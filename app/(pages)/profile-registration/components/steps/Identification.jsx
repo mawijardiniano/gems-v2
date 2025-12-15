@@ -14,8 +14,8 @@ export default function Identification() {
   const canProceed = !!currentStatus;
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="w-[900px] border border-gray-200 p-16 rounded-xl bg-white">
+    <div className="flex justify-center items-center h-screen px-4">
+      <div className="w-[900px] border border-gray-200 p-6 sm:p-16 rounded-xl bg-white">
         <div className="flex justify-center items-center mb-6">
           <StepIndicator
             titles={["Identification", "Personal", "Gender", "Affiliation", "Contact"]}

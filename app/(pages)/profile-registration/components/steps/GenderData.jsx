@@ -31,8 +31,8 @@ export default function GenderData() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="w-[900px] border border-gray-200 p-16 rounded-xl bg-white">
+    <div className="flex justify-center items-center h-screen px-4">
+      <div className="w-[900px] border border-gray-200 p-6 sm:p-16 rounded-xl bg-white">
         {/* Step Indicator */}
         <div className="flex justify-center items-center mb-6">
           <StepIndicator
@@ -48,7 +48,6 @@ export default function GenderData() {
 
         <h2 className="text-xl font-bold mb-4">GAD / Gender & Equity</h2>
 
-        {/* Form Fields */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block font-medium mb-1">
@@ -92,21 +91,31 @@ export default function GenderData() {
 
           <div>
             <label className="block font-medium mb-1">Sexual Orientation</label>
-            <input
-              type="text"
+            <select
               className="w-full border p-2 rounded"
               value={gadData.sexualOrientation || ""}
               onChange={(e) =>
                 handleChange("sexualOrientation", e.target.value)
               }
-              placeholder="e.g., Heterosexual, Homosexual"
-            />
+            >
+              <option value="">Select</option>
+              <option value="Heterosexual">Heterosexual</option>
+              <option value="Homosexual">Homosexual</option>
+              <option value="Bisexual">Bisexual</option>
+              <option value="Pansexual">Pansexual</option>
+              <option value="Asexual">Asexual</option>
+              <option value="Aromantic">Aromantic</option>
+              <option value="Demisexual">Demisexual</option>
+              <option value="Queer">Queer</option>
+              <option value="Prefer not to disclose">
+                Prefer not to disclose
+              </option>
+            </select>
           </div>
 
           <div>
             <label className="block font-medium mb-1">
-              Person with Disability (PWD)?{" "}
-              <span className="text-red-500">*</span>
+              Person with Disability? <span className="text-red-500">*</span>
             </label>
             <select
               className="w-full border p-2 rounded"

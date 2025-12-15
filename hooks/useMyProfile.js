@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export const useMyProfile = (token) => {
+export const useMyProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -9,22 +9,26 @@ export const useMyProfile = (token) => {
     const getProfile = async () => {
       try {
         const res = await axios.get("/api/profile/my-profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         });
 
-        setProfile(res.data.data);
-        console.log("DATA", res.data.data)
+        if (res.data.success) {
+          setProfile(res.data.data);
+          console.log("PROFILE DATA:", res.data.data);
+        } else {
+          setProfile(null);
+        }
       } catch (error) {
         console.error("Failed to fetch profile:", error);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (token) getProfile();
-  }, [token]);
+    getProfile();
+  }, []);
 
   return { profile, loading };
 };
+

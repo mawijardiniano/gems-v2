@@ -25,7 +25,7 @@ export default function Filters({
       </select>
 
       <select
-        className="border p-2 rounded bg-white"
+        className="border p-2 rounded bg-white w-32"
         value={filterCollege}
         onChange={(e) => setFilterCollege(e.target.value)}
       >

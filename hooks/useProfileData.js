@@ -21,13 +21,12 @@ export default function useProfileData() {
     return age;
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    axios
-      .get("/api/profile", { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setProfiles(res.data.data))
-      .catch(() => setError("Failed to fetch profiles. Please log in."));
-  }, []);
+useEffect(() => {
+  axios
+    .get("/api/profile", { withCredentials: true })
+    .then((res) => setProfiles(res.data.data))
+    .catch(() => setError("Failed to fetch profiles. Please log in."));
+}, []);
 
   useEffect(() => {
     const socket = getSocket();
@@ -50,7 +49,6 @@ export default function useProfileData() {
     };
   }, []);
 
-  // Filters & derived data
   const filteredProfiles = useMemo(
     () =>
       profiles.filter((p) => {

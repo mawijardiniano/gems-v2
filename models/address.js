@@ -2,7 +2,7 @@ import { Schema } from "mongoose";
 
 const addressSchema = new Schema(
   {
-    houseNo: { type: String },
+    street: { type: String },
     barangay: { type: String },
     city: { type: String },
     province: { type: String },

@@ -13,16 +13,21 @@ export default function ProtectedLayout({ children }) {
     const checkAuth = async () => {
       try {
         const res = await axios.get("/api/profile/my-profile", {
-          withCredentials: true,
+          withCredentials: true, 
         });
 
-        if (res.data?.user) {
-          setAuthorized(true);
+        console.log("Profile API response:", res.data); 
+
+        const hasProfile = res.data?.hasProfile ?? res.data?.data?.hasProfile;
+
+        if (hasProfile) {
+          router.replace("/dashboard");
         } else {
-          router.replace("/");
+          setAuthorized(true);
         }
       } catch (err) {
-        router.replace("/"); 
+        console.error(err);
+        router.replace("/");
       } finally {
         setLoading(false);
       }
@@ -30,10 +35,7 @@ export default function ProtectedLayout({ children }) {
 
     checkAuth();
   }, [router]);
-
-  if (!authorized) {
-    return null;
-  }
+  if (!authorized) return null;
 
   return <>{children}</>;
 }

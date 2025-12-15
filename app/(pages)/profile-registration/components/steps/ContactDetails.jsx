@@ -47,11 +47,9 @@ export default function ContactInformation() {
   const requiredFields = [
     contact.email,
     contact.mobileNumber,
-    contact.permanentAddress.houseNo,
     contact.permanentAddress.barangay,
     contact.permanentAddress.city,
     contact.permanentAddress.province,
-    contact.currentAddress.houseNo,
     contact.currentAddress.barangay,
     contact.currentAddress.city,
     contact.currentAddress.province,
@@ -116,7 +114,7 @@ export default function ContactInformation() {
 
   const renderAddressFields = (type) => (
     <div className="grid grid-cols-2 gap-4">
-      {["houseNo", "barangay", "city", "province"].map((field) => (
+      {["street", "barangay", "city", "province"].map((field) => (
         <div key={field}>
           <label className="capitalize font-medium text-sm">
             {field.replace("No", " No.")}
@@ -135,8 +133,8 @@ export default function ContactInformation() {
 
   return (
     <div className="py-20">
-      <div className="flex justify-center items-center h-screen">
-        <div className="w-[900px] border border-gray-200 p-12 rounded-xl bg-white">
+      <div className="flex justify-center items-center h-screen px-4">
+        <div className="w-[900px] border border-gray-200 p-6 sm:p-16 rounded-xl bg-white">
           <div className="flex justify-center items-center mb-6">
             <StepIndicator
               titles={[

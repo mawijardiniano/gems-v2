@@ -1,5 +1,3 @@
-
-
 import { useDispatch, useSelector } from "react-redux";
 import {
   prevStep,
@@ -12,7 +10,6 @@ export default function StepOne() {
   const dispatch = useDispatch();
   const personal = useSelector((state) => state.profile.personal);
 
-
   const handleChange = (field, value) => {
     dispatch(setPersonal({ field, value }));
   };
@@ -20,7 +17,6 @@ export default function StepOne() {
   const handleBirthdayChange = (value) => {
     const today = new Date().toISOString().split("T")[0];
     if (value > today) {
-      
       return;
     }
     handleChange("birthday", value);
@@ -37,8 +33,8 @@ export default function StepOne() {
   const canProceed = requiredFields.every(Boolean);
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="w-[900px] border border-gray-200 p-16 rounded-xl bg-white">
+    <div className="flex justify-center items-center h-screen px-4">
+      <div className="w-[900px] border border-gray-200 p-6 sm:p-16 rounded-xl bg-white">
         {/* Step Indicator */}
         <div className="flex justify-center items-center mb-6">
           <StepIndicator
@@ -58,19 +54,6 @@ export default function StepOne() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block font-medium mb-1">
-              Last Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              className="w-full border p-2 rounded"
-              value={personal.lastName}
-              onChange={(e) => handleChange("lastName", e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">
               First Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -78,6 +61,18 @@ export default function StepOne() {
               className="w-full border p-2 rounded"
               value={personal.firstName}
               onChange={(e) => handleChange("firstName", e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-medium mb-1">
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              className="w-full border p-2 rounded"
+              value={personal.lastName}
+              onChange={(e) => handleChange("lastName", e.target.value)}
               required
             />
           </div>

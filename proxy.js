@@ -12,7 +12,7 @@ export function proxy(req) {
     pathname.startsWith("/api/auth/protected") ||
     pathname === "/api/auth/users"
   ) {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const token = req.cookies.get("auth_token")?.value
     if (!token) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }

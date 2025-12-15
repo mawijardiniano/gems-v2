@@ -15,7 +15,6 @@ export default function Dashboard() {
     <div className="p-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold">Dashboard</h1>
           <h2 className="text-lg mb-4">
             Total Profiles: {data.filteredProfiles.length}
           </h2>

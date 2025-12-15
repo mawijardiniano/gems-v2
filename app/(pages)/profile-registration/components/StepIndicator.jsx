@@ -14,7 +14,6 @@ export default function StepIndicator({ titles }) {
         return (
           <div key={index} className="flex flex-1 items-center">
             
-            {/* Step Circle + Title */}
             <div className="flex flex-col items-center">
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all

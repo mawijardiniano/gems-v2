@@ -1,4 +1,3 @@
-
 import { useDispatch, useSelector } from "react-redux";
 import {
   nextStep,
@@ -47,12 +46,13 @@ export default function UniversityAffiliation() {
       : []),
   ];
 
-  const canProceed =
-    requiredFields.every((field) => field !== "" && field !== null);
+  const canProceed = requiredFields.every(
+    (field) => field !== "" && field !== null
+  );
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="w-[900px] border border-gray-200 p-16 rounded-xl bg-white">
+    <div className="flex justify-center items-center h-screen px-4">
+      <div className="w-[900px] border border-gray-200 p-6 sm:p-16 rounded-xl bg-white">
         {/* Step Indicator */}
         <div className="flex justify-center items-center mb-6">
           <StepIndicator
@@ -81,13 +81,65 @@ export default function UniversityAffiliation() {
 
         <div className="mb-3">
           <label className="font-medium">College</label>
-          <input
-            type="text"
+          <select
             className="border p-2 w-full"
-            placeholder="Enter college"
             value={affiliation.college}
             onChange={(e) => handleChange("college", e.target.value)}
-          />
+          >
+            <option value="">Enter college</option>
+            <option value="Graduate School">Graduate School</option>
+            <option value="College of Agriculture">
+              College of Agriculture
+            </option>
+            <option value="College of Allied Health Sciences">
+              College of Allied Health Sciences
+            </option>
+            <option value="College of Arts & Social Sciences">
+              College of Arts & Social Sciences
+            </option>
+            <option value="College of Business & Accountancy">
+              College of Business & Accountancy
+            </option>
+            <option value="College of Criminal Justice Education">
+              College of Criminal Justice Education
+            </option>
+            <option value="College of Education">College of Education</option>
+            <option value="College of Engineering">
+              College of Engineering
+            </option>
+            <option value="College of Environmental Studies">
+              College of Environmental Studies
+            </option>
+            <option value="College of Fisheries & Aquatic Sciences">
+              College of Fisheries & Aquatic Sciences
+            </option>
+            <option value="College of Governance">College of Governance</option>
+            <option value="College of Industrial Technology">
+              College of Industrial Technology
+            </option>
+            <option value="College of Information & Computing Sciences">
+              College of Information & Computing Sciences
+            </option>
+            <option value="Offices under the Office of the University President">
+              Offices under the Office of the University President
+            </option>
+            <option value="Offices under the Office of the Vice President for Academic Affairs">
+              Offices under the Office of the Vice President for Academic
+              Affairs
+            </option>
+            <option value="Offices under the Office of the Vice President for Administration and Finance">
+              Offices under the Office of the Vice President for Administration
+              and Finance
+            </option>
+            <option value="Offices under the Office of the Vice President for Research and Extension">
+              Offices under the Office of the Vice President for Research and
+              Extension
+            </option>
+            <option value="Offices under the Office of the Vice President for Student Affairs and Services">
+              Offices under the Office of the Vice President for Student Affairs
+              and Services
+            </option>
+          </select>
         </div>
 
         {currentStatus === "Employee" && (
@@ -142,8 +194,8 @@ export default function UniversityAffiliation() {
                 }
               >
                 <option value="">Select Type</option>
-                <option value="Permanent">Permanent</option>
-                <option value="Contractual">Contractual</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Non-teaching-Personnel">Non teaching Personnel</option>
               </select>
             </div>
           </>

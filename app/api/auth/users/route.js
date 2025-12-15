@@ -16,3 +16,22 @@ export async function GET() {
     );
   }
 }
+
+export async function DELETE() {
+  try {
+    await connectDB();
+
+    const result = await User.deleteMany({});
+
+    return NextResponse.json({
+      status: "success",
+      message: `Deleted ${result.deletedCount} users.`,
+    });
+  } catch (error) {
+    console.error("Error deleting all profiles:", error);
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 500 }
+    );
+  }
+}

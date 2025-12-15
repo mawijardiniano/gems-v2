@@ -1,8 +1,8 @@
-import UserDashboardPageContent from "./content";
+import EditProfilePageContent from './content';
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
+export default async function EditProfilePage() {
   const cookieStore = await cookies();
   const authToken = cookieStore.get("auth_token")?.value;
 
@@ -21,5 +21,6 @@ export default async function DashboardPage() {
 
   const data = await res.json();
 
-  return <UserDashboardPageContent profile={data.data} />;
+  return <EditProfilePageContent profile={data.data} />;
 }
+

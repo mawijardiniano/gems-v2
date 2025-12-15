@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ResponsiveContainer,
@@ -19,7 +19,8 @@ export default function AgeChart({ data }) {
       </div>
       <div className="w-full h-72 p-4">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ left: 50 }}>
+          {/* <BarChart data={data} layout="vertical" margin={{ left: 50 }}> */}
+          <BarChart data={data} layout="vertical">
             <XAxis type="number" />
             <YAxis dataKey="age" type="category" />
             <Tooltip />

@@ -11,7 +11,7 @@ const personalSchema = new Schema(
       enum: ["Single", "Married", "Widowed", "Separated", "Divorced", "Other"],
       required: true,
     },
-    nationality: { type: String, default: "Filipino" },
+    nationality: { type: String, default: "Filipino", required: true },
     bloodType: {
       type: String,
       enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],

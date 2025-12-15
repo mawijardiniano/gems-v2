@@ -19,57 +19,54 @@ export default function LoginForm() {
     setError("");
 
     try {
-      const loginApi = "/api/auth/login";
+      const res = await axios.post(
+        "/api/auth/login",
+        { email, password },
+        { withCredentials: true }
+      );
 
-      const res = await axios.post(loginApi, { email, password });
+      const user = res.data.user;
+      const role = user.role.toLowerCase();
 
-      const token = res.data.token;
-      const userId = res.data.user._id;
-      const role = res.data.user.role.toLowerCase();
+      dispatch(
+        loginSuccess({
+          userId: user._id,
+          role,
+          hasProfile: false,
+        })
+      );
 
-      console.log("token", token)
-      console.log("userID", userId)
-      console.log("role", role)
       if (role === "admin") {
-        dispatch(
-          loginSuccess({
-            token,
-            userId,
-            role,
-            hasProfile: false,
-          })
-        );
         router.push("/admin-dashboard");
         return;
       }
 
-      // Check if user has profile
       const profileRes = await axios.get("/api/profile/my-profile", {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
+
+      console.log("Profile response:", profileRes.data);
 
       const profile = profileRes.data.data;
       const hasProfile = !!profile;
 
-      console.log("Profile response data:", profileRes.data);
-console.log("Profile object:", profile);
-console.log("Has profile:", hasProfile);
-
       dispatch(
         loginSuccess({
-          token,
-          userId,
+          userId: user._id,
           role,
           hasProfile,
         })
       );
 
-      hasProfile
-        ? router.push("/dashboard")
-        : router.push("/profile-registration"); //if no profile
+      router.push(hasProfile ? "/dashboard" : "/profile-registration");
     } catch (err) {
       console.error("Login error:", err);
-      setError("Invalid email or password.");
+
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError("Invalid email or password.");
+      }
     }
   };
 
@@ -91,10 +88,7 @@ console.log("Has profile:", hasProfile);
           <form onSubmit={handleLogin} className="mt-8 space-y-6">
             <div className="space-y-4">
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
                 </label>
                 <div className="mt-1">
@@ -113,10 +107,7 @@ console.log("Has profile:", hasProfile);
               </div>
 
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <div className="mt-1">
@@ -139,11 +130,7 @@ console.log("Has profile:", hasProfile);
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
                   <div className="shrink-0">
-                    <svg
-                      className="h-5 w-5 text-red-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -168,10 +155,7 @@ console.log("Has profile:", hasProfile);
             <div className="flex justify-center">
               <p className="text-sm">
                 Don't have an account?{" "}
-                <Link
-                  href="/authentication/signup"
-                  className="text-sm font-medium text-gray-900"
-                >
+                <Link href="/authentication/signup" className="text-sm font-medium text-gray-900">
                   Register here
                 </Link>
               </p>

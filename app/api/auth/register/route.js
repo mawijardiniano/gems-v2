@@ -1,6 +1,5 @@
 import { connectDB } from "@/lib/db";
 import User from "@/models/user";
-import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   try {
@@ -10,6 +9,16 @@ export async function POST(request) {
     if (!name || !email || !password) {
       return new Response(
         JSON.stringify({ status: "error", message: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (password.length < 8) {
+      return new Response(
+        JSON.stringify({
+          status: "error",
+          message: "Password must be at least 8 characters long",
+        }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -26,7 +35,6 @@ export async function POST(request) {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
-
 
     const newUser = await User.create({
       name,

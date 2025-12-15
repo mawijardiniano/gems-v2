@@ -8,13 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function GET(req) {
   try {
-    const authHeader = req.headers.get("authorization");
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
+    const token = req.cookies.get("auth_token")?.value;
 
     let decoded;
     try {
@@ -68,7 +62,6 @@ export async function GET(req) {
       },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("GET /api/profile/me error:", error);
     return NextResponse.json(
