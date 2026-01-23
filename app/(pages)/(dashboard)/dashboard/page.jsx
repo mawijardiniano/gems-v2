@@ -9,17 +9,25 @@ export default async function DashboardPage() {
   if (!authToken) {
     return redirect("/");
   }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/profile/my-profile`, {
-    headers: {
-      Cookie: `auth_token=${authToken}`,
-    },
-  });
+  const res = await fetch(
+    `${
+      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    }/api/profile/my-profile`,
+    {
+      headers: {
+        Cookie: `auth_token=${authToken}`,
+      },
+    }
+  );
 
   if (!res.ok) {
     return redirect("/");
   }
 
   const data = await res.json();
+  console.log("userIdsss", data);
 
-  return <UserDashboardPageContent profile={data.data} />;
+  return (
+    <UserDashboardPageContent profile={data.data} userId={data.user._id} />
+  );
 }

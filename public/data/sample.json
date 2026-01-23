@@ -1,0 +1,601 @@
+[
+  {
+    "personal_information": {
+      "first_name": "Maria",
+      "middle_name": "Santos",
+      "last_name": "Reyes",
+      "sex": "Female",
+      "gender_preference": "Heterosexual Female",
+      "age_bracket": "31-40",
+      "civil_status": "Married",
+      "religion": "Roman Catholic",
+      "college_office": "College of Education",
+      "employment_status": "Faculty",
+      "employment_appointment_status": "Regular",
+      "solo_parent": false,
+      "pwd": false,
+      "indigenous": true,
+      "total_annual_family_income": "₱201,000-₱300,000"
+    },
+    "health_information": {
+      "health_problems": ["Hypertension"]
+    },
+    "economic_financial_role": {
+      "breadwinner": true,
+      "income_sources": ["Active Income"],
+      "cultural_barrier_work": false,
+      "manage_financial_resources": true,
+      "participate_financial_decisions": true
+    },
+    "reproductive_family_role": {
+      "childbearing_stage": "Yes",
+      "child_rearing_stage": "Yes",
+      "family_planning": "Yes",
+      "spouse_share_childcare": "Yes",
+      "attend_school_needs": "Yes",
+      "childcare_responsibility": "Shared by both parents"
+    },
+    "household_managing_role": {
+      "spouse_participate_household": "Yes",
+      "family_participate_household": true,
+      "decision_manage_household": true,
+      "household_decision_explanation": ""
+    },
+    "community_involvement": {
+      "community_involvement": true,
+      "exercise_right_to_vote": true,
+      "spouse_different_religion": "No",
+      "spouse_cultural_difference": "No"
+    },
+    "social_development_rights_protection": {
+      "housing_work_life_balance": {
+        "house_property_owned": false,
+        "job_hinder_parent_role": "Yes",
+        "working_parent_hindrance_career": "Yes",
+        "enough_rest": false,
+        "manage_stress": false,
+        "stress_management_methods": ""
+      },
+      "personal_development_empowerment": {
+        "undertake_empowerment_activities": false,
+        "empowerment_activities_examples": "",
+        "home_environment_growth": false,
+        "community_environment_growth": true,
+        "environment_growth_reason": "Financial constraints"
+      },
+      "legal_awareness_and_observance": {
+        "awareness": {
+          "RA 6275": "Yes",
+          "RA 10354": "Yes",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "Yes",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Yes",
+          "RA 11313": "Yes",
+          "RA 8353": "Yes",
+          "RA 11596": "Yes"
+        },
+        "observed_in_university_or_community": {
+          "RA 6275": "Yes",
+          "RA 10354": "Yes",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "Yes",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Yes",
+          "RA 11313": "Yes",
+          "RA 11596": "Yes"
+        }
+      },
+      "legal_awareness_training_needs": {
+        "need_awareness_program": "Strongly Agree",
+        "other_training_needs": [
+          "Financial literacy",
+          "Mental health awareness"
+        ]
+      }
+    },
+    "environmental_climate_change": {
+      "gad_paps": {
+        "Environmental protection and sustainable development": "Yes",
+        "Disaster reduction": "Not Sure"
+      },
+      "disaster_knowledge_personal": "Yes",
+      "disaster_knowledge_family": "Yes",
+      "disaster_knowledge_officemates": "Not Sure",
+      "fire_drill": "Yes",
+      "earthquake_drill": "Yes",
+      "trained_marshals": true,
+      "emergency_equipment_home": true,
+      "emergency_equipment_office": false
+    },
+    "gender_responsive_governance": {
+      "equal_access_resources": true,
+      "control_over_resources": true,
+      "consulted_community_issues": true,
+      "consulted_women_issues": true,
+      "consulted_organization_issues": false,
+      "officials_respect_rights": "Very Frequently",
+      "treated_with_respect": "Always"
+    },
+    "security_peace_justice": {
+      "gender_based_experiences": {
+        "verbal_and_emotional_abuse": "Rarely",
+        "mental_and_emotional_anguish": "Rarely",
+        "public_humiliation": "Never",
+        "sexual_favor_as_condition": "Never",
+        "workplace_discrimination_intimidation": "Rarely",
+        "malicious_green_jokes": "Sometimes",
+        "sexual_advances_by_coworker": "Never"
+      },
+      "other_experiences": {
+        "physical_harm": "Always",
+        "attempts_physical_harm": "Never",
+        "fear_of_imminent_physical_harm": "Rarely",
+        "compulsion_or_attempt_to_compel": "Never",
+        "deprivation_of_freedom": "Never",
+        "deprivation_of_rights": "Never",
+        "harassment_of_self_or_family": "Rarely",
+        "emotional_distress": "Rarely",
+        "stalking": "Never",
+        "harassment": "Rarely"
+      },
+      "willing_to_discuss": "Agree",
+      "reason_not_discuss": "",
+      "vaw_services_awareness": {
+        "vaw_desk_marsu": "Yes",
+        "legal_assistance_marsu": "Yes"
+      }
+    }
+  },
+  {
+    "personal_information": {
+      "first_name": "Juan",
+      "middle_name": "Dela",
+      "last_name": "Cruz",
+      "sex": "Male",
+      "gender_preference": "Prefer not to say",
+      "age_bracket": "41-50",
+      "civil_status": "Single",
+      "religion": "Iglesia ni Cristo",
+      "college_office": "Administrative Office",
+      "employment_status": "Non-Teaching Personnel",
+      "employment_appointment_status": "Utility Worker",
+      "solo_parent": false,
+      "pwd": true,
+      "indigenous": true,
+      "total_annual_family_income": "₱101,000-₱200,000"
+    },
+    "health_information": {
+      "health_problems": ["None"]
+    },
+    "economic_financial_role": {
+      "breadwinner": false,
+      "income_sources": ["N/A"],
+      "cultural_barrier_work": false,
+      "manage_financial_resources": false,
+      "participate_financial_decisions": false
+    },
+    "reproductive_family_role": {
+      "childbearing_stage": "N/A",
+      "child_rearing_stage": "N/A",
+      "family_planning": "N/A",
+      "spouse_share_childcare": "N/A",
+      "attend_school_needs": "N/A",
+      "childcare_responsibility": ""
+    },
+    "household_managing_role": {
+      "spouse_participate_household": "N/A",
+      "family_participate_household": false,
+      "decision_manage_household": false,
+      "household_decision_explanation": "Lives with parents"
+    },
+    "community_involvement": {
+      "community_involvement": false,
+      "exercise_right_to_vote": true,
+      "spouse_different_religion": "N/A",
+      "spouse_cultural_difference": "N/A"
+    },
+    "social_development_rights_protection": {
+      "housing_work_life_balance": {
+        "house_property_owned": false,
+        "job_hinder_parent_role": "N/A",
+        "working_parent_hindrance_career": "N/A",
+        "enough_rest": true,
+        "manage_stress": true,
+        "stress_management_methods": "Watching TV"
+      },
+      "personal_development_empowerment": {
+        "undertake_empowerment_activities": false,
+        "empowerment_activities_examples": "",
+        "home_environment_growth": true,
+        "community_environment_growth": false,
+        "environment_growth_reason": "Limited community programs"
+      },
+      "legal_awareness_and_observance": {
+        "awareness": {
+          "RA 6275": "Not Sure",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Not Sure",
+          "RA 7877": "Not Sure",
+          "RA 8972": "Not Sure",
+          "RA 9710": "Not Sure",
+          "RA 9262": "Not Sure",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Yes",
+          "RA 8353": "Not Sure",
+          "RA 11596": "Not Sure"
+        },
+        "observed_in_university_or_community": {
+          "RA 6275": "Not Sure",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Not Sure",
+          "RA 7877": "Not Sure",
+          "RA 8972": "Not Sure",
+          "RA 9710": "Not Sure",
+          "RA 9262": "Not Sure",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Not Sure",
+          "RA 11596": "Not Sure"
+        }
+      },
+      "legal_awareness_training_needs": {
+        "need_awareness_program": "Undecided",
+        "other_training_needs": []
+      }
+    },
+    "environmental_climate_change": {
+      "gad_paps": {
+        "Environmental protection and sustainable development": "Yes",
+        "Disaster reduction": "Not Sure"
+      },
+      "disaster_knowledge_personal": "Yes",
+      "disaster_knowledge_family": "Yes",
+      "disaster_knowledge_officemates": "Not Sure",
+      "fire_drill": "Yes",
+      "earthquake_drill": "Yes",
+      "trained_marshals": true,
+      "emergency_equipment_home": true,
+      "emergency_equipment_office": false
+    },
+    "gender_responsive_governance": {
+      "equal_access_resources": true,
+      "control_over_resources": false,
+      "consulted_community_issues": false,
+      "consulted_women_issues": false,
+      "consulted_organization_issues": false,
+      "officials_respect_rights": "Occasionally",
+      "treated_with_respect": "Very Frequently"
+    },
+    "security_peace_justice": {
+      "gender_based_experiences": {
+        "verbal_and_emotional_abuse": "Never",
+        "mental_and_emotional_anguish": "Never",
+        "public_humiliation": "Never",
+        "sexual_favor_as_condition": "Never",
+        "workplace_discrimination_intimidation": "Rarely",
+        "malicious_green_jokes": "Rarely",
+        "sexual_advances_by_coworker": "Never"
+      },
+      "other_experiences": {
+        "physical_harm": "Never",
+        "attempts_physical_harm": "Never",
+        "fear_of_imminent_physical_harm": "Rarely",
+        "compulsion_or_attempt_to_compel": "Never",
+        "deprivation_of_freedom": "Never",
+        "deprivation_of_rights": "Never",
+        "harassment_of_self_or_family": "Never",
+        "emotional_distress": "Never",
+        "stalking": "Never",
+        "harassment": "Never"
+      },
+      "willing_to_discuss": "Undecided",
+      "reason_not_discuss": "",
+      "vaw_services_awareness": {
+        "vaw_desk_marsu": "Not Sure",
+        "legal_assistance_marsu": "Not Sure"
+      }
+    }
+  },
+  {
+    "personal_information": {
+      "first_name": "Ana",
+      "middle_name": "Lopez",
+      "last_name": "Garcia",
+      "sex": "Female",
+      "gender_preference": "Prefer not to say",
+      "age_bracket": "51-60",
+      "civil_status": "Widow",
+      "religion": "Protestant",
+      "college_office": "College of Arts and Sciences",
+      "employment_status": "Faculty",
+      "employment_appointment_status": "Part-time Lecturer",
+      "solo_parent": true,
+      "pwd": true,
+      "indigenous": false,
+      "total_annual_family_income": "₱1,000-₱50,000"
+    },
+    "health_information": {
+      "health_problems": ["Diabetes", "Eye Problems"]
+    },
+    "economic_financial_role": {
+      "breadwinner": true,
+      "income_sources": ["Active Income", "Passive Income"],
+      "cultural_barrier_work": true,
+      "manage_financial_resources": true,
+      "participate_financial_decisions": true
+    },
+    "reproductive_family_role": {
+      "childbearing_stage": "No",
+      "child_rearing_stage": "Yes",
+      "family_planning": "No",
+      "spouse_share_childcare": "N/A",
+      "attend_school_needs": "Yes",
+      "childcare_responsibility": "Respondent as solo parent"
+    },
+    "household_managing_role": {
+      "spouse_participate_household": "N/A",
+      "family_participate_household": true,
+      "decision_manage_household": true,
+      "household_decision_explanation": ""
+    },
+    "community_involvement": {
+      "community_involvement": true,
+      "exercise_right_to_vote": true,
+      "spouse_different_religion": "N/A",
+      "spouse_cultural_difference": "N/A"
+    },
+    "social_development_rights_protection": {
+      "housing_work_life_balance": {
+        "house_property_owned": true,
+        "job_hinder_parent_role": "Yes",
+        "working_parent_hindrance_career": "Yes",
+        "enough_rest": false,
+        "manage_stress": true,
+        "stress_management_methods": "Prayer and walking"
+      },
+      "personal_development_empowerment": {
+        "undertake_empowerment_activities": true,
+        "empowerment_activities_examples": "Leadership training",
+        "home_environment_growth": true,
+        "community_environment_growth": true,
+        "environment_growth_reason": ""
+      },
+      "legal_awareness_and_observance": {
+        "awareness": {
+          "RA 6275": "Yes",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "No",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Yes",
+          "RA 8353": "Yes",
+          "RA 11596": "Not Sure"
+        },
+        "observed_in_university_or_community": {
+          "RA 6275": "Yes",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "No",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Yes",
+          "RA 11596": "Not Sure"
+        }
+      },
+      "legal_awareness_training_needs": {
+        "need_awareness_program": "Agree",
+        "other_training_needs": ["GAD trainings"]
+      }
+    },
+    "environmental_climate_change": {
+      "gad_paps": {
+        "Environmental protection and sustainable development": "Yes",
+        "Disaster reduction": "Yes"
+      },
+      "disaster_knowledge_personal": "Yes",
+      "disaster_knowledge_family": "Yes",
+      "disaster_knowledge_officemates": "Yes",
+      "fire_drill": "Yes",
+      "earthquake_drill": "Yes",
+      "trained_marshals": true,
+      "emergency_equipment_home": true,
+      "emergency_equipment_office": true
+    },
+    "gender_responsive_governance": {
+      "equal_access_resources": true,
+      "control_over_resources": true,
+      "consulted_community_issues": true,
+      "consulted_women_issues": true,
+      "consulted_organization_issues": true,
+      "officials_respect_rights": "Always",
+      "treated_with_respect": "Always"
+    },
+    "security_peace_justice": {
+      "gender_based_experiences": {
+        "verbal_and_emotional_abuse": "Sometimes",
+        "mental_and_emotional_anguish": "Sometimes",
+        "public_humiliation": "Rarely",
+        "sexual_favor_as_condition": "Never",
+        "workplace_discrimination_intimidation": "Sometimes",
+        "malicious_green_jokes": "Often",
+        "sexual_advances_by_coworker": "Rarely"
+      },
+      "other_experiences": {
+        "physical_harm": "Rarely",
+        "attempts_physical_harm": "Never",
+        "fear_of_imminent_physical_harm": "Often",
+        "compulsion_or_attempt_to_compel": "Rarely",
+        "deprivation_of_freedom": "Sometimes",
+        "deprivation_of_rights": "Sometimes",
+        "harassment_of_self_or_family": "Often",
+        "emotional_distress": "Often",
+        "stalking": "Rarely",
+        "harassment": "Often"
+      },
+      "willing_to_discuss": "Strongly Agree",
+      "reason_not_discuss": "",
+      "vaw_services_awareness": {
+        "vaw_desk_marsu": "Yes",
+        "legal_assistance_marsu": "Yes"
+      }
+    }
+  },
+  {
+    "personal_information": {
+      "first_name": "Lisha",
+      "middle_name": "Lopez",
+      "last_name": "Garcia",
+      "sex": "Female",
+      "gender_preference": "Prefer not to say",
+      "age_bracket": "18-30",
+      "civil_status": "Single",
+      "religion": "Roman Catholic",
+      "college_office": "College of Arts and Sciences",
+      "employment_status": "Faculty",
+      "employment_appointment_status": "University Lecturer",
+      "solo_parent": false,
+      "pwd": false,
+      "indigenous": false,
+      "total_annual_family_income": "₱401,000-₱500,000"
+    },
+    "health_information": {
+      "health_problems": ["Hypertension"]
+    },
+    "economic_financial_role": {
+      "breadwinner": true,
+      "income_sources": ["Active Income", "Passive Income"],
+      "cultural_barrier_work": true,
+      "manage_financial_resources": true,
+      "participate_financial_decisions": true
+    },
+    "reproductive_family_role": {
+      "childbearing_stage": "No",
+      "child_rearing_stage": "Yes",
+      "family_planning": "No",
+      "spouse_share_childcare": "N/A",
+      "attend_school_needs": "Yes",
+      "childcare_responsibility": "Respondent as solo parent"
+    },
+    "household_managing_role": {
+      "spouse_participate_household": "N/A",
+      "family_participate_household": true,
+      "decision_manage_household": true,
+      "household_decision_explanation": ""
+    },
+    "community_involvement": {
+      "community_involvement": true,
+      "exercise_right_to_vote": true,
+      "spouse_different_religion": "N/A",
+      "spouse_cultural_difference": "N/A"
+    },
+    "social_development_rights_protection": {
+      "housing_work_life_balance": {
+        "house_property_owned": true,
+        "job_hinder_parent_role": "Yes",
+        "working_parent_hindrance_career": "Yes",
+        "enough_rest": false,
+        "manage_stress": true,
+        "stress_management_methods": "Prayer and walking"
+      },
+      "personal_development_empowerment": {
+        "undertake_empowerment_activities": true,
+        "empowerment_activities_examples": "Leadership training",
+        "home_environment_growth": true,
+        "community_environment_growth": true,
+        "environment_growth_reason": ""
+      },
+      "legal_awareness_and_observance": {
+        "awareness": {
+          "RA 6275": "Yes",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "No",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Yes",
+          "RA 8353": "Yes",
+          "RA 11596": "Not Sure"
+        },
+        "observed_in_university_or_community": {
+          "RA 6275": "Yes",
+          "RA 10354": "Not Sure",
+          "RA 7192": "Yes",
+          "RA 7877": "Yes",
+          "RA 8972": "No",
+          "RA 9710": "Yes",
+          "RA 9262": "Yes",
+          "RA 7277": "Not Sure",
+          "RA 11313": "Yes",
+          "RA 11596": "Not Sure"
+        }
+      },
+      "legal_awareness_training_needs": {
+        "need_awareness_program": "Agree",
+        "other_training_needs": ["GAD trainings"]
+      }
+    },
+    "environmental_climate_change": {
+      "gad_paps": {
+        "Environmental protection and sustainable development": "Yes",
+        "Disaster reduction": "Yes"
+      },
+      "disaster_knowledge_personal": "Yes",
+      "disaster_knowledge_family": "Yes",
+      "disaster_knowledge_officemates": "Yes",
+      "fire_drill": "Yes",
+      "earthquake_drill": "Yes",
+      "trained_marshals": true,
+      "emergency_equipment_home": true,
+      "emergency_equipment_office": true
+    },
+    "gender_responsive_governance": {
+      "equal_access_resources": false,
+      "control_over_resources": false,
+      "consulted_community_issues": true,
+      "consulted_women_issues": true,
+      "consulted_organization_issues": false,
+      "officials_respect_rights": "Always",
+      "treated_with_respect": "Always"
+    },
+    "security_peace_justice": {
+      "gender_based_experiences": {
+        "verbal_and_emotional_abuse": "Sometimes",
+        "mental_and_emotional_anguish": "Sometimes",
+        "public_humiliation": "Rarely",
+        "sexual_favor_as_condition": "Never",
+        "workplace_discrimination_intimidation": "Sometimes",
+        "malicious_green_jokes": "Often",
+        "sexual_advances_by_coworker": "Rarely"
+      },
+      "other_experiences": {
+        "physical_harm": "Rarely",
+        "attempts_physical_harm": "Never",
+        "fear_of_imminent_physical_harm": "Often",
+        "compulsion_or_attempt_to_compel": "Rarely",
+        "deprivation_of_freedom": "Sometimes",
+        "deprivation_of_rights": "Sometimes",
+        "harassment_of_self_or_family": "Often",
+        "emotional_distress": "Often",
+        "stalking": "Rarely",
+        "harassment": "Often"
+      },
+      "willing_to_discuss": "Strongly Agree",
+      "reason_not_discuss": "",
+      "vaw_services_awareness": {
+        "vaw_desk_marsu": "Yes",
+        "legal_assistance_marsu": "Yes"
+      }
+    }
+  }
+]

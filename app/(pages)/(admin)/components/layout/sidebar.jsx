@@ -10,8 +10,8 @@ export default function Sidebar({ open, setOpen }) {
   const router = useRouter();
 
   const links = [
-    { name: "Dashboard", href: "/admin-dashboard", icon: <FaHome /> },
-    { name: "User List", href: "/users-list", icon: <FaPen /> },
+    { name: "Dashboard", href: "/sample-dashboard", icon: <FaHome /> },
+    { name: "User List", href: "/sample-user-list", icon: <FaPen /> },
     { name: "Settings", href: "/admin-settings", icon: <FaCog /> },
   ];
 

@@ -1,11 +1,11 @@
 import { connectDB } from "@/lib/db";
-import User from "@/models/user";
+import UserAuth from "@/models/user";
 
 export async function GET() {
   try {
     await connectDB();
 
-    const users = await User.find({}, { password: 0 }).lean();
+    const users = await UserAuth.find({}, { password: 0 }).lean();
 
     return Response.json({ status: "success", data: users }, { status: 200 });
   } catch (error) {
@@ -21,7 +21,7 @@ export async function DELETE() {
   try {
     await connectDB();
 
-    const result = await User.deleteMany({});
+    const result = await UserAuth.deleteMany({});
 
     return NextResponse.json({
       status: "success",

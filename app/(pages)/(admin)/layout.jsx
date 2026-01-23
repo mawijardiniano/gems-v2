@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }) {
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="mt-16 px-4 sm:px-6 bg-gray-50 h-screen">
+        <main className="mt-16 px-4 sm:px-6 bg-gray-50">
           {children}
         </main>
       </div>

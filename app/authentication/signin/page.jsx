@@ -8,67 +8,85 @@ import axios from "axios";
 import { loginSuccess } from "@/store/slices/authSlice";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const dispatch = useDispatch();
   const router = useRouter();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await axios.post(
-        "/api/auth/login",
-        { email, password },
-        { withCredentials: true }
-      );
+  try {
+    console.log("Logging in with:", { username, password });
 
-      const user = res.data.user;
-      const role = user.role.toLowerCase();
+    const res = await axios.post(
+      "/api/auth/login",
+      { username, password },
+      { withCredentials: true }
+    );
 
-      dispatch(
-        loginSuccess({
-          userId: user._id,
-          role,
-          hasProfile: false,
-        })
-      );
+    const user = res.data.user;
+    console.log("Logged in user:", user);
 
-      if (role === "admin") {
-        router.push("/admin-dashboard");
-        return;
-      }
-
-      const profileRes = await axios.get("/api/profile/my-profile", {
-        withCredentials: true,
-      });
-
-      console.log("Profile response:", profileRes.data);
-
-      const profile = profileRes.data.data;
-      const hasProfile = !!profile;
-
-      dispatch(
-        loginSuccess({
-          userId: user._id,
-          role,
-          hasProfile,
-        })
-      );
-
-      router.push(hasProfile ? "/dashboard" : "/profile-registration");
-    } catch (err) {
-      console.error("Login error:", err);
-
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError("Invalid email or password.");
-      }
+    if (!user) {
+      setError("No user returned from login.");
+      return;
     }
-  };
+
+    const role = user.role.toLowerCase();
+    console.log("User role:", role);
+
+    dispatch(
+      loginSuccess({
+        userId: user._id,
+        role,
+        hasProfile: false,
+      })
+    );
+
+
+    if (role === "admin") {
+      console.log("Admin detected, redirecting to /sample-dashboard");
+      router.push("/sample-dashboard");
+      return;
+    }
+
+    // For regular users, fetch their profile
+    const profileRes = await axios.get("/api/profile/my-profile", {
+      withCredentials: true,
+    });
+
+    console.log("Profile response:", profileRes.data);
+
+    const profile = profileRes.data.data;
+    const hasProfile = !!profile;
+
+    console.log("Has profile:", hasProfile);
+
+    dispatch(
+      loginSuccess({
+        userId: user._id,
+        role,
+        hasProfile,
+      })
+    );
+
+    const redirectUrl = hasProfile ? "/dashboard" : "/";
+    console.log("Redirecting to:", redirectUrl);
+    router.push(redirectUrl);
+  } catch (err) {
+    console.error("Login error:", err);
+
+    if (err.response?.data?.error) {
+      setError(err.response.data.error);
+    } else {
+      setError("Invalid username or password.");
+    }
+  }
+};
+
 
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-8">
@@ -87,27 +105,35 @@ export default function LoginForm() {
 
           <form onSubmit={handleLogin} className="mt-8 space-y-6">
             <div className="space-y-4">
+              {/* Username input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email address
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Username
                 </label>
                 <div className="mt-1">
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id="username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
                     className="appearance-none block w-full px-3 py-2.5 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
               </div>
 
+              {/* Password input */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <div className="mt-1">
@@ -130,7 +156,11 @@ export default function LoginForm() {
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
                   <div className="shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -152,14 +182,17 @@ export default function LoginForm() {
               Sign in
             </button>
 
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
               <p className="text-sm">
                 Don't have an account?{" "}
-                <Link href="/authentication/signup" className="text-sm font-medium text-gray-900">
+                <Link
+                  href="/authentication/signup"
+                  className="text-sm font-medium text-gray-900"
+                >
                   Register here
                 </Link>
               </p>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>

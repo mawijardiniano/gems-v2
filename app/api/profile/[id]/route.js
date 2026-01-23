@@ -1,6 +1,8 @@
 import Profile from "@/models/profile";
+import UserAuth from "@/models/user"
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/activityLog";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -12,7 +14,7 @@ export async function GET(req, { params }) {
     );
 
   await connectDB();
-  const profile = await Profile.findById(id).lean();
+  const profile = await UserAuth.findById(id).populate("personal_info_id").lean();
   if (!profile)
     return NextResponse.json(
       { status: "error", message: "Profile not found" },
@@ -33,6 +35,7 @@ export async function PUT(req, { params }) {
 
   await connectDB();
   const body = await req.json();
+  console.log("body", body);
 
   const profile = await Profile.findById(id);
   if (!profile) {
@@ -42,54 +45,22 @@ export async function PUT(req, { params }) {
     );
   }
 
-  Object.assign(profile, body);
-
-  const newStatus = body.currentStatus || profile.currentStatus;
-  if (newStatus === "Employee") profile.affiliation.studentDetails = undefined;
-  if (newStatus === "Student") profile.affiliation.employeeDetails = undefined;
-
-  if (profile.gadData.isPWD === false) {
-    profile.gadData.disabilityDetails = undefined;
-  }
-
-  if (newStatus === "Student" && profile.affiliation.studentDetails) {
-    profile.affiliation.studentDetails.isScholar =
-      profile.affiliation.studentDetails.isScholar === true ||
-      profile.affiliation.studentDetails.isScholar === "true";
-  }
-  if (newStatus === "Employee" && profile.affiliation.employeeDetails) {
-  }
-
-  if (newStatus === "Student") {
-    const sd = profile.affiliation.studentDetails;
-    if (!sd?.course || !sd?.yearLevel || sd?.isScholar == null) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message:
-            "Student details (course, yearLevel, isScholar) are required when status is Student",
-        },
-        { status: 400 }
-      );
-    }
-  }
-
-  if (newStatus === "Employee") {
-    const ed = profile.affiliation.employeeDetails;
-    if (!ed?.department || !ed?.position || !ed?.employmentType) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message:
-            "Employee details (department, position, employmentType) are required when status is Employee",
-        },
-        { status: 400 }
-      );
-    }
-  }
-
+  profile.set(body);
   try {
     const updated = await profile.save();
+
+ const user = await UserAuth.findOne({ personal_info_id: profile._id });
+    const userId = user?._id;
+
+    if (userId) {
+      await logActivity({
+        user_id: userId,
+        action: "UPDATE_PROFILE",
+        description: "User updated their profile",
+      });
+      console.log("✅ Logged activity: UPDATE_PROFILE");
+    }
+
 
     if (global.io) {
       global.io.emit("profile:updated", updated);
@@ -108,27 +79,50 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   const { id } = await params;
-  if (!id)
+
+  if (!id) {
     return NextResponse.json(
-      { status: "error", message: "Missing profile id" },
+      { status: "error", message: "Missing user id" },
       { status: 400 }
     );
-
-  await connectDB();
-  const deleted = await Profile.findByIdAndDelete(id).lean();
-
-  if (!deleted)
-    return NextResponse.json(
-      { status: "error", message: "Profile not found" },
-      { status: 404 }
-    );
-
-  if (global.io) {
-    global.io.emit("profile:deleted", { id });
-    console.log("✅ Emitted profile:deleted", id);
-  } else {
-    console.warn("⚠️ Socket.IO server not initialized!");
   }
 
-  return NextResponse.json({ status: "success", message: "Profile deleted" });
+  try {
+    await connectDB();
+
+    const user = await UserAuth.findById(id);
+    if (!user) {
+      return NextResponse.json(
+        { status: "error", message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (user.personal_info_id) {
+      const deletedProfile = await Profile.findByIdAndDelete(user.personal_info_id);
+      if (deletedProfile) {
+        console.log("✅ Deleted linked profile:", deletedProfile._id.toString());
+      } else {
+        console.warn("⚠️ Profile not found for deletion:", user.personal_info_id.toString());
+      }
+    }
+
+    await UserAuth.findByIdAndDelete(id);
+    console.log("✅ Deleted user account:", id);
+
+    if (global.io) {
+      global.io.emit("profile:deleted", { id: user.personal_info_id?.toString() });
+    }
+
+    return NextResponse.json({
+      status: "success",
+      message: "User account and linked profile deleted",
+    });
+  } catch (error) {
+    console.error("DELETE /api/profile error:", error);
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 500 }
+    );
+  }
 }

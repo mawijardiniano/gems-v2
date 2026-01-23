@@ -8,7 +8,7 @@ export default function useProfileData() {
   const [profiles, setProfiles] = useState([]);
   const [error, setError] = useState(null);
   const [filterCampus, setFilterCampus] = useState("");
-  const [filterCollege, setFilterCollege] = useState("");
+  const [filterCollege, setFilterCollege] = useState([]);
   const [filterStatus, setFilterStatus] = useState("");
 
   const calculateAge = (birthday) => {
@@ -21,12 +21,12 @@ export default function useProfileData() {
     return age;
   };
 
-useEffect(() => {
-  axios
-    .get("/api/profile", { withCredentials: true })
-    .then((res) => setProfiles(res.data.data))
-    .catch(() => setError("Failed to fetch profiles. Please log in."));
-}, []);
+  useEffect(() => {
+    axios
+      .get("/api/profile", { withCredentials: true })
+      .then((res) => setProfiles(res.data.data))
+      .catch(() => setError("Failed to fetch profiles. Please log in."));
+  }, []);
 
   useEffect(() => {
     const socket = getSocket();
@@ -34,7 +34,9 @@ useEffect(() => {
 
     const handleNew = (profile) => setProfiles((prev) => [...prev, profile]);
     const handleUpdate = (profile) =>
-      setProfiles((prev) => prev.map((p) => (p._id === profile._id ? profile : p)));
+      setProfiles((prev) =>
+        prev.map((p) => (p._id === profile._id ? profile : p))
+      );
     const handleDelete = ({ id }) =>
       setProfiles((prev) => prev.filter((p) => p._id !== id));
 
@@ -52,21 +54,32 @@ useEffect(() => {
   const filteredProfiles = useMemo(
     () =>
       profiles.filter((p) => {
-        const campusMatch = filterCampus ? p.affiliation?.campus === filterCampus : true;
-        const collegeMatch = filterCollege ? p.affiliation?.college === filterCollege : true;
-        const statusMatch = filterStatus ? p.currentStatus === filterStatus : true;
+        const campusMatch = filterCampus
+          ? p.affiliation?.campus === filterCampus
+          : true;
+        const collegeMatch =
+          Array.isArray(filterCollege) && filterCollege.length > 0
+            ? filterCollege.includes(p.affiliation?.college)
+            : true;
+        const statusMatch = filterStatus
+          ? p.currentStatus === filterStatus
+          : true;
         return campusMatch && collegeMatch && statusMatch;
       }),
     [profiles, filterCampus, filterCollege, filterStatus]
   );
 
   const campusOptions = useMemo(
-    () => [...new Set(profiles.map((p) => p.affiliation?.campus).filter(Boolean))],
+    () => [
+      ...new Set(profiles.map((p) => p.affiliation?.campus).filter(Boolean)),
+    ],
     [profiles]
   );
 
   const collegeOptions = useMemo(
-    () => [...new Set(profiles.map((p) => p.affiliation?.college).filter(Boolean))],
+    () => [
+      ...new Set(profiles.map((p) => p.affiliation?.college).filter(Boolean)),
+    ],
     [profiles]
   );
 
@@ -116,7 +129,9 @@ useEffect(() => {
     () =>
       genders.map((g) => ({
         gender: g,
-        PWD: filteredProfiles.filter((p) => p.gadData?.sexAtBirth === g && p.gadData?.isPWD).length,
+        PWD: filteredProfiles.filter(
+          (p) => p.gadData?.sexAtBirth === g && p.gadData?.isPWD
+        ).length,
       })),
     [filteredProfiles]
   );
@@ -129,6 +144,18 @@ useEffect(() => {
           (p) => p.gadData?.sexAtBirth === g && p.gadData?.isIndigenousPerson
         ).length,
       })),
+    [filteredProfiles]
+  );
+
+  const totalPWD = useMemo(
+    () => filteredProfiles.filter((p) => p.gadData?.isPWD === true).length,
+    [filteredProfiles]
+  );
+
+  const totalIndigenous = useMemo(
+    () =>
+      filteredProfiles.filter((p) => p.gadData?.isIndigenousPerson === true)
+        .length,
     [filteredProfiles]
   );
 
@@ -149,5 +176,7 @@ useEffect(() => {
     statusData,
     pwdData,
     indigenousData,
+    totalIndigenous,
+    totalPWD,
   };
 }

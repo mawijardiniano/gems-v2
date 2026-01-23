@@ -1,18 +1,29 @@
 import { connectDB } from "@/lib/db";
 import Profile from "@/models/profile";
+import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
+
+function generateUsername(personal) {
+  return personal.person_id;
+}
+
+function generateTempPassword() {
+  return `Temp@${Math.floor(100000 + Math.random() * 900000)}`;
+}
 
 export async function GET() {
   try {
     await connectDB();
 
-    const profile = await Profile.find({}).populate("userId").lean();
+    const users = await UserAuth.find({ role: "User" })
+      .populate("personal_info_id")
+      .lean();
 
-    return Response.json({ status: "success", data: profile }, { status: 200 });
+    return NextResponse.json({ status: "success", data: users });
   } catch (error) {
-    console.error("GET /api/profile error:", error);
-    return Response.json(
-      { status: "error", message: "Internal Server Error" },
+    console.error("GET /api/users error:", error);
+    return NextResponse.json(
+      { status: "error", message: error.message },
       { status: 500 }
     );
   }
@@ -25,16 +36,39 @@ export async function POST(req) {
     const body = await req.json();
 
     const profile = await Profile.create(body);
+    const role = body.role ? body.role : "User";
+
+    const username = generateUsername(body.personal_information);
+    const tempPassword = generateTempPassword();
+
+    await UserAuth.create({
+      personal_info_id: profile._id,
+      username,
+      password: tempPassword,
+      role,
+    });
 
     if (global.io) {
       global.io.emit("profile:new", profile);
       console.log("✅ Emitted profile:new", profile._id);
     }
 
-    return NextResponse.json(profile, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        profile_id: profile._id,
+        username,
+        temporary_password: tempPassword,
+        role,
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("POST /api/profile error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 400 }
+    );
   }
 }
 
@@ -42,19 +76,25 @@ export async function DELETE() {
   try {
     await connectDB();
 
-    const result = await Profile.deleteMany({});
+    const usersToDelete = await UserAuth.find({ role: "User" }).select(
+      "personal_info_id"
+    );
+    const profileIds = usersToDelete.map((u) => u.personal_info_id);
+
+    await Profile.deleteMany({ _id: { $in: profileIds } });
+    await UserAuth.deleteMany({ role: "User" });
 
     if (global.io) {
-      global.io.emit("profile:delete");
-      console.log("✅ Emitted profile:deleted");
+      global.io.emit("profile:deleted");
+      console.log("✅ Emitted profile:deleted for User role only");
     }
 
     return NextResponse.json({
       status: "success",
-      message: `Deleted ${result.deletedCount} profiles.`,
+      message: `Deleted ${usersToDelete.length} users with role "User".`,
     });
   } catch (error) {
-    console.error("Error deleting all profiles:", error);
+    console.error("DELETE /api/profile error:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
       { status: 500 }

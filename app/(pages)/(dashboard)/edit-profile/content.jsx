@@ -50,76 +50,256 @@ export default function EditProfilePageContent({ profile }) {
     }));
   };
 
-  // const handleBirthdayChange = (value) => {
-  //   const today = new Date().toISOString().split("T")[0];
-  //   if (value > today) {
-
-  //     return;
-  //   }
-  //   handleChange("birthday", value);
-  // };
-
-  const handleAddressChange = (addressType, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      contact: {
-        ...prev.contact,
-        [addressType]: {
-          ...prev.contact[addressType],
-          [field]: value,
-        },
-      },
-    }));
-  };
-
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.personal_information.first_name?.trim())
+      newErrors["personal_information.first_name"] = "First name is required.";
 
-    // Personal Info
-    if (!formData.personal.firstName?.trim())
-      newErrors["personal.firstName"] = "First name is required.";
-    if (!formData.personal.lastName?.trim())
-      newErrors["personal.lastName"] = "Last name is required.";
-    if (!formData.personal.birthday)
-      newErrors["personal.birthday"] = "Birthday is required.";
-    if (!formData.personal.civilStatus)
-      newErrors["personal.civilStatus"] = "Civil Status is required.";
-    if (!formData.personal.nationality)
-      newErrors["personal.nationality"] = "Nationality is required.";
-    if (!formData.personal.bloodType)
-      newErrors["personal.bloodType"] = "Blood Type is required.";
+    if (!formData.personal_information.last_name?.trim())
+      newErrors["personal_information.last_name"] = "Last name is required.";
 
-    //Gad Data
-    if (formData.gadData.isPWD === true) {
-      if (!formData.gadData.disabilityDetails?.trim()) {
-        newErrors["gadData.disabilityDetails"] =
-          "Disability details are required if PWD.";
+    if (!formData.personal_information.sex?.trim())
+      newErrors["personal_information.sex"] = "Sex is required.";
+
+    if (!formData.personal_information.gender_preference?.trim())
+      newErrors["personal_information.gender_preference"] =
+        "Gender preference is required.";
+
+    if (!formData.personal_information.age_bracket?.trim())
+      newErrors["personal_information.age_bracket"] =
+        "Age bracket is required.";
+
+    if (!formData.personal_information.civil_status?.trim())
+      newErrors["personal_information.civil_status"] =
+        "Civil status is required.";
+
+    if (!formData.personal_information.religion?.trim())
+      newErrors["personal_information.religion"] = "Religion is required.";
+
+    if (!formData.personal_information.college_office?.trim())
+      newErrors["personal_information.college_office"] =
+        "College/Office is required.";
+
+    if (!formData.personal_information.employment_status?.trim())
+      newErrors["personal_information.employment_status"] =
+        "Employment status is required.";
+
+    if (!formData.personal_information.employment_appointment_status?.trim())
+      newErrors["personal_information.employment_appointment_status"] =
+        "Employment appointment status is required.";
+
+    if (formData.personal_information.solo_parent == null)
+      newErrors["personal_information.solo_parent"] =
+        "Solo parent status is required.";
+
+    if (!formData.personal_information.total_annual_family_income?.trim())
+      newErrors["personal_information.total_annual_family_income"] =
+        "Total annual family income is required.";
+
+    if (
+      !formData.personal_information.health_problems ||
+      formData.personal_information.health_problems.length === 0
+    )
+      newErrors["personal_information.health_problems"] =
+        "Health problems field is required.";
+
+    // Economic & Financial Role validation
+    if (formData.economic_financial_role.breadwinner == null)
+      newErrors["economic_financial_role.breadwinner"] =
+        "Breadwinner status is required.";
+
+    if (
+      !formData.economic_financial_role.income_sources ||
+      formData.economic_financial_role.income_sources.length === 0
+    )
+      newErrors["economic_financial_role.income_sources"] =
+        "At least one income source is required.";
+
+    if (formData.economic_financial_role.cultural_barrier_work == null)
+      newErrors["economic_financial_role.cultural_barrier_work"] =
+        "Cultural barrier work field is required.";
+
+    if (formData.economic_financial_role.manage_financial_resources == null)
+      newErrors["economic_financial_role.manage_financial_resources"] =
+        "Manage financial resources field is required.";
+
+    if (
+      formData.economic_financial_role.participate_financial_decisions == null
+    )
+      newErrors["economic_financial_role.participate_financial_decisions"] =
+        "Participate in financial decisions field is required.";
+
+    // Reproductive & Family Role validation
+    if (!formData.reproductive_family_role.childbearing_stage?.trim())
+      newErrors["reproductive_family_role.childbearing_stage"] =
+        "Childbearing stage is required.";
+
+    if (!formData.reproductive_family_role.child_rearing_stage?.trim())
+      newErrors["reproductive_family_role.child_rearing_stage"] =
+        "Child rearing stage is required.";
+
+    if (!formData.reproductive_family_role.family_planning?.trim())
+      newErrors["reproductive_family_role.family_planning"] =
+        "Family planning field is required.";
+
+    if (!formData.reproductive_family_role.spouse_share_childcare?.trim())
+      newErrors["reproductive_family_role.spouse_share_childcare"] =
+        "Spouse share childcare field is required.";
+
+    if (!formData.reproductive_family_role.attend_school_needs?.trim())
+      newErrors["reproductive_family_role.attend_school_needs"] =
+        "Attend school needs field is required.";
+
+    if (!formData.reproductive_family_role.childcare_responsibility?.trim())
+      newErrors["reproductive_family_role.childcare_responsibility"] =
+        "Childcare responsibility is required.";
+
+    // Household Managing Role
+    if (!formData.household_managing_role.spouse_participate_household?.trim())
+      newErrors["household_managing_role.spouse_participate_household"] =
+        "Spouse participation is required.";
+
+    if (formData.household_managing_role.family_participate_household == null)
+      newErrors["household_managing_role.family_participate_household"] =
+        "Family participation is required.";
+
+    if (formData.household_managing_role.decision_manage_household == null)
+      newErrors["household_managing_role.decision_manage_household"] =
+        "Decision manage household is required.";
+
+    if (
+      !formData.household_managing_role.household_decision_explanation?.trim()
+    )
+      newErrors["household_managing_role.household_decision_explanation"] =
+        "Household decision explanation is required.";
+
+    // Community Involvement
+    if (formData.community_involvement.community_involvement == null)
+      newErrors["community_involvement.community_involvement"] =
+        "Community involvement is required.";
+
+    if (formData.community_involvement.exercise_right_to_vote == null)
+      newErrors["community_involvement.exercise_right_to_vote"] =
+        "Exercise right to vote is required.";
+
+    if (!formData.community_involvement.spouse_different_religion?.trim())
+      newErrors["community_involvement.spouse_different_religion"] =
+        "Spouse different religion field is required.";
+
+    if (!formData.community_involvement.spouse_cultural_difference?.trim())
+      newErrors["community_involvement.spouse_cultural_difference"] =
+        "Spouse cultural difference field is required.";
+
+    // Housing Work-Life Balance
+    if (
+      formData.social_development.housing_work_life_balance
+        .house_property_owned == null
+    )
+      newErrors[
+        "social_development.housing_work_life_balance.house_property_owned"
+      ] = "House property owned is required.";
+
+    if (
+      !formData.social_development.housing_work_life_balance.job_hinder_parent_role?.trim()
+    )
+      newErrors[
+        "social_development.housing_work_life_balance.job_hinder_parent_role"
+      ] = "Job hinder parent role is required.";
+
+    if (
+      !formData.social_development.housing_work_life_balance.working_parent_hindrance_career?.trim()
+    )
+      newErrors[
+        "social_development.housing_work_life_balance.working_parent_hindrance_career"
+      ] = "Working parent hindrance career is required.";
+
+    if (
+      formData.social_development.housing_work_life_balance.enough_rest == null
+    )
+      newErrors["social_development.housing_work_life_balance.enough_rest"] =
+        "Enough rest is required.";
+
+    if (
+      formData.social_development.housing_work_life_balance.manage_stress ==
+      null
+    )
+      newErrors["social_development.housing_work_life_balance.manage_stress"] =
+        "Manage stress field is required.";
+
+    Object.entries(
+      formData.social_development.personal_development_empowerment
+    ).forEach(([key, value]) => {
+      if (value == null)
+        newErrors[
+          `social_development.personal_development_empowerment.${key}`
+        ] = `${key.replace(/_/g, " ")} is required.`;
+    });
+
+    Object.entries(formData.social_development.awareness).forEach(
+      ([key, value]) => {
+        if (!value?.trim())
+          newErrors[
+            `social_development.awareness.${key}`
+          ] = `${key} awareness is required.`;
       }
-    }
+    );
 
-    // Contact Info
-    if (!formData.contact.email?.trim())
-      newErrors["contact.email"] = "Email is required.";
-    if (!formData.contact.mobileNumber?.trim())
-      newErrors["contact.mobileNumber"] = "Mobile number is required.";
+    Object.entries(
+      formData.social_development.observed_in_university_or_community
+    ).forEach(([key, value]) => {
+      if (!value?.trim())
+        newErrors[
+          `social_development.observed_in_university_or_community.${key}`
+        ] = `${key} observation is required.`;
+    });
 
-    // University Affiliation
-    if (!formData.affiliation.campus?.trim())
-      newErrors["affiliation.campus"] = "Campus is required.";
-    if (!formData.affiliation.college?.trim())
-      newErrors["affiliation.college"] = "College is required.";
+    if (!formData.social_development.other_training_needs?.length)
+      newErrors["social_development.other_training_needs"] =
+        "Please specify other training needs or 'None'.";
 
-    if (currentStatus === "Student") {
-      if (!formData.affiliation.studentDetails?.course?.trim())
-        newErrors["affiliation.studentDetails.course"] =
-          "Course is required for students.";
-    }
+    Object.entries(formData.environmental_climate).forEach(([key, value]) => {
+      if (value == null || value === "")
+        newErrors[`environmental_climate.${key}`] = `${key.replace(
+          /_/g,
+          " "
+        )} is required.`;
+    });
 
-    if (currentStatus === "Employee") {
-      if (!formData.affiliation.employeeDetails?.position?.trim())
-        newErrors["affiliation.employeeDetails.position"] =
-          "Position is required for employees.";
-    }
+    Object.entries(formData.gender_responsive).forEach(([key, value]) => {
+      if (value == null || value === "")
+        newErrors[`gender_responsive.${key}`] = `${key.replace(
+          /_/g,
+          " "
+        )} is required.`;
+    });
+
+    Object.entries(formData.security_peace.gender_based_experiences).forEach(
+      ([key, value]) => {
+        if (!value?.trim())
+          newErrors[
+            `security_peace.gender_based_experiences.${key}`
+          ] = `${key.replace(/_/g, " ")} is required.`;
+      }
+    );
+
+    Object.entries(formData.security_peace.other_experiences).forEach(
+      ([key, value]) => {
+        if (!value?.trim())
+          newErrors[`security_peace.other_experiences.${key}`] = `${key.replace(
+            /_/g,
+            " "
+          )} is required.`;
+      }
+    );
+
+    Object.entries(formData.security_peace.vaw_services_awareness).forEach(
+      ([key, value]) => {
+        if (!value?.trim())
+          newErrors[
+            `security_peace.vaw_services_awareness.${key}`
+          ] = `${key.replace(/_/g, " ")} is required.`;
+      }
+    );
 
     return newErrors;
   };
@@ -137,6 +317,7 @@ export default function EditProfilePageContent({ profile }) {
     }
     try {
       const userId = formData._id;
+      console.log("UserId", userId);
       if (!userId) throw new Error("User ID not found");
 
       setIsUpdating(true);
@@ -196,22 +377,26 @@ export default function EditProfilePageContent({ profile }) {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <div className="shadow-sm bg-white px-6 py-6 rounded-md">
-          <h1 className="text-xl font-medium pb-4">Personal Info</h1>
-          <div className="grid grid-cols-2 gap-2 space-y-4">
+          <h1 className="text-xl font-medium pb-4">Personal Information</h1>
+          <div className="grid grid-cols-2 gap-2 space-y-1">
             <div>
               <label className="text-gray-500 font-medium">First Name</label>
               <input
                 className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.firstName}
+                value={formData.personal_information.first_name || ""}
                 onChange={(e) =>
-                  handleChange("personal", "firstName", e.target.value)
+                  handleChange(
+                    "personal_information",
+                    "first_name",
+                    e.target.value
+                  )
                 }
               />
-              {errors["personal.firstName"] && (
+              {errors["personal_information.first_name"] && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.firstName"]}
+                  {errors["personal_information.first_name"]}
                 </p>
               )}
             </div>
@@ -220,59 +405,94 @@ export default function EditProfilePageContent({ profile }) {
               <label className="text-gray-500 font-medium">Last Name</label>
               <input
                 className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.lastName}
+                value={formData.personal_information.last_name || ""}
                 onChange={(e) =>
-                  handleChange("personal", "lastName", e.target.value)
+                  handleChange(
+                    "personal_information",
+                    "last_name",
+                    e.target.value
+                  )
                 }
               />
-              {errors["personal.lastName"] && (
+              {errors["personal_information.last_name"] && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.lastName"]}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="text-gray-500 font-medium">Middle Name</label>
-              <input
-                className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.middleName}
-                onChange={(e) =>
-                  handleChange("personal", "middleName", e.target.value)
-                }
-              />
-              {errors["personal.middleName"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.middleName"]}
+                  {errors["personal_information.last_name"]}
                 </p>
               )}
             </div>
 
+            {/* Sex */}
+            <div>
+              <label className="text-gray-500 font-medium">Sex</label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={formData.personal_information.sex || ""}
+                onChange={(e) =>
+                  handleChange("personal_information", "sex", e.target.value)
+                }
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            {/* Gender Preference */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Gender Preference
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={formData.personal_information.gender_preference || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "gender_preference",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="Heterosexual Male">Heterosexual Male</option>
+                <option value="Heterosexual Female">Heterosexual Female</option>
+                <option value="Gay">Gay</option>
+                <option value="Lesbian">Lesbian</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
 
             <div>
-              <label className="text-gray-500 font-medium">Birthday</label>
-              <input
-                type="date"
+              <label className="text-gray-500 font-medium">Age Bracket</label>
+
+              <select
                 className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.birthday?.substring(0, 10) || ""}
+                value={formData.personal_information.age_bracket || ""}
                 onChange={(e) =>
-                  handleChange("personal", "birthday", e.target.value)
+                  handleChange(
+                    "personal_information",
+                    "age_bracket",
+                    e.target.value
+                  )
                 }
-                max={new Date().toISOString().split("T")[0]}
-              />
-              {errors["personal.birthday"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.birthday"]}
-                </p>
-              )}
+              >
+                <option value="18-30">18-30</option>
+                <option value="31-40">31-40</option>
+                <option value="41-50">41-50</option>
+                <option value="51-60">51-60</option>
+                <option value="61 and above">61 and above</option>
+              </select>
             </div>
 
             <div>
               <label className="text-gray-500 font-medium">Civil Status</label>
               <select
                 className="border border-gray-300 p-2 rounded w-full"
-                value={formData.personal.civilStatus}
+                value={formData.personal_information.civil_status || ""}
                 onChange={(e) =>
-                  handleChange("personal", "civilStatus", e.target.value)
+                  handleChange(
+                    "personal_information",
+                    "civil_status",
+                    e.target.value
+                  )
                 }
               >
                 <option value="Single">Single</option>
@@ -281,193 +501,124 @@ export default function EditProfilePageContent({ profile }) {
                 <option value="Separated">Separated</option>
                 <option value="Divorced">Divorced</option>
               </select>
-              {errors["personal.civilStatus"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.civilStatus"]}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">Nationality</label>
-              <input
-                className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.nationality}
-                onChange={(e) =>
-                  handleChange("personal", "nationality", e.target.value)
-                }
-              />
-              {errors["personal.nationality"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.nationality"]}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">Blood Type</label>
-              <select
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.personal.bloodType}
-                onChange={(e) =>
-                  handleChange("personal", "bloodType", e.target.value)
-                }
-              >
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-              {errors["personal.bloodType"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.bloodType"]}
-                </p>
-              )}
             </div>
 
             <div>
               <label className="text-gray-500 font-medium">Religion</label>
               <input
                 className="border border-gray-300 rounded p-2 w-full"
-                value={formData.personal.religion}
-                onChange={(e) =>
-                  handleChange("personal", "religion", e.target.value)
-                }
-              />
-              {errors["personal.religion"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["personal.religion"]}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Gender & Equity Data */}
-        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
-          <h1 className="text-xl font-medium pb-4">Gender & Equity Data</h1>
-          <div className="grid grid-cols-2 gap-2 space-y-4">
-            <div>
-              <label className="text-gray-500 font-medium">Sex At Birth</label>
-              <select
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.sexAtBirth || ""}
-                onChange={(e) =>
-                  handleChange("gadData", "sexAtBirth", e.target.value)
-                }
-              >
-                <option value="Female">Female</option>
-                <option value="Male">Male</option>
-                <option value="Intersex">Intersex</option>
-                <option value="Prefer not to disclose">
-                  Prefer not to disclose
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                Gender Identity
-              </label>
-              <input
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.genderIdentity || ""}
-                onChange={(e) =>
-                  handleChange("gadData", "genderIdentity", e.target.value)
-                }
-              />
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                Gender Expression
-              </label>
-              <input
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.genderExpression || ""}
-                onChange={(e) =>
-                  handleChange("gadData", "genderExpression", e.target.value)
-                }
-              />
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                Sexual Orientation
-              </label>
-              <select
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.sexualOrientation}
-                onChange={(e) =>
-                  handleChange("gadData", "sexualOrientation", e.target.value)
-                }
-              >
-                <option value="Heterosexual">Heterosexual</option>
-                <option value="Homosexual">Homosexual</option>
-                <option value="Bisexual">Bisexual</option>
-                <option value="Pansexual">Pansexual</option>
-                <option value="Asexual">Asexual</option>
-                <option value="Aromantic">Aromantic</option>
-                <option value="Demisexual">Demisexual</option>
-                <option value="Queer">Queer</option>
-                <option value="Prefer not to disclose">
-                  Prefer not to disclose
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                Person with Disability
-              </label>
-              <select
-                className="border border-gray-300 p-2 rounded w-full"
-                value={String(formData.gadData.isPWD)}
-                onChange={(e) =>
-                  handleChange("gadData", "isPWD", e.target.value === "true")
-                }
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            {formData.gadData.isPWD === true && (
-              <div className="col-span-2">
-                <label className="text-gray-500 font-medium">
-                  Disability Details
-                </label>
-                <input
-                  className="border border-gray-300 p-2 rounded w-full"
-                  value={formData.gadData.disabilityDetails || ""}
-                  onChange={(e) =>
-                    handleChange("gadData", "disabilityDetails", e.target.value)
-                  }
-                  placeholder="Specify disability"
-                />
-                {errors["gadData.disabilityDetails"] && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors["gadData.disabilityDetails"]}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                Indigenous Person
-              </label>
-              <select
-                className="border border-gray-300 p-2 rounded w-full"
-                value={String(formData.gadData.isIndigenousPerson)}
+                value={formData.personal_information.religion || ""}
                 onChange={(e) =>
                   handleChange(
-                    "gadData",
-                    "isIndigenousPerson",
+                    "personal_information",
+                    "religion",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                College Office
+              </label>
+
+              <select
+                className="border border-gray-300 rounded p-2 w-full"
+                value={formData.personal_information.college_office || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "college_office",
+                    e.target.value
+                  )
+                }
+              >
+                <option>Graduate School</option>
+                <option>College of Agriculture</option>
+                <option>College of Allied Health Sciences</option>
+                <option>College of Arts & Social Sciences</option>
+                <option>College of Business & Accountancy</option>
+                <option>College of Criminal Justice Education</option>
+                <option>College of Education</option>
+                <option>College of Engineering</option>
+                <option>College of Environmental Studies</option>
+                <option>College of Fisheries & Aquatic Sciences</option>
+                <option>College of Governance</option>
+                <option>College of Industrial Technology</option>
+                <option>College of Information & Computing Sciences</option>
+                <option>
+                  Offices under the Office of the University President
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Academic
+                  Affairs
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for
+                  Administration and Finance
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Research
+                  and Extension
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Student
+                  Affairs and Services
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Employment Status
+              </label>
+
+              <select
+                className="border border-gray-300 rounded p-2 w-full"
+                value={formData.personal_information.employment_status || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "employment_status",
+                    e.target.value
+                  )
+                }
+              >
+                <option>Faculty</option>
+                <option>Non-teaching Personnel</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Employment Appointment Status
+              </label>
+              <input
+                className="border border-gray-300 rounded p-2 w-full"
+                value={
+                  formData.personal_information.employment_appointment_status ||
+                  ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "employment_appointment_status",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">Solo Parent</label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(formData.personal_information.solo_parent)}
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "solo_parent",
                     e.target.value === "true"
                   )
                 }
@@ -479,332 +630,1158 @@ export default function EditProfilePageContent({ profile }) {
 
             <div>
               <label className="text-gray-500 font-medium">
-                Socio Economic Status
+                Total Annual Family Income
+              </label>
+
+              <select
+                className="border border-gray-300 rounded p-2 w-full"
+                value={
+                  formData.personal_information.total_annual_family_income || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "total_annual_family_income",
+                    e.target.value
+                  )
+                }
+              >
+                <option>₱1,000.00 - ₱50,000.00</option>
+                <option>₱51,000.00 - ₱100,000.00</option>
+                <option>₱101,000.00 - ₱200,000.00</option>
+                <option>₱201,000.00 - ₱300,000.00</option>
+                <option>₱301,000.00 - ₱400,000.00</option>
+                <option>₱401,000.00 - ₱500,000.00</option>
+                <option>₱501,000.00 and above</option>
+              </select>
+            </div>
+
+            <div className="col-span-2">
+              <label className="text-gray-500 font-medium">
+                Health Problems
+              </label>
+              <input
+                className="border border-gray-300 rounded p-2 w-full"
+                value={
+                  formData.personal_information.health_problems?.join(", ") ||
+                  ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "personal_information",
+                    "health_problems",
+                    e.target.value.split(",").map((v) => v.trim())
+                  )
+                }
+                placeholder="Separate multiple health problems with commas"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
+          <h1 className="text-xl font-medium pb-4">
+            Economic & Financial Role
+          </h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-gray-500 font-medium">Breadwinner</label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={formData.economic_financial_role.breadwinner}
+                onChange={(e) =>
+                  handleChange(
+                    "economic_financial_role",
+                    "breadwinner",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Income Sources
+              </label>
+              <input
+                type="text"
+                className="border border-gray-300 p-2 rounded w-full"
+                value={formData.economic_financial_role.income_sources.join(
+                  ", "
+                )}
+                onChange={(e) =>
+                  handleChange(
+                    "economic_financial_role",
+                    "income_sources",
+                    e.target.value.split(",").map((s) => s.trim())
+                  )
+                }
+                placeholder="Comma separated, e.g., Salary, Passive Income"
+              />
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Cultural Barrier Work
               </label>
               <select
                 className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.socioEconomicStatus || ""}
+                value={formData.economic_financial_role.cultural_barrier_work}
                 onChange={(e) =>
-                  handleChange("gadData", "socioEconomicStatus", e.target.value)
+                  handleChange(
+                    "economic_financial_role",
+                    "cultural_barrier_work",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Manage Financial Resources
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.economic_financial_role.manage_financial_resources
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "economic_financial_role",
+                    "manage_financial_resources",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Participate in Financial Decisions
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.economic_financial_role
+                    .participate_financial_decisions
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "economic_financial_role",
+                    "participate_financial_decisions",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/*Reproductive */}
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
+          <h1 className="text-xl font-medium pb-4">
+            Reproductive & Family Role
+          </h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Childbearing Stage */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Childbearing Stage
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.reproductive_family_role.childbearing_stage || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "reproductive_family_role",
+                    "childbearing_stage",
+                    e.target.value
+                  )
                 }
               >
                 <option value="">Select</option>
-                <option value="Low Income">Low Income</option>
-                <option value="Middle Income">Middle Income</option>
-                <option value="High Income">High Income</option>
-                <option value="Prefer not to disclose">
-                  Prefer not to disclose
-                </option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
               </select>
+              {errors["reproductive_family_role.childbearing_stage"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.childbearing_stage"]}
+                </p>
+              )}
             </div>
 
+            {/* Child Rearing Stage */}
             <div>
               <label className="text-gray-500 font-medium">
-                Head of Household
-              </label>
-              <input
-                className="border border-gray-300 p-2 rounded w-full"
-                value={formData.gadData.headOfHousehold || ""}
-                onChange={(e) =>
-                  handleChange("gadData", "headOfHousehold", e.target.value)
-                }
-                placeholder="e.g., Self, Spouse, Parent"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
-          <h1 className="text-xl font-medium pb-4">University Affiliation</h1>
-
-          <div className="grid grid-cols-2 gap-2 space-y-4">
-            <div>
-              <label className="text-gray-500 font-medium">Campus</label>
-              <input
-                type="text"
-                className="border border-gray-300 p-2 w-full rounded"
-                value={formData.affiliation.campus || ""}
-                onChange={(e) =>
-                  handleChange("affiliation", "campus", e.target.value)
-                }
-              />
-            </div>
-
-            <div>
-              <label className="text-gray-500 font-medium">
-                College/Office
+                Child Rearing Stage
               </label>
               <select
-                className="border border-gray-300 p-2 w-full rounded"
-                value={formData.affiliation.college || ""}
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.reproductive_family_role.child_rearing_stage || ""
+                }
                 onChange={(e) =>
-                  handleChange("affiliation", "college", e.target.value)
+                  handleChange(
+                    "reproductive_family_role",
+                    "child_rearing_stage",
+                    e.target.value
+                  )
                 }
               >
-                <option value="Graduate School">Graduate School</option>
-                <option value="College of Agriculture">
-                  College of Agriculture
-                </option>
-                <option value="College of Allied Health Sciences">
-                  College of Allied Health Sciences
-                </option>
-                <option value="College of Arts & Social Sciences">
-                  College of Arts & Social Sciences
-                </option>
-                <option value="College of Business & Accountancy">
-                  College of Business & Accountancy
-                </option>
-                <option value="College of Criminal Justice Education">
-                  College of Criminal Justice Education
-                </option>
-                <option value="College of Education">
-                  College of Education
-                </option>
-                <option value="College of Engineering">
-                  College of Engineering
-                </option>
-                <option value="College of Environmental Studies">
-                  College of Environmental Studies
-                </option>
-                <option value="College of Fisheries & Aquatic Sciences">
-                  College of Fisheries & Aquatic Sciences
-                </option>
-                <option value="College of Governance">
-                  College of Governance
-                </option>
-                <option value="College of Industrial Technology">
-                  College of Industrial Technology
-                </option>
-                <option value="College of Information & Computing Sciences">
-                  College of Information & Computing Sciences
-                </option>
-                <option value="Offices under the Office of the University President">
-                  Offices under the Office of the University President
-                </option>
-                <option value="Offices under the Office of the Vice President for Academic Affairs">
-                  Offices under the Office of the Vice President for Academic
-                  Affairs
-                </option>
-                <option value="Offices under the Office of the Vice President for Administration and Finance">
-                  Offices under the Office of the Vice President for
-                  Administration and Finance
-                </option>
-                <option value="Offices under the Office of the Vice President for Research and Extension">
-                  Offices under the Office of the Vice President for Research
-                  and Extension
-                </option>
-                <option value="Offices under the Office of the Vice President for Student Affairs and Services">
-                  Offices under the Office of the Vice President for Student
-                  Affairs and Services
-                </option>
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["reproductive_family_role.child_rearing_stage"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.child_rearing_stage"]}
+                </p>
+              )}
+            </div>
+
+            {/* Family Planning */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Family Planning
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={formData.reproductive_family_role.family_planning || ""}
+                onChange={(e) =>
+                  handleChange(
+                    "reproductive_family_role",
+                    "family_planning",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["reproductive_family_role.family_planning"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.family_planning"]}
+                </p>
+              )}
+            </div>
+
+            {/* Spouse Share Childcare */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Spouse Share Childcare
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.reproductive_family_role.spouse_share_childcare || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "reproductive_family_role",
+                    "spouse_share_childcare",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["reproductive_family_role.spouse_share_childcare"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.spouse_share_childcare"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Attend School Needs
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.reproductive_family_role.attend_school_needs || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "reproductive_family_role",
+                    "attend_school_needs",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["reproductive_family_role.attend_school_needs"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.attend_school_needs"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Childcare Responsibility
+              </label>
+              <input
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.reproductive_family_role.childcare_responsibility ||
+                  ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "reproductive_family_role",
+                    "childcare_responsibility",
+                    e.target.value
+                  )
+                }
+              />
+
+              {errors["reproductive_family_role.childcare_responsibility"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["reproductive_family_role.childcare_responsibility"]}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
+          <h1 className="text-xl font-medium pb-4">Household Managing Role</h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Spouse Participate Household */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Spouse Participate Household
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.household_managing_role
+                    .spouse_participate_household || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "household_managing_role",
+                    "spouse_participate_household",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors[
+                "household_managing_role.spouse_participate_household"
+              ] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {
+                    errors[
+                      "household_managing_role.spouse_participate_household"
+                    ]
+                  }
+                </p>
+              )}
+            </div>
+
+            {/* Family Participate Household */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Family Participate Household
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.household_managing_role.family_participate_household
+                )}
+                onChange={(e) =>
+                  handleChange(
+                    "household_managing_role",
+                    "family_participate_household",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              {errors[
+                "household_managing_role.family_participate_household"
+              ] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {
+                    errors[
+                      "household_managing_role.family_participate_household"
+                    ]
+                  }
+                </p>
+              )}
+            </div>
+
+            {/* Decision Manage Household */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Decision Manage Household
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.household_managing_role.decision_manage_household
+                )}
+                onChange={(e) =>
+                  handleChange(
+                    "household_managing_role",
+                    "decision_manage_household",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              {errors["household_managing_role.decision_manage_household"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["household_managing_role.decision_manage_household"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">
+                Household Decision Explanation
+              </label>
+              <input
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.household_managing_role
+                    .household_decision_explanation || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "household_managing_role",
+                    "household_decision_explanation",
+                    e.target.value
+                  )
+                }
+              />
+              {errors[
+                "household_managing_role.household_decision_explanation"
+              ] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {
+                    errors[
+                      "household_managing_role.household_decision_explanation"
+                    ]
+                  }
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md mt-6">
+          <h1 className="text-xl font-medium pb-4">Community Involvement</h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Community Involvement */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Community Involvement
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.community_involvement.community_involvement
+                )}
+                onChange={(e) =>
+                  handleChange(
+                    "community_involvement",
+                    "community_involvement",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              {errors["community_involvement.community_involvement"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["community_involvement.community_involvement"]}
+                </p>
+              )}
+            </div>
+
+            {/* Exercise Right To Vote */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Exercise Right To Vote
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.community_involvement.exercise_right_to_vote
+                )}
+                onChange={(e) =>
+                  handleChange(
+                    "community_involvement",
+                    "exercise_right_to_vote",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              {errors["community_involvement.exercise_right_to_vote"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["community_involvement.exercise_right_to_vote"]}
+                </p>
+              )}
+            </div>
+
+            {/* Spouse Different Religion */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Spouse Different Religion
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.community_involvement.spouse_different_religion || ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "community_involvement",
+                    "spouse_different_religion",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["community_involvement.spouse_different_religion"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["community_involvement.spouse_different_religion"]}
+                </p>
+              )}
+            </div>
+
+            {/* Spouse Cultural Difference */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Spouse Cultural Difference
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.community_involvement.spouse_cultural_difference ||
+                  ""
+                }
+                onChange={(e) =>
+                  handleChange(
+                    "community_involvement",
+                    "spouse_cultural_difference",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+              {errors["community_involvement.spouse_cultural_difference"] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors["community_involvement.spouse_cultural_difference"]}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md mt-6">
+          <h1 className="text-xl font-medium pb-4">
+            Social Development - Housing & Work-Life Balance
+          </h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-gray-500 font-medium">
+                House Property Owned
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.housing_work_life_balance
+                    .house_property_owned ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "housing_work_life_balance",
+                    "house_property_owned",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            {/* Job Hinder Parent Role */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Job Hinder Parent Role
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.social_development.housing_work_life_balance
+                    .job_hinder_parent_role ?? ""
+                }
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "housing_work_life_balance",
+                    "job_hinder_parent_role",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+            </div>
+
+            {/* Working Parent Hindrance Career */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Working Parent Hindrance Career
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={
+                  formData.social_development.housing_work_life_balance
+                    .working_parent_hindrance_career ?? ""
+                }
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "housing_work_life_balance",
+                    "working_parent_hindrance_career",
+                    e.target.value
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="N/A">N/A</option>
+              </select>
+            </div>
+
+            {/* Enough Rest */}
+            <div>
+              <label className="text-gray-500 font-medium">Enough Rest</label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.housing_work_life_balance
+                    .enough_rest ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "housing_work_life_balance",
+                    "enough_rest",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-gray-500 font-medium">Manage Stress</label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.housing_work_life_balance
+                    .manage_stress ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "housing_work_life_balance",
+                    "manage_stress",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            {formData.social_development.housing_work_life_balance
+              .manage_stress && (
+              <div>
+                <label className="text-gray-500 font-medium">
+                  Stress Management Methods
+                </label>
+                <input
+                  className="border border-gray-300 p-2 rounded w-full"
+                  value={
+                    formData.social_development.housing_work_life_balance
+                      .stress_management_methods || ""
+                  }
+                  onChange={(e) =>
+                    handleNestedChange(
+                      "social_development",
+                      "housing_work_life_balance",
+                      "stress_management_methods",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Describe your stress management methods"
+                />
+              </div>
+            )}
+          </div>
+
+          <h1 className="text-xl font-medium pb-4 mt-6">
+            Social Development - Personal Development & Empowerment
+          </h1>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Undertake Empowerment Activities */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Undertake Empowerment Activities
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.personal_development_empowerment
+                    .undertake_empowerment_activities ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "personal_development_empowerment",
+                    "undertake_empowerment_activities",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            {/* Home Environment Growth */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Home Environment Growth
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.personal_development_empowerment
+                    .home_environment_growth ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "personal_development_empowerment",
+                    "home_environment_growth",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            {/* Community Environment Growth */}
+            <div>
+              <label className="text-gray-500 font-medium">
+                Community Environment Growth
+              </label>
+              <select
+                className="border border-gray-300 p-2 rounded w-full"
+                value={String(
+                  formData.social_development.personal_development_empowerment
+                    .community_environment_growth ?? ""
+                )}
+                onChange={(e) =>
+                  handleNestedChange(
+                    "social_development",
+                    "personal_development_empowerment",
+                    "community_environment_growth",
+                    e.target.value === "true"
+                  )
+                }
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
               </select>
             </div>
           </div>
 
-          {currentStatus === "Employee" && (
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <div>
-                <label className="text-gray-500 font-medium">Department</label>
-                <input
-                  type="text"
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={formData.affiliation.employeeDetails?.department || ""}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "employeeDetails",
-                      "department",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-gray-500 font-medium">Position</label>
-                <input
-                  type="text"
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={formData.affiliation.employeeDetails?.position || ""}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "employeeDetails",
-                      "position",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-gray-500 font-medium">
-                  Employment Type
-                </label>
-                <select
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={
-                    formData.affiliation.employeeDetails?.employmentType || ""
-                  }
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "employeeDetails",
-                      "employmentType",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="">Select Type</option>
-                  <option value="Faculty">Permanent</option>
-                  <option value="Non-teaching-Personnel">Contractual</option>
-                </select>
-              </div>
+          <div>
+            <h1 className="text-xl font-medium pb-4">Awareness of RA Acts</h1>
+            <div className="grid grid-cols-2 gap-2 space-y-1">
+              {Object.keys(formData.social_development.awareness).map((ra) => (
+                <div key={ra}>
+                  <label className="text-gray-500 font-medium">
+                    {ra.replace("_", " ")}
+                  </label>
+                  <select
+                    className="border border-gray-300 p-2 rounded w-full"
+                    value={formData.social_development.awareness[ra]}
+                    onChange={(e) =>
+                      handleNestedChange(
+                        "social_development",
+                        "awareness",
+                        ra,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <option value="Not Sure">Not Sure</option>
+                  </select>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
-          {currentStatus === "Student" && (
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <div>
-                <label className="text-gray-500 font-medium">Course</label>
-                <input
-                  type="text"
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={formData.affiliation.studentDetails?.course || ""}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "studentDetails",
-                      "course",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="text-gray-500 font-medium">Year Level</label>
-                <select
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={formData.affiliation.studentDetails?.yearLevel || ""}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "studentDetails",
-                      "yearLevel",
-                      Number(e.target.value)
-                    )
-                  }
-                >
-                  <option value="">Select Year</option>
-                  <option value={1}>1st Year</option>
-                  <option value={2}>2nd Year</option>
-                  <option value={3}>3rd Year</option>
-                  <option value={4}>4th Year</option>
-                  <option value={5}>5th Year</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-gray-500 font-medium">Scholar?</label>
-                <select
-                  className="border border-gray-300 p-2 w-full rounded"
-                  value={String(formData.affiliation.studentDetails?.isScholar)}
-                  onChange={(e) =>
-                    handleNestedChange(
-                      "affiliation",
-                      "studentDetails",
-                      "isScholar",
-                      e.target.value === "true"
-                    )
-                  }
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
+          <div>
+            <h1 className="text-xl font-medium pb-4">
+              Observed in University/Community
+            </h1>
+            <div className="grid grid-cols-2 gap-2 space-y-1">
+              {Object.keys(
+                formData.social_development.observed_in_university_or_community
+              ).map((ra) => (
+                <div key={ra}>
+                  <label className="text-gray-500 font-medium">
+                    {ra.replace("_", " ")}
+                  </label>
+                  <select
+                    className="border border-gray-300 p-2 rounded w-full"
+                    value={
+                      formData.social_development
+                        .observed_in_university_or_community[ra]
+                    }
+                    onChange={(e) =>
+                      handleNestedChange(
+                        "social_development",
+                        "observed_in_university_or_community",
+                        ra,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <option value="Not Sure">Not Sure</option>
+                  </select>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+
+          <div>
+            <h1 className="text-xl font-medium pb-4">Other Training Needs</h1>
+            {formData.social_development.other_training_needs.map(
+              (item, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    className="border border-gray-300 p-2 rounded w-full"
+                    value={item}
+                    onChange={(e) => {
+                      const updated = [
+                        ...formData.social_development.other_training_needs,
+                      ];
+                      updated[index] = e.target.value;
+                      handleNestedChange(
+                        "social_development",
+                        "other_training_needs",
+                        null,
+                        updated
+                      );
+                    }}
+                  />
+                </div>
+              )
+            )}
+          </div>
         </div>
 
-        <div className="shadow-sm bg-white px-6 py-6 rounded-md">
-          <h1 className="text-xl font-medium pb-4 col-span-2">Contact Info</h1>
+        <div className="grid grid-cols-2 gap-2 space-y-1">
+          {[
+            "environmental_protection",
+            "disaster_reduction",
+            "disaster_knowledge_personal",
+            "disaster_knowledge_family",
+            "disaster_knowledge_officemates",
+            "fire_drill",
+            "earthquake_drill",
+            "trained_marshals",
+            "emergency_equipment_home",
+            "emergency_equipment_office",
+          ].map((key) => {
+            const isBoolean =
+              typeof formData.environmental_climate[key] === "boolean";
 
-          <div className="grid grid-cols-2 gap-2 space-y-4">
-            <div>
-              <label className="text-gray-500 font-medium">Email</label>
-              <input
-                type="email"
-                className="border border-gray-300 p-2 rounded w-full"
-                placeholder="Enter email"
-                value={formData.contact.email || ""}
-                onChange={(e) =>
-                  handleChange("contact", "email", e.target.value)
-                }
-              />
-            </div>
+            return (
+              <div key={key}>
+                <label className="text-gray-500 font-medium">
+                  {key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </label>
 
-            <div>
-              <label className="text-gray-500 font-medium">Mobile Number</label>
-              <input
-                type="text"
-                className="border border-gray-300 p-2 rounded w-full"
-                placeholder="Enter mobile number"
-                value={formData.contact.mobileNumber || ""}
-                onChange={(e) =>
-                  handleChange("contact", "mobileNumber", e.target.value)
-                }
-              />
+                <select
+                  className="border border-gray-300 p-2 rounded w-full"
+                  value={String(formData.environmental_climate[key] ?? "")}
+                  onChange={(e) => {
+                    const value = isBoolean
+                      ? e.target.value === "true"
+                      : e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      environmental_climate: {
+                        ...prev.environmental_climate,
+                        [key]: value,
+                      },
+                    }));
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      [`environmental_climate.${key}`]: "",
+                    }));
+                  }}
+                >
+                  {isBoolean ? (
+                    <>
+                      <option value="">Select</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="">Select</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                      <option value="N/A">N/A</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md mt-6">
+          <h1 className="text-xl font-medium pb-4">Gender Responsive</h1>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(formData.gender_responsive).map(([key, value]) => (
+              <div key={key}>
+                <label className="text-gray-500 font-medium">
+                  {key.replace(/_/g, " ")}
+                </label>
+                {typeof value === "boolean" ? (
+                  <select
+                    className="border border-gray-300 p-2 rounded w-full"
+                    value={String(value)}
+                    onChange={(e) =>
+                      handleChange(
+                        "gender_responsive",
+                        key,
+                        e.target.value === "true"
+                      )
+                    }
+                  >
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                ) : (
+                  <select
+                    className="border border-gray-300 p-2 rounded w-full"
+                    value={value || ""}
+                    onChange={(e) =>
+                      handleChange("gender_responsive", key, e.target.value)
+                    }
+                  >
+                    <option>Always</option>
+
+                    <option>Very Frequently</option>
+                    <option>Occasionally</option>
+                    <option>Rarely</option>
+                    <option>Very Rarely</option>
+                    <option>Never</option>
+                  </select>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="shadow-sm bg-white px-6 py-6 rounded-md mt-6">
+          <h1 className="text-xl font-medium pb-4">
+            Security & Peace - Gender-Based Experiences
+          </h1>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(
+              formData.security_peace.gender_based_experiences
+            ).map(([key, value]) => (
+              <div key={key}>
+                <label className="text-gray-500 font-medium">
+                  {key.replace(/_/g, " ")}
+                </label>
+                <select
+                  className="border border-gray-300 p-2 rounded w-full"
+                  value={value || ""}
+                  onChange={(e) =>
+                    handleNestedChange(
+                      "security_peace",
+                      "gender_based_experiences",
+                      key,
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="Never">Never</option>
+                  <option value="Rarely">Rarely</option>
+                  <option value="Sometimes">Sometimes</option>
+                  <option value="Often">Often</option>
+                  <option value="Always">Always</option>
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <h1 className="text-xl font-medium pb-4">Other Experiences</h1>
+            <div className="grid grid-cols-2 gap-2 space-y-1">
+              {Object.keys(formData.security_peace.other_experiences).map(
+                (key) => (
+                  <div key={key}>
+                    <label className="text-gray-500 font-medium">
+                      {key
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </label>
+                    <select
+                      className="border border-gray-300 p-2 rounded w-full"
+                      value={formData.security_peace.other_experiences[key]}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "security_peace",
+                          "other_experiences",
+                          key,
+                          e.target.value
+                        )
+                      }
+                    >
+                      <option value="Never">Never</option>
+                      <option value="Rarely">Rarely</option>
+                      <option value="Sometimes">Sometimes</option>
+                      <option value="Often">Often</option>
+                      <option value="Always">Always</option>
+                    </select>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Permanent Address</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {["street", "barangay", "city", "province"].map((field) => (
-                <div key={field}>
-                  <label className="capitalize text-gray-500 font-medium">
-                    {field.replace("No", " No.")}
-                  </label>
-                  <input
-                    type="text"
-                    className="border border-gray-300 p-2 rounded w-full"
-                    placeholder={`Enter ${field}`}
-                    value={formData.contact.permanentAddress?.[field] || ""}
-                    onChange={(e) =>
-                      handleAddressChange(
-                        "permanentAddress",
-                        field,
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Current Address</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {["street", "barangay", "city", "province"].map((field) => (
-                <div key={field}>
-                  <label className="capitalize text-gray-500 font-medium">
-                    {field.replace("No", " No.")}
-                  </label>
-                  <input
-                    type="text"
-                    className="border border-gray-300 p-2 rounded w-full"
-                    placeholder={`Enter ${field}`}
-                    value={formData.contact.currentAddress?.[field] || ""}
-                    onChange={(e) =>
-                      handleAddressChange(
-                        "currentAddress",
-                        field,
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-              ))}
+          <div>
+            <h1 className="text-xl font-medium pb-4">VAW Services Awareness</h1>
+            <div className="grid grid-cols-2 gap-2 space-y-1">
+              {Object.keys(formData.security_peace.vaw_services_awareness).map(
+                (key) => (
+                  <div key={key}>
+                    <label className="text-gray-500 font-medium">
+                      {key
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </label>
+                    <select
+                      className="border border-gray-300 p-2 rounded w-full"
+                      value={
+                        formData.security_peace.vaw_services_awareness[key]
+                      }
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "security_peace",
+                          "vaw_services_awareness",
+                          key,
+                          e.target.value
+                        )
+                      }
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                      <option value="Not Sure">Not Sure</option>
+                    </select>
+                  </div>
+                )
+              )}
             </div>
           </div>
         </div>

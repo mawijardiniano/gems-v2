@@ -13,30 +13,34 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("/api/profile/my-profile", {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await res.json();
+const checkAuth = async () => {
+  try {
+    const res = await fetch("/api/profile/my-profile", {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await res.json();
 
-        if (!res.ok || !data.user) {
-          router.replace("/");
-          return;
-        }
+    console.log("Dashboard auth check data:", data); // add log
 
-        if (data.user.role.toLowerCase() !== "user") {
-          router.replace("/not-authorized");
-          return;
-        }
+    if (!res.ok || !data.user) {
+      router.replace("/");
+      return;
+    }
 
-        setIsAuthorized(true);
-      } catch (err) {
-        console.error(err);
-        router.replace("/");
-      }
-    };
+    if (!data.user.role || data.user.role.toLowerCase() !== "user") {
+      console.log("User not authorized, role:", data.user.role);
+      router.replace("/not-authorized");
+      return;
+    }
+
+    setIsAuthorized(true);
+  } catch (err) {
+    console.error(err);
+    router.replace("/");
+  }
+};
+
 
     checkAuth();
   }, [router]);
@@ -80,7 +84,7 @@ export default function DashboardLayout({ children }) {
   if (!isAuthorized) return null;
 
   return (
-    <div className="flex relative">
+    <div className="flex relative bg-gray-50">
       <div ref={sidebarRef}>
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       </div>
