@@ -53,7 +53,6 @@ export default function DashboardContent({ profile, userId }) {
           <p className="text-lg font-medium">{profile.personal_information.employment_appointment_status}</p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white border border-gray-200 p-6 rounded shadow">
           <h3 className="text-lg font-semibold mb-4">Family Role Summary</h3>
