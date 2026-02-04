@@ -65,7 +65,7 @@ export default function GenderResponsivenessContent({ profile }) {
   const renderField = (key, value) => {
         if (!isEditing) {
         let display = typeof value === "boolean" ? (value ? "Yes" : "No") : value || "";
-        return <div className="border px-2 py-1 rounded bg-gray-50">{display}</div>;
+        return <div className="border border-gray-300 px-2 py-1 rounded bg-gray-50">{display}</div>;
         }
 
     if (typeof value === "boolean") {

@@ -11,6 +11,7 @@ import Progress from "./progress";
 export default function CommunityInvolvement() {
   const dispatch = useDispatch();
   const c = useSelector((state) => state.profile.community_involvement);
+  const p = useSelector((state) => state.profile.personal_information);
 
   const update = (field, value) =>
     dispatch(setCommunityInvolvement({ field, value }));
@@ -57,7 +58,7 @@ export default function CommunityInvolvement() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <span>           Do you exercise your right to vote?</span>
+        <span> Do you exercise your right to vote?</span>
         {YesorNoOptions.map((opt) => (
           <label key={opt.label} className="flex items-center gap-2">
             <input
@@ -72,44 +73,47 @@ export default function CommunityInvolvement() {
           </label>
         ))}
       </div>
-
-      <div>
-        <p className="font-medium text-gray-700 mb-2">
-          Is your spouse of a different religion?
-        </p>
-        <div className="flex gap-6">
-          {yesNoOptions.map((opt) => (
-            <label key={opt} className="flex items-center gap-2">
-              <input
-                type="radio"
-                checked={c.spouse_different_religion === opt}
-                onChange={() => update("spouse_different_religion", opt)}
-                className="w-4 h-4 accent-blue-500"
-              />
-              {opt}
-            </label>
-          ))}
+      {p.civil_status !== "Single" && (
+        <div>
+          <p className="font-medium text-gray-700 mb-2">
+            Is your spouse of a different religion?
+          </p>
+          <div className="flex gap-6">
+            {yesNoOptions.map((opt) => (
+              <label key={opt} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={c.spouse_different_religion === opt}
+                  onChange={() => update("spouse_different_religion", opt)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div>
-        <p className="font-medium text-gray-700 mb-2">
-          Is there a cultural difference with your spouse?
-        </p>
-        <div className="flex gap-6">
-          {yesNoOptions.map((opt) => (
-            <label key={opt} className="flex items-center gap-2">
-              <input
-                type="radio"
-                checked={c.spouse_cultural_difference === opt}
-                onChange={() => update("spouse_cultural_difference", opt)}
-                className="w-4 h-4 accent-blue-500"
-              />
-              {opt}
-            </label>
-          ))}
+      {p.civil_status !== "Single" && (
+        <div>
+          <p className="font-medium text-gray-700 mb-2">
+            Is there a cultural difference with your spouse?
+          </p>
+          <div className="flex gap-6">
+            {yesNoOptions.map((opt) => (
+              <label key={opt} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={c.spouse_cultural_difference === opt}
+                  onChange={() => update("spouse_cultural_difference", opt)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex justify-between mt-6">
         <button

@@ -58,7 +58,7 @@ const gemsProfileSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const GemsProfile =

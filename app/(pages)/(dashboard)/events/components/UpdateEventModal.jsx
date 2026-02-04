@@ -35,7 +35,6 @@ export default function UpdateEventModal({
     "Offices under the Office of the Vice President for Student Affairs and Services",
   ];
 
-  /** Prefill form when modal opens */
   useEffect(() => {
     if (isOpen && event) {
       setFormData({
@@ -56,14 +55,36 @@ export default function UpdateEventModal({
               : event.invitation_rules.solo_parent,
           college_scope: event.invitation_rules?.college_scope || "ALL",
           colleges: event.invitation_rules?.colleges || [],
+          sex: event.invitation_rules?.sex || "",
         },
       });
     }
   }, [isOpen, event]);
 
+  const isEmployeeSelected =
+    formData?.invitation_rules.person_type.includes("Employee");
+
+  useEffect(() => {
+    if (formData && !isEmployeeSelected) {
+      setFormData((prev) => ({
+        ...prev,
+        invitation_rules: {
+          ...prev.invitation_rules,
+          employment_status: [],
+        },
+      }));
+    }
+  }, [isEmployeeSelected]);
+
   const handleBasicInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+    const getNowForDatetimeLocal = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+};
 
   const handleRulesChange = (field, value) => {
     setFormData((prev) => ({
@@ -114,11 +135,13 @@ export default function UpdateEventModal({
     try {
       if (!formData.title.trim()) {
         setError("Event title is required");
+        setLoading(false);
         return;
       }
 
       if (!formData.date) {
         setError("Event date is required");
+        setLoading(false);
         return;
       }
 
@@ -181,6 +204,7 @@ export default function UpdateEventModal({
               type="datetime-local"
               className="w-full border border-gray-400 rounded px-4 py-2 mb-3"
               value={formData.date}
+               min={getNowForDatetimeLocal()}
               onChange={(e) => handleBasicInputChange("date", e.target.value)}
             />
 
@@ -201,8 +225,13 @@ export default function UpdateEventModal({
               onChange={(e) => handleBasicInputChange("venue", e.target.value)}
             />
           </section>
+
           <section className="border-t border-gray-400 pt-5">
-            <h3 className="font-semibold mb-3">Invitation Rules</h3>
+            <h3 className="text-lg font-semibold mb-4">Who Can Attend</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Leave all empty to allow everyone.
+            </p>
+
 
             {["Student", "Employee"].map((type) => (
               <label key={type} className="flex gap-2 text-sm">
@@ -215,17 +244,28 @@ export default function UpdateEventModal({
               </label>
             ))}
 
-            <div>
+            <div className="mt-2">
               <label className="block font-medium mb-2">
                 Employment Status
+                {!isEmployeeSelected && (
+                  <span className="text-gray-400 text-xs ml-2">
+                    (Select Employee first)
+                  </span>
+                )}
               </label>
               <div className="space-y-2">
                 {["Faculty", "Non-teaching Personnel"].map((status) => (
-                  <label key={status} className="flex items-center text-sm">
+                  <label
+                    key={status}
+                    className={`flex items-center text-sm ${
+                      !isEmployeeSelected ? "text-gray-400" : ""
+                    }`}
+                  >
                     <input
                       type="checkbox"
+                      disabled={!isEmployeeSelected}
                       checked={formData.invitation_rules.employment_status.includes(
-                        status
+                        status,
                       )}
                       onChange={() =>
                         handleArrayToggle("employment_status", status)
@@ -238,6 +278,19 @@ export default function UpdateEventModal({
               </div>
             </div>
 
+                        <div className="mt-2">
+              <label className="block font-medium mb-2">Sex Restriction</label>
+              <select
+                value={formData.invitation_rules.sex || ""}
+                onChange={(e) => handleRulesChange("sex", e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="">No restriction</option>
+                <option value="Male">Male only</option>
+                <option value="Female">Female only</option>
+              </select>
+            </div>
+
             <div>
               <label className="block font-medium mb-2">
                 Person with Disability
@@ -247,14 +300,14 @@ export default function UpdateEventModal({
                   formData.invitation_rules.pwd === null
                     ? ""
                     : formData.invitation_rules.pwd
-                    ? "true"
-                    : "false"
+                      ? "true"
+                      : "false"
                 }
                 onChange={(e) => {
                   const value = e.target.value;
                   handleRulesChange(
                     "pwd",
-                    value === "" ? null : value === "true"
+                    value === "" ? null : value === "true",
                   );
                 }}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
@@ -274,14 +327,14 @@ export default function UpdateEventModal({
                   formData.invitation_rules.solo_parent === null
                     ? ""
                     : formData.invitation_rules.solo_parent
-                    ? "true"
-                    : "false"
+                      ? "true"
+                      : "false"
                 }
                 onChange={(e) => {
                   const value = e.target.value;
                   handleRulesChange(
                     "solo_parent",
-                    value === "" ? null : value === "true"
+                    value === "" ? null : value === "true",
                   );
                 }}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
@@ -314,7 +367,7 @@ export default function UpdateEventModal({
                       type="checkbox"
                       className="mr-2"
                       checked={formData.invitation_rules.colleges.includes(
-                        college
+                        college,
                       )}
                       onChange={() => handleCollegeToggle(college)}
                     />

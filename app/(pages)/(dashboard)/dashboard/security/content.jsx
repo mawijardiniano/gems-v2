@@ -52,7 +52,7 @@ export default function SecurityContent({ profile }) {
 
   const renderField = (section, key, value) => {
     if (!isEditing)
-      return <h1 className="border px-2 py-1 rounded bg-gray-50">{value}</h1>;
+      return <h1 className="border border-gray-300 px-2 py-1 rounded bg-gray-50">{value}</h1>;
 
     const options =
       section === "vaw_services_awareness" ? YES_NO_NA : FREQUENCY_OPTIONS;

@@ -57,7 +57,7 @@ export default function EnvironmentalContent({ profile }) {
       if (YES_NO_NA.includes(value)) display = value;
       if (!display) display = "-";
       return (
-        <div className="border px-2 py-1 rounded bg-gray-50 min-w-[100px]">
+        <div className="border border-gray-300 px-2 py-1 rounded bg-gray-50 min-w-[100px]">
           {display}
         </div>
       );

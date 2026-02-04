@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 
 export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
   const userId = useSelector((state) => state.auth.userId);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -16,6 +17,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
       employment_status: [],
       pwd: null,
       solo_parent: null,
+      sex: null,
       college_scope: "ALL",
       colleges: [],
     },
@@ -48,20 +50,32 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
   ];
 
   useEffect(() => {
-    if (isOpen) {
-      setColleges(COLLEGE_LIST);
-    }
+    if (isOpen) setColleges(COLLEGE_LIST);
   }, [isOpen]);
 
-  const fetchColleges = () => {
-    setColleges(COLLEGE_LIST);
-  };
+  const isEmployeeSelected =
+    formData.invitation_rules.person_type.includes("Employee");
+
+  useEffect(() => {
+    if (!isEmployeeSelected) {
+      setFormData((prev) => ({
+        ...prev,
+        invitation_rules: {
+          ...prev.invitation_rules,
+          employment_status: [],
+        },
+      }));
+    }
+  }, [isEmployeeSelected]);
 
   const handleBasicInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getNowForDatetimeLocal = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
   };
 
   const handleRulesChange = (field, value) => {
@@ -138,11 +152,12 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
       setTimeout(() => {
         resetForm();
         onClose();
-        if (onEventCreated) onEventCreated();
+        onEventCreated?.();
       }, 1000);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Error creating event. Please try again."
+        err.response?.data?.message ||
+          "Error creating event. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -160,6 +175,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
         employment_status: [],
         pwd: null,
         solo_parent: null,
+        sex: null,
         college_scope: "ALL",
         colleges: [],
       },
@@ -192,6 +208,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
             ×
           </button>
         </div>
+
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
             <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -231,6 +248,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
                 <input
                   type="datetime-local"
                   value={formData.date}
+                  min={getNowForDatetimeLocal()}
                   onChange={(e) =>
                     handleBasicInputChange("date", e.target.value)
                   }
@@ -267,146 +285,176 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
           </section>
 
           <section className="border-t border-gray-300 pt-6">
-            <h3 className="text-lg font-semibold mb-4">Invitation Rules</h3>
+            <h3 className="text-lg font-semibold mb-4">Who Can Attend</h3>
             <p className="text-gray-600 text-sm mb-4">
               Leave all empty to allow everyone.
             </p>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block font-medium mb-2">Person Type</label>
-                <div className="space-y-2">
-                  {["Student", "Employee"].map((type) => (
-                    <label key={type} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={formData.invitation_rules.person_type.includes(
-                          type
-                        )}
-                        onChange={() => handleArrayToggle("person_type", type)}
-                        className="mr-2"
-                      />
-                      {type}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2">
-                  Employment Status
-                </label>
-                <div className="space-y-2">
-                  {["Faculty", "Non-teaching Personnel"].map((status) => (
-                    <label key={status} className="flex items-center text-sm">
-                      <input
-                        type="checkbox"
-                        checked={formData.invitation_rules.employment_status.includes(
-                          status
-                        )}
-                        onChange={() =>
-                          handleArrayToggle("employment_status", status)
-                        }
-                        className="mr-2"
-                      />
-                      {status}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block font-medium mb-2">
-                  Person with Disability
-                </label>
-                <select
-                  value={
-                    formData.invitation_rules.pwd === null
-                      ? ""
-                      : formData.invitation_rules.pwd
-                      ? "true"
-                      : "false"
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    handleRulesChange(
-                      "pwd",
-                      value === "" ? null : value === "true"
-                    );
-                  }}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                >
-                  <option value="">No restriction</option>
-                  <option value="true">PWD only</option>
-                  <option value="false">Non-PWD only</option>
-                </select>
-              </div>
-              <div>
-                <label className="block font-medium mb-2">
-                  Solo Parent Status
-                </label>
-                <select
-                  value={
-                    formData.invitation_rules.solo_parent === null
-                      ? ""
-                      : formData.invitation_rules.solo_parent
-                      ? "true"
-                      : "false"
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    handleRulesChange(
-                      "solo_parent",
-                      value === "" ? null : value === "true"
-                    );
-                  }}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                >
-                  <option value="">No restriction</option>
-                  <option value="true">Solo Parents only</option>
-                  <option value="false">Non-Solo Parents only</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2">College Scope</label>
-                <select
-                  value={formData.invitation_rules.college_scope}
-                  onChange={(e) =>
-                    handleRulesChange("college_scope", e.target.value)
-                  }
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                >
-                  <option value="ALL">All Colleges</option>
-                  <option value="SELECTED">Selected Colleges Only</option>
-                </select>
-              </div>
-
-              {formData.invitation_rules.college_scope === "SELECTED" && (
-                <div className="bg-gray-50 p-3 rounded">
-                  <label className="block font-medium mb-2 text-sm">
-                    Select Colleges
+            <div>
+              <label className="block font-medium mb-2">Person Type</label>
+              <div className="space-y-2">
+                {["Student", "Employee"].map((type) => (
+                  <label key={type} className="flex items-center text-sm">
+                    <input
+                      type="checkbox"
+                      checked={formData.invitation_rules.person_type.includes(
+                        type,
+                      )}
+                      onChange={() => handleArrayToggle("person_type", type)}
+                      className="mr-2"
+                    />
+                    {type}
                   </label>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {colleges.map((college) => (
-                      <label
-                        key={college}
-                        className="flex items-center text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.invitation_rules.colleges.includes(
-                            college
-                          )}
-                          onChange={() => handleCollegeToggle(college)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{college}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
+
+            <div>
+              <label className="block font-medium mb-2">
+                Employment Status
+                {!isEmployeeSelected && (
+                  <span className="text-gray-400 text-xs ml-2">
+                    (Select Employee first)
+                  </span>
+                )}
+              </label>
+              <div className="space-y-2">
+                {["Faculty", "Non-teaching Personnel"].map((status) => (
+                  <label
+                    key={status}
+                    className={`flex items-center text-sm ${
+                      !isEmployeeSelected ? "text-gray-400" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      disabled={!isEmployeeSelected}
+                      checked={formData.invitation_rules.employment_status.includes(
+                        status,
+                      )}
+                      onChange={() =>
+                        handleArrayToggle("employment_status", status)
+                      }
+                      className="mr-2"
+                    />
+                    {status}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-medium mb-2">Sex</label>
+              <select
+                value={
+                  formData.invitation_rules.sex === null
+                    ? ""
+                    : formData.invitation_rules.sex
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleRulesChange("sex", value === "" ? null : value);
+                }}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="">No restriction</option>
+                <option value="Male">Male only</option>
+                <option value="Female">Female only</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-medium mb-2">
+                Person with Disability
+              </label>
+              <select
+                value={
+                  formData.invitation_rules.pwd === null
+                    ? ""
+                    : formData.invitation_rules.pwd
+                      ? "true"
+                      : "false"
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleRulesChange(
+                    "pwd",
+                    value === "" ? null : value === "true",
+                  );
+                }}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="">No restriction</option>
+                <option value="true">PWD only</option>
+                <option value="false">Non-PWD only</option>
+              </select>
+            </div>
+
+            {/* Solo Parent */}
+            <div>
+              <label className="block font-medium mb-2">
+                Solo Parent Status
+              </label>
+              <select
+                value={
+                  formData.invitation_rules.solo_parent === null
+                    ? ""
+                    : formData.invitation_rules.solo_parent
+                      ? "true"
+                      : "false"
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleRulesChange(
+                    "solo_parent",
+                    value === "" ? null : value === "true",
+                  );
+                }}
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="">No restriction</option>
+                <option value="true">Solo Parents only</option>
+                <option value="false">Non-Solo Parents only</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-medium mb-2">College Scope</label>
+              <select
+                value={formData.invitation_rules.college_scope}
+                onChange={(e) =>
+                  handleRulesChange("college_scope", e.target.value)
+                }
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              >
+                <option value="ALL">All Colleges</option>
+                <option value="SELECTED">Selected Colleges Only</option>
+              </select>
+            </div>
+
+            {/* Colleges */}
+            {formData.invitation_rules.college_scope === "SELECTED" && (
+              <div className="bg-gray-50 p-3 rounded">
+                <label className="block font-medium mb-2 text-sm">
+                  Select Colleges
+                </label>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {colleges.map((college) => (
+                    <label key={college} className="flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        checked={formData.invitation_rules.colleges.includes(
+                          college,
+                        )}
+                        onChange={() => handleCollegeToggle(college)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">{college}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         </form>
 

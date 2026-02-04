@@ -4,11 +4,11 @@ import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 
 function generateUsername(personal) {
-  return personal.person_id;
+  return personal.first_name;
 }
 
 function generateTempPassword() {
-  return `Temp@${Math.floor(100000 + Math.random() * 900000)}`;
+  return `gems123!`; //set default password
 }
 
 export async function GET() {

@@ -11,6 +11,7 @@ import Progress from "./progress";
 export default function ReproductiveFamilyRole() {
   const dispatch = useDispatch();
   const r = useSelector((state) => state.profile.reproductive_family_role);
+    const p = useSelector((state) => state.profile.personal_information);
 
   const update = (field, value) =>
     dispatch(setReproductiveFamilyRole({ field, value }));
@@ -86,7 +87,8 @@ export default function ReproductiveFamilyRole() {
       </div>
 
       {/* Spouse Share Childcare */}
-      <div>
+      {p.civil_status !== "Single" && (
+<div>
         <p className="font-medium text-gray-700 mb-2">
           Does your spouse share childcare responsibilities?
         </p>
@@ -104,6 +106,8 @@ export default function ReproductiveFamilyRole() {
           ))}
         </div>
       </div>
+      )}
+      
 
       {/* Attend School Needs */}
       <div>

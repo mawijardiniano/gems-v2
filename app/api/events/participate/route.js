@@ -31,7 +31,7 @@ async function meetsInvitationRules(userId, rules) {
       return {
         eligible: false,
         reason: `Person type "${userStatus}" not allowed. Required: ${rules.person_type.join(
-          ", "
+          ", ",
         )}`,
       };
     }
@@ -47,7 +47,7 @@ async function meetsInvitationRules(userId, rules) {
       return {
         eligible: false,
         reason: `Employment status "${empStatus}" not allowed. Required: ${rules.employment_status.join(
-          ", "
+          ", ",
         )}`,
       };
     }
@@ -90,7 +90,7 @@ async function meetsInvitationRules(userId, rules) {
       return {
         eligible: false,
         reason: `College "${userCollege}" not allowed. Required: ${rules.colleges.join(
-          ", "
+          ", ",
         )}`,
       };
     }
@@ -108,14 +108,14 @@ export async function POST(req) {
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
       return NextResponse.json(
         { message: "Valid Event ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
       return NextResponse.json(
         { message: "Valid User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -129,7 +129,7 @@ export async function POST(req) {
 
     const ruleCheck = await meetsInvitationRules(
       user_id,
-      event.invitation_rules
+      event.invitation_rules,
     );
     if (!ruleCheck.eligible) {
       return NextResponse.json(
@@ -137,17 +137,17 @@ export async function POST(req) {
           message: ruleCheck.reason,
           eligible: false,
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const alreadyRegistered = event.registered_users.some(
-      (id) => id.toString() === user_id
+      (id) => id.toString() === user_id,
     );
     if (alreadyRegistered) {
       return NextResponse.json(
         { message: "User already registered", event, eligible: true },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -164,13 +164,13 @@ export async function POST(req) {
 
     return NextResponse.json(
       { message: "Successfully registered", event, eligible: true },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     console.error(err);
     return NextResponse.json(
       { message: "Internal server error", error: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -186,14 +186,14 @@ export async function GET(req) {
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
       return NextResponse.json(
         { message: "Valid Event ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
       return NextResponse.json(
         { message: "Valid User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -207,7 +207,7 @@ export async function GET(req) {
 
     const ruleCheck = await meetsInvitationRules(
       user_id,
-      event.invitation_rules
+      event.invitation_rules,
     );
 
     return NextResponse.json(
@@ -218,13 +218,13 @@ export async function GET(req) {
         user_id,
         invitation_rules: event.invitation_rules,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     console.error(err);
     return NextResponse.json(
       { message: "Internal server error", error: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -74,3 +74,24 @@ export async function POST(req) {
     );
   }
 }
+
+
+
+export async function DELETE() {
+  try {
+    await connectDB();
+
+    const result = await Event.deleteMany({});
+
+    return NextResponse.json({
+      status: "success",
+      message: `Deleted ${result.deletedCount} event.`,
+    });
+  } catch (error) {
+    console.error("Error deleting all events:", error);
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 500 }
+    );
+  }
+}

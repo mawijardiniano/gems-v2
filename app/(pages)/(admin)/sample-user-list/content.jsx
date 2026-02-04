@@ -17,6 +17,8 @@ export default function UserListPageContent() {
   const { data: rawData, loading } = useFetchData();
 
   const [filterSex, setFilterSex] = useState("");
+  const [filterPersonType, setFilterPersonType] = useState("");
+  const [filterYearLevel, setFilterYearLevel] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterEmployment, setFilterEmployment] = useState("");
   const [filterAppointment, setFilterAppointment] = useState([]);
@@ -24,74 +26,129 @@ export default function UserListPageContent() {
   const sexOption = useMemo(
     () => [
       ...new Set(
-        rawData.map((d) => d.personal_information?.sex).filter(Boolean)
+        rawData.map((d) => d?.personal_information?.sex).filter(Boolean),
       ),
     ],
-    [rawData]
+    [rawData],
   );
 
   const collegeOptions = useMemo(
     () => [
       ...new Set(
         rawData
-          .map((d) => d.personal_information?.college_office)
-          .filter(Boolean)
+          .map(
+            (d) =>
+              d?.personal_information?.academic_information?.college ||
+              d?.personal_information?.employment_information?.office,
+          )
+          .filter(Boolean),
       ),
     ],
-    [rawData]
+    [rawData],
   );
 
   const employmentOptions = useMemo(
     () => [
       ...new Set(
         rawData
-          .map((d) => d.personal_information?.employment_status)
-          .filter(Boolean)
+          .map(
+            (d) =>
+              d?.personal_information?.employment_information
+                ?.employment_status,
+          )
+          .filter(Boolean),
       ),
     ],
-    [rawData]
+    [rawData],
   );
 
   const appointmentOptions = useMemo(
     () => [
       ...new Set(
         rawData
-          .map((d) => d.personal_information?.employment_appointment_status)
-          .filter(Boolean)
+          .map(
+            (d) =>
+              d?.personal_information?.employment_information
+                ?.employment_appointment_status,
+          )
+          .filter(Boolean),
       ),
     ],
-    [rawData]
+    [rawData],
+  );
+
+  const personTypeOptions = useMemo(() => {
+    const list = [
+      ...new Set(
+        rawData
+          .map((d) => d?.personal_information?.person_type)
+          .filter(Boolean),
+      ),
+    ];
+    return list.length > 0 ? list : ["Student", "Employee"];
+  }, [rawData]);
+
+  const yearLevelOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map((d) => d?.personal_information?.academic_information?.year_level)
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
   );
 
   const filteredData = useMemo(() => {
     return rawData.filter((user) => {
       const p = user.personal_information || {};
+      const acad = p.academic_information || {};
+      const emp = p.employment_information || {};
+      const collegeOrOffice = acad.college || emp.office || "";
+      const empStatus = emp.employment_status || "";
+      const empAppointment = emp.employment_appointment_status || "";
+
       return (
         (!filterSex || p.sex === filterSex) &&
+        (!filterPersonType || p.person_type === filterPersonType) &&
+        (!filterYearLevel || acad.year_level === filterYearLevel) &&
         (filterCollege.length === 0 ||
-          filterCollege.includes(p.college_office)) &&
-        (!filterEmployment || p.employment_status === filterEmployment) &&
+          filterCollege.includes(collegeOrOffice)) &&
+        (!filterEmployment || empStatus === filterEmployment) &&
         (filterAppointment.length === 0 ||
-          filterAppointment.includes(p.employment_appointment_status))
+          filterAppointment.includes(empAppointment))
       );
     });
-  }, [rawData, filterSex, filterCollege, filterEmployment, filterAppointment]);
+  }, [
+    rawData,
+    filterSex,
+    filterPersonType,
+    filterYearLevel,
+    filterCollege,
+    filterEmployment,
+    filterAppointment,
+  ]);
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">User List</h1>
+      <div className="flex justify-end">
         <div className="flex">
           <Filter
             filterSex={filterSex}
+            filterYearLevel={filterYearLevel}
+            filterPersonType={filterPersonType}
             filterCollege={filterCollege}
             filterEmployment={filterEmployment}
             filterAppointment={filterAppointment}
             setFilterSex={setFilterSex}
+            setFilterYearLevel={setFilterYearLevel}
+            setFilterPersonType={setFilterPersonType}
             setFilterCollege={setFilterCollege}
             setFilterEmployment={setFilterEmployment}
             setFilterAppointment={setFilterAppointment}
             sexOption={sexOption}
+            personTypeOptions={personTypeOptions}
+            yearLevelOptions={yearLevelOptions}
             collegeOptions={collegeOptions}
             employmentOptions={employmentOptions}
             appointmentOptions={appointmentOptions}
@@ -105,6 +162,7 @@ export default function UserListPageContent() {
             <TableHeadCell>Name</TableHeadCell>
             <TableHeadCell>Gender</TableHeadCell>
             <TableHeadCell>College Office</TableHeadCell>
+            <TableHeadCell>Year Level</TableHeadCell>
             <TableHeadCell>Employment Status</TableHeadCell>
             <TableHeadCell>Appointment Status</TableHeadCell>
             <TableHeadCell />
@@ -119,10 +177,20 @@ export default function UserListPageContent() {
                     {p.first_name} {p.last_name}
                   </TableCell>
                   <TableCell>{p.sex || "—"}</TableCell>
-                  <TableCell>{p.college_office || "—"}</TableCell>
-                  <TableCell>{p.employment_status || "—"}</TableCell>
                   <TableCell>
-                    {p.employment_appointment_status || "—"}
+                    {p.academic_information?.college ||
+                      p.employment_information?.office ||
+                      "—"}
+                  </TableCell>
+                  <TableCell>
+                    {p.academic_information?.year_level || "—"}
+                  </TableCell>
+                  <TableCell>
+                    {p.employment_information?.employment_status || "—"}
+                  </TableCell>
+                  <TableCell>
+                    {p.employment_information?.employment_appointment_status ||
+                      "—"}
                   </TableCell>
                   <TableCell>
                     <Button

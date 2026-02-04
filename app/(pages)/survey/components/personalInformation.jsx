@@ -20,7 +20,7 @@ export default function PersonalInformation() {
       field,
       p[field].includes(value)
         ? p[field].filter((v) => v !== value)
-        : [...p[field], value]
+        : [...p[field], value],
     );
   };
 
@@ -36,7 +36,7 @@ export default function PersonalInformation() {
     { label: "No", value: false },
   ];
 
-   const pwdTypes = [
+  const pwdTypes = [
     "Visual Impairment",
     "Hearing Impairment",
     "Physical Disability",
@@ -129,16 +129,7 @@ export default function PersonalInformation() {
             <option>Legally Separated Marriage</option>
             <option>Living In/Common Law</option>
             <option>Annulled</option>
-            <option>Iba pa</option>
           </select>
-          {p.civil_status === "Iba pa" && (
-            <input
-              className="mt-2 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Specify Civil Status"
-              value={p.civil_status_other}
-              onChange={(e) => update("civil_status_other", e.target.value)}
-            />
-          )}
         </div>
       </div>
 
@@ -155,163 +146,47 @@ export default function PersonalInformation() {
             <option>Iglesia ni Cristo</option>
             <option>Protestant</option>
             <option>Born Again Christian</option>
-            <option>Iba pa</option>
           </select>
-          {p.religion === "Iba pa" && (
-            <input
-              className="mt-2 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Specify Religion"
-              value={p.religion_other}
-              onChange={(e) => update("religion_other", e.target.value)}
-            />
-          )}
-        </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Person Type</label>
-<select
-  className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-  value={p.person_type || ""}
-  onChange={(e) => {
-    const value = e.target.value;
-    update("person_type", value);
-
-    if (value === "Student") {
-      update("employment_status", "");
-      update("employment_appointment_status", "");
-    }
-  }}
->
-  <option value="">Select</option>
-  <option value="Student">Student</option>
-  <option value="Employee">Employee</option>
-</select>
-
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">
-            {p.person_type === "Student" ? "Student ID" : "Employee ID"}
-          </label>
-          <input
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.person_id || ""}
-            onChange={(e) => update("person_id", e.target.value)}
-            placeholder={
-              p.person_type === "Student" ? "Enter Student ID" : "Enter Employee ID"
-            }
-            disabled={!p.person_type}
-          />
-        </div>
-      </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">College / Office</label>
+          <label className="text-sm text-gray-600">Current Status</label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.college_office}
-            onChange={(e) => update("college_office", e.target.value)}
+            value={p.person_type || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              update("person_type", value);
+
+              if (value === "Student") {
+                update("academic_information", {
+                  student_id: "",
+                  college: "",
+                  year_level: "",
+                });
+
+                update("employment_information", null);
+              } else if (value === "Employee") {
+                update("employment_information", {
+                  employee_id: "",
+                  office: "",
+                  employment_status: "",
+                  employment_appointment_status: "",
+                });
+
+                update("academic_information", null);
+              } else {
+                update("academic_information", null);
+                update("employment_information", null);
+              }
+            }}
           >
             <option value="">Select</option>
-            <option>Graduate School</option>
-            <option>College of Agriculture</option>
-            <option>College of Allied Health Sciences</option>
-            <option>College of Arts & Social Sciences</option>
-            <option>College of Business & Accountancy</option>
-            <option>College of Criminal Justice Education</option>
-            <option>College of Education</option>
-            <option>College of Engineering</option>
-            <option>College of Environmental Studies</option>
-            <option>College of Fisheries & Aquatic Sciences</option>
-            <option>College of Governance</option>
-            <option>College of Industrial Technology</option>
-            <option>College of Information & Computing Sciences</option>
-            <option>
-              Offices under the Office of the University President
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Academic
-              Affairs
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Administration
-              and Finance
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Research and
-              Extension
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Student Affairs
-              and Services
-            </option>
+            <option value="Student">Student</option>
+            <option value="Employee">Employee</option>
           </select>
         </div>
       </div>
-
-{p.person_type === "Employee" && (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div className="flex flex-col">
-      <label className="text-sm text-gray-600">Employment Status</label>
-      <select
-        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        value={p.employment_status}
-        onChange={(e) => update("employment_status", e.target.value)}
-      >
-        <option value="">Select</option>
-        <option>Faculty</option>
-        <option>Non-teaching Personnel</option>
-      </select>
-    </div>
-
-    <div className="flex flex-col">
-      <label className="text-sm text-gray-600">
-        Employment Appointment Status
-      </label>
-      <select
-        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        value={p.employment_appointment_status}
-        onChange={(e) =>
-          update("employment_appointment_status", e.target.value)
-        }
-        disabled={!p.employment_status}
-      >
-        <option value="">Select Appointment Status</option>
-
-        {p.employment_status === "Non-teaching Personnel" &&
-          [
-            "Regular",
-            "Temporary",
-            "Coterminous",
-            "Casual",
-            "Job Order",
-            "Contract of Service (Skilled)",
-            "Utility Worker",
-          ].map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-
-        {p.employment_status === "Faculty" &&
-          [
-            "Regular",
-            "Temporary",
-            "University Lecturer",
-            "Part-time Lecturer",
-            "Clinical Instructor",
-            "Adjunct",
-          ].map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-      </select>
-    </div>
-  </div>
-)}
-
 
       <div>
         <p className="font-medium text-gray-700 mb-2">Solo Parent</p>
@@ -325,7 +200,7 @@ export default function PersonalInformation() {
                 update(
                   "solo_parent",
 
-                  opt.value
+                  opt.value,
                 )
               }
               className="w-4 h-4 accent-blue-500"
@@ -335,7 +210,6 @@ export default function PersonalInformation() {
         ))}
       </div>
 
-      
       <div>
         <p className="font-medium text-gray-700 mb-2">Person with Disability</p>
         {yesNoOptions.map((opt) => (
@@ -348,7 +222,7 @@ export default function PersonalInformation() {
                 update(
                   "pwd",
 
-                  opt.value
+                  opt.value,
                 )
               }
               className="w-4 h-4 accent-blue-500"

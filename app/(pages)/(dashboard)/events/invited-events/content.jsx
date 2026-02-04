@@ -18,7 +18,7 @@ export default function InvitedContent({
     participatedEvents.reduce((acc, e) => {
       acc[e._id] = e.registered_users?.includes(userId) || false;
       return acc;
-    }, {})
+    }, {}),
   );
 
   const [eligibility, setEligibility] = useState({});
@@ -38,10 +38,10 @@ export default function InvitedContent({
         const promises = invitedEvents.map((event) =>
           axios
             .get(
-              `/api/events/participate?event_id=${event._id}&user_id=${userId}`
+              `/api/events/participate?event_id=${event._id}&user_id=${userId}`,
             )
             .then((res) => [event._id, res.data.eligible])
-            .catch(() => [event._id, false])
+            .catch(() => [event._id, false]),
         );
 
         const results = await Promise.all(promises);
@@ -56,7 +56,7 @@ export default function InvitedContent({
         console.error("Error fetching eligibility:", err);
         const fallback = invitedEvents.reduce(
           (acc, e) => ({ ...acc, [e._id]: false }),
-          {}
+          {},
         );
         setEligibility(fallback);
       } finally {
@@ -68,6 +68,16 @@ export default function InvitedContent({
   }, [invitedEvents, userId]);
 
   const handleRegister = async (eventId) => {
+    const allEvents = [...participatedEvents, ...invitedEvents];
+    const evt = allEvents.find((e) => e._id === eventId);
+    if (evt && evt.status === "completed") {
+      setError((prev) => ({
+        ...prev,
+        [eventId]: "Cannot register: event already completed.",
+      }));
+      return;
+    }
+
     try {
       setLoading((prev) => ({ ...prev, [eventId]: true }));
 
@@ -130,18 +140,20 @@ export default function InvitedContent({
                 <div className="flex flex-row justify-between items-center">
                   <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
 
-                  {!isRegistered && isEligible && (
-                    <button
-                      disabled={isLoading}
-                      onClick={() => {
-                        setSelectedEventId(event._id);
-                        setIsModalOpen(true);
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? "Registering..." : "Register"}
-                    </button>
-                  )}
+                  {!isRegistered &&
+                    isEligible &&
+                    event.status !== "completed" && (
+                      <button
+                        disabled={isLoading}
+                        onClick={() => {
+                          setSelectedEventId(event._id);
+                          setIsModalOpen(true);
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? "Registering..." : "Register"}
+                      </button>
+                    )}
                 </div>
 
                 <p className="text-gray-700 mb-2">{event.description}</p>
@@ -163,8 +175,8 @@ export default function InvitedContent({
                         event.status === "cancelled"
                           ? "text-red-600"
                           : event.status === "completed"
-                          ? "text-gray-600"
-                          : "text-green-600"
+                            ? "text-gray-600"
+                            : "text-green-600"
                       }`}
                     >
                       {event.status?.charAt(0).toUpperCase() +

@@ -19,10 +19,9 @@ const reproductiveSchema = new Schema(
       enum: ["Yes", "No", "N/A"],
       required: true,
     },
-    spouse_share_childcare: {
+    spouse_share_childcare: {//remove if single
       type: String,
       enum: ["Yes", "No", "N/A"],
-      required: true,
     },
 
     attend_school_needs: {

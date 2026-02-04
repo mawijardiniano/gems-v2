@@ -57,7 +57,7 @@ export default function DevelopmentContent({ profile }) {
   const renderField = (section, key, value) => {
     if (!isEditing) {
       return (
-        <h1 className="border px-2 py-1 rounded bg-gray-50">{displayValue(value)}</h1>
+        <h1 className="border border-gray-300 px-2 py-1 rounded bg-gray-50">{displayValue(value)}</h1>
       );
     }
 

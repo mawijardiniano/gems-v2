@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaUser } from "react-icons/fa";
 
 const SELECT_FIELDS = {
@@ -34,6 +35,21 @@ const SELECT_FIELDS = {
     "Iba pa",
   ],
   person_type: ["Student", "Employee"],
+  college: [
+    "Graduate School",
+    "College of Agriculture",
+    "College of Allied Health Sciences",
+    "College of Arts & Social Sciences",
+    "College of Business & Accountancy",
+    "College of Criminal Justice Education",
+    "College of Education",
+    "College of Engineering",
+    "College of Environmental Studies",
+    "College of Fisheries & Aquatic Sciences",
+    "College of Governance",
+    "College of Industrial Technology",
+    "College of Information & Computing Sciences",
+  ],
   college_office: [
     "Graduate School",
     "College of Agriculture",
@@ -111,11 +127,16 @@ export default function PersonalInformationContent({ profile }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState(profile?.personal_information || {});
   const [originalData, setOriginalData] = useState(
-    profile?.personal_information || {}
+    profile?.personal_information || {},
   );
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastColor, setToastColor] = useState("success");
+  const [showCompleteEmploymentModal, setShowCompleteEmploymentModal] =
+    useState(false);
+  const [showCompleteAcademicModal, setShowCompleteAcademicModal] =
+    useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setFormData(profile?.personal_information || {});
@@ -123,23 +144,39 @@ export default function PersonalInformationContent({ profile }) {
   }, [profile]);
 
   const handleChange = (key, value) => {
+    if (key === "person_type") setIsEditing(true);
+
     setFormData((prev) => {
       const updated = { ...prev, [key]: value };
 
-      // Clear PWD type if not PWD
       if (key === "pwd" && value === false) delete updated.pwd_type;
 
-      if (key === "person_type" && value === "Student") {
-        delete updated.employment_status;
-        delete updated.employment_appointment_status;
+      if (key === "person_type") {
+        if (value === "Student") {
+          updated.employment_information = null;
+          updated.academic_information = updated.academic_information || {};
+        }
+        if (value === "Employee") {
+          updated.academic_information = null;
+          updated.employment_information = updated.employment_information || {};
+        }
       }
 
-      // Clear appointment if employment_status changes
       if (key === "employment_status")
         delete updated.employment_appointment_status;
 
       return updated;
     });
+  };
+
+  const handleChangeNested = (section, key, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...(prev[section] || {}),
+        [key]: value,
+      },
+    }));
   };
 
   const handleSave = async () => {
@@ -148,6 +185,28 @@ export default function PersonalInformationContent({ profile }) {
       setToastColor("failure");
       setShowToast(true);
       return;
+    }
+    if (formData.person_type === "Employee") {
+      const emp = formData.employment_information || {};
+      if (!emp.employee_id || !emp.office || !emp.employment_status) {
+        setShowCompleteEmploymentModal(true);
+        return;
+      }
+      if (
+        emp.employment_status === "Non-teaching Personnel" &&
+        !emp.employment_appointment_status
+      ) {
+        setShowCompleteEmploymentModal(true);
+        return;
+      }
+    }
+    if (formData.person_type === "Student") {
+      const ai = formData.academic_information || {};
+      if (!ai.student_id || !ai.college || !ai.year_level) {
+   
+        setShowCompleteAcademicModal(true);
+        return;
+      }
     }
 
     try {
@@ -158,10 +217,8 @@ export default function PersonalInformationContent({ profile }) {
 
       const cleanedData = { ...formData };
 
-      // Remove PWD type if not PWD
       if (!cleanedData.pwd) delete cleanedData.pwd_type;
 
-      // Remove employment fields if Student
       if (cleanedData.person_type === "Student") {
         delete cleanedData.employment_status;
         delete cleanedData.employment_appointment_status;
@@ -183,6 +240,12 @@ export default function PersonalInformationContent({ profile }) {
       setToastMessage("Profile updated successfully!");
       setToastColor("success");
       setShowToast(true);
+      try {
+        router.refresh();
+      } catch (e) {}
+      try {
+        if (typeof window !== "undefined") window.location.reload();
+      } catch (e) {}
     } catch (err) {
       console.error(err);
       setToastMessage("Failed to update profile.");
@@ -204,16 +267,20 @@ export default function PersonalInformationContent({ profile }) {
     if (!isEditing) {
       if (typeof value === "boolean")
         return (
-          <div className="border px-2 py-1 rounded">{value ? "Yes" : "No"}</div>
+          <div className="border border-gray-300 px-2 py-1 rounded">
+            {value ? "Yes" : "No"}
+          </div>
         );
       if (Array.isArray(value))
         return (
-          <div className="border px-2 py-1 rounded">
+          <div className="border border-gray-300 px-2 py-1 rounded">
             {value.join(", ") || "-"}
           </div>
         );
       return (
-        <div className="border px-2 py-1 rounded truncate">{value || "-"}</div>
+        <div className="border border-gray-300 px-2 py-1 rounded truncate">
+          {value || "-"}
+        </div>
       );
     }
 
@@ -224,7 +291,7 @@ export default function PersonalInformationContent({ profile }) {
           onChange={(e) =>
             handleChange(
               key,
-              e.target.value === "" ? undefined : e.target.value === "true"
+              e.target.value === "" ? undefined : e.target.value === "true",
             )
           }
           className="border px-2 py-1 rounded"
@@ -267,8 +334,8 @@ export default function PersonalInformationContent({ profile }) {
         key === "employment_status"
           ? SELECT_FIELDS.employment_status
           : formData.employment_status
-          ? APPOINTMENT_STATUS_MAP[formData.employment_status]
-          : [];
+            ? APPOINTMENT_STATUS_MAP[formData.employment_status]
+            : [];
 
       return (
         <select
@@ -323,11 +390,6 @@ export default function PersonalInformationContent({ profile }) {
     "civil_status",
     "religion",
     "person_type",
-    "person_id",
-    "college_office",
-    ...(formData.person_type === "Employee"
-      ? ["employment_status", "employment_appointment_status"]
-      : []),
     "solo_parent",
     "pwd",
     ...(formData.pwd ? ["pwd_type"] : []),
@@ -337,7 +399,7 @@ export default function PersonalInformationContent({ profile }) {
 
   return (
     <div className="pt-6">
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+      <div className="border border-gray-200 p-8">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <FaUser className="text-gray-600 text-xl" />
@@ -381,6 +443,193 @@ export default function PersonalInformationContent({ profile }) {
             </div>
           ))}
         </div>
+        {isEditing &&
+          formData.person_type === "Employee" &&
+          formData.person_type !== (originalData?.person_type || "") && (
+            <div className="mt-6 border-t pt-4">
+              <h3 className="font-semibold mb-3">
+                Employment Information (edit)
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    Employee ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.employment_information?.employee_id || ""}
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "employment_information",
+                        "employee_id",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  />
+                </div>
+
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    Office
+                  </label>
+                  <select
+                    value={formData.employment_information?.office || ""}
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "employment_information",
+                        "office",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Select Office</option>
+                    {SELECT_FIELDS.college_office.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    Employment Status
+                  </label>
+                  <select
+                    value={
+                      formData.employment_information?.employment_status || ""
+                    }
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "employment_information",
+                        "employment_status",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Select Status</option>
+                    {SELECT_FIELDS.employment_status.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {formData.employment_information?.employment_status ===
+                  "Non-teaching Personnel" && (
+                  <div className="flex flex-col w-64">
+                    <label className="font-medium text-gray-700 mb-1">
+                      Appointment Status
+                    </label>
+                    <select
+                      value={
+                        formData.employment_information
+                          ?.employment_appointment_status || ""
+                      }
+                      onChange={(e) =>
+                        handleChangeNested(
+                          "employment_information",
+                          "employment_appointment_status",
+                          e.target.value,
+                        )
+                      }
+                      className="border px-2 py-1 rounded"
+                    >
+                      <option value="">Select Appointment</option>
+                      {APPOINTMENT_STATUS_MAP["Non-teaching Personnel"].map(
+                        (a) => (
+                          <option key={a} value={a}>
+                            {a}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        {isEditing &&
+          formData.person_type === "Student" &&
+          formData.person_type !== (originalData?.person_type || "") && (
+            <div className="mt-6 border-t pt-4">
+              <h3 className="font-semibold mb-3">
+                Academic Information (edit)
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    Student ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.academic_information?.student_id || ""}
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "academic_information",
+                        "student_id",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  />
+                </div>
+
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    College
+                  </label>
+                  <select
+                    value={formData.academic_information?.college || ""}
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "academic_information",
+                        "college",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Select College</option>
+                    {SELECT_FIELDS.college.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col w-64">
+                  <label className="font-medium text-gray-700 mb-1">
+                    Year Level
+                  </label>
+                  <select
+                    value={formData.academic_information?.year_level || ""}
+                    onChange={(e) =>
+                      handleChangeNested(
+                        "academic_information",
+                        "year_level",
+                        e.target.value,
+                      )
+                    }
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Select Year Level</option>
+                    <option>1st Year</option>
+                    <option>2nd Year</option>
+                    <option>3rd Year</option>
+                    <option>4th Year</option>
+                    <option>5th Year</option>
+                    <option>6th Year</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
 
       {showToast && (
@@ -390,6 +639,67 @@ export default function PersonalInformationContent({ profile }) {
           }`}
         >
           {toastMessage}
+        </div>
+      )}
+
+      {showCompleteEmploymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">
+              Complete Employment Information
+            </h3>
+            <p className="text-gray-700 mb-4">
+              The Employment fields are handled on the Employment page. Please
+              complete the required employment details there before saving.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowCompleteEmploymentModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompleteEmploymentModal(false);
+                  router.push("/dashboard/employment");
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Go to Employment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCompleteAcademicModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">
+              Complete Academic Information
+            </h3>
+            <p className="text-gray-700 mb-4">
+              The Academic fields are handled on the Academic page. Please
+              complete the required academic details there before saving.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowCompleteAcademicModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompleteAcademicModal(false);
+                  router.push("/dashboard/academic");
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Go to Academic
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

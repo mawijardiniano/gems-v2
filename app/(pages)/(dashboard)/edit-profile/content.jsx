@@ -1015,7 +1015,6 @@ export default function EditProfilePageContent({ profile }) {
               )}
             </div>
 
-            {/* Family Participate Household */}
             <div>
               <label className="text-gray-500 font-medium">
                 Family Participate Household

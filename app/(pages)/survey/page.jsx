@@ -24,6 +24,8 @@ import Navbar from "./components/layout/navbar";
 
 import PersonalInformation from "./components/personalInformation";
 import EconomicFinancial from "./components/economicFinancial";
+import AcademicInformation from "./components/AcademicInformation";
+import EmploymentInformation from "./components/EmploymentInformation";
 import ReproductiveFamilyRole from "./components/reproductive";
 import HouseholdManagingRole from "./components/household";
 import CommunityInvolvement from "./components/community";
@@ -34,26 +36,33 @@ import SecurityPeaceJustice from "./components/security";
 
 export default function ProfileRegistration() {
   const currentStep = useSelector((state) => state.profile.currentStep);
+  const personType = useSelector(
+    (state) => state.profile.personal_information.person_type,
+  );
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return <PersonalInformation />;
       case 2:
-        return <EconomicFinancial />;
+       if (personType === "Student") return <AcademicInformation />;
+        if (personType === "Employee") return <EmploymentInformation />;
+
       case 3:
-        return <ReproductiveFamilyRole />;
+               return <EconomicFinancial />;
       case 4:
-        return <HouseholdManagingRole />;
+        return <ReproductiveFamilyRole />;
       case 5:
-        return <CommunityInvolvement />;
+        return <HouseholdManagingRole />;
       case 6:
-        return <SocialDevelopment />;
+        return <CommunityInvolvement />;
       case 7:
-        return <Environmental />;
+        return <SocialDevelopment />;
       case 8:
-        return <GenderResponsiveForm />;
+        return <Environmental />;
       case 9:
+        return <GenderResponsiveForm />;
+      case 10:
         return <SecurityPeaceJustice />;
       default:
         return <PersonalInformation />;

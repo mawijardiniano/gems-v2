@@ -36,6 +36,9 @@ async function meetsInvitationRules(userId, rules) {
     if (!!info.pwd !== rules.pwd) return false;
   }
 
+  const userSex = (info.sex || "").toLowerCase();
+  const ruleSex = (rules.sex || "").toLowerCase().trim();
+  if (ruleSex && userSex !== ruleSex) return false;
 
   if (rules.solo_parent === true || rules.solo_parent === false) {
     if (!!info.solo_parent !== rules.solo_parent) return false;
@@ -54,7 +57,6 @@ async function meetsInvitationRules(userId, rules) {
   return true;
 }
 
-
 export async function GET(req) {
   try {
     await connectDB();
@@ -65,7 +67,7 @@ export async function GET(req) {
     if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
       return NextResponse.json(
         { message: "Valid user_id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,7 +88,7 @@ export async function GET(req) {
     for (const event of allOtherEvents) {
       const eligible = await meetsInvitationRules(
         user_id,
-        event.invitation_rules
+        event.invitation_rules,
       );
       if (eligible) invitedEvents.push(event);
     }
@@ -98,13 +100,13 @@ export async function GET(req) {
         participatedEvents,
         invitedEvents,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     console.error(err);
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

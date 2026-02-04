@@ -8,7 +8,7 @@ import UpdateEventModal from "./components/UpdateEventModal";
 import CancelEventModal from "./components/CancelEventModal";
 import {
   FaCalendar,
-  FaEdit,
+  FaEllipsisV,
   FaUsers,
   FaLocationArrow,
   FaClock,
@@ -21,10 +21,14 @@ export default function EventContent({ createdEvents = [] }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [menuOpen, setMenuOpen] = useState({});
+  const [isDoneOpen, setIsDoneOpen] = useState(false);
+  const [doneTargetId, setDoneTargetId] = useState(null);
+  const [doneTargetStatus, setDoneTargetStatus] = useState(null);
+  const [doneLoading, setDoneLoading] = useState(false);
+  const [doneError, setDoneError] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState("");
-
-  const reloadEvents = () => window.location.reload();
 
   const handleCancelEvent = async () => {
     if (!selectedEvent) return;
@@ -45,6 +49,47 @@ export default function EventContent({ createdEvents = [] }) {
     } finally {
       setCancelLoading(false);
     }
+  };
+
+  const reloadEvents = () => window.location.reload();
+
+  const toggleMenu = (id) => {
+    setMenuOpen((p) => ({ ...p, [id]: !p[id] }));
+  };
+
+  const openStatusConfirm = (eventId, targetStatus) => {
+    setDoneTargetId(eventId);
+    setDoneTargetStatus(targetStatus);
+    setIsDoneOpen(true);
+    setMenuOpen((p) => ({ ...p, [eventId]: false }));
+  };
+
+  const performStatusChange = async () => {
+    if (!doneTargetId || !doneTargetStatus) return;
+    setDoneLoading(true);
+    setDoneError("");
+    try {
+      await axios.patch(`/api/events/${doneTargetId}/status`, {
+        status: doneTargetStatus,
+        userId,
+      });
+      setIsDoneOpen(false);
+      setDoneTargetId(null);
+      setDoneTargetStatus(null);
+      reloadEvents();
+    } catch (err) {
+      setDoneError(
+        err.response?.data?.message || "Failed to change event status",
+      );
+    } finally {
+      setDoneLoading(false);
+    }
+  };
+
+  const openEdit = (event) => {
+    setSelectedEvent(event);
+    setIsEditOpen(true);
+    setMenuOpen((p) => ({ ...p, [event._id]: false }));
   };
 
   return (
@@ -79,21 +124,42 @@ export default function EventContent({ createdEvents = [] }) {
             >
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-semibold">{event.title}</h3>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectedEvent(event);
-                      setIsEditOpen(true);
-                    }}
-                    disabled={event.status === "cancelled"}
-                    className={`text-xl ${
-                      event.status === "cancelled"
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-blue-600 hover:underline"
-                    }`}
-                  >
-                    <FaEdit />
-                  </button>
+                <div className="flex gap-3 items-center relative">
+                  <div className="relative">
+                    <button
+                      onClick={() => toggleMenu(event._id)}
+                      className="p-2 rounded hover:bg-gray-100"
+                      aria-label="More options"
+                    >
+                      <FaEllipsisV />
+                    </button>
+
+                    {menuOpen[event._id] && (
+                      <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-400 rounded shadow-md z-20">
+                        <button
+                          onClick={() => openEdit(event)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            openStatusConfirm(
+                              event._id,
+                              event.status === "completed"
+                                ? "active"
+                                : "completed",
+                            )
+                          }
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-t border-gray-400"
+                        >
+                          {event.status === "completed"
+                            ? "Mark as Active"
+                            : "Mark as Done"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -124,7 +190,7 @@ export default function EventContent({ createdEvents = [] }) {
                     <FaUsers />
                   </strong>{" "}
                   {event.registered_users?.length || 0} {""}
-                  <span className="text-gray-400">participants</span>
+                  <span className="text-gray-400">Number of participants</span>
                 </p>
                 <p className="text-md mt-2 flex flex-row items-center gap-2">
                   <strong>Status:</strong>{" "}
@@ -133,8 +199,8 @@ export default function EventContent({ createdEvents = [] }) {
                       event.status === "cancelled"
                         ? "text-red-600"
                         : event.status === "completed"
-                        ? "text-gray-600"
-                        : "text-green-600"
+                          ? "text-gray-600"
+                          : "text-green-600"
                     }`}
                   >
                     {event.status
@@ -184,6 +250,49 @@ export default function EventContent({ createdEvents = [] }) {
         loading={cancelLoading}
         error={cancelError}
       />
+
+      {isDoneOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">
+              {doneTargetStatus === "completed"
+                ? "Mark Event as Done"
+                : "Revert Event to Active"}
+            </h3>
+
+            <p className="text-gray-700 mb-4">
+              {doneTargetStatus === "completed"
+                ? "Are you sure you want to mark this event as completed? This will update its status for all participants."
+                : "Are you sure you want to revert this event to active? This will make it available again."}
+            </p>
+
+            {doneError && (
+              <p className="text-red-500 text-sm mb-3">{doneError}</p>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsDoneOpen(false);
+                  setDoneTargetId(null);
+                  setDoneTargetStatus(null);
+                }}
+                className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={performStatusChange}
+                disabled={doneLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {doneLoading ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

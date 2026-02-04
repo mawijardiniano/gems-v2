@@ -1,4 +1,6 @@
 import { Schema } from "mongoose";
+import academicInformationSchema from "./academic_information.js";
+import employmentInformationSchema from "./employment_information.js";
 
 const personalInformationSchema = new Schema(
   {
@@ -43,19 +45,14 @@ const personalInformationSchema = new Schema(
     civil_status: {
       type: String,
       enum: [
-        "Single",
+        "Single", //remove spouse questions
         "Married",
         "Widow",
         "Legally Separated Marriage",
         "Living In/Common Law",
         "Annulled",
-        "Iba pa",
       ],
       required: true,
-    },
-
-    civil_status_other: {
-      type: String,
     },
 
     religion: {
@@ -69,66 +66,27 @@ const personalInformationSchema = new Schema(
         "Evangelical Christian",
         "Latter Day Saints",
         "Members Church of God International (MGCI)",
-        "Iba pa",
       ],
       required: true,
     },
 
-    religion_other: {
-      type: String,
-    },
     person_type: {
       type: String,
-      enum: ["Student", "Employee"],
+      enum: ["Student", "Employee"], //academic info if student //employement info if employee
       required: true,
     },
-    person_id: { type: String, required: true },
-
-    college_office: {
-      type: String,
-      enum: [
-        "Graduate School",
-        "College of Agriculture",
-        "College of Allied Health Sciences",
-        "College of Arts & Social Sciences",
-        "College of Business & Accountancy",
-        "College of Criminal Justice Education",
-        "College of Education",
-        "College of Engineering",
-        "College of Environmental Studies",
-        "College of Fisheries & Aquatic Sciences",
-        "College of Governance",
-        "College of Industrial Technology",
-        "College of Information & Computing Sciences",
-        "Offices under the Office of the University President",
-        "Offices under the Office of the Vice President for Academic Affairs",
-        "Offices under the Office of the Vice President for Administration and Finance",
-        "Offices under the Office of the Vice President for Research and Extension",
-        "Offices under the Office of the Vice President for Student Affairs and Services",
-      ],
-      required: true,
+    academic_information: {
+      type: academicInformationSchema,
+      required: function () {
+        return this.person_type === "Student";
+      },
     },
 
-    employment_status: {
-      type: String,
-      enum: ["Faculty", "Non-teaching Personnel"],
-    },
-
-    employment_appointment_status: {
-      type: String,
-      enum: [
-        "Regular",
-        "Temporary",
-        "Coterminous",
-        "Casual",
-        "Job Order",
-        "Contract of Service (Skilled)",
-        "Utility Worker",
-        "University Lecturer",
-        "Part-time Lecturer",
-        "Clinical Instructor",
-        "Adjunct",
-      ],
+    employment_information: {
+      type: employmentInformationSchema,
+      required: function () {
+        return this.person_type === "Employee";
+      },
     },
 
     solo_parent: {
@@ -137,6 +95,7 @@ const personalInformationSchema = new Schema(
     },
     pwd: {
       type: Boolean,
+      default: false,
     },
     pwd_type: {
       type: String,
@@ -200,7 +159,7 @@ const personalInformationSchema = new Schema(
       type: String,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 export default personalInformationSchema;

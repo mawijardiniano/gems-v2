@@ -73,7 +73,7 @@ export default function Snapshot({ data }) {
           </div>
         </div>
 
-        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
+        <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaWheelchair className="text-green-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">PWD</p>
@@ -83,7 +83,7 @@ export default function Snapshot({ data }) {
           </div>
         </div>
 
-        <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
+        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaLeaf className="text-teal-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">Indigenous Peoples</p>

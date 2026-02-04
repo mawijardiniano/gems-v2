@@ -155,9 +155,17 @@ const initialState = {
     civil_status_other: "",
     religion: "",
     religion_other: "",
-    college_office: "",
-    employment_status: "",
-    employment_appointment_status: "",
+    academic_information: {
+      student_id: "",
+      college: "",
+      year_level: "",
+    },
+    employment_information: {
+      employee_id: "",
+      office: "",
+      employment_status: "",
+      employment_appointment_status: "",
+    },
     solo_parent: null,
     total_annual_family_income: "",
     health_problems: [],
@@ -247,6 +255,22 @@ const profileRegistrationSlice = createSlice({
   reducers: {
     setPersonalInformation: (state, action) => {
       const { field, value } = action.payload;
+
+      // support nested fields using dot notation, e.g. "academic_information.student_id"
+      if (typeof field === "string" && field.includes(".")) {
+        const parts = field.split(".");
+        const last = parts.pop();
+        let target = state.personal_information;
+        for (const part of parts) {
+          if (target[part] === undefined || target[part] === null)
+            target[part] = {};
+          target = target[part];
+        }
+        target[last] = value;
+        return;
+      }
+
+      // allow setting an object directly (e.g. whole academic_information)
       state.personal_information[field] = value;
     },
     setEconomicFinancialRole: (state, action) => {

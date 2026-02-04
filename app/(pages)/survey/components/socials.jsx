@@ -36,6 +36,30 @@ export default function SocialDevelopment() {
   const yesNoNAArr = ["Yes", "No", "N/A"];
   const yesNoNotSure = ["Yes", "No", "Not Sure"];
 
+  const LAW_LABELS = {
+    RA_6275:
+      "RA No. 6275: An Act Strengthening the Prohibition on Discrimination Against Women with respect to terms and conditions of employment, amending for the purpose Article 135 of the Labor Code, as amended",
+    RA_10354:
+      "RA No. 10354: An Act Providing for a National Policy on Responsible Parenthood and Reproductive Health",
+    RA_7192:
+      "RA No. 7192: Women in Development and Nation Building Act – an act promoting the integration of women as full equal partners of men in development and nation building and for other purposes",
+    RA_7877:
+      "RA No. 7877: Anti-Sexual Harassment Act of 1995 – an act declaring sexual harassment unlawful in the employment, education or training environment and for other purposes",
+    RA_8972:
+      "RA No. 8972: Solo Parent’s Welfare Act of 2000 – an act providing for benefits and privileges to solo parents and their children, appropriating funds therefor and for other purposes",
+    RA_9710: "RA No. 9710: An Act Providing for the Magna Carta of Women",
+    RA_9262:
+      "RA No. 9262: Anti-Violence Against Women and their Children Act of 2004 – an act defining violence against women and their children, providing for protective measures for victims, prescribing penalties therefor, and for other purposes",
+    RA_7277:
+      "RA No. 7277: Magna Carta for Disabled Persons – An Act Providing for the Rehabilitation, Self-Development and Self-Reliance of Disabled Persons and their Integration into the Mainstream of Society and for other purposes",
+    RA_11313:
+      "RA No. 11313: Safe Spaces Act – An Act Defining Gender-Based Sexual Harassment in Streets, Public Spaces, Online, Workplaces, and Educational or Training Institutions, Providing Protective Measures and Prescribing Penalties Therefor",
+    RA_8353:
+      "RA No. 8353: The Anti-Rape Law of 1997 – An Act Expanding the Definition of the Crime of Rape, Reclassifying the same as Crime against Persons, Amending for the Purpose Act No. 3815, as Amended, otherwise known as the Revised Penal Code, and for Other Purposes",
+    RA_11596:
+      "RA No. 11596: An Act Prohibiting the Practice of Child Marriage and Imposing Penalties for Violations Thereof",
+  };
+
   const RA_fields = [
     "RA_6275",
     "RA_10354",
@@ -72,7 +96,7 @@ export default function SocialDevelopment() {
       null,
       sd.other_training_needs.includes(value)
         ? sd.other_training_needs.filter((v) => v !== value)
-        : [...sd.other_training_needs, value]
+        : [...sd.other_training_needs, value],
     );
   };
 
@@ -104,7 +128,7 @@ export default function SocialDevelopment() {
                   update(
                     "housing_work_life_balance",
                     "house_property_owned",
-                    opt.value
+                    opt.value,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -129,7 +153,7 @@ export default function SocialDevelopment() {
                   update(
                     "housing_work_life_balance",
                     "job_hinder_parent_role",
-                    opt
+                    opt,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -158,7 +182,7 @@ export default function SocialDevelopment() {
                   update(
                     "housing_work_life_balance",
                     "working_parent_hindrance_career",
-                    opt
+                    opt,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -201,7 +225,7 @@ export default function SocialDevelopment() {
                   update(
                     "housing_work_life_balance",
                     "manage_stress",
-                    opt.value
+                    opt.value,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -224,7 +248,7 @@ export default function SocialDevelopment() {
                 update(
                   "housing_work_life_balance",
                   "stress_management_methods",
-                  e.target.value
+                  e.target.value,
                 )
               }
             />
@@ -251,7 +275,7 @@ export default function SocialDevelopment() {
                   update(
                     "personal_development_empowerment",
                     "undertake_empowerment_activities",
-                    opt.value
+                    opt.value,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -277,7 +301,7 @@ export default function SocialDevelopment() {
                 update(
                   "personal_development_empowerment",
                   "empowerment_activities_examples",
-                  e.target.value
+                  e.target.value,
                 )
               }
             />
@@ -303,7 +327,7 @@ export default function SocialDevelopment() {
                   update(
                     "personal_development_empowerment",
                     "home_environment_growth",
-                    opt.value
+                    opt.value,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -329,7 +353,7 @@ export default function SocialDevelopment() {
                   update(
                     "personal_development_empowerment",
                     "community_environment_growth",
-                    opt.value
+                    opt.value,
                   )
                 }
                 className="w-4 h-4 accent-blue-500"
@@ -355,7 +379,7 @@ export default function SocialDevelopment() {
                 update(
                   "personal_development_empowerment",
                   "environment_growth_reason",
-                  e.target.value
+                  e.target.value,
                 )
               }
             />
@@ -368,7 +392,7 @@ export default function SocialDevelopment() {
           Legal Awareness & Observance
         </h3>
         {["awareness", "observed_in_university_or_community"].map((section) => (
-          <div key={section} className="overflow-x-auto">
+          <div key={section} className="overflow-x-auto capitalize">
             <h4 className="font-medium text-gray-600 mb-2">
               {section.replace(/_/g, " ")}
             </h4>
@@ -381,7 +405,7 @@ export default function SocialDevelopment() {
                   {yesNoNotSure.map((opt) => (
                     <th
                       key={opt}
-                      className="border border-gray-300 px-3 py-2 text-center"
+                      className="border border-gray-300 px-3 py-2 text-center w-30"
                     >
                       {opt}
                     </th>
@@ -391,7 +415,10 @@ export default function SocialDevelopment() {
               <tbody>
                 {RA_fields.map((ra) => (
                   <tr key={ra}>
-                    <td className="border border-gray-300 px-3 py-2">{ra}</td>
+                    <td className="border border-gray-300 px-3 py-2 text-sm leading-relaxed">
+                      {LAW_LABELS[ra] || ra}
+                    </td>
+
                     {yesNoNotSure.map((opt) => (
                       <td
                         key={opt}

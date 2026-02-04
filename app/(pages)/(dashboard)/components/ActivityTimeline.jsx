@@ -7,7 +7,7 @@ import {
   FaPlusCircle,
   FaCalendarCheck,
   FaTimesCircle,
-  FaEdit, // new icon for event updates
+  FaEdit,
 } from "react-icons/fa";
 
 function timeAgo(date) {
@@ -35,7 +35,7 @@ export default function ActivityTimeline({ userId }) {
     fetch(`/api/activity?user_id=${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        const latestActivities = (data.activities || []).slice(0, 4); // max 4
+        const latestActivities = (data.activities || []).slice(0, 4);
         setActivities(latestActivities);
         setLoading(false);
       });

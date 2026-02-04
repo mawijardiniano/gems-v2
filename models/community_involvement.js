@@ -12,16 +12,14 @@ const communitySchema = new Schema(
       required: true,
     },
 
-    spouse_different_religion: {
+    spouse_different_religion: {//remove if single
       type: String,
       enum: ["Yes", "No", "N/A"],
-      required: true,
     },
 
-    spouse_cultural_difference: {
+    spouse_cultural_difference: {//remove if single
       type: String,
       enum: ["Yes", "No", "N/A"],
-      required: true,
     },
   },
   { _id: false }

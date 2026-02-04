@@ -27,7 +27,7 @@ export async function POST(req) {
       req,
     });
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id, role: user.role, }, JWT_SECRET, { expiresIn: "1d" });
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
 

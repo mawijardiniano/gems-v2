@@ -219,7 +219,7 @@ export default function CreateEventPage() {
           </div>
         </section>
 
-        {/* Invitation Rules */}
+
         <section className="mb-8 border-t pt-8">
           <h2 className="text-2xl font-semibold mb-6">Invitation Rules</h2>
           <p className="text-gray-600 mb-6">
@@ -227,7 +227,7 @@ export default function CreateEventPage() {
             invitations.
           </p>
 
-          {/* Person Type */}
+
           <div className="mb-8">
             <label className="block font-medium mb-3">Person Type</label>
             <div className="space-y-2">
@@ -247,7 +247,6 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          {/* Employment Status */}
           <div className="mb-8">
             <label className="block font-medium mb-3">Employment Status</label>
             <div className="space-y-2">
@@ -269,7 +268,6 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          {/* PWD Status */}
           <div className="mb-8">
             <label className="block font-medium mb-3">
               Person with Disability
@@ -297,7 +295,6 @@ export default function CreateEventPage() {
             </select>
           </div>
 
-          {/* Solo Parent Status */}
           <div className="mb-8">
             <label className="block font-medium mb-3">Solo Parent Status</label>
             <select
@@ -323,7 +320,6 @@ export default function CreateEventPage() {
             </select>
           </div>
 
-          {/* College Scope */}
           <div className="mb-8">
             <label className="block font-medium mb-3">College Scope</label>
             <select
@@ -338,7 +334,6 @@ export default function CreateEventPage() {
             </select>
           </div>
 
-          {/* Selected Colleges */}
           {formData.invitation_rules.college_scope === "SELECTED" && (
             <div className="mb-8 bg-gray-50 p-4 rounded">
               <label className="block font-medium mb-3">Select Colleges</label>
@@ -361,7 +356,6 @@ export default function CreateEventPage() {
           )}
         </section>
 
-        {/* Buttons */}
         <div className="flex gap-4 justify-end border-t pt-8">
           <button
             type="button"

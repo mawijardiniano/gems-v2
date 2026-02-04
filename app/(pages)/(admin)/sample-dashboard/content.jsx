@@ -15,66 +15,128 @@ export default function Page() {
   const { data: rawData, loading } = useFetchData();
 
   const [filterSex, setFilterSex] = useState("");
+  const [filterYearLevel, setFilterYearLevel] = useState("");
+  const [filterPersonType, setFilterPersonType] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterEmployment, setFilterEmployment] = useState("");
   const [filterAppointment, setFilterAppointment] = useState([]);
 
-  const sexOption = useMemo(    
-    () => [...new Set(rawData.map((d) => d.personal_information.sex).filter(Boolean))],
-    [rawData]
+  const sexOption = useMemo(
+    () => [
+      ...new Set(
+        rawData.map((d) => d?.personal_information?.sex).filter(Boolean),
+      ),
+    ],
+    [rawData],
   );
 
   const collegeOptions = useMemo(
-    () =>
-      [...new Set(rawData.map((d) => d.personal_information.college_office).filter(Boolean))],
-    [rawData]
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_information?.academic_information?.college ||
+              d?.personal_information?.employment_information?.office,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
   );
 
   const employmentOptions = useMemo(
-    () =>
-      [...new Set(rawData.map((d) => d.personal_information.employment_status).filter(Boolean))],
-    [rawData]
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_information?.employment_information
+                ?.employment_status,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
   );
 
   const appointmentOptions = useMemo(
-    () =>
-      [...new Set(
+    () => [
+      ...new Set(
         rawData
-          .map((d) => d.personal_information.employment_appointment_status)
-          .filter(Boolean)
-      )],
-    [rawData]
+          .map(
+            (d) =>
+              d?.personal_information?.employment_information
+                ?.employment_appointment_status,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const yearLevelOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map((d) => d?.personal_information?.academic_information?.year_level)
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
   );
 
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {
-      const p = d.personal_information;
+      const p = d?.personal_information || {};
       if (!p || Object.keys(p).length === 0) return false;
+
+      const acad = p.academic_information || {};
+      const emp = p.employment_information || {};
+      const collegeOrOffice = acad.college || emp.office || "";
+      const empStatus = emp.employment_status || "";
+      const empAppointment = emp.employment_appointment_status || "";
 
       return (
         (!filterSex || p.sex === filterSex) &&
-        (filterCollege.length === 0 || filterCollege.includes(p.college_office)) &&
-        (!filterEmployment || p.employment_status === filterEmployment) &&
+        (!filterPersonType || p.person_type === filterPersonType) &&
+        (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        (filterCollege.length === 0 ||
+          filterCollege.includes(collegeOrOffice)) &&
+        (!filterEmployment || empStatus === filterEmployment) &&
         (filterAppointment.length === 0 ||
-          filterAppointment.includes(p.employment_appointment_status))
+          filterAppointment.includes(empAppointment))
       );
     });
-  }, [rawData, filterSex, filterCollege, filterEmployment, filterAppointment]);
-
+  }, [
+    rawData,
+    filterSex,
+    filterPersonType,
+    filterYearLevel,
+    filterCollege,
+    filterEmployment,
+    filterAppointment,
+  ]);
 
   return (
     <div className="py-8 flex flex-col gap-4">
       <div className="flex justify-end">
         <Filter
           filterSex={filterSex}
+          filterPersonType={filterPersonType}
+          filterYearLevel={filterYearLevel}
           filterCollege={filterCollege}
           filterEmployment={filterEmployment}
           filterAppointment={filterAppointment}
           setFilterSex={setFilterSex}
+          setFilterPersonType={setFilterPersonType}
+          setFilterYearLevel={setFilterYearLevel}
           setFilterCollege={setFilterCollege}
           setFilterEmployment={setFilterEmployment}
           setFilterAppointment={setFilterAppointment}
           sexOption={sexOption}
+          personTypeOptions={["Student", "Employee"]}
+          yearLevelOptions={yearLevelOptions}
           collegeOptions={collegeOptions}
           employmentOptions={employmentOptions}
           appointmentOptions={appointmentOptions}

@@ -11,6 +11,8 @@ import Progress from "./progress";
 export default function HouseholdManagingRole() {
   const dispatch = useDispatch();
   const h = useSelector((state) => state.profile.household_managing_role);
+  const p = useSelector((state) => state.profile.personal_information);
+
   const currentStep = useSelector((state) => state.profile.currentStep);
 
   const handleNext = () => {
@@ -37,26 +39,27 @@ export default function HouseholdManagingRole() {
       <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
         Household Managing Role
       </h2>
-
-      <div>
-        <p className="font-medium text-gray-700 mb-2">
-          Does your spouse participate in household chores?
-        </p>
-        <div className="flex gap-6">
-          {stringOptions.map((opt) => (
-            <label key={opt} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="spouse_participate_household"
-                checked={h.spouse_participate_household === opt}
-                onChange={() => update("spouse_participate_household", opt)}
-                className="w-4 h-4 accent-blue-500"
-              />
-              {opt}
-            </label>
-          ))}
+      {p.civil_status !== "Single" && (
+        <div>
+          <p className="font-medium text-gray-700 mb-2">
+            Does your spouse participate in household chores?
+          </p>
+          <div className="flex gap-6">
+            {stringOptions.map((opt) => (
+              <label key={opt} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="spouse_participate_household"
+                  checked={h.spouse_participate_household === opt}
+                  onChange={() => update("spouse_participate_household", opt)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <p className="font-medium text-gray-700 mb-2">
@@ -69,7 +72,9 @@ export default function HouseholdManagingRole() {
                 type="radio"
                 name="family_participate_household"
                 checked={h.family_participate_household === opt.value}
-                onChange={() => update("family_participate_household", opt.value)}
+                onChange={() =>
+                  update("family_participate_household", opt.value)
+                }
                 className="w-4 h-4 accent-blue-500"
               />
               {opt.label}

@@ -17,7 +17,7 @@ export default function Environmental() {
   };
 
   const yesNoOptions = ["Yes", "No", "N/A"];
-   const YesorNoOptions = [
+  const YesorNoOptions = [
     { label: "Yes", value: true },
     { label: "No", value: false },
   ];
@@ -45,18 +45,16 @@ export default function Environmental() {
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 space-y-8 rounded-xl shadow-lg">
-      {/* Progress Bar */}
       <Progress />
 
       <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
         Environmental & Climate
       </h2>
 
-      {/* Environmental Questions */}
       <div className="grid grid-cols-1 gap-4">
         {fields.map((field) => (
           <div key={field} className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-600">
+            <span className="text-sm font-medium text-gray-600 capitalize">
               {field.replace(/_/g, " ")}
             </span>
             <div className="flex gap-4 mt-1">
@@ -77,30 +75,28 @@ export default function Environmental() {
           </div>
         ))}
 
-       <div className="flex flex-col gap-1">
-  <span className="text-sm font-medium text-gray-600">
-    Trained Marshals
-  </span>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-gray-600">
+            Trained Marshals
+          </span>
 
-  <div className="flex gap-4 mt-1">
-    {YesorNoOptions.map((opt) => (
-      <label key={opt.label} className="flex items-center gap-2">
-        <input
-          type="radio"
-          name="trained_marshals"
-          checked={env.trained_marshals === opt.value}
-          onChange={() => update("trained_marshals", opt.value)}
-          className="w-4 h-4 accent-blue-500"
-        />
-        {opt.label}
-      </label>
-    ))}
-  </div>
-</div>
-
+          <div className="flex gap-4 mt-1">
+            {YesorNoOptions.map((opt) => (
+              <label key={opt.label} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="trained_marshals"
+                  checked={env.trained_marshals === opt.value}
+                  onChange={() => update("trained_marshals", opt.value)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex justify-between mt-6">
         <button
           onClick={() => dispatch(prevStep())}

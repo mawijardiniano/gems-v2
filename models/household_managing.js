@@ -3,9 +3,9 @@ import { Schema } from "mongoose";
 const householdSchema = new Schema(
   {
     spouse_participate_household: {
+      //remove if single
       type: String,
       enum: ["Yes", "No", "N/A"],
-      required: true,
     },
 
     family_participate_household: {
@@ -23,7 +23,7 @@ const householdSchema = new Schema(
       required: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 export default householdSchema;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaUser,
   FaChevronDown,
@@ -24,6 +24,7 @@ export default function Sidebar({ open, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEventOpen, setIsEventOpen] = useState(false);
+  const [personType, setPersonType] = useState(null);
   const router = useRouter();
 
   const handleMobileClose = () => {
@@ -31,6 +32,27 @@ export default function Sidebar({ open, setOpen }) {
       setOpen(false);
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/profile/my-profile", {
+          credentials: "include",
+        });
+        if (!mounted) return;
+        if (!res.ok) return;
+        const body = await res.json();
+        // Support multiple response shapes: { success, data }, { profile }, or direct profile
+        const profileObj = body?.data || body?.profile || body || null;
+        const pt = profileObj?.personal_information?.person_type || null;
+        setPersonType(pt);
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => (mounted = false);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -53,10 +75,14 @@ export default function Sidebar({ open, setOpen }) {
       }`}
     >
       <nav className="flex flex-col h-full px-2 py-4 space-y-2 mt-16">
-
-        {/* Overview */}
-        <div className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}>
-          <Link href="/dashboard" onClick={handleMobileClose} className="flex items-center gap-2">
+        <div
+          className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+        >
+          <Link
+            href="/dashboard"
+            onClick={handleMobileClose}
+            className="flex items-center gap-2"
+          >
             <FaUser />
             {open && <span>Overview</span>}
           </Link>
@@ -67,46 +93,103 @@ export default function Sidebar({ open, setOpen }) {
           )}
         </div>
 
-        {/* Profile submenu */}
         {isProfileOpen && open && (
           <div className="ml-6 space-y-1">
-            <Link href="/dashboard/personal-information" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/personal-information"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaIdCard /> Personal Information
             </Link>
 
-            <Link href="/dashboard/roles" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            {personType === "Student" && (
+              <Link
+                href="/dashboard/academic"
+                onClick={handleMobileClose}
+                className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              >
+                <FaBook /> Academic Information
+              </Link>
+            )}
+
+            {personType === "Employee" && (
+              <Link
+                href="/dashboard/employment"
+                onClick={handleMobileClose}
+                className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              >
+                <FaIdCard /> Employment Information
+              </Link>
+            )}
+
+            <Link
+              href="/dashboard/roles"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaUsers /> Roles
             </Link>
 
-            <Link href="/dashboard/development" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/development"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaBook /> Development
             </Link>
 
-            <Link href="/dashboard/legal-knowledge" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/legal-knowledge"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaBalanceScale /> Legal Knowledge
             </Link>
 
-            <Link href="/dashboard/community" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/community"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaUsers /> Community
             </Link>
 
-            <Link href="/dashboard/environmental" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/environmental"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaLeaf /> Environmental
             </Link>
 
-            <Link href="/dashboard/gender-responsiveness" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/gender-responsiveness"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaVenusMars /> Gender Responsiveness
             </Link>
 
-            <Link href="/dashboard/security" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/dashboard/security"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaShieldAlt /> Security
             </Link>
           </div>
         )}
 
         {/* Events */}
-        <div className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}>
-          <Link href="/events" onClick={handleMobileClose} className="flex items-center gap-2">
+        <div
+          className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+        >
+          <Link
+            href="/events"
+            onClick={handleMobileClose}
+            className="flex items-center gap-2"
+          >
             <FaCalendar />
             {open && <span>Events</span>}
           </Link>
@@ -119,14 +202,22 @@ export default function Sidebar({ open, setOpen }) {
 
         {isEventOpen && open && (
           <div className="ml-6 space-y-1">
-            <Link href="/events/invited-events" onClick={handleMobileClose} className="flex items-center gap-2 p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/events/invited-events"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
               <FaClipboardList /> Invited / Participated
             </Link>
           </div>
         )}
 
         {/* Settings */}
-        <Link href="/settings" onClick={handleMobileClose} className={`flex items-center p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}>
+        <Link
+          href="/settings"
+          onClick={handleMobileClose}
+          className={`flex items-center p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+        >
           <FaCog />
           {open && <span className="ml-3">Settings</span>}
         </Link>
@@ -146,12 +237,20 @@ export default function Sidebar({ open, setOpen }) {
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80">
             <h2 className="text-lg font-medium">Confirm Logout</h2>
-            <p className="mb-6 text-gray-600">Are you sure you want to log out?</p>
+            <p className="mb-6 text-gray-600">
+              Are you sure you want to log out?
+            </p>
             <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowLogoutModal(false)}>
+              <button
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={() => setShowLogoutModal(false)}
+              >
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={handleLogout}>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             </div>

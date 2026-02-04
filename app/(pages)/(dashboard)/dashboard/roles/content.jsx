@@ -99,21 +99,19 @@ const renderField = (section, key) => {
   const value = formData[section][key];
 
   if (!isEditing) {
-    // Convert boolean / boolean-like values to Yes/No
     let display = value;
     if (typeof value === "boolean") display = value ? "Yes" : "No";
     if (value === "true") display = "Yes";
     if (value === "false") display = "No";
-    if (!display) display = "-"; // fallback for empty/null values
+    if (!display) display = "-"; 
 
     return (
-      <div className="border px-2 py-1 rounded bg-gray-50 min-w-[100px]">
+      <div className="border border-gray-300 px-2 py-1 rounded bg-gray-50 min-w-[100px]">
         {display}
       </div>
     );
   }
 
-  // Editable fields
   if (ENUM_FIELDS[key]) {
     return (
       <select

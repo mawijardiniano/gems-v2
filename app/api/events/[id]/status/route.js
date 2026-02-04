@@ -14,7 +14,7 @@ export async function PATCH(req, context) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { message: "Invalid event ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +24,7 @@ export async function PATCH(req, context) {
     if (!allowedStatus.includes(status)) {
       return NextResponse.json(
         { message: "Invalid status value" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
