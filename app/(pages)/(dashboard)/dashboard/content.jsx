@@ -151,7 +151,7 @@ export default function DashboardContent({ profile, userId }) {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
                   <h3 className="text-gray-500 text-sm">Status</h3>
                   <p className="text-lg font-medium">
