@@ -208,14 +208,14 @@ export default function DiscoverEventContent() {
             <h2 className="text-xl font-semibold">Do you have an account?</h2>
             <p className="text-gray-600">
               We use your account to personalize your event experience. If you
-              do not have one, we will take you to the quick survey.
+              do not have one, please sign up to continue.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 onClick={handleQrNoAccount}
                 className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100"
               >
-                No, take survey
+                Sign Up
               </button>
               <button
                 onClick={handleQrYesAccount}
@@ -310,7 +310,6 @@ export default function DiscoverEventContent() {
                   key={s}
                   onClick={() => {
                     if (s === "going") {
-                     
                       if (
                         event.eligibility_criteria &&
                         event.eligibility_criteria !== "None"
