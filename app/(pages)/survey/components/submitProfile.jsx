@@ -153,34 +153,178 @@ export default function SubmitProfile() {
           </div>
         </div>
       ) : (
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => dispatch(prevStep())}
-            className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            Previous
-          </button>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`px-6 py-2 rounded-lg transition ${
-                isSubmitting
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
-            <button
-              onClick={() => dispatch(reset())}
-              className="px-4 py-2 rounded-lg border"
-              disabled={isSubmitting}
-            >
-              Reset
-            </button>
+        <>
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+            <h3 className="font-semibold mb-2 text-gray-700">
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <div>
+                <b>First Name:</b> {personal.first_name}
+              </div>
+              <div>
+                <b>Middle Name:</b> {personal.middle_name}
+              </div>
+              <div>
+                <b>Last Name:</b> {personal.last_name}
+              </div>
+              <div>
+                <b>Civil Status:</b> {personal.civil_status}
+              </div>
+              <div>
+                <b>Religion:</b> {personal.religion}
+              </div>
+              <div>
+                <b>Current Status:</b> {personal.currentStatus}
+              </div>
+              <div>
+                <b>Birthday:</b> {personal.birthday}
+              </div>
+              <div>
+                <b>Blood Type:</b> {personal.bloodType}
+              </div>
+            </div>
           </div>
-        </div>
+
+           {personal.currentStatus === "Student" && (
+            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+              <h3 className="font-semibold mb-2 text-gray-700">
+                Academic Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div>
+                  <b>Student ID:</b>{" "}
+                  {affiliation.academic_information?.student_id}
+                </div>
+                <div>
+                  <b>Campus:</b> {affiliation.academic_information?.campus}
+                </div>
+                <div>
+                  <b>College:</b> {affiliation.academic_information?.college}
+                </div>
+                <div>
+                  <b>Course:</b> {affiliation.academic_information?.course}
+                </div>
+                <div>
+                  <b>Year Level:</b>{" "}
+                  {affiliation.academic_information?.year_level}
+                </div>
+                <div>
+                  <b>Scholar:</b>{" "}
+                  {affiliation.academic_information?.isScholar ? "Yes" : "No"}
+                </div>
+              </div>
+            </div>
+          )}
+          {personal.currentStatus === "Employee" && (
+            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+              <h3 className="font-semibold mb-2 text-gray-700">
+                Employment Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div>
+                  <b>Employee ID:</b>{" "}
+                  {affiliation.employment_information?.employee_id}
+                </div>
+                <div>
+                  <b>Office:</b> {affiliation.employment_information?.office}
+                </div>
+                <div>
+                  <b>Employment Status:</b>{" "}
+                  {affiliation.employment_information?.employment_status}
+                </div>
+                <div>
+                  <b>Appointment Status:</b>{" "}
+                  {
+                    affiliation.employment_information
+                      ?.employment_appointment_status
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+            <h3 className="font-semibold mb-2 text-gray-700">GAD Data</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <div>
+                <b>Sex at Birth:</b> {gadData.sexAtBirth}
+              </div>
+              <div>
+                <b>Gender Preference:</b> {gadData.gender_preference}
+              </div>
+              <div>
+                <b>PWD:</b> {gadData.isPWD ? "Yes" : "No"}
+              </div>
+              {gadData.isPWD && (
+                <div>
+                  <b>PWD Type:</b> {gadData.pwd_type}
+                </div>
+              )}
+              <div>
+                <b>Indigenous Person:</b>{" "}
+                {gadData.isIndigenousPerson ? "Yes" : "No"}
+              </div>
+              <div>
+                <b>Socio-Economic Status:</b> {gadData.socioEconomicStatus}
+              </div>
+              <div>
+                <b>Head of Household:</b> {gadData.headOfHousehold}
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+            <h3 className="font-semibold mb-2 text-gray-700">
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <div>
+                <b>Email:</b> {contact.email}
+              </div>
+              <div>
+                <b>Mobile Number:</b> {contact.mobileNumber}
+              </div>
+              <div>
+                <b>Permanent Address:</b> {contact.permanentAddress?.barangay},{" "}
+                {contact.permanentAddress?.city},{" "}
+                {contact.permanentAddress?.province}
+              </div>
+              <div>
+                <b>Current Address:</b> {contact.currentAddress?.barangay},{" "}
+                {contact.currentAddress?.city},{" "}
+                {contact.currentAddress?.province}
+              </div>
+            </div>
+          </div>
+         
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={() => dispatch(prevStep())}
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className={`px-6 py-2 rounded-lg transition ${
+                  isSubmitting
+                    ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </button>
+              <button
+                onClick={() => dispatch(reset())}
+                className="px-4 py-2 rounded-lg border"
+                disabled={isSubmitting}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

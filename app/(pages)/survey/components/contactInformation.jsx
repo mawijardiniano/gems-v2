@@ -8,9 +8,12 @@ import {
 } from "@/store/slices/profileRegistrationSlice";
 import Progress from "./progress";
 
+import { useState } from "react";
+
 export default function ContactInformation() {
   const dispatch = useDispatch();
   const contact = useSelector((state) => state.profile.contact);
+  const [copyChecked, setCopyChecked] = useState(false);
 
   const update = (field, value) => dispatch(setContact({ field, value }));
 
@@ -35,6 +38,25 @@ export default function ContactInformation() {
   const isNextDisabled = requiredFields.some(
     (field) => !getValue(field) || getValue(field).toString().trim() === "",
   );
+
+  const handleCopyChecked = (checked) => {
+    setCopyChecked(checked);
+    if (checked) {
+      update(
+        "currentAddress.barangay",
+        contact.permanentAddress.barangay || "",
+      );
+      update("currentAddress.city", contact.permanentAddress.city || "");
+      update(
+        "currentAddress.province",
+        contact.permanentAddress.province || "",
+      );
+    } else {
+      update("currentAddress.barangay", "");
+      update("currentAddress.city", "");
+      update("currentAddress.province", "");
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 space-y-8 rounded-xl shadow-lg">
@@ -105,9 +127,20 @@ export default function ContactInformation() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-700">
-            Current Address <span className="text-red-500">*</span>
-          </h3>
+          <div className="flex flex-row justify-between">
+            <h3 className="font-semibold text-gray-700">
+              Current Address <span className="text-red-500">*</span>
+            </h3>
+            <label className="flex justify-center items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={copyChecked}
+                onChange={(e) => handleCopyChecked(e.target.checked)}
+              />
+              Same as Permanent Address
+            </label>
+          </div>
+
           <input
             className="border border-gray-300 rounded-lg px-3 py-2 w-full"
             value={contact.currentAddress.barangay}
