@@ -372,12 +372,15 @@ export default function PersonalInformationContent({ profile }) {
     }
 
     const inputType = key === "birthday" ? "date" : "text";
+    const maxDate =
+      key === "birthday" ? new Date().toISOString().split("T")[0] : undefined;
     return (
       <input
         type={inputType}
         className="border border-gray-300 rounded px-3 py-1 w-full"
         value={value || ""}
         onChange={(e) => handleChange(key, e.target.value)}
+        {...(key === "birthday" ? { max: maxDate } : {})}
       />
     );
   };

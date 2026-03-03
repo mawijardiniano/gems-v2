@@ -17,8 +17,25 @@ export default function PersonalInformation() {
   const updateAffiliation = (field, value) =>
     dispatch(setAffiliation({ field, value }));
 
+  // Required fields except middle_name
+  const requiredFields = [
+    "first_name",
+    "last_name",
+    "birthday",
+    "bloodType",
+    "nationality",
+    "civil_status",
+    "religion",
+    "currentStatus",
+  ];
+  const isNextDisabled = requiredFields.some(
+    (field) => !personal[field] || personal[field].toString().trim() === "",
+  );
+
   const handleNext = () => {
-    dispatch(nextStep());
+    if (!isNextDisabled) {
+      dispatch(nextStep());
+    }
   };
 
   return (
@@ -34,6 +51,9 @@ export default function PersonalInformation() {
           <div key={field} className="flex flex-col">
             <label className="text-sm text-gray-600 capitalize">
               {field.replace("_", " ")}
+              {field !== "middle_name" && (
+                <span className="text-red-500">*</span>
+              )}
             </label>
             <input
               className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -46,17 +66,22 @@ export default function PersonalInformation() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Birthday</label>
+          <label className="text-sm text-gray-600">
+            Birthday <span className="text-red-500">*</span>
+          </label>
           <input
             type="date"
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.birthday}
             onChange={(e) => updatePersonal("birthday", e.target.value)}
+            max={new Date().toISOString().split("T")[0]}
           />
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Blood Type</label>
+          <label className="text-sm text-gray-600">
+            Blood Type <span className="text-red-500">*</span>
+          </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.bloodType}
@@ -72,7 +97,9 @@ export default function PersonalInformation() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Nationality</label>
+          <label className="text-sm text-gray-600">
+            Nationality <span className="text-red-500">*</span>
+          </label>
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.nationality}
@@ -83,7 +110,9 @@ export default function PersonalInformation() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Civil Status</label>
+          <label className="text-sm text-gray-600">
+            Civil Status <span className="text-red-500">*</span>
+          </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.civil_status}
@@ -100,7 +129,9 @@ export default function PersonalInformation() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Religion</label>
+          <label className="text-sm text-gray-600">
+            Religion <span className="text-red-500">*</span>
+          </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.religion}
@@ -120,7 +151,9 @@ export default function PersonalInformation() {
       </div>
 
       <div className="flex flex-col">
-        <label className="text-sm text-gray-600">Current Status</label>
+        <label className="text-sm text-gray-600">
+          Current Status <span className="text-red-500">*</span>
+        </label>
         <select
           className="border border-gray-300 rounded-lg px-3 py-2"
           value={personal.currentStatus}
@@ -160,7 +193,8 @@ export default function PersonalInformation() {
       <div className="flex justify-end">
         <button
           onClick={handleNext}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+          className={`bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition ${isNextDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={isNextDisabled}
         >
           Next
         </button>

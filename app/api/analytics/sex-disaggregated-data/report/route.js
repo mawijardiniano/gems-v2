@@ -177,7 +177,7 @@ export async function GET(req) {
     doc.setFontSize(8);
     tableStartY += 4;
 
-    const cicsCourses = ["Info System", "Info Tech"];
+    const cicsCourses = ["Information System", "Information Technology"];
     const cicsYearMap = {};
     cicsCourses.forEach((course) => {
       const yearMap = courseYearCounts[course] || {};
@@ -264,7 +264,7 @@ export async function GET(req) {
           return [year, male, female, total];
         });
         let yearRows;
-        if (course === "Info System" || course === "Info Tech") {
+        if (course === "Information System" || course === "Information Technology") {
           const yearOrder = [
             "1st Year",
             "2nd Year",

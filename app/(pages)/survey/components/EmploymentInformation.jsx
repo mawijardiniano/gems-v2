@@ -14,20 +14,6 @@ export default function EmploymentInformation() {
     (s) => s.profile.affiliation.employment_information,
   );
 
-  // const appointmentOptions = [
-  //   "Regular",
-  //   "Temporary",
-  //   "Coterminous",
-  //   "Casual",
-  //   "Job Order",
-  //   "Contract of Service (Skilled)",
-  //   "Utility Worker",
-  //   "University Lecturer",
-  //   "Part-time Lecturer",
-  //   "Clinical Instructor",
-  //   "Adjunct",
-  // ];
-
   const APPOINTMENT_STATUS_MAP = {
     "Non-teaching Personnel": [
       "Regular",
@@ -58,6 +44,18 @@ export default function EmploymentInformation() {
         value: { ...employment, [field]: value },
       }),
     );
+
+  // All fields required
+  const requiredFields = [
+    "employee_id",
+    "office",
+    "employment_status",
+    "employment_appointment_status",
+  ];
+  const isNextDisabled = requiredFields.some(
+    (field) =>
+      !employment?.[field] || employment[field].toString().trim() === "",
+  );
 
   if (personal.currentStatus !== "Employee") {
     return (
@@ -92,21 +90,27 @@ export default function EmploymentInformation() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Employee ID</label>
+          <label className="text-sm text-gray-600">
+            Employee ID <span className="text-red-500">*</span>
+          </label>
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={employment?.employee_id || ""}
             onChange={(e) => update("employee_id", e.target.value)}
             placeholder="Enter Employee ID"
+            required
           />
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Office</label>
+          <label className="text-sm text-gray-600">
+            Office <span className="text-red-500">*</span>
+          </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={employment?.office || ""}
             onChange={(e) => update("office", e.target.value)}
+            required
           >
             <option value="">Select</option>
             <option>Graduate School</option>
@@ -147,11 +151,14 @@ export default function EmploymentInformation() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Employment Status</label>
+          <label className="text-sm text-gray-600">
+            Employment Status <span className="text-red-500">*</span>
+          </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={employment?.employment_status || ""}
             onChange={(e) => update("employment_status", e.target.value)}
+            required
           >
             <option value="">Select</option>
             <option>Faculty</option>
@@ -161,7 +168,8 @@ export default function EmploymentInformation() {
 
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">
-            Employment Appointment Status
+            Employment Appointment Status{" "}
+            <span className="text-red-500">*</span>
           </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
@@ -170,6 +178,7 @@ export default function EmploymentInformation() {
               update("employment_appointment_status", e.target.value)
             }
             disabled={!employment?.employment_status}
+            required
           >
             <option value="">Select Appointment Status</option>
             {appointmentOptions.map((status) => (
@@ -189,8 +198,9 @@ export default function EmploymentInformation() {
           Previous
         </button>
         <button
-          onClick={() => dispatch(nextStep())}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={() => !isNextDisabled && dispatch(nextStep())}
+          className={`bg-blue-600 text-white px-4 py-2 rounded ${isNextDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={isNextDisabled}
         >
           Next
         </button>

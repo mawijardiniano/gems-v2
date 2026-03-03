@@ -21,7 +21,7 @@ export default function Snapshot({ data }) {
   ).length;
 
   const pwdCount =
-    data.filter((d) => d.personal_info_id.gadData.isPwd === true).length || 0;
+    data.filter((d) => d.personal_info_id.gadData.isPWD === true).length || 0;
   const ipCount =
     data.filter((d) => d.personal_info_id.gadData.isIndigenousPerson === true)
       .length || 0;
