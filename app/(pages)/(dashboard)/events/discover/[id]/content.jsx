@@ -310,7 +310,11 @@ export default function DiscoverEventContent() {
                   key={s}
                   onClick={() => {
                     if (s === "going") {
-                      if (event.eligibility_criteria) {
+                     
+                      if (
+                        event.eligibility_criteria &&
+                        event.eligibility_criteria !== "None"
+                      ) {
                         setShowEligibilityModal(true);
                       } else {
                         handleStatus(event, s);
@@ -350,7 +354,7 @@ export default function DiscoverEventContent() {
       )}
 
       <div>
-        <h1>QR for Attendance</h1>
+        {/* <h1>QR for Attendance</h1> */}
         {/* {userId ? (
           <div className="flex items-center gap-4 p-3 border rounded-lg bg-gray-50 mt-4">
             <div>
