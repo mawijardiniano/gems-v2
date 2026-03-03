@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
-import User from "@/models/user";
+import UserAuth from "@/models/user";
+import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 
@@ -8,14 +9,51 @@ export async function GET() {
   try {
     await connectDB();
 
-    const events = await Event.find().lean();
+    const events = await Event.find()
+      .populate({
+        path: "created_by",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: {
+          path: "personal_info_id",
+          model: "GemsProfile",
+        },
+      })
+      .populate({
+        path: "registered_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: {
+          path: "personal_info_id",
+          model: "GemsProfile",
+        },
+      })
+      .populate({
+        path: "interested_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: {
+          path: "personal_info_id",
+          model: "GemsProfile",
+        },
+      })
+      .populate({
+        path: "not_interested_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: {
+          path: "personal_info_id",
+          model: "GemsProfile",
+        },
+      })
+      .lean();
 
     return NextResponse.json({ status: "success", data: events });
   } catch (error) {
     console.error("GET /api/events error:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -25,32 +63,62 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
-    const { title, description, date, venue, created_by, invitation_rules } =
-      body;
+    const {
+      title,
+      description,
+      start_date,
+      end_date,
+      venue,
+      created_by,
+      type_of_activity,
+      organizing_office_unit,
+      eligibility_criteria,
+    } = body;
 
-    if (!title || !date || !created_by) {
+    if (
+      !title ||
+      !start_date ||
+      !end_date ||
+      !created_by ||
+      !type_of_activity ||
+      !organizing_office_unit ||
+      !eligibility_criteria
+    ) {
       return NextResponse.json(
-        { message: "Title, date, and created_by are required." },
-        { status: 400 }
+        {
+          message:
+            "Title, start_date, end_date, created_by, type_of_activity, and organizing_office_unit are required.",
+        },
+        { status: 400 },
       );
     }
 
-    const user = await User.findById(created_by);
+    const user = await UserAuth.findById(created_by);
     if (!user) {
       return NextResponse.json(
         { message: "Creator user not found." },
-        { status: 404 }
+        { status: 404 },
+      );
+    }
+
+    if (user.role !== "Focal") {
+      return NextResponse.json(
+        { message: "Only Focal users can create events." },
+        { status: 403 },
       );
     }
 
     const newEvent = await Event.create({
       title,
       description,
-      date,
+      start_date,
+      end_date,
       venue,
+      type_of_activity,
+      organizing_office_unit,
+      eligibility_criteria,
       created_by,
       updated_by: created_by,
-      invitation_rules,
       registered_users: [],
     });
 
@@ -64,18 +132,16 @@ export async function POST(req) {
 
     return NextResponse.json(
       { message: "Event created successfully", event: newEvent },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
       { message: "Internal server error", error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
-
 
 export async function DELETE() {
   try {
@@ -91,7 +157,7 @@ export async function DELETE() {
     console.error("Error deleting all events:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

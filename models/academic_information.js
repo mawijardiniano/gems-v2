@@ -6,6 +6,11 @@ const academicInformationSchema = new Schema(
       type: String,
       required: true,
     },
+    campus: {
+      type: String,
+      required: true,
+      enum: ["Boac", "Gasan", "Sta. Cruz"],
+    },
 
     college: {
       type: String,
@@ -26,6 +31,11 @@ const academicInformationSchema = new Schema(
       ],
       required: true,
     },
+    course: {
+      type: String,
+      required: true,
+      enum: ["Information System", "Information Technology"],
+    },
 
     year_level: {
       type: String,
@@ -39,8 +49,12 @@ const academicInformationSchema = new Schema(
       ],
       required: true,
     },
+    isScholar: {
+      type: String,
+      required: true,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 export default academicInformationSchema;

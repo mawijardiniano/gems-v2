@@ -2,48 +2,24 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import {
-  setPersonalInformation,
+  setPersonal,
+  setAffiliation,
   nextStep,
 } from "@/store/slices/profileRegistrationSlice";
 import Progress from "./progress";
 
 export default function PersonalInformation() {
   const dispatch = useDispatch();
-  const p = useSelector((state) => state.profile.personal_information);
-  const currentStep = useSelector((state) => state.profile.currentStep);
+  const personal = useSelector((state) => state.profile.personal);
 
-  const update = (field, value) =>
-    dispatch(setPersonalInformation({ field, value }));
-
-  const toggle = (field, value) => {
-    update(
-      field,
-      p[field].includes(value)
-        ? p[field].filter((v) => v !== value)
-        : [...p[field], value],
-    );
-  };
+  const updatePersonal = (field, value) =>
+    dispatch(setPersonal({ field, value }));
+  const updateAffiliation = (field, value) =>
+    dispatch(setAffiliation({ field, value }));
 
   const handleNext = () => {
     dispatch(nextStep());
-    console.log("Moved to next step:", currentStep + 1, {
-      personal_information: p,
-    });
   };
-
-  const yesNoOptions = [
-    { label: "Yes", value: true },
-    { label: "No", value: false },
-  ];
-
-  const pwdTypes = [
-    "Visual Impairment",
-    "Hearing Impairment",
-    "Physical Disability",
-    "Mental Disability",
-    "Multiple Disabilities",
-    "Other",
-  ];
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 space-y-8 rounded-xl shadow-lg">
@@ -52,75 +28,66 @@ export default function PersonalInformation() {
       <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
         Personal Information
       </h2>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {["first_name", "middle_name", "last_name"].map((field, idx) => (
-          <div key={idx} className="flex flex-col">
+        {["first_name", "middle_name", "last_name"].map((field) => (
+          <div key={field} className="flex flex-col">
             <label className="text-sm text-gray-600 capitalize">
               {field.replace("_", " ")}
             </label>
             <input
               className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={p[field]}
-              onChange={(e) => update(field, e.target.value)}
+              value={personal[field]}
+              onChange={(e) => updatePersonal(field, e.target.value)}
             />
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Sex</label>
+          <label className="text-sm text-gray-600">Birthday</label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-lg px-3 py-2"
+            value={personal.birthday}
+            onChange={(e) => updatePersonal("birthday", e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600">Blood Type</label>
           <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.sex}
-            onChange={(e) => update("sex", e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2"
+            value={personal.bloodType}
+            onChange={(e) => updatePersonal("bloodType", e.target.value)}
           >
             <option value="">Select</option>
-            <option>Male</option>
-            <option>Female</option>
+            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+              <option key={bt} value={bt}>
+                {bt}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Gender Preference</label>
-          <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.gender_preference}
-            onChange={(e) => update("gender_preference", e.target.value)}
-          >
-            <option value="">Select</option>
-            <option>Heterosexual Male</option>
-            <option>Heterosexual Female</option>
-            <option>Gay</option>
-            <option>Lesbian</option>
-            <option>Prefer not to say</option>
-          </select>
+          <label className="text-sm text-gray-600">Nationality</label>
+          <input
+            className="border border-gray-300 rounded-lg px-3 py-2"
+            value={personal.nationality}
+            onChange={(e) => updatePersonal("nationality", e.target.value)}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Age Bracket</label>
-          <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.age_bracket}
-            onChange={(e) => update("age_bracket", e.target.value)}
-          >
-            <option value="">Select</option>
-            <option>18-30</option>
-            <option>31-40</option>
-            <option>41-50</option>
-            <option>51-60</option>
-            <option>61 and above</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col">
           <label className="text-sm text-gray-600">Civil Status</label>
           <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.civil_status}
-            onChange={(e) => update("civil_status", e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2"
+            value={personal.civil_status}
+            onChange={(e) => updatePersonal("civil_status", e.target.value)}
           >
             <option value="">Select</option>
             <option>Single</option>
@@ -131,194 +98,66 @@ export default function PersonalInformation() {
             <option>Annulled</option>
           </select>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">Religion</label>
           <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.religion}
-            onChange={(e) => update("religion", e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2"
+            value={personal.religion}
+            onChange={(e) => updatePersonal("religion", e.target.value)}
           >
             <option value="">Select</option>
             <option>Roman Catholic</option>
             <option>Iglesia ni Cristo</option>
+            <option>Iglesia Independencia Filipina</option>
             <option>Protestant</option>
             <option>Born Again Christian</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">Current Status</label>
-          <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.person_type || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              update("person_type", value);
-
-              if (value === "Student") {
-                update("academic_information", {
-                  student_id: "",
-                  college: "",
-                  year_level: "",
-                });
-
-                update("employment_information", null);
-              } else if (value === "Employee") {
-                update("employment_information", {
-                  employee_id: "",
-                  office: "",
-                  employment_status: "",
-                  employment_appointment_status: "",
-                });
-
-                update("academic_information", null);
-              } else {
-                update("academic_information", null);
-                update("employment_information", null);
-              }
-            }}
-          >
-            <option value="">Select</option>
-            <option value="Student">Student</option>
-            <option value="Employee">Employee</option>
+            <option>Evangelical Christian</option>
+            <option>Latter Day Saints</option>
+            <option>Members Church of God International (MGCI)</option>
           </select>
         </div>
       </div>
-
-      <div>
-        <p className="font-medium text-gray-700 mb-2">Solo Parent</p>
-        {yesNoOptions.map((opt) => (
-          <label key={opt.label} className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="solo_parent"
-              checked={p.solo_parent === opt.value}
-              onChange={() =>
-                update(
-                  "solo_parent",
-
-                  opt.value,
-                )
-              }
-              className="w-4 h-4 accent-blue-500"
-            />
-            {opt.label}
-          </label>
-        ))}
-      </div>
-
-      <div>
-        <p className="font-medium text-gray-700 mb-2">Person with Disability</p>
-        {yesNoOptions.map((opt) => (
-          <label key={opt.label} className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="pwd"
-              checked={p.pwd === opt.value}
-              onChange={() =>
-                update(
-                  "pwd",
-
-                  opt.value,
-                )
-              }
-              className="w-4 h-4 accent-blue-500"
-            />
-            {opt.label}
-          </label>
-        ))}
-      </div>
-
-      {p.pwd === true && (
-        <div className="flex flex-col">
-          <label className="text-sm text-gray-600">PWD Type</label>
-          <select
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={p.pwd_type || ""}
-            onChange={(e) => update("pwd_type", e.target.value)}
-          >
-            <option value="">Select PWD Type</option>
-            {pwdTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       <div className="flex flex-col">
-        <label className="text-sm text-gray-600">
-          Total Annual Family Income
-        </label>
+        <label className="text-sm text-gray-600">Current Status</label>
         <select
-          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={p.total_annual_family_income}
-          onChange={(e) => update("total_annual_family_income", e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2"
+          value={personal.currentStatus}
+          onChange={(e) => {
+            const value = e.target.value;
+            updatePersonal("currentStatus", value);
+
+            if (value === "Student") {
+              updateAffiliation("academic_information", {
+                student_id: "",
+                campus: "",
+                college: "",
+                course: "",
+                year_level: "",
+                isScholar: "",
+              });
+              updateAffiliation("employment_information", null);
+            } else if (value === "Employee") {
+              updateAffiliation("employment_information", {
+                employee_id: "",
+                office: "",
+                employment_status: "",
+                employment_appointment_status: "",
+              });
+              updateAffiliation("academic_information", null);
+            } else {
+              updateAffiliation("academic_information", null);
+              updateAffiliation("employment_information", null);
+            }
+          }}
         >
-          <option value="">Select Income</option>
-          <option>₱1,000.00 - ₱50,000.00</option>
-          <option>₱51,000.00 - ₱100,000.00</option>
-          <option>₱101,000.00 - ₱200,000.00</option>
-          <option>₱201,000.00 - ₱300,000.00</option>
-          <option>₱301,000.00 - ₱400,000.00</option>
-          <option>₱401,000.00 - ₱500,000.00</option>
-          <option>₱501,000.00 and above</option>
+          <option value="">Select</option>
+          <option value="Student">Student</option>
+          <option value="Employee">Employee</option>
         </select>
       </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-sm text-gray-600">Health Problems</label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {[
-            "Physical Impairment",
-            "Physiological/Mental Condition",
-            "Heart Ailment",
-            "Diabetes",
-            "Eye Problems",
-            "Hypertension/High Blood Pressure",
-            "Cancer",
-            "Headache (Migraine, Vertigo, etc.)",
-            "Hyper/Hypothyroidism",
-            "Autoimmune Disease",
-            "Pneumonia",
-            "Polycystic Kidney Disease (PKD)",
-            "Respiratory Allergies",
-            "Allergic Rhinitis",
-            "Nearsightedness",
-            "Asthma",
-            "Skin Allergies",
-            "Rheumatoid Arthritis/Gout",
-            "Allergy/Hyper Acidity",
-            "Allergies",
-            "None",
-            "Iba pa",
-          ].map((h) => (
-            <label key={h} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                className="w-4 h-4 accent-blue-500"
-                checked={p.health_problems.includes(h)}
-                onChange={() => toggle("health_problems", h)}
-              />
-              {h}
-            </label>
-          ))}
-        </div>
-
-        {p.health_problems.includes("Iba pa") && (
-          <input
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 mt-2"
-            placeholder="Specify Other Health Problem"
-            value={p.health_problems_other}
-            onChange={(e) => update("health_problems_other", e.target.value)}
-          />
-        )}
-      </div>
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-end">
         <button
           onClick={handleNext}
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"

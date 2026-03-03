@@ -9,25 +9,40 @@ import {
 } from "recharts";
 
 export default function GenderPanel({ data }) {
-  const total = data.length;
-
-  const femaleCount = data.filter(d => d.personal_information.sex === "Female").length;
-  const maleCount = data.filter(d => d.personal_information.sex === "Male").length;
+  const femaleCount = data.filter(
+    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Female",
+  ).length;
+  const maleCount = data.filter(
+    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Male",
+  ).length;
 
   const genderData = [
     { name: "Female", value: femaleCount },
     { name: "Male", value: maleCount },
   ];
 
-  const preferNotSayCount = data.filter(d => d.personal_information.gender_preference === "Prefer not to say").length;
-  const statedCount = total - preferNotSayCount;
+  const preferenceOptions = ["Male", "Female", "LGBTQIA+"];
+  const preferenceCounts = preferenceOptions.map((option) => ({
+    name: option,
+    value: data.filter(
+      (d) => d.personal_info_id?.gadData?.gender_preference === option,
+    ).length,
+  }));
 
-  const preferenceData = [
-    { name: "Prefer not to say", value: preferNotSayCount },
-    { name: "Stated preference", value: statedCount },
-  ];
+  const unspecifiedCount = data.filter((d) => {
+    const pref = d.personal_info_id?.gadData?.gender_preference;
+    return !preferenceOptions.includes(pref);
+  }).length;
 
-  const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981"]; // purple, blue, yellow, green
+  const preferenceData =
+    unspecifiedCount > 0
+      ? [
+          ...preferenceCounts,
+          { name: "Not specified", value: unspecifiedCount },
+        ]
+      : preferenceCounts;
+
+  const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981", "#ef4444"]; // purple, blue, yellow, green, red
 
   return (
     <div className="w-full bg-white border border-gray-200 rounded-md px-8 py-6">
@@ -42,8 +57,8 @@ export default function GenderPanel({ data }) {
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="bg-gray-50 p-4 w-full rounded-md">
-          <h2 className="font-semibold mb-2">Gender & Sex Breakdown</h2>
-          <ResponsiveContainer width="100%" height={200}>
+          <h2 className="font-semibold mb-2">Sex at Birth Breakdown</h2>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={genderData}
@@ -68,7 +83,7 @@ export default function GenderPanel({ data }) {
 
         <div className="bg-gray-50 p-4 w-full rounded-md">
           <h2 className="font-semibold mb-2">Gender Preference</h2>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={preferenceData}
@@ -83,7 +98,10 @@ export default function GenderPanel({ data }) {
                 }
               >
                 {preferenceData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index + 2]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[(index + 2) % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip formatter={(value) => [`${value}`, "Count"]} />

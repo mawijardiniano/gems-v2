@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  FaCheckCircle,
   FaTimesCircle,
   FaSignInAlt,
   FaUserEdit,
@@ -9,7 +8,8 @@ import {
   FaCalendarCheck,
   FaEdit,
 } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -29,7 +29,63 @@ function timeAgo(date) {
 }
 
 export default function DashboardContent({ profile, userId }) {
-  const profileCompletion = 82;
+  const [previousEvents, setPreviousEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const personal = profile?.personal || {};
+  const gadData = profile?.gadData || {};
+  const affiliation = profile?.affiliation || {};
+  const academic = affiliation.academic_information || {};
+  const employment = affiliation.employment_information || {};
+  const contact = profile?.contact || {};
+
+  const isStudent = personal.currentStatus === "Student";
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userId) return;
+    setEventsLoading(true);
+    Promise.all([
+      fetch("/api/events").then((res) => res.json()),
+      fetch(`/api/events/user-events?user_id=${userId}`).then((res) =>
+        res.json(),
+      ),
+    ])
+      .then(([eventsRes, userEventsRes]) => {
+        setAllEvents(eventsRes.data || []);
+        const participated = userEventsRes.participatedEvents || [];
+        const created = userEventsRes.createdEvents || [];
+        setRegisteredIds(new Set(participated.map((evt) => evt._id)));
+        setCreatedIds(new Set(created.map((evt) => evt._id)));
+        setPreviousEvents(participated.slice(0, 4));
+        setEventsLoading(false);
+      })
+      .catch(() => setEventsLoading(false));
+  }, [userId]);
+
+  const [allEvents, setAllEvents] = useState([]);
+  const [registeredIds, setRegisteredIds] = useState(new Set());
+  const [createdIds, setCreatedIds] = useState(new Set());
+
+  const isPast = (evt) => {
+    const end = evt.end_date || evt.start_date || evt.date;
+    if (!end) return false;
+    return new Date(end).getTime() < Date.now();
+  };
+
+  const discoverEvents = useMemo(() => {
+    return (allEvents || [])
+      .filter((evt) => !isPast(evt))
+      .filter((evt) => !registeredIds.has(evt._id))
+      .filter((evt) => !createdIds.has(evt._id))
+      .sort(
+        (a, b) =>
+          new Date(a.start_date || a.date).getTime() -
+          new Date(b.start_date || b.date).getTime(),
+      )
+      .slice(0, 4);
+  }, [allEvents, registeredIds, createdIds]);
+
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,130 +99,97 @@ export default function DashboardContent({ profile, userId }) {
       });
   }, [userId]);
 
-  if (loading) return <p className="text-gray-500">Loading activity...</p>;
+  if (loading) return <p className="text-gray-500">Loading Dashboard...</p>;
   if (activities.length === 0)
     return <p className="text-gray-500">No activity yet</p>;
-
-  const booleanIcon = (value) =>
-    value ? (
-      <span className="text-green-500 flex items-center gap-1">
-        <FaCheckCircle /> Yes
-      </span>
-    ) : (
-      <span className="text-red-500 flex items-center gap-1">
-        <FaTimesCircle /> No
-      </span>
-    );
 
   return (
     <div className="mt-20 px-4 md:px-8">
       <h1 className="text-2xl font-bold mb-2">Dashboard Overview</h1>
 
       <h2 className="text-3xl font-medium mb-8">
-        Welcome {profile.personal_information.first_name}{" "}
-        {profile.personal_information.middle_name}{" "}
-        {profile.personal_information.last_name}
+        Welcome{" "}
+        {[personal.first_name, personal.middle_name, personal.last_name]
+          .filter(Boolean)
+          .join(" ")}
       </h2>
 
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-          <h3 className="text-lg font-semibold mb-2">Profile Completion</h3>
-          <div className="w-full bg-gray-200 h-4 rounded mb-2">
-            <div
-              className="bg-blue-500 h-4 rounded"
-              style={{ width: `${profileCompletion}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-600">
-            {profileCompletion}% completed
-          </p>
-        </div>
-
-        {profile.personal_information.person_type === "Student" ? (
-          <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-            <h3 className="text-gray-500 text-sm">College</h3>
-            <p className="text-lg font-medium">
-              {profile.personal_information.academic_information.college}
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-            <h3 className="text-gray-500 text-sm">College/Office</h3>
-            <p className="text-lg font-medium">
-              {profile.personal_information.employment_information.office}
-            </p>
-          </div>
-        )}
-
-        {profile.personal_information.person_type === "Student" ? (
-<div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-          <h3 className="text-gray-500 text-sm">Year Level</h3>
-          <p className="text-lg font-medium">
-            {profile.personal_information.academic_information.year_level}
-          </p>
-        </div>
-        ) : (
-<div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-          <h3 className="text-gray-500 text-sm">Employment Status</h3>
-          <p className="text-lg font-medium">
-            {profile.personal_information.employment_information.employment_status}
-          </p>
-        </div>
-        )}
-
-
-        {profile.personal_information.person_type === "Student" ? (
-        <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-          <h3 className="text-gray-500 text-sm">Student ID</h3>
-          <p className="text-lg font-medium">
-            {profile.personal_information.academic_information.student_id}
-          </p>
-        </div>
-        ) : (
-        <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
-          <h3 className="text-gray-500 text-sm">Employee Appointment Status</h3>
-          <p className="text-lg font-medium">
-            {profile.personal_information.employment_information.employment_appointment_status}
-          </p>
-        </div>
-        )}
-        
-
-
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white border border-gray-200 p-6 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4">Family Role Summary</h3>
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between">
-              <span>Breadwinner:</span>
-              {booleanIcon(profile.economic_financial_role.breadwinner)}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+        <div className="lg:col-span-3">
+          {isStudent ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">Status</h3>
+                <p className="text-lg font-medium">
+                  {personal.currentStatus || "—"}
+                </p>
+              </div>
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">Campus</h3>
+                <p className="text-lg font-medium">{academic.campus || "—"}</p>
+              </div>
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">College</h3>
+                <p className="text-lg font-medium">{academic.college || "—"}</p>
+              </div>
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">Course</h3>
+                <p className="text-lg font-medium">{academic.course || "—"}</p>
+              </div>
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">Year Level</h3>
+                <p className="text-lg font-medium">
+                  {academic.year_level || "—"}
+                </p>
+              </div>
+              <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                <h3 className="text-gray-500 text-sm">Student ID</h3>
+                <p className="text-lg font-medium">
+                  {academic.student_id || "—"}
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>Family Planning:</span>
-              {profile.reproductive_family_role.family_planning === "N/A" ? (
-                <span className="text-gray-500">N/A</span>
-              ) : (
-                booleanIcon(
-                  profile.reproductive_family_role.family_planning === "Yes",
-                )
-              )}
-            </div>
-            <div className="flex justify-between">
-              <span>House Property Owned:</span>
-              {booleanIcon(
-                profile.social_development.housing_work_life_balance
-                  .house_property_owned,
-              )}
-            </div>
-            <div className="flex justify-between">
-              <span>Community Involved:</span>
-              {booleanIcon(profile.community_involvement.community_involvement)}
-            </div>
-          </div>
-        </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                  <h3 className="text-gray-500 text-sm">Status</h3>
+                  <p className="text-lg font-medium">
+                    {personal.currentStatus || "—"}
+                  </p>
+                </div>
+                <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                  <h3 className="text-gray-500 text-sm">Office</h3>
+                  <p className="text-lg font-medium">
+                    {employment.office || "—"}
+                  </p>
+                </div>
+                <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                  <h3 className="text-gray-500 text-sm">Employment Status</h3>
+                  <p className="text-lg font-medium">
+                    {employment.employment_status || "—"}
+                  </p>
+                </div>
+              </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
+              <div className="grid  grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                  <h3 className="text-gray-500 text-sm">Appointment Status</h3>
+                  <p className="text-lg font-medium">
+                    {employment.employment_appointment_status || "—"}
+                  </p>
+                </div>
+                <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
+                  <h3 className="text-gray-500 text-sm">Employee ID</h3>
+                  <p className="text-lg font-medium">
+                    {employment.employee_id || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 lg:col-span-1">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <ul className="space-y-3">
             {activities.map((a) => {
@@ -208,7 +231,7 @@ export default function DashboardContent({ profile, userId }) {
                 <li key={a._id} className="flex items-center gap-3">
                   <div className="mt-1">{Icon}</div>
                   <div>
-                    <p className="text-sm font-medium">{description}</p>
+                    <p className="text-xs font-medium">{description}</p>
                     <p className="text-xs text-gray-500">
                       {timeAgo(a.createdAt)}
                     </p>
@@ -219,6 +242,145 @@ export default function DashboardContent({ profile, userId }) {
           </ul>
         </div>
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* <div className="bg-white border border-gray-200 p-6 rounded shadow space-y-3">
+          <h3 className="text-lg font-semibold">Profile Snapshot</h3>
+          <div className="flex flex-col gap-2 text-sm text-gray-700">
+            <div className="flex justify-between">
+              <span>Birthday</span>
+              <span>
+                {personal.birthday
+                  ? new Date(personal.birthday).toLocaleDateString()
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Blood Type</span>
+              <span>{personal.bloodType || "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Nationality</span>
+              <span>{personal.nationality || "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Email</span>
+              <span className="truncate max-w-[180px] text-right">
+                {contact.email || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Mobile</span>
+              <span>{contact.mobileNumber || "—"}</span>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-sm font-semibold text-gray-800 mb-2">
+                GAD Data
+              </p>
+              <div className="flex justify-between">
+                <span>Sex at Birth</span>
+                <span>{gadData.sexAtBirth || "—"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Gender Preference</span>
+                <span className="truncate max-w-[180px] text-right">
+                  {gadData.gender_preference || "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>PWD</span>
+                <span>
+                  {gadData.isPWD ? "Yes" : gadData.isPWD === false ? "No" : "—"}
+                  {gadData.isPWD && gadData.pwd_type
+                    ? ` (${gadData.pwd_type})`
+                    : ""}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Indigenous Person</span>
+                <span>
+                  {gadData.isIndigenousPerson
+                    ? "Yes"
+                    : gadData.isIndigenousPerson === false
+                      ? "No"
+                      : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Socio-economic Status</span>
+                <span>{gadData.socioEconomicStatus || "—"}</span>
+              </div>
+            </div>
+          </div>
+        </div> */}
+
+        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2 h-70">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-medium text-md">Discover Events</h1>
+            <button
+              className="text-blue-600 hover:underline text-sm font-medium w-20"
+              onClick={() => router.push("/events/discover")}
+            >
+              View All
+            </button>
+          </div>
+
+          {eventsLoading ? (
+            <p className="text-gray-500">Loading events...</p>
+          ) : (
+            <EventList
+              events={discoverEvents}
+              showEmpty="No events to discover."
+            />
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-medium text-md">
+              Previous Events You Registered/Participated
+            </h1>
+            <button
+              className="text-blue-600 hover:underline text-sm font-medium w-20"
+              onClick={() => router.push("/events")}
+            >
+              View All
+            </button>
+          </div>
+          {eventsLoading ? (
+            <p className="text-gray-500">Loading events...</p>
+          ) : (
+            <EventList
+              events={previousEvents}
+              showEmpty="No previous events."
+            />
+          )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function EventList({ events, showEmpty }) {
+  const router = useRouter();
+  if (!events?.length)
+    return <p className="text-gray-500">No previous events found.</p>;
+  return (
+    <ul className="space-y-2 mt-2">
+      {events.map((event) => (
+        <li
+          key={event._id}
+          className="border-b border-gray-200 pb-2 cursor-pointer hover:bg-gray-50 transition"
+          onClick={() => router.push(`/events/discover/${event._id}`)}
+        >
+          <div className="font-semibold text-sm">{event.title}</div>
+          <div className="text-xs text-gray-500">
+            {event.start_date
+              ? new Date(event.start_date).toLocaleDateString()
+              : "No date"}
+          </div>
+        </li>
+      ))}
+      {showEmpty && !events?.length && <li>{showEmpty}</li>}
+    </ul>
   );
 }

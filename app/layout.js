@@ -1,4 +1,4 @@
-"use client"; // needed for useEffect
+"use client";
 
 import { useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";

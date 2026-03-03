@@ -27,6 +27,24 @@ export default function Filter({
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const collegeRef = useRef(null);
   const appointmentRef = useRef(null);
+
+  useEffect(() => {
+    if (filterPersonType === "Student") {
+      setFilterEmployment("");
+      setFilterAppointment([]);
+    } else if (filterPersonType === "Employee") {
+      setFilterYearLevel("");
+    } else {
+      setFilterYearLevel("");
+      setFilterEmployment("");
+      setFilterAppointment([]);
+    }
+  }, [
+    filterPersonType,
+    setFilterEmployment,
+    setFilterAppointment,
+    setFilterYearLevel,
+  ]);
   useEffect(() => {
     function onDoc(e) {
       if (collegeRef.current && !collegeRef.current.contains(e.target))
@@ -44,7 +62,7 @@ export default function Filter({
         value={filterSex}
         onChange={(e) => setFilterSex(e.target.value)}
       >
-        <option value="">All Gender</option>
+        <option value="">All Sex at Birth</option>
         {sexOption.map((c) => (
           <option key={c} value={c}>
             {c}
@@ -57,7 +75,7 @@ export default function Filter({
         value={filterPersonType}
         onChange={(e) => setFilterPersonType(e.target.value)}
       >
-        <option value="">All Person Types</option>
+        <option value="">All Status</option>
         {personTypeOptions.map((c) => (
           <option key={c} value={c}>
             {c}
@@ -65,7 +83,7 @@ export default function Filter({
         ))}
       </select>
 
-      {(filterPersonType === "" || filterPersonType === "Student") && (
+      {filterPersonType === "Student" && (
         <select
           className="border p-2 rounded bg-white"
           value={filterYearLevel}
@@ -150,7 +168,7 @@ export default function Filter({
         </div>
       )}
 
-      {(filterPersonType === "" || filterPersonType === "Employee") && (
+      {filterPersonType === "Employee" && (
         <select
           className="border p-2 rounded bg-white"
           value={filterEmployment}
@@ -165,7 +183,7 @@ export default function Filter({
         </select>
       )}
 
-      {(filterPersonType === "" || filterPersonType === "Employee") && (
+      {filterPersonType === "Employee" && (
         <div className="relative" ref={appointmentRef}>
           <button
             type="button"

@@ -2,17 +2,89 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import {
-  setPersonalInformation,
+  setAffiliation,
   nextStep,
   prevStep,
 } from "@/store/slices/profileRegistrationSlice";
 
 export default function EmploymentInformation() {
   const dispatch = useDispatch();
-  const p = useSelector((s) => s.profile.personal_information);
+  const personal = useSelector((s) => s.profile.personal);
+  const employment = useSelector(
+    (s) => s.profile.affiliation.employment_information,
+  );
+
+  // const appointmentOptions = [
+  //   "Regular",
+  //   "Temporary",
+  //   "Coterminous",
+  //   "Casual",
+  //   "Job Order",
+  //   "Contract of Service (Skilled)",
+  //   "Utility Worker",
+  //   "University Lecturer",
+  //   "Part-time Lecturer",
+  //   "Clinical Instructor",
+  //   "Adjunct",
+  // ];
+
+  const APPOINTMENT_STATUS_MAP = {
+    "Non-teaching Personnel": [
+      "Regular",
+      "Temporary",
+      "Coterminous",
+      "Casual",
+      "Job Order",
+      "Contract of Service (Skilled)",
+      "Utility Worker",
+    ],
+    Faculty: [
+      "Regular",
+      "Temporary",
+      "University Lecturer",
+      "Part-time Lecturer",
+      "Clinical Instructor",
+      "Adjunct",
+    ],
+  };
+
+  const appointmentOptions =
+    APPOINTMENT_STATUS_MAP[employment?.employment_status] || [];
 
   const update = (field, value) =>
-    dispatch(setPersonalInformation({ field, value }));
+    dispatch(
+      setAffiliation({
+        field: "employment_information",
+        value: { ...employment, [field]: value },
+      }),
+    );
+
+  if (personal.currentStatus !== "Employee") {
+    return (
+      <div className="max-w-3xl mx-auto text-center py-12">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Employment Information
+        </h2>
+        <p className="text-gray-600">
+          This section is available when Current Status is set to Employee.
+        </p>
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => dispatch(prevStep())}
+            className="px-4 py-2 rounded border"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => dispatch(nextStep())}
+            className="ml-3 bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 space-y-6 rounded-xl shadow-lg">
@@ -23,10 +95,8 @@ export default function EmploymentInformation() {
           <label className="text-sm text-gray-600">Employee ID</label>
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
-            value={p.employment_information?.employee_id || ""}
-            onChange={(e) =>
-              update("employment_information.employee_id", e.target.value)
-            }
+            value={employment?.employee_id || ""}
+            onChange={(e) => update("employee_id", e.target.value)}
             placeholder="Enter Employee ID"
           />
         </div>
@@ -35,10 +105,8 @@ export default function EmploymentInformation() {
           <label className="text-sm text-gray-600">Office</label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
-            value={p.employment_information?.office || ""}
-            onChange={(e) =>
-              update("employment_information.office", e.target.value)
-            }
+            value={employment?.office || ""}
+            onChange={(e) => update("office", e.target.value)}
           >
             <option value="">Select</option>
             <option>Graduate School</option>
@@ -82,10 +150,8 @@ export default function EmploymentInformation() {
           <label className="text-sm text-gray-600">Employment Status</label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
-            value={p.employment_information?.employment_status || ""}
-            onChange={(e) =>
-              update("employment_information.employment_status", e.target.value)
-            }
+            value={employment?.employment_status || ""}
+            onChange={(e) => update("employment_status", e.target.value)}
           >
             <option value="">Select</option>
             <option>Faculty</option>
@@ -99,48 +165,18 @@ export default function EmploymentInformation() {
           </label>
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
-            value={
-              p.employment_information?.employment_appointment_status || ""
-            }
+            value={employment?.employment_appointment_status || ""}
             onChange={(e) =>
-              update(
-                "employment_information.employment_appointment_status",
-                e.target.value,
-              )
+              update("employment_appointment_status", e.target.value)
             }
-            disabled={!p.employment_information?.employment_status}
+            disabled={!employment?.employment_status}
           >
             <option value="">Select Appointment Status</option>
-
-            {p.employment_information?.employment_status ===
-              "Non-teaching Personnel" &&
-              [
-                "Regular",
-                "Temporary",
-                "Coterminous",
-                "Casual",
-                "Job Order",
-                "Contract of Service (Skilled)",
-                "Utility Worker",
-              ].map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-
-            {p.employment_information?.employment_status === "Faculty" &&
-              [
-                "Regular",
-                "Temporary",
-                "University Lecturer",
-                "Part-time Lecturer",
-                "Clinical Instructor",
-                "Adjunct",
-              ].map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
+            {appointmentOptions.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -150,7 +186,7 @@ export default function EmploymentInformation() {
           onClick={() => dispatch(prevStep())}
           className="px-4 py-2 rounded border"
         >
-          Back
+          Previous
         </button>
         <button
           onClick={() => dispatch(nextStep())}

@@ -17,14 +17,20 @@ export default function Navbar() {
 
         <div className="hidden sm:flex items-center gap-6">
           <Link href="/survey" className="text-gray-600 hover:text-indigo-600">
-            Survey
+            Sign up
           </Link>
           <Link href="/authentication/signin" className="text-gray-600">
             Sign in
           </Link>
         </div>
 
-        <div className="sm:hidden">
+        <div className="sm:hidden flex items-center gap-4">
+          <button
+            onClick={() => router.push("/survey")}
+            className="text-sm text-indigo-600 hover:text-indigo-600"
+          >
+            Sign up
+          </button>
           <button
             onClick={() => router.push("/authentication/signin")}
             className="text-sm text-indigo-600"

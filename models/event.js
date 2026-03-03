@@ -1,36 +1,92 @@
 import { Schema, model, models } from "mongoose";
-import { type } from "os";
-
-const InvitationRulesSchema = new Schema(
-  {
-    person_type: { type: [String], default: [] },
-    employment_status: { type: [String], default: [] },
-    sex: { type: String, enum: ["Male", "Female", ""], default: "" },
-    pwd: { type: Boolean, default: null },
-    solo_parent: { type: Boolean, default: null },
-    college_scope: { type: String, enum: ["ALL", "SELECTED"], default: "ALL" },
-    colleges: { type: [String], default: [] },
-  },
-  { _id: false },
-);
 
 const EventSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, default: "" },
-    date: { type: Date, required: true },
+    start_date: { type: Date, required: true },
+    end_date: { type: Date, required: true },
     venue: { type: String, default: "" },
-    created_by: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    updated_by: { type: Schema.Types.ObjectId, ref: "User" },
-    invitation_rules: { type: InvitationRulesSchema, default: () => ({}) },
-    registered_users: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    eligibility_criteria: {
+      type: String,
+      enum: [
+        "Scholarship Applicant",
+        "Solo Parent",
+        "PWDs",
+        "Indigenous Groups",
+        "LGBTQIA+",
+        "Low Income Students",
+      ],
+    },
+    type_of_activity: {
+      type: String,
+      enum: [
+        "Academic",
+        "Administrative",
+        "GAD",
+        "Extension Research",
+        "Students",
+        "Others",
+      ],
+      required: true,
+    },
+    organizing_office_unit: {
+      type: String,
+      enum: [
+        "Graduate School",
+        "College of Agriculture",
+        "College of Allied Health Sciences",
+        "College of Arts & Social Sciences",
+        "College of Business & Accountancy",
+        "College of Criminal Justice Education",
+        "College of Education",
+        "College of Engineering",
+        "College of Environmental Studies",
+        "College of Fisheries & Aquatic Sciences",
+        "College of Governance",
+        "College of Industrial Technology",
+        "College of Information & Computing Sciences",
+        "Offices under the Office of the University President",
+        "Offices under the Office of the Vice President for Academic Affairs",
+        "Offices under the Office of the Vice President for Administration and Finance",
+        "Offices under the Office of the Vice President for Research and Extension",
+        "Offices under the Office of the Vice President for Student Affairs and Services",
+      ],
+      required: true,
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: "UserAuth",
+      required: true,
+    },
+    updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    registered_users: [{ type: Schema.Types.ObjectId, ref: "UserAuth" }],
+    interested_users: [
+      { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
+    ],
+    not_interested_users: [
+      { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
+    ],
     status: {
       type: String,
-      enum: ["active", "cancelled", "completed"], //mark as complete
+      enum: ["active", "cancelled", "completed"],
       default: "active",
     },
   },
   { timestamps: true },
 );
+
+export const eligibilityRequirementsMap = {
+  "Scholarship Applicant": [
+    "Scholarship ID",
+    "GWA",
+    "Proof of Scholarship",
+  ],
+  "Solo Parent": ["Solo Parent ID", "Barangay Certificate"],
+  "PWDs": ["PWD ID", "Medical Certificate"],
+  "Indigenous Groups": ["Tribe Name", "Certificate of Ancestry"],
+  "LGBTQIA+": ["Self-identification"],
+  "Low Income Students": ["Income Certificate", "Barangay Certificate"],
+};
 
 export default models.Event || model("Event", EventSchema);

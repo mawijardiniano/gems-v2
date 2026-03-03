@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
+import "@/models/profile"; // register GemsProfile for populate
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 
@@ -9,15 +10,52 @@ export async function GET(req, { params }) {
   if (!id)
     return NextResponse.json(
       { status: "error", message: "Missing event id" },
-      { status: 400 }
+      { status: 400 },
     );
 
   await connectDB();
-  const event = await Event.findById(id).lean();
+  const event = await Event.findById(id)
+    .populate({
+      path: "created_by",
+      model: "UserAuth",
+      select: "username role personal_info_id",
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+      },
+    })
+    .populate({
+      path: "registered_users",
+      model: "UserAuth",
+      select: "username role personal_info_id",
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+      },
+    })
+    .populate({
+      path: "interested_users",
+      model: "UserAuth",
+      select: "username role personal_info_id",
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+      },
+    })
+    .populate({
+      path: "not_interested_users",
+      model: "UserAuth",
+      select: "username role personal_info_id",
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+      },
+    })
+    .lean();
   if (!event)
     return NextResponse.json(
       { status: "error", message: "Event not found" },
-      { status: 404 }
+      { status: 404 },
     );
 
   return NextResponse.json({ status: "success", data: event });
@@ -28,7 +66,7 @@ export async function PUT(req, { params }) {
   if (!id) {
     return NextResponse.json(
       { status: "error", message: "Missing event id" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -40,7 +78,7 @@ export async function PUT(req, { params }) {
   if (!event) {
     return NextResponse.json(
       { status: "error", message: "Event not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -49,7 +87,7 @@ export async function PUT(req, { params }) {
   if (!event.updated_by) {
     return NextResponse.json(
       { status: "error", message: "updated_by is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   event.updated_by = event.updated_by;
@@ -70,7 +108,7 @@ export async function PUT(req, { params }) {
     console.error("Validation failed:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

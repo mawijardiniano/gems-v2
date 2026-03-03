@@ -15,78 +15,94 @@ export default function LoginForm() {
   const router = useRouter();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  try {
-    console.log("Logging in with:", { username, password });
+    try {
+      console.log("Logging in with:", { username, password });
 
-    const res = await axios.post(
-      "/api/auth/login",
-      { username, password },
-      { withCredentials: true }
-    );
+      const res = await axios.post(
+        "/api/auth/login",
+        { username, password },
+        { withCredentials: true },
+      );
 
-    const user = res.data.user;
-    console.log("Logged in user:", user);
+      const user = res.data.user;
+      console.log("Logged in user:", user);
 
-    if (!user) {
-      setError("No user returned from login.");
-      return;
+      if (!user) {
+        setError("No user returned from login.");
+        return;
+      }
+
+      const role = user.role.toLowerCase();
+      console.log("User role:", role);
+
+      dispatch(
+        loginSuccess({
+          userId: user._id,
+          role,
+          hasProfile: false,
+        }),
+      );
+
+      if (role === "admin") {
+        console.log("Admin detected, redirecting to /sample-dashboard");
+        router.push("/sample-dashboard");
+        return;
+      }
+
+      if (role === "focal") {
+        console.log("Focal detected, redirecting to /events-dashboard");
+        router.push("/events-dashboard");
+        return;
+      }
+
+      const profileRes = await axios.get("/api/profile/my-profile", {
+        withCredentials: true,
+      });
+
+      console.log("Profile response:", profileRes.data);
+
+      const profile = profileRes.data.data;
+      const hasProfile = !!profile;
+
+      console.log("Has profile:", hasProfile);
+
+      dispatch(
+        loginSuccess({
+          userId: user._id,
+          role,
+          hasProfile,
+        }),
+      );
+
+      const redirectUrl = hasProfile ? "/dashboard" : "/";
+      console.log("Redirecting to:", redirectUrl);
+      router.push(redirectUrl);
+    } catch (err) {
+      console.error("Login error:", err);
+
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError("Invalid username or password.");
+      }
     }
+  };
 
-    const role = user.role.toLowerCase();
-    console.log("User role:", role);
-
-    dispatch(
-      loginSuccess({
-        userId: user._id,
-        role,
-        hasProfile: false,
-      })
-    );
-
-
-    if (role === "admin") {
-      console.log("Admin detected, redirecting to /sample-dashboard");
-      router.push("/sample-dashboard");
-      return;
-    }
-
-    // For regular users, fetch their profile
-    const profileRes = await axios.get("/api/profile/my-profile", {
-      withCredentials: true,
-    });
-
-    console.log("Profile response:", profileRes.data);
-
-    const profile = profileRes.data.data;
-    const hasProfile = !!profile;
-
-    console.log("Has profile:", hasProfile);
-
-    dispatch(
-      loginSuccess({
-        userId: user._id,
-        role,
-        hasProfile,
-      })
-    );
-
-    const redirectUrl = hasProfile ? "/dashboard" : "/";
-    console.log("Redirecting to:", redirectUrl);
-    router.push(redirectUrl);
-  } catch (err) {
-    console.error("Login error:", err);
-
-    if (err.response?.data?.error) {
-      setError(err.response.data.error);
-    } else {
-      setError("Invalid username or password.");
-    }
-  }
-};
-
+  const handleAdmin = async () => {
+    setUsername("Admin");
+    setPassword("Admin123!");
+  };
+  const handleFocal = async () => {
+    setUsername("Focal");
+    setPassword("focal123!");
+  };
+  const handleUser = async () => {
+    setUsername("Mawi");
+    setPassword("gems123!");
+  };
 
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-8">
@@ -105,7 +121,6 @@ export default function LoginForm() {
 
           <form onSubmit={handleLogin} className="mt-8 space-y-6">
             <div className="space-y-4">
-              {/* Username input */}
               <div>
                 <label
                   htmlFor="username"
@@ -128,7 +143,6 @@ export default function LoginForm() {
                 </div>
               </div>
 
-              {/* Password input */}
               <div>
                 <label
                   htmlFor="password"
@@ -181,6 +195,30 @@ export default function LoginForm() {
             >
               Sign in
             </button>
+
+            {/* <div className="flex flex-col gap-2">
+              <h1 className="text-sm font-medium">Quick SignIn</h1>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  className="shadow px-4 py-1 rounded-md"
+                  onClick={handleAdmin}
+                >
+                  Admin
+                </button>
+                <button
+                  className="shadow px-4 py-1 rounded-md"
+                  onClick={handleFocal}
+                >
+                  Focal
+                </button>
+                <button
+                  className="shadow px-4 py-1 rounded-md"
+                  onClick={handleUser}
+                >
+                  User
+                </button>
+              </div>
+            </div> */}
 
             {/* <div className="flex justify-center">
               <p className="text-sm">

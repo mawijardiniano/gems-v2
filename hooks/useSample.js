@@ -10,7 +10,7 @@ export default function useFetchData() {
   const normalizeProfile = (d) => ({
     ...d,
     personal_information:
-      d.personal_info_id?.personal_information || d.personal_information || {},
+      d.personal_info_id?.personal || d.personal || {},
     economic_financial_role: d.personal_info_id?.economic_financial_role || {},
     reproductive_family_role:
       d.personal_info_id?.reproductive_family_role || {},

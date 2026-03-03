@@ -9,12 +9,7 @@ import {
   FaSignOutAlt,
   FaCalendar,
   FaIdCard,
-  FaUsers,
   FaBook,
-  FaBalanceScale,
-  FaLeaf,
-  FaVenusMars,
-  FaShieldAlt,
   FaClipboardList,
 } from "react-icons/fa";
 import Link from "next/link";
@@ -45,7 +40,10 @@ export default function Sidebar({ open, setOpen }) {
         const body = await res.json();
         // Support multiple response shapes: { success, data }, { profile }, or direct profile
         const profileObj = body?.data || body?.profile || body || null;
-        const pt = profileObj?.personal_information?.person_type || null;
+        const pt =
+          profileObj?.personal?.currentStatus ||
+          profileObj?.personal_information?.person_type ||
+          null;
         setPersonType(pt);
       } catch (e) {
         // ignore
@@ -70,11 +68,15 @@ export default function Sidebar({ open, setOpen }) {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-30 ${
+      className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-30 overflow-hidden ${
         open ? "w-64" : "w-0 sm:w-16"
       }`}
     >
-      <nav className="flex flex-col h-full px-2 py-4 space-y-2 mt-16">
+      <nav
+        className={`flex flex-col h-full py-4 space-y-2 mt-16 transition-all duration-200 ${
+          open ? "px-2" : "px-0"
+        }`}
+      >
         <div
           className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
         >
@@ -124,64 +126,22 @@ export default function Sidebar({ open, setOpen }) {
             )}
 
             <Link
-              href="/dashboard/roles"
+              href="/dashboard/gender-equity-data"
               onClick={handleMobileClose}
               className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
             >
-              <FaUsers /> Roles
+              <FaIdCard /> GAD Data
             </Link>
-
             <Link
-              href="/dashboard/development"
+              href="/dashboard/contact-information"
               onClick={handleMobileClose}
               className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
             >
-              <FaBook /> Development
-            </Link>
-
-            <Link
-              href="/dashboard/legal-knowledge"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaBalanceScale /> Legal Knowledge
-            </Link>
-
-            <Link
-              href="/dashboard/community"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaUsers /> Community
-            </Link>
-
-            <Link
-              href="/dashboard/environmental"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaLeaf /> Environmental
-            </Link>
-
-            <Link
-              href="/dashboard/gender-responsiveness"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaVenusMars /> Gender Responsiveness
-            </Link>
-
-            <Link
-              href="/dashboard/security"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaShieldAlt /> Security
+              <FaIdCard /> Contact Information
             </Link>
           </div>
         )}
 
-        {/* Events */}
         <div
           className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
         >
@@ -202,12 +162,19 @@ export default function Sidebar({ open, setOpen }) {
 
         {isEventOpen && open && (
           <div className="ml-6 space-y-1">
-            <Link
+            {/* <Link
               href="/events/invited-events"
               onClick={handleMobileClose}
               className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
             >
               <FaClipboardList /> Invited / Participated
+            </Link> */}
+            <Link
+              href="/events/discover"
+              onClick={handleMobileClose}
+              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+            >
+              <FaClipboardList /> Discover
             </Link>
           </div>
         )}

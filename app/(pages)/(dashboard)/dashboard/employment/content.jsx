@@ -76,7 +76,7 @@ export default function EmploymentContent() {
         console.log("Loaded profile (employment):", profileObj);
         setProfile(profileObj);
         const employment =
-          profileObj?.personal_information?.employment_information || null;
+          profileObj?.affiliation?.employment_information || null;
         setFormData({
           employee_id: employment?.employee_id || "",
           office: employment?.office || "",
@@ -135,7 +135,7 @@ export default function EmploymentContent() {
       setIsUpdating(true);
 
       const payload = {
-        personal_information: { employment_information: formData },
+        affiliation: { employment_information: formData },
       };
       console.log("Saving employment payload:", payload);
 
@@ -158,7 +158,7 @@ export default function EmploymentContent() {
       }
 
       const updatedEmployment =
-        data.data.personal_information?.employment_information || formData;
+        data.data.affiliation?.employment_information || formData;
       setFormData({
         employee_id: updatedEmployment.employee_id || "",
         office: updatedEmployment.office || "",
@@ -247,11 +247,11 @@ export default function EmploymentContent() {
             )}
           </div>
 
-          <div>
+          <div className="">
             <label className="text-sm text-gray-600">Office</label>
             {isEditing ? (
               <select
-                className="border border-gray-300 rounded px-3 py-1 w-full"
+                className="border border-gray-300 rounded px-3 py-1 w-full truncate"
                 value={formData.office}
                 onChange={(e) => handleChange("office", e.target.value)}
               >

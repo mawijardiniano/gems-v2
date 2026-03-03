@@ -5,10 +5,6 @@ import useFetchData from "@/hooks/useSample";
 import Snapshot from "./components/snapshot";
 import GenderPanel from "./components/genderPanel";
 import Demographics from "./components/demographics";
-import Economic from "./components/economic";
-import GenderResponsive from "./components/genderResponsive";
-import Health from "./components/health";
-import PeaceJustice from "./components/peaceJustice";
 import Filter from "./components/Filter";
 
 export default function Page() {
@@ -24,7 +20,7 @@ export default function Page() {
   const sexOption = useMemo(
     () => [
       ...new Set(
-        rawData.map((d) => d?.personal_information?.sex).filter(Boolean),
+        rawData.map((d) => d?.personal_info_id?.gadData?.sexAtBirth).filter(Boolean),
       ),
     ],
     [rawData],
@@ -36,8 +32,8 @@ export default function Page() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.academic_information?.college ||
-              d?.personal_information?.employment_information?.office,
+              d?.personal_info_id?.affiliation.academic_information?.college ||
+              d?.personal_info_id?.affiliation.employment_information?.office,
           )
           .filter(Boolean),
       ),
@@ -51,7 +47,7 @@ export default function Page() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.employment_information
+              d?.personal_info_id?.affiliation.employment_information
                 ?.employment_status,
           )
           .filter(Boolean),
@@ -66,7 +62,7 @@ export default function Page() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.employment_information
+              d?.personal_info_id?.affiliation.employment_information
                 ?.employment_appointment_status,
           )
           .filter(Boolean),
@@ -79,7 +75,7 @@ export default function Page() {
     () => [
       ...new Set(
         rawData
-          .map((d) => d?.personal_information?.academic_information?.year_level)
+          .map((d) => d?.personal_info_id?.affiliation.academic_information?.year_level)
           .filter(Boolean),
       ),
     ],
@@ -88,18 +84,18 @@ export default function Page() {
 
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {
-      const p = d?.personal_information || {};
+      const p = d?.personal_info_id || {};
       if (!p || Object.keys(p).length === 0) return false;
 
-      const acad = p.academic_information || {};
-      const emp = p.employment_information || {};
+      const acad = p.affiliation?.academic_information || {};
+      const emp = p.affiliation?.employment_information || {};
       const collegeOrOffice = acad.college || emp.office || "";
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
 
       return (
-        (!filterSex || p.sex === filterSex) &&
-        (!filterPersonType || p.person_type === filterPersonType) &&
+        (!filterSex || p.gadData.sexAtBirth === filterSex) &&
+        (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
         (filterCollege.length === 0 ||
           filterCollege.includes(collegeOrOffice)) &&
@@ -146,10 +142,10 @@ export default function Page() {
       <Snapshot data={filteredData} />
       <GenderPanel data={filteredData} />
       <Demographics data={filteredData} />
-      <Economic data={filteredData} />
+      {/* <Economic data={filteredData} />
       <Health data={filteredData} />
       <GenderResponsive data={filteredData} />
-      <PeaceJustice data={filteredData} />
+      <PeaceJustice data={filteredData} /> */}
     </div>
   );
 }

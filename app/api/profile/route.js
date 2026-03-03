@@ -4,7 +4,8 @@ import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 
 function generateUsername(personal) {
-  return personal.first_name;
+  if (personal?.first_name) return personal.first_name;
+  return "user";
 }
 
 function generateTempPassword() {
@@ -24,7 +25,7 @@ export async function GET() {
     console.error("GET /api/users error:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -35,10 +36,20 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    const profile = await Profile.create(body);
+    const personal = body.personal || body.personal_information;
+    if (!personal || !personal.first_name || !personal.last_name) {
+      throw new Error(
+        "personal.first_name and personal.last_name are required",
+      );
+    }
+
+    const profilePayload = { ...body, personal };
+    delete profilePayload.personal_information;
+
+    const profile = await Profile.create(profilePayload);
     const role = body.role ? body.role : "User";
 
-    const username = generateUsername(body.personal_information);
+    const username = generateUsername(personal);
     const tempPassword = generateTempPassword();
 
     await UserAuth.create({
@@ -61,13 +72,13 @@ export async function POST(req) {
         temporary_password: tempPassword,
         role,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("POST /api/profile error:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }
@@ -77,7 +88,7 @@ export async function DELETE() {
     await connectDB();
 
     const usersToDelete = await UserAuth.find({ role: "User" }).select(
-      "personal_info_id"
+      "personal_info_id",
     );
     const profileIds = usersToDelete.map((u) => u.personal_info_id);
 
@@ -97,7 +108,7 @@ export async function DELETE() {
     console.error("DELETE /api/profile error:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

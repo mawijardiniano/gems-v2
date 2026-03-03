@@ -14,33 +14,34 @@ export default function Snapshot({ data }) {
   const totalRespondents = data.length;
 
   const femaleCount = data.filter(
-    (d) => d.personal_information.sex === "Female"
+    (d) => d.personal_info_id.gadData.sexAtBirth === "Female",
   ).length;
   const maleCount = data.filter(
-    (d) => d.personal_information.sex === "Male"
+    (d) => d.personal_info_id.gadData.sexAtBirth === "Male",
   ).length;
 
   const pwdCount =
-    data.filter((d) => d.personal_information.pwd === true).length || 0;
+    data.filter((d) => d.personal_info_id.gadData.isPwd === true).length || 0;
   const ipCount =
-    data.filter((d) => d.personal_information.indigenous === true).length || 0;
+    data.filter((d) => d.personal_info_id.gadData.isIndigenousPerson === true)
+      .length || 0;
 
   const soloParents = data.filter(
-    (d) => d.personal_information.solo_parent
+    (d) => d.personal_information.solo_parent,
   ).length;
 
   const healthConditions = data.filter(
     (d) =>
       d.health_information?.health_problems?.length > 0 &&
       d.health_information.health_problems[0] !== "None" &&
-      d.health_information.health_problems[0] !== ""
+      d.health_information.health_problems[0] !== "",
   ).length;
 
   const highRisk = data.filter(
     (d) =>
       d.personal_information.solo_parent &&
       d.health_information?.health_problems?.length > 0 &&
-      d.health_information.health_problems[0] !== "None"
+      d.health_information.health_problems[0] !== "None",
   ).length;
 
   return (
@@ -83,7 +84,7 @@ export default function Snapshot({ data }) {
           </div>
         </div>
 
-        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
+        <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaLeaf className="text-teal-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">Indigenous Peoples</p>
@@ -91,17 +92,17 @@ export default function Snapshot({ data }) {
               {ipCount} {ipCount === 0 ? "(No declaration)" : ""}
             </p>
           </div>
-        </div> */}
+        </div>
 
-        <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
+        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaChild className="text-yellow-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">Solo Parents</p>
             <p className="text-xl font-semibold text-black">{soloParents}</p>
           </div>
-        </div>
+        </div> */}
 
-        <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
+        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaHospital className="text-red-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">With Health Conditions</p>
@@ -109,7 +110,7 @@ export default function Snapshot({ data }) {
               {healthConditions}
             </p>
           </div>
-        </div>
+        </div> */}
 
         {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaExclamationTriangle className="text-orange-500 text-2xl" />

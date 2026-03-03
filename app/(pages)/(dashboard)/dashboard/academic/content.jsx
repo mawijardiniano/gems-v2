@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FaGraduationCap } from "react-icons/fa";
 
+const COURSE = ["Information System", "Information Technology"];
+const CAMPUS = ["Boac", "Sta. Cruz"];
 const COLLEGES = [
   "Graduate School",
   "College of Agriculture",
@@ -18,7 +20,6 @@ const COLLEGES = [
   "College of Industrial Technology",
   "College of Information & Computing Sciences",
 ];
-
 const YEAR_LEVELS = [
   "1st Year",
   "2nd Year",
@@ -27,6 +28,7 @@ const YEAR_LEVELS = [
   "5th Year",
   "6th Year",
 ];
+const SCHOLAR_STATUS = ["Yes", "No"];
 
 export default function AcademicContent() {
   const [profile, setProfile] = useState(null);
@@ -34,9 +36,12 @@ export default function AcademicContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
+    campus: "",
     student_id: "",
     college: "",
+    course: "",
     year_level: "",
+    isScholar: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [showToast, setShowToast] = useState(false);
@@ -55,12 +60,14 @@ export default function AcademicContent() {
         const body = await res.json();
         const profileObj = body?.data || body?.profile || body || null;
         setProfile(profileObj);
-        const academic =
-          profileObj?.personal_information?.academic_information || null;
+        const academic = profileObj?.affiliation?.academic_information || null;
         setFormData({
+          campus: academic?.campus || "",
           student_id: academic?.student_id || "",
           college: academic?.college || "",
+          course: academic?.course || "",
           year_level: academic?.year_level || "",
+          isScholar: academic?.isScholar || "",
         });
         setOriginalData(academic);
       } catch (e) {
@@ -77,23 +84,32 @@ export default function AcademicContent() {
     setFormData((p) => ({ ...p, [key]: value }));
 
   const handleSave = async () => {
-    if (!formData.student_id || !formData.college || !formData.year_level) {
-      setToastMessage("Student ID, College and Year Level are required.");
+    const required = [
+      formData.student_id,
+      formData.campus,
+      formData.college,
+      formData.course,
+      formData.year_level,
+      formData.isScholar,
+    ];
+
+    if (required.some((v) => !v)) {
+      setToastMessage(
+        "Student ID, Campus, College, Course, Year Level, and Scholarship status are required.",
+      );
       setToastColor("failure");
       setShowToast(true);
       return;
     }
 
     try {
-      const userId = profile?._id;
-      if (!userId) throw new Error("User ID not found");
+      const profileId = profile?._id;
+      if (!profileId) throw new Error("Profile ID not found");
       setIsUpdating(true);
 
-      const payload = {
-        personal_information: { academic_information: formData },
-      };
+      const payload = { affiliation: { academic_information: formData } };
 
-      const res = await fetch(`/api/profile/${userId}`, {
+      const res = await fetch(`/api/profile/${profileId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -102,13 +118,19 @@ export default function AcademicContent() {
       if (!res.ok) throw new Error("Failed to save academic info");
       const data = await res.json();
 
+      const updatedProfile = data.data || profile;
       const updatedAcademic =
-        data.data.personal_information?.academic_information || formData;
+        updatedProfile?.affiliation?.academic_information || formData;
+
       setFormData({
         student_id: updatedAcademic.student_id || "",
+        campus: updatedAcademic.campus || "",
         college: updatedAcademic.college || "",
+        course: updatedAcademic.course || "",
         year_level: updatedAcademic.year_level || "",
+        isScholar: updatedAcademic.isScholar || "",
       });
+      setProfile(updatedProfile);
       setOriginalData(updatedAcademic);
       setIsEditing(false);
       setToastMessage("Academic information saved.");
@@ -118,7 +140,7 @@ export default function AcademicContent() {
       try {
         if (typeof window !== "undefined") {
           window.dispatchEvent(
-            new CustomEvent("profileUpdated", { detail: data.data }),
+            new CustomEvent("profileUpdated", { detail: updatedProfile }),
           );
         }
       } catch (e) {}
@@ -134,6 +156,20 @@ export default function AcademicContent() {
 
   if (loading) return <p className="text-gray-500">Loading...</p>;
   if (!profile) return <p className="text-gray-500">No profile found.</p>;
+  const isStudent = profile?.personal?.currentStatus === "Student";
+
+  if (!isStudent)
+    return (
+      <div className="p-6">
+        <div className="border border-gray-200 p-6 rounded">
+          <h1 className="text-lg font-medium mb-2">Academic Information</h1>
+          <p className="text-gray-600 text-sm">
+            Academic details apply only to students. Set Current Status to
+            Student to edit.
+          </p>
+        </div>
+      </div>
+    );
 
   return (
     <div className="p-6">
@@ -160,8 +196,11 @@ export default function AcademicContent() {
                 if (isEditing) {
                   setFormData({
                     student_id: originalData?.student_id || "",
+                    campus: originalData?.campus || "",
                     college: originalData?.college || "",
+                    course: originalData?.course || "",
                     year_level: originalData?.year_level || "",
+                    isScholar: originalData?.isScholar || "",
                   });
                 }
                 setIsEditing(!isEditing);
@@ -189,6 +228,28 @@ export default function AcademicContent() {
           </div>
 
           <div>
+            <label className="text-sm text-gray-600">Campus</label>
+            {isEditing ? (
+              <select
+                className="border border-gray-300 rounded px-3 py-1 w-full"
+                value={formData.campus}
+                onChange={(e) => handleChange("campus", e.target.value)}
+              >
+                <option value="">Select Campus</option>
+                {CAMPUS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="border border-gray-300 rounded px-3 py-1 w-full">
+                {formData.campus || "N/A"}
+              </p>
+            )}
+          </div>
+
+          <div>
             <label className="text-sm text-gray-600">College</label>
             {isEditing ? (
               <select
@@ -211,6 +272,28 @@ export default function AcademicContent() {
           </div>
 
           <div>
+            <label className="text-sm text-gray-600">Course</label>
+            {isEditing ? (
+              <select
+                className="border border-gray-300 rounded px-3 py-1 w-full"
+                value={formData.course}
+                onChange={(e) => handleChange("course", e.target.value)}
+              >
+                <option value="">Select Course</option>
+                {COURSE.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="border border-gray-300 rounded px-3 py-1 w-full">
+                {formData.course || "N/A"}
+              </p>
+            )}
+          </div>
+
+          <div>
             <label className="text-sm text-gray-600">Year Level</label>
             {isEditing ? (
               <select
@@ -228,6 +311,28 @@ export default function AcademicContent() {
             ) : (
               <p className="border border-gray-300 rounded px-3 py-1 w-full">
                 {formData.year_level || "N/A"}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600">Scholarship Status</label>
+            {isEditing ? (
+              <select
+                className="border border-gray-300 rounded px-3 py-1 w-full"
+                value={formData.isScholar}
+                onChange={(e) => handleChange("isScholar", e.target.value)}
+              >
+                <option value="">Select Scholarship Status</option>
+                {SCHOLAR_STATUS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="border border-gray-300 rounded px-3 py-1 w-full">
+                {formData.isScholar || "N/A"}
               </p>
             )}
           </div>

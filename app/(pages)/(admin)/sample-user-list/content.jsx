@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Button,
   Table,
@@ -13,11 +13,11 @@ import {
 import useFetchData from "@/hooks/useSample";
 import Filter from "../sample-dashboard/components/Filter";
 
-export default function UserListPageContent() {
+export default function UserListPageContent({ defaultType = "" }) {
   const { data: rawData, loading } = useFetchData();
 
   const [filterSex, setFilterSex] = useState("");
-  const [filterPersonType, setFilterPersonType] = useState("");
+  const [filterPersonType, setFilterPersonType] = useState(defaultType);
   const [filterYearLevel, setFilterYearLevel] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterEmployment, setFilterEmployment] = useState("");
@@ -26,7 +26,9 @@ export default function UserListPageContent() {
   const sexOption = useMemo(
     () => [
       ...new Set(
-        rawData.map((d) => d?.personal_information?.sex).filter(Boolean),
+        rawData
+          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
+          .filter(Boolean),
       ),
     ],
     [rawData],
@@ -38,8 +40,8 @@ export default function UserListPageContent() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.academic_information?.college ||
-              d?.personal_information?.employment_information?.office,
+              d?.personal_info_id?.affiliation.academic_information?.college ||
+              d?.personal_info_id?.affiliation.employment_information?.office,
           )
           .filter(Boolean),
       ),
@@ -53,7 +55,7 @@ export default function UserListPageContent() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.employment_information
+              d?.personal_info_id?.affiliation.employment_information
                 ?.employment_status,
           )
           .filter(Boolean),
@@ -68,7 +70,7 @@ export default function UserListPageContent() {
         rawData
           .map(
             (d) =>
-              d?.personal_information?.employment_information
+              d?.personal_info_id?.affiliation.employment_information
                 ?.employment_appointment_status,
           )
           .filter(Boolean),
@@ -77,11 +79,17 @@ export default function UserListPageContent() {
     [rawData],
   );
 
+  useEffect(() => {
+    if (defaultType && filterPersonType !== defaultType) {
+      setFilterPersonType(defaultType);
+    }
+  }, [defaultType, filterPersonType]);
+
   const personTypeOptions = useMemo(() => {
     const list = [
       ...new Set(
         rawData
-          .map((d) => d?.personal_information?.person_type)
+          .map((d) => d?.personal_info_id?.personal.currentStatus)
           .filter(Boolean),
       ),
     ];
@@ -92,7 +100,10 @@ export default function UserListPageContent() {
     () => [
       ...new Set(
         rawData
-          .map((d) => d?.personal_information?.academic_information?.year_level)
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.academic_information?.year_level,
+          )
           .filter(Boolean),
       ),
     ],
@@ -101,16 +112,19 @@ export default function UserListPageContent() {
 
   const filteredData = useMemo(() => {
     return rawData.filter((user) => {
-      const p = user.personal_information || {};
-      const acad = p.academic_information || {};
-      const emp = p.employment_information || {};
+      const p = user.personal_info_id || {};
+      const gad = p.gadData || {};
+      const personal = p.personal || {};
+      const affiliation = p.affiliation || {};
+      const acad = affiliation.academic_information || {};
+      const emp = affiliation.employment_information || {};
       const collegeOrOffice = acad.college || emp.office || "";
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
 
       return (
-        (!filterSex || p.sex === filterSex) &&
-        (!filterPersonType || p.person_type === filterPersonType) &&
+        (!filterSex || gad.sexAtBirth === filterSex) &&
+        (!filterPersonType || personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
         (filterCollege.length === 0 ||
           filterCollege.includes(collegeOrOffice)) &&
@@ -128,6 +142,17 @@ export default function UserListPageContent() {
     filterEmployment,
     filterAppointment,
   ]);
+
+  const viewType = (filterPersonType || defaultType || "").toLowerCase();
+  const showStudentCols = viewType === "student";
+  const showEmployeeCols = viewType === "employee";
+  const showAllCols = !showStudentCols && !showEmployeeCols;
+
+  const columnCount =
+    3 +
+    (showStudentCols || showAllCols ? 3 : 0) + 
+    (showEmployeeCols || showAllCols ? 2 : 0) + 
+    1;
 
   return (
     <div className="p-6">
@@ -161,37 +186,69 @@ export default function UserListPageContent() {
           <TableHead className="bg-gray-200 text-black">
             <TableHeadCell>Name</TableHeadCell>
             <TableHeadCell>Gender</TableHeadCell>
-            <TableHeadCell>College Office</TableHeadCell>
-            <TableHeadCell>Year Level</TableHeadCell>
-            <TableHeadCell>Employment Status</TableHeadCell>
-            <TableHeadCell>Appointment Status</TableHeadCell>
+            <TableHeadCell>
+              {showStudentCols
+                ? "College"
+                : showEmployeeCols
+                  ? "Office"
+                  : "College / Office"}
+            </TableHeadCell>
+            {(showStudentCols || showAllCols) && (
+              <TableHeadCell>Campus</TableHeadCell>
+            )}
+            {(showStudentCols || showAllCols) && (
+              <TableHeadCell>Course</TableHeadCell>
+            )}
+            {(showStudentCols || showAllCols) && (
+              <TableHeadCell>Year Level</TableHeadCell>
+            )}
+            {(showEmployeeCols || showAllCols) && (
+              <>
+                <TableHeadCell>Employment Status</TableHeadCell>
+                <TableHeadCell>Appointment Status</TableHeadCell>
+              </>
+            )}
             <TableHeadCell />
           </TableHead>
 
           <TableBody className="divide-y">
             {filteredData.map((user, index) => {
-              const p = user.personal_information || {};
+              const p = user.personal_info_id || {};
+              const personal = p.personal || {};
+              const gad = p.gadData || {};
+              const affiliation = p.affiliation || {};
+              const acad =
+                affiliation.academic_information ||
+                p.academic_information ||
+                {};
+              const emp =
+                affiliation.employment_information ||
+                p.employment_information ||
+                {};
               return (
                 <TableRow key={user._id || index} className="hover:bg-gray-50">
                   <TableCell>
-                    {p.first_name} {p.last_name}
+                    {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell>{p.sex || "—"}</TableCell>
-                  <TableCell>
-                    {p.academic_information?.college ||
-                      p.employment_information?.office ||
-                      "—"}
-                  </TableCell>
-                  <TableCell>
-                    {p.academic_information?.year_level || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {p.employment_information?.employment_status || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {p.employment_information?.employment_appointment_status ||
-                      "—"}
-                  </TableCell>
+                  <TableCell>{gad.sexAtBirth || "—"}</TableCell>
+                  <TableCell>{acad.college || emp.office || "—"}</TableCell>
+                  {(showStudentCols || showAllCols) && (
+                    <TableCell>{acad.campus || "—"}</TableCell>
+                  )}
+                  {(showStudentCols || showAllCols) && (
+                    <TableCell>{acad.course || "—"}</TableCell>
+                  )}
+                  {(showStudentCols || showAllCols) && (
+                    <TableCell>{acad.year_level || "—"}</TableCell>
+                  )}
+                  {(showEmployeeCols || showAllCols) && (
+                    <>
+                      <TableCell>{emp.employment_status || "—"}</TableCell>
+                      <TableCell>
+                        {emp.employment_appointment_status || "—"}
+                      </TableCell>
+                    </>
+                  )}
                   <TableCell>
                     <Button
                       size="xs"
@@ -206,7 +263,7 @@ export default function UserListPageContent() {
 
             {filteredData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
+                <TableCell colSpan={columnCount} className="text-center py-6">
                   No users found
                 </TableCell>
               </TableRow>

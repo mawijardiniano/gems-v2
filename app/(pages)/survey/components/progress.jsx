@@ -2,13 +2,12 @@
 
 import { useSelector } from "react-redux";
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 5;
 
 export default function Progress() {
   const currentStep = useSelector((state) => state.profile.currentStep);
 
-  const percentage =
-    ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
+  const percentage = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
 
   return (
     <div className="w-full mb-6">

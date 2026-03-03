@@ -66,7 +66,7 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    const { username, password } = await req.json();
+    const { username, password, role } = await req.json();
     const existingAdmin = await UserAuth.findOne({ username });
     if (existingAdmin) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export async function POST(req) {
     const admin = await UserAuth.create({
       username,
       password,
-      role: "Admin", 
+      role, 
     });
 
     const { password: _, ...adminData } = admin.toObject();

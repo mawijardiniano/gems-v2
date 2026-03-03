@@ -19,7 +19,7 @@ export default function Hero() {
               one privacy-first platform.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            {/* <div className="mt-6 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/survey")}
@@ -33,7 +33,7 @@ export default function Hero() {
               >
                 Learn more →
               </a>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex justify-center">

@@ -1,71 +1,47 @@
-// import Navbar from "./components/layout/navbar";
-// import Progress from "./components/progress";
-// import PersonalInformation from "./components/personalInformation";
-
-// export default function GAD() {
-//   return (
-//     <div className="h-screen">
-//       <Navbar />
-//       <div className="pt-16 px-4 sm:px-6 flex items-center justify-center h-[calc(100vh-4rem)]">
-//         <div className="w-full max-w-3xl flex flex-col items-center justify-center border border-gray-200 p-6">
-//           <Progress />
-//              <PersonalInformation />
-
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import React from "react";
 import Navbar from "./components/layout/navbar";
 
+import PrivacyConsent from "./components/privacyConsent";
 import PersonalInformation from "./components/personalInformation";
-import EconomicFinancial from "./components/economicFinancial";
+import GadInformation from "./components/gadInformation";
 import AcademicInformation from "./components/AcademicInformation";
 import EmploymentInformation from "./components/EmploymentInformation";
-import ReproductiveFamilyRole from "./components/reproductive";
-import HouseholdManagingRole from "./components/household";
-import CommunityInvolvement from "./components/community";
-import SocialDevelopment from "./components/socials";
-import Environmental from "./components/environmental";
-import GenderResponsiveForm from "./components/genderResponsive";
-import SecurityPeaceJustice from "./components/security";
+import ContactInformation from "./components/contactInformation";
+import SubmitProfile from "./components/submitProfile";
+
+import { reset } from "@/store/slices/profileRegistrationSlice";
 
 export default function ProfileRegistration() {
+  const dispatch = useDispatch();
   const currentStep = useSelector((state) => state.profile.currentStep);
-  const personType = useSelector(
-    (state) => state.profile.personal_information.person_type,
+  const currentStatus = useSelector(
+    (state) => state.profile.personal.currentStatus,
   );
+
+  React.useEffect(() => {
+    dispatch(reset());
+  }, [dispatch]);
 
   const renderStep = () => {
     switch (currentStep) {
+      case 0:
+        return <PrivacyConsent />;
       case 1:
         return <PersonalInformation />;
       case 2:
-       if (personType === "Student") return <AcademicInformation />;
-        if (personType === "Employee") return <EmploymentInformation />;
-
+        if (currentStatus === "Student") return <AcademicInformation />;
+        if (currentStatus === "Employee") return <EmploymentInformation />;
       case 3:
-               return <EconomicFinancial />;
+        return <GadInformation />;
       case 4:
-        return <ReproductiveFamilyRole />;
+        return <ContactInformation />;
       case 5:
-        return <HouseholdManagingRole />;
-      case 6:
-        return <CommunityInvolvement />;
-      case 7:
-        return <SocialDevelopment />;
-      case 8:
-        return <Environmental />;
-      case 9:
-        return <GenderResponsiveForm />;
-      case 10:
-        return <SecurityPeaceJustice />;
+        return <SubmitProfile />;
       default:
-        return <PersonalInformation />;
+        return <PrivacyConsent />;
     }
   };
 
