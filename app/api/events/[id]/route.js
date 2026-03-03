@@ -93,7 +93,34 @@ export async function PUT(req, { params }) {
   event.updated_by = event.updated_by;
 
   try {
-    const updated = await event.save();
+    await event.save();
+
+    const populated = await Event.findById(id)
+      .populate({
+        path: "created_by",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: { path: "personal_info_id", model: "GemsProfile" },
+      })
+      .populate({
+        path: "registered_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: { path: "personal_info_id", model: "GemsProfile" },
+      })
+      .populate({
+        path: "interested_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: { path: "personal_info_id", model: "GemsProfile" },
+      })
+      .populate({
+        path: "not_interested_users",
+        model: "UserAuth",
+        select: "username role personal_info_id",
+        populate: { path: "personal_info_id", model: "GemsProfile" },
+      })
+      .lean();
 
     await logActivity({
       user_id: event.updated_by,
@@ -103,7 +130,7 @@ export async function PUT(req, { params }) {
       metadata: { event_id: event._id },
     });
 
-    return NextResponse.json({ status: "success", data: updated });
+    return NextResponse.json({ status: "success", data: populated });
   } catch (error) {
     console.error("Validation failed:", error);
     return NextResponse.json(

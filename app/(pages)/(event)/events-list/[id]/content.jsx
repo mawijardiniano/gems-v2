@@ -57,8 +57,6 @@ export default function EventManageContent() {
   const [profileChecked, setProfileChecked] = useState(false);
   const [interestedSelected, setInterestedSelected] = useState([]);
 
-  
-
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -89,7 +87,7 @@ export default function EventManageContent() {
             end_date: formatForInput(evt.end_date),
             venue: evt.venue || "",
             status: evt.status || "active",
-            eligibility_criteria: evt.eligibility_criteria
+            eligibility_criteria: evt.eligibility_criteria,
           });
         }
       } catch (err) {
@@ -466,6 +464,7 @@ export default function EventManageContent() {
         end_date: formatForInput(updated.end_date),
         venue: updated.venue || "",
         status: updated.status || "active",
+        eligibility_criteria: updated.eligibility_criteria,
       });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save changes.");
@@ -1181,15 +1180,15 @@ function OverviewTabs({
   formatRange,
   userId,
 }) {
-
   const ELIGIBILITY_OPTIONS = [
-  { value: "Scholarship Applicant", label: "Scholarship Applicant" },
-  { value: "Solo Parent", label: "Solo Parent" },
-  { value: "PWDs", label: "Person with Disability (PWD)" },
-  { value: "Indigenous Group", label: "Indigenous Group Member" },
-  { value: "LGBTQIA+", label: "LGBTQIA+" },
-  { value: "Low Income Student", label: "Low-income Student" },
-];
+    { value: "Scholarship Applicant", label: "Scholarship Applicant" },
+    { value: "Solo Parent", label: "Solo Parent" },
+    { value: "PWDs", label: "Person with Disability (PWD)" },
+    { value: "Indigenous Group", label: "Indigenous Group Member" },
+    { value: "LGBTQIA+", label: "LGBTQIA+" },
+    { value: "Low Income Student", label: "Low-income Student" },
+    { value: "None", label: "None" },
+  ];
   return (
     <div className="space-y-4">
       {isPast && (
@@ -1292,26 +1291,25 @@ function OverviewTabs({
                 }
               />
             </div>
-
-           <div>
-          <label className="block text-sm font-medium mb-2">
-            Eligibility Criteria
-          </label>
-          <select
-            value={editData?.eligibility_criteria}
-           onChange={(e) =>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Eligibility Criteria
+              </label>
+              <select
+                value={editData?.eligibility_criteria}
+                onChange={(e) =>
                   handleEditChange("eligibility_criteria", e.target.value)
                 }
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          >
-            <option value="">Select eligibility criteria</option>
-            {ELIGIBILITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="">Select eligibility criteria</option>
+                {ELIGIBILITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex gap-3 justify-end">
               <button
@@ -1324,7 +1322,7 @@ function OverviewTabs({
                     end_date: formatForInput(event.end_date),
                     venue: event.venue || "",
                     status: event.status || "active",
-                    eligibility_criteria: event.eligibility_criteria
+                    eligibility_criteria: event.eligibility_criteria,
                   });
                 }}
                 className="px-4 py-2 border rounded hover:bg-gray-100"
@@ -1746,8 +1744,6 @@ function InsightTab({
           <option value="not_interested">Not Interested</option>
         </select>
       </div>
-
-
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 border rounded-lg bg-white">

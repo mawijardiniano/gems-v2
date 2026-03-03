@@ -47,7 +47,6 @@ export async function POST(req) {
     event.registered_users.push(user._id);
     await event.save();
 
-    // Populate registered users (with personal info) and host for the response
     event = await event.populate([
       {
         path: "created_by",

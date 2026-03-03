@@ -11,6 +11,7 @@ const ELIGIBILITY_OPTIONS = [
   { value: "Indigenous Group", label: "Indigenous Group Member" },
   { value: "LGBTQIA+", label: "LGBTQIA+" },
   { value: "Low Income Student", label: "Low-income Student" },
+  { value: "None", label: "None" },
 ];
 
 export default function CreateEventsContent() {
@@ -125,11 +126,11 @@ export default function CreateEventsContent() {
         </div>
       </div>
 
-      {error && (
+      {/* {error && (
         <div className="mb-4 p-4 rounded border border-red-300 bg-red-50 text-red-700">
           {error}
         </div>
-      )}
+      )} */}
 
       {success && (
         <div className="mb-4 p-4 rounded border border-green-300 bg-green-50 text-green-700">

@@ -16,7 +16,9 @@ const EventSchema = new Schema(
         "Indigenous Groups",
         "LGBTQIA+",
         "Low Income Students",
+        "None"
       ],
+      required: false,
     },
     type_of_activity: {
       type: String,
@@ -75,18 +77,5 @@ const EventSchema = new Schema(
   },
   { timestamps: true },
 );
-
-export const eligibilityRequirementsMap = {
-  "Scholarship Applicant": [
-    "Scholarship ID",
-    "GWA",
-    "Proof of Scholarship",
-  ],
-  "Solo Parent": ["Solo Parent ID", "Barangay Certificate"],
-  "PWDs": ["PWD ID", "Medical Certificate"],
-  "Indigenous Groups": ["Tribe Name", "Certificate of Ancestry"],
-  "LGBTQIA+": ["Self-identification"],
-  "Low Income Students": ["Income Certificate", "Barangay Certificate"],
-};
 
 export default models.Event || model("Event", EventSchema);
