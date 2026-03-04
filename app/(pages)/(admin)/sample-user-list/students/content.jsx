@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+
 import axios from "axios";
 import {
   Button,
@@ -22,6 +23,15 @@ export default function StudentsUserListContent() {
   const [selected, setSelected] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [nameSort, setNameSort] = useState(null);
+  const [sexSort, setSexSort] = useState(null);
+  const [collegeSort, setCollegeSort] = useState(null);
+  const [campusSort, setCampusSort] = useState(null);
+  const [courseSort, setCourseSort] = useState(null);
+  const [yearSort, setYearSort] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageSizeInput, setPageSizeInput] = useState("10");
 
   const studentsData = useMemo(
     () =>
@@ -70,7 +80,7 @@ export default function StudentsUserListContent() {
   );
 
   const filteredData = useMemo(() => {
-    return studentsData.filter((user) => {
+    let data = studentsData.filter((user) => {
       const p = user.personal_info_id || {};
       const gad = p.gadData || {};
       const acad = p.affiliation?.academic_information || {};
@@ -80,14 +90,119 @@ export default function StudentsUserListContent() {
         (filterCollege.length === 0 || filterCollege.includes(acad.college))
       );
     });
-  }, [studentsData, filterSex, filterYearLevel, filterCollege]);
+    if (nameSort) {
+      data = [...data].sort((a, b) => {
+        const pa = a.personal_info_id?.personal || {};
+        const pb = b.personal_info_id?.personal || {};
+        const nameA = `${pa.first_name || ""} ${pa.last_name || ""}`
+          .trim()
+          .toLowerCase();
+        const nameB = `${pb.first_name || ""} ${pb.last_name || ""}`
+          .trim()
+          .toLowerCase();
+        if (nameA < nameB) return nameSort === "asc" ? -1 : 1;
+        if (nameA > nameB) return nameSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (sexSort) {
+      data = [...data].sort((a, b) => {
+        const ga = a.personal_info_id?.gadData || {};
+        const gb = b.personal_info_id?.gadData || {};
+        const normalizeSex = (val) => {
+          if (!val) return "zzz";
+          const v = val.toLowerCase();
+          if (v === "male") return "a";
+          if (v === "female") return "b";
+          return "c" + v;
+        };
+        const sexA = normalizeSex(ga.sexAtBirth);
+        const sexB = normalizeSex(gb.sexAtBirth);
+        if (sexA < sexB) return sexSort === "asc" ? -1 : 1;
+        if (sexA > sexB) return sexSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (campusSort) {
+      data = [...data].sort((a, b) => {
+        const acadA =
+          a.personal_info_id?.affiliation?.academic_information || {};
+        const acadB =
+          b.personal_info_id?.affiliation?.academic_information || {};
+        const campusA = (acadA.campus || "").toLowerCase();
+        const campusB = (acadB.campus || "").toLowerCase();
+        if (campusA < campusB) return campusSort === "asc" ? -1 : 1;
+        if (campusA > campusB) return campusSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (courseSort) {
+      data = [...data].sort((a, b) => {
+        const acadA =
+          a.personal_info_id?.affiliation?.academic_information || {};
+        const acadB =
+          b.personal_info_id?.affiliation?.academic_information || {};
+        const courseA = (acadA.course || "").toLowerCase();
+        const courseB = (acadB.course || "").toLowerCase();
+        if (courseA < courseB) return courseSort === "asc" ? -1 : 1;
+        if (courseA > courseB) return courseSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (yearSort) {
+      data = [...data].sort((a, b) => {
+        const acadA =
+          a.personal_info_id?.affiliation?.academic_information || {};
+        const acadB =
+          b.personal_info_id?.affiliation?.academic_information || {};
+
+        const parseYear = (val) => {
+          if (!val) return 999;
+          const match = String(val).match(/\d+/);
+          return match ? parseInt(match[0], 10) : 999;
+        };
+        const yearA = parseYear(acadA.year_level);
+        const yearB = parseYear(acadB.year_level);
+        if (yearA !== 999 && yearB !== 999) {
+          if (yearA < yearB) return yearSort === "asc" ? -1 : 1;
+          if (yearA > yearB) return yearSort === "asc" ? 1 : -1;
+          return 0;
+        }
+
+        const strA = (acadA.year_level || "").toLowerCase();
+        const strB = (acadB.year_level || "").toLowerCase();
+        if (strA < strB) return yearSort === "asc" ? -1 : 1;
+        if (strA > strB) return yearSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
+  }, [
+    studentsData,
+    filterSex,
+    filterYearLevel,
+    filterCollege,
+    nameSort,
+    sexSort,
+    campusSort,
+    courseSort,
+    yearSort,
+  ]);
+
+  // Pagination
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / pageSize) || 1;
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, page, pageSize]);
 
   const allIds = useMemo(
     () =>
-      filteredData.map(
+      paginatedData.map(
         (user) => user._id || user.personal_info_id?._id || user,
       ),
-    [filteredData],
+    [paginatedData],
   );
   const isAllSelected = selected.length === allIds.length && allIds.length > 0;
   const toggleSelectAll = () => {
@@ -157,18 +272,180 @@ export default function StudentsUserListContent() {
           <TableHead className="bg-gray-200 text-black">
             <TableRow>
               <TableHeadCell></TableHeadCell>
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell>Gender</TableHeadCell>
-              <TableHeadCell>College</TableHeadCell>
-              <TableHeadCell>Campus</TableHeadCell>
-              <TableHeadCell>Course</TableHeadCell>
-              <TableHeadCell>Year Level</TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                Name
+                <span className="ml-1 align-middle inline-block">
+                  <span
+                    className={
+                      nameSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      nameSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                Sex
+                <span className="ml-1">
+                  <span
+                    className={
+                      sexSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      sexSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setCollegeSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                College
+                <span className="ml-1">
+                  <span
+                    className={
+                      collegeSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      collegeSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setCampusSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                Campus
+                <span className="ml-1">
+                  <span
+                    className={
+                      campusSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      campusSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setCourseSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                Course
+                <span className="ml-1">
+                  <span
+                    className={
+                      courseSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      courseSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
+              <TableHeadCell
+                className="cursor-pointer select-none"
+                onClick={() =>
+                  setYearSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+              >
+                Year Level
+                <span className="ml-1">
+                  <span
+                    className={
+                      yearSort === "asc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      yearSort === "desc"
+                        ? "text-blue-600 font-bold"
+                        : "text-gray-400"
+                    }
+                  >
+                    ▼
+                  </span>
+                </span>
+              </TableHeadCell>
               <TableHeadCell>Created At</TableHeadCell>
               <TableHeadCell />
             </TableRow>
           </TableHead>
           <TableBody className="divide-y">
-            {filteredData.map((user, index) => {
+            {paginatedData.map((user, index) => {
               const p = user.personal_info_id || {};
               const personal = p.personal || {};
               const gad = p.gadData || {};
@@ -191,7 +468,15 @@ export default function StudentsUserListContent() {
                   <TableCell>
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell>{gad.sexAtBirth || "—"}</TableCell>
+                  <TableCell>
+                    {gad.sexAtBirth
+                      ? gad.sexAtBirth.toLowerCase() === "male"
+                        ? "Male"
+                        : gad.sexAtBirth.toLowerCase() === "female"
+                          ? "Female"
+                          : gad.sexAtBirth
+                      : "—"}
+                  </TableCell>
                   <TableCell>{acad.college || "—"}</TableCell>
                   <TableCell>{acad.campus || "—"}</TableCell>
                   <TableCell>{acad.course || "—"}</TableCell>
@@ -222,7 +507,7 @@ export default function StudentsUserListContent() {
                 </TableRow>
               );
             })}
-            {filteredData.length === 0 && (
+            {paginatedData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-6">
                   No users found
@@ -231,6 +516,51 @@ export default function StudentsUserListContent() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+        <div className="flex items-center gap-2">
+          <span>Rows per page:</span>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={pageSizeInput}
+            onChange={(e) => setPageSizeInput(e.target.value)}
+            onBlur={() => {
+              let val = parseInt(pageSizeInput, 10);
+              if (isNaN(val) || val < 1) val = 1;
+              if (val > 100) val = 100;
+              setPageSize(val);
+              setPage(1);
+              setPageSizeInput(String(val));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.target.blur();
+              }
+            }}
+            className="w-16 border rounded px-2 py-1"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Prev
+          </button>
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {showConfirmModal && (
@@ -257,25 +587,6 @@ export default function StudentsUserListContent() {
           </div>
         </div>
       )}
-      {/* Custom Error Modal
-      {showErrorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Error</h2>
-            <div className="text-center text-red-600 mb-6">
-              Failed to delete selected users.
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                onClick={() => setShowErrorModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }

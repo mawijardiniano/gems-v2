@@ -27,6 +27,11 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
   const [selected, setSelected] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [nameSort, setNameSort] = useState(null);
+  const [sexSort, setSexSort] = useState(null);
+  const [officeSort, setOfficeSort] = useState(null);
+  const [employmentSort, setEmploymentSort] = useState(null);
+  const [appointmentSort, setAppointmentSort] = useState(null);
 
   const sexOption = useMemo(
     () => [
@@ -116,7 +121,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
   );
 
   const filteredData = useMemo(() => {
-    return rawData.filter((user) => {
+    let data = rawData.filter((user) => {
       const p = user.personal_info_id || {};
       const gad = p.gadData || {};
       const personal = p.personal || {};
@@ -127,7 +132,6 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
 
-      // Only show users with currentStatus === 'Employee'
       if (personal.currentStatus !== "Employee") return false;
 
       return (
@@ -141,6 +145,85 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
           filterAppointment.includes(empAppointment))
       );
     });
+    if (nameSort) {
+      data = [...data].sort((a, b) => {
+        const pa = a.personal_info_id?.personal || {};
+        const pb = b.personal_info_id?.personal || {};
+        const nameA = `${pa.first_name || ""} ${pa.last_name || ""}`
+          .trim()
+          .toLowerCase();
+        const nameB = `${pb.first_name || ""} ${pb.last_name || ""}`
+          .trim()
+          .toLowerCase();
+        if (nameA < nameB) return nameSort === "asc" ? -1 : 1;
+        if (nameA > nameB) return nameSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (sexSort) {
+      data = [...data].sort((a, b) => {
+        const ga = a.personal_info_id?.gadData || {};
+        const gb = b.personal_info_id?.gadData || {};
+        const normalizeSex = (val) => {
+          if (!val) return "zzz";
+          const v = val.toLowerCase();
+          if (v === "male") return "a";
+          if (v === "female") return "b";
+          return "c" + v;
+        };
+        const sexA = normalizeSex(ga.sexAtBirth);
+        const sexB = normalizeSex(gb.sexAtBirth);
+        if (sexA < sexB) return sexSort === "asc" ? -1 : 1;
+        if (sexA > sexB) return sexSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (officeSort) {
+      data = [...data].sort((a, b) => {
+        const officeA =
+          a.personal_info_id?.affiliation?.employment_information || {};
+        const officeB =
+          b.personal_info_id?.affiliation?.employment_information || {};
+        const offA = (officeA.office || "").toLowerCase();
+        const offB = (officeB.office || "").toLowerCase();
+        if (offA < offB) return officeSort === "asc" ? -1 : 1;
+        if (offA > offB) return officeSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (employmentSort) {
+      data = [...data].sort((a, b) => {
+        const empA =
+          a.personal_info_id?.affiliation?.employment_information || {};
+        const empB =
+          b.personal_info_id?.affiliation?.employment_information || {};
+        const employmentA = (empA.employment_status || "").toLowerCase();
+        const employmentB = (empB.employment_status || "").toLowerCase();
+        if (employmentA < employmentB) return employmentSort === "asc" ? -1 : 1;
+        if (employmentA > employmentB) return employmentSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    if (appointmentSort) {
+      data = [...data].sort((a, b) => {
+        const appA =
+          a.personal_info_id?.affiliation?.employment_information || {};
+        const appB =
+          b.personal_info_id?.affiliation?.employment_information || {};
+        const appointmentA = (
+          appA.employment_appointment_status || ""
+        ).toLowerCase();
+        const appointmentB = (
+          appB.employment_appointment_status || ""
+        ).toLowerCase();
+        if (appointmentA < appointmentB)
+          return appointmentSort === "asc" ? -1 : 1;
+        if (appointmentA > appointmentB)
+          return appointmentSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return data;
   }, [
     rawData,
     filterSex,
@@ -149,14 +232,30 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     filterCollege,
     filterEmployment,
     filterAppointment,
+    nameSort,
+    sexSort,
+    officeSort,
+    employmentSort,
+    appointmentSort,
   ]);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageSizeInput, setPageSizeInput] = useState("10");
+  const totalRows = filteredData.length;
+  const totalPages = Math.ceil(totalRows / pageSize) || 1;
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, page, pageSize]);
 
   const allIds = useMemo(
     () =>
-      filteredData.map(
+      paginatedData.map(
         (user) => user._id || user.personal_info_id?._id || user,
       ),
-    [filteredData],
+    [paginatedData],
   );
   const isAllSelected = selected.length === allIds.length && allIds.length > 0;
   const toggleSelectAll = () => {
@@ -245,17 +344,152 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
         <Table className="bg-white" striped={false} color="none">
           <TableHead className="bg-gray-200 text-black">
             <TableHeadCell></TableHeadCell>
-            <TableHeadCell>Name</TableHeadCell>
-            <TableHeadCell>Gender</TableHeadCell>
-            <TableHeadCell>Office</TableHeadCell>
-            <TableHeadCell>Employment Status</TableHeadCell>
-            <TableHeadCell>Appointment Status</TableHeadCell>
+            <TableHeadCell
+              className="cursor-pointer select-none"
+              onClick={() =>
+                setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
+            >
+              Name
+              <span className="ml-1 align-middle inline-block">
+                <span
+                  className={
+                    nameSort === "asc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▲
+                </span>
+                <span
+                  className={
+                    nameSort === "desc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▼
+                </span>
+              </span>
+            </TableHeadCell>
+            <TableHeadCell
+              className="cursor-pointer select-none"
+              onClick={() =>
+                setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
+            >
+              Sex
+              <span className="ml-1">
+                <span
+                  className={
+                    sexSort === "asc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▲
+                </span>
+                <span
+                  className={
+                    sexSort === "desc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▼
+                </span>
+              </span>
+            </TableHeadCell>
+            <TableHeadCell
+              className="cursor-pointer select-none"
+              onClick={() =>
+                setOfficeSort((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
+            >
+              Office
+              <span className="ml-1">
+                <span
+                  className={
+                    officeSort === "asc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▲
+                </span>
+                <span
+                  className={
+                    officeSort === "desc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▼
+                </span>
+              </span>
+            </TableHeadCell>
+            <TableHeadCell
+              className="cursor-pointer select-none"
+              onClick={() =>
+                setEmploymentSort((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
+            >
+              Employment Status
+              <span className="ml-1">
+                <span
+                  className={
+                    employmentSort === "asc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▲
+                </span>
+                <span
+                  className={
+                    employmentSort === "desc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▼
+                </span>
+              </span>
+            </TableHeadCell>
+            <TableHeadCell
+              className="cursor-pointer select-none"
+              onClick={() =>
+                setAppointmentSort((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
+            >
+              Appointment Status
+              <span className="ml-1">
+                <span
+                  className={
+                    appointmentSort === "asc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▲
+                </span>
+                <span
+                  className={
+                    appointmentSort === "desc"
+                      ? "text-blue-600 font-bold"
+                      : "text-gray-400"
+                  }
+                >
+                  ▼
+                </span>
+              </span>
+            </TableHeadCell>
             <TableHeadCell>Created At</TableHeadCell>
             <TableHeadCell />
           </TableHead>
 
           <TableBody className="divide-y">
-            {filteredData.map((user, index) => {
+            {paginatedData.map((user, index) => {
               const p = user.personal_info_id || {};
               const personal = p.personal || {};
               const gad = p.gadData || {};
@@ -317,7 +551,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
               );
             })}
 
-            {filteredData.length === 0 && (
+            {paginatedData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columnCount} className="text-center py-6">
                   No users found
@@ -326,6 +560,52 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+        <div className="flex items-center gap-2">
+          <span>Rows per page:</span>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={pageSizeInput}
+            onChange={(e) => setPageSizeInput(e.target.value)}
+            onBlur={() => {
+              let val = parseInt(pageSizeInput, 10);
+              if (isNaN(val) || val < 1) val = 1;
+              if (val > 100) val = 100;
+              setPageSize(val);
+              setPage(1);
+              setPageSizeInput(String(val));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.target.blur();
+              }
+            }}
+            className="w-16 border rounded px-2 py-1"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Prev
+          </button>
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {showConfirmModal && (

@@ -12,6 +12,25 @@ function generateTempPassword() {
   return `gems123!`; //set default password
 }
 
+function capitalizeWords(str) {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+
+function capitalizeObjectStrings(obj) {
+  if (!obj) return obj;
+  const newObj = { ...obj };
+  for (const key in newObj) {
+    if (typeof newObj[key] === "string") {
+      newObj[key] = capitalizeWords(newObj[key]);
+    }
+  }
+  return newObj;
+}
+
 export async function GET() {
   try {
     await connectDB();
@@ -36,7 +55,8 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    const personal = body.personal || body.personal_information;
+    let personal = body.personal || body.personal_information;
+    personal = capitalizeObjectStrings(personal);
     if (!personal || !personal.first_name || !personal.last_name) {
       throw new Error(
         "personal.first_name and personal.last_name are required",
