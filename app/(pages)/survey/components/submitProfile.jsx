@@ -125,12 +125,12 @@ export default function SubmitProfile() {
         Please review your details and submit to create your profile.
       </p>
 
-      {error && (
+      {/* {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           <p className="font-semibold">Please fix the following:</p>
           <pre className="whitespace-pre-wrap text-sm mt-1">{error}</pre>
         </div>
-      )}
+      )} */}
 
       {credentials ? (
         <div className="space-y-4">
@@ -154,7 +154,7 @@ export default function SubmitProfile() {
         </div>
       ) : (
         <>
-          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-2">
             <h3 className="font-semibold mb-2 text-gray-700">
               Personal Information
             </h3>
@@ -172,7 +172,10 @@ export default function SubmitProfile() {
                 <b>Civil Status:</b> {personal.civil_status}
               </div>
               <div>
-                <b>Religion:</b> {personal.religion}
+                <b>Religion:</b>{" "}
+                {personal.religion === "Other"
+                  ? personal.religion_other
+                  : personal.religion}
               </div>
               <div>
                 <b>Current Status:</b> {personal.currentStatus}
@@ -186,8 +189,8 @@ export default function SubmitProfile() {
             </div>
           </div>
 
-           {personal.currentStatus === "Student" && (
-            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+          {personal.currentStatus === "Student" && (
+            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-2">
               <h3 className="font-semibold mb-2 text-gray-700">
                 Academic Information
               </h3>
@@ -217,7 +220,7 @@ export default function SubmitProfile() {
             </div>
           )}
           {personal.currentStatus === "Employee" && (
-            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+            <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-2">
               <h3 className="font-semibold mb-2 text-gray-700">
                 Employment Information
               </h3>
@@ -243,7 +246,7 @@ export default function SubmitProfile() {
               </div>
             </div>
           )}
-          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-2">
             <h3 className="font-semibold mb-2 text-gray-700">GAD Data</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
               <div>
@@ -272,7 +275,7 @@ export default function SubmitProfile() {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-2">
             <h3 className="font-semibold mb-2 text-gray-700">
               Contact Information
             </h3>
@@ -295,7 +298,7 @@ export default function SubmitProfile() {
               </div>
             </div>
           </div>
-         
+
           <div className="flex justify-between mt-6">
             <button
               onClick={() => dispatch(prevStep())}

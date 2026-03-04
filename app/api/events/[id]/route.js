@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
-import "@/models/profile"; // register GemsProfile for populate
+import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 

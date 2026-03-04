@@ -21,7 +21,7 @@ const personalSchema = new Schema(
     civil_status: {
       type: String,
       enum: [
-        "Single", 
+        "Single",
         "Married",
         "Widow",
         "Legally Separated Marriage",
@@ -42,8 +42,13 @@ const personalSchema = new Schema(
         "Evangelical Christian",
         "Latter Day Saints",
         "Members Church of God International (MGCI)",
+        "Other",
       ],
       required: true,
+    },
+    religion_other: {
+      type: String,
+      default: "",
     },
 
     nationality: {
@@ -64,7 +69,7 @@ const personalSchema = new Schema(
 
     bloodType: {
       type: String,
-      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"],
       required: true,
     },
   },

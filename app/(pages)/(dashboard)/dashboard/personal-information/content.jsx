@@ -22,9 +22,20 @@ const RELIGIONS = [
   "Evangelical Christian",
   "Latter Day Saints",
   "Members Church of God International (MGCI)",
+  "Other",
 ];
 
-const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_TYPES = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+  "Unknown",
+];
 const CURRENT_STATUS = ["Student", "Employee"];
 const CAMPUS = ["Boac", "Sta. Cruz"];
 const COLLEGES = [
@@ -447,6 +458,20 @@ export default function PersonalInformationContent({ profile }) {
             <label className="font-medium text-gray-700 mb-1">Religion</label>
             {renderField("Religion", "religion", RELIGIONS)}
           </div>
+          {isEditing && formData.religion === "Other" && (
+            <div className="flex flex-col">
+              <label className="font-medium text-gray-700 mb-1">
+                Please specify your religion
+              </label>
+              <input
+                className="border border-gray-300 rounded px-3 py-1"
+                placeholder="Please specify your religion"
+                value={formData.religion_other || ""}
+                onChange={(e) => handleChange("religion_other", e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="flex flex-col">
             <label className="font-medium text-gray-700 mb-1">
               Nationality

@@ -43,6 +43,41 @@ export async function POST(req) {
       );
     }
 
+    if (personal.religion) {
+      const allowedReligions = [
+        "Roman Catholic",
+        "Iglesia ni Cristo",
+        "Iglesia Independencia Filipina",
+        "Protestant",
+        "Born Again Christian",
+        "Evangelical Christian",
+        "Latter Day Saints",
+        "Members Church of God International (MGCI)",
+        "Other",
+      ];
+      personal.religion =
+        allowedReligions.find(
+          (r) => r.toLowerCase() === personal.religion.toLowerCase(),
+        ) || personal.religion;
+    }
+    if (personal.bloodType) {
+      const allowedBloodTypes = [
+        "A+",
+        "A-",
+        "B+",
+        "B-",
+        "AB+",
+        "AB-",
+        "O+",
+        "O-",
+        "Unknown",
+      ];
+      personal.bloodType =
+        allowedBloodTypes.find(
+          (b) => b.toLowerCase() === personal.bloodType.toLowerCase(),
+        ) || personal.bloodType;
+    }
+
     const profilePayload = { ...body, personal };
     delete profilePayload.personal_information;
 

@@ -17,7 +17,6 @@ export default function PersonalInformation() {
   const updateAffiliation = (field, value) =>
     dispatch(setAffiliation({ field, value }));
 
-  // Required fields except middle_name
   const requiredFields = [
     "first_name",
     "last_name",
@@ -28,9 +27,10 @@ export default function PersonalInformation() {
     "religion",
     "currentStatus",
   ];
+  // Add religion_other as required if religion is Other
   const isNextDisabled = requiredFields.some(
-    (field) => !personal[field] || personal[field].toString().trim() === "",
-  );
+    (field) => !personal[field] || personal[field].toString().trim() === ""
+  ) || (personal.religion === "Other" && (!personal.religion_other || personal.religion_other.trim() === ""));
 
   const handleNext = () => {
     if (!isNextDisabled) {
@@ -88,11 +88,13 @@ export default function PersonalInformation() {
             onChange={(e) => updatePersonal("bloodType", e.target.value)}
           >
             <option value="">Select</option>
-            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
-              <option key={bt} value={bt}>
-                {bt}
-              </option>
-            ))}
+            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"].map(
+              (bt) => (
+                <option key={bt} value={bt}>
+                  {bt}
+                </option>
+              ),
+            )}
           </select>
         </div>
 
@@ -135,7 +137,12 @@ export default function PersonalInformation() {
           <select
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={personal.religion}
-            onChange={(e) => updatePersonal("religion", e.target.value)}
+            onChange={(e) => {
+              updatePersonal("religion", e.target.value);
+              if (e.target.value !== "Other") {
+                updatePersonal("religion_other", "");
+              }
+            }}
           >
             <option value="">Select</option>
             <option>Roman Catholic</option>
@@ -146,7 +153,17 @@ export default function PersonalInformation() {
             <option>Evangelical Christian</option>
             <option>Latter Day Saints</option>
             <option>Members Church of God International (MGCI)</option>
+            <option>Other</option>
           </select>
+          {personal.religion === "Other" && (
+            <input
+              className="border border-gray-300 rounded-lg px-3 py-2 mt-2"
+              placeholder="Please specify your religion"
+              value={personal.religion_other || ""}
+              onChange={e => updatePersonal("religion_other", e.target.value)}
+              required
+            />
+          )}
         </div>
       </div>
 

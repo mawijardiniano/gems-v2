@@ -169,13 +169,14 @@ export default function GadInformation() {
 
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">
-            Head of Household <span className="text-red-500">*</span>
+            Who is the head of the household?{" "}
+            <span className="text-red-500">*</span>
           </label>
           <input
             className="border border-gray-300 rounded-lg px-3 py-2"
             value={gadData.headOfHousehold}
             onChange={(e) => update("headOfHousehold", e.target.value)}
-            placeholder="Name or relation"
+            placeholder="(e.g., Self, Spouse, Parent"
             required
           />
         </div>
