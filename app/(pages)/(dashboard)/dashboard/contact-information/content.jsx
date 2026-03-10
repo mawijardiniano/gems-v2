@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { FaIdCard } from "react-icons/fa";
+import allData from "@/public/data/all.json";
 
-const emptyAddress = { barangay: "", city: "", province: "" };
+const emptyAddress = { region: "", province: "", city: "", barangay: "" };
 
 export default function ContactInformationContent({ profile }) {
   const [currentProfile, setCurrentProfile] = useState(profile || null);
@@ -22,14 +23,17 @@ export default function ContactInformationContent({ profile }) {
 
   useEffect(() => {
     const contact = (profile && profile.contact) || {};
+    const normAddr = (addr = {}) => ({
+      region: addr.region || "",
+      province: addr.province || "",
+      city: addr.city || "",
+      barangay: addr.barangay || "",
+    });
     const normalized = {
       email: contact.email || "",
       mobileNumber: contact.mobileNumber || "",
-      currentAddress: { ...emptyAddress, ...(contact.currentAddress || {}) },
-      permanentAddress: {
-        ...emptyAddress,
-        ...(contact.permanentAddress || {}),
-      },
+      currentAddress: normAddr(contact.currentAddress),
+      permanentAddress: normAddr(contact.permanentAddress),
     };
     setFormData(normalized);
     setOriginalData(normalized);
@@ -40,13 +44,39 @@ export default function ContactInformationContent({ profile }) {
   };
 
   const handleAddressChange = (which, key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [which]: {
-        ...(prev[which] || {}),
-        [key]: value,
-      },
-    }));
+    setFormData((prev) => {
+      let updated = {
+        ...prev,
+        [which]: {
+          ...(prev[which] || {}),
+          [key]: value,
+        },
+      };
+      if (key === "region") {
+        updated[which].province = "";
+        updated[which].city = "";
+        updated[which].barangay = "";
+      } else if (key === "province") {
+        updated[which].city = "";
+        updated[which].barangay = "";
+      } else if (key === "city") {
+        updated[which].barangay = "";
+      }
+      return updated;
+    });
+  };
+
+  const getAddressWithNames = (addr) => {
+    const regionObj = allData.regions.find((r) => r.code === addr.region);
+    const provinceObj = allData.provinces.find((p) => p.code === addr.province);
+    const cityObj = allData.cities.find((c) => c.code === addr.city);
+    const barangayObj = allData.barangays.find((b) => b.code === addr.barangay);
+    return {
+      region: regionObj ? regionObj.name : "",
+      province: provinceObj ? provinceObj.name : "",
+      city: cityObj ? cityObj.name : "",
+      barangay: barangayObj ? barangayObj.name : "",
+    };
   };
 
   const handleSave = async () => {
@@ -65,8 +95,8 @@ export default function ContactInformationContent({ profile }) {
       const payload = {
         contact: {
           ...formData,
-          currentAddress: { ...formData.currentAddress },
-          permanentAddress: { ...formData.permanentAddress },
+          currentAddress: getAddressWithNames(formData.currentAddress),
+          permanentAddress: getAddressWithNames(formData.permanentAddress),
         },
       };
 
@@ -137,31 +167,151 @@ export default function ContactInformationContent({ profile }) {
     </div>
   );
 
-  const renderAddress = (label, which) => (
-    <div className="flex flex-col gap-2 border border-gray-100 rounded p-3 bg-gray-50">
-      <h4 className="font-semibold text-gray-800 text-sm">{label}</h4>
-      {["barangay", "city", "province"].map((field) => (
-        <div className="flex flex-col" key={`${which}-${field}`}>
-          <label className="text-xs text-gray-600 mb-1 capitalize">
-            {field}
-          </label>
+  const renderAddress = (label, which) => {
+    const addr = formData[which] || emptyAddress;
+    const regions = allData.regions;
+    const provinces = addr.region
+      ? allData.provinces.filter((p) => p.region_code === addr.region)
+      : [];
+    const cities = addr.province
+      ? allData.cities.filter((c) => c.province_code === addr.province)
+      : [];
+    const barangays = addr.city
+      ? allData.barangays.filter((b) => b.city_code === addr.city)
+      : [];
+    return (
+      <div className="flex flex-col gap-2 ">
+        <div className="flex items-center justify-between">
+          <h4 className="font-semibold text-gray-800 text-sm">{label}</h4>
+          {isEditing && which === "currentAddress" && (
+            <div className="flex items-center ml-2">
+              <input
+                type="checkbox"
+                id="sameAsPermanent"
+                className="mr-2"
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      currentAddress: { ...prev.permanentAddress },
+                    }));
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      currentAddress: { ...emptyAddress },
+                    }));
+                  }
+                }}
+              />
+              <label
+                htmlFor="sameAsPermanent"
+                className="text-sm text-gray-700"
+              >
+                Same as Permanent Address
+              </label>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-600 mb-1">Region</label>
           {isEditing ? (
-            <input
+            <select
               className="border border-gray-300 rounded px-3 py-1"
-              value={formData[which]?.[field] || ""}
+              value={addr.region}
               onChange={(e) =>
-                handleAddressChange(which, field, e.target.value)
+                handleAddressChange(which, "region", e.target.value)
               }
-            />
+            >
+              <option value="">Select Region</option>
+              {regions.map((r) => (
+                <option key={r.code} value={r.code}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
           ) : (
             <p className="border border-gray-300 rounded px-3 py-1">
-              {formData[which]?.[field] || "N/A"}
+              {addr.region || "N/A"}
             </p>
           )}
         </div>
-      ))}
-    </div>
-  );
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-600 mb-1">Province</label>
+          {isEditing ? (
+            <select
+              className="border border-gray-300 rounded px-3 py-1"
+              value={addr.province}
+              onChange={(e) =>
+                handleAddressChange(which, "province", e.target.value)
+              }
+              disabled={!addr.region}
+            >
+              <option value="">Select Province</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="border border-gray-300 rounded px-3 py-1">
+              {addr.province || "N/A"}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-600 mb-1">
+            City/Municipality
+          </label>
+          {isEditing ? (
+            <select
+              className="border border-gray-300 rounded px-3 py-1"
+              value={addr.city}
+              onChange={(e) =>
+                handleAddressChange(which, "city", e.target.value)
+              }
+              disabled={!addr.province}
+            >
+              <option value="">Select City/Municipality</option>
+              {cities.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="border border-gray-300 rounded px-3 py-1">
+              {addr.city || "N/A"}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs text-gray-600 mb-1">Barangay</label>
+          {isEditing ? (
+            <select
+              className="border border-gray-300 rounded px-3 py-1"
+              value={addr.barangay}
+              onChange={(e) =>
+                handleAddressChange(which, "barangay", e.target.value)
+              }
+              disabled={!addr.city}
+            >
+              <option value="">Select Barangay</option>
+              {barangays.map((b) => (
+                <option key={b.code} value={b.code}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="border border-gray-300 rounded px-3 py-1">
+              {addr.barangay || "N/A"}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="p-6">
@@ -201,8 +351,8 @@ export default function ContactInformationContent({ profile }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          {renderAddress("Current Address", "currentAddress")}
           {renderAddress("Permanent Address", "permanentAddress")}
+          {renderAddress("Current Address", "currentAddress")}
         </div>
       </div>
 

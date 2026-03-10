@@ -85,7 +85,7 @@ export default function EventsListContent() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10">
+    <div className="max-w-5xl mx-auto space-y-10 pb-10">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Events</h1>
         <button

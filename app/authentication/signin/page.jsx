@@ -48,7 +48,7 @@ export default function LoginForm() {
 
       if (role === "admin") {
         console.log("Admin detected, redirecting to /sample-dashboard");
-        router.push("/sample-dashboard");
+        router.push("/admin-dashboard");
         return;
       }
 
@@ -220,17 +220,17 @@ export default function LoginForm() {
               </div>
             </div> */}
 
-            {/* <div className="flex justify-center">
+            <div className="flex justify-center">
               <p className="text-sm">
                 Don't have an account?{" "}
                 <Link
-                  href="/authentication/signup"
+                  href="/profile-registration"
                   className="text-sm font-medium text-gray-900"
                 >
                   Register here
                 </Link>
               </p>
-            </div> */}
+            </div>
           </form>
         </div>
       </div>

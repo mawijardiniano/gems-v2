@@ -115,7 +115,7 @@ export default function DashboardContent({ profile, userId }) {
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           {isStudent ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white border border-gray-200 p-6 rounded shadow flex-1 min-w-[220px]">
@@ -189,7 +189,53 @@ export default function DashboardContent({ profile, userId }) {
             </div>
           )}
         </div>
-        <div className="bg-white rounded-lg shadow p-4 lg:col-span-1">
+
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 pb-10">
+
+        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2 h-70">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-medium text-md">Discover Events</h1>
+            <button
+              className="text-blue-600 hover:underline text-sm font-medium w-20"
+              onClick={() => router.push("/events/discover")}
+            >
+              View All
+            </button>
+          </div>
+
+          {eventsLoading ? (
+            <p className="text-gray-500">Loading events...</p>
+          ) : (
+            <EventList
+              events={discoverEvents}
+              showEmpty="No events to discover."
+            />
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-medium text-md">
+              Previous Events You Registered/Participated
+            </h1>
+            <button
+              className="text-blue-600 hover:underline text-sm font-medium w-20"
+              onClick={() => router.push("/events")}
+            >
+              View All
+            </button>
+          </div>
+          {eventsLoading ? (
+            <p className="text-gray-500">Loading events...</p>
+          ) : (
+            <EventList
+              events={previousEvents}
+              showEmpty="No previous events."
+            />
+          )}
+        </div>
+                <div className="bg-white rounded-lg shadow p-4 lg:col-span-1">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <ul className="space-y-3">
             {activities.map((a) => {
@@ -240,120 +286,6 @@ export default function DashboardContent({ profile, userId }) {
               );
             })}
           </ul>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* <div className="bg-white border border-gray-200 p-6 rounded shadow space-y-3">
-          <h3 className="text-lg font-semibold">Profile Snapshot</h3>
-          <div className="flex flex-col gap-2 text-sm text-gray-700">
-            <div className="flex justify-between">
-              <span>Birthday</span>
-              <span>
-                {personal.birthday
-                  ? new Date(personal.birthday).toLocaleDateString()
-                  : "—"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Blood Type</span>
-              <span>{personal.bloodType || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Nationality</span>
-              <span>{personal.nationality || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Email</span>
-              <span className="truncate max-w-[180px] text-right">
-                {contact.email || "—"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Mobile</span>
-              <span>{contact.mobileNumber || "—"}</span>
-            </div>
-            <div className="pt-2 border-t border-gray-100">
-              <p className="text-sm font-semibold text-gray-800 mb-2">
-                GAD Data
-              </p>
-              <div className="flex justify-between">
-                <span>Sex at Birth</span>
-                <span>{gadData.sexAtBirth || "—"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Gender Preference</span>
-                <span className="truncate max-w-[180px] text-right">
-                  {gadData.gender_preference || "—"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>PWD</span>
-                <span>
-                  {gadData.isPWD ? "Yes" : gadData.isPWD === false ? "No" : "—"}
-                  {gadData.isPWD && gadData.pwd_type
-                    ? ` (${gadData.pwd_type})`
-                    : ""}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Indigenous Person</span>
-                <span>
-                  {gadData.isIndigenousPerson
-                    ? "Yes"
-                    : gadData.isIndigenousPerson === false
-                      ? "No"
-                      : "—"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Socio-economic Status</span>
-                <span>{gadData.socioEconomicStatus || "—"}</span>
-              </div>
-            </div>
-          </div>
-        </div> */}
-
-        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2 h-70">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="font-medium text-md">Discover Events</h1>
-            <button
-              className="text-blue-600 hover:underline text-sm font-medium w-20"
-              onClick={() => router.push("/events/discover")}
-            >
-              View All
-            </button>
-          </div>
-
-          {eventsLoading ? (
-            <p className="text-gray-500">Loading events...</p>
-          ) : (
-            <EventList
-              events={discoverEvents}
-              showEmpty="No events to discover."
-            />
-          )}
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 lg:col-span-2">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="font-medium text-md">
-              Previous Events You Registered/Participated
-            </h1>
-            <button
-              className="text-blue-600 hover:underline text-sm font-medium w-20"
-              onClick={() => router.push("/events")}
-            >
-              View All
-            </button>
-          </div>
-          {eventsLoading ? (
-            <p className="text-gray-500">Loading events...</p>
-          ) : (
-            <EventList
-              events={previousEvents}
-              showEmpty="No previous events."
-            />
-          )}
         </div>
       </div>
     </div>

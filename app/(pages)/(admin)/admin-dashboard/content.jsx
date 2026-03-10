@@ -1,54 +1,156 @@
 "use client";
 
-import useProfileData from "@/hooks/useProfileData";
-import Filter from "../components/Filter";
-import GenderCharts from "../components/GenderCharts";
-import AgeCharts from "../components/AgeCharts";
-import StatusChart from "../components/StatusChart";
-import PwdChart from "../components/PwdChart";
-import IndigenousChart from "../components/IndigenousChart";
+import { useState, useMemo } from "react";
+import useFetchData from "@/hooks/useSample";
+import Snapshot from "./components/snapshot";
+import GenderPanel from "./components/genderPanel";
+import Demographics from "./components/demographics";
+import Filter from "./components/Filter";
 
-export default function DashboardClient() {
-  const data = useProfileData();
+export default function Page() {
+  const { data: rawData, loading } = useFetchData();
+
+  const [filterSex, setFilterSex] = useState("");
+  const [filterYearLevel, setFilterYearLevel] = useState("");
+  const [filterPersonType, setFilterPersonType] = useState("");
+  const [filterCollege, setFilterCollege] = useState([]);
+  const [filterEmployment, setFilterEmployment] = useState("");
+  const [filterAppointment, setFilterAppointment] = useState([]);
+
+  const sexOption = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const collegeOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.academic_information?.college ||
+              d?.personal_info_id?.affiliation.employment_information?.office,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const employmentOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.employment_information
+                ?.employment_status,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const appointmentOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.employment_information
+                ?.employment_appointment_status,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const yearLevelOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.academic_information?.year_level,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [rawData],
+  );
+
+  const filteredData = useMemo(() => {
+    return rawData.filter((d) => {
+      const p = d?.personal_info_id || {};
+      if (!p || Object.keys(p).length === 0) return false;
+
+      const acad = p.affiliation?.academic_information || {};
+      const emp = p.affiliation?.employment_information || {};
+      const collegeOrOffice = acad.college || emp.office || "";
+      const empStatus = emp.employment_status || "";
+      const empAppointment = emp.employment_appointment_status || "";
+
+      return (
+        (!filterSex || p.gadData.sexAtBirth === filterSex) &&
+        (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
+        (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        (filterCollege.length === 0 ||
+          filterCollege.includes(collegeOrOffice)) &&
+        (!filterEmployment || empStatus === filterEmployment) &&
+        (filterAppointment.length === 0 ||
+          filterAppointment.includes(empAppointment))
+      );
+    });
+  }, [
+    rawData,
+    filterSex,
+    filterPersonType,
+    filterYearLevel,
+    filterCollege,
+    filterEmployment,
+    filterAppointment,
+  ]);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-end gap-6">
-        <Filter {...data} />
+    <div className="py-8 flex flex-col gap-4">
+      <div className="flex justify-end">
+        <Filter
+          filterSex={filterSex}
+          filterPersonType={filterPersonType}
+          filterYearLevel={filterYearLevel}
+          filterCollege={filterCollege}
+          filterEmployment={filterEmployment}
+          filterAppointment={filterAppointment}
+          setFilterSex={setFilterSex}
+          setFilterPersonType={setFilterPersonType}
+          setFilterYearLevel={setFilterYearLevel}
+          setFilterCollege={setFilterCollege}
+          setFilterEmployment={setFilterEmployment}
+          setFilterAppointment={setFilterAppointment}
+          sexOption={sexOption}
+          personTypeOptions={["Student", "Employee"]}
+          yearLevelOptions={yearLevelOptions}
+          collegeOptions={collegeOptions}
+          employmentOptions={employmentOptions}
+          appointmentOptions={appointmentOptions}
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full lg:w-auto">
-        <div className="p-4 border rounded-lg bg-white">
-          <p className="text-sm text-gray-500">Total Profiles</p>
-          <p className="text-2xl font-semibold">
-            {data.filteredProfiles.length}
-          </p>
-        </div>
-
-        <div className="p-4 border rounded-lg bg-white">
-<p className="text-sm text-gray-500">Total Persons with Disabilities</p>
-          <p className="text-2xl font-semibold">
-            {data.totalPWD}
-          </p>
-        </div>
-
-        <div className="p-4 border rounded-lg bg-white">
-<p className="text-sm text-gray-500">Total Indigenous Persons</p>
-          <p className="text-2xl font-semibold">
-            {data.totalIndigenous}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <GenderCharts data={data.genderData} />
-        <AgeCharts data={data.ageData} />
-        <StatusChart data={data.statusData} />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
-        <PwdChart data={data.pwdData} />
-        <IndigenousChart data={data.indigenousData} />
-      </div>
+      <Snapshot data={filteredData} />
+      <GenderPanel data={filteredData} />
+      <Demographics data={filteredData} />
+      {/* <Economic data={filteredData} />
+      <Health data={filteredData} />
+      <GenderResponsive data={filteredData} />
+      <PeaceJustice data={filteredData} /> */}
     </div>
   );
 }

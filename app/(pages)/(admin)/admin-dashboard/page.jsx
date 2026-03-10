@@ -1,5 +1,5 @@
-import DashboardClient from "./content";
+import Dashboard from "./content";
 
-export default function DashboardPage() {
-  return <DashboardClient />;
+export default function page() {
+  return <Dashboard />;
 }

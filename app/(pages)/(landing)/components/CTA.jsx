@@ -14,7 +14,7 @@ export default function CTA() {
         <div className="flex gap-4 justify-center flex-wrap">
           <button
             type="button"
-            onClick={() => router.push("/survey")}
+            onClick={() => router.push("/profile-registration")}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md"
           >
             Take Survey

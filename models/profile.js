@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
-import User from "./user";
 import personalSchema from "./personal";
 import gadDataSchema from "./gadData";
 import affiliationSchema from "./affiliation";

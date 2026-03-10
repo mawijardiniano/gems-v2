@@ -81,7 +81,7 @@ export default function DiscoverContent() {
 
   const handleQrNoAccount = () => {
     setShowQrPrompt(false);
-    router.push("/survey");
+    router.push("/profile-registration");
   };
 
   const registeredIds = useMemo(

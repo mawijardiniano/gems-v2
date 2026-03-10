@@ -45,6 +45,7 @@ const initialState = {
       barangay: "",
       city: "",
       province: "",
+      region: "",
     },
     currentAddress: {
       barangay: "",

@@ -22,7 +22,7 @@ export default function Hero() {
             {/* <div className="mt-6 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => router.push("/survey")}
+                onClick={() => router.push("/profile-registration")}
                 className="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md"
               >
                 Take Survey

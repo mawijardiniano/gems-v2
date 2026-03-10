@@ -9,7 +9,7 @@ export default function Footer() {
           <a href="/" className="text-indigo-600">
             Home
           </a>
-          <a href="/survey" className="text-indigo-600">
+          <a href="/profile-registration" className="text-indigo-600">
             Survey
           </a>
         </div>

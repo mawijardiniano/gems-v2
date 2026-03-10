@@ -139,3 +139,40 @@ export async function PUT(req, { params }) {
     );
   }
 }
+
+export async function DELETE(req, { params }) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { status: "error", message: "Missing event id" },
+      { status: 400 },
+    );
+  }
+
+  await connectDB();
+  const event = await Event.findById(id);
+  if (!event) {
+    return NextResponse.json(
+      { status: "error", message: "Event not found" },
+      { status: 404 },
+    );
+  }
+
+  try {
+    await Event.deleteOne({ _id: id });
+    await logActivity({
+      user_id: req.user?._id || null,
+      action: "EVENT_DELETE",
+      description: `Deleted event: ${event.title}`,
+      req,
+      metadata: { event_id: event._id },
+    });
+    return NextResponse.json({ status: "success", message: "Event deleted" });
+  } catch (error) {
+    console.error("Delete failed:", error);
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 400 },
+    );
+  }
+}

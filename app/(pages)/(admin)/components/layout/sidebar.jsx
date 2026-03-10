@@ -24,20 +24,20 @@ export default function Sidebar({ open, setOpen }) {
   const pathname = usePathname();
 
   const links = [
-    { name: "Dashboard", href: "/sample-dashboard", icon: <FaHome /> },
+    { name: "Dashboard", href: "/admin-dashboard", icon: <FaHome /> },
     {
       name: "User List",
-      href: "/sample-user-list",
+      href: "/user-lists",
       icon: <FaPen />,
       children: [
         {
           name: "Students",
-          href: "/sample-user-list/students",
+          href: "/user-lists/students",
           icon: <FaUserGraduate />,
         },
         {
           name: "Employees",
-          href: "/sample-user-list/employees",
+          href: "/user-lists/employees",
           icon: <FaBriefcase />,
         },
       ],

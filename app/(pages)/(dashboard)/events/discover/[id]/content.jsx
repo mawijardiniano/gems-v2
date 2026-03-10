@@ -106,7 +106,7 @@ export default function DiscoverEventContent() {
 
   const handleQrNoAccount = () => {
     setShowQrPrompt(false);
-    router.push("/survey");
+    router.push("/profile-registration");
   };
 
   const isPast = (evt) => {

@@ -1,6 +1,4 @@
 import { Schema } from "mongoose";
-import academicInformationSchema from "./academic_information.js";
-import employmentInformationSchema from "./employment_information.js";
 
 const personalSchema = new Schema(
   {

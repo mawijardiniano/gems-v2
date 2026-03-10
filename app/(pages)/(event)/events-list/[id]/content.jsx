@@ -56,6 +56,42 @@ export default function EventManageContent() {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [profileChecked, setProfileChecked] = useState(false);
   const [interestedSelected, setInterestedSelected] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [guestTypeFilter, setGuestTypeFilter] = useState("all");
+
+  const getFilteredGuests = (guests) => {
+    return guests
+      .filter((guest) => {
+        const details = extractGuestDetails(guest);
+        if (guestTypeFilter === "student") return details.status === "Student";
+        if (guestTypeFilter === "employee")
+          return details.status === "Employee";
+        return true;
+      })
+      .filter((guest) => {
+        const details = extractGuestDetails(guest);
+        if (!interestedSearch) return true;
+        return details.name
+          ?.toLowerCase()
+          .includes(interestedSearch.toLowerCase());
+      });
+  };
+
+  const handleDeleteEvent = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await axios.delete(`/api/events/${eventId}`);
+      setShowDeleteModal(false);
+      router.push("/events-list");
+    } catch (err) {
+      setDeleteError(err?.response?.data?.message || "Failed to delete event.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -357,24 +393,58 @@ export default function EventManageContent() {
     }
   };
 
-  const buildGuestRows = (guests) =>
-    guests.map((g, idx) => {
-      const details = extractGuestDetails(g);
-      return [
-        idx + 1,
-        details.name,
-        details.sex || "",
-        details.genderPreference || "",
-        details.age ?? "",
-        details.status,
-        details.department,
-        details.positionDesignation || "",
-        details.programYearSection || "",
-        details.contact,
-        details.email,
-        "",
-      ];
+  const buildGuestRows = (guests) => {
+    // Use full office/college name for header, acronym for table column
+    const getDepartmentRaw = (details) =>
+      details.office || details.college || "No Department/College";
+    const sorted = [...guests].sort((a, b) => {
+      const detailsA = extractGuestDetails(a);
+      const detailsB = extractGuestDetails(b);
+      const depA = (getDepartmentRaw(detailsA) || "").toLowerCase();
+      const depB = (getDepartmentRaw(detailsB) || "").toLowerCase();
+      if (depA < depB) return -1;
+      if (depA > depB) return 1;
+      const nameA = (detailsA.name || "").toLowerCase();
+      const nameB = (detailsB.name || "").toLowerCase();
+      if (nameA < nameB) return -1;
+      if (nameA > nameB) return 1;
+      return 0;
     });
+    let rowIdx = 1;
+    const rows = [];
+    let lastDepartment = null;
+    sorted.forEach((g) => {
+      const details = extractGuestDetails(g);
+      const departmentRaw =
+        details.office || details.college || "No Department/College";
+      if (departmentRaw !== lastDepartment) {
+        rows.push({
+          isDepartmentHeader: true,
+          department: departmentRaw,
+        });
+        lastDepartment = departmentRaw;
+        rowIdx = 1;
+      }
+      rows.push({
+        isDepartmentHeader: false,
+        data: [
+          rowIdx++,
+          details.name,
+          details.sex || "",
+          details.genderPreference || "",
+          details.age ?? "",
+          details.status,
+          details.department,
+          details.positionDesignation || "",
+          details.programYearSection || "",
+          details.contact,
+          details.email,
+          "",
+        ],
+      });
+    });
+    return rows;
+  };
 
   const genderData = useMemo(() => {
     const counts = { Male: 0, Female: 0 };
@@ -413,6 +483,44 @@ export default function EventManageContent() {
       .sort((a, b) => b[1] - a[1])
       .map(([name, value]) => ({ name, value }));
   }, [filteredProfiles]);
+
+  // const perYearData = useMemo(() => {
+  //   const counts = {};
+  //   filteredProfiles.forEach((p) => {
+  //     let year = p?.affiliation?.academic_information?.year_level;
+  //     if (!year || typeof year !== "string" || !year.trim()) return;
+  //     year = year.trim();
+  //     counts[year] = (counts[year] || 0) + 1;
+  //   });
+
+  //   const yearOrder = [
+  //     "1st Year",
+  //     "2nd Year",
+  //     "3rd Year",
+  //     "4th Year",
+  //     "5th Year",
+  //     "6th Year",
+  //     "1st",
+  //     "2nd",
+  //     "3rd",
+  //     "4th",
+  //     "5th",
+  //     "6th",
+  //   ];
+  //   const getOrder = (label) => {
+  //     const idx = yearOrder.findIndex((y) =>
+  //       label.toLowerCase().startsWith(y.toLowerCase()),
+  //     );
+  //     if (idx !== -1) return idx;
+  //     // Try to extract a number for fallback
+  //     const num = parseInt(label);
+  //     return Number.isNaN(num) ? 99 : num + 10;
+  //   };
+  //   return Object.entries(counts)
+  //     .filter(([name]) => name && name !== "null" && name !== "undefined")
+  //     .sort((a, b) => getOrder(a[0]) - getOrder(b[0]))
+  //     .map(([name, value]) => ({ name, value }));
+  // }, [filteredProfiles]);
 
   const statusCounts = useMemo(() => {
     const counts = {};
@@ -473,20 +581,19 @@ export default function EventManageContent() {
     }
   };
 
-  const handlePrintGuests = () => {
+  const handlePrintGuests = (guests) => {
     if (typeof window === "undefined") return;
 
-    const guests = Array.isArray(event?.registered_users)
-      ? event.registered_users
-      : [];
-
     const rows = buildGuestRows(guests)
-      .map(
-        (r) =>
-          `<tr>${r
+      .map((row) => {
+        if (row.isDepartmentHeader) {
+          return `<tr><td colspan="12" style="background:#e6f0fa;font-weight:bold;text-align:left;padding:8px 12px;">${row.department}</td></tr>`;
+        } else {
+          return `<tr>${row.data
             .map((cell) => `<td>${cell === undefined ? "" : cell}</td>`)
-            .join("")}</tr>`,
-      )
+            .join("")}</tr>`;
+        }
+      })
       .join("");
 
     const dateLabel = formatRange(
@@ -519,7 +626,7 @@ export default function EventManageContent() {
 
     body {
       font-family: Arial, sans-serif;
-      padding: 0 24px 24px 24px;
+      padding: 0 2px 24px 2px;
       margin: 0;
       color: #111;
     }
@@ -577,13 +684,13 @@ export default function EventManageContent() {
       <img src="/getThemePhoto.png" alt="MarSULogo" width="100" style="display: block; margin: 0 auto;" />
     </div>
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;">
-      <h2 style="margin: 0;">MARINDUQUE STATE UNIVERSITY</h2>
-      <h3 style="margin: 0; font-weight: 100;">Gender and Development Unit</h3>
+      <h2 style="margin: 0; font-size:16px; font-weight: bold; letter-spacing: 2px;">MARINDUQUE STATE UNIVERSITY</h2>
+      <h3 style="margin: 0; font-weight: 100; font-size:16px;">Gender and Development Unit</h3>
     </div>
     <div></div>
 </div>
 
-  <h3>UNIVERSITY ACTIVITY ATTENDANCE SHEET</h3>
+  <h3 style="font-size:16px;">UNIVERSITY ACTIVITY ATTENDANCE SHEET</h3>
 
 <div style="margin-left: 50px;">
         <h4 style="font-weight: bold;">I.<b style="margin-left: 20px;">Activity Information</b></h4>
@@ -653,22 +760,24 @@ export default function EventManageContent() {
     };
   };
 
-  const handleDownloadGuestsPdf = () => {
+  const handleDownloadGuestsPdf = (guests) => {
     if (typeof window === "undefined") return;
-    const guests = Array.isArray(event?.registered_users)
-      ? event.registered_users
-      : [];
 
     const rows = buildGuestRows(guests)
-      .map(
-        (r) =>
-          `<tr>${r
+      .map((row) => {
+        if (row.isDepartmentHeader) {
+          return `<tr><td colspan="12" style="font-weight:bold;text-align:left;padding:8px 12px;font-size: 16px;">${row.department}</td></tr>`;
+        } else if (row.data && Array.isArray(row.data)) {
+          return `<tr>${row.data
             .map(
               (cell) =>
-                `<td style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px;">${cell === undefined ? "" : cell}</td>`,
+                `<td style="border: 1px solid #ccc; padding:8px; text-align: center; font-size: 12px;">${cell === undefined ? "" : cell}</td>`,
             )
-            .join("")}</tr>`,
-      )
+            .join("")}</tr>`;
+        } else {
+          return "";
+        }
+      })
       .join("");
 
     const dateLabel = formatRange(
@@ -976,7 +1085,7 @@ export default function EventManageContent() {
 
   const handleQrNoAccount = () => {
     setShowQrPrompt(false);
-    router.push("/survey");
+    router.push("/profile-registration");
   };
 
   if (loading) {
@@ -1112,6 +1221,11 @@ export default function EventManageContent() {
           handleQrNoAccount={handleQrNoAccount}
           formatRange={formatRange}
           userId={userId}
+          showDeleteModal={showDeleteModal}
+          setShowDeleteModal={setShowDeleteModal}
+          deleteError={deleteError}
+          deleting={deleting}
+          handleDeleteEvent={handleDeleteEvent}
         />
       )}
 
@@ -1132,6 +1246,9 @@ export default function EventManageContent() {
           handleDownloadGuestsPdf={handleDownloadGuestsPdf}
           handleDownloadBlankGuestsPdf={handleDownloadBlankGuestsPdf}
           handlePrintGuests={handlePrintGuests}
+          guestTypeFilter={guestTypeFilter}
+          setGuestTypeFilter={setGuestTypeFilter}
+          getFilteredGuests={getFilteredGuests}
         />
       )}
 
@@ -1152,6 +1269,7 @@ export default function EventManageContent() {
           eventData={eventData}
           ageData={ageData}
           collegeData={collegeData}
+          // perYearData={perYearData}
         />
       )}
     </div>
@@ -1179,6 +1297,11 @@ function OverviewTabs({
   handleQrNoAccount,
   formatRange,
   userId,
+  showDeleteModal,
+  setShowDeleteModal,
+  deleteError,
+  deleting,
+  handleDeleteEvent,
 }) {
   const ELIGIBILITY_OPTIONS = [
     { value: "Scholarship Applicant", label: "Scholarship Applicant" },
@@ -1379,6 +1502,51 @@ function OverviewTabs({
           <p className="text-sm text-gray-600">Generating QR...</p>
         )}
       </div>
+      <div>
+        <button
+          className="px-4 py-2 bg-red-600 text-white rounded"
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Delete Event
+        </button>
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h2 className="text-lg font-semibold text-red-600">
+                  Delete Event
+                </h2>
+              </div>
+              <div className="px-6 py-4 text-md text-gray-700 font-medium">
+                <p>Are you sure you want to delete this event?</p>
+                <p className="mt-2 text-gray-500">
+                  This action cannot be undone.
+                </p>
+                {deleteError && (
+                  <p className="text-red-600 mt-2">{deleteError}</p>
+                )}
+              </div>
+              <div className="px-6 py-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 border rounded text-sm"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteEvent}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white rounded text-sm disabled:bg-gray-400"
+                >
+                  {deleting ? "Deleting..." : "Yes, delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1399,7 +1567,27 @@ function GuestTabs({
   handleDownloadGuestsPdf,
   handleDownloadBlankGuestsPdf,
   handlePrintGuests,
+  guestTypeFilter,
+  setGuestTypeFilter,
+  getFilteredGuests,
 }) {
+  const [goingPage, setGoingPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageSizeInput, setPageSizeInput] = useState("10");
+  const filteredGoingGuests = getFilteredGuests(event.registered_users);
+  const totalGoingPages = Math.ceil(filteredGoingGuests.length / pageSize) || 1;
+  const paginatedGoingGuests = filteredGoingGuests.slice(
+    (goingPage - 1) * pageSize,
+    goingPage * pageSize,
+  );
+
+  useEffect(() => {
+    setGoingPage(1);
+  }, [guestTypeFilter, event.registered_users, guestTab, pageSize]);
+
+  useEffect(() => {
+    setPageSizeInput(String(pageSize));
+  }, [pageSize]);
   return (
     <div className="space-y-3">
       <button
@@ -1424,132 +1612,195 @@ function GuestTabs({
       </button>
       {guestTab === "going" && (
         <div>
-          <div className="flex justify-between items-center py-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 gap-2">
             <h2 className="text-lg font-medium">
-              Guest List ({event.registered_users.length})
+              Guest List ({filteredGoingGuests.length})
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* <label className="flex items-center gap-1 text-sm">
+                Page size:
+                <select
+                  className="border rounded px-1 py-0.5 text-sm"
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                >
+                  {[5, 10, 20, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </label> */}
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={guestTypeFilter}
+                onChange={(e) => setGuestTypeFilter(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="student">Students Only</option>
+                <option value="employee">Employees Only</option>
+              </select>
               <button
-                onClick={handleDownloadGuestsPdf}
+                onClick={() => handleDownloadGuestsPdf(filteredGoingGuests)}
                 className="text-sm text-blue-600 hover:underline"
               >
                 Download PDF
               </button>
               <button
-                onClick={handleDownloadBlankGuestsPdf}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Download Blank Attendance PDF
-              </button>
-              <button
-                onClick={handlePrintGuests}
+                onClick={() => handlePrintGuests(filteredGoingGuests)}
                 className="text-sm text-blue-600 hover:underline"
               >
                 Print
               </button>
             </div>
           </div>
-          {Array.isArray(event.registered_users) &&
-          event.registered_users.length > 0 ? (
-            <div className="overflow-auto border border-gray-200 rounded-lg">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 text-left text-gray-600">
-                  <tr className="text-center">
-                    <th className="px-4 py-2 font-medium">No.</th>
-                    <th className="px-4 py-2 font-medium">Full Name</th>
+          {filteredGoingGuests.length > 0 ? (
+            <>
+              <div className="overflow-auto border border-gray-200 rounded-lg">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 text-left text-gray-600">
+                    <tr className="text-center">
+                      <th className="p-2 font-medium">No.</th>
+                      <th className="px-4 py-2 font-medium">Full Name</th>
+                      <th className="px-4 py-2 font-medium">Sex</th>
+                      <th className="px-4 py-2 font-medium">Gender Identity</th>
+                      <th className="px-4 py-2 font-medium">Age</th>
+                      <th className="px-4 py-2 font-medium">
+                        Participant Type
+                      </th>
+                      <th className="px-4 py-2 font-medium">
+                        Department/
+                        <br />
+                        Office/
+                        <br />
+                        Organization
+                      </th>
+                      <th className="px-4 py-2 font-medium">
+                        Position/
+                        <br />
+                        Designation
+                        <br />
+                        (Employee/
+                        <br />
+                        Stakeholders)
+                      </th>
+                      <th className="px-4 py-2 font-medium">
+                        Program/ <br />
+                        Year/ <br />
+                        Section
+                        <br />
+                        (For Students)
+                      </th>
+                      <th className="p-2 font-medium">Contact No.</th>
+                      <th className="p-2 font-medium">
+                        Email
+                        <br /> Address
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {paginatedGoingGuests.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={11}
+                          className="px-4 py-4 text-center text-gray-500"
+                        >
+                          No matching guests found.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedGoingGuests.map((guest, idx) => {
+                        const details = extractGuestDetails(guest);
+                        return (
+                          <tr key={guest?._id?.toString?.() || guest}>
+                            <td className="p-2">
+                              {(goingPage - 1) * pageSize + idx + 1}
+                            </td>
+                            <td className="p-2">{details.name}</td>
+                            <td className="p-2 text-center">
+                              {details.sex || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.genderPreference || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.age ?? "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.status || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.department || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.positionDesignation || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.programYearSection || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.contact || "—"}
+                            </td>
+                            <td className="p-2 text-center">
+                              {details.email || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-                    <th className="px-4 py-2 font-medium">Sex</th>
-                    <th className="px-4 py-2 font-medium">Gender Identity</th>
-                    <th className="px-4 py-2 font-medium">Age</th>
-                    <th className="px-4 py-2 font-medium">Participant Type</th>
-                    <th className="px-4 py-2 font-medium">
-                      Department/
-                      <br />
-                      Office/
-                      <br />
-                      Organization
-                    </th>
-                    <th className="px-4 py-2 font-medium">
-                      Position/
-                      <br />
-                      Designation
-                      <br />
-                      (Employee/
-                      <br />
-                      Stakeholders)
-                    </th>
-                    <th className="px-4 py-2 font-medium">
-                      Program/ <br />
-                      Year/ <br />
-                      Section
-                      <br />
-                      (For Students)
-                    </th>
-                    <th className="px-4 py-2 font-medium">Contact No.</th>
-                    <th className="px-4 py-2 font-medium">Email Address</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {(() => {
-                    const filtered = event.registered_users.filter((guest) => {
-                      const details = extractGuestDetails(guest);
-                      if (!interestedSearch) return true;
-                      return details.name
-                        ?.toLowerCase()
-                        .includes(interestedSearch.toLowerCase());
-                    });
-                    if (filtered.length === 0) {
-                      return (
-                        <tr>
-                          <td
-                            colSpan={11}
-                            className="px-4 py-4 text-center text-gray-500"
-                          >
-                            No matching guests found.
-                          </td>
-                        </tr>
-                      );
-                    }
-                    return filtered.map((guest, idx) => {
-                      const details = extractGuestDetails(guest);
-                      return (
-                        <tr key={guest?._id?.toString?.() || guest}>
-                          <td className="px-4 py-2">{idx + 1}</td>
-                          <td className="px-4 py-2">{details.name}</td>
-                          <td className="px-4 py-2 text-center">
-                            {details.sex || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.genderPreference || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.age ?? "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.status || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.department || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.positionDesignation || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.programYearSection || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.contact || "—"}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            {details.email || "—"}
-                          </td>
-                        </tr>
-                      );
-                    });
-                  })()}
-                </tbody>
-              </table>
-            </div>
+              <div className="flex flex-wrap justify-between gap-2 mt-4">
+                <span className="flex items-center gap-1 text-sm">
+                  Rows per page:
+                  <input
+                    type="number"
+                    min={1}
+                    className="border rounded px-1 py-0.5 text-sm w-16"
+                    value={pageSizeInput}
+                    onChange={(e) => {
+                      setPageSizeInput(e.target.value);
+                      const val = Number(e.target.value);
+                      if (e.target.value === "" || isNaN(val)) return;
+                      if (val > 0) setPageSize(val);
+                    }}
+                    onBlur={(e) => {
+                      if (
+                        !pageSizeInput ||
+                        isNaN(Number(pageSizeInput)) ||
+                        Number(pageSizeInput) < 1
+                      ) {
+                        setPageSizeInput(String(pageSize));
+                      }
+                    }}
+                  />
+                </span>
+                <div>
+ <button
+                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  onClick={() => setGoingPage((p) => Math.max(1, p - 1))}
+                  disabled={goingPage === 1}
+                >
+                  Prev
+                </button>
+                <span className="px-2">
+                  Page {goingPage} of {totalGoingPages}
+                </span>
+                <button
+                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  onClick={() =>
+                    setGoingPage((p) => Math.min(totalGoingPages, p + 1))
+                  }
+                  disabled={goingPage === totalGoingPages}
+                >
+                  Next
+                </button>
+                </div>
+               
+              </div>
+            </>
           ) : (
             <div className="text-sm text-gray-600">
               No guests registered yet.
@@ -1729,6 +1980,7 @@ function InsightTab({
   eventData,
   ageData,
   collegeData,
+  // perYearData,
 }) {
   return (
     <div className="space-y-6">
@@ -1840,6 +2092,7 @@ function InsightTab({
         </div>
         <AgeChart data={ageData} />
         <CollegeChart data={collegeData} />
+        {/* <PerYearChart data={perYearData} /> */}
       </div>
     </div>
   );
@@ -1990,6 +2243,33 @@ function CollegeChart({ data }) {
     </div>
   );
 }
+
+//sample filter attendance
+// export function groupStudentsByCollegeYear(guests) {
+//   const groups = {};
+//   guests.forEach((guest) => {
+//     if (guest.status === "Student") {
+//       const college = guest.college || "Unknown College";
+//       const year = guest.year || "Unknown Year";
+//       if (!groups[college]) groups[college] = {};
+//       if (!groups[college][year]) groups[college][year] = [];
+//       groups[college][year].push(guest);
+//     }
+//   });
+//   return groups;
+// }
+
+// export function groupEmployeesByOffice(guests) {
+//   const groups = {};
+//   guests.forEach((guest) => {
+//     if (guest.status === "Employee") {
+//       const office = guest.office || "Unknown Office";
+//       if (!groups[office]) groups[office] = [];
+//       groups[office].push(guest);
+//     }
+//   });
+//   return groups;
+// }
 
 function AgeChart({ data }) {
   return (
