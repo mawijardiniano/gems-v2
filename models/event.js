@@ -56,6 +56,10 @@ const EventSchema = new Schema(
       ],
       required: true,
     },
+    target_number_of_participants : {
+      type: Number,
+      required:true
+    },
     created_by: {
       type: Schema.Types.ObjectId,
       ref: "UserAuth",

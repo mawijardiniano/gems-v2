@@ -73,6 +73,7 @@ export async function POST(req) {
       type_of_activity,
       organizing_office_unit,
       eligibility_criteria,
+      target_number_of_participants
     } = body;
 
     if (
@@ -82,7 +83,8 @@ export async function POST(req) {
       !created_by ||
       !type_of_activity ||
       !organizing_office_unit ||
-      !eligibility_criteria
+      !eligibility_criteria ||
+      !target_number_of_participants
     ) {
       return NextResponse.json(
         {
@@ -117,6 +119,7 @@ export async function POST(req) {
       type_of_activity,
       organizing_office_unit,
       eligibility_criteria,
+      target_number_of_participants,
       created_by,
       updated_by: created_by,
       registered_users: [],

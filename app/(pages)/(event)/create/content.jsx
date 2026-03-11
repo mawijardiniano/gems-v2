@@ -25,9 +25,10 @@ export default function CreateEventsContent() {
     venue: "",
     type_of_activity: "Academic",
     organizing_office_unit: "",
-    eligibility_criteria: "", 
+    eligibility_criteria: "",
+    target_number_of_participants: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -55,7 +56,6 @@ export default function CreateEventsContent() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // For single-select dropdown
   const handleEligibilityChange = (e) => {
     setFormData((prev) => ({ ...prev, eligibility_criteria: e.target.value }));
   };
@@ -100,6 +100,7 @@ export default function CreateEventsContent() {
         type_of_activity: formData.type_of_activity,
         organizing_office_unit: formData.organizing_office_unit.trim(),
         eligibility_criteria: formData.eligibility_criteria,
+        target_number_of_participants: formData.target_number_of_participants,
         ...(userId ? { created_by: userId } : {}),
       };
 
@@ -125,12 +126,6 @@ export default function CreateEventsContent() {
           <p className="text-gray-600 text-sm">Set the schedule and details.</p>
         </div>
       </div>
-
-      {/* {error && (
-        <div className="mb-4 p-4 rounded border border-red-300 bg-red-50 text-red-700">
-          {error}
-        </div>
-      )} */}
 
       {success && (
         <div className="mb-4 p-4 rounded border border-green-300 bg-green-50 text-green-700">
@@ -286,6 +281,20 @@ export default function CreateEventsContent() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Target Number of Participants
+          </label>
+          <input
+            type="number"
+            value={formData.target_number_of_participants}
+            onChange={(e) =>
+              handleChange("target_number_of_participants", e.target.value)
+            }
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-400">

@@ -124,6 +124,7 @@ export default function EventManageContent() {
             venue: evt.venue || "",
             status: evt.status || "active",
             eligibility_criteria: evt.eligibility_criteria,
+            target_number_of_participants: evt.target_number_of_participants,
           });
         }
       } catch (err) {
@@ -394,7 +395,6 @@ export default function EventManageContent() {
   };
 
   const buildGuestRows = (guests) => {
-    // Use full office/college name for header, acronym for table column
     const getDepartmentRaw = (details) =>
       details.office || details.college || "No Department/College";
     const sorted = [...guests].sort((a, b) => {
@@ -484,43 +484,43 @@ export default function EventManageContent() {
       .map(([name, value]) => ({ name, value }));
   }, [filteredProfiles]);
 
-  // const perYearData = useMemo(() => {
-  //   const counts = {};
-  //   filteredProfiles.forEach((p) => {
-  //     let year = p?.affiliation?.academic_information?.year_level;
-  //     if (!year || typeof year !== "string" || !year.trim()) return;
-  //     year = year.trim();
-  //     counts[year] = (counts[year] || 0) + 1;
-  //   });
+  const perYearData = useMemo(() => {
+    const counts = {};
+    filteredProfiles.forEach((p) => {
+      let year = p?.affiliation?.academic_information?.year_level;
+      if (!year || typeof year !== "string" || !year.trim()) return;
+      year = year.trim();
+      counts[year] = (counts[year] || 0) + 1;
+    });
 
-  //   const yearOrder = [
-  //     "1st Year",
-  //     "2nd Year",
-  //     "3rd Year",
-  //     "4th Year",
-  //     "5th Year",
-  //     "6th Year",
-  //     "1st",
-  //     "2nd",
-  //     "3rd",
-  //     "4th",
-  //     "5th",
-  //     "6th",
-  //   ];
-  //   const getOrder = (label) => {
-  //     const idx = yearOrder.findIndex((y) =>
-  //       label.toLowerCase().startsWith(y.toLowerCase()),
-  //     );
-  //     if (idx !== -1) return idx;
-  //     // Try to extract a number for fallback
-  //     const num = parseInt(label);
-  //     return Number.isNaN(num) ? 99 : num + 10;
-  //   };
-  //   return Object.entries(counts)
-  //     .filter(([name]) => name && name !== "null" && name !== "undefined")
-  //     .sort((a, b) => getOrder(a[0]) - getOrder(b[0]))
-  //     .map(([name, value]) => ({ name, value }));
-  // }, [filteredProfiles]);
+    const yearOrder = [
+      "1st Year",
+      "2nd Year",
+      "3rd Year",
+      "4th Year",
+      "5th Year",
+      "6th Year",
+      "1st",
+      "2nd",
+      "3rd",
+      "4th",
+      "5th",
+      "6th",
+    ];
+    const getOrder = (label) => {
+      const idx = yearOrder.findIndex((y) =>
+        label.toLowerCase().startsWith(y.toLowerCase()),
+      );
+      if (idx !== -1) return idx;
+      // Try to extract a number for fallback
+      const num = parseInt(label);
+      return Number.isNaN(num) ? 99 : num + 10;
+    };
+    return Object.entries(counts)
+      .filter(([name]) => name && name !== "null" && name !== "undefined")
+      .sort((a, b) => getOrder(a[0]) - getOrder(b[0]))
+      .map(([name, value]) => ({ name, value }));
+  }, [filteredProfiles]);
 
   const statusCounts = useMemo(() => {
     const counts = {};
@@ -557,28 +557,32 @@ export default function EventManageContent() {
     if (!event?._id || !userId || !editData) return;
     setSaving(true);
     setError("");
-    try {
-      const payload = {
-        ...editData,
-        updated_by: userId,
-      };
-      const res = await axios.put(`/api/events/${event._id}`, payload);
-      const updated = res.data?.data || event;
-      setEvent(updated);
-      setEditData({
-        title: updated.title || "",
-        description: updated.description || "",
-        start_date: formatForInput(updated.start_date || updated.date),
-        end_date: formatForInput(updated.end_date),
-        venue: updated.venue || "",
-        status: updated.status || "active",
-        eligibility_criteria: updated.eligibility_criteria,
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to save changes.");
-    } finally {
-      setSaving(false);
-    }
+      try {
+        const payload = {
+          ...editData,
+          start_date: new Date(editData.start_date).toISOString(),
+          end_date: new Date(editData.end_date).toISOString(),
+          updated_by: userId,
+        };
+        console.log('Saving event payload:', payload);
+        const res = await axios.put(`/api/events/${event._id}`, payload);
+        const updated = res.data?.data || event;
+        setEvent(updated);
+        setEditData({
+          title: updated.title || "",
+          description: updated.description || "",
+          start_date: formatForInput(updated.start_date || updated.date),
+          end_date: formatForInput(updated.end_date),
+          venue: updated.venue || "",
+          status: updated.status || "active",
+          eligibility_criteria: updated.eligibility_criteria,
+          target_number_of_participants: updated.target_number_of_participants,
+        });
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to save changes.");
+      } finally {
+        setSaving(false);
+      }
   };
 
   const handlePrintGuests = (guests) => {
@@ -606,8 +610,7 @@ export default function EventManageContent() {
       "Administrative",
       "GAD",
       "Extension Research",
-      "Students",
-      "Others",
+      "Students",      "Others",
     ];
 
     const selectedType = event.type_of_activity;
@@ -1269,7 +1272,8 @@ export default function EventManageContent() {
           eventData={eventData}
           ageData={ageData}
           collegeData={collegeData}
-          // perYearData={perYearData}
+          perYearData={perYearData}
+          PerYearChart={PerYearChart}
         />
       )}
     </div>
@@ -1381,7 +1385,7 @@ function OverviewTabs({
                   onChange={(e) => handleEditChange("venue", e.target.value)}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 mb-2">
                 <label className="text-sm text-gray-600">Start</label>
                 <input
                   type="datetime-local"
@@ -1392,7 +1396,7 @@ function OverviewTabs({
                   }
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 mb-2">
                 <label className="text-sm text-gray-600">End</label>
                 <input
                   type="datetime-local"
@@ -1403,7 +1407,7 @@ function OverviewTabs({
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 mb-2">
               <label className="text-sm text-gray-600">Description</label>
               <textarea
                 rows={4}
@@ -1414,10 +1418,8 @@ function OverviewTabs({
                 }
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Eligibility Criteria
-              </label>
+            <div className="mb-2">
+              <label className="block text-sm">Eligibility Criteria</label>
               <select
                 value={editData?.eligibility_criteria}
                 onChange={(e) =>
@@ -1433,6 +1435,22 @@ function OverviewTabs({
                 ))}
               </select>
             </div>
+            <div className="flex flex-col gap-1 mb-6">
+              <label className="text-sm text-gray-600">
+                Target Number of Participants
+              </label>
+              <input
+                type="text"
+                className="border rounded px-3 py-2"
+                value={editData?.target_number_of_participants || ""}
+                onChange={(e) =>
+                  handleEditChange(
+                    "target_number_of_participants",
+                    e.target.value,
+                  )
+                }
+              />
+            </div>
 
             <div className="flex gap-3 justify-end">
               <button
@@ -1446,6 +1464,8 @@ function OverviewTabs({
                     venue: event.venue || "",
                     status: event.status || "active",
                     eligibility_criteria: event.eligibility_criteria,
+                    target_number_of_participants:
+                      event.target_number_of_participants,
                   });
                 }}
                 className="px-4 py-2 border rounded hover:bg-gray-100"
@@ -1778,27 +1798,26 @@ function GuestTabs({
                   />
                 </span>
                 <div>
- <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  onClick={() => setGoingPage((p) => Math.max(1, p - 1))}
-                  disabled={goingPage === 1}
-                >
-                  Prev
-                </button>
-                <span className="px-2">
-                  Page {goingPage} of {totalGoingPages}
-                </span>
-                <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  onClick={() =>
-                    setGoingPage((p) => Math.min(totalGoingPages, p + 1))
-                  }
-                  disabled={goingPage === totalGoingPages}
-                >
-                  Next
-                </button>
+                  <button
+                    className="px-2 py-1 border rounded disabled:opacity-50"
+                    onClick={() => setGoingPage((p) => Math.max(1, p - 1))}
+                    disabled={goingPage === 1}
+                  >
+                    Prev
+                  </button>
+                  <span className="px-2">
+                    Page {goingPage} of {totalGoingPages}
+                  </span>
+                  <button
+                    className="px-2 py-1 border rounded disabled:opacity-50"
+                    onClick={() =>
+                      setGoingPage((p) => Math.min(totalGoingPages, p + 1))
+                    }
+                    disabled={goingPage === totalGoingPages}
+                  >
+                    Next
+                  </button>
                 </div>
-               
               </div>
             </>
           ) : (
@@ -1980,11 +1999,12 @@ function InsightTab({
   eventData,
   ageData,
   collegeData,
-  // perYearData,
+  perYearData,
+  PerYearChart,
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
         <select
           className="border rounded px-3 py-2 text-sm bg-white"
           value={insightsFilter}
@@ -1995,6 +2015,9 @@ function InsightTab({
           <option value="interested">Interested</option>
           <option value="not_interested">Not Interested</option>
         </select>
+        <button className="bg-black text-white px-4 py-1 rounded-md">
+          Generate Report
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -2092,7 +2115,7 @@ function InsightTab({
         </div>
         <AgeChart data={ageData} />
         <CollegeChart data={collegeData} />
-        {/* <PerYearChart data={perYearData} /> */}
+        <PerYearChart data={perYearData} />
       </div>
     </div>
   );
@@ -2226,6 +2249,29 @@ function CollegeChart({ data }) {
     <div className="bg-white shadow rounded">
       <div className="bg-gray-200 px-4 py-2">
         <h2 className="text-xl font-semibold text-center">College</h2>
+      </div>
+      <div className="w-full h-72 p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="horizontal">
+            <XAxis dataKey="name" type="category" width={120} />
+            <YAxis type="number" allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#38bdf8">
+              <LabelList dataKey="value" position="right" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function PerYearChart({ data }) {
+  return (
+    <div className="bg-white shadow rounded">
+      <div className="bg-gray-200 px-4 py-2">
+        <h2 className="text-xl font-semibold text-center">Per Year</h2>
       </div>
       <div className="w-full h-72 p-4">
         <ResponsiveContainer width="100%" height="100%">
