@@ -58,7 +58,6 @@ const EventSchema = new Schema(
     },
     target_number_of_participants : {
       type: Number,
-      required:true
     },
     created_by: {
       type: Schema.Types.ObjectId,
