@@ -19,7 +19,6 @@ function capitalizeWords(str) {
     .join(" ");
 }
 
-
 function capitalizeObjectStrings(obj) {
   if (!obj) return obj;
   const newObj = { ...obj };
@@ -39,7 +38,11 @@ export async function GET() {
       .populate("personal_info_id")
       .lean();
 
-    return NextResponse.json({ status: "success", data: users });
+    const usersNoPassword = users.map((u) => {
+      const { password, ...rest } = u;
+      return rest;
+    });
+    return NextResponse.json({ status: "success", data: usersNoPassword });
   } catch (error) {
     console.error("GET /api/users error:", error);
     return NextResponse.json(

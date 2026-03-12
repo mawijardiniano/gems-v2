@@ -93,6 +93,31 @@ export default function SubmitProfile() {
     return errors;
   };
 
+  const buildAddress = (address) => {
+    const regionObj = AddressData.regions.find(
+      (r) => r.code === address.region,
+    );
+    const provinceObj = AddressData.provinces.find(
+      (p) => p.code === address.province,
+    );
+    const cityObj = AddressData.cities.find((c) => c.code === address.city);
+    const barangayObj = AddressData.barangays.find(
+      (b) => b.code === address.barangay,
+    );
+    return {
+      region: { code: address.region, name: regionObj ? regionObj.name : "" },
+      province: {
+        code: address.province,
+        name: provinceObj ? provinceObj.name : "",
+      },
+      city: { code: address.city, name: cityObj ? cityObj.name : "" },
+      barangay: {
+        code: address.barangay,
+        name: barangayObj ? barangayObj.name : "",
+      },
+    };
+  };
+
   const handleSubmit = async () => {
     setError("");
     const errors = validate();
@@ -103,18 +128,19 @@ export default function SubmitProfile() {
 
     setIsSubmitting(true);
     try {
-      // Map codes to names for both addresses
-      const contactWithNames = {
+      const contactWithCodesAndNames = {
         ...contact,
-        permanentAddress: getAddressNames(contact.permanentAddress),
-        currentAddress: getAddressNames(contact.currentAddress),
+        permanentAddress: buildAddress(contact.permanentAddress),
+        currentAddress: buildAddress(contact.currentAddress),
       };
       const payload = {
         personal,
         gadData: { ...gadData },
         affiliation: { ...affiliation },
-        contact: contactWithNames,
+        contact: contactWithCodesAndNames,
       };
+
+      console.log("Payload", payload)
 
       if (payload.gadData.isPWD === false) {
         delete payload.gadData.pwd_type;

@@ -38,7 +38,7 @@ export default function Sidebar({ open, setOpen }) {
         if (!mounted) return;
         if (!res.ok) return;
         const body = await res.json();
-        // Support multiple response shapes: { success, data }, { profile }, or direct profile
+       
         const profileObj = body?.data || body?.profile || body || null;
         const pt =
           profileObj?.personal?.currentStatus ||
@@ -46,7 +46,7 @@ export default function Sidebar({ open, setOpen }) {
           null;
         setPersonType(pt);
       } catch (e) {
-        // ignore
+     
       }
     })();
     return () => (mounted = false);

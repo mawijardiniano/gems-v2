@@ -6,7 +6,7 @@ import {
   setAffiliation,
   nextStep,
 } from "@/store/slices/profileRegistrationSlice";
-import Progress from "./layout/progress";
+import Progress from "./progress";
 
 export default function PersonalInformation() {
   const dispatch = useDispatch();

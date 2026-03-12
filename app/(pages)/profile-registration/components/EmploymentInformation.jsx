@@ -45,7 +45,6 @@ export default function EmploymentInformation() {
       }),
     );
 
-  // All fields required
   const requiredFields = [
     "employee_id",
     "office",

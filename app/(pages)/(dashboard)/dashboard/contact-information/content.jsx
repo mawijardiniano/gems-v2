@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { FaIdCard } from "react-icons/fa";
 import allData from "@/public/data/all.json";
 
-const emptyAddress = { region: "", province: "", city: "", barangay: "" };
+const emptyAddress = {
+  region: { code: "", name: "" },
+  province: { code: "", name: "" },
+  city: { code: "", name: "" },
+  barangay: { code: "", name: "" },
+};
 
 export default function ContactInformationContent({ profile }) {
   const [currentProfile, setCurrentProfile] = useState(profile || null);
@@ -24,10 +29,10 @@ export default function ContactInformationContent({ profile }) {
   useEffect(() => {
     const contact = (profile && profile.contact) || {};
     const normAddr = (addr = {}) => ({
-      region: addr.region || "",
-      province: addr.province || "",
-      city: addr.city || "",
-      barangay: addr.barangay || "",
+      region: addr.region || { code: "", name: "" },
+      province: addr.province || { code: "", name: "" },
+      city: addr.city || { code: "", name: "" },
+      barangay: addr.barangay || { code: "", name: "" },
     });
     const normalized = {
       email: contact.email || "",
@@ -43,41 +48,44 @@ export default function ContactInformationContent({ profile }) {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleAddressChange = (which, key, value) => {
+  const handleAddressChange = (which, key, code) => {
     setFormData((prev) => {
       let updated = {
         ...prev,
         [which]: {
           ...(prev[which] || {}),
-          [key]: value,
+          [key]: { code, name: "" },
         },
       };
+      // Set name based on code
+      let list = [];
+      if (key === "region") list = allData.regions;
+      if (key === "province") list = allData.provinces;
+      if (key === "city") list = allData.cities;
+      if (key === "barangay") list = allData.barangays;
+      const found = list.find((item) => item.code === code);
+      updated[which][key].name = found ? found.name : "";
       if (key === "region") {
-        updated[which].province = "";
-        updated[which].city = "";
-        updated[which].barangay = "";
+        updated[which].province = { code: "", name: "" };
+        updated[which].city = { code: "", name: "" };
+        updated[which].barangay = { code: "", name: "" };
       } else if (key === "province") {
-        updated[which].city = "";
-        updated[which].barangay = "";
+        updated[which].city = { code: "", name: "" };
+        updated[which].barangay = { code: "", name: "" };
       } else if (key === "city") {
-        updated[which].barangay = "";
+        updated[which].barangay = { code: "", name: "" };
       }
       return updated;
     });
   };
 
-  const getAddressWithNames = (addr) => {
-    const regionObj = allData.regions.find((r) => r.code === addr.region);
-    const provinceObj = allData.provinces.find((p) => p.code === addr.province);
-    const cityObj = allData.cities.find((c) => c.code === addr.city);
-    const barangayObj = allData.barangays.find((b) => b.code === addr.barangay);
-    return {
-      region: regionObj ? regionObj.name : "",
-      province: provinceObj ? provinceObj.name : "",
-      city: cityObj ? cityObj.name : "",
-      barangay: barangayObj ? barangayObj.name : "",
-    };
-  };
+  // Accepts { code, name } objects and returns the same structure (for backend)
+  const buildAddress = (address) => ({
+    region: { code: address.region.code, name: address.region.name },
+    province: { code: address.province.code, name: address.province.name },
+    city: { code: address.city.code, name: address.city.name },
+    barangay: { code: address.barangay.code, name: address.barangay.name },
+  });
 
   const handleSave = async () => {
     if (!formData.email || !formData.mobileNumber) {
@@ -95,8 +103,8 @@ export default function ContactInformationContent({ profile }) {
       const payload = {
         contact: {
           ...formData,
-          currentAddress: getAddressWithNames(formData.currentAddress),
-          permanentAddress: getAddressWithNames(formData.permanentAddress),
+          currentAddress: buildAddress(formData.currentAddress),
+          permanentAddress: buildAddress(formData.permanentAddress),
         },
       };
 
@@ -170,14 +178,14 @@ export default function ContactInformationContent({ profile }) {
   const renderAddress = (label, which) => {
     const addr = formData[which] || emptyAddress;
     const regions = allData.regions;
-    const provinces = addr.region
-      ? allData.provinces.filter((p) => p.region_code === addr.region)
+    const provinces = addr.region.code
+      ? allData.provinces.filter((p) => p.region_code === addr.region.code)
       : [];
-    const cities = addr.province
-      ? allData.cities.filter((c) => c.province_code === addr.province)
+    const cities = addr.province.code
+      ? allData.cities.filter((c) => c.province_code === addr.province.code)
       : [];
-    const barangays = addr.city
-      ? allData.barangays.filter((b) => b.city_code === addr.city)
+    const barangays = addr.city.code
+      ? allData.barangays.filter((b) => b.city_code === addr.city.code)
       : [];
     return (
       <div className="flex flex-col gap-2 ">
@@ -217,7 +225,7 @@ export default function ContactInformationContent({ profile }) {
           {isEditing ? (
             <select
               className="border border-gray-300 rounded px-3 py-1"
-              value={addr.region}
+              value={addr.region.code}
               onChange={(e) =>
                 handleAddressChange(which, "region", e.target.value)
               }
@@ -231,7 +239,7 @@ export default function ContactInformationContent({ profile }) {
             </select>
           ) : (
             <p className="border border-gray-300 rounded px-3 py-1">
-              {addr.region || "N/A"}
+              {addr.region.name || "N/A"}
             </p>
           )}
         </div>
@@ -240,11 +248,11 @@ export default function ContactInformationContent({ profile }) {
           {isEditing ? (
             <select
               className="border border-gray-300 rounded px-3 py-1"
-              value={addr.province}
+              value={addr.province.code}
               onChange={(e) =>
                 handleAddressChange(which, "province", e.target.value)
               }
-              disabled={!addr.region}
+              disabled={!addr.region.code}
             >
               <option value="">Select Province</option>
               {provinces.map((p) => (
@@ -255,7 +263,7 @@ export default function ContactInformationContent({ profile }) {
             </select>
           ) : (
             <p className="border border-gray-300 rounded px-3 py-1">
-              {addr.province || "N/A"}
+              {addr.province.name || "N/A"}
             </p>
           )}
         </div>
@@ -266,11 +274,11 @@ export default function ContactInformationContent({ profile }) {
           {isEditing ? (
             <select
               className="border border-gray-300 rounded px-3 py-1"
-              value={addr.city}
+              value={addr.city.code}
               onChange={(e) =>
                 handleAddressChange(which, "city", e.target.value)
               }
-              disabled={!addr.province}
+              disabled={!addr.province.code}
             >
               <option value="">Select City/Municipality</option>
               {cities.map((c) => (
@@ -281,7 +289,7 @@ export default function ContactInformationContent({ profile }) {
             </select>
           ) : (
             <p className="border border-gray-300 rounded px-3 py-1">
-              {addr.city || "N/A"}
+              {addr.city.name || "N/A"}
             </p>
           )}
         </div>
@@ -290,11 +298,11 @@ export default function ContactInformationContent({ profile }) {
           {isEditing ? (
             <select
               className="border border-gray-300 rounded px-3 py-1"
-              value={addr.barangay}
+              value={addr.barangay.code}
               onChange={(e) =>
                 handleAddressChange(which, "barangay", e.target.value)
               }
-              disabled={!addr.city}
+              disabled={!addr.city.code}
             >
               <option value="">Select Barangay</option>
               {barangays.map((b) => (
@@ -305,7 +313,7 @@ export default function ContactInformationContent({ profile }) {
             </select>
           ) : (
             <p className="border border-gray-300 rounded px-3 py-1">
-              {addr.barangay || "N/A"}
+              {addr.barangay.name || "N/A"}
             </p>
           )}
         </div>

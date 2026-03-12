@@ -6,7 +6,7 @@ import {
   nextStep,
   prevStep,
 } from "@/store/slices/profileRegistrationSlice";
-import Progress from "./layout/progress";
+import Progress from "./progress";
 import AddressData from "@/public/data/all.json";
 import { useState, useMemo } from "react";
 
@@ -50,24 +50,49 @@ export default function ContactInformation() {
     [selectedCity],
   );
 
-  const getAddressNames = (address) => {
-    const regionObj = (AddressData.regions || []).find(
+  // const getAddressNames = (address) => {
+  //   const regionObj = (AddressData.regions || []).find(
+  //     (r) => r.code === address.region,
+  //   );
+  //   const provinceObj = (AddressData.provinces || []).find(
+  //     (p) => p.code === address.province,
+  //   );
+  //   const cityObj = (AddressData.cities || []).find(
+  //     (c) => c.code === address.city,
+  //   );
+  //   const barangayObj = (AddressData.barangays || []).find(
+  //     (b) => b.code === address.barangay,
+  //   );
+  //   return {
+  //     region: regionObj ? regionObj.name : "",
+  //     province: provinceObj ? provinceObj.name : "",
+  //     city: cityObj ? cityObj.name : "",
+  //     barangay: barangayObj ? barangayObj.name : "",
+  //   };
+  // };
+
+  const buildAddress = (address) => {
+    const regionObj = AddressData.regions.find(
       (r) => r.code === address.region,
     );
-    const provinceObj = (AddressData.provinces || []).find(
+    const provinceObj = AddressData.provinces.find(
       (p) => p.code === address.province,
     );
-    const cityObj = (AddressData.cities || []).find(
-      (c) => c.code === address.city,
-    );
-    const barangayObj = (AddressData.barangays || []).find(
+    const cityObj = AddressData.cities.find((c) => c.code === address.city);
+    const barangayObj = AddressData.barangays.find(
       (b) => b.code === address.barangay,
     );
     return {
-      region: regionObj ? regionObj.name : "",
-      province: provinceObj ? provinceObj.name : "",
-      city: cityObj ? cityObj.name : "",
-      barangay: barangayObj ? barangayObj.name : "",
+      region: { code: address.region, name: regionObj ? regionObj.name : "" },
+      province: {
+        code: address.province,
+        name: provinceObj ? provinceObj.name : "",
+      },
+      city: { code: address.city, name: cityObj ? cityObj.name : "" },
+      barangay: {
+        code: address.barangay,
+        name: barangayObj ? barangayObj.name : "",
+      },
     };
   };
 
@@ -366,8 +391,8 @@ export default function ContactInformation() {
         <button
           onClick={() => {
             if (!isNextDisabled) {
-              const permanent = getAddressNames(contact.permanentAddress);
-              const current = getAddressNames(contact.currentAddress);
+              const permanent = buildAddress(contact.permanentAddress);
+              const current = buildAddress(contact.currentAddress);
               console.log("Permanent Address (to save):", permanent);
               console.log("Current Address (to save):", current);
               dispatch(nextStep());

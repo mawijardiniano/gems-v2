@@ -11,10 +11,10 @@ const initialState = {
     nationality: "Filipino",
     civil_status: "",
     religion: "",
-    currentStatus: "", // Student | Employee
+    currentStatus: "",
   },
   gadData: {
-    sexAtBirth: "", // Male | Female
+    sexAtBirth: "",
     gender_preference: "",
     isPWD: null,
     pwd_type: "",
@@ -42,15 +42,16 @@ const initialState = {
     email: "",
     mobileNumber: "",
     permanentAddress: {
-      barangay: "",
-      city: "",
-      province: "",
-      region: "",
+      region: { code: "", name: "" },
+      province: { code: "", name: "" },
+      city: { code: "", name: "" },
+      barangay: { code: "", name: "" },
     },
     currentAddress: {
-      barangay: "",
-      city: "",
-      province: "",
+      region: { code: "", name: "" },
+      province: { code: "", name: "" },
+      city: { code: "", name: "" },
+      barangay: { code: "", name: "" },
     },
   },
 };

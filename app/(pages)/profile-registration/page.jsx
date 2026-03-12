@@ -4,13 +4,13 @@ import { useSelector, useDispatch } from "react-redux";
 import React from "react";
 import Navbar from "./components/layout/navbar";
 
-import PrivacyConsent from "./components/layout/privacyConsent";
+import PrivacyConsent from "./components/privacyConsent";
 import PersonalInformation from "./components/personalInformation";
-import GadInformation from "./components/layout/gadInformation";
+import GadInformation from "./components/gadInformation";
 import AcademicInformation from "./components/AcademicInformation";
-import EmploymentInformation from "./components/layout/EmploymentInformation";
+import EmploymentInformation from "./components/EmploymentInformation";
 import ContactInformation from "./components/contactInformation";
-import SubmitProfile from "./components/layout/submitProfile";
+import SubmitProfile from "./components/submitProfile";
 
 import { reset } from "@/store/slices/profileRegistrationSlice";
 
