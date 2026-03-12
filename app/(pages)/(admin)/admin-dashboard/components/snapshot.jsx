@@ -53,7 +53,7 @@ export default function Snapshot({ data }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
           <FaUsers className="text-blue-500 text-2xl" />
           <div>

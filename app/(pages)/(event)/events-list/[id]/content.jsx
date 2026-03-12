@@ -395,15 +395,9 @@ export default function EventManageContent() {
   };
 
   const buildGuestRows = (guests) => {
-    const getDepartmentRaw = (details) =>
-      details.office || details.college || "No Department/College";
     const sorted = [...guests].sort((a, b) => {
       const detailsA = extractGuestDetails(a);
       const detailsB = extractGuestDetails(b);
-      const depA = (getDepartmentRaw(detailsA) || "").toLowerCase();
-      const depB = (getDepartmentRaw(detailsB) || "").toLowerCase();
-      if (depA < depB) return -1;
-      if (depA > depB) return 1;
       const nameA = (detailsA.name || "").toLowerCase();
       const nameB = (detailsB.name || "").toLowerCase();
       if (nameA < nameB) return -1;
@@ -412,19 +406,8 @@ export default function EventManageContent() {
     });
     let rowIdx = 1;
     const rows = [];
-    let lastDepartment = null;
     sorted.forEach((g) => {
       const details = extractGuestDetails(g);
-      const departmentRaw =
-        details.office || details.college || "No Department/College";
-      if (departmentRaw !== lastDepartment) {
-        rows.push({
-          isDepartmentHeader: true,
-          department: departmentRaw,
-        });
-        lastDepartment = departmentRaw;
-        rowIdx = 1;
-      }
       rows.push({
         isDepartmentHeader: false,
         data: [
@@ -557,32 +540,32 @@ export default function EventManageContent() {
     if (!event?._id || !userId || !editData) return;
     setSaving(true);
     setError("");
-      try {
-        const payload = {
-          ...editData,
-          start_date: new Date(editData.start_date).toISOString(),
-          end_date: new Date(editData.end_date).toISOString(),
-          updated_by: userId,
-        };
-        console.log('Saving event payload:', payload);
-        const res = await axios.put(`/api/events/${event._id}`, payload);
-        const updated = res.data?.data || event;
-        setEvent(updated);
-        setEditData({
-          title: updated.title || "",
-          description: updated.description || "",
-          start_date: formatForInput(updated.start_date || updated.date),
-          end_date: formatForInput(updated.end_date),
-          venue: updated.venue || "",
-          status: updated.status || "active",
-          eligibility_criteria: updated.eligibility_criteria,
-          target_number_of_participants: updated.target_number_of_participants,
-        });
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to save changes.");
-      } finally {
-        setSaving(false);
-      }
+    try {
+      const payload = {
+        ...editData,
+        start_date: new Date(editData.start_date).toISOString(),
+        end_date: new Date(editData.end_date).toISOString(),
+        updated_by: userId,
+      };
+      console.log("Saving event payload:", payload);
+      const res = await axios.put(`/api/events/${event._id}`, payload);
+      const updated = res.data?.data || event;
+      setEvent(updated);
+      setEditData({
+        title: updated.title || "",
+        description: updated.description || "",
+        start_date: formatForInput(updated.start_date || updated.date),
+        end_date: formatForInput(updated.end_date),
+        venue: updated.venue || "",
+        status: updated.status || "active",
+        eligibility_criteria: updated.eligibility_criteria,
+        target_number_of_participants: updated.target_number_of_participants,
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save changes.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePrintGuests = (guests) => {
@@ -610,7 +593,8 @@ export default function EventManageContent() {
       "Administrative",
       "GAD",
       "Extension Research",
-      "Students",      "Others",
+      "Students",
+      "Others",
     ];
 
     const selectedType = event.type_of_activity;
@@ -1712,7 +1696,7 @@ function GuestTabs({
                         (For Students)
                       </th>
                       <th className="p-2 font-medium">Contact No.</th>
-                      <th className="p-2 font-medium">
+                      <th className="max-w-40 p-2 font-medium">
                         Email
                         <br /> Address
                       </th>
@@ -1761,7 +1745,7 @@ function GuestTabs({
                             <td className="p-2 text-center">
                               {details.contact || "—"}
                             </td>
-                            <td className="p-2 text-center">
+                            <td className="max-w-40 truncate p-2 text-center">
                               {details.email || "—"}
                             </td>
                           </tr>
@@ -1881,7 +1865,7 @@ function GuestTabs({
                       (For Students)
                     </th>
                     <th className="px-4 py-2 font-medium">Contact No.</th>
-                    <th className="px-4 py-2 font-medium">Email Address</th>
+                    <th className="px-4 py-2 font-medium max-w-40 truncate">Email Address</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -1953,7 +1937,7 @@ function GuestTabs({
                           <td className="px-4 py-2 text-center">
                             {details.contact || "—"}
                           </td>
-                          <td className="px-4 py-2 text-center">
+                          <td className="px-4 py-2 text-center max-w-40 truncate">
                             {details.email || "—"}
                           </td>
                         </tr>
@@ -2035,7 +2019,7 @@ function InsightTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
         <div className="border border-gray-200 p-4 rounded-md gap-4">
           <div className="flex flex-col border-gray-400">
             {/* <div className="flex flex-col">
@@ -2068,7 +2052,7 @@ function InsightTab({
           </div>
           <div>
             <h1 className="text-md font-medium">Age Group</h1>
-            <div className="grid grid-cols-6 gap-2 rounded-md">
+            <div className="grid md:grid-cols-6 grid-cols-3 gap-2 rounded-md">
               {ageGroupCounts && Object.keys(ageGroupCounts).length > 0 ? (
                 Object.entries(ageGroupCounts)
                   .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
@@ -2108,7 +2092,7 @@ function InsightTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
-        <div className="gap-4 grid grid-cols-3">
+        <div className="gap-4 grid md:grid-cols-3 grid-cols-1">
           <SexChart data={genderDataChart} />
           <StatusChart data={affiliationData} />
           <EventChart data={eventData} />

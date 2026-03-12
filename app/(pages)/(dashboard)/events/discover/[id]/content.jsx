@@ -169,7 +169,6 @@ export default function DiscoverEventContent() {
     await handleStatus(event, "going");
     setShowEligibilityModal(false);
     setEligibilityForm({});
-    // Optionally, send eligibilityForm data to your backend here
   };
 
   if (loading) {
