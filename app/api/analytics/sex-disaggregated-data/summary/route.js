@@ -136,15 +136,81 @@ export async function GET(req) {
       });
     });
 
+    const officeSexCounts = {};
+    employees.forEach((user) => {
+      const office =
+        user.personal_info_id?.affiliation?.employment_information?.office ||
+        "Unspecified";
+      const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+      if (!officeSexCounts[office])
+        officeSexCounts[office] = { Male: 0, Female: 0, Unspecified: 0 };
+      officeSexCounts[office][sex] = (officeSexCounts[office][sex] || 0) + 1;
+    });
+    const officeSexList = [];
+    Object.entries(officeSexCounts).forEach(([office, counts]) => {
+      if (office === "Unspecified") return;
+      if (counts.Male > 0)
+        officeSexList.push({ office, sex: "Male", total: counts.Male });
+      if (counts.Female > 0)
+        officeSexList.push({ office, sex: "Female", total: counts.Female });
+    });
+
+    const collegeSexCounts = {};
+    students.forEach((user) => {
+      const college =
+        user.personal_info_id?.affiliation?.academic_information?.college ||
+        "Unspecified";
+      const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+      if (!collegeSexCounts[college])
+        collegeSexCounts[college] = { Male: 0, Female: 0, Unspecified: 0 };
+      collegeSexCounts[college][sex] =
+        (collegeSexCounts[college][sex] || 0) + 1;
+    });
+    const collegeSexList = [];
+    Object.entries(collegeSexCounts).forEach(([college, counts]) => {
+      if (college === "Unspecified") return;
+      if (counts.Male > 0)
+        collegeSexList.push({ college, sex: "Male", total: counts.Male });
+      if (counts.Female > 0)
+        collegeSexList.push({ college, sex: "Female", total: counts.Female });
+    });
+
+    const yearLevelSexCounts = {};
+    students.forEach((user) => {
+      const yearLevel =
+        user.personal_info_id?.affiliation?.academic_information?.year_level ||
+        "Unspecified";
+      const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+      if (!yearLevelSexCounts[yearLevel])
+        yearLevelSexCounts[yearLevel] = { Male: 0, Female: 0, Unspecified: 0 };
+      yearLevelSexCounts[yearLevel][sex] =
+        (yearLevelSexCounts[yearLevel][sex] || 0) + 1;
+    });
+    const yearLevelSexList = [];
+    Object.entries(yearLevelSexCounts).forEach(([yearLevel, counts]) => {
+      if (yearLevel === "Unspecified") return;
+      if (counts.Male > 0)
+        yearLevelSexList.push({ yearLevel, sex: "Male", total: counts.Male });
+      if (counts.Female > 0)
+        yearLevelSexList.push({
+          yearLevel,
+          sex: "Female",
+          total: counts.Female,
+        });
+    });
+
     return NextResponse.json(
       {
         employees: {
           appointmentStatus: employeeList,
           totals: employeeTotals,
+          officeSex: officeSexList,
         },
         students: {
           courseYear: courseYearList,
           totals: studentTotals,
+          collegeSex: collegeSexList,
+          yearLevelSex: yearLevelSexList,
         },
       },
       { status: 200 },
