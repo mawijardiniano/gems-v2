@@ -12,6 +12,17 @@ export default function EventsListContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [activityType, setActivityType] = useState("");
+
+  // Use fixed type_of_activity enum values for filter
+  const activityTypes = [
+    "Academic",
+    "Administrative",
+    "GAD",
+    "Extension Research",
+    "Students",
+    "Others",
+  ];
 
   const goToManage = (id) => {
     if (!id) return;
@@ -42,14 +53,16 @@ export default function EventsListContent() {
     const now = Date.now();
     return (events || [])
       .filter(
-        (evt) => new Date(evt.end_date || evt.start_date).getTime() >= now,
+        (evt) =>
+          new Date(evt.end_date || evt.start_date).getTime() >= now &&
+          (!activityType || evt.type_of_activity === activityType),
       )
       .sort(
         (a, b) =>
           new Date(a.start_date || a.date).getTime() -
           new Date(b.start_date || b.date).getTime(),
       );
-  }, [events]);
+  }, [events, activityType]);
 
   const pastEvents = useMemo(() => {
     const now = Date.now();
@@ -60,7 +73,8 @@ export default function EventsListContent() {
           endMs < now &&
           (!userId ||
             evt.created_by === userId ||
-            evt.created_by?._id === userId)
+            evt.created_by?._id === userId) &&
+          (!activityType || evt.type_of_activity === activityType)
         );
       })
       .sort(
@@ -68,7 +82,7 @@ export default function EventsListContent() {
           new Date(b.start_date || b.date).getTime() -
           new Date(a.start_date || a.date).getTime(),
       );
-  }, [events, userId]);
+  }, [events, userId, activityType]);
 
   const formatRange = (start, end) => {
     if (!start) return "No date";
@@ -87,13 +101,29 @@ export default function EventsListContent() {
   return (
     <div className="max-w-5xl mx-auto space-y-10 pb-10">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Events</h1>
-        <button
-          onClick={() => router.push("/create")}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-        >
-          Create Event
-        </button>
+        <div>
+          <h1 className="text-3xl font-semibold">Events</h1>
+        </div>
+        <div className="flex gap-6 items-center">
+          <select
+            className="border rounded px-2 py-2 text-sm"
+            value={activityType}
+            onChange={(e) => setActivityType(e.target.value)}
+          >
+            <option value="">All Types</option>
+            {activityTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => router.push("/create")}
+            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          >
+            Create Event
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -181,7 +211,7 @@ export default function EventsListContent() {
                   key={evt._id}
                   className="border rounded-lg p-4 border-gray-200 hover:shadow-md bg-white"
                 >
-                                    <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold mb-1">{evt.title}</h3>
                     <button
                       onClick={() => goToManage(evt._id)}
