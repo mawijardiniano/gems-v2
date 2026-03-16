@@ -117,12 +117,14 @@ export default function EventManageContent() {
         setEvent(evt);
         if (evt) {
           setEditData({
+            type_of_activity: evt.type_of_activity,
             title: evt.title || "",
             description: evt.description || "",
             start_date: formatForInput(evt.start_date || evt.date),
             end_date: formatForInput(evt.end_date),
             venue: evt.venue || "",
             status: evt.status || "active",
+            organizing_office_unit: evt.organizing_office_unit,
             eligibility_criteria: evt.eligibility_criteria,
             target_number_of_participants: evt.target_number_of_participants,
           });
@@ -552,12 +554,14 @@ export default function EventManageContent() {
       const updated = res.data?.data || event;
       setEvent(updated);
       setEditData({
+        type_of_activity: updated.type_of_activity,
         title: updated.title || "",
         description: updated.description || "",
         start_date: formatForInput(updated.start_date || updated.date),
         end_date: formatForInput(updated.end_date),
         venue: updated.venue || "",
         status: updated.status || "active",
+        organizing_office_unit: updated.organizing_office_unit,
         eligibility_criteria: updated.eligibility_criteria,
         target_number_of_participants: updated.target_number_of_participants,
       });
@@ -1351,6 +1355,26 @@ function OverviewTabs({
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-2">
+                  Type of Activity <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={editData?.type_of_activity}
+                  onChange={(e) =>
+                    handleEditChange("type_of_activity", e.target.value)
+                  }
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  required
+                >
+                  <option value="Academic">Academic</option>
+                  <option value="Administrative">Administrative</option>
+                  <option value="GAD">GAD</option>
+                  <option value="Extension Research">Extension Research</option>
+                  <option value="Students">Students</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-gray-600">Title</label>
                 <input
@@ -1402,6 +1426,55 @@ function OverviewTabs({
                 }
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Organizing Office/Unit <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={editData?.organizing_office_unit}
+                onChange={(e) =>
+                  handleEditChange("organizing_office_unit", e.target.value)
+                }
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                placeholder="Enter organizing office or unit"
+                required
+              >
+                <option value="">Select</option>
+                <option>Graduate School</option>
+                <option>College of Agriculture</option>
+                <option>College of Allied Health Sciences</option>
+                <option>College of Arts & Social Sciences</option>
+                <option>College of Business & Accountancy</option>
+                <option>College of Criminal Justice Education</option>
+                <option>College of Education</option>
+                <option>College of Engineering</option>
+                <option>College of Environmental Studies</option>
+                <option>College of Fisheries & Aquatic Sciences</option>
+                <option>College of Governance</option>
+                <option>College of Industrial Technology</option>
+                <option>College of Information & Computing Sciences</option>
+                <option>
+                  Offices under the Office of the University President
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Academic
+                  Affairs
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for
+                  Administration and Finance
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Research
+                  and Extension
+                </option>
+                <option>
+                  Offices under the Office of the Vice President for Student
+                  Affairs and Services
+                </option>
+              </select>
+            </div>
             <div className="mb-2">
               <label className="block text-sm">Eligibility Criteria</label>
               <select
@@ -1441,12 +1514,14 @@ function OverviewTabs({
                 onClick={() => {
                   setIsEditing(false);
                   setEditData({
+                    type_of_activity: event.type_of_activity,
                     title: event.title || "",
                     description: event.description || "",
                     start_date: formatForInput(event.start_date || event.date),
                     end_date: formatForInput(event.end_date),
                     venue: event.venue || "",
                     status: event.status || "active",
+                    organizing_office_unit: event.organizing_office_unit,
                     eligibility_criteria: event.eligibility_criteria,
                     target_number_of_participants:
                       event.target_number_of_participants,
@@ -1865,7 +1940,9 @@ function GuestTabs({
                       (For Students)
                     </th>
                     <th className="px-4 py-2 font-medium">Contact No.</th>
-                    <th className="px-4 py-2 font-medium max-w-40 truncate">Email Address</th>
+                    <th className="px-4 py-2 font-medium max-w-40 truncate">
+                      Email Address
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

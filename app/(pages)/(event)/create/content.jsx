@@ -135,6 +135,24 @@ export default function CreateEventsContent() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="col-span-2">
+          <label className="block text-sm font-medium mb-2">
+            Type of Activity <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.type_of_activity}
+            onChange={(e) => handleChange("type_of_activity", e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          >
+            <option value="Academic">Academic</option>
+            <option value="Administrative">Administrative</option>
+            <option value="GAD">GAD</option>
+            <option value="Extension Research">Extension Research</option>
+            <option value="Students">Students</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium mb-2">
               Title <span className="text-red-500">*</span>
@@ -196,26 +214,6 @@ export default function CreateEventsContent() {
             placeholder="Where will this be held?"
           />
         </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Type of Activity <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.type_of_activity}
-            onChange={(e) => handleChange("type_of_activity", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            required
-          >
-            <option value="Academic">Academic</option>
-            <option value="Administrative">Administrative</option>
-            <option value="GAD">GAD</option>
-            <option value="Extension Research">Extension Research</option>
-            <option value="Students">Students</option>
-            <option value="Others">Others</option>
-          </select>
-        </div>
-
         <div>
           <label className="block text-sm font-medium mb-2">
             Organizing Office/Unit <span className="text-red-500">*</span>
