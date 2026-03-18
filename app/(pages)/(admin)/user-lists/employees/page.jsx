@@ -26,7 +26,7 @@ import EmployeeListPageContent from './content'
 export default function EmployeeUserListPage() {
   return (
     <div>
-      <EmployeeListPageContent/>
+      <EmployeeListPageContent />
     </div>
   )
 }

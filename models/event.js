@@ -16,7 +16,7 @@ const EventSchema = new Schema(
         "Indigenous Groups",
         "LGBTQIA+",
         "Low Income Students",
-        "None"
+        "None",
       ],
       required: false,
     },
@@ -56,7 +56,7 @@ const EventSchema = new Schema(
       ],
       required: true,
     },
-    target_number_of_participants : {
+    target_number_of_participants: {
       type: Number,
     },
     created_by: {
@@ -76,6 +76,11 @@ const EventSchema = new Schema(
       type: String,
       enum: ["active", "cancelled", "completed"],
       default: "active",
+    },
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
+      required: false,
     },
   },
   { timestamps: true },

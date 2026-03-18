@@ -13,7 +13,7 @@ import {
   FaClipboardList,
 } from "react-icons/fa";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Sidebar({ open, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -21,6 +21,7 @@ export default function Sidebar({ open, setOpen }) {
   const [isEventOpen, setIsEventOpen] = useState(false);
   const [personType, setPersonType] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleMobileClose = () => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
@@ -38,16 +39,14 @@ export default function Sidebar({ open, setOpen }) {
         if (!mounted) return;
         if (!res.ok) return;
         const body = await res.json();
-       
+
         const profileObj = body?.data || body?.profile || body || null;
         const pt =
           profileObj?.personal?.currentStatus ||
           profileObj?.personal_information?.person_type ||
           null;
         setPersonType(pt);
-      } catch (e) {
-     
-      }
+      } catch (e) {}
     })();
     return () => (mounted = false);
   }, []);
@@ -74,11 +73,12 @@ export default function Sidebar({ open, setOpen }) {
     >
       <nav
         className={`flex flex-col h-full py-4 space-y-2 mt-16 transition-all duration-200 ${
-          open ? "px-2" : "px-0"
+          open ? "px-4" : "px-0"
         }`}
       >
+        {/* Overview/Profile Section */}
         <div
-          className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+          className={`flex items-center justify-between p-2 rounded hover:bg-blue-200  text-gray-700 ${open ? "" : "justify-center"} ${pathname.startsWith("/dashboard") ? "bg-blue-100" : ""}`}
         >
           <Link
             href="/dashboard"
@@ -94,56 +94,52 @@ export default function Sidebar({ open, setOpen }) {
             </button>
           )}
         </div>
-
         {isProfileOpen && open && (
           <div className="ml-6 space-y-1">
             <Link
               href="/dashboard/personal-information"
               onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/dashboard/personal-information" ? "bg-blue-100" : ""}`}
             >
               <FaIdCard /> Personal Information
             </Link>
-
             {personType === "Student" && (
               <Link
                 href="/dashboard/academic"
                 onClick={handleMobileClose}
-                className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+                className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/dashboard/academic" ? "bg-blue-100" : ""}`}
               >
                 <FaBook /> Academic Information
               </Link>
             )}
-
             {personType === "Employee" && (
               <Link
                 href="/dashboard/employment"
                 onClick={handleMobileClose}
-                className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+                className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/dashboard/employment" ? "bg-blue-100" : ""}`}
               >
                 <FaIdCard /> Employment Information
               </Link>
             )}
-
             <Link
               href="/dashboard/gender-equity-data"
               onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/dashboard/gender-equity-data" ? "bg-blue-100" : ""}`}
             >
               <FaIdCard /> GAD Data
             </Link>
             <Link
               href="/dashboard/contact-information"
               onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/dashboard/contact-information" ? "bg-blue-100" : ""}`}
             >
               <FaIdCard /> Contact Information
             </Link>
           </div>
         )}
-
+        {/* Events Section */}
         <div
-          className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+          className={`flex items-center justify-between p-2 rounded hover:bg-blue-200  text-gray-700 ${open ? "" : "justify-center"} ${pathname.startsWith("/events") ? "bg-blue-100" : ""}`}
         >
           <Link
             href="/events"
@@ -159,47 +155,40 @@ export default function Sidebar({ open, setOpen }) {
             </button>
           )}
         </div>
-
         {isEventOpen && open && (
           <div className="ml-6 space-y-1">
-            {/* <Link
-              href="/events/invited-events"
-              onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-            >
-              <FaClipboardList /> Invited / Participated
-            </Link> */}
             <Link
               href="/events/discover"
               onClick={handleMobileClose}
-              className="flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+              className={`flex items-center gap-2 p-2 rounded  hover:bg-blue-200  ${pathname === "/events/discover" ? "bg-blue-100" : ""}`}
             >
               <FaClipboardList /> Discover
             </Link>
           </div>
         )}
-
         {/* Settings */}
-        <Link
-          href="/settings"
-          onClick={handleMobileClose}
-          className={`flex items-center p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+        <div
+          className={`flex items-center p-2 rounded  hover:bg-blue-200  text-gray-700 ${open ? "" : "justify-center"} ${pathname.startsWith("/settings") ? "bg-blue-100" : ""}`}
         >
-          <FaCog />
-          {open && <span className="ml-3">Settings</span>}
-        </Link>
-
+          <Link
+            href="/settings"
+            onClick={handleMobileClose}
+            className={`flex items-center ${pathname === "/settings" ? "bg-blue-100" : ""}`}
+          >
+            <FaCog />
+            {open && <span className="ml-3">Settings</span>}
+          </Link>
+        </div>
         {/* Logout */}
         <button
           onClick={() => setShowLogoutModal(true)}
-          className={`flex items-center p-2 rounded hover:bg-gray-100 text-gray-700 ${open ? "" : "justify-center"}`}
+          className={`flex items-center p-2 rounded  hover:bg-blue-200  text-gray-700 ${open ? "" : "justify-center"}`}
         >
           <FaSignOutAlt />
           {open && <span className="ml-3">Logout</span>}
         </button>
       </nav>
 
-      {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80">

@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import UserAuth from "@/models/user";
+import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
@@ -73,7 +74,8 @@ export async function POST(req) {
       type_of_activity,
       organizing_office_unit,
       eligibility_criteria,
-      target_number_of_participants
+      target_number_of_participants,
+      project,
     } = body;
 
     if (
@@ -123,7 +125,17 @@ export async function POST(req) {
       created_by,
       updated_by: created_by,
       registered_users: [],
+      ...(project ? { project } : {}),
     });
+
+    // If a project is specified, push the event's _id into the project's events array
+    if (project) {
+      await Project.findByIdAndUpdate(
+        project,
+        { $addToSet: { events: newEvent._id } },
+        { new: true },
+      );
+    }
 
     await logActivity({
       user_id: user._id,

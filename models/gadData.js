@@ -5,7 +5,6 @@ const gadDataSchema = new Schema(
     sexAtBirth: {
       type: String,
       enum: ["Male", "Female"],
-      required: true,
     },
 
     gender_preference: {
@@ -15,7 +14,7 @@ const gadDataSchema = new Schema(
 
     isPWD: {
       type: Boolean,
-      required: true,
+
     },
     pwd_type: {
       type: String,
@@ -33,16 +32,16 @@ const gadDataSchema = new Schema(
     },
     isIndigenousPerson: {
       type: Boolean,
-      required: true,
+
     },
     socioEconomicStatus: {
       type: String,
       enum: ["Low Income", "Middle Income", "High Income"],
-      required: true,
+
     },
     headOfHousehold: {
       type: String,
-      required: true,
+
     },
   },
   { _id: false },

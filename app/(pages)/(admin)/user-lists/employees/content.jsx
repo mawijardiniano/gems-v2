@@ -239,7 +239,6 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     appointmentSort,
   ]);
 
-  // Pagination
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeInput, setPageSizeInput] = useState("10");

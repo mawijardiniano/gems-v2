@@ -22,7 +22,11 @@ export default function SexDisaggregatedContent() {
   const [summaryError, setSummaryError] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
 
-  const formatPercent = (value) => `${Math.round((value || 0) * 100)}%`;
+  // For employees: percent of total in group
+  const formatPercent = (value, total) => {
+    if (!total || total === 0) return "0%";
+    return `${Math.round((value / total) * 100)}%`;
+  };
 
   const colleges = [
     "Graduate School",
@@ -124,11 +128,17 @@ export default function SexDisaggregatedContent() {
 
   const employeeData = useMemo(() => {
     if (!summary?.employees?.appointmentStatus) return [];
-    return summary.employees.appointmentStatus.map((row) => ({
-      status: row.status,
-      Male: row.male || 0,
-      Female: row.female || 0,
-    }));
+    return summary.employees.appointmentStatus.map((row) => {
+      const Male = row.male || 0;
+      const Female = row.female || 0;
+      const total = Male + Female;
+      return {
+        status: row.status,
+        Male,
+        Female,
+        total,
+      };
+    });
   }, [summary]);
 
   const studentYearData = useMemo(() => {
@@ -267,11 +277,18 @@ export default function SexDisaggregatedContent() {
                   height={60}
                 />
                 <YAxis
-                  tickFormatter={formatPercent}
+                  tickFormatter={(value) => `${Math.round(value * 100)}%`}
                   tick={{ fontSize: 12 }}
                   domain={[0, 1]}
                 />
-                <Tooltip formatter={(value) => formatPercent(value)} />
+                <Tooltip
+                  formatter={(_value, name, props) => {
+                    const { payload } = props;
+                    const total = payload.total;
+                    const value = payload[name];
+                    return [`${value} (${formatPercent(value, total)})`, name];
+                  }}
+                />
                 <Legend />
                 <Bar
                   dataKey="Male"

@@ -60,6 +60,19 @@ export default function EventManageContent() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await axios.get("/api/project");
+        setProjects(res.data?.data || []);
+      } catch (err) {
+        setProjects([]);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const getFilteredGuests = (guests) => {
     return guests
@@ -118,6 +131,7 @@ export default function EventManageContent() {
         if (evt) {
           setEditData({
             type_of_activity: evt.type_of_activity,
+            project: evt.project,
             title: evt.title || "",
             description: evt.description || "",
             start_date: formatForInput(evt.start_date || evt.date),
@@ -555,6 +569,7 @@ export default function EventManageContent() {
       setEvent(updated);
       setEditData({
         type_of_activity: updated.type_of_activity,
+        project: updated.project,
         title: updated.title || "",
         description: updated.description || "",
         start_date: formatForInput(updated.start_date || updated.date),
@@ -1217,6 +1232,7 @@ export default function EventManageContent() {
           deleteError={deleteError}
           deleting={deleting}
           handleDeleteEvent={handleDeleteEvent}
+          projects={projects}
         />
       )}
 
@@ -1294,6 +1310,7 @@ function OverviewTabs({
   deleteError,
   deleting,
   handleDeleteEvent,
+  projects,
 }) {
   const ELIGIBILITY_OPTIONS = [
     { value: "Scholarship Applicant", label: "Scholarship Applicant" },
@@ -1364,7 +1381,7 @@ function OverviewTabs({
                   onChange={(e) =>
                     handleEditChange("type_of_activity", e.target.value)
                   }
-                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2"
                   required
                 >
                   <option value="Academic">Academic</option>
@@ -1373,6 +1390,24 @@ function OverviewTabs({
                   <option value="Extension Research">Extension Research</option>
                   <option value="Students">Students</option>
                   <option value="Others">Others</option>
+                </select>
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-2">
+                  Project <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={editData?.project}
+                  onChange={(e) => handleEditChange("project", e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">No Project</option>
+                  {projects.map((proj) => (
+                    <option key={proj._id} value={proj._id}>
+                      {proj.project_name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex flex-col gap-1">
@@ -1515,6 +1550,7 @@ function OverviewTabs({
                   setIsEditing(false);
                   setEditData({
                     type_of_activity: event.type_of_activity,
+                    project: event.project,
                     title: event.title || "",
                     description: event.description || "",
                     start_date: formatForInput(event.start_date || event.date),

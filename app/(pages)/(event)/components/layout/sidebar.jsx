@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaHome, FaCog, FaPen, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaCog, FaPen, FaSignOutAlt, FaFolder } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,8 +11,9 @@ export default function Sidebar({ open, setOpen }) {
 
   const links = [
     { name: "Dashboard", href: "/events-dashboard", icon: <FaHome /> },
+        { name: "Projects", href: "/projects", icon: <FaFolder /> },
     { name: "Events", href: "/events-list ", icon: <FaPen /> },
-    // { name: "Settings", href: "/admin-settings", icon: <FaCog /> },
+
   ];
 
   const handleMobileClose = () => {

@@ -12,6 +12,7 @@
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
+    "csvtojson": "^2.0.14",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "flowbite-react": "^0.12.10",

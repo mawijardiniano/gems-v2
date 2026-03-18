@@ -39,7 +39,7 @@ export default function ProfileStats() {
       });
   }, []);
 
-//   if (loading) return <div className="py-8 text-center">Loading stats...</div>;
+  //   if (loading) return <div className="py-8 text-center">Loading stats...</div>;
   if (error || !data)
     return (
       <div className="py-8 text-center text-red-600">
@@ -49,22 +49,31 @@ export default function ProfileStats() {
 
   const empTotals = data.employees?.totals || {};
   const stuTotals = data.students?.totals || {};
+
+  console.log("EMPLOYEE TOTAL", empTotals);
+  console.log("STUDENT TOTAL", stuTotals);
   const totalMale = (empTotals.Male || 0) + (stuTotals.Male || 0);
   const totalFemale = (empTotals.Female || 0) + (stuTotals.Female || 0);
-  const totalPopulation = totalMale + totalFemale;
+  const totalUnspecified =
+    (empTotals.Unspecified || 0) + (stuTotals.Unspecified || 0);
+  const totalPopulation = totalMale + totalFemale + totalUnspecified;
 
   const totalMaleEmployee = empTotals.Male || 0;
   const totalFemaleEmployee = empTotals.Female || 0;
-  const totalEmployee = (empTotals.Male || 0) + (empTotals.Female || 0);
+  const totalUnspecifiedEmployee = empTotals.Unspecified || 0;
+  const totalEmployee =
+    totalMaleEmployee + totalFemaleEmployee + totalUnspecifiedEmployee;
 
   const totalMaleStudent = stuTotals.Male || 0;
   const totalFemaleStudent = stuTotals.Female || 0;
-  const totalStudent = (stuTotals.Male || 0) + (stuTotals.Female || 0);
+  const totalUnspecifiedStudent = stuTotals.Unspecified || 0;
+  const totalStudent =
+    totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
-//   const overallGenderPie = [
-//     { name: "Male", value: totalMale },
-//     { name: "Female", value: totalFemale },
-//   ];
+  //   const overallGenderPie = [
+  //     { name: "Male", value: totalMale },
+  //     { name: "Female", value: totalFemale },
+  //   ];
 
   const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
   const yearLineData = (data.students?.yearLevelSex || [])

@@ -21,7 +21,7 @@ export default function Page() {
     () => [
       ...new Set(
         rawData
-          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
+          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth ?? "Unknown")
           .filter(Boolean),
       ),
     ],
@@ -99,7 +99,7 @@ export default function Page() {
       const empAppointment = emp.employment_appointment_status || "";
 
       return (
-        (!filterSex || p.gadData.sexAtBirth === filterSex) &&
+        (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
         (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
         (filterCollege.length === 0 ||

@@ -9,7 +9,7 @@ function generateUsername(personal) {
 }
 
 function generateTempPassword() {
-  return `gems123!`; //set default password
+  return `gems1234`; 
 }
 
 function capitalizeWords(str) {

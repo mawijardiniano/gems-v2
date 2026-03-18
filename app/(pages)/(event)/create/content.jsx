@@ -27,7 +27,9 @@ export default function CreateEventsContent() {
     organizing_office_unit: "",
     eligibility_criteria: "",
     target_number_of_participants: "",
+    project: "",
   });
+  const [projects, setProjects] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,7 +45,17 @@ export default function CreateEventsContent() {
       }
     };
 
+    const fetchProjects = async () => {
+      try {
+        const res = await axios.get("/api/project");
+        setProjects(res.data?.data || []);
+      } catch (err) {
+        setProjects([]);
+      }
+    };
+
     fetchProfile();
+    fetchProjects();
   }, []);
 
   const nowLocal = useMemo(() => {
@@ -101,6 +113,7 @@ export default function CreateEventsContent() {
         organizing_office_unit: formData.organizing_office_unit.trim(),
         eligibility_criteria: formData.eligibility_criteria,
         target_number_of_participants: formData.target_number_of_participants,
+        ...(formData.project ? { project: formData.project } : {}),
         ...(userId ? { created_by: userId } : {}),
       };
 
@@ -135,25 +148,43 @@ export default function CreateEventsContent() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="col-span-2">
-          <label className="block text-sm font-medium mb-2">
-            Type of Activity <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.type_of_activity}
-            onChange={(e) => handleChange("type_of_activity", e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            required
-          >
-            <option value="Academic">Academic</option>
-            <option value="Administrative">Administrative</option>
-            <option value="GAD">GAD</option>
-            <option value="Extension Research">Extension Research</option>
-            <option value="Students">Students</option>
-            <option value="Others">Others</option>
-          </select>
-        </div>
-          <div className="sm:col-span-2">
+          <div className="col-span-2">
+            <label className="block text-sm font-medium mb-2">
+              Type of Activity <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.type_of_activity}
+              onChange={(e) => handleChange("type_of_activity", e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            >
+              <option value="Academic">Academic</option>
+              <option value="Administrative">Administrative</option>
+              <option value="GAD">GAD</option>
+              <option value="Extension Research">Extension Research</option>
+              <option value="Students">Students</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium mb-2">
+              Project <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.project}
+              onChange={(e) => handleChange("project", e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            >
+              <option value="">No Project</option>
+              {projects.map((proj) => (
+                <option key={proj._id} value={proj._id}>
+                  {proj.project_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-span-2">
             <label className="block text-sm font-medium mb-2">
               Title <span className="text-red-500">*</span>
             </label>

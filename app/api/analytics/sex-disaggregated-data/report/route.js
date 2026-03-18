@@ -159,8 +159,13 @@ export async function GET(req) {
       doc.text(`College/Office: ${collegeFilter}`, 14, 28);
     }
 
+    const sectionLabel = collegeFilter || "All Colleges/Offices";
     doc.setFontSize(10);
-    doc.text("Faculty Composition in CICS", 14, collegeFilter ? 32 : 28);
+    doc.text(
+      `Faculty Composition in ${sectionLabel}`,
+      14,
+      collegeFilter ? 32 : 28,
+    );
     doc.setFontSize(8);
     autoTable(doc, {
       startY: collegeFilter ? 36 : 32,
@@ -172,69 +177,69 @@ export async function GET(req) {
     let tableStartY =
       (doc.lastAutoTable?.finalY || (collegeFilter ? 36 : 32)) + 8;
 
+    // Use a dynamic label for the summary section
+    const summaryLabel = collegeFilter || "All Colleges/Offices";
+
     doc.setFontSize(10);
-    doc.text("Student Enrollment in CICS", 14, tableStartY);
+    doc.text(`Student Enrollment in ${summaryLabel}`, 14, tableStartY);
     doc.setFontSize(8);
     tableStartY += 4;
 
-    const cicsCourses = ["Information System", "Information Technology"];
-    const cicsYearMap = {};
-    cicsCourses.forEach((course) => {
-      const yearMap = courseYearCounts[course] || {};
+    // Build a summary for all courses (all colleges)
+    const allYearMap = {};
+    Object.values(courseYearCounts).forEach((yearMap) => {
       Object.entries(yearMap).forEach(([year, counts]) => {
-        if (!cicsYearMap[year]) {
-          cicsYearMap[year] = { Male: 0, Female: 0, Unspecified: 0 };
+        if (!allYearMap[year]) {
+          allYearMap[year] = { Male: 0, Female: 0, Unspecified: 0 };
         }
-        cicsYearMap[year].Male += counts.Male || 0;
-        cicsYearMap[year].Female += counts.Female || 0;
-        cicsYearMap[year].Unspecified += counts.Unspecified || 0;
+        allYearMap[year].Male += counts.Male || 0;
+        allYearMap[year].Female += counts.Female || 0;
+        allYearMap[year].Unspecified += counts.Unspecified || 0;
       });
     });
 
     // Arrange year levels in order: 1st, 2nd, 3rd, 4th year, then Total
     const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Total"];
-    const cicsRowsUnsorted = Object.entries(cicsYearMap).map(
-      ([year, counts]) => {
-        const male = counts.Male || 0;
-        const female = counts.Female || 0;
-        const unspecified = counts.Unspecified || 0;
-        const total = male + female + unspecified;
-        return [year, male, female, total];
-      },
-    );
+    const allRowsUnsorted = Object.entries(allYearMap).map(([year, counts]) => {
+      const male = counts.Male || 0;
+      const female = counts.Female || 0;
+      const unspecified = counts.Unspecified || 0;
+      const total = male + female + unspecified;
+      return [year, male, female, total];
+    });
     // Sort rows by yearOrder
-    const cicsRows = yearOrder
-      .map((orderYear) => cicsRowsUnsorted.find((row) => row[0] === orderYear))
+    const allRows = yearOrder
+      .map((orderYear) => allRowsUnsorted.find((row) => row[0] === orderYear))
       .filter(Boolean);
     // Add any other years not in the order
-    cicsRowsUnsorted.forEach((row) => {
-      if (!yearOrder.includes(row[0])) cicsRows.push(row);
+    allRowsUnsorted.forEach((row) => {
+      if (!yearOrder.includes(row[0])) allRows.push(row);
     });
 
-    const cicsMaleTotal = Object.values(cicsYearMap).reduce(
+    const allMaleTotal = Object.values(allYearMap).reduce(
       (sum, c) => sum + (c.Male || 0),
       0,
     );
-    const cicsFemaleTotal = Object.values(cicsYearMap).reduce(
+    const allFemaleTotal = Object.values(allYearMap).reduce(
       (sum, c) => sum + (c.Female || 0),
       0,
     );
-    const cicsUnspecifiedTotal = Object.values(cicsYearMap).reduce(
+    const allUnspecifiedTotal = Object.values(allYearMap).reduce(
       (sum, c) => sum + (c.Unspecified || 0),
       0,
     );
-    const cicsTotal = cicsMaleTotal + cicsFemaleTotal + cicsUnspecifiedTotal;
-    if (cicsRows.length) {
-      const totalRow = ["Total", cicsMaleTotal, cicsFemaleTotal, cicsTotal];
-      const filteredRows = cicsRows.filter((row) => row[0] !== "Total");
+    const allTotal = allMaleTotal + allFemaleTotal + allUnspecifiedTotal;
+    if (allRows.length) {
+      const totalRow = ["Total", allMaleTotal, allFemaleTotal, allTotal];
+      const filteredRows = allRows.filter((row) => row[0] !== "Total");
       filteredRows.push(totalRow);
-      cicsRows.length = 0;
-      cicsRows.push(...filteredRows);
+      allRows.length = 0;
+      allRows.push(...filteredRows);
     }
     autoTable(doc, {
       startY: tableStartY,
       head: [["Year Level", "Male", "Female", "Total"]],
-      body: cicsRows.length ? cicsRows : [["No CICS student data", 0, 0, 0]],
+      body: allRows.length ? allRows : [["No student data", 0, 0, 0]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [33, 150, 243] },
     });
@@ -264,7 +269,10 @@ export async function GET(req) {
           return [year, male, female, total];
         });
         let yearRows;
-        if (course === "Information System" || course === "Information Technology") {
+        if (
+          course === "Information System" ||
+          course === "Information Technology"
+        ) {
           const yearOrder = [
             "1st Year",
             "2nd Year",

@@ -15,7 +15,7 @@ import {
 import useFetchData from "@/hooks/useSample";
 import Filter from "../admin-dashboard/components/Filter";
 
-export default function UserListPageContent({ defaultType = "" }) {
+export default function UserListPageContent({ users = [], defaultType = "" }) {
   const { data: rawData, loading } = useFetchData();
 
   const [filterSex, setFilterSex] = useState("");

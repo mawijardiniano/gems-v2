@@ -4,7 +4,6 @@ const employmentInformationSchema = new Schema(
   {
     employee_id: {
       type: String,
-      required: true,
     },
 
     office: {
@@ -29,13 +28,11 @@ const employmentInformationSchema = new Schema(
         "Offices under the Office of the Vice President for Research and Extension",
         "Offices under the Office of the Vice President for Student Affairs and Services",
       ],
-      required: true,
     },
 
     employment_status: {
       type: String,
       enum: ["Faculty", "Non-teaching Personnel"],
-      required: true,
     },
 
     employment_appointment_status: {
@@ -53,7 +50,6 @@ const employmentInformationSchema = new Schema(
         "Clinical Instructor",
         "Adjunct",
       ],
-      required: true,
     },
   },
   { _id: false }

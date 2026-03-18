@@ -14,7 +14,6 @@ export default function EventsListContent() {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [activityType, setActivityType] = useState("");
 
-  // Use fixed type_of_activity enum values for filter
   const activityTypes = [
     "Academic",
     "Administrative",
@@ -71,9 +70,6 @@ export default function EventsListContent() {
         const endMs = new Date(evt.end_date || evt.start_date).getTime();
         return (
           endMs < now &&
-          (!userId ||
-            evt.created_by === userId ||
-            evt.created_by?._id === userId) &&
           (!activityType || evt.type_of_activity === activityType)
         );
       })
@@ -82,7 +78,7 @@ export default function EventsListContent() {
           new Date(b.start_date || b.date).getTime() -
           new Date(a.start_date || a.date).getTime(),
       );
-  }, [events, userId, activityType]);
+  }, [events, activityType]);
 
   const formatRange = (start, end) => {
     if (!start) return "No date";

@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
+import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
@@ -82,6 +83,10 @@ export async function PUT(req, { params }) {
     );
   }
 
+  // Track old and new project IDs
+  const oldProjectId = event.project ? event.project.toString() : null;
+  const newProjectId = body.project;
+
   event.set(body);
   console.log("event", event);
   if (!event.updated_by) {
@@ -91,6 +96,17 @@ export async function PUT(req, { params }) {
     );
   }
   event.updated_by = event.updated_by;
+
+  if (oldProjectId && oldProjectId !== newProjectId) {
+    await Project.findByIdAndUpdate(oldProjectId, {
+      $pull: { events: event._id },
+    });
+  }
+  if (newProjectId && oldProjectId !== newProjectId) {
+    await Project.findByIdAndUpdate(newProjectId, {
+      $addToSet: { events: event._id },
+    });
+  }
 
   try {
     await event.save();

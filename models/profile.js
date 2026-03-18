@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
-import personalSchema from "./personal";
-import gadDataSchema from "./gadData";
-import affiliationSchema from "./affiliation";
-import contactSchema from "./contact";
+import personalSchema from "./personal.js";
+import gadDataSchema from "./gadData.js";
+import affiliationSchema from "./affiliation.js";
+import contactSchema from "./contact.js";
 
 const gemsProfileSchema = new Schema(
   {

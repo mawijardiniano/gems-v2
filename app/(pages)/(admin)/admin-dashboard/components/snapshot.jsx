@@ -14,20 +14,20 @@ export default function Snapshot({ data }) {
   const totalRespondents = data.length;
 
   const femaleCount = data.filter(
-    (d) => d.personal_info_id.gadData.sexAtBirth === "Female",
+    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Female",
   ).length;
   const maleCount = data.filter(
-    (d) => d.personal_info_id.gadData.sexAtBirth === "Male",
+    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Male",
   ).length;
 
   const pwdCount =
-    data.filter((d) => d.personal_info_id.gadData.isPWD === true).length || 0;
+    data.filter((d) => d.personal_info_id?.gadData?.isPWD === true).length || 0;
   const ipCount =
-    data.filter((d) => d.personal_info_id.gadData.isIndigenousPerson === true)
+    data.filter((d) => d.personal_info_id?.gadData?.isIndigenousPerson === true)
       .length || 0;
 
   const soloParents = data.filter(
-    (d) => d.personal_information.solo_parent,
+    (d) => d.personal_information?.solo_parent,
   ).length;
 
   const healthConditions = data.filter(
@@ -39,7 +39,7 @@ export default function Snapshot({ data }) {
 
   const highRisk = data.filter(
     (d) =>
-      d.personal_information.solo_parent &&
+      d.personal_information?.solo_parent &&
       d.health_information?.health_problems?.length > 0 &&
       d.health_information.health_problems[0] !== "None",
   ).length;

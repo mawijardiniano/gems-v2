@@ -23,10 +23,11 @@ const personalSchema = new Schema(
         "Married",
         "Widow",
         "Legally Separated Marriage",
+        "Separated",
         "Living In/Common Law",
         "Annulled",
+        ""
       ],
-      required: true,
     },
 
     religion: {
@@ -42,7 +43,7 @@ const personalSchema = new Schema(
         "Members Church of God International (MGCI)",
         "Other",
       ],
-      required: true,
+
     },
     religion_other: {
       type: String,
@@ -62,13 +63,11 @@ const personalSchema = new Schema(
 
     birthday: {
       type: Date,
-      required: true,
     },
 
     bloodType: {
       type: String,
-      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"],
-      required: true,
+      enum: ["A+", "A-", "A", "B+", "B-", "B", "AB+", "AB-", "AB", "O+", "O-", "O", "Unknown"],
     },
   },
   { _id: false },

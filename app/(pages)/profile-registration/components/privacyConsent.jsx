@@ -12,7 +12,7 @@ export default function PrivacyConsent() {
 
   return (
     <div className="p-4">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+      <div className="max-w-2xl mx-auto bg-white p-6 rounded border border-gray-200">
         <h2 className="text-xl font-bold mb-4 text-center">
           Privacy and Consent
         </h2>
