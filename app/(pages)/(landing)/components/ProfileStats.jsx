@@ -70,11 +70,6 @@ export default function ProfileStats() {
   const totalStudent =
     totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
-  //   const overallGenderPie = [
-  //     { name: "Male", value: totalMale },
-  //     { name: "Female", value: totalFemale },
-  //   ];
-
   const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
   const yearLineData = (data.students?.yearLevelSex || [])
     .filter((row) => row.yearLevel && row.yearLevel !== "Unspecified")

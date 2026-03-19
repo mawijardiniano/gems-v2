@@ -22,13 +22,13 @@ export default function SexDisaggregatedContent() {
   const [summaryError, setSummaryError] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
 
-  // For employees: percent of total in group
   const formatPercent = (value, total) => {
     if (!total || total === 0) return "0%";
     return `${Math.round((value / total) * 100)}%`;
   };
 
   const colleges = [
+    "Laboratory School",
     "Graduate School",
     "College of Agriculture",
     "College of Allied Health Sciences",

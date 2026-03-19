@@ -140,13 +140,9 @@ export async function GET(req) {
       (studentTotals.Female || 0) +
       (studentTotals.Unspecified || 0);
 
-    const courseOrder = ["Info System", "Info Tech"];
-    const dynamicCourses = Object.keys(courseYearCounts)
-      .filter((c) => !courseOrder.includes(c))
-      .sort((a, b) => a.localeCompare(b));
-    const allCourses = [...courseOrder, ...dynamicCourses].filter(
-      (c) => courseYearCounts[c],
-    );
+    const allCourses = Object.keys(courseYearCounts)
+      .sort((a, b) => a.localeCompare(b))
+      .filter((c) => courseYearCounts[c]);
 
     const doc = new jsPDF();
     const nowISO = new Date().toISOString();
@@ -177,7 +173,6 @@ export async function GET(req) {
     let tableStartY =
       (doc.lastAutoTable?.finalY || (collegeFilter ? 36 : 32)) + 8;
 
-    // Use a dynamic label for the summary section
     const summaryLabel = collegeFilter || "All Colleges/Offices";
 
     doc.setFontSize(10);
@@ -185,7 +180,6 @@ export async function GET(req) {
     doc.setFontSize(8);
     tableStartY += 4;
 
-    // Build a summary for all courses (all colleges)
     const allYearMap = {};
     Object.values(courseYearCounts).forEach((yearMap) => {
       Object.entries(yearMap).forEach(([year, counts]) => {
@@ -198,7 +192,6 @@ export async function GET(req) {
       });
     });
 
-    // Arrange year levels in order: 1st, 2nd, 3rd, 4th year, then Total
     const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Total"];
     const allRowsUnsorted = Object.entries(allYearMap).map(([year, counts]) => {
       const male = counts.Male || 0;
@@ -207,11 +200,10 @@ export async function GET(req) {
       const total = male + female + unspecified;
       return [year, male, female, total];
     });
-    // Sort rows by yearOrder
     const allRows = yearOrder
       .map((orderYear) => allRowsUnsorted.find((row) => row[0] === orderYear))
       .filter(Boolean);
-    // Add any other years not in the order
+
     allRowsUnsorted.forEach((row) => {
       if (!yearOrder.includes(row[0])) allRows.push(row);
     });
@@ -268,30 +260,21 @@ export async function GET(req) {
           const total = male + female + unspecified;
           return [year, male, female, total];
         });
-        let yearRows;
-        if (
-          course === "Information System" ||
-          course === "Information Technology"
-        ) {
-          const yearOrder = [
-            "1st Year",
-            "2nd Year",
-            "3rd Year",
-            "4th Year",
-            "Total",
-          ];
-          yearRows = yearOrder
-            .map((orderYear) =>
-              yearRowsUnsorted.find((row) => row[0] === orderYear),
-            )
-            .filter(Boolean);
-
-          yearRowsUnsorted.forEach((row) => {
-            if (!yearOrder.includes(row[0])) yearRows.push(row);
-          });
-        } else {
-          yearRows = yearRowsUnsorted;
-        }
+        const yearOrder = [
+          "1st Year",
+          "2nd Year",
+          "3rd Year",
+          "4th Year",
+          "Total",
+        ];
+        let yearRows = yearOrder
+          .map((orderYear) =>
+            yearRowsUnsorted.find((row) => row[0] === orderYear),
+          )
+          .filter(Boolean);
+        yearRowsUnsorted.forEach((row) => {
+          if (!yearOrder.includes(row[0])) yearRows.push(row);
+        });
 
         if (yearRows.length) {
           const maleTotal = Object.values(yearMap).reduce(
