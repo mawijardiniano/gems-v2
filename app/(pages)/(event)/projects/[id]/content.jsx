@@ -34,7 +34,6 @@ export default function ProjectContent() {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!project) return <div className="p-6">Project not found.</div>;
 
-  // Helper for date formatting
   function formatDate(dateStr) {
     if (!dateStr) return "-";
     const date = new Date(dateStr);

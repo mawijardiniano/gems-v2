@@ -3,143 +3,60 @@ import React, { useEffect, useState } from "react";
 import { FaFolderPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-function CreateProjectModal({ open, onClose, onCreated }) {
-  const [projectName, setProjectName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default function ProjectContent() {
+  const [newProject, setNewProject] = useState({
+    gender_issue: "",
+    cause_gender_issue: "",
+    gad_objective: "",
+    supporting_statistics_data: "",
+    relevant_agency: "",
+    gad_activity: "",
+    performance_indicator_target: "",
+    gad_budget: "",
+    source_budget: "",
+    responsible_office: "",
+  });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleNewProjectChange = (field, value) => {
+    setNewProject((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddProject = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setAddLoading(true);
+    setAddError("");
     try {
       const res = await fetch("/api/project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_name: projectName }),
+        body: JSON.stringify(newProject),
       });
       const data = await res.json();
       if (res.ok) {
-        setProjectName("");
-        onCreated();
-        onClose();
+        setNewProject({
+          gender_issue: "",
+          cause_gender_issue: "",
+          gad_objective: "",
+          supporting_statistics_data: "",
+          relevant_agency: "",
+          gad_activity: "",
+          performance_indicator_target: "",
+          gad_budget: "",
+          source_budget: "",
+          responsible_office: "",
+        });
+        fetchProjects();
       } else {
-        setError(data.error || "Failed to create project");
+        setAddError(data.error || "Failed to add project");
       }
     } catch (err) {
-      setError("Network error");
+      setAddError("Network error");
     } finally {
-      setLoading(false);
+      setAddLoading(false);
     }
   };
-
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white bg-opacity-80 rounded-xl shadow-lg p-8 w-full max-w-md relative">
-        <button
-          className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        <h3 className="text-xl font-bold mb-4">Create Project</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="font-medium">Project Name</label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
-            placeholder="Project Name"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            required
-            disabled={loading}
-          />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Create"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function EditProjectModal({ open, onClose, project, onUpdated }) {
-  const [projectName, setProjectName] = useState(project?.project_name || "");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    setProjectName(project?.project_name || "");
-    setError("");
-  }, [project, open]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/project/${project._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_name: projectName }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onUpdated();
-        onClose();
-      } else {
-        setError(data.error || "Failed to update project");
-      }
-    } catch (err) {
-      setError("Network error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!open || !project) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white bg-opacity-80 rounded-xl shadow-lg p-8 w-full max-w-md relative">
-        <button
-          className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        <h3 className="text-xl font-bold mb-4">Edit Project</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="font-medium">Project Name</label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
-            placeholder="Project Name"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            required
-            disabled={loading}
-          />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-export default function ProjectContent() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -147,7 +64,50 @@ export default function ProjectContent() {
     open: false,
     project: null,
   });
-  const [editModal, setEditModal] = useState({ open: false, project: null });
+  const [editingId, setEditingId] = useState(null);
+  const [editRow, setEditRow] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const startEdit = (project) => {
+    setEditingId(project._id);
+    setEditRow({ ...project });
+    setEditError("");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditRow(null);
+    setEditError("");
+  };
+
+  const handleEditRowChange = (field, value) => {
+    setEditRow((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const saveEdit = async () => {
+    if (!editRow) return;
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/project/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editRow),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingId(null);
+        setEditRow(null);
+        fetchProjects();
+      } else {
+        setEditError(data.error || "Failed to update project");
+      }
+    } catch (err) {
+      setEditError("Network error");
+    } finally {
+      setEditLoading(false);
+    }
+  };
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -178,7 +138,6 @@ export default function ProjectContent() {
   }, []);
 
   useEffect(() => {
-
     if (page > totalPages) setPage(totalPages);
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
@@ -199,18 +158,18 @@ export default function ProjectContent() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold">Projects</h2>
-        <button
+        {/* <button
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => setModalOpen(true)}
         >
           <FaFolderPlus /> Create Project
-        </button>
+        </button> */}
       </div>
-      <CreateProjectModal
+      {/* <CreateProjectModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onCreated={fetchProjects}
-      />
+      /> */}
       {deleteModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -221,13 +180,7 @@ export default function ProjectContent() {
               &times;
             </button>
             <h3 className="text-xl font-bold mb-4">Delete Project</h3>
-            <p>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold">
-                {deleteModal.project?.project_name}
-              </span>
-              ?
-            </p>
+            <p>Are you sure you want to delete this project?</p>
             <div className="flex justify-end gap-2 mt-6">
               <button
                 className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
@@ -245,67 +198,421 @@ export default function ProjectContent() {
           </div>
         </div>
       )}
-      {editModal.open && (
-        <EditProjectModal
-          open={editModal.open}
-          onClose={() => setEditModal({ open: false, project: null })}
-          project={editModal.project}
-          onUpdated={fetchProjects}
-        />
-      )}
+
       {loading ? (
         <div>Loading projects...</div>
-      ) : projects.length === 0 ? (
-        <div className="text-gray-500">No projects found.</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded shadow">
-            <thead>
-              <tr className="bg-gray-900 border text-white">
-                <th className="py-2 px-4 border-b text-left">No.</th>
-                <th className="py-2 px-4 border-b text-left">Project Name</th>
-                <th className="py-2 px-4 border-b text-left">
-                  Number of Events
-                </th>
-                <th className="py-2 px-4 border-b text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedProjects.map((project, idx) => (
-                <tr key={project._id} className="hover:bg-gray-50 border-b">
+          <form onSubmit={handleAddProject}>
+            <table className="min-w-full bg-white rounded shadow">
+              <thead>
+                <tr className="bg-gray-900 border text-white ">
+                  <th className="py-2 px-4 border-b text-center">No.</th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Gender Issue and/or GAD Mandate
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Cause of the Gender Issue
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    GAD Result Statement/GAD Objective
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Supporting Statistics Data
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Relevant Agency MFO/PAP
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    GAD Activity
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Output Performance Indicators and Target
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">GAD Budget</th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Source of Budget
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Responsible Unit/Office
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">
+                    Number of Events
+                  </th>
+                  <th className="py-2 px-4 border-b text-center">Actions</th>
+                </tr>
+                <tr className="bg-gray-100">
+                  <td className="py-2 px-4 border-b text-center">—</td>
                   <td className="py-2 px-4 border-b">
-                    {(page - 1) * pageSize + idx + 1}
-                  </td>
-                  <td className="py-2 px-4 border-b font-medium">
-                    {project.project_name}
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.gender_issue}
+                      onChange={(e) =>
+                        handleNewProjectChange("gender_issue", e.target.value)
+                      }
+                      required
+                    />
                   </td>
                   <td className="py-2 px-4 border-b">
-                    {Array.isArray(project.events) ? project.events.length : 0}
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.cause_gender_issue}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "cause_gender_issue",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
                   </td>
-                  <td className="py-2 px-4 flex gap-2">
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.gad_objective}
+                      onChange={(e) =>
+                        handleNewProjectChange("gad_objective", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.supporting_statistics_data}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "supporting_statistics_data",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.relevant_agency}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "relevant_agency",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.gad_activity}
+                      onChange={(e) =>
+                        handleNewProjectChange("gad_activity", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.performance_indicator_target}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "performance_indicator_target",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-32 border rounded px-2 py-1"
+                      value={newProject.gad_budget}
+                      onChange={(e) =>
+                        handleNewProjectChange("gad_budget", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-32 border rounded px-2 py-1"
+                      value={newProject.source_budget}
+                      onChange={(e) =>
+                        handleNewProjectChange("source_budget", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    <textarea
+                      className="w-40 border rounded px-2 py-1"
+                      value={newProject.responsible_office}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "responsible_office",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="py-2 px-4 border-b text-center">—</td>
+                  <td className="py-2 px-4 border-b">
                     <button
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                      onClick={() => router.push(`/projects/${project._id}`)}
+                      type="submit"
+                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      disabled={addLoading}
                     >
-                      View
-                    </button>
-                    <button
-                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                      onClick={() => setEditModal({ open: true, project })}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                      onClick={() => setDeleteModal({ open: true, project })}
-                    >
-                      Delete
+                      {addLoading ? "Adding..." : "Add"}
                     </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {addError && (
+                  <tr>
+                    <td colSpan={13} className="text-red-500 text-sm px-4 py-2">
+                      {addError}
+                    </td>
+                  </tr>
+                )}
+                {paginatedProjects.map((project, idx) => (
+                  <tr key={project._id} className="hover:bg-gray-50 border">
+                    <td className="py-2 px-4 border">
+                      {(page - 1) * pageSize + idx + 1}
+                    </td>
+                    {editingId === project._id ? (
+                      <>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.gender_issue}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "gender_issue",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.cause_gender_issue}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "cause_gender_issue",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.gad_objective}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "gad_objective",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.supporting_statistics_data}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "supporting_statistics_data",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.relevant_agency}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "relevant_agency",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.gad_activity}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "gad_activity",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.performance_indicator_target}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "performance_indicator_target",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-32 border rounded px-2 py-1"
+                            value={editRow.gad_budget}
+                            onChange={(e) =>
+                              handleEditRowChange("gad_budget", e.target.value)
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-32 border rounded px-2 py-1"
+                            value={editRow.source_budget}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "source_budget",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={editRow.responsible_office}
+                            onChange={(e) =>
+                              handleEditRowChange(
+                                "responsible_office",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border text-center">
+                          {Array.isArray(project.events)
+                            ? project.events.length
+                            : 0}
+                        </td>
+                        <td className="py-2 px-4 flex gap-2">
+                          <button
+                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              saveEdit();
+                            }}
+                            disabled={editLoading}
+                          >
+                            {editLoading ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            className="px-3 py-1 bg-gray-400 text-black rounded hover:bg-gray-500 transition"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              cancelEdit();
+                            }}
+                            disabled={editLoading}
+                          >
+                            Cancel
+                          </button>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="py-2 px-4 border">
+                          {project.gender_issue}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.cause_gender_issue}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.gad_objective}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.supporting_statistics_data}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.relevant_agency}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.gad_activity}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.performance_indicator_target}
+                        </td>
+                        <td className="py-2 px-4 border text-center">
+                          {project.gad_budget}
+                        </td>
+                        <td className="py-2 px-4 border text-center">
+                          {project.source_budget}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {project.responsible_office}
+                        </td>
+                        <td className="py-2 px-4 border">
+                          {Array.isArray(project.events)
+                            ? project.events.length
+                            : 0}
+                        </td>
+                        <td className="py-2 px-4 flex gap-2">
+                          <button
+                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                            onClick={() =>
+                              router.push(`/projects/${project._id}`)
+                            }
+                          >
+                            View
+                          </button>
+                          <button
+                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                            onClick={() => startEdit(project)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                            onClick={() =>
+                              setDeleteModal({ open: true, project })
+                            }
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+                {editError && (
+                  <tr>
+                    <td colSpan={13} className="text-red-500 text-sm px-4 py-2">
+                      {editError}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </form>
           <div className="flex items-center justify-between gap-4 mt-6">
             <label className="text-sm gap">
               Show
@@ -337,7 +644,7 @@ export default function ProjectContent() {
               </span>
               <div className="flex gap-2">
                 <button
-                  className="px-3 py-1 rounded bg-gray-400 hover:bg-gray-500 disabled:opacity-50" 
+                  className="px-3 py-1 rounded bg-gray-400 hover:bg-gray-500 disabled:opacity-50"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >

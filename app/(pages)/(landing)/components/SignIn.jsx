@@ -52,7 +52,7 @@ export default function LoginForm() {
         return;
       }
 
-      if (role === "focal") {
+      if (role === "gad focal person") {
         console.log("Focal detected, redirecting to /events-dashboard");
         router.push("/events-dashboard");
         return;

@@ -12,6 +12,7 @@ import {
   FaBriefcase,
   FaChartPie,
   FaVenusMars,
+  FaUsers
 } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -54,6 +55,7 @@ export default function Sidebar({ open, setOpen }) {
         },
       ],
     },
+    { name: "Manage Roles", href: "/manage-role", icon: <FaUsers /> },
     { name: "Settings", href: "/admin-settings", icon: <FaCog /> },
   ];
 

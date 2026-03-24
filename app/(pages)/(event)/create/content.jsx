@@ -178,7 +178,7 @@ export default function CreateEventsContent() {
               <option value="">No Project</option>
               {projects.map((proj) => (
                 <option key={proj._id} value={proj._id}>
-                  {proj.project_name}
+                  {proj.gad_activity}
                 </option>
               ))}
             </select>

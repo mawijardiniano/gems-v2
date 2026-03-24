@@ -9,7 +9,7 @@ function generateUsername(personal) {
 }
 
 function generateTempPassword() {
-  return `gems1234`; 
+  return `gems1234`;
 }
 
 function capitalizeWords(str) {
@@ -34,11 +34,12 @@ export async function GET() {
   try {
     await connectDB();
 
-    const users = await UserAuth.find({ role: "User" })
-      .populate("personal_info_id")
-      .lean();
+    const users = await UserAuth.find({}).populate("personal_info_id").lean();
+    const filteredUsers = users.filter(
+      (u) => u.username !== "Admin" && u.username !== "Focal",
+    );
 
-    const usersNoPassword = users.map((u) => {
+    const usersNoPassword = filteredUsers.map((u) => {
       const { password, ...rest } = u;
       return rest;
     });

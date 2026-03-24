@@ -911,164 +911,142 @@ export default function EventManageContent() {
   const handleDownloadBlankGuestsPdf = async () => {
     if (typeof window === "undefined") return;
 
-    try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable").catch(() => null),
-      ]);
+    const blankRowHtml = () =>
+      `<tr>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Male<br/>[ ] Female</td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Male<br/>[ ] Female<br/>[ ] LGBTQIA+</td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Student<br/>[ ] Employee<br/>[ ] External Stakeholders</td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
+    </tr>`;
 
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "legal",
-      });
+    const blankRowsFirst = Array.from({ length: 5 }, blankRowHtml).join("");
+    const blankRowsSecond = Array.from({ length: 9 }, blankRowHtml).join("");
 
-      const pageWidth = doc.internal.pageSize.getWidth();
+    const tableHeader = `
+    <thead>
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">No.</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Full Name</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Sex</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Gender <br/> Identity</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Age</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Participant Type</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Department / <br/>Office /<br/> Organization</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Position /<br/> Designation <br/>(Employee/<br/>Stakeholders)</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Program / Year / <br/> Section (For Student)</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Contact No.</th>
+        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Signature</th>
+      </tr>
+    </thead>
+  `;
 
-      const dateLabel = formatRange(
-        event.start_date || event.date,
-        event.end_date,
-      );
+    const dateLabel = formatRange(
+      event.start_date || event.date,
+      event.end_date,
+    );
 
-      const ACTIVITY_TYPES = [
-        "Academic",
-        "Administrative",
-        "GAD",
-        "Extension Research",
-        "Students",
-      ];
+    const ACTIVITY_TYPES = [
+      "Academic",
+      "Administrative",
+      "GAD",
+      "Extension Research",
+      "Students",
+      "Others",
+    ];
 
-      const selectedType = event.type_of_activity || "";
-      const isPredefined = ACTIVITY_TYPES.includes(selectedType);
+    const selectedType = event.type_of_activity;
 
-      let typeList = ACTIVITY_TYPES.map((type) => {
-        const mark = type === selectedType ? "(X)" : "( )";
-        return `${mark} ${type}`;
-      }).join("    ");
+    const typeOfActivityHTML = ACTIVITY_TYPES.map((type) => {
+      const checked = type === selectedType ? "☑" : "☐";
+      return `<span class="checkbox-item">${checked} ${type}</span>`;
+    }).join("");
 
-      if (isPredefined) {
-        typeList += "    ( ) Other";
-      } else if (selectedType) {
-        typeList += `    (X) Other: ${selectedType}`;
-      } else {
-        typeList += "    ( ) Other: __________";
-      }
-
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("UNIVERSITY ACTIVITY ATTENDANCE SHEET", pageWidth / 2, 12, {
-        align: "center",
-      });
-
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-
-      let y = 20;
-
-      doc.text("I. Activity Information", 14, y);
-      y += 6;
-
-      doc.text(`Activity Title: ${event.title || ""}`, 14, y);
-      y += 6;
-
-      const labelX = 14;
-      const listX = 50;
-      doc.text("Type of Activity:", labelX, y);
-      doc.text(typeList, listX, y);
-      y += 6;
-
-      doc.text(`Date: ${dateLabel}`, 14, y);
-      y += 6;
-
-      doc.text(`Venue: ${event.venue || ""}`, 14, y);
-      y += 6;
-
-      doc.text(
-        `Organizing Office/Unit: ${event.organizing_office_unit || ""}`,
-        14,
-        y,
-      );
-
-      y += 10;
-
-      doc.text("II. Participating Attendance", 14, y);
-      y += 6;
-
-      const head = [
-        [
-          "No.",
-          "Full Name",
-          "Sex",
-          "Gender Identity",
-          "Age",
-          "Participant Type",
-          "Department / Office / Organization",
-          "Position/\nDesignation\n(Employee/\nStakeholders)",
-          "Program / Year / Section(For Students)",
-          "Contact No.",
-          "Email Address",
-          "Signature",
-        ],
-      ];
-
-      const blankBody = Array.from({ length: 100 }, () => [
-        "",
-        "",
-        formatCheckboxPair(""),
-        formatGenderCheckbox(""),
-        "",
-        formatParticipantCheckbox(""),
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-      ]);
-
-      const autoTable =
-        autoTableModule?.default || doc.autoTable || doc.lastAutoTable;
-
-      if (typeof autoTable === "function") {
-        autoTable(doc, {
-          head,
-          body: blankBody,
-          startY: y,
-          margin: { left: 6, right: 6 },
-          tableWidth: pageWidth - 12,
-          styles: {
-            fontSize: 10,
-            cellPadding: 3,
-            halign: "center",
-            lineWidth: 0.1,
-          },
-          headStyles: {
-            fillColor: [255, 255, 255],
-            textColor: 0,
-            lineWidth: 0.1,
-          },
-          columnStyles: {
-            0: { cellWidth: 12 },
-            1: { halign: "left", cellWidth: "auto" },
-            2: { halign: "left", cellWidth: 22 },
-            3: { halign: "left", cellWidth: 28 },
-            4: { halign: "center", cellWidth: 14 },
-            5: { halign: "left", cellWidth: 46 },
-            6: { halign: "left", cellWidth: 28 },
-            7: { halign: "left", cellWidth: 36 },
-            8: { halign: "left", cellWidth: 28 },
-            9: { halign: "left", cellWidth: 26 },
-            10: { halign: "left", cellWidth: 32 },
-            11: { halign: "left", cellWidth: 24 },
-          },
-        });
-      }
-
-      doc.save(`${event.title || "guest-list"}-blank.pdf`);
-    } catch (err) {
-      console.error("PDF export failed", err);
-      alert("Unable to generate PDF. Please try again.");
+    let tablesHtml = "";
+   tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc; page-break-after: always;">${tableHeader}<tbody>${blankRowsFirst}</tbody></table>`;
+tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc;">${tableHeader}<tbody>${blankRowsSecond}</tbody></table>`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${event.title || "Guest List"}</title>
+  <style>
+    @page { size: landscape; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 24px 24px 24px 24px;
+      margin: 0;
+      color: #111;
     }
+    h3 {
+      margin: 0 0 10px;
+      text-align: center;
+    }
+    h4 {
+      margin: 4px 0;
+      font-weight: 500;
+    }
+    .checkbox-container {
+      margin-top: 4px;
+      margin-bottom: 8px;
+      line-height: 1.8;
+    }
+    .checkbox-item {
+      display: inline-block;
+      gap: 30px;
+    }
+  </style>
+</head>
+<body>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; justify-items: center; margin-bottom: 4px; margin-top: 0;">
+  <div style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;">
+    <img src="/getThemePhoto.png" alt="MarSULogo" width="100" style="display: block; margin: 10px auto;" />
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;">
+    <h1 style="margin: 0; font-weight: bold; letter-spacing: 2px;">MARINDUQUE STATE UNIVERSITY</h1>
+    <h3 style="margin: 0; font-weight: 400;">Gender and Development Unit</h3>
+  </div>
+  <div></div>
+</div>
+  <h3 style="margin: 0; font-weight: bold; text-align: center;">UNIVERSITY ACTIVITY ATTENDANCE SHEET</h3>
+    <div style="margin-left: 50px;">
+        <h4 style="font-weight: bold;">I.<b style="margin-left: 20px;">Activity Information</b></h4>
+    <div style="margin-left: 30px;">
+    <h4><span style="font-weight: bold;">Activity Title:</span> ${event.title || "Guest List"}</h4>
+    <h4><span style="font-weight: bold;">Type of Activity:</span> ${typeOfActivityHTML}</h4>
+    <h4> <span style="font-weight: bold;">Date:</span>${dateLabel}</h4>
+    <h4><span style="font-weight: bold;">Venue:</span> ${event.venue || ""}</h4>
+     <h4><span style="font-weight: bold;">Organizing Office/Unit::</span> ${event.organizing_office_unit || ""}</h4>
+    </div>
+
+  <h4 style="margin:12px 0px 24px 0px; font-weight: bold;">II.<b style="margin-left: 20px;">Participating Attendance</b></h4>
+  </div>
+  ${tablesHtml}
+</body>
+</html>`;
+
+    import("html2pdf.js")
+      .then((html2pdf) => {
+        html2pdf
+          .default()
+          .from(html)
+          .set({
+            margin: 0,
+            filename: `${event.title || "guest-list"}-guests.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { orientation: "landscape", unit: "mm", format: "legal" },
+          })
+          .save();
+      })
+      .catch((err) => {
+        console.error("PDF export failed", err);
+        alert("Unable to generate PDF. Please try again.");
+      });
   };
 
   const handleDownloadQr = () => {
@@ -1405,7 +1383,7 @@ function OverviewTabs({
                   <option value="">No Project</option>
                   {projects.map((proj) => (
                     <option key={proj._id} value={proj._id}>
-                      {proj.project_name}
+                      {proj.gad_activity}
                     </option>
                   ))}
                 </select>
@@ -1762,6 +1740,12 @@ function GuestTabs({
                 Download PDF
               </button>
               <button
+                onClick={() => handleDownloadBlankGuestsPdf()}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Blank Attendance Print
+              </button>
+              <button
                 onClick={() => handlePrintGuests(filteredGoingGuests)}
                 className="text-sm text-blue-600 hover:underline"
               >
@@ -2112,9 +2096,9 @@ function InsightTab({
           <option value="interested">Interested</option>
           <option value="not_interested">Not Interested</option>
         </select>
-        <button className="bg-black text-white px-4 py-1 rounded-md">
+        {/* <button className="bg-black text-white px-4 py-1 rounded-md">
           Generate Report
-        </button>
+        </button> */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

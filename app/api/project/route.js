@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
+import "@/models/event";
 
 export async function GET(req) {
   await connectDB();

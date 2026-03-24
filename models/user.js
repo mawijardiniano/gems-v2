@@ -46,7 +46,7 @@ const userAuthSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["User", "Admin", "Focal"],
+      enum: ["User", "Admin", "GAD Focal Person", "SUC President", "GAD Coordinator", "ICTU Director" ],
       default: "User",
     },
   },

@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }) {
           return;
         }
 
-        if (data.user.role.toLowerCase() !== "focal") {
+        if (data.user.role.toLowerCase() !== "gad focal person") {
           router.replace("/not-authorized");
           return;
         }
