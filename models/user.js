@@ -49,6 +49,7 @@ const userAuthSchema = new Schema(
       enum: ["User", "Admin", "GAD Focal Person", "SUC President", "GAD Coordinator", "ICTU Director" ],
       default: "User",
     },
+
   },
   { timestamps: true }
 );

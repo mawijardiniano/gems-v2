@@ -30,9 +30,11 @@ export default function ManageRoleContent() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
+    setLoading(true);
     fetch(`/api/profile`)
       .then((res) => res.json())
-      .then((data) => setUsers(data.data || []));
+      .then((data) => setUsers(data.data || []))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -96,6 +98,14 @@ export default function ManageRoleContent() {
   };
 
   const specialRoleUsers = users.filter((u) => ROLES.slice(1).includes(u.role));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <span className="text-lg text-gray-500">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="py-6">
@@ -199,15 +209,13 @@ export default function ManageRoleContent() {
                 user.personal_info_id?.personal?.last_name ||
                 user.personal_info_id?.last_name ||
                 "";
-                const college = user.personal_info_id?.affiliation?.office
+              const college = user.personal_info_id?.affiliation?.office;
               return (
                 <tr key={user._id}>
                   <td className="border px-4 py-2">
                     {firstName} {lastName}
                   </td>
-                  <td className="border px-4 py-2">
-                    {college}
-                  </td>
+                  <td className="border px-4 py-2">{college}</td>
                   <td className="border px-4 py-2 font-semibold">
                     {user.role}
                   </td>

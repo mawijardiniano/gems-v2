@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }) {
           return;
         }
 
-        if (data.user.role.toLowerCase() !== "gad focal person") {
+        if (data.user.role.toLowerCase() !== "gad focal person" && data.user.role.toLowerCase() !== "gad coordinator") {
           router.replace("/not-authorized");
           return;
         }
@@ -98,9 +98,7 @@ export default function DashboardLayout({ children }) {
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="mt-16 px-4 sm:px-6">
-          {children}
-        </main>
+        <main className="mt-16 px-4 sm:px-6">{children}</main>
       </div>
     </div>
   );

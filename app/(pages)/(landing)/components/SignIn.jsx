@@ -47,12 +47,12 @@ export default function LoginForm() {
       );
 
       if (role === "admin") {
-        console.log("Admin detected, redirecting to /sample-dashboard");
+        console.log("Admin detected, redirecting to /admin-dashboard");
         router.push("/admin-dashboard");
         return;
       }
 
-      if (role === "gad focal person") {
+      if (role === "gad focal person" || role === "gad coordinator") {
         console.log("Focal detected, redirecting to /events-dashboard");
         router.push("/events-dashboard");
         return;
