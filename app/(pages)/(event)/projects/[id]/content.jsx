@@ -34,17 +34,35 @@ export default function ProjectContent() {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!project) return <div className="p-6">Project not found.</div>;
 
-  function formatDate(dateStr) {
-    if (!dateStr) return "-";
-    const date = new Date(dateStr);
-    return date.toLocaleString(undefined, {
+  // Format a date range for multi-day events
+  function formatDateRange(event) {
+    let start = event.start_date;
+    let end = event.end_date;
+    if (Array.isArray(event.start_dates) && event.start_dates.length > 0) {
+      start = event.start_dates[0];
+    }
+    if (Array.isArray(event.end_dates) && event.end_dates.length > 0) {
+      end = event.end_dates[event.end_dates.length - 1];
+    }
+    if (!start) return "-";
+    const opts = {
       year: "numeric",
       month: "short",
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    });
+    };
+    const format = (value) => {
+      const d = new Date(value);
+      return Number.isNaN(d.getTime())
+        ? "Invalid date"
+        : d.toLocaleString(undefined, opts);
+    };
+    const startStr = format(start);
+    if (!end) return startStr;
+    const endStr = format(end);
+    return `${startStr} - ${endStr}`;
   }
 
   return (
@@ -77,15 +95,15 @@ export default function ProjectContent() {
             </thead>
             <tbody>
               {project.events.map((event) => (
-                <tr key={event._id || event} className="hover:bg-gray-50 border-b">
+                <tr
+                  key={event._id || event}
+                  className="hover:bg-gray-50 border-b"
+                >
                   <td className="py-2 px-4 border-b font-medium">
                     {event.title || event}
                   </td>
-                  <td className="py-2 px-4 border-b">
-                    {formatDate(event.start_date)}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {formatDate(event.end_date)}
+                  <td className="py-2 px-4 border-b" colSpan={2}>
+                    {formatDateRange(event)}
                   </td>
                   <td className="py-2 px-4 border-b">{event.venue || "-"}</td>
                   <td className="py-2 px-4 border-b">

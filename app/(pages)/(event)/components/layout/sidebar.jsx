@@ -8,6 +8,7 @@ import {
   FaSignOutAlt,
   FaFolder,
   FaMoneyBill,
+  FaUsers
 } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,8 @@ export default function Sidebar({ open, setOpen }) {
 
   const links = [
     { name: "Dashboard", href: "/events-dashboard", icon: <FaHome /> },
+            { name: "University Officials", href: "/university-officials", icon: <FaUsers /> },
+        { name: "GFPS", href: "/gfps", icon: <FaUsers /> },
     { name: "GAA Budget", href: "/gaa-budget", icon: <FaMoneyBill /> },
     { name: "Projects", href: "/projects", icon: <FaFolder /> },
     { name: "Events", href: "/events-list ", icon: <FaPen /> },

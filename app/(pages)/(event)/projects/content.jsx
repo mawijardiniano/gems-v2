@@ -748,7 +748,6 @@ export default function ProjectContent() {
                   </tr>
                 )}
                 {paginatedProjects.map((project, idx) => {
-                  // Ensure all array fields are arrays
                   const causeArr = Array.isArray(project.cause_gender_issue)
                     ? project.cause_gender_issue
                     : project.cause_gender_issue

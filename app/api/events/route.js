@@ -64,26 +64,34 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
+
     const {
       title,
       description,
-      start_date,
-      end_date,
+      number_of_days,
+      start_dates,
+      end_dates,
       venue,
       created_by,
       type_of_activity,
       organizing_office_unit,
+      co_organizing_office_unit,
       eligibility_criteria,
       target_number_of_participants,
       project,
+      gad_activity,
     } = body;
 
     if (
       !title ||
-      !start_date ||
-      !end_date ||
+      !number_of_days ||
+      !Array.isArray(start_dates) ||
+      !Array.isArray(end_dates) ||
+      start_dates.length !== Number(number_of_days) ||
+      end_dates.length !== Number(number_of_days) ||
       !created_by ||
       !type_of_activity ||
+      !co_organizing_office_unit ||
       !organizing_office_unit ||
       !eligibility_criteria ||
       !target_number_of_participants
@@ -91,7 +99,7 @@ export async function POST(req) {
       return NextResponse.json(
         {
           message:
-            "Title, start_date, end_date, created_by, type_of_activity, and organizing_office_unit are required.",
+            "All fields are required. start_dates and end_dates must be arrays matching number_of_days.",
         },
         { status: 400 },
       );
@@ -99,15 +107,28 @@ export async function POST(req) {
 
     const user = await UserAuth.findById(created_by);
     if (!user) {
+      console.error("POST /api/events: Creator user not found", { created_by });
       return NextResponse.json(
         { message: "Creator user not found." },
         { status: 404 },
       );
     }
 
-    if (user.role !== "Focal") {
+    if (user.role !== "GAD Focal Person" && user.role !== "GAD Coordinator") {
+      console.error(
+        "POST /api/events: Forbidden - user is not Focal or Coordinator",
+        {
+          userId: user._id,
+          username: user.username,
+          role: user.role,
+        },
+      );
       return NextResponse.json(
-        { message: "Only Focal users can create events." },
+        {
+          message:
+            "Only GAD Focal Person or GAD Coordinator can create events.",
+          debug: { userId: user._id, username: user.username, role: user.role },
+        },
         { status: 403 },
       );
     }
@@ -115,20 +136,22 @@ export async function POST(req) {
     const newEvent = await Event.create({
       title,
       description,
-      start_date,
-      end_date,
+      number_of_days,
+      start_dates,
+      end_dates,
       venue,
       type_of_activity,
       organizing_office_unit,
+      co_organizing_office_unit,
       eligibility_criteria,
       target_number_of_participants,
       created_by,
       updated_by: created_by,
       registered_users: [],
       ...(project ? { project } : {}),
+      gad_activity,
     });
 
-    // If a project is specified, push the event's _id into the project's events array
     if (project) {
       await Project.findByIdAndUpdate(
         project,

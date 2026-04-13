@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import QRCode from "qrcode";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import MarSULogo from "@/public/getThemePhoto.png";
 import {
@@ -19,6 +19,60 @@ import {
   Cell,
 } from "recharts";
 import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
+
+function CheckboxDropdown({ label, options, selected, onChange, required }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleOption = (option) => {
+    if (selected.includes(option)) {
+      onChange(selected.filter((v) => v !== option));
+    } else {
+      onChange([...selected, option]);
+    }
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <label className="block text-sm font-medium mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <button
+        type="button"
+        className="w-full border border-gray-300 rounded px-3 py-2 text-left bg-white"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {selected.length === 0 ? "Select..." : selected.join(", ")}
+        <span className="float-right">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-60 overflow-auto">
+          {options.map((option) => (
+            <label key={option} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selected.includes(option)}
+                onChange={() => toggleOption(option)}
+                className="mr-2"
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function EventManageContent() {
   const handleAssignGoing = async () => {
@@ -129,16 +183,36 @@ export default function EventManageContent() {
         const evt = res.data?.data || null;
         setEvent(evt);
         if (evt) {
+          // Debug logs for event date fields
+          console.log("Loaded event:", evt);
+          let startDates =
+            Array.isArray(evt.start_dates) && evt.start_dates.length > 0
+              ? evt.start_dates.map(formatForInput)
+              : [formatForInput(evt.start_date || evt.date)];
+          let endDates =
+            Array.isArray(evt.end_dates) && evt.end_dates.length > 0
+              ? evt.end_dates.map(formatForInput)
+              : [formatForInput(evt.end_date)];
+          console.log("Initial startDates:", startDates);
+          console.log("Initial endDates:", endDates);
+          if (!startDates[0])
+            startDates[0] = formatForInput(evt.start_date || evt.date);
+          if (!endDates[0]) endDates[0] = formatForInput(evt.end_date);
+          console.log("Final startDates:", startDates);
+          console.log("Final endDates:", endDates);
           setEditData({
             type_of_activity: evt.type_of_activity,
             project: evt.project,
+            gad_activity: evt.gad_activity,
             title: evt.title || "",
             description: evt.description || "",
-            start_date: formatForInput(evt.start_date || evt.date),
-            end_date: formatForInput(evt.end_date),
+            number_of_days: evt.number_of_days,
+            start_dates: startDates,
+            end_dates: endDates,
             venue: evt.venue || "",
             status: evt.status || "active",
             organizing_office_unit: evt.organizing_office_unit,
+            co_organizing_office_unit: evt.co_organizing_office_unit,
             eligibility_criteria: evt.eligibility_criteria,
             target_number_of_participants: evt.target_number_of_participants,
           });
@@ -192,13 +266,25 @@ export default function EventManageContent() {
 
   const isPast = useMemo(() => {
     if (!event) return false;
-    const end = event.end_date || event.start_date || event.date;
+    let end = event.end_date || event.start_date || event.date;
+    if (Array.isArray(event.end_dates) && event.end_dates.length > 0) {
+      end = event.end_dates[event.end_dates.length - 1];
+    }
     if (!end) return false;
     return new Date(end).getTime() < Date.now();
   }, [event]);
 
-  const formatRange = (start, end) => {
-    if (!start) return "No date";
+  // Format a date range for multi-day events
+  const formatRange = (start, end, evt) => {
+    let s = start;
+    let e = end;
+    if (evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0) {
+      s = evt.start_dates[0];
+    }
+    if (evt && Array.isArray(evt.end_dates) && evt.end_dates.length > 0) {
+      e = evt.end_dates[evt.end_dates.length - 1];
+    }
+    if (!s) return "No date";
     const opts = {
       month: "short",
       day: "numeric",
@@ -212,10 +298,9 @@ export default function EventManageContent() {
         ? "Invalid date"
         : d.toLocaleString(undefined, opts);
     };
-
-    const startStr = format(start);
-    if (!end) return startStr;
-    const endStr = format(end);
+    const startStr = format(s);
+    if (!e) return startStr;
+    const endStr = format(e);
     return `${startStr} - ${endStr}`;
   };
 
@@ -559,8 +644,8 @@ export default function EventManageContent() {
     try {
       const payload = {
         ...editData,
-        start_date: new Date(editData.start_date).toISOString(),
-        end_date: new Date(editData.end_date).toISOString(),
+        start_dates: editData.start_dates.map((d) => new Date(d).toISOString()),
+        end_dates: editData.end_dates.map((d) => new Date(d).toISOString()),
         updated_by: userId,
       };
       console.log("Saving event payload:", payload);
@@ -570,13 +655,16 @@ export default function EventManageContent() {
       setEditData({
         type_of_activity: updated.type_of_activity,
         project: updated.project,
+        gad_activity: updated.gad_activity,
         title: updated.title || "",
         description: updated.description || "",
-        start_date: formatForInput(updated.start_date || updated.date),
-        end_date: formatForInput(updated.end_date),
+        number_of_days: updated.number_of_days || "",
+        start_dates: updated.start_dates || [],
+        end_dates: updated.end_dates || [],
         venue: updated.venue || "",
         status: updated.status || "active",
         organizing_office_unit: updated.organizing_office_unit,
+        co_organizing_office_unit: updated.co_organizing_office_unit,
         eligibility_criteria: updated.eligibility_criteria,
         target_number_of_participants: updated.target_number_of_participants,
       });
@@ -969,8 +1057,8 @@ export default function EventManageContent() {
     }).join("");
 
     let tablesHtml = "";
-   tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc; page-break-after: always;">${tableHeader}<tbody>${blankRowsFirst}</tbody></table>`;
-tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc;">${tableHeader}<tbody>${blankRowsSecond}</tbody></table>`;
+    tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc; page-break-after: always;">${tableHeader}<tbody>${blankRowsFirst}</tbody></table>`;
+    tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc;">${tableHeader}<tbody>${blankRowsSecond}</tbody></table>`;
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -1145,7 +1233,11 @@ tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top:
           <div>
             <h1 className="text-3xl font-bold">{event.title}</h1>
             <p className="text-sm text-gray-600 mt-1">
-              {formatRange(event.start_date || event.date, event.end_date)}
+              {formatRange(
+                event.start_date || event.date,
+                event.end_date,
+                event,
+              )}
             </p>
           </div>
         </div>
@@ -1325,16 +1417,24 @@ function OverviewTabs({
         </div>
 
         {!isEditing ? (
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 text-sm text-gray-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
             <div>
-              <p className="text-gray-500">Start</p>
+              <p className="text-gray-500">Date Range</p>
               <p className="font-medium">
-                {formatRange(event.start_date || event.date, null)}
+                {formatRange(
+                  event.start_date || event.date,
+                  event.end_date,
+                  event,
+                )}
               </p>
             </div>
             <div>
-              <p className="text-gray-500">End</p>
-              <p className="font-medium">{formatRange(event.end_date, null)}</p>
+              <p className="text-gray-500">Number of Days</p>
+              <p className="font-medium">
+                {(event.start_dates && event.start_dates.length) ||
+                  event.number_of_days ||
+                  1}
+              </p>
             </div>
             <div>
               <p className="text-gray-500">Venue</p>
@@ -1373,19 +1473,43 @@ function OverviewTabs({
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium mb-2">
-                  Project <span className="text-red-500">*</span>
+                  Project / GAD Activity <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={editData?.project}
-                  onChange={(e) => handleEditChange("project", e.target.value)}
+                  value={
+                    editData?.project && editData?.gad_activity
+                      ? `${editData.project}||||${editData.gad_activity}`
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) {
+                      handleEditChange("project", "");
+                      handleEditChange("gad_activity", "");
+                      return;
+                    }
+                    const [project, gad_activity] = val.split("||||");
+                    handleEditChange("project", project);
+                    handleEditChange("gad_activity", gad_activity);
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">No Project</option>
-                  {projects.map((proj) => (
-                    <option key={proj._id} value={proj._id}>
-                      {proj.gad_activity}
-                    </option>
-                  ))}
+                  {projects.flatMap((proj) =>
+                    (Array.isArray(proj.gad_activity)
+                      ? proj.gad_activity
+                      : [proj.gad_activity]
+                    )
+                      .filter(Boolean)
+                      .map((activity, idx) => (
+                        <option
+                          key={proj._id + "-" + idx}
+                          value={proj._id + "||||" + activity}
+                        >
+                          {activity}
+                        </option>
+                      )),
+                  )}
                 </select>
               </div>
               <div className="flex flex-col gap-1">
@@ -1406,25 +1530,76 @@ function OverviewTabs({
                   onChange={(e) => handleEditChange("venue", e.target.value)}
                 />
               </div>
-              <div className="flex flex-col gap-1 mb-2">
-                <label className="text-sm text-gray-600">Start</label>
-                <input
-                  type="datetime-local"
-                  className="border rounded px-3 py-2"
-                  value={editData?.start_date || ""}
-                  onChange={(e) =>
-                    handleEditChange("start_date", e.target.value)
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1 mb-2">
-                <label className="text-sm text-gray-600">End</label>
-                <input
-                  type="datetime-local"
-                  className="border rounded px-3 py-2"
-                  value={editData?.end_date || ""}
-                  onChange={(e) => handleEditChange("end_date", e.target.value)}
-                />
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-2">
+                  Event Days
+                </label>
+                <p className="text-sm text-gray-600 mb-2">
+                  Number of Days: {editData?.start_dates?.length || 1}
+                </p>
+                {editData?.start_dates &&
+                  editData?.end_dates &&
+                  editData.start_dates.map((start, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2 items-center">
+                      <span className="text-xs text-gray-500 mr-2">
+                        Day {idx + 1}
+                      </span>
+                      <input
+                        type="datetime-local"
+                        className="border rounded px-2 py-1"
+                        value={start}
+                        onChange={(e) => {
+                          const newStarts = [...editData.start_dates];
+                          newStarts[idx] = e.target.value;
+                          handleEditChange("start_dates", newStarts);
+                        }}
+                      />
+                      <span className="mx-1">to</span>
+                      <input
+                        type="datetime-local"
+                        className="border rounded px-2 py-1"
+                        value={editData.end_dates[idx]}
+                        onChange={(e) => {
+                          const newEnds = [...editData.end_dates];
+                          newEnds[idx] = e.target.value;
+                          handleEditChange("end_dates", newEnds);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200"
+                        onClick={() => {
+                          const newStarts = editData.start_dates.filter(
+                            (_, i) => i !== idx,
+                          );
+                          const newEnds = editData.end_dates.filter(
+                            (_, i) => i !== idx,
+                          );
+                          handleEditChange("start_dates", newStarts);
+                          handleEditChange("end_dates", newEnds);
+                        }}
+                        disabled={editData.start_dates.length <= 1}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                <button
+                  type="button"
+                  className="mt-2 px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                  onClick={() => {
+                    handleEditChange("start_dates", [
+                      ...(editData.start_dates || []),
+                      "",
+                    ]);
+                    handleEditChange("end_dates", [
+                      ...(editData.end_dates || []),
+                      "",
+                    ]);
+                  }}
+                >
+                  Add Day
+                </button>
               </div>
             </div>
 
@@ -1440,54 +1615,58 @@ function OverviewTabs({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Organizing Office/Unit <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={editData?.organizing_office_unit}
-                onChange={(e) =>
-                  handleEditChange("organizing_office_unit", e.target.value)
-                }
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter organizing office or unit"
-                required
-              >
-                <option value="">Select</option>
-                <option>Graduate School</option>
-                <option>College of Agriculture</option>
-                <option>College of Allied Health Sciences</option>
-                <option>College of Arts & Social Sciences</option>
-                <option>College of Business & Accountancy</option>
-                <option>College of Criminal Justice Education</option>
-                <option>College of Education</option>
-                <option>College of Engineering</option>
-                <option>College of Environmental Studies</option>
-                <option>College of Fisheries & Aquatic Sciences</option>
-                <option>College of Governance</option>
-                <option>College of Industrial Technology</option>
-                <option>College of Information & Computing Sciences</option>
-                <option>
-                  Offices under the Office of the University President
-                </option>
-                <option>
-                  Offices under the Office of the Vice President for Academic
-                  Affairs
-                </option>
-                <option>
-                  Offices under the Office of the Vice President for
-                  Administration and Finance
-                </option>
-                <option>
-                  Offices under the Office of the Vice President for Research
-                  and Extension
-                </option>
-                <option>
-                  Offices under the Office of the Vice President for Student
-                  Affairs and Services
-                </option>
-              </select>
-            </div>
+<CheckboxDropdown
+  label="Organizing Office/Unit"
+  options={[
+    "Graduate School",
+    "College of Agriculture",
+    "College of Allied Health Sciences",
+    "College of Arts & Social Sciences",
+    "College of Business & Accountancy",
+    "College of Criminal Justice Education",
+    "College of Education",
+    "College of Engineering",
+    "College of Environmental Studies",
+    "College of Fisheries & Aquatic Sciences",
+    "College of Governance",
+    "College of Industrial Technology",
+    "College of Information & Computing Sciences",
+    "Offices under the Office of the University President",
+    "Offices under the Office of the Vice President for Academic Affairs",
+    "Offices under the Office of the Vice President for Administration and Finance",
+    "Offices under the Office of the Vice President for Research and Extension",
+    "Offices under the Office of the Vice President for Student Affairs and Services",
+  ]}
+  selected={editData?.organizing_office_unit || []}
+  onChange={(vals) => handleEditChange("organizing_office_unit", vals)}
+  required
+/>
+            <CheckboxDropdown
+  label="Co Organizing Office/Unit"
+  options={[
+    "Graduate School",
+    "College of Agriculture",
+    "College of Allied Health Sciences",
+    "College of Arts & Social Sciences",
+    "College of Business & Accountancy",
+    "College of Criminal Justice Education",
+    "College of Education",
+    "College of Engineering",
+    "College of Environmental Studies",
+    "College of Fisheries & Aquatic Sciences",
+    "College of Governance",
+    "College of Industrial Technology",
+    "College of Information & Computing Sciences",
+    "Offices under the Office of the University President",
+    "Offices under the Office of the Vice President for Academic Affairs",
+    "Offices under the Office of the Vice President for Administration and Finance",
+    "Offices under the Office of the Vice President for Research and Extension",
+    "Offices under the Office of the Vice President for Student Affairs and Services",
+  ]}
+  selected={editData?.co_organizing_office_unit || []}
+  onChange={(vals) => handleEditChange("co_organizing_office_unit", vals)}
+  required
+/>
             <div className="mb-2">
               <label className="block text-sm">Eligibility Criteria</label>
               <select
@@ -1531,11 +1710,13 @@ function OverviewTabs({
                     project: event.project,
                     title: event.title || "",
                     description: event.description || "",
+                    number_of_days: event.number_of_days || "",
                     start_date: formatForInput(event.start_date || event.date),
                     end_date: formatForInput(event.end_date),
                     venue: event.venue || "",
                     status: event.status || "active",
                     organizing_office_unit: event.organizing_office_unit,
+                    co_organizing_office_unit: event.co_organizing_office_unit,
                     eligibility_criteria: event.eligibility_criteria,
                     target_number_of_participants:
                       event.target_number_of_participants,

@@ -52,7 +52,7 @@ function BudgetModal({ open, onClose, onSave, initial }) {
         >
           &times;
         </button>
-        <h2 className="text-xl font-bold mb-4 text-blue-700">
+        <h2 className="text-xl font-bold mb-4">
           {initial ? "Edit" : "Add"} GAA Budget
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -210,11 +210,11 @@ export default function GAABudgetContent() {
   return (
     <div className="p-8">
       <div className="flex justify-between pb-6">
-        <h2 className="text-3xl font-bold mb-4 text-blue-700">
+        <h2 className="text-2xl font-bold ">
           Annual GAA Budgets
         </h2>
         <button
-          className="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition"
+          className="mb-4 bg-black hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition"
           onClick={() => {
             setEditBudget(null);
             setModalOpen(true);

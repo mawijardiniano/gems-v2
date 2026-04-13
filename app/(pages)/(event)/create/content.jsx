@@ -1,7 +1,63 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+function CheckboxDropdown({ label, options, selected, onChange, required }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleOption = (option) => {
+    if (selected.includes(option)) {
+      onChange(selected.filter((v) => v !== option));
+    } else {
+      onChange([...selected, option]);
+    }
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <label className="block text-sm font-medium mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <button
+        type="button"
+        className="w-full border border-gray-300 rounded px-3 py-2 text-left bg-white"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {selected.length === 0 ? "Select..." : selected.join(", ")}
+        <span className="float-right">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-60 overflow-auto">
+          {options.map((option) => (
+            <label
+              key={option}
+              className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(option)}
+                onChange={() => toggleOption(option)}
+                className="mr-2"
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 import { useRouter } from "next/navigation";
 
 const ELIGIBILITY_OPTIONS = [
@@ -17,14 +73,36 @@ const ELIGIBILITY_OPTIONS = [
 export default function CreateEventsContent() {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
+  const OFFICE_OPTIONS = [
+    "Graduate School",
+    "College of Agriculture",
+    "College of Allied Health Sciences",
+    "College of Arts & Social Sciences",
+    "College of Business & Accountancy",
+    "College of Criminal Justice Education",
+    "College of Education",
+    "College of Engineering",
+    "College of Environmental Studies",
+    "College of Fisheries & Aquatic Sciences",
+    "College of Governance",
+    "College of Industrial Technology",
+    "College of Information & Computing Sciences",
+    "Offices under the Office of the University President",
+    "Offices under the Office of the Vice President for Academic Affairs",
+    "Offices under the Office of the Vice President for Administration and Finance",
+    "Offices under the Office of the Vice President for Research and Extension",
+    "Offices under the Office of the Vice President for Student Affairs and Services",
+  ];
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    start_date: "",
-    end_date: "",
+    number_of_days: 1,
+    start_dates: [""],
+    end_dates: [""],
     venue: "",
     type_of_activity: "Academic",
-    organizing_office_unit: "",
+    organizing_office_unit: [],
+    co_organizing_office_unit: [],
     eligibility_criteria: "",
     target_number_of_participants: "",
     project: "",
@@ -65,7 +143,39 @@ export default function CreateEventsContent() {
   }, []);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      if (field === "number_of_days") {
+        // Allow empty string for custom typing
+        if (value === "" || isNaN(Number(value)) || Number(value) < 1) {
+          return {
+            ...prev,
+            number_of_days: value,
+            start_dates: [],
+            end_dates: [],
+          };
+        }
+        const num = Number(value);
+        let start_dates = prev.start_dates.slice(0, num);
+        let end_dates = prev.end_dates.slice(0, num);
+        while (start_dates.length < num) start_dates.push("");
+        while (end_dates.length < num) end_dates.push("");
+        return { ...prev, number_of_days: num, start_dates, end_dates };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const handleOfficeSelect = (field, options) => {
+    const values = Array.from(options).map((o) => o.value);
+    setFormData((prev) => ({ ...prev, [field]: values }));
+  };
+
+  const handleDateChange = (type, idx, value) => {
+    setFormData((prev) => {
+      const arr = [...prev[type]];
+      arr[idx] = value;
+      return { ...prev, [type]: arr };
+    });
   };
 
   const handleEligibilityChange = (e) => {
@@ -84,36 +194,43 @@ export default function CreateEventsContent() {
       return;
     }
 
-    if (!formData.start_date) {
-      setError("Start date/time is required");
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.end_date) {
-      setError("End date/time is required");
-      setLoading(false);
-      return;
-    }
-
-    if (new Date(formData.end_date) < new Date(formData.start_date)) {
-      setError("End date/time must be after start date/time");
-      setLoading(false);
-      return;
+    for (let i = 0; i < formData.number_of_days; i++) {
+      if (!formData.start_dates[i]) {
+        setError(`Start date/time for day ${i + 1} is required`);
+        setLoading(false);
+        return;
+      }
+      if (!formData.end_dates[i]) {
+        setError(`End date/time for day ${i + 1} is required`);
+        setLoading(false);
+        return;
+      }
+      if (new Date(formData.end_dates[i]) < new Date(formData.start_dates[i])) {
+        setError(
+          `End date/time must be after start date/time for day ${i + 1}`,
+        );
+        setLoading(false);
+        return;
+      }
     }
 
     try {
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        start_date: formData.start_date,
-        end_date: formData.end_date,
+        number_of_days: formData.number_of_days,
+        start_dates: formData.start_dates,
+        end_dates: formData.end_dates,
         venue: formData.venue.trim(),
         type_of_activity: formData.type_of_activity,
-        organizing_office_unit: formData.organizing_office_unit.trim(),
+        organizing_office_unit: formData.organizing_office_unit,
+        co_organizing_office_unit: formData.co_organizing_office_unit,
         eligibility_criteria: formData.eligibility_criteria,
         target_number_of_participants: formData.target_number_of_participants,
         ...(formData.project ? { project: formData.project } : {}),
+        ...(formData.gad_activity
+          ? { gad_activity: formData.gad_activity }
+          : {}),
         ...(userId ? { created_by: userId } : {}),
       };
 
@@ -161,7 +278,8 @@ export default function CreateEventsContent() {
               <option value="Academic">Academic</option>
               <option value="Administrative">Administrative</option>
               <option value="GAD">GAD</option>
-              <option value="Extension Research">Extension Research</option>
+              <option value="Extension">Extension</option>
+              <option value="Research">Research</option>
               <option value="Students">Students</option>
               <option value="Others">Others</option>
             </select>
@@ -171,16 +289,42 @@ export default function CreateEventsContent() {
               Project <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.project}
-              onChange={(e) => handleChange("project", e.target.value)}
+              value={
+                formData.project && formData.gad_activity
+                  ? `${formData.project}||||${formData.gad_activity}`
+                  : ""
+              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) {
+                  setFormData((prev) => ({
+                    ...prev,
+                    project: "",
+                    gad_activity: "",
+                  }));
+                  return;
+                }
+                const [project, gad_activity] = val.split("||||");
+                setFormData((prev) => ({ ...prev, project, gad_activity }));
+              }}
               className="w-full border border-gray-300 rounded px-3 py-2"
             >
               <option value="">No Project</option>
-              {projects.map((proj) => (
-                <option key={proj._id} value={proj._id}>
-                  {proj.gad_activity}
-                </option>
-              ))}
+              {projects.flatMap((proj) =>
+                (Array.isArray(proj.gad_activity)
+                  ? proj.gad_activity
+                  : [proj.gad_activity]
+                )
+                  .filter(Boolean)
+                  .map((activity, idx) => (
+                    <option
+                      key={proj._id + "-" + idx}
+                      value={proj._id + "||||" + activity}
+                    >
+                      {activity}
+                    </option>
+                  )),
+              )}
             </select>
           </div>
 
@@ -197,31 +341,60 @@ export default function CreateEventsContent() {
             />
           </div>
 
-          <div>
+          <div className="col-span-2">
             <label className="block text-sm font-medium mb-2">
-              Start Date & Time <span className="text-red-500">*</span>
+              Number of Days <span className="text-red-500">*</span>
             </label>
             <input
-              type="datetime-local"
-              value={formData.start_date}
-              min={nowLocal}
-              onChange={(e) => handleChange("start_date", e.target.value)}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={formData.number_of_days}
+              onChange={(e) => handleChange("number_of_days", e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              End Date & Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              value={formData.end_date}
-              min={formData.start_date || nowLocal}
-              onChange={(e) => handleChange("end_date", e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
+          {Number(formData.number_of_days) > 0 &&
+            Array.from({ length: Number(formData.number_of_days) }).map(
+              (_, idx) => (
+                <div
+                  className="col-span-2 flex flex-col sm:flex-row gap-4 items-end"
+                  key={"day-row-" + idx}
+                >
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-2">
+                      Day {idx + 1} Start Date & Time{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.start_dates[idx] || ""}
+                      min={nowLocal}
+                      onChange={(e) =>
+                        handleDateChange("start_dates", idx, e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-2">
+                      Day {idx + 1} End Date & Time{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.end_dates[idx] || ""}
+                      min={formData.start_dates[idx] || nowLocal}
+                      onChange={(e) =>
+                        handleDateChange("end_dates", idx, e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              ),
+            )}
         </div>
 
         <div>
@@ -245,55 +418,27 @@ export default function CreateEventsContent() {
             placeholder="Where will this be held?"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Organizing Office/Unit <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.organizing_office_unit}
-            onChange={(e) =>
-              handleChange("organizing_office_unit", e.target.value)
-            }
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            placeholder="Enter organizing office or unit"
-            required
-          >
-            <option value="">Select</option>
-            <option>Graduate School</option>
-            <option>College of Agriculture</option>
-            <option>College of Allied Health Sciences</option>
-            <option>College of Arts & Social Sciences</option>
-            <option>College of Business & Accountancy</option>
-            <option>College of Criminal Justice Education</option>
-            <option>College of Education</option>
-            <option>College of Engineering</option>
-            <option>College of Environmental Studies</option>
-            <option>College of Fisheries & Aquatic Sciences</option>
-            <option>College of Governance</option>
-            <option>College of Industrial Technology</option>
-            <option>College of Information & Computing Sciences</option>
-            <option>
-              Offices under the Office of the University President
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Academic
-              Affairs
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Administration
-              and Finance
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Research and
-              Extension
-            </option>
-            <option>
-              Offices under the Office of the Vice President for Student Affairs
-              and Services
-            </option>
-          </select>
-        </div>
-
+        <CheckboxDropdown
+          label="Organizing Office/Unit"
+          options={OFFICE_OPTIONS}
+          selected={formData.organizing_office_unit}
+          onChange={(vals) =>
+            setFormData((prev) => ({ ...prev, organizing_office_unit: vals }))
+          }
+          required
+        />
+        <CheckboxDropdown
+          label="Co Organizing Office/Unit"
+          options={OFFICE_OPTIONS}
+          selected={formData.co_organizing_office_unit}
+          onChange={(vals) =>
+            setFormData((prev) => ({
+              ...prev,
+              co_organizing_office_unit: vals,
+            }))
+          }
+          required
+        />
         <div>
           <label className="block text-sm font-medium mb-2">
             Eligibility Criteria

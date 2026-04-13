@@ -18,7 +18,8 @@ export default function EventsListContent() {
     "Academic",
     "Administrative",
     "GAD",
-    "Extension Research",
+    "Extension",
+    "Research",
     "Students",
     "Others",
   ];
@@ -51,36 +52,66 @@ export default function EventsListContent() {
   const upcomingEvents = useMemo(() => {
     const now = Date.now();
     return (events || [])
-      .filter(
-        (evt) =>
-          new Date(evt.end_date || evt.start_date).getTime() >= now &&
-          (!activityType || evt.type_of_activity === activityType),
-      )
-      .sort(
-        (a, b) =>
-          new Date(a.start_date || a.date).getTime() -
-          new Date(b.start_date || b.date).getTime(),
-      );
+      .filter((evt) => {
+        // Support new schema: arrays of start_dates and end_dates
+        const end =
+          Array.isArray(evt.end_dates) && evt.end_dates.length > 0
+            ? evt.end_dates[evt.end_dates.length - 1]
+            : evt.end_date || evt.start_date;
+        return (
+          new Date(end).getTime() >= now &&
+          (!activityType || evt.type_of_activity === activityType)
+        );
+      })
+      .sort((a, b) => {
+        const aStart =
+          Array.isArray(a.start_dates) && a.start_dates.length > 0
+            ? a.start_dates[0]
+            : a.start_date || a.date;
+        const bStart =
+          Array.isArray(b.start_dates) && b.start_dates.length > 0
+            ? b.start_dates[0]
+            : b.start_date || b.date;
+        return new Date(aStart).getTime() - new Date(bStart).getTime();
+      });
   }, [events, activityType]);
 
   const pastEvents = useMemo(() => {
     const now = Date.now();
     return (events || [])
       .filter((evt) => {
-        const endMs = new Date(evt.end_date || evt.start_date).getTime();
+        const end =
+          Array.isArray(evt.end_dates) && evt.end_dates.length > 0
+            ? evt.end_dates[evt.end_dates.length - 1]
+            : evt.end_date || evt.start_date;
         return (
-          endMs < now &&
+          new Date(end).getTime() < now &&
           (!activityType || evt.type_of_activity === activityType)
         );
       })
-      .sort(
-        (a, b) =>
-          new Date(b.start_date || b.date).getTime() -
-          new Date(a.start_date || a.date).getTime(),
-      );
+      .sort((a, b) => {
+        const aStart =
+          Array.isArray(a.start_dates) && a.start_dates.length > 0
+            ? a.start_dates[0]
+            : a.start_date || a.date;
+        const bStart =
+          Array.isArray(b.start_dates) && b.start_dates.length > 0
+            ? b.start_dates[0]
+            : b.start_date || b.date;
+        return new Date(bStart).getTime() - new Date(aStart).getTime();
+      });
   }, [events, activityType]);
 
-  const formatRange = (start, end) => {
+  // Format a date range for multi-day events
+  const formatRange = (evt) => {
+    let start = evt.start_date || evt.date;
+    let end = evt.end_date;
+    if (Array.isArray(evt.start_dates) && evt.start_dates.length > 0) {
+      start = evt.start_dates[0];
+    }
+    if (Array.isArray(evt.end_dates) && evt.end_dates.length > 0) {
+      end = evt.end_dates[evt.end_dates.length - 1];
+    }
     if (!start) return "No date";
     const startStr = new Date(start).toLocaleString();
     if (!end) return startStr;
@@ -175,7 +206,7 @@ export default function EventsListContent() {
                   </div>
 
                   <p className="text-sm text-gray-600 mb-2">
-                    {formatRange(evt.start_date || evt.date, evt.end_date)}
+                    {formatRange(evt)}
                   </p>
                   {evt.venue && (
                     <p className="text-sm text-gray-700 mb-2">
@@ -217,7 +248,7 @@ export default function EventsListContent() {
                     </button>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">
-                    {formatRange(evt.start_date || evt.date, evt.end_date)}
+                    {formatRange(evt)}
                   </p>
                   {evt.venue && (
                     <p className="text-sm text-gray-700 mb-2">
