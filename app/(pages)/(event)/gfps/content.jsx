@@ -221,13 +221,11 @@ export default function GFPSManager() {
       const match = items.find((item) => {
         const nameId = item.name?._id?.toString();  // populated UserAuth _id
         const nameStr = item.name?.toString();       // raw ObjectId as string
-        const subId = item._id?.toString();          // subdocument _id
+        const subId = item._id?.toString();         
         return nameId === idStr || nameStr === idStr || subId === idStr;
       });
 
       if (match) {
-        // Must exactly match how CheckboxTree builds its keys:
-        // `${section}:${item.name?._id || item._id || item.name}`
         const matchId = match.name?._id || match._id || match.name;
         return `${group}:${matchId}`;
       }
