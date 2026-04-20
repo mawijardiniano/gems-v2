@@ -17,11 +17,20 @@ function CheckboxDropdown({ label, options, selected, onChange, required }) {
   }, []);
 
   const toggleOption = (option) => {
+    let newSelected;
+
     if (selected.includes(option)) {
-      onChange(selected.filter((v) => v !== option));
+      newSelected = selected.filter((v) => v !== option);
     } else {
-      onChange([...selected, option]);
+      if (option === "None") {
+        newSelected = ["None"];
+      } else {
+        newSelected = selected.filter((v) => v !== "None");
+        newSelected.push(option);
+      }
     }
+
+    onChange(newSelected);
   };
 
   return (
@@ -103,7 +112,7 @@ export default function CreateEventsContent() {
     type_of_activity: "Academic",
     organizing_office_unit: [],
     co_organizing_office_unit: [],
-    eligibility_criteria: "",
+    eligibility_criteria: [],
     target_number_of_participants: "",
     project: "",
   });
@@ -145,7 +154,6 @@ export default function CreateEventsContent() {
   const handleChange = (field, value) => {
     setFormData((prev) => {
       if (field === "number_of_days") {
-        // Allow empty string for custom typing
         if (value === "" || isNaN(Number(value)) || Number(value) < 1) {
           return {
             ...prev,
@@ -440,21 +448,17 @@ export default function CreateEventsContent() {
           required
         />
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Eligibility Criteria
-          </label>
-          <select
-            value={formData.eligibility_criteria}
-            onChange={handleEligibilityChange}
-            className="w-full border border-gray-300 rounded px-3 py-2"
-          >
-            <option value="">Select eligibility criteria</option>
-            {ELIGIBILITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <CheckboxDropdown
+            label="Eligibility Criteria"
+            options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
+            selected={formData.eligibility_criteria || []}
+            onChange={(vals) =>
+              setFormData((prev) => ({
+                ...prev,
+                eligibility_criteria: vals,
+              }))
+            }
+          />
         </div>
 
         <div>

@@ -183,7 +183,6 @@ export default function EventManageContent() {
         const evt = res.data?.data || null;
         setEvent(evt);
         if (evt) {
-          // Debug logs for event date fields
           console.log("Loaded event:", evt);
           let startDates =
             Array.isArray(evt.start_dates) && evt.start_dates.length > 0
@@ -1382,6 +1381,8 @@ function OverviewTabs({
   handleDeleteEvent,
   projects,
 }) {
+
+  
   const ELIGIBILITY_OPTIONS = [
     { value: "Scholarship Applicant", label: "Scholarship Applicant" },
     { value: "Solo Parent", label: "Solo Parent" },
@@ -1667,23 +1668,17 @@ function OverviewTabs({
   onChange={(vals) => handleEditChange("co_organizing_office_unit", vals)}
   required
 />
-            <div className="mb-2">
-              <label className="block text-sm">Eligibility Criteria</label>
-              <select
-                value={editData?.eligibility_criteria}
-                onChange={(e) =>
-                  handleEditChange("eligibility_criteria", e.target.value)
-                }
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="">Select eligibility criteria</option>
-                {ELIGIBILITY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+<div className="mb-2">
+  <CheckboxDropdown
+    label="Eligibility Criteria"
+    options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
+    selected={editData?.eligibility_criteria || []}
+    onChange={(vals) =>
+      handleEditChange("eligibility_criteria", vals)
+    }
+    required
+  />
+</div>
             <div className="flex flex-col gap-1 mb-6">
               <label className="text-sm text-gray-600">
                 Target Number of Participants

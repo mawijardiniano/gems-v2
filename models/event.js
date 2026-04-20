@@ -8,22 +8,23 @@ const EventSchema = new Schema(
     start_dates: [{ type: Date, required: true }],
     end_dates: [{ type: Date, required: true }],
     venue: { type: String, default: "" },
-    eligibility_criteria: {
-      type: String,
-      enum: [
-        "Scholarship Applicant",
-        "Solo Parent",
-        "PWDs",
-        "Indigenous Groups",
-        "LGBTQIA+",
-        "Low Income Students",
-        "None",
-      ],
-      required: false,
-    },
+eligibility_criteria: [
+  {
+    type: String,
+    enum: [
+      "Scholarship Applicant",
+      "Solo Parent",
+      "PWDs",
+      "Indigenous Group",
+      "LGBTQIA+",
+      "Low Income Student",
+      "None",
+    ],
+  },
+],
     type_of_activity: {
       type: String,
-      enum: [
+      enum: [   
         "Academic",
         "Administrative",
         "GAD",
