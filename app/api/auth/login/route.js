@@ -16,9 +16,19 @@ export async function POST(req) {
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 401 });
 
+    if (user.is_active === false) {
+      return NextResponse.json(
+        { error: "Account is deactivated. Contact administrator." },
+        { status: 403 },
+      );
+    }
+
     const isValid = await user.matchPassword(password);
     if (!isValid)
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
 
     await logActivity({
       user_id: user._id,
@@ -27,7 +37,9 @@ export async function POST(req) {
       req,
     });
 
-    const token = jwt.sign({ id: user._id, role: user.role, }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
 
@@ -50,6 +62,9 @@ export async function POST(req) {
     return res;
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

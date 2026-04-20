@@ -32,6 +32,8 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
   const [officeSort, setOfficeSort] = useState(null);
   const [employmentSort, setEmploymentSort] = useState(null);
   const [appointmentSort, setAppointmentSort] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [searchName, setSearchName] = useState("");
 
   const sexOption = useMemo(
     () => [
@@ -120,31 +122,46 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     [rawData],
   );
 
-  const filteredData = useMemo(() => {
-    let data = rawData.filter((user) => {
-      const p = user.personal_info_id || {};
-      const gad = p.gadData || {};
-      const personal = p.personal || {};
-      const affiliation = p.affiliation || {};
-      const acad = affiliation.academic_information || {};
-      const emp = affiliation.employment_information || {};
-      const collegeOrOffice = acad.college || emp.office || "";
-      const empStatus = emp.employment_status || "";
-      const empAppointment = emp.employment_appointment_status || "";
+const filteredData = useMemo(() => {
+  let data = rawData.filter((user) => {
+    const p = user.personal_info_id || {};
+    const gad = p.gadData || {};
+    const personal = p.personal || {};
+    const affiliation = p.affiliation || {};
+    const acad = affiliation.academic_information || {};
+    const emp = affiliation.employment_information || {};
+    const collegeOrOffice = acad.college || emp.office || "";
+    const empStatus = emp.employment_status || "";
+    const empAppointment = emp.employment_appointment_status || "";
 
-      if (personal.currentStatus !== "Employee") return false;
+    if (personal.currentStatus !== "Employee") return false;
 
-      return (
-        (!filterSex || gad.sexAtBirth === filterSex) &&
-        (!filterPersonType || personal.currentStatus === filterPersonType) &&
-        (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        (filterCollege.length === 0 ||
-          filterCollege.includes(collegeOrOffice)) &&
-        (!filterEmployment || empStatus === filterEmployment) &&
-        (filterAppointment.length === 0 ||
-          filterAppointment.includes(empAppointment))
-      );
+    return (
+      (!filterSex || gad.sexAtBirth === filterSex) &&
+      (!filterPersonType || personal.currentStatus === filterPersonType) &&
+      (!filterYearLevel || acad.year_level === filterYearLevel) &&
+      (filterCollege.length === 0 ||
+        filterCollege.includes(collegeOrOffice)) &&
+      (!filterEmployment || empStatus === filterEmployment) &&
+      (filterAppointment.length === 0 ||
+        filterAppointment.includes(empAppointment))
+    );
+  });
+
+
+  if (searchName.trim()) {
+    const q = searchName.toLowerCase();
+
+    data = data.filter((user) => {
+      const p = user.personal_info_id?.personal || {};
+      const fullName = `${p.first_name || ""} ${p.last_name || ""}`
+        .toLowerCase()
+        .trim();
+
+      return fullName.includes(q);
     });
+  }
+
     if (nameSort) {
       data = [...data].sort((a, b) => {
         const pa = a.personal_info_id?.personal || {};
@@ -237,6 +254,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     officeSort,
     employmentSort,
     appointmentSort,
+    searchName
   ]);
 
   const [page, setPage] = useState(1);
@@ -295,6 +313,39 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     (showEmployeeCols || showAllCols ? 2 : 0) +
     1;
 
+
+const handleToggleStatus = async (id, isActive) => {
+  try {
+    console.log("Toggle ID:", id);
+
+    const res = await axios.patch(
+      `/api/auth/users/toggle-status/${id}`,
+      {
+        action: isActive ? "deactivate" : "activate",
+      },
+      { withCredentials: true }
+    );
+
+    console.log("Toggle response:", res.data);
+    window.location.reload();
+  } catch (err) {
+    console.error("Toggle error:", err.response?.data || err);
+  }
+};
+
+
+const handleResetPassword = async (id) => {
+  try {
+    await axios.patch(
+      `/api/auth/users/reset-password/${id}`,
+      {},
+      { withCredentials: true }
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   return (
     <div className="p-6">
       <div className="flex justify-end">
@@ -329,6 +380,16 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
           />
           <span className="ml-2">Select All</span>
         </div>
+        <div className="flex flex-row gap-4">
+          <div>
+  <input
+    type="text"
+    placeholder="Search by name..."
+    value={searchName}
+    onChange={(e) => setSearchName(e.target.value)}
+    className="border px-3 py-2 rounded w-full max-w-sm"
+  />
+</div>
         {selected.length > 0 && (
           <button
             className="bg-red-500 px-4 py-1 text-white rounded-md"
@@ -337,6 +398,8 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
             Delete
           </button>
         )}
+        </div>
+
       </div>
 
       <div className="overflow-x-auto">
@@ -538,14 +601,45 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                       });
                     })()}
                   </TableCell>
-                  <TableCell>
-                    <Button
-                      size="xs"
-                      className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
+<TableCell className="flex items-center gap-2">
+
+  <button
+    onClick={() => handleEdit(user._id)}
+    className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+  >
+    Edit
+  </button>
+
+  <button
+    onClick={() =>
+      setConfirmAction({
+        type: "toggle",
+        userId: user._id,
+        isActive: user.is_active,
+      })
+    }
+    className={`px-3 py-1 text-xs rounded-md text-white transition ${
+      user.is_active
+        ? "bg-red-500 hover:bg-red-600"
+        : "bg-green-600 hover:bg-green-700"
+    }`}
+  >
+    {user.is_active ? "Deactivate" : "Activate"}
+  </button>
+
+  <button
+    onClick={() =>
+      setConfirmAction({
+        type: "reset",
+        userId: user._id,
+      })
+    }
+    className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
+  >
+    Reset
+  </button>
+
+</TableCell>
                 </TableRow>
               );
             })}
@@ -632,24 +726,56 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
         </div>
       )}
 
-      {/* {showErrorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Error</h2>
-            <div className="text-center text-red-600 mb-6">
-              Failed to delete selected users.
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                onClick={() => setShowErrorModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
+{confirmAction && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+
+      <h2 className="text-lg font-semibold mb-3">
+        {confirmAction.type === "reset"
+          ? "Reset Password"
+          : "Change User Status"}
+      </h2>
+
+      <p className="text-sm text-gray-600 mb-6">
+        {confirmAction.type === "reset"
+          ? "This will reset password to default."
+          : confirmAction.isActive
+            ? "This will deactivate the user."
+            : "This will activate the user."}
+      </p>
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setConfirmAction(null)}
+          className="px-4 py-2 text-sm rounded bg-gray-300 hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={async () => {
+            try {
+              if (confirmAction.type === "reset") {
+                await handleResetPassword(confirmAction.userId);
+              } else {
+                await handleToggleStatus(
+                  confirmAction.userId,
+                  confirmAction.isActive
+                );
+              }
+            } finally {
+              setConfirmAction(null);
+            }
+          }}
+          className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Confirm
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
     </div>
   );
 }

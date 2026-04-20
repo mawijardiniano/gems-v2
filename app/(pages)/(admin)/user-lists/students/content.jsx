@@ -32,6 +32,8 @@ export default function StudentsUserListContent() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeInput, setPageSizeInput] = useState("10");
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [searchName, setSearchName] = useState("");
 
   const studentsData = useMemo(
     () =>
@@ -80,16 +82,26 @@ export default function StudentsUserListContent() {
   );
 
   const filteredData = useMemo(() => {
-    let data = studentsData.filter((user) => {
-      const p = user.personal_info_id || {};
-      const gad = p.gadData || {};
-      const acad = p.affiliation?.academic_information || {};
-      return (
-        (!filterSex || gad.sexAtBirth === filterSex) &&
-        (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        (filterCollege.length === 0 || filterCollege.includes(acad.college))
-      );
-    });
+let data = studentsData.filter((user) => {
+  const p = user.personal_info_id || {};
+  const gad = p.gadData || {};
+  const acad = p.affiliation?.academic_information || {};
+  const personal = p.personal || {};
+
+  const fullName = `${personal.first_name || ""} ${personal.last_name || ""}`
+    .trim()
+    .toLowerCase();
+
+  const matchesSearch =
+    !searchName || fullName.includes(searchName.toLowerCase());
+
+  return (
+    matchesSearch &&
+    (!filterSex || gad.sexAtBirth === filterSex) &&
+    (!filterYearLevel || acad.year_level === filterYearLevel) &&
+    (filterCollege.length === 0 || filterCollege.includes(acad.college))
+  );
+});
     if (nameSort) {
       data = [...data].sort((a, b) => {
         const pa = a.personal_info_id?.personal || {};
@@ -187,9 +199,9 @@ export default function StudentsUserListContent() {
     campusSort,
     courseSort,
     yearSort,
+    searchName
   ]);
 
-  // Pagination
   const totalRows = filteredData.length;
   const totalPages = Math.ceil(totalRows / pageSize) || 1;
   const paginatedData = useMemo(() => {
@@ -231,6 +243,37 @@ export default function StudentsUserListContent() {
     }
   };
 
+  const handleToggleStatus = async (id, isActive) => {
+    try {
+      console.log("Toggle ID:", id);
+
+      const res = await axios.patch(
+        `/api/auth/users/toggle-status/${id}`,
+        {
+          action: isActive ? "deactivate" : "activate",
+        },
+        { withCredentials: true },
+      );
+
+      console.log("Toggle response:", res.data);
+      window.location.reload();
+    } catch (err) {
+      console.error("Toggle error:", err.response?.data || err);
+    }
+  };
+
+  const handleResetPassword = async (id) => {
+    try {
+      await axios.patch(
+        `/api/auth/users/reset-password/${id}`,
+        {},
+        { withCredentials: true },
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-end">
@@ -258,6 +301,16 @@ export default function StudentsUserListContent() {
           />
           <span className="ml-2">Select All</span>
         </div>
+        <div className="flex felex-row gap-4">
+                 <div>
+  <input
+    type="text"
+    placeholder="Search by name..."
+    value={searchName}
+    onChange={(e) => setSearchName(e.target.value)}
+    className="border px-3 py-2 rounded w-full max-w-sm"
+  />
+</div>
         {selected.length > 0 && (
           <button
             className="bg-red-500 px-4 py-1 text-white rounded-md"
@@ -266,6 +319,8 @@ export default function StudentsUserListContent() {
             Delete
           </button>
         )}
+
+        </div>
       </div>
       <div className="overflow-x-auto">
         <Table className="bg-white" striped={false} color="none">
@@ -496,13 +551,42 @@ export default function StudentsUserListContent() {
                           })
                         : "—"}
                   </TableCell>
-                  <TableCell>
-                    <Button
-                      size="xs"
-                      className="bg-blue-600 text-white hover:bg-blue-700"
+                  <TableCell className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEdit(user._id)}
+                      className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
                     >
                       Edit
-                    </Button>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setConfirmAction({
+                          type: "toggle",
+                          userId: user._id,
+                          isActive: user.is_active,
+                        })
+                      }
+                      className={`px-3 py-1 text-xs rounded-md text-white transition ${
+                        user.is_active
+                          ? "bg-red-500 hover:bg-red-600"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      {user.is_active ? "Deactivate" : "Activate"}
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setConfirmAction({
+                          type: "reset",
+                          userId: user._id,
+                        })
+                      }
+                      className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
+                    >
+                      Reset
+                    </button>
                   </TableCell>
                 </TableRow>
               );
@@ -582,6 +666,55 @@ export default function StudentsUserListContent() {
                 onClick={() => setShowConfirmModal(false)}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-3">
+              {confirmAction.type === "reset"
+                ? "Reset Password"
+                : "Change User Status"}
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-6">
+              {confirmAction.type === "reset"
+                ? "This will reset password to default."
+                : confirmAction.isActive
+                  ? "This will deactivate the user."
+                  : "This will activate the user."}
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-4 py-2 text-sm rounded bg-gray-300 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    if (confirmAction.type === "reset") {
+                      await handleResetPassword(confirmAction.userId);
+                    } else {
+                      await handleToggleStatus(
+                        confirmAction.userId,
+                        confirmAction.isActive,
+                      );
+                    }
+                  } finally {
+                    setConfirmAction(null);
+                  }
+                }}
+                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Confirm
               </button>
             </div>
           </div>

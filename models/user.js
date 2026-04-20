@@ -24,7 +24,6 @@
 
 // export default mongoose.models.User || mongoose.model("User", UserSchema);
 
-
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -46,12 +45,22 @@ const userAuthSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["User", "Admin", "GAD Focal Person", "SUC President", "GAD Coordinator", "ICTU Director" ],
+      enum: [
+        "User",
+        "Admin",
+        "GAD Focal Person",
+        "SUC President",
+        "GAD Coordinator",
+        "ICTU Director",
+      ],
       default: "User",
     },
-
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userAuthSchema.pre("save", async function (next) {

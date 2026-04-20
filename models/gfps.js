@@ -37,7 +37,7 @@ const ExecutiveMemberSchema = new mongoose.Schema({
 });
 
 const ExecutiveCommitteeSchema = new mongoose.Schema({
-  members: [ExecutiveMemberSchema], // Only executive committee members require role
+  members: [ExecutiveMemberSchema],
 });
 
 const TechnicalWorkingGroupSchema = new mongoose.Schema({

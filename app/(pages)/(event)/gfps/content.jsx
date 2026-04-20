@@ -41,7 +41,7 @@ function CheckboxTree({ officials, selected, onChange }) {
   const handleSectionCheck = (section, checked) => {
     const items = Array.isArray(officials[section]) ? officials[section] : [];
     const allKeys = items.map(
-      (item) => `${section}:${item.name?._id || item._id || item.name}`
+      (item) => `${section}:${item.name?._id || item._id || item.name}`,
     );
     if (checked) {
       onChange((prev) => [...new Set([...prev, ...allKeys])]);
@@ -83,8 +83,8 @@ function CheckboxTree({ officials, selected, onChange }) {
                   items.length > 0 &&
                   items.every((item) =>
                     selectedSet.has(
-                      `${section}:${item.name?._id || item._id || item.name}`
-                    )
+                      `${section}:${item.name?._id || item._id || item.name}`,
+                    ),
                   )
                 }
                 onChange={(e) => handleSectionCheck(section, e.target.checked)}
@@ -219,9 +219,9 @@ export default function GFPSManager() {
       if (!items || items.length === 0) continue;
 
       const match = items.find((item) => {
-        const nameId = item.name?._id?.toString();  // populated UserAuth _id
-        const nameStr = item.name?.toString();       // raw ObjectId as string
-        const subId = item._id?.toString();         
+        const nameId = item.name?._id?.toString(); // populated UserAuth _id
+        const nameStr = item.name?.toString(); // raw ObjectId as string
+        const subId = item._id?.toString();
         return nameId === idStr || nameStr === idStr || subId === idStr;
       });
 
@@ -248,7 +248,6 @@ export default function GFPSManager() {
       const key = findOfficialKey(officialId);
       setSelectedOfficials(key ? [key] : []);
       setExecRoles({});
-
     } else if (
       sectionKey === "executiveCommittee" ||
       sectionKey === "technicalWorkingGroup"
@@ -269,7 +268,6 @@ export default function GFPSManager() {
       } else {
         setExecRoles({});
       }
-
     } else if (sectionKey === "secretariat") {
       const members = Array.isArray(gfps[sectionKey]) ? gfps[sectionKey] : [];
       const keys = members
@@ -360,22 +358,181 @@ export default function GFPSManager() {
     </button>
   );
 
+ const handlePrintGFPS = () => {
+  const html = `
+    <html>
+      <head>
+        <title>GFPS Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+
+          h2 {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+          }
+
+          th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+          }
+
+          th {
+            background: #f2f2f2;
+            text-align: center;
+          }
+
+          .section {
+            font-weight: bold;
+            background: #fafafa;
+          }
+
+          .members {
+            white-space: pre-wrap;
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="header">
+          <h2>Gender and Development Focal Point System (GFPS)</h2>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>Officials</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${Object.entries(SECTIONS)
+              .map(([_, sec]) => {
+                let members = [];
+
+                if (
+                  sec.key === "executiveCommittee" ||
+                  sec.key === "technicalWorkingGroup"
+                ) {
+                  members = gfps[sec.key]?.members || [];
+                } else if (sec.key === "secretariat") {
+                  members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
+                } else if (sec.key === "chairOrHeadOfAgency") {
+                  const chair = gfps[sec.key];
+                  if (!chair) return "";
+
+                  const o = chair.official || {};
+                  const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
+                  const position = o.position || "";
+
+                  return `
+                    <tr>
+                      <td class="section">${sec.label}</td>
+                      <td>
+                        <strong>${position}</strong><br/>
+                        ${name}
+                      </td>
+                    </tr>
+                  `;
+                }
+
+                if (!members.length) return "";
+
+                const formatted = members
+                  .map((m) => {
+                    const o = m.official || {};
+                    const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
+                    const position = o.position || "";
+                    const extra =
+                      o.branch || o.college
+                        ? ` - ${o.branch || o.college}`
+                        : "";
+
+                    return `${position}${extra} (${name})`;
+                  })
+                  .join("<br/>");
+
+                return `
+                  <tr>
+                    <td class="section">${sec.label}</td>
+                    <td class="members">${formatted}</td>
+                  </tr>
+                `;
+              })
+              .join("")}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const iframe = document.createElement("iframe");
+
+  Object.assign(iframe.style, {
+    position: "fixed",
+    right: "0",
+    bottom: "0",
+    width: "0",
+    height: "0",
+    border: "0",
+  });
+
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) return;
+
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  iframe.onload = () => {
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  };
+};
+
   return (
     <div className="p-6">
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold items-center justify-center">GFPS</h1>
-        <button
-          onClick={() => {
-            setEditingSection(null);
-            setSelectedOfficials([]);
-            setExecRoles({});
-            setSection(SECTION_CHOICES[0].key);
-            setShowModal(true);
-          }}
-          className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          Add Member
-        </button>
+        <div className="flex gap-4">
+          <button
+            className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={handlePrintGFPS}
+          >
+            Print GFPS
+          </button>
+          <button
+            onClick={() => {
+              setEditingSection(null);
+              setSelectedOfficials([]);
+              setExecRoles({});
+              setSection(SECTION_CHOICES[0].key);
+              setShowModal(true);
+            }}
+            className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Add Member
+          </button>
+        </div>
       </div>
 
       {showModal && (
@@ -427,7 +584,9 @@ export default function GFPSManager() {
                       const [group, id] = key.split(":");
                       const item = Array.isArray(officials[group])
                         ? officials[group].find(
-                            (o) => (o.name?._id || o._id || o.name)?.toString() === id
+                            (o) =>
+                              (o.name?._id || o._id || o.name)?.toString() ===
+                              id,
                           )
                         : undefined;
                       const label =
@@ -552,8 +711,8 @@ export default function GFPSManager() {
                                   return (
                                     <span key={o._id || i}>
                                       <strong>{o.position}</strong>
-                                      {extra && <strong> — {extra}</strong>}{" "}
-                                      ({o.first_name} {o.last_name})
+                                      {extra && <strong> — {extra}</strong>} (
+                                      {o.first_name} {o.last_name})
                                       {i < chairs.length - 1 && ", "}
                                     </span>
                                   );
@@ -569,8 +728,8 @@ export default function GFPSManager() {
                                   return (
                                     <span key={o._id || i}>
                                       <strong>{o.position}</strong>
-                                      {extra && <strong> - {extra}</strong>}{" "}
-                                      ({o.first_name} {o.last_name})
+                                      {extra && <strong> - {extra}</strong>} (
+                                      {o.first_name} {o.last_name})
                                       {i < membersOnly.length - 1 && ", "}
                                     </span>
                                   );

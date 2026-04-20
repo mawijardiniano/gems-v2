@@ -67,13 +67,40 @@ async function normalizeOfficialId(id) {
       if (item._id?.toString() === idStr) return item.name?.toString();
     }
   }
-  // Log if no match found
+
   console.log(
     "[normalizeOfficialId] No match found for id:",
     idStr,
     "| Returning as is.",
   );
   return id;
+}
+
+function removeSensitiveUserFields(userAuth) {
+  if (!userAuth) return userAuth;
+
+  const obj =
+    typeof userAuth.toObject === "function"
+      ? userAuth.toObject()
+      : { ...userAuth };
+
+  delete obj.username;
+  delete obj.password;
+  delete obj.role;
+  delete obj.createdAt;
+  delete obj.updatedAt;
+
+  if (obj.personal_info_id) {
+    if (typeof obj.personal_info_id === "object") {
+      const p = obj.personal_info_id;
+
+      if (p.personal) {
+        delete p.personal;
+      }
+    }
+  }
+
+  return obj;
 }
 
 async function normalizeSectionOfficials(section) {
@@ -155,7 +182,7 @@ export async function GET(req) {
   function findOfficialById(id) {
     if (!id || !universityOfficials) return null;
     const idStr = id.toString();
-    // Debug log for president matching in GET
+
     if (universityOfficials.president) {
       let presidentId = universityOfficials.president.name;
       if (presidentId && typeof presidentId === "object" && presidentId._id) {
@@ -233,10 +260,20 @@ export async function GET(req) {
         last_name = personal_info_id.last_name || "";
       }
     }
+    // return {
+    //   ...member,
+    //   official: {
+    //     ...details,
+    //     personal_info_id: personal_info_id?._id || personal_info_id,
+    //     first_name,
+    //     last_name,
+    //   },
+    // };
     return {
       ...member,
       official: {
         ...details,
+        name: removeSensitiveUserFields(details.name),
         personal_info_id: personal_info_id?._id || personal_info_id,
         first_name,
         last_name,

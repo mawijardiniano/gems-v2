@@ -83,11 +83,21 @@ export default function LoginForm() {
     } catch (err) {
       console.error("Login error:", err);
 
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError("Invalid username or password.");
-      }
+      const status = err.response?.status;
+  const message = err.response?.data?.error;
+
+  if (status === 403) {
+    setError(message || "Account is deactivated.");
+    return;
+  }
+
+
+  if (status === 401) {
+    setError(message || "Invalid username or password.");
+    return;
+  }
+
+  setError("Something went wrong. Please try again.");
     }
   };
 

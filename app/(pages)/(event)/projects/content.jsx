@@ -155,6 +155,7 @@ export default function ProjectContent() {
   const [annualBudget, setAnnualBudget] = useState(null);
   const [totalGAA, setTotalGAA] = useState(null);
   const [remainingBudget, setRemainingBudget] = useState(null);
+  const [usedBudget, setUsedBudget] = useState(0);
   const [budgetYear, setBudgetYear] = useState(() => new Date().getFullYear());
   const router = useRouter();
 
@@ -202,18 +203,18 @@ export default function ProjectContent() {
     if (page > totalPages) setPage(totalPages);
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
-  useEffect(() => {
-    if (projects.length > 0) {
-      const yearCounts = projects.reduce((acc, p) => {
-        const y = Number(p.year) || new Date().getFullYear();
-        acc[y] = (acc[y] || 0) + 1;
-        return acc;
-      }, {});
-      setBudgetYear(
-        Number(Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0][0]),
-      );
-    }
-  }, [projects]);
+  // useEffect(() => {
+  //   if (projects.length > 0) {
+  //     const yearCounts = projects.reduce((acc, p) => {
+  //       const y = Number(p.year) || new Date().getFullYear();
+  //       acc[y] = (acc[y] || 0) + 1;
+  //       return acc;
+  //     }, {});
+  //     setBudgetYear(
+  //       Number(Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0][0]),
+  //     );
+  //   }
+  // }, [projects]);
   useEffect(() => {
     if (!budgetYear) return;
     fetch(`/api/gaa-budget?year=${budgetYear}`)
@@ -232,9 +233,12 @@ export default function ProjectContent() {
       const used = projects
         .filter((p) => Number(p.year) === Number(budgetYear))
         .reduce((sum, p) => sum + (Number(p.gad_budget) || 0), 0);
+
+      setUsedBudget(used);
       setRemainingBudget(annualBudget - used);
     } else {
       setRemainingBudget(null);
+      setUsedBudget(0);
     }
   }, [annualBudget, projects, budgetYear]);
 
@@ -375,7 +379,6 @@ export default function ProjectContent() {
     } catch {}
   };
 
-  // ── print ─────────────────────────────────────────────────────────────────
   const handlePrintProjects = () => {
     const year = budgetYear;
     let totalGAAFormatted = "";
@@ -538,8 +541,30 @@ export default function ProjectContent() {
         Print Projects
       </button>
 
+      {annualBudget !== null && (
+        <div className="mb-2 text-md font-bold">
+          Total GAD Budget for {budgetYear}: ₱{" "}
+          <span className="text-red-600">
+            {annualBudget.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+      )}
+
+      {usedBudget !== null && (
+        <div className="mb-2 text-md font-bold">
+          Total GAD Allocation Used for {budgetYear}: ₱{" "}
+          <span className="text-red-600">
+            {usedBudget.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+      )}
+
       {remainingBudget !== null && (
-        <div className="mb-4 text-lg font-bold">
+        <div className="mb-4 text-md font-bold">
           Remaining GAD Budget for {budgetYear}: ₱{" "}
           <span className="text-red-600">
             {remainingBudget.toLocaleString(undefined, {
@@ -903,7 +928,6 @@ export default function ProjectContent() {
                     perfArr.length,
                   );
 
-                  // In edit mode, use editRow arrays for computing maxRows
                   const editCauseArr =
                     editingId === project._id &&
                     Array.isArray(editRow?.cause_gender_issue)
