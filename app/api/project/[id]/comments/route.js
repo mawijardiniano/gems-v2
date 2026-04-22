@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
-import Project from "@/models/Project";
-import UserAuth from "@/models/UserAuth";
+import Project from "@/models/projects";
+import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
