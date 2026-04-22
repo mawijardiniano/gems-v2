@@ -80,6 +80,7 @@ export async function POST(req) {
       target_number_of_participants,
       project,
       gad_activity,
+      event_poster 
     } = body;
 
     if (
@@ -150,6 +151,10 @@ export async function POST(req) {
       registered_users: [],
       ...(project ? { project } : {}),
       gad_activity,
+      event_poster: event_poster || {
+  url: "",
+  key: "",
+}
     });
 
     if (project) {

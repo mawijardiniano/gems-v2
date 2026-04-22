@@ -7,6 +7,7 @@ const ROLES = [
   "SUC President",
   "GAD Coordinator",
   "ICTU Director",
+  "Planning Director"
 ];
 
 export default function ManageRoleContent() {

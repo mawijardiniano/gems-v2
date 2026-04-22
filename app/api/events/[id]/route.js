@@ -83,7 +83,6 @@ export async function PUT(req, { params }) {
     );
   }
 
-  // Track old and new project IDs
   const oldProjectId = event.project ? event.project.toString() : null;
   const newProjectId = body.project;
 

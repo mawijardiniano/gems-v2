@@ -58,7 +58,10 @@ function CheckboxDropdown({ label, options, selected, onChange, required }) {
       {open && (
         <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-60 overflow-auto">
           {options.map((option) => (
-            <label key={option} className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer">
+            <label
+              key={option}
+              className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={selected.includes(option)}
@@ -214,6 +217,7 @@ export default function EventManageContent() {
             co_organizing_office_unit: evt.co_organizing_office_unit,
             eligibility_criteria: evt.eligibility_criteria,
             target_number_of_participants: evt.target_number_of_participants,
+            event_poster: evt.event_poster || "",
           });
         }
       } catch (err) {
@@ -595,7 +599,6 @@ export default function EventManageContent() {
         label.toLowerCase().startsWith(y.toLowerCase()),
       );
       if (idx !== -1) return idx;
-      // Try to extract a number for fallback
       const num = parseInt(label);
       return Number.isNaN(num) ? 99 : num + 10;
     };
@@ -638,34 +641,37 @@ export default function EventManageContent() {
 
   const handleSave = async () => {
     if (!event?._id || !userId || !editData) return;
+
     setSaving(true);
     setError("");
+
     try {
+      const oldPoster = event.event_poster;
+      const newPoster = editData.event_poster;
+
       const payload = {
         ...editData,
         start_dates: editData.start_dates.map((d) => new Date(d).toISOString()),
         end_dates: editData.end_dates.map((d) => new Date(d).toISOString()),
         updated_by: userId,
       };
-      console.log("Saving event payload:", payload);
+
       const res = await axios.put(`/api/events/${event._id}`, payload);
       const updated = res.data?.data || event;
-      setEvent(updated);
+      if (oldPoster?.key && newPoster?.key && oldPoster.key !== newPoster.key) {
+        await axios.delete("/api/upload", {
+          data: { key: oldPoster.key },
+        });
+      }
+
+      setEvent({
+        ...updated,
+        event_poster: updated.event_poster ?? editData.event_poster,
+      });
+
       setEditData({
-        type_of_activity: updated.type_of_activity,
-        project: updated.project,
-        gad_activity: updated.gad_activity,
-        title: updated.title || "",
-        description: updated.description || "",
-        number_of_days: updated.number_of_days || "",
-        start_dates: updated.start_dates || [],
-        end_dates: updated.end_dates || [],
-        venue: updated.venue || "",
-        status: updated.status || "active",
-        organizing_office_unit: updated.organizing_office_unit,
-        co_organizing_office_unit: updated.co_organizing_office_unit,
-        eligibility_criteria: updated.eligibility_criteria,
-        target_number_of_participants: updated.target_number_of_participants,
+        ...updated,
+        event_poster: updated.event_poster || editData.event_poster || "",
       });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save changes.");
@@ -673,7 +679,6 @@ export default function EventManageContent() {
       setSaving(false);
     }
   };
-
   const handlePrintGuests = (guests) => {
     if (typeof window === "undefined") return;
 
@@ -1302,6 +1307,7 @@ export default function EventManageContent() {
           deleting={deleting}
           handleDeleteEvent={handleDeleteEvent}
           projects={projects}
+          formatForInput={formatForInput}
         />
       )}
 
@@ -1380,9 +1386,8 @@ function OverviewTabs({
   deleting,
   handleDeleteEvent,
   projects,
+  formatForInput,
 }) {
-
-  
   const ELIGIBILITY_OPTIONS = [
     { value: "Scholarship Applicant", label: "Scholarship Applicant" },
     { value: "Solo Parent", label: "Solo Parent" },
@@ -1392,6 +1397,33 @@ function OverviewTabs({
     { value: "Low Income Student", label: "Low-income Student" },
     { value: "None", label: "None" },
   ];
+  const [posterUploading, setPosterUploading] = useState(false);
+  const [posterError, setPosterError] = useState("");
+
+  const handlePosterUpload = async (file) => {
+    if (!file) return;
+    setPosterUploading(true);
+    setPosterError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+       formData.append("folder", "events/posters"); 
+
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      handleEditChange("event_poster", {
+        url: res.data.url,
+        key: res.data.key,
+      });
+    } catch (err) {
+      setPosterError("Failed to upload image. Please try again.");
+    } finally {
+      setPosterUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {isPast && (
@@ -1409,16 +1441,40 @@ function OverviewTabs({
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Event Details</h2>
           <button
-            onClick={() => setIsEditing((prev) => !prev)}
+            onClick={async () => {
+              if (
+                isEditing &&
+                editData?.event_poster?.key &&
+                editData.event_poster?.key !== event.event_poster?.key
+              ) {
+                try {
+                  await axios.delete("/api/upload", {
+                    data: { key: editData.event_poster.key },
+                  });
+                } catch (err) {
+                  console.error("Failed to delete orphan poster:", err);
+                }
+              }
+              setIsEditing((prev) => !prev);
+            }}
             className="inline-flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100"
           >
             <FiEdit2 aria-hidden="true" />
-            {isEditing ? "" : ""}
           </button>
         </div>
 
         {!isEditing ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
+            {/* {event.event_poster && (
+  <div className="col-span-2">
+    <p className="text-gray-500 text-sm">Event Poster</p>
+    <img
+      src={event.event_poster}
+      alt="Event poster"
+      className="mt-1 w-48 h-48 object-cover rounded border"
+    />
+  </div>
+)} */}
             <div>
               <p className="text-gray-500">Date Range</p>
               <p className="font-medium">
@@ -1451,6 +1507,42 @@ function OverviewTabs({
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1 mb-2">
+                <label className="text-sm text-gray-600">Event Poster</label>
+                {editData?.event_poster && (
+                  <div className="mb-2">
+                    <img
+                      src={editData.event_poster.url}
+                      alt="Event poster"
+                      className="w-40 h-40 object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-red-500 hover:underline"
+                      onClick={() => handleEditChange("event_poster", "")}
+                    >
+                      Remove poster
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="border rounded px-3 py-2 text-sm"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handlePosterUpload(file);
+                  }}
+                />
+
+                {posterUploading && (
+                  <p className="text-sm text-blue-500">Uploading...</p>
+                )}
+                {posterError && (
+                  <p className="text-sm text-red-500">{posterError}</p>
+                )}
+              </div>
               <div className="col-span-2">
                 <label className="block text-sm font-medium mb-2">
                   Type of Activity <span className="text-red-500">*</span>
@@ -1616,69 +1708,73 @@ function OverviewTabs({
               />
             </div>
 
-<CheckboxDropdown
-  label="Organizing Office/Unit"
-  options={[
-    "Graduate School",
-    "College of Agriculture",
-    "College of Allied Health Sciences",
-    "College of Arts & Social Sciences",
-    "College of Business & Accountancy",
-    "College of Criminal Justice Education",
-    "College of Education",
-    "College of Engineering",
-    "College of Environmental Studies",
-    "College of Fisheries & Aquatic Sciences",
-    "College of Governance",
-    "College of Industrial Technology",
-    "College of Information & Computing Sciences",
-    "Offices under the Office of the University President",
-    "Offices under the Office of the Vice President for Academic Affairs",
-    "Offices under the Office of the Vice President for Administration and Finance",
-    "Offices under the Office of the Vice President for Research and Extension",
-    "Offices under the Office of the Vice President for Student Affairs and Services",
-  ]}
-  selected={editData?.organizing_office_unit || []}
-  onChange={(vals) => handleEditChange("organizing_office_unit", vals)}
-  required
-/>
             <CheckboxDropdown
-  label="Co Organizing Office/Unit"
-  options={[
-    "Graduate School",
-    "College of Agriculture",
-    "College of Allied Health Sciences",
-    "College of Arts & Social Sciences",
-    "College of Business & Accountancy",
-    "College of Criminal Justice Education",
-    "College of Education",
-    "College of Engineering",
-    "College of Environmental Studies",
-    "College of Fisheries & Aquatic Sciences",
-    "College of Governance",
-    "College of Industrial Technology",
-    "College of Information & Computing Sciences",
-    "Offices under the Office of the University President",
-    "Offices under the Office of the Vice President for Academic Affairs",
-    "Offices under the Office of the Vice President for Administration and Finance",
-    "Offices under the Office of the Vice President for Research and Extension",
-    "Offices under the Office of the Vice President for Student Affairs and Services",
-  ]}
-  selected={editData?.co_organizing_office_unit || []}
-  onChange={(vals) => handleEditChange("co_organizing_office_unit", vals)}
-  required
-/>
-<div className="mb-2">
-  <CheckboxDropdown
-    label="Eligibility Criteria"
-    options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
-    selected={editData?.eligibility_criteria || []}
-    onChange={(vals) =>
-      handleEditChange("eligibility_criteria", vals)
-    }
-    required
-  />
-</div>
+              label="Organizing Office/Unit"
+              options={[
+                "Graduate School",
+                "College of Agriculture",
+                "College of Allied Health Sciences",
+                "College of Arts & Social Sciences",
+                "College of Business & Accountancy",
+                "College of Criminal Justice Education",
+                "College of Education",
+                "College of Engineering",
+                "College of Environmental Studies",
+                "College of Fisheries & Aquatic Sciences",
+                "College of Governance",
+                "College of Industrial Technology",
+                "College of Information & Computing Sciences",
+                "Offices under the Office of the University President",
+                "Offices under the Office of the Vice President for Academic Affairs",
+                "Offices under the Office of the Vice President for Administration and Finance",
+                "Offices under the Office of the Vice President for Research and Extension",
+                "Offices under the Office of the Vice President for Student Affairs and Services",
+              ]}
+              selected={editData?.organizing_office_unit || []}
+              onChange={(vals) =>
+                handleEditChange("organizing_office_unit", vals)
+              }
+              required
+            />
+            <CheckboxDropdown
+              label="Co Organizing Office/Unit"
+              options={[
+                "Graduate School",
+                "College of Agriculture",
+                "College of Allied Health Sciences",
+                "College of Arts & Social Sciences",
+                "College of Business & Accountancy",
+                "College of Criminal Justice Education",
+                "College of Education",
+                "College of Engineering",
+                "College of Environmental Studies",
+                "College of Fisheries & Aquatic Sciences",
+                "College of Governance",
+                "College of Industrial Technology",
+                "College of Information & Computing Sciences",
+                "Offices under the Office of the University President",
+                "Offices under the Office of the Vice President for Academic Affairs",
+                "Offices under the Office of the Vice President for Administration and Finance",
+                "Offices under the Office of the Vice President for Research and Extension",
+                "Offices under the Office of the Vice President for Student Affairs and Services",
+              ]}
+              selected={editData?.co_organizing_office_unit || []}
+              onChange={(vals) =>
+                handleEditChange("co_organizing_office_unit", vals)
+              }
+              required
+            />
+            <div className="mb-2">
+              <CheckboxDropdown
+                label="Eligibility Criteria"
+                options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
+                selected={editData?.eligibility_criteria || []}
+                onChange={(vals) =>
+                  handleEditChange("eligibility_criteria", vals)
+                }
+                required
+              />
+            </div>
             <div className="flex flex-col gap-1 mb-6">
               <label className="text-sm text-gray-600">
                 Target Number of Participants
@@ -1698,16 +1794,33 @@ function OverviewTabs({
 
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => {
+                onClick={async () => {
+                  if (
+                    editData?.event_poster?.key &&
+                    editData.event_poster?.key !== event.event_poster?.key
+                  ) {
+                    try {
+                      await axios.delete("/api/upload", {
+                        data: { key: editData.event_poster.key },
+                      });
+                    } catch (err) {
+                      console.error("Failed to delete orphan poster:", err);
+                    }
+                  }
                   setIsEditing(false);
                   setEditData({
                     type_of_activity: event.type_of_activity,
                     project: event.project,
+                    gad_activity: event.gad_activity,
                     title: event.title || "",
                     description: event.description || "",
                     number_of_days: event.number_of_days || "",
-                    start_date: formatForInput(event.start_date || event.date),
-                    end_date: formatForInput(event.end_date),
+                    start_dates: Array.isArray(event.start_dates)
+                      ? event.start_dates.map(formatForInput)
+                      : [],
+                    end_dates: Array.isArray(event.end_dates)
+                      ? event.end_dates.map(formatForInput)
+                      : [],
                     venue: event.venue || "",
                     status: event.status || "active",
                     organizing_office_unit: event.organizing_office_unit,
@@ -1715,6 +1828,7 @@ function OverviewTabs({
                     eligibility_criteria: event.eligibility_criteria,
                     target_number_of_participants:
                       event.target_number_of_participants,
+                    event_poster: event.event_poster || null,
                   });
                 }}
                 className="px-4 py-2 border rounded hover:bg-gray-100"

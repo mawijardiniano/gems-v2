@@ -58,6 +58,12 @@ export default function LoginForm() {
         return;
       }
 
+      if (role === "planning director") {
+        console.log("Focal detected, redirecting to /projects");
+        router.push("/projects");
+        return;
+      }
+
       const profileRes = await axios.get("/api/profile/my-profile", {
         withCredentials: true,
       });
@@ -84,20 +90,19 @@ export default function LoginForm() {
       console.error("Login error:", err);
 
       const status = err.response?.status;
-  const message = err.response?.data?.error;
+      const message = err.response?.data?.error;
 
-  if (status === 403) {
-    setError(message || "Account is deactivated.");
-    return;
-  }
+      if (status === 403) {
+        setError(message || "Account is deactivated.");
+        return;
+      }
 
+      if (status === 401) {
+        setError(message || "Invalid username or password.");
+        return;
+      }
 
-  if (status === 401) {
-    setError(message || "Invalid username or password.");
-    return;
-  }
-
-  setError("Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
     }
   };
 

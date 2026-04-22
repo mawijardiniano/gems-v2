@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 function formatPerformanceIndicator({ totalSeminars, totalMale, totalFemale }) {
   const s = Number(totalSeminars) || 0;
@@ -158,6 +159,9 @@ export default function ProjectContent() {
   const [usedBudget, setUsedBudget] = useState(0);
   const [budgetYear, setBudgetYear] = useState(() => new Date().getFullYear());
   const router = useRouter();
+
+  const role = useSelector((state) => state.auth.role);
+
 
   const safeProjects = Array.isArray(projects) ? projects : [];
   const totalPages = Math.max(1, Math.ceil(safeProjects.length / pageSize));
@@ -529,10 +533,15 @@ export default function ProjectContent() {
     };
   };
 
-  // ── render ────────────────────────────────────────────────────────────────
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold mb-4">Projects</h2>
+      {role === "planning director" && (
+        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2 mr-4">
+          Add Comment
+        </button>
+      )}
+
       <button
         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2"
         onClick={handlePrintProjects}
@@ -640,191 +649,53 @@ export default function ProjectContent() {
                   <th className="py-2 px-4 border-b text-center">
                     Responsible Unit/Office
                   </th>
-                  <th className="py-2 px-4 border-b text-center">
-                    Number of Events
-                  </th>
-                  <th className="py-2 px-4 border-b text-center">Actions</th>
+                  {role !== "planning director" && (
+                    <>
+                      <th className="py-2 px-4 border-b text-center">
+                        Number of Events
+                      </th>
+                      <th className="py-2 px-4 border-b text-center">
+                        Actions
+                      </th>
+                    </>
+                  )}
                 </tr>
 
-                {/* ── ADD ROW ── */}
-                <tr className="bg-gray-100">
-                  <td className="py-2 px-4 border-b text-center">—</td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-40 border rounded px-2 py-1"
-                      value={newProject.gender_issue}
-                      onChange={(e) =>
-                        handleNewProjectChange("gender_issue", e.target.value)
-                      }
-                      required
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {newProject.cause_gender_issue.map((val, idx) => (
-                      <div key={idx} className="flex items-center mb-1">
-                        <textarea
-                          className="w-40 border rounded px-2 py-1"
-                          value={val}
-                          onChange={(e) =>
-                            handleArrayFieldChange(
-                              "cause_gender_issue",
-                              idx,
-                              e.target.value,
-                            )
-                          }
-                          required
-                        />
-                        {newProject.cause_gender_issue.length > 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                            onClick={() =>
-                              handleRemoveArrayField("cause_gender_issue", idx)
+                {role !== "planning director" && (
+                  <tr className="bg-gray-100">
+                    <td className="py-2 px-4 border-b text-center">—</td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-40 border rounded px-2 py-1"
+                        value={newProject.gender_issue}
+                        onChange={(e) =>
+                          handleNewProjectChange("gender_issue", e.target.value)
+                        }
+                        required
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {newProject.cause_gender_issue.map((val, idx) => (
+                        <div key={idx} className="flex items-center mb-1">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={val}
+                            onChange={(e) =>
+                              handleArrayFieldChange(
+                                "cause_gender_issue",
+                                idx,
+                                e.target.value,
+                              )
                             }
-                          >
-                            -
-                          </button>
-                        )}
-                        {idx === newProject.cause_gender_issue.length - 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                            onClick={() =>
-                              handleAddArrayField("cause_gender_issue")
-                            }
-                          >
-                            +
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {newProject.gad_objective.map((val, idx) => (
-                      <div key={idx} className="flex items-center mb-1">
-                        <textarea
-                          className="w-40 border rounded px-2 py-1"
-                          value={val}
-                          onChange={(e) =>
-                            handleArrayFieldChange(
-                              "gad_objective",
-                              idx,
-                              e.target.value,
-                            )
-                          }
-                          required
-                        />
-                        {newProject.gad_objective.length > 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                            onClick={() =>
-                              handleRemoveArrayField("gad_objective", idx)
-                            }
-                          >
-                            -
-                          </button>
-                        )}
-                        {idx === newProject.gad_objective.length - 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                            onClick={() => handleAddArrayField("gad_objective")}
-                          >
-                            +
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-40 border rounded px-2 py-1"
-                      value={newProject.supporting_statistics_data}
-                      onChange={(e) =>
-                        handleNewProjectChange(
-                          "supporting_statistics_data",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-40 border rounded px-2 py-1"
-                      value={newProject.relevant_agency}
-                      onChange={(e) =>
-                        handleNewProjectChange(
-                          "relevant_agency",
-                          e.target.value,
-                        )
-                      }
-                      required
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {newProject.gad_activity.map((val, idx) => (
-                      <div key={idx} className="flex items-center mb-1">
-                        <textarea
-                          className="w-40 border rounded px-2 py-1"
-                          value={val}
-                          onChange={(e) =>
-                            handleArrayFieldChange(
-                              "gad_activity",
-                              idx,
-                              e.target.value,
-                            )
-                          }
-                          required
-                        />
-                        {newProject.gad_activity.length > 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                            onClick={() =>
-                              handleRemoveArrayField("gad_activity", idx)
-                            }
-                          >
-                            -
-                          </button>
-                        )}
-                        {idx === newProject.gad_activity.length - 1 && (
-                          <button
-                            type="button"
-                            className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                            onClick={() => handleAddArrayField("gad_activity")}
-                          >
-                            +
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {newProject.performance_indicator_target.map((val, idx) => (
-                      <div key={idx} className="flex items-start gap-1 mb-2">
-                        <PerformanceIndicatorInput
-                          value={val}
-                          onChange={(updated) => {
-                            const arr = [
-                              ...newProject.performance_indicator_target,
-                            ];
-                            arr[idx] = updated;
-                            handleNewProjectChange(
-                              "performance_indicator_target",
-                              arr,
-                            );
-                          }}
-                        />
-                        <div className="flex flex-col gap-1 mt-4">
-                          {newProject.performance_indicator_target.length >
-                            1 && (
+                            required
+                          />
+                          {newProject.cause_gender_issue.length > 1 && (
                             <button
                               type="button"
-                              className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                              className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
                               onClick={() =>
                                 handleRemoveArrayField(
-                                  "performance_indicator_target",
+                                  "cause_gender_issue",
                                   idx,
                                 )
                               }
@@ -832,69 +703,229 @@ export default function ProjectContent() {
                               -
                             </button>
                           )}
-                          {idx ===
-                            newProject.performance_indicator_target.length -
-                              1 && (
+                          {idx === newProject.cause_gender_issue.length - 1 && (
                             <button
                               type="button"
-                              className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                              className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
                               onClick={() =>
-                                handleAddArrayField(
-                                  "performance_indicator_target",
-                                )
+                                handleAddArrayField("cause_gender_issue")
                               }
                             >
                               +
                             </button>
                           )}
                         </div>
-                      </div>
-                    ))}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-32 border rounded px-2 py-1"
-                      value={newProject.gad_budget}
-                      onChange={(e) =>
-                        handleNewProjectChange("gad_budget", e.target.value)
-                      }
-                      required
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-32 border rounded px-2 py-1"
-                      value={newProject.source_budget}
-                      onChange={(e) =>
-                        handleNewProjectChange("source_budget", e.target.value)
-                      }
-                      required
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <textarea
-                      className="w-40 border rounded px-2 py-1"
-                      value={newProject.responsible_office}
-                      onChange={(e) =>
-                        handleNewProjectChange(
-                          "responsible_office",
-                          e.target.value,
-                        )
-                      }
-                      required
-                    />
-                  </td>
-                  <td className="py-2 px-4 border-b text-center">—</td>
-                  <td className="py-2 px-4 border-b">
-                    <button
-                      type="submit"
-                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                      disabled={addLoading}
-                    >
-                      {addLoading ? "Adding..." : "Add"}
-                    </button>
-                  </td>
-                </tr>
+                      ))}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {newProject.gad_objective.map((val, idx) => (
+                        <div key={idx} className="flex items-center mb-1">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={val}
+                            onChange={(e) =>
+                              handleArrayFieldChange(
+                                "gad_objective",
+                                idx,
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                          {newProject.gad_objective.length > 1 && (
+                            <button
+                              type="button"
+                              className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
+                              onClick={() =>
+                                handleRemoveArrayField("gad_objective", idx)
+                              }
+                            >
+                              -
+                            </button>
+                          )}
+                          {idx === newProject.gad_objective.length - 1 && (
+                            <button
+                              type="button"
+                              className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
+                              onClick={() =>
+                                handleAddArrayField("gad_objective")
+                              }
+                            >
+                              +
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-40 border rounded px-2 py-1"
+                        value={newProject.supporting_statistics_data}
+                        onChange={(e) =>
+                          handleNewProjectChange(
+                            "supporting_statistics_data",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-40 border rounded px-2 py-1"
+                        value={newProject.relevant_agency}
+                        onChange={(e) =>
+                          handleNewProjectChange(
+                            "relevant_agency",
+                            e.target.value,
+                          )
+                        }
+                        required
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {newProject.gad_activity.map((val, idx) => (
+                        <div key={idx} className="flex items-center mb-1">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={val}
+                            onChange={(e) =>
+                              handleArrayFieldChange(
+                                "gad_activity",
+                                idx,
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                          {newProject.gad_activity.length > 1 && (
+                            <button
+                              type="button"
+                              className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
+                              onClick={() =>
+                                handleRemoveArrayField("gad_activity", idx)
+                              }
+                            >
+                              -
+                            </button>
+                          )}
+                          {idx === newProject.gad_activity.length - 1 && (
+                            <button
+                              type="button"
+                              className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
+                              onClick={() =>
+                                handleAddArrayField("gad_activity")
+                              }
+                            >
+                              +
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      {newProject.performance_indicator_target.map(
+                        (val, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-1 mb-2"
+                          >
+                            <PerformanceIndicatorInput
+                              value={val}
+                              onChange={(updated) => {
+                                const arr = [
+                                  ...newProject.performance_indicator_target,
+                                ];
+                                arr[idx] = updated;
+                                handleNewProjectChange(
+                                  "performance_indicator_target",
+                                  arr,
+                                );
+                              }}
+                            />
+                            <div className="flex flex-col gap-1 mt-4">
+                              {newProject.performance_indicator_target.length >
+                                1 && (
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                                  onClick={() =>
+                                    handleRemoveArrayField(
+                                      "performance_indicator_target",
+                                      idx,
+                                    )
+                                  }
+                                >
+                                  -
+                                </button>
+                              )}
+                              {idx ===
+                                newProject.performance_indicator_target.length -
+                                  1 && (
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                                  onClick={() =>
+                                    handleAddArrayField(
+                                      "performance_indicator_target",
+                                    )
+                                  }
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-32 border rounded px-2 py-1"
+                        value={newProject.gad_budget}
+                        onChange={(e) =>
+                          handleNewProjectChange("gad_budget", e.target.value)
+                        }
+                        required
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-32 border rounded px-2 py-1"
+                        value={newProject.source_budget}
+                        onChange={(e) =>
+                          handleNewProjectChange(
+                            "source_budget",
+                            e.target.value,
+                          )
+                        }
+                        required
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <textarea
+                        className="w-40 border rounded px-2 py-1"
+                        value={newProject.responsible_office}
+                        onChange={(e) =>
+                          handleNewProjectChange(
+                            "responsible_office",
+                            e.target.value,
+                          )
+                        }
+                        required
+                      />
+                    </td>
+                    <td className="py-2 px-4 border-b text-center">—</td>
+                    <td className="py-2 px-4 border-b">
+                      <button
+                        type="submit"
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                        disabled={addLoading}
+                      >
+                        {addLoading ? "Adding..." : "Add"}
+                      </button>
+                    </td>
+                  </tr>
+                )}
               </thead>
 
               <tbody>
@@ -1599,68 +1630,82 @@ export default function ProjectContent() {
                                 {project.responsible_office}
                               </td>
                             )}
-                            <td
-                              className="py-2 px-4 border"
-                              rowSpan={editMaxRows}
-                            >
-                              {Array.isArray(project.events)
-                                ? project.events.length
-                                : 0}
-                            </td>
-                            <td
-                              className="py-2 px-4 flex gap-2"
-                              rowSpan={editMaxRows}
-                            >
-                              {editingId === project._id ? (
-                                <>
-                                  <button
-                                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      saveEdit();
-                                    }}
-                                    disabled={editLoading}
-                                  >
-                                    {editLoading ? "Saving..." : "Save"}
-                                  </button>
-                                  <button
-                                    className="px-3 py-1 bg-gray-400 text-black rounded hover:bg-gray-500 transition"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      cancelEdit();
-                                    }}
-                                    disabled={editLoading}
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                                    onClick={() =>
-                                      router.push(`/projects/${project._id}`)
-                                    }
-                                  >
-                                    View
-                                  </button>
-                                  <button
-                                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                    onClick={() => startEdit(project)}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                                    onClick={() =>
-                                      setDeleteModal({ open: true, project })
-                                    }
-                                  >
-                                    Delete
-                                  </button>
-                                </>
-                              )}
-                            </td>
+                            {role !== "planning director" && (
+                              <>
+                                <td
+                                  className="py-2 px-4 border"
+                                  rowSpan={editMaxRows}
+                                >
+                                  {Array.isArray(project.events)
+                                    ? project.events.length
+                                    : 0}
+                                </td>
+                                <td
+                                  className="py-2 px-4 flex gap-2"
+                                  rowSpan={editMaxRows}
+                                >
+                                  {editingId === project._id ? (
+                                    <>
+                                      <button
+                                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          saveEdit();
+                                        }}
+                                        disabled={editLoading}
+                                      >
+                                        {editLoading ? "Saving..." : "Save"}
+                                      </button>
+                                      <button
+                                        className="px-3 py-1 bg-gray-400 text-black rounded hover:bg-gray-500 transition"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          cancelEdit();
+                                        }}
+                                        disabled={editLoading}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {role !== "planning director" && (
+                                        <>
+                                          <button
+                                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                            onClick={() =>
+                                              router.push(
+                                                `/projects/${project._id}`,
+                                              )
+                                            }
+                                          >
+                                            View
+                                          </button>
+                                          <button
+                                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                            onClick={() => startEdit(project)}
+                                          >
+                                            Edit
+                                          </button>
+
+                                          <button
+                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                            onClick={() =>
+                                              setDeleteModal({
+                                                open: true,
+                                                project,
+                                              })
+                                            }
+                                          >
+                                            Delete
+                                          </button>
+                                        </>
+                                      )}
+                                    </>
+                                  )}
+                                </td>
+                              </>
+                            )}
                           </>
                         )}
                       </tr>

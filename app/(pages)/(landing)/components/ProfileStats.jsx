@@ -85,12 +85,190 @@ export default function ProfileStats() {
     }, [])
     .sort((a, b) => yearOrder.indexOf(a.year) - yearOrder.indexOf(b.year));
 
+  const handlePrintSummary = () => {
+    const yearRows = yearLineData
+      .map(
+        (row) => `
+        <tr>
+          <td>${row.year}</td>
+          <td>${row.male}</td>
+          <td>${row.female}</td>
+          <td>${row.male + row.female}</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    const collegeData = (data.students?.collegeSex || [])
+      .filter((row) => row.college && row.college !== "Unspecified")
+      .reduce((acc, row) => {
+        let found = acc.find((x) => x.college === row.college);
+        if (!found) {
+          found = { college: row.college, male: 0, female: 0 };
+          acc.push(found);
+        }
+        if (row.sex === "Male") found.male += row.total;
+        if (row.sex === "Female") found.female += row.total;
+        return acc;
+      }, []);
+
+    const collegeRows = collegeData
+      .map(
+        (row) => `
+        <tr>
+          <td>${row.college}</td>
+          <td>${row.male}</td>
+          <td>${row.female}</td>
+          <td>${row.male + row.female}</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    const html = `
+    <html>
+      <head>
+        <title>Campus Gender Summary</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+          h2, h3 {
+            text-align: center;
+            margin-top: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+          }
+          th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #f3f4f6;
+          }
+        </style>
+      </head>
+      <body>
+
+        <h2>Campus Gender Equality Summary</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Total</th>
+              <th>Male</th>
+              <th>Female</th>
+              <th>Unspecified</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Overall Population</td>
+              <td>${totalPopulation}</td>
+              <td>${totalMale}</td>
+              <td>${totalFemale}</td>
+              <td>${totalUnspecified}</td>
+            </tr>
+            <tr>
+              <td>Employees</td>
+              <td>${totalEmployee}</td>
+              <td>${totalMaleEmployee}</td>
+              <td>${totalFemaleEmployee}</td>
+              <td>${totalUnspecifiedEmployee}</td>
+            </tr>
+            <tr>
+              <td>Students</td>
+              <td>${totalStudent}</td>
+              <td>${totalMaleStudent}</td>
+              <td>${totalFemaleStudent}</td>
+              <td>${totalUnspecifiedStudent}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Students by Year Level</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Year Level</th>
+              <th>Male</th>
+              <th>Female</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${yearRows}
+          </tbody>
+        </table>
+
+        <h3>Students by College</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>College</th>
+              <th>Male</th>
+              <th>Female</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${collegeRows}
+          </tbody>
+        </table>
+
+      </body>
+    </html>
+  `;
+
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+    });
+
+    document.body.appendChild(iframe);
+
+    const frameDoc = iframe.contentWindow?.document;
+    if (!frameDoc) return;
+
+    frameDoc.open();
+    frameDoc.write(html);
+    frameDoc.close();
+
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
+  };
+
   return (
     <section className="my-8">
-      <div className="mb-8 text-center">
+      <div className="mb-8 text-center relative">
         <h2 className="text-3xl md:text-4xl font-extrabold text-violet-800 mb-2 drop-shadow-sm tracking-tight">
           Campus Gender Equality Overview
         </h2>
+
+        <button
+          onClick={handlePrintSummary}
+          className="absolute right-10 top-0 bg-violet-800 text-white rounded-md border border-gray-200 px-6 py-1"
+        >
+          Print
+        </button>
+
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           See a quick overview of our campus population and gender distribution
           among students and employees.

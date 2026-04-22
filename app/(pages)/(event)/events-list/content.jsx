@@ -193,31 +193,42 @@ export default function EventsListContent() {
               {upcomingEvents.map((evt) => (
                 <div
                   key={evt._id}
-                  className="border rounded-lg p-4 border-gray-200 hover:shadow-md bg-white"
+                  className="border rounded-lg border-gray-200 hover:shadow-md bg-white"
                 >
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold mb-1">{evt.title}</h3>
-                    <button
-                      onClick={() => goToManage(evt._id)}
-                      className="bg-black text-white text-sm py-1 px-4 rounded-md flex items-center gap-2"
-                    >
-                      Manage <FaArrowRight />
-                    </button>
-                  </div>
+                  {evt.event_poster && (
+                    <img
+                      src={evt.event_poster.url}
+                      alt={evt.title}
+                      className="w-full h-40 object-cover rounded-md mb-3"
+                    />
+                  )}
+                  <div className="p-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold mb-1">
+                        {evt.title}
+                      </h3>
+                      <button
+                        onClick={() => goToManage(evt._id)}
+                        className="bg-black text-white text-sm py-1 px-4 rounded-md flex items-center gap-2"
+                      >
+                        Manage <FaArrowRight />
+                      </button>
+                    </div>
 
-                  <p className="text-sm text-gray-600 mb-2">
-                    {formatRange(evt)}
-                  </p>
-                  {evt.venue && (
-                    <p className="text-sm text-gray-700 mb-2">
-                      Venue: {evt.venue}
+                    <p className="text-sm text-gray-600 mb-2">
+                      {formatRange(evt)}
                     </p>
-                  )}
-                  {evt.description && (
-                    <p className="text-sm text-gray-700 line-clamp-2">
-                      {evt.description}
-                    </p>
-                  )}
+                    {evt.venue && (
+                      <p className="text-sm text-gray-700 mb-2">
+                        Venue: {evt.venue}
+                      </p>
+                    )}
+                    {evt.description && (
+                      <p className="text-sm text-gray-700 line-clamp-2">
+                        {evt.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -236,30 +247,41 @@ export default function EventsListContent() {
               {pastEvents.map((evt) => (
                 <div
                   key={evt._id}
-                  className="border rounded-lg p-4 border-gray-200 hover:shadow-md bg-white"
+                  className="border rounded-lg border-gray-200 hover:shadow-md bg-white"
                 >
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold mb-1">{evt.title}</h3>
-                    <button
-                      onClick={() => goToManage(evt._id)}
-                      className="bg-black text-white text-sm py-1 px-4 rounded-md flex items-center gap-2"
-                    >
-                      Manage <FaArrowRight />
-                    </button>
+                  {evt.event_poster && (
+                    <img
+                      src={evt.event_poster.url}
+                      alt={evt.title}
+                      className="w-full h-40 object-cover rounded-md mb-3"
+                    />
+                  )}
+                  <div className="p-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold mb-1">
+                        {evt.title}
+                      </h3>
+                      <button
+                        onClick={() => goToManage(evt._id)}
+                        className="bg-black text-white text-sm py-1 px-4 rounded-md flex items-center gap-2"
+                      >
+                        Manage <FaArrowRight />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {formatRange(evt)}
+                    </p>
+                    {evt.venue && (
+                      <p className="text-sm text-gray-700 mb-2">
+                        Venue: {evt.venue}
+                      </p>
+                    )}
+                    {evt.description && (
+                      <p className="text-sm text-gray-700 line-clamp-2">
+                        {evt.description}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {formatRange(evt)}
-                  </p>
-                  {evt.venue && (
-                    <p className="text-sm text-gray-700 mb-2">
-                      Venue: {evt.venue}
-                    </p>
-                  )}
-                  {evt.description && (
-                    <p className="text-sm text-gray-700 line-clamp-2">
-                      {evt.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
