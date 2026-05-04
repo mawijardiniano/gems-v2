@@ -164,7 +164,7 @@ export default function Sidebar({ open, setOpen, role }) {
       name: "Dashboard",
       href: "/events-dashboard",
       icon: <FaHome />,
-      key: "dashboard",
+      key: "events-dashboard",
     },
     {
       name: "University Officials",
@@ -232,7 +232,7 @@ export default function Sidebar({ open, setOpen, role }) {
       }`}
     >
       <nav className="flex flex-col h-full px-2 py-4 space-y-2 mt-16">
-        {/* LINKS */}
+
         {filteredLinks.map((link) => (
           <Link
             key={link.name}

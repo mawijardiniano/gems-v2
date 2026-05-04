@@ -148,12 +148,19 @@ export default function EventManageContent() {
           .includes(interestedSearch.toLowerCase());
       });
   };
-
   const handleDeleteEvent = async () => {
     setDeleting(true);
     setDeleteError("");
+
     try {
+      if (event?.event_poster?.key) {
+        await axios.delete("/api/upload", {
+          data: { key: event.event_poster.key },
+        });
+      }
+
       await axios.delete(`/api/events/${eventId}`);
+
       setShowDeleteModal(false);
       router.push("/events-list");
     } catch (err) {
@@ -679,6 +686,7 @@ export default function EventManageContent() {
       setSaving(false);
     }
   };
+
   const handlePrintGuests = (guests) => {
     if (typeof window === "undefined") return;
 
@@ -1277,6 +1285,16 @@ export default function EventManageContent() {
         >
           Insights
         </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={`pb-3 px-2 -mb-px border-b-2 text-md font-medium transition ${
+            activeTab === "reports"
+              ? "border-blue-600 text-blue-700"
+              : "border-transparent text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Post-Activity Report
+        </button>
       </div>
 
       {activeTab === "overview" && (
@@ -1355,6 +1373,8 @@ export default function EventManageContent() {
           PerYearChart={PerYearChart}
         />
       )}
+
+      {activeTab === "reports" && <ReportTab event={event} />}
     </div>
   );
 }
@@ -1407,7 +1427,7 @@ function OverviewTabs({
     try {
       const formData = new FormData();
       formData.append("file", file);
-       formData.append("folder", "events/posters"); 
+      formData.append("folder", "events/posters");
 
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -2488,6 +2508,572 @@ function InsightTab({
         <CollegeChart data={collegeData} />
         <PerYearChart data={perYearData} />
       </div>
+    </div>
+  );
+}
+
+function ReportTab({ event }) {
+  const [form, setForm] = useState({
+    narrative: "",
+  });
+
+  const [files, setFiles] = useState({
+    office_memorandum: null,
+    activity_design: null,
+    attendance_sheet: null,
+    photos: [],
+  });
+
+  const [uploading, setUploading] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [reports, setReports] = useState([]);
+  const [showReport, setShowReport] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [previewImg, setPreviewImg] = useState(null);
+  const [deletedPhotoKeys, setDeletedPhotoKeys] = useState([]);
+
+  const deleteFileByKey = async (key) => {
+    if (!key) return;
+    try {
+      await axios.delete("/api/upload", {
+        data: { key },
+      });
+    } catch (err) {
+      console.log("Failed to delete old file:", err);
+    }
+  };
+
+  const handleEdit = () => {
+    console.log("🟡 EDIT CLICKED");
+    console.log("Current showReport:", showReport);
+
+    setForm({
+      narrative: showReport?.narrative || "",
+    });
+
+    setFiles({
+      office_memorandum: showReport?.office_memorandum || null,
+      activity_design: showReport?.activity_design || null,
+      attendance_sheet: showReport?.attendance_sheet || null,
+      photos: showReport?.photos || [],
+    });
+
+    console.log("🟢 FORM SET FOR EDIT:", {
+      narrative: showReport?.narrative,
+      office_memorandum: showReport?.office_memorandum,
+      activity_design: showReport?.activity_design,
+      attendance_sheet: showReport?.attendance_sheet,
+      photos: showReport?.photos,
+    });
+
+    setIsEditing(true);
+
+    console.log("🟣 isEditing = true");
+  };
+
+  const handleSingleFileUpload = async (file, field, folder) => {
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [field]: true }));
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setFiles((prev) => {
+        const oldFile = prev[field];
+
+        if (oldFile?.key) {
+          deleteFileByKey(oldFile.key);
+        }
+
+        return {
+          ...prev,
+          [field]: {
+            url: res.data.url,
+            key: res.data.key,
+          },
+        };
+      });
+    } catch {
+      setError(`Failed to upload ${field}`);
+    } finally {
+      setUploading((prev) => ({ ...prev, [field]: false }));
+    }
+  };
+
+  const handlePhotosUpload = async (fileList) => {
+    setUploading((prev) => ({ ...prev, photos: true }));
+
+    try {
+      const uploaded = await Promise.all(
+        Array.from(fileList).map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("folder", "reports/photos");
+
+          const res = await axios.post("/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          return { url: res.data.url, key: res.data.key };
+        }),
+      );
+
+      setFiles((prev) => ({
+        ...prev,
+        photos: isEditing ? [...prev.photos, ...uploaded] : uploaded,
+      }));
+    } catch {
+      setError("Failed to upload photos");
+    } finally {
+      setUploading((prev) => ({ ...prev, photos: false }));
+    }
+  };
+
+  const removePhoto = (idx) => {
+    setFiles((prev) => {
+      const photo = prev.photos[idx];
+
+      return {
+        ...prev,
+        photos: prev.photos.filter((_, i) => i !== idx),
+      };
+    });
+
+    setDeletedPhotoKeys((prev) => {
+      const photo = files.photos[idx];
+      if (!photo?.key) return prev;
+      return [...prev, photo.key];
+    });
+  };
+
+  const fetchReport = async () => {
+    try {
+      const res = await fetch(`/api/events/accomplishment-report/${event._id}`);
+      const data = await res.json();
+
+      setShowReport(data.data);
+    } catch {
+      setShowReport(null);
+    }
+  };
+
+  useEffect(() => {
+    if (event?._id) fetchReport();
+  }, [event?._id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const url = isEditing
+        ? `/api/events/accomplishment-report/${event._id}`
+        : `/api/events/accomplishment-report`;
+
+      const method = isEditing ? "PUT" : "POST";
+
+      if (deletedPhotoKeys.length > 0) {
+        await Promise.all(deletedPhotoKeys.map((key) => deleteFileByKey(key)));
+      }
+
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_id: event._id,
+          narrative: form.narrative,
+          office_memorandum: files.office_memorandum,
+          activity_design: files.activity_design,
+          attendance_sheet: files.attendance_sheet,
+          photos: files.photos.filter((p) => !deletedPhotoKeys.includes(p.key)),
+        }),
+      });
+
+      setSuccess(
+        isEditing
+          ? "Report updated successfully."
+          : "Report submitted successfully.",
+      );
+
+      setForm({ narrative: "" });
+      setFiles({
+        office_memorandum: null,
+        activity_design: null,
+        attendance_sheet: null,
+        photos: [],
+      });
+
+      setDeletedPhotoKeys([]);
+      setIsEditing(false);
+
+      fetchReport();
+    } catch {
+      setError("Failed to submit report.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  if (showReport && !isEditing) {
+    return (
+      <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200">
+        {previewImg && (
+          <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+            onClick={() => setPreviewImg(null)}
+          >
+            <img
+              src={previewImg}
+              className="max-w-[90%] max-h-[90%] rounded shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold">Accomplishment Report</h3>
+
+          <button
+            onClick={handleEdit}
+            className="px-4 py-1 text-sm border rounded hover:bg-gray-50"
+          >
+            Edit
+          </button>
+        </div>
+
+        {/* NARRATIVE */}
+        <div>
+          <h4 className="font-semibold text-gray-600">Narrative</h4>
+          <p className="text-sm whitespace-pre-wrap">{showReport.narrative}</p>
+        </div>
+
+        {/* OFFICE MEMO + ACTIVITY */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Office Memo */}
+          <div>
+            <h4 className="font-semibold">Office Memorandum</h4>
+            {showReport.office_memorandum?.url ? (
+              <img
+                src={showReport.office_memorandum.url}
+                className="h-40 w-full object-cover rounded border cursor-pointer"
+                onClick={() => setPreviewImg(showReport.office_memorandum.url)}
+              />
+            ) : (
+              <p className="text-xs text-gray-400">No file uploaded</p>
+            )}
+          </div>
+
+          {/* Activity Design */}
+          <div>
+            <h4 className="font-semibold">Activity Design</h4>
+            {showReport.activity_design?.url ? (
+              <img
+                src={showReport.activity_design.url}
+                className="h-40 w-full object-cover rounded border cursor-pointer"
+                onClick={() => setPreviewImg(showReport.activity_design.url)}
+              />
+            ) : (
+              <p className="text-xs text-gray-400">No file uploaded</p>
+            )}
+          </div>
+        </div>
+
+        {/* ATTENDANCE SHEET */}
+        <div>
+          <h4 className="font-semibold">Attendance Sheet</h4>
+
+          {showReport.attendance_sheet?.url ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <img
+                src={showReport.attendance_sheet.url}
+                className="h-40 w-full object-cover rounded border cursor-pointer"
+                onClick={() => setPreviewImg(showReport.attendance_sheet.url)}
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">No file uploaded</p>
+          )}
+        </div>
+
+        {/* PHOTOS */}
+        <div>
+          <h4 className="font-semibold">Event Photos</h4>
+
+          {showReport.photos?.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {showReport.photos.map((p, i) => (
+                <img
+                  key={i}
+                  src={p.url}
+                  className="h-40 w-full object-cover rounded border cursor-pointer"
+                  onClick={() => setPreviewImg(p.url)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">No photos uploaded</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="border border-gray-200 rounded-lg p-6 space-y-4 bg-white"
+      >
+        <h3 className="text-lg font-semibold">Post-Activity Report</h3>
+        {/* <p className="text-sm text-gray-500">Event: <span className="font-medium text-gray-800">{event?.title}</span></p> */}
+
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        {success && <p className="text-sm text-green-600">{success}</p>}
+
+        {/* Narrative */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Narrative Report
+          </label>
+          <textarea
+            name="narrative"
+            value={form.narrative}
+            onChange={(e) => setForm({ ...form, narrative: e.target.value })}
+            className="w-full border rounded px-3 py-2 text-sm min-h-[100px] resize-y"
+            placeholder="Describe what happened during the event..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Office Memorandum
+          </label>
+
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            className="border rounded px-3 py-2 text-sm w-full"
+            onChange={(e) =>
+              handleSingleFileUpload(
+                e.target.files[0],
+                "office_memorandum",
+                "reports/memorandum",
+              )
+            }
+          />
+
+          {uploading.office_memorandum && (
+            <p className="text-xs text-blue-500 mt-1">Uploading...</p>
+          )}
+
+          {files.office_memorandum?.url && (
+            <div className="relative mt-2 inline-block">
+              <img
+                src={files.office_memorandum.url}
+                className="w-20 h-20 object-cover rounded border"
+              />
+
+              <button
+                type="button"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                onClick={() =>
+                  setFiles((prev) => ({
+                    ...prev,
+                    office_memorandum: null,
+                  }))
+                }
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Activity Design */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Activity Design
+          </label>
+
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            className="border rounded px-3 py-2 text-sm w-full"
+            onChange={(e) =>
+              handleSingleFileUpload(
+                e.target.files[0],
+                "activity_design",
+                "reports/activity-design",
+              )
+            }
+          />
+
+          {uploading.activity_design && (
+            <p className="text-xs text-blue-500 mt-1">Uploading...</p>
+          )}
+
+          {files.activity_design?.url && (
+            <div className="relative mt-2 inline-block">
+              <img
+                src={files.activity_design.url}
+                className="w-20 h-20 object-cover rounded border"
+              />
+
+              <button
+                type="button"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                onClick={() =>
+                  setFiles((prev) => ({
+                    ...prev,
+                    activity_design: null,
+                  }))
+                }
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Attendance Sheet */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Attendance Sheet
+          </label>
+
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            className="border rounded px-3 py-2 text-sm w-full"
+            onChange={(e) =>
+              handleSingleFileUpload(
+                e.target.files[0],
+                "attendance_sheet",
+                "reports/attendance",
+              )
+            }
+          />
+
+          {uploading.attendance_sheet && (
+            <p className="text-xs text-blue-500 mt-1">Uploading...</p>
+          )}
+
+          {files.attendance_sheet?.url && (
+            <div className="relative mt-2 inline-block">
+              <img
+                src={files.attendance_sheet.url}
+                className="w-20 h-20 object-cover rounded border"
+              />
+
+              <button
+                type="button"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                onClick={() =>
+                  setFiles((prev) => ({
+                    ...prev,
+                    attendance_sheet: null,
+                  }))
+                }
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Photos */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Event Photos</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="border rounded px-3 py-2 text-sm w-full"
+            onChange={(e) => handlePhotosUpload(e.target.files)}
+          />
+          {uploading.photos && (
+            <p className="text-xs text-blue-500 mt-1">Uploading photos...</p>
+          )}
+          {files.photos.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {files.photos.map((p, i) => (
+                <div key={i} className="relative">
+                  <img
+                    src={p.url}
+                    className="w-20 h-20 object-cover rounded border"
+                    alt={`photo-${i}`}
+                  />
+                  <button
+                    type="button"
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    onClick={() => removePhoto(i)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {submitting ? "Submitting..." : "Submit Report"}
+          </button>
+
+          {isEditing && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(false);
+                setForm({ narrative: "" });
+                setFiles({
+                  office_memorandum: null,
+                  activity_design: null,
+                  attendance_sheet: null,
+                  photos: [],
+                });
+                setShowReport(showReport);
+              }}
+              className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* {reports.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Submitted Reports</h3>
+          {reports.map((r) => (
+            <div key={r._id} className="border rounded-lg p-4 bg-white space-y-2">
+              <p className="text-sm text-gray-700">{r.narrative}</p>
+              {r.photos?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {r.photos.map((p, i) => (
+                    <img key={i} src={p.url} className="w-20 h-20 object-cover rounded border" alt={`photo-${i}`} />
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-3 text-sm">
+                {r.office_memorandum?.url && <a href={r.office_memorandum.url} target="_blank" className="text-blue-600 underline">Memorandum</a>}
+                {r.activity_design?.url && <a href={r.activity_design.url} target="_blank" className="text-blue-600 underline">Activity Design</a>}
+                {r.attendance_sheet?.url && <a href={r.attendance_sheet.url} target="_blank" className="text-blue-600 underline">Attendance Sheet</a>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )} */}
     </div>
   );
 }
