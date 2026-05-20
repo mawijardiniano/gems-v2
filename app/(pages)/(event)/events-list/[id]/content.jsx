@@ -284,7 +284,6 @@ export default function EventManageContent() {
     return new Date(end).getTime() < Date.now();
   }, [event]);
 
-  // Format a date range for multi-day events
   const formatRange = (start, end, evt) => {
     let s = start;
     let e = end;
@@ -1233,15 +1232,17 @@ export default function EventManageContent() {
           </div>
         </div>
       )}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          {/* <button
+      <button
             onClick={() => router.push("/events-list")}
-            className="p-2 text-2xl inline-flex items-center"
+            className="p-2 text-md inline-flex items-center text-blue-500"
             aria-label="Back to events"
           >
-            <FiArrowLeft aria-hidden="true" />
-          </button> */}
+            <FiArrowLeft aria-hidden="true" /> <p className="text-blue-500"> Back to Events</p>
+          </button>
+      <div className="flex justify-between items-center">
+      
+        <div className="flex items-center gap-3">
+          
           <div>
             <h1 className="text-3xl font-bold">{event.title}</h1>
             <p className="text-sm text-gray-600 mt-1">
@@ -1484,7 +1485,7 @@ function OverviewTabs({
         </div>
 
         {!isEditing ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
+          <div>
             {/* {event.event_poster && (
   <div className="col-span-2">
     <p className="text-gray-500 text-sm">Event Poster</p>
@@ -1495,33 +1496,46 @@ function OverviewTabs({
     />
   </div>
 )} */}
-            <div>
-              <p className="text-gray-500">Date Range</p>
-              <p className="font-medium">
-                {formatRange(
-                  event.start_date || event.date,
-                  event.end_date,
-                  event,
-                )}
-              </p>
+            <div className="flex flex-col gap-2 mb-2">
+              <div>
+                <p className="text-gray-500 text-sm">Event Description</p>
+                <p className="font-medium text-sm">{event.description}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">GAD Activity</p>
+                <p className="font-medium text-sm">{event.gad_activity}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-500">Number of Days</p>
-              <p className="font-medium">
-                {(event.start_dates && event.start_dates.length) ||
-                  event.number_of_days ||
-                  1}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-500">Venue</p>
-              <p className="font-medium">{event.venue || "—"}</p>
-            </div>
-            <div>
-              <p className="text-gray-500">Participants</p>
-              <p className="font-medium">
-                {event.registered_users.length || "—"}
-              </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
+              <div>
+                <p className="text-gray-500">Date Range</p>
+                <p className="font-medium">
+                  {formatRange(
+                    event.start_date || event.date,
+                    event.end_date,
+                    event,
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Number of Days</p>
+                <p className="font-medium">
+                  {(event.start_dates && event.start_dates.length) ||
+                    event.number_of_days ||
+                    1}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Venue</p>
+                <p className="font-medium">{event.venue || "—"}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Participants</p>
+                <p className="font-medium">
+                  {event.registered_users.length || "—"}
+                </p>
+              </div>
             </div>
           </div>
         ) : (
@@ -1614,14 +1628,21 @@ function OverviewTabs({
                       : [proj.gad_activity]
                     )
                       .filter(Boolean)
-                      .map((activity, idx) => (
-                        <option
-                          key={proj._id + "-" + idx}
-                          value={proj._id + "||||" + activity}
-                        >
-                          {activity}
-                        </option>
-                      )),
+                      .map((activity, idx) => {
+                        const label =
+                          typeof activity === "object"
+                            ? activity.value
+                            : activity;
+
+                        return (
+                          <option
+                            key={proj._id + "-" + idx}
+                            value={proj._id + "||||" + label}
+                          >
+                            {label}
+                          </option>
+                        );
+                      }),
                   )}
                 </select>
               </div>
@@ -2747,15 +2768,12 @@ function ReportTab({ event }) {
           </button>
         </div>
 
-        {/* NARRATIVE */}
         <div>
           <h4 className="font-semibold text-gray-600">Narrative</h4>
           <p className="text-sm whitespace-pre-wrap">{showReport.narrative}</p>
         </div>
 
-        {/* OFFICE MEMO + ACTIVITY */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Office Memo */}
           <div>
             <h4 className="font-semibold">Office Memorandum</h4>
             {showReport.office_memorandum?.url ? (
@@ -2835,7 +2853,6 @@ function ReportTab({ event }) {
         {error && <p className="text-sm text-red-500">{error}</p>}
         {success && <p className="text-sm text-green-600">{success}</p>}
 
-        {/* Narrative */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Narrative Report

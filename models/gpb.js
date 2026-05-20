@@ -8,17 +8,25 @@ const GadPlanSchema = new Schema(
       ref: "GAABudget",
     },
     projects: [{ type: Schema.Types.ObjectId, ref: "Project" }],
-    status: {
-      type: String,
-      enum: [
-        "draft",
-        "for_review",
-        "needs_revision",
-        "for_endorsement",
-        "approved",
-        "disapproved",
-      ],
-      default: "draft",
+    status_of_gpb: {
+      status: {
+        type: String,
+        enum: ["draft", "approved", "disapproved"],
+        default: "draft",
+      },
+      reason: {
+        type: String,
+      },
+      scanned_copy: {
+        url: {
+          type: String,
+          default: "",
+        },
+        key: {
+          type: String,
+          default: "",
+        },
+      },
     },
     archived: { type: Boolean, default: false },
     archivedAt: { type: Date, default: null },

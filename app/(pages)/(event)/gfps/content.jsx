@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 const SECTIONS = [
   { key: "chairOrHeadOfAgency", label: "Chair/Head of Agency" },
@@ -61,7 +62,7 @@ function CheckboxTree({ officials, selected, onChange }) {
   };
 
   return (
-    <div className="border rounded p-2 max-h-64 overflow-y-auto bg-gray-50">
+    <div className="border rounded p-2 max-h-50 overflow-y-auto bg-gray-50">
       {OFFICIAL_GROUPS_ORDER.map((section) => {
         let items = officials[section];
         if (items && !Array.isArray(items)) items = [items];
@@ -169,6 +170,7 @@ export default function GFPSManager() {
   const [officials, setOfficials] = useState({});
   const [execRoles, setExecRoles] = useState({});
   const [editingSection, setEditingSection] = useState(null);
+  const role = useSelector((state) => state.auth.role);
 
   useEffect(() => {
     setExecRoles((prev) => {
@@ -207,8 +209,6 @@ export default function GFPSManager() {
     fetchOfficials();
   }, []);
 
-  // Matches against ALL possible ID formats to handle both
-  // raw ObjectId and populated object cases
   const findOfficialKey = (officialId) => {
     if (!officialId) return null;
     const idStr = officialId.toString();
@@ -291,41 +291,114 @@ export default function GFPSManager() {
     e.preventDefault();
     let payload = {};
 
+    const getOfficialNames = (key) => {
+      const [group, officialId] = key.split(":");
+
+      let items = officials[group];
+      if (items && !Array.isArray(items)) items = [items];
+
+      const found = (items || []).find((item) => {
+        const id =
+          item.name?._id?.toString() ||
+          item._id?.toString() ||
+          item.name?.toString();
+
+        return id === officialId;
+      });
+
+      const o = found?.name || found;
+
+      const first_name =
+        o?.first_name ||
+        o?.personal_info_id?.personal?.first_name ||
+        o?.personal_info_id?.first_name ||
+        "";
+
+      const last_name =
+        o?.last_name ||
+        o?.personal_info_id?.personal?.last_name ||
+        o?.personal_info_id?.last_name ||
+        "";
+
+      return {
+        officialId,
+        first_name,
+        last_name,
+      };
+    };
+
     try {
+      console.log("SECTION:", section);
+      console.log("EDITING SECTION:", editingSection);
+      console.log("SELECTED OFFICIALS KEYS:", selectedOfficials);
+      console.log("EXEC ROLES:", execRoles);
+
+      const debugResolved = selectedOfficials.map((key) => {
+        const data = getOfficialNames(key);
+
+        console.log("🔍 RESOLVING:", key, data);
+
+        return {
+          key,
+          ...data,
+        };
+      });
+
+      console.log("FULL RESOLVED OFFICIALS:", debugResolved);
+
       if (section === "executiveCommittee") {
         payload[section] = {
           members: selectedOfficials.map((key) => {
-            const parts = key.split(":");
-            const officialId = parts.length > 1 ? parts[1] : key;
-            return { official: officialId, role: execRoles[key] || "member" };
+            const d = debugResolved.find((x) => x.key === key);
+
+            return {
+              official: d?.officialId,
+              role: execRoles[key] || "member",
+              first_name: d?.first_name || "",
+              last_name: d?.last_name || "",
+            };
           }),
         };
       } else if (section === "technicalWorkingGroup") {
         payload[section] = {
           members: selectedOfficials.map((key) => {
-            const parts = key.split(":");
-            const officialId = parts.length > 1 ? parts[1] : key;
-            return { official: officialId };
+            const d = debugResolved.find((x) => x.key === key);
+
+            return {
+              official: d?.officialId,
+              first_name: d?.first_name || "",
+              last_name: d?.last_name || "",
+            };
           }),
         };
       } else if (section === "chairOrHeadOfAgency") {
-        if (selectedOfficials.length > 0) {
-          const key = selectedOfficials[0];
-          const parts = key.split(":");
-          const officialId = parts.length > 1 ? parts[1] : key;
-          payload[section] = { official: officialId };
-        }
+        const d = debugResolved[0];
+
+        payload[section] = {
+          official: d?.officialId,
+          first_name: d?.first_name || "",
+          last_name: d?.last_name || "",
+        };
       } else if (section === "secretariat") {
         payload[section] = selectedOfficials.map((key) => {
-          const parts = key.split(":");
-          const officialId = parts.length > 1 ? parts[1] : key;
-          return { official: officialId };
+          const d = debugResolved.find((x) => x.key === key);
+
+          return {
+            official: d?.officialId,
+            first_name: d?.first_name || "",
+            last_name: d?.last_name || "",
+          };
         });
       }
+
+      console.log("FINAL PAYLOAD:", JSON.stringify(payload, null, 2));
+      console.log("=======================================");
 
       const isEditing = !!editingSection;
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `/api/gfps/${gfps._id}` : "/api/gfps";
+
+      console.log("REQUEST:", { method, url });
 
       const res = await fetch(url, {
         method,
@@ -334,8 +407,9 @@ export default function GFPSManager() {
       });
 
       const data = await res.json().catch(() => ({}));
-      console.log(`${method} ${url} response status:`, res.status);
-      console.log(`${method} ${url} response body:`, data);
+
+      console.log("RESPONSE STATUS:", res.status);
+      console.log("RESPONSE DATA:", data);
 
       if (!res.ok) {
         alert("Error: " + (data?.message || data?.error || res.status));
@@ -344,7 +418,7 @@ export default function GFPSManager() {
         await fetchGfps();
       }
     } catch (err) {
-      console.error("Submit error:", err);
+      console.error("SUBMIT ERROR:", err);
       alert("Request failed: " + err.message);
     }
   };
@@ -358,8 +432,8 @@ export default function GFPSManager() {
     </button>
   );
 
- const handlePrintGFPS = () => {
-  const html = `
+  const handlePrintGFPS = () => {
+    const html = `
     <html>
       <head>
         <title>GFPS Report</title>
@@ -438,7 +512,8 @@ export default function GFPSManager() {
                   if (!chair) return "";
 
                   const o = chair.official || {};
-                  const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
+                  const name =
+                    `${o.first_name || ""} ${o.last_name || ""}`.trim();
                   const position = o.position || "";
 
                   return `
@@ -457,7 +532,8 @@ export default function GFPSManager() {
                 const formatted = members
                   .map((m) => {
                     const o = m.official || {};
-                    const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
+                    const name =
+                      `${o.first_name || ""} ${o.last_name || ""}`.trim();
                     const position = o.position || "";
                     const extra =
                       o.branch || o.college
@@ -482,56 +558,58 @@ export default function GFPSManager() {
     </html>
   `;
 
-  const iframe = document.createElement("iframe");
+    const iframe = document.createElement("iframe");
 
-  Object.assign(iframe.style, {
-    position: "fixed",
-    right: "0",
-    bottom: "0",
-    width: "0",
-    height: "0",
-    border: "0",
-  });
+    Object.assign(iframe.style, {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+    });
 
-  document.body.appendChild(iframe);
+    document.body.appendChild(iframe);
 
-  const doc = iframe.contentWindow?.document;
-  if (!doc) return;
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
 
-  doc.open();
-  doc.write(html);
-  doc.close();
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-  iframe.onload = () => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    setTimeout(() => document.body.removeChild(iframe), 1000);
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
   };
-};
 
   return (
     <div className="p-6">
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold items-center justify-center">GFPS</h1>
+        <h1 className="text-3xl font-bold items-center justify-center">GFPS</h1>
         <div className="flex gap-4">
           <button
-            className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={handlePrintGFPS}
           >
             Print GFPS
           </button>
-          <button
-            onClick={() => {
-              setEditingSection(null);
-              setSelectedOfficials([]);
-              setExecRoles({});
-              setSection(SECTION_CHOICES[0].key);
-              setShowModal(true);
-            }}
-            className="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Add Member
-          </button>
+          {role !== "gad coordinator" && (
+            <button
+              onClick={() => {
+                setEditingSection(null);
+                setSelectedOfficials([]);
+                setExecRoles({});
+                setSection(SECTION_CHOICES[0].key);
+                setShowModal(true);
+              }}
+              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              + Add Member
+            </button>
+          )}
         </div>
       </div>
 
@@ -554,7 +632,7 @@ export default function GFPSManager() {
                   if (!editingSection) setSection(e.target.value);
                 }}
                 disabled={!!editingSection}
-                className="w-full border rounded px-2 py-1 max-w-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full border rounded px-2 py-1 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 {SECTION_CHOICES.map((s) => (
                   <option key={s.key} value={s.key}>
@@ -576,32 +654,54 @@ export default function GFPSManager() {
 
               {section === "executiveCommittee" &&
                 selectedOfficials.length > 0 && (
-                  <div className="mt-2">
-                    <label className="block mb-1 font-semibold">
+                  <div className="mt-2 overflow-y-auto h-40 border rounded-sm px-4">
+                    <label className="block mb-1 font-semibold sticky top-0 bg-white z-10 py-2">
                       Assign Role
                     </label>
                     {selectedOfficials.map((key) => {
                       const [group, id] = key.split(":");
-                      const item = Array.isArray(officials[group])
-                        ? officials[group].find(
-                            (o) =>
-                              (o.name?._id || o._id || o.name)?.toString() ===
-                              id,
-                          )
-                        : undefined;
+
+                      let groupItems = officials[group];
+
+                      if (groupItems && !Array.isArray(groupItems)) {
+                        groupItems = [groupItems];
+                      }
+
+                      const item = groupItems?.find(
+                        (o) =>
+                          (o.name?._id || o._id || o.name)?.toString() === id,
+                      );
+
                       const label =
                         item?.position ||
                         item?.college ||
-                        item?.branch ||
-                        item?.name?.personal_info_id?.first_name ||
-                        item?.name?.email ||
-                        id;
+                        item?.branch;
+
+                      const subLabel = item?.college || item?.branch;
+
+                      const firstName =
+                        item?.name?.personal_info_id?.personal?.first_name ||
+                        item?.first_name;
+
+                      const lastName =
+                        item?.name?.personal_info_id?.personal?.last_name ||
+                        item?.last_name;
+
                       return (
                         <div
                           key={key}
-                          className="flex items-center mb-1 space-x-2"
+                          className="flex justify-between items-center mb-1 space-x-2"
                         >
-                          <span className="flex-1 text-sm">{label}</span>
+                          <div className="flex flex-col">
+                            <p className="font-semibold">
+                              {label} {subLabel}
+                            </p>
+
+                            <p>
+                              ({firstName} {lastName})
+                            </p>
+                          </div>
+
                           <select
                             value={execRoles[key] || "member"}
                             onChange={(e) =>
@@ -644,13 +744,18 @@ export default function GFPSManager() {
       <div className="overflow-x-auto">
         {loadingGfps ? (
           <div>Loading data...</div>
-        ) : (
-          <table className="min-w-full bg-white border rounded shadow">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 border-b">Section</th>
-                <th className="px-4 py-2 border-b">Officials</th>
-                <th className="px-4 py-2 border-b">Action</th>
+        ) : ( 
+          <div className="">
+
+     
+          <table className="min-w-full bg-white border-2 border-gray-200">
+            <thead className="rounded-md">
+              <tr className="border border-gray-200 bg-gray-200">
+                <th className="px-4 py-2 border-r-2 border-gray-200">Section</th>
+                <th className="px-4 py-2 border-r-2 border-gray-200">Officials</th>
+                {role !== "gad coordinator" && (
+                  <th className="px-4 py-2">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -678,14 +783,16 @@ export default function GFPSManager() {
                     "";
                   const position = official?.position || "";
                   return (
-                    <tr key={sec.key}>
-                      <td className="px-4 py-2 border-b">{sec.label}</td>
-                      <td className="px-4 py-2 border-b">
+                    <tr key={sec.key}  className="border border-gray-200">
+                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
+                      <td className="px-4 py-2 border-r-2 border-gray-200">
                         <strong>{position}</strong> ({firstName} {lastName})
                       </td>
-                      <td className="px-4 py-2 border-b">
-                        <EditButton sectionKey={sec.key} />
-                      </td>
+                      {role !== "gad coordinator" && (
+                        <td className="px-4 py-2">
+                          <EditButton sectionKey={sec.key} />
+                        </td>
+                      )}
                     </tr>
                   );
                 } else if (sec.key === "secretariat") {
@@ -698,9 +805,9 @@ export default function GFPSManager() {
                   const chairs = members.filter((m) => m.role === "chair");
                   const membersOnly = members.filter((m) => m.role !== "chair");
                   return (
-                    <tr key={sec.key}>
-                      <td className="px-4 py-2 border-b">{sec.label}</td>
-                      <td className="px-4 py-2 border-b">
+                    <tr key={sec.key}  className="border border-gray-200">
+                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
+                      <td className="px-4 py-2 border-r-2 border-gray-200">
                         <div>
                           <div>
                             <strong>Chair:</strong>{" "}
@@ -738,17 +845,19 @@ export default function GFPSManager() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-2 border-b">
-                        <EditButton sectionKey={sec.key} />
-                      </td>
+                      {role !== "gad coordinator" && (
+                        <td className="px-4 py-2">
+                          <EditButton sectionKey={sec.key} />
+                        </td>
+                      )}
                     </tr>
                   );
                 }
 
                 return (
-                  <tr key={sec.key}>
-                    <td className="px-4 py-2 border-b">{sec.label}</td>
-                    <td className="px-4 py-2 border-b">
+                  <tr key={sec.key}  className="border border-gray-200">
+                    <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
+                    <td className="px-4 py-2 border-r-2 border-gray-200 ">
                       {members
                         .map((m) => {
                           if (m.official) {
@@ -781,14 +890,17 @@ export default function GFPSManager() {
                           return [...acc, ", ", curr];
                         }, [])}
                     </td>
-                    <td className="px-4 py-2 border-b">
-                      <EditButton sectionKey={sec.key} />
-                    </td>
+                    {role !== "gad coordinator" && (
+                      <td className="px-4 py-2">
+                        <EditButton sectionKey={sec.key} />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
             </tbody>
           </table>
+               </div>
         )}
       </div>
     </div>

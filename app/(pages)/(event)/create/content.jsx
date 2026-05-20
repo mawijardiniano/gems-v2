@@ -123,7 +123,7 @@ export default function CreateEventsContent() {
   const [success, setSuccess] = useState("");
 
   const [posterFile, setPosterFile] = useState(null);
-const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -149,29 +149,29 @@ const [uploading, setUploading] = useState(false);
   }, []);
 
   const uploadPoster = async () => {
-  if (!posterFile) return null;
+    if (!posterFile) return null;
 
-  const formData = new FormData();
-   formData.append("file", posterFile);
-  formData.append("folder", "events/posters");
+    const formData = new FormData();
+    formData.append("file", posterFile);
+    formData.append("folder", "events/posters");
 
-  setUploading(true);
+    setUploading(true);
 
-  try {
-    const res = await axios.post("/api/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    try {
+      const res = await axios.post("/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    return {
-      url: res.data.url,
-      key: res.data.key,
-    };
-  } finally {
-    setUploading(false);
-  }
-};
+      return {
+        url: res.data.url,
+        key: res.data.key,
+      };
+    } finally {
+      setUploading(false);
+    }
+  };
   const nowLocal = useMemo(() => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -250,33 +250,32 @@ const [uploading, setUploading] = useState(false);
     }
 
     try {
+      let posterUrl = null;
 
-       let posterUrl = null;
+      if (posterFile) {
+        posterUrl = await uploadPoster();
+      }
 
-if (posterFile) {
-  posterUrl = await uploadPoster();
-}
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        number_of_days: formData.number_of_days,
+        start_dates: formData.start_dates,
+        end_dates: formData.end_dates,
+        venue: formData.venue.trim(),
+        type_of_activity: formData.type_of_activity,
+        organizing_office_unit: formData.organizing_office_unit,
+        co_organizing_office_unit: formData.co_organizing_office_unit,
+        eligibility_criteria: formData.eligibility_criteria,
+        target_number_of_participants: formData.target_number_of_participants,
+        ...(formData.project ? { project: formData.project } : {}),
+        ...(formData.gad_activity
+          ? { gad_activity: formData.gad_activity }
+          : {}),
+        ...(userId ? { created_by: userId } : {}),
 
-const payload = {
-  title: formData.title.trim(),
-  description: formData.description.trim(),
-  number_of_days: formData.number_of_days,
-  start_dates: formData.start_dates,
-  end_dates: formData.end_dates,
-  venue: formData.venue.trim(),
-  type_of_activity: formData.type_of_activity,
-  organizing_office_unit: formData.organizing_office_unit,
-  co_organizing_office_unit: formData.co_organizing_office_unit,
-  eligibility_criteria: formData.eligibility_criteria,
-  target_number_of_participants: formData.target_number_of_participants,
-  ...(formData.project ? { project: formData.project } : {}),
-  ...(formData.gad_activity ? { gad_activity: formData.gad_activity } : {}),
-  ...(userId ? { created_by: userId } : {}),
-
-  ...(posterUrl
-    ? { event_poster: posterUrl }
-    : {}),
-};
+        ...(posterUrl ? { event_poster: posterUrl } : {}),
+      };
 
       await axios.post("/api/events", payload);
       setSuccess("Event created successfully");
@@ -309,24 +308,24 @@ const payload = {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-  <label className="block text-sm font-medium mb-2">
-    Event Poster
-  </label>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Event Poster
+            </label>
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => setPosterFile(e.target.files[0])}
-    className="w-full border border-gray-300 rounded px-3 py-2"
-  />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPosterFile(e.target.files[0])}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
 
-  {posterFile && (
-    <p className="text-xs text-gray-500 mt-1">
-      Selected: {posterFile.name}
-    </p>
-  )}
-</div>
+            {posterFile && (
+              <p className="text-xs text-gray-500 mt-1">
+                Selected: {posterFile.name}
+              </p>
+            )}
+          </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-2">
               Type of Activity <span className="text-red-500">*</span>
@@ -378,14 +377,19 @@ const payload = {
                   : [proj.gad_activity]
                 )
                   .filter(Boolean)
-                  .map((activity, idx) => (
-                    <option
-                      key={proj._id + "-" + idx}
-                      value={proj._id + "||||" + activity}
-                    >
-                      {activity}
-                    </option>
-                  )),
+                  .map((activity, idx) => {
+                    const label =
+                      typeof activity === "object" ? activity.value : activity;
+
+                    return (
+                      <option
+                        key={proj._id + "-" + idx}
+                        value={proj._id + "||||" + label}
+                      >
+                        {label}
+                      </option>
+                    );
+                  }),
               )}
             </select>
           </div>
@@ -537,13 +541,13 @@ const payload = {
           >
             Cancel
           </button>
-         <button
-  type="submit"
-  disabled={loading || uploading}
-  className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400"
->
-  {loading || uploading ? "Creating..." : "Create Event"}
-</button>
+          <button
+            type="submit"
+            disabled={loading || uploading}
+            className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+          >
+            {loading || uploading ? "Creating..." : "Create Event"}
+          </button>
         </div>
       </form>
     </div>

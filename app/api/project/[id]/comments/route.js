@@ -37,47 +37,78 @@ export async function GET(req, { params }) {
   }
 }
 
+
 export async function POST(req, { params }) {
   await connectDB();
 
-  const { id } = await params;
-  const body = await req.json();
+  try {
+    const { id } = await params;
+    const { field, message, type, userId } = await req.json();
 
-  const { field, message, type, userId } = body;
+    const project = await Project.findById(id);
 
-  const project = await Project.findById(id);
+    if (!project) {
+      return Response.json({ message: "Project not found" }, { status: 404 });
+    }
 
-  if (!project) {
+    if (!field || !message || !userId) {
+      return Response.json({ message: "Missing required fields" }, { status: 400 });
+    }
+
+   const parts = field.split(".");
+const baseField = parts[0];
+const fieldIndex = parts[1] !== undefined ? Number(parts[1]) : null;
+
+    const target = project[baseField];
+
+    if (!target) {
+      return Response.json({ message: "Field not found" }, { status: 400 });
+    }
+
+    if (!Array.isArray(target.comments)) {
+      target.comments = [];
+    }
+
+    target.comments.push({
+      userId,
+      message,
+      type,
+      fieldIndex
+    });
+
+    project.markModified(baseField);
+    await project.save();
+
+    return Response.json({
+      success: true,
+      data: target.comments,
+    });
+
+  } catch (error) {
     return Response.json(
-      { message: "Project not found" },
-      { status: 404 }
+      { message: error.message },
+      { status: 500 }
     );
   }
-
-  project[field].comments.push({
-    userId,
-    message,
-    type,
-  });
-
-  await project.save();
-
-  return Response.json({
-    message: "Comment added successfully",
-    data: project[field].comments,
-  });
 }
 
 export async function DELETE(req, { params }) {
   await connectDB();
 
-  const { id } = await params;
-  const { searchParams } = new URL(req.url);
-
-  const field = searchParams.get("field");
-  const commentId = searchParams.get("commentId");
-
   try {
+    const { id } = await params;
+    const { searchParams } = new URL(req.url);
+
+    const fieldRaw = searchParams.get("field");
+    const commentId = searchParams.get("commentId");
+
+    if (!fieldRaw || !commentId) {
+      return Response.json(
+        { message: "Missing field or commentId" },
+        { status: 400 }
+      );
+    }
+
     const project = await Project.findById(id);
 
     if (!project) {
@@ -87,33 +118,33 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    if (!field || !commentId) {
+    // ✅ FIX: remove ".0" or ".1" safely
+    const baseField = fieldRaw.split(".")[0];
+
+    const target = project[baseField];
+
+    if (!target || !Array.isArray(target.comments)) {
       return Response.json(
-        { message: "Missing field or commentId" },
+        { message: "Invalid field or no comments found" },
         { status: 400 }
       );
     }
 
-    if (!project[field] || !project[field].comments) {
-      return Response.json(
-        { message: "Invalid field" },
-        { status: 400 }
-      );
-    }
-
-    project[field].comments = project[field].comments.filter(
+    // ✅ delete comment correctly
+    target.comments = target.comments.filter(
       (c) => c._id.toString() !== commentId
     );
 
+    project.markModified(baseField);
     await project.save();
 
     return Response.json({
-      message: "Comment deleted successfully",
-      data: project[field].comments,
+      success: true,
+      data: target.comments,
     });
-  } catch (err) {
+  } catch (error) {
     return Response.json(
-      { message: err.message },
+      { message: error.message },
       { status: 500 }
     );
   }

@@ -12,12 +12,72 @@ import {
   Legend,
   LabelList,
 } from "recharts";
+import { useRouter } from "next/navigation";
 
 export default function EventsDashboardContent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [GPB, setGPB] = useState([]);
+  const [gaaBudget, setGAABudget] = useState([]);
+  const router = useRouter();
+  const { totalGAA, totalGAD, avgGADPercent } = useMemo(() => {
+    const totalGAA = gaaBudget.reduce((sum, g) => sum + (g.totalGAA || 0), 0);
+    const totalGAD = gaaBudget.reduce(
+      (sum, g) => sum + (g.gadAnnualBudget || 0),
+      0,
+    );
+
+    const avgGADPercent =
+      gaaBudget.length > 0
+        ? (
+            gaaBudget.reduce((sum, g) => sum + (g.gadPercent || 0), 0) /
+            gaaBudget.length
+          ).toFixed(2)
+        : 0;
+
+    return {
+      totalGAA: totalGAA.toLocaleString(),
+      totalGAD: totalGAD.toLocaleString(),
+      avgGADPercent,
+    };
+  }, [gaaBudget]);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await axios.get("/api/gaa-budget");
+        setGAABudget(res.data?.data.slice(0, 5) || []);
+        console.log("GAA", res.data?.data);
+      } catch (err) {
+        setError(err.response?.data?.message || "Unable to load gaa budget.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await axios.get("/api/gpb");
+        setGPB(res.data?.data.slice(0, 4) || []);
+        console.log("GPB", res.data?.data);
+      } catch (err) {
+        setError(err.response?.data?.message || "Unable to load gpb.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -36,137 +96,24 @@ export default function EventsDashboardContent() {
     load();
   }, []);
 
-  const { now, todayStart } = useMemo(() => {
-    const current = Date.now();
-    const t = new Date();
-    t.setHours(0, 0, 0, 0);
-    return { now: current, todayStart: t.getTime() };
-  }, []);
-
-  const parseDate = (value) => {
-    if (!value) return null;
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d;
-  };
-
-  const getStart = (e) =>
-    parseDate(e.start_date || e.date || e.startDate || e.event_date);
-  const getEnd = (e) =>
-    parseDate(e.end_date || e.endDate || e.finish_date || e.finishDate);
-
-  const filteredEvents = useMemo(() => {
-    let filtered = events;
-    if (statusFilter === "upcoming") {
-      filtered = events.filter((e) => {
-        const end = getEnd(e) || getStart(e);
-        return end && end.getTime() >= todayStart;
-      });
-    } else if (statusFilter === "past") {
-      filtered = events.filter((e) => {
-        const end = getEnd(e) || getStart(e);
-        return end && end.getTime() < todayStart;
-      });
-    } else if (statusFilter !== "all") {
-      filtered = events.filter(
-        (e) => (e.status || "").toLowerCase() === statusFilter,
-      );
-    }
-    return filtered.slice(0, 4);
-  }, [events, now, statusFilter]);
-
-  const stats = useMemo(() => {
-    const total = events.length;
-    const active = events.filter(
-      (e) => (e.status || "").toLowerCase() === "active",
-    ).length;
-    const cancelled = events.filter(
-      (e) => (e.status || "").toLowerCase() === "cancelled",
-    ).length;
-    const upcoming = events.filter((e) => {
-      const end = getEnd(e) || getStart(e);
-      return end && end.getTime() >= todayStart;
-    }).length;
-    const past = events.filter((e) => {
-      const end = getEnd(e) || getStart(e);
-      return end && end.getTime() < todayStart;
-    }).length;
-    const totalRegistrations = events.reduce(
-      (sum, e) =>
-        sum +
-        (Array.isArray(e.registered_users) ? e.registered_users.length : 0),
-      0,
-    );
-
-    return { total, active, cancelled, upcoming, past, totalRegistrations };
-  }, [events, now]);
-
-  const monthlyData = useMemo(() => {
-    const counts = {};
-    events.forEach((e) => {
-      const d = parseDate(e.start_date || e.date);
-      if (!d) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      counts[key] = (counts[key] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort(([a], [b]) => (a > b ? 1 : -1))
-      .map(([name, value]) => ({ name, value }));
-  }, [events]);
-
-  const topEvents = useMemo(() => {
-    return [...events]
-      .sort((a, b) => {
-        const aCount = Array.isArray(a.registered_users)
-          ? a.registered_users.length
-          : 0;
-        const bCount = Array.isArray(b.registered_users)
-          ? b.registered_users.length
-          : 0;
-        return bCount - aCount;
-      })
-      .slice(0, 4);
-  }, [events]);
-
-  const formatRange = (start, end) => {
-    if (!start) return "No date";
-    const opts = {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    };
-    const format = (value) => {
-      const d = new Date(value);
-      return Number.isNaN(d.getTime())
-        ? "Invalid date"
-        : d.toLocaleString(undefined, opts);
-    };
-    const startStr = format(start);
-    if (!end) return startStr;
-    return `${startStr} - ${format(end)}`;
-  };
+  const gaaChartData = useMemo(() => {
+    return [...gaaBudget]
+      .sort((a, b) => a.year - b.year)
+      .map((g) => ({
+        year: g.year,
+        gaa: g.totalGAA,
+        gad: g.gadAnnualBudget,
+      }));
+  }, [gaaBudget]);
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Event Dashboard</h1>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-sm text-gray-600">
-            Overview of events and registrations
+            Overview of events, GPB, and GAA budget allocation
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-600">Filter</label>
-          <select
-            className="border border-gray-200 rounded px-3 py-2 text-sm bg-white"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="past">Past</option>
-          </select>
         </div>
       </div>
 
@@ -180,36 +127,63 @@ export default function EventsDashboardContent() {
         <div className="text-gray-500">Loading events...</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 w-full">
-            <StatCard label="Total Events" value={stats.total} />
-            <StatCard label="Upcoming" value={stats.upcoming} />
-            <StatCard label="Past" value={stats.past} />
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 p-4 border border-gray-200 rounded-lg bg-white h-full">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Events per Month</h2>
+                <h2 className="text-lg font-semibold">GAA Budget per Year</h2>
                 <span className="text-xs text-gray-500">
-                  Based on start date
+                  GAD allocation from total budget
                 </span>
               </div>
-              {monthlyData.length === 0 ? (
+              {gaaBudget.length === 0 ? (
                 <p className="text-sm text-gray-600">No data available.</p>
               ) : (
                 <div className="w-full h-72">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData}>
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                    <BarChart data={gaaChartData}>
+                      <XAxis dataKey="year" tickLine={false} axisLine={false} />
                       <YAxis
-                        allowDecimals={false}
+                        tickFormatter={(value) =>
+                          `₱${(value / 1000000).toFixed(0)}M`
+                        }
                         tickLine={false}
                         axisLine={false}
                       />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value) =>
+                          `₱ ${Number(value).toLocaleString()}`
+                        }
+                      />
                       <Legend />
-                      <Bar dataKey="value" fill="#2563eb" radius={[4, 4, 0, 0]}>
-                        <LabelList dataKey="value" position="top" />
+
+                      <Bar
+                        dataKey="gaa"
+                        name="Total GAA"
+                        fill="#2563eb"
+                        radius={[4, 4, 0, 0]}
+                      >
+                        <LabelList
+                          dataKey="gaa"
+                          position="top"
+                          formatter={(value) =>
+                            `₱${(value / 1000000).toFixed(1)}M`
+                          }
+                        />
+                      </Bar>
+
+                      <Bar
+                        dataKey="gad"
+                        name="GAD Budget"
+                        fill="#16a34a"
+                        radius={[4, 4, 0, 0]}
+                      >
+                        <LabelList
+                          dataKey="gad"
+                          position="top"
+                          formatter={(value) =>
+                            `₱${(value / 1000000).toFixed(1)}M`
+                          }
+                        />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -217,102 +191,121 @@ export default function EventsDashboardContent() {
               )}
             </div>
 
-            <div className="p-4 border  border-gray-200 rounded-lg bg-white h-full">
+            <div className="p-5 border border-gray-200 rounded-xl bg-white h-full">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Top Events</h2>
-                <span className="text-xs text-gray-500">By registrations</span>
+                <h2 className="text-lg font-semibold">GPB Overview</h2>
+                <span className="text-xs text-gray-500">Projects per year</span>
               </div>
-              {topEvents.length === 0 ? (
-                <p className="text-sm text-gray-600">No events available.</p>
+
+              {GPB.length === 0 ? (
+                <div className="text-center py-10 text-sm text-gray-500">
+                  No GPB records available.
+                </div>
               ) : (
-                <ul className="divide-y divide-gray-200">
-                  {topEvents.map((evt, idx) => {
-                    const regCount = Array.isArray(evt.registered_users)
-                      ? evt.registered_users.length
+                <ul className="space-y-2">
+                  {GPB.map((gpb, idx) => {
+                    const projectCount = Array.isArray(gpb.projects)
+                      ? gpb.projects.length
                       : 0;
+
                     return (
-                      <li key={evt._id || idx} className="py-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold">
-                              {evt.title || "Untitled"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatRange(
-                                evt.start_date || evt.date,
-                                evt.end_date,
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold">{regCount}</p>
-                            <p className="text-xs text-gray-500">Registered</p>
-                          </div>
+                      <li
+                        key={gpb._id || idx}
+                        className="flex items-center justify-between gap-4 border-b border-gray-200"
+                      >
+                        <div className="space-y-1">
+                          <p className="font-medium text-sm text-gray-800">
+                            GPB {gpb.year}
+                          </p>
+
+                          <p className="text-sm text-gray-500 mb-2">
+                            {projectCount} project
+                            {projectCount !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+                              gpb?.status_of_gpb?.status === "draft"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : gpb?.status_of_gpb?.status === "approved"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {gpb?.status_of_gpb?.status}
+                          </span>
                         </div>
                       </li>
                     );
                   })}
                 </ul>
               )}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => router.push("/projects")}
+                  className="text-xs text-blue-600 mt-2"
+                >
+                  View All
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="p-4 border  border-gray-200 rounded-lg bg-white">
+          <div className="p-5 border border-gray-200 rounded-xl bg-white shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Event List</h2>
-              <span className="text-xs text-gray-500">Filtered view</span>
+              <h2 className="text-lg font-semibold">GAA Budget</h2>
+              <span className="text-xs text-gray-500">Annual allocation</span>
             </div>
-            {filteredEvents.length === 0 ? (
+
+            {gaaBudget.length === 0 ? (
               <p className="text-sm text-gray-600">
-                No events match this filter.
+                No GAA budget data available.
               </p>
             ) : (
               <div className="overflow-auto">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-left text-gray-600">
                     <tr>
-                      <th className="px-4 py-2 font-medium">Title</th>
-                      <th className="px-4 py-2 font-medium">Schedule</th>
-                      <th className="px-4 py-2 font-medium">Registrations</th>
+                      <th className="px-4 py-2 font-medium">Year</th>
+                      <th className="px-4 py-2 font-medium">Total GAA</th>
+                      <th className="px-4 py-2 font-medium">GAD %</th>
+                      <th className="px-4 py-2 font-medium">GAD Budget</th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-gray-200">
-                    {filteredEvents.map((evt) => {
-                      const regCount = Array.isArray(evt.registered_users)
-                        ? evt.registered_users.length
-                        : 0;
-                      return (
-                        <tr key={evt._id || evt.title}>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            {evt.title || "Untitled"}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            {formatRange(
-                              evt.start_date || evt.date,
-                              evt.end_date,
-                            )}
-                          </td>
-                          <td className="px-4 py-2">{regCount}</td>
-                        </tr>
-                      );
-                    })}
+                    {gaaBudget.map((gaa) => (
+                      <tr key={gaa._id}>
+                        <td className="px-4 py-2 font-medium">{gaa.year}</td>
+
+                        <td className="px-4 py-2">
+                          ₱ {Number(gaa.totalGAA).toLocaleString()}
+                        </td>
+
+                        <td className="px-4 py-2">{gaa.gadPercent}%</td>
+
+                        <td className="px-4 py-2 text-green-600 font-medium">
+                          ₱ {Number(gaa.gadAnnualBudget).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             )}
+            <div className="flex justify-end">
+              <button
+                onClick={() => router.push("/gaa-budget")}
+                className="text-xs text-blue-600 mt-2"
+              >
+                View All
+              </button>
+            </div>
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function StatCard({ label, value, hint }) {
-  return (
-    <div className="p-4 border border-gray-200 rounded-lg bg-white">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-2xl font-semibold">{value}</p>
-      {hint ? <p className="text-xs text-gray-500">{hint}</p> : null}
     </div>
   );
 }

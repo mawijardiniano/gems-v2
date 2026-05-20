@@ -1,6 +1,14 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import {
+  FaEdit,
+  FaPlus,
+  FaPrint,
+  FaTimes,
+  FaMoneyBillWave,
+} from "react-icons/fa";
 
 function BudgetModal({ open, onClose, onSave, initial }) {
   const [year, setYear] = useState(initial?.year || new Date().getFullYear());
@@ -30,6 +38,7 @@ function BudgetModal({ open, onClose, onSave, initial }) {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
       await onSave({
         year,
@@ -39,61 +48,78 @@ function BudgetModal({ open, onClose, onSave, initial }) {
     } catch (err) {
       setError(err.message || "Failed to save budget");
     }
+
     setLoading(false);
   };
 
   if (!open) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 bg-opacity-30">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative">
-        <button
-          className="absolute top-2 right-4 text-4xl text-gray-400 hover:text-gray-700"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        <h2 className="text-xl font-bold mb-4">
-          {initial ? "Edit" : "Add"} GAA Budget
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+      <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-blue-600 to-indigo-600">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              {initial ? "Edit Budget" : "Add Budget"}
+            </h2>
+
+            <p className="text-blue-100 text-sm mt-1">
+              Manage annual GAA and GAD allocation
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-white/20 p-2 rounded-full transition"
+          >
+            <FaTimes size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* YEAR */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Year
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Budget Year
               </label>
+
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
                 min={2000}
                 max={2100}
                 required
                 disabled={!!initial}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               />
             </div>
+
+            {/* TOTAL GAA */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Total GAA (₱)
               </label>
+
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 value={totalGAA === 0 ? "" : totalGAA}
                 onChange={(e) => setTotalGAA(e.target.value)}
-                step="1"
                 required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                GAD Percent (%)
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                GAD Percentage (%)
               </label>
+
               <input
                 type="number"
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 value={gadPercent}
                 onChange={(e) =>
                   setGadPercent(
@@ -102,36 +128,53 @@ function BudgetModal({ open, onClose, onSave, initial }) {
                 }
                 min={0}
                 max={100}
-                step="0.01"
+                step="1"
                 required
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Computed GAD Budget (₱)
               </label>
-              <input
-                type="text"
-                className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700"
-                value={gadAnnualBudget.toLocaleString(undefined, {
+
+              <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-green-700 font-bold text-lg">
+                <FaMoneyBillWave />₱{" "}
+                {gadAnnualBudget.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
-                readOnly
-              />
+              </div>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
-            disabled={loading}
-          >
-            {loading ? "Saving..." : initial ? "Update Budget" : "Save Budget"}
-          </button>
           {error && (
-            <div className="text-red-600 text-center mt-2">{error}</div>
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 text-sm">
+              {error}
+            </div>
           )}
+
+          <div className="flex justify-end gap-3 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition shadow-lg shadow-blue-200"
+            >
+              {loading
+                ? "Saving..."
+                : initial
+                  ? "Update Budget"
+                  : "Save Budget"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -140,19 +183,23 @@ function BudgetModal({ open, onClose, onSave, initial }) {
 
 export default function GAABudgetContent() {
   const userId = useSelector((state) => state.auth.userId);
+
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editBudget, setEditBudget] = useState(null);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const role = useSelector((state) => state.auth.role);
 
   const fetchBudgets = async () => {
     setLoading(true);
     setError("");
+
     try {
       const res = await fetch("/api/gaa-budget");
       const data = await res.json();
+
       if (res.ok && data.success) {
         setBudgets(data.data);
       } else {
@@ -161,6 +208,7 @@ export default function GAABudgetContent() {
     } catch (err) {
       setError("Network error");
     }
+
     setLoading(false);
   };
 
@@ -171,15 +219,22 @@ export default function GAABudgetContent() {
   const handleSave = async (budget) => {
     setSuccess("");
     setError("");
+
     try {
       let res, data;
-      const payload = { ...budget, enteredBy: userId };
+
+      const payload = {
+        ...budget,
+        enteredBy: userId,
+      };
+
       if (editBudget) {
         res = await fetch(`/api/gaa-budget/${editBudget._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
         data = await res.json();
       } else {
         res = await fetch("/api/gaa-budget", {
@@ -187,8 +242,10 @@ export default function GAABudgetContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
         data = await res.json();
       }
+
       if (res.ok && data.success) {
         setSuccess(editBudget ? "Budget updated!" : "Budget saved!");
         setModalOpen(false);
@@ -208,7 +265,7 @@ export default function GAABudgetContent() {
   };
 
   const handlePrintBudgets = () => {
-  const html = `
+    const html = `
     <html>
       <head>
         <title>GAA Budget Report</title>
@@ -238,13 +295,19 @@ export default function GAABudgetContent() {
           <tbody>
             ${budgets
               .map((b) => {
-                const totalGAA = Number(b.totalGAA || 0).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                });
+                const totalGAA = Number(b.totalGAA || 0).toLocaleString(
+                  undefined,
+                  {
+                    minimumFractionDigits: 2,
+                  },
+                );
 
-                const gadBudget = Number(b.gadAnnualBudget || 0).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                });
+                const gadBudget = Number(b.gadAnnualBudget || 0).toLocaleString(
+                  undefined,
+                  {
+                    minimumFractionDigits: 2,
+                  },
+                );
 
                 return `
                   <tr>
@@ -262,113 +325,171 @@ export default function GAABudgetContent() {
     </html>
   `;
 
-  const iframe = document.createElement("iframe");
-  Object.assign(iframe.style, {
-    position: "fixed",
-    right: "0",
-    bottom: "0",
-    width: "0",
-    height: "0",
-    border: "0",
-  });
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+    });
 
-  document.body.appendChild(iframe);
+    document.body.appendChild(iframe);
 
-  const doc = iframe.contentWindow?.document;
-  if (!doc) return;
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
 
-  doc.open();
-  doc.write(html);
-  doc.close();
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-  iframe.onload = () => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    setTimeout(() => document.body.removeChild(iframe), 1000);
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
   };
-};
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between pb-6">
-        <h2 className="text-2xl font-bold ">
-          Annual GAA Budgets
-        </h2>
-        <div className="flex gap-4">
-<button
-  onClick={handlePrintBudgets}
-  className="mb-4 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded transition"
->
-  Print GAA Budget
-</button>
-<button
-          className="mb-4 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded transition"
-          onClick={() => {
-            setEditBudget(null);
-            setModalOpen(true);
-          }}
-        >
-          + Add Budget
-        </button>
+    <div className="min-h-screen md:p-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900">
+            Annual GAA Budgets
+          </h1>
+
+          <p className="text-gray-500 mt-2">
+            Manage annual allocation and GAD budget records
+          </p>
         </div>
-        
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handlePrintBudgets}
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-white border border-gray-200 hover:bg-gray-100 transition shadow-sm"
+          >
+            <FaPrint />
+            Print Report
+          </button>
+
+          {role !== "gad coordinator" && (
+            <button
+              onClick={() => {
+                setEditBudget(null);
+                setModalOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition shadow-lg shadow-blue-200"
+            >
+              <FaPlus />
+              Add Budget
+            </button>
+          )}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="text-center text-gray-500 py-10">
-          Loading budgets...
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border rounded-lg">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border px-4 py-2">Year</th>
-                <th className="border px-4 py-2">Total GAA (₱)</th>
-                <th className="border px-4 py-2">GAD %</th>
-                <th className="border px-4 py-2">GAD Budget (₱)</th>
-                <th className="border px-4 py-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {budgets.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center text-gray-400 py-6">
-                    No budgets found
-                  </td>
-                </tr>
-              ) : (
-                budgets.map((b) => (
-                  <tr key={b._id} className="hover:bg-blue-50">
-                    <td className="border px-4 py-2 text-center">{b.year}</td>
-                    <td className="border px-4 py-2 text-center">
-                      {Number(b.totalGAA).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      {b.gadPercent}%
-                    </td>
-                    <td className="border px-4 py-2 font-semibold text-blue-700 text-center">
-                      {Number(b.gadAnnualBudget).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="border px-4 py-2 text-center">
-                      <button
-                        className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded mr-2"
-                        onClick={() => handleEdit(b)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {success && (
+        <div className="mb-6 rounded-2xl bg-green-50 border border-green-200 px-5 py-4 text-green-700">
+          {success}
         </div>
       )}
+
+      {error && (
+        <div className="mb-6 rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b bg-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Budget Records
+          </h2>
+        </div>
+
+        {loading ? (
+          <div className="p-10 text-center text-gray-500">
+            Loading budgets...
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-100">
+                <tr className="text-sm text-gray-700">
+                  <th className="px-6 py-4 text-left font-semibold">Year</th>
+                  <th className="px-6 py-4 text-left font-semibold">
+                    Total GAA
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold">GAD %</th>
+                  <th className="px-6 py-4 text-left font-semibold">
+                    GAD Budget
+                  </th>
+                            {role !== "gad coordinator" && (
+                  <th className="px-6 py-4 text-right font-semibold">Action</th>
+                            )}
+                </tr>
+              </thead>
+
+              <tbody>
+                {budgets.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center text-gray-400">
+                      No budgets found
+                    </td>
+                  </tr>
+                ) : (
+                  budgets.map((b) => (
+                    <tr
+                      key={b._id}
+                      className="border-t hover:bg-gray-50 transition"
+                    >
+                      <td className="px-6 py-5 font-semibold text-gray-900">
+                        {b.year}
+                      </td>
+
+                      <td className="px-6 py-5 text-gray-700">
+                        ₱{" "}
+                        {Number(b.totalGAA).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium">
+                          {b.gadPercent}%
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="font-bold text-green-700">
+                          ₱{" "}
+                          {Number(b.gadAnnualBudget).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </div>
+                      </td>
+
+
+          {role !== "gad coordinator" && (
+                      <td className="px-6 py-5 text-right">
+                        <button
+                          onClick={() => handleEdit(b)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition"
+                        >
+                          <FaEdit />
+                          Edit
+                        </button>
+                      </td>
+          )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <BudgetModal
         open={modalOpen}
         onClose={() => {

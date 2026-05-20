@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const PRESIDENT = ["University President"];
 const VICE_POSITIONS = [
@@ -178,6 +179,7 @@ function UniversityOfficialsContent() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [debouncedUserSearch, setDebouncedUserSearch] = useState("");
+  const role = useSelector((state) => state.auth.role);
 
   useEffect(() => {
     fetchOfficials();
@@ -274,11 +276,10 @@ function UniversityOfficialsContent() {
     setLoading(false);
   };
 
-
   const handlePrintOfficials = () => {
-  if (!officials) return;
+    if (!officials) return;
 
-  const html = `
+    const html = `
     <html>
       <head>
         <title>University Officials Report</title>
@@ -337,9 +338,10 @@ function UniversityOfficialsContent() {
                   ${
                     sec.key === "campusDirectors"
                       ? "<th>Branch</th>"
-                      : sec.key === "collegeDeans" || sec.key === "associateDeans"
-                      ? "<th>College</th>"
-                      : ""
+                      : sec.key === "collegeDeans" ||
+                          sec.key === "associateDeans"
+                        ? "<th>College</th>"
+                        : ""
                   }
                 </tr>
               </thead>
@@ -359,9 +361,9 @@ function UniversityOfficialsContent() {
                           sec.key === "campusDirectors"
                             ? `<td>${branch}</td>`
                             : sec.key === "collegeDeans" ||
-                              sec.key === "associateDeans"
-                            ? `<td>${college}</td>`
-                            : ""
+                                sec.key === "associateDeans"
+                              ? `<td>${college}</td>`
+                              : ""
                         }
                       </tr>
                     `;
@@ -376,31 +378,31 @@ function UniversityOfficialsContent() {
     </html>
   `;
 
-  const iframe = document.createElement("iframe");
-  Object.assign(iframe.style, {
-    position: "fixed",
-    right: "0",
-    bottom: "0",
-    width: "0",
-    height: "0",
-    border: "0",
-  });
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+    });
 
-  document.body.appendChild(iframe);
+    document.body.appendChild(iframe);
 
-  const doc = iframe.contentWindow?.document;
-  if (!doc) return;
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
 
-  doc.open();
-  doc.write(html);
-  doc.close();
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-  iframe.onload = () => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    setTimeout(() => document.body.removeChild(iframe), 1000);
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
   };
-};
 
   const renderNameField = () => (
     <div className="relative">
@@ -800,7 +802,6 @@ function UniversityOfficialsContent() {
     setEditModalOpen(true);
   };
 
-  // Interactive name field for edit modal
   const renderEditNameField = () => (
     <div className="relative">
       <input
@@ -906,9 +907,9 @@ function UniversityOfficialsContent() {
               <div className="mt-6 mb-2 text-lg font-semibold text-slate-800">
                 {sec.label}
               </div>
-              <div className="overflow-x-auto rounded-xl shadow bg-white mb-6">
+              <div className="overflow-x-auto rounded-md shadow bg-white mb-6">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-gray-200">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Name
@@ -931,9 +932,11 @@ function UniversityOfficialsContent() {
                           College
                         </th>
                       )}
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                        Edit
-                      </th>
+                      {role !== "gad coordinator" && (
+                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                          
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
@@ -973,14 +976,16 @@ function UniversityOfficialsContent() {
                               {o.college}
                             </td>
                           )}
-                          <td className="px-6 py-3 whitespace-nowrap">
-                            <button
-                              className="text-blue-600 hover:underline font-semibold"
-                              onClick={() => handleEdit(sec.key, idx)}
-                            >
-                              Edit
-                            </button>
-                          </td>
+                          {role !== "gad coordinator" && (
+                            <td className="px-6 py-3 whitespace-nowrap">
+                              <button
+                                className="text-blue-600 hover:underline font-semibold"
+                                onClick={() => handleEdit(sec.key, idx)}
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))
                     )}
@@ -1002,19 +1007,20 @@ function UniversityOfficialsContent() {
         </h2>
         <div className="flex gap-4">
           <button
-  onClick={handlePrintOfficials}
-  className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold"
->
-  Print Officials
-</button>
-        <button
-          onClick={handleOpenModal}
-          className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold"
-        >
-          Add Official
-        </button>
+            onClick={handlePrintOfficials}
+            className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
+          >
+            Print Officials
+          </button>
+          {role !== "gad coordinator" && (
+            <button
+              onClick={handleOpenModal}
+              className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
+            >
+              + Add Official
+            </button>
+          )}
         </div>
-       
       </div>
 
       {modalOpen && (

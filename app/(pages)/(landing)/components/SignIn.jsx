@@ -115,8 +115,13 @@ export default function LoginForm() {
     setPassword("focal123!");
   };
   const handleUser = async () => {
-    setUsername("Mawi");
-    setPassword("gems123!");
+    setUsername("JardinianoMarkLouisse");
+    setPassword("gems1234");
+  };
+
+  const handleCoordinator = async () => {
+    setUsername("DeLuna-MalinaoEunice");
+    setPassword("gems1234");
   };
 
   return (
@@ -211,29 +216,35 @@ export default function LoginForm() {
               Sign in
             </button>
 
-            {/* <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <h1 className="text-sm font-medium">Quick SignIn</h1>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
-                  className="shadow px-4 py-1 rounded-md"
+                  className="shadow px-4 py-1 rounded-md bg-white"
                   onClick={handleAdmin}
                 >
                   Admin
                 </button>
                 <button
-                  className="shadow px-4 py-1 rounded-md"
+                  className="shadow px-4 py-1 rounded-md bg-white"
                   onClick={handleFocal}
                 >
                   Focal
                 </button>
                 <button
-                  className="shadow px-4 py-1 rounded-md"
+                  className="shadow px-4 py-1 rounded-md bg-white"
                   onClick={handleUser}
                 >
-                  User
+                  Planning Director
+                </button>
+                <button
+                  className="shadow px-4 py-1 rounded-md bg-white"
+                  onClick={handleCoordinator}
+                >
+                  GAD Coordinator
                 </button>
               </div>
-            </div> */}
+            </div>
 
             <div className="flex justify-center">
               <p className="text-sm">

@@ -13,6 +13,7 @@ const CommentSchema = new Schema(
       type: String,
       enum: ["approval", "revision"],
     },
+    fieldIndex: { type: Number, default: null },
   },
   { timestamps: true }
 );
