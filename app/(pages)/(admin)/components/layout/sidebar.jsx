@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   FaHome,
   FaCog,
@@ -12,34 +12,61 @@ import {
   FaBriefcase,
   FaChartPie,
   FaVenusMars,
-  FaUsers
+  FaUsers,
+  FaFolder
 } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function Sidebar({ open, setOpen }) {
+export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userListOpen, setUserListOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
+  const ROLE_ACCESS = {
+    admin: [
+      "admin-dashboard",
+      "user-list",
+      "reports",
+      "manage-roles",
+      "settings",
+    ],
+
+    "planning director": ["admin-dashboard", "gpb"],
+  };
+
   const links = [
-    { name: "Dashboard", href: "/admin-dashboard", icon: <FaHome /> },
+    {
+      name: "Dashboard",
+      href: "/admin-dashboard",
+      icon: <FaHome />,
+      key: "admin-dashboard",
+    },
+    {
+      name: "GPB",
+      href: "/gpb",
+      icon: <FaFolder />,
+      key: "gpb",
+    },
     {
       name: "User List",
       href: "/user-lists",
       icon: <FaPen />,
+      key: "user-list",
       children: [
         {
           name: "Students",
           href: "/user-lists/students",
           icon: <FaUserGraduate />,
+          key: "students",
         },
         {
           name: "Employees",
           href: "/user-lists/employees",
           icon: <FaBriefcase />,
+          key: "employees",
         },
       ],
     },
@@ -47,17 +74,41 @@ export default function Sidebar({ open, setOpen }) {
       name: "Reports",
       href: "/reports",
       icon: <FaChartPie />,
+      key: "reports",
       children: [
         {
           name: "Sex Disaggregated Data",
           href: "/reports/sex-disaggregated-data",
           icon: <FaVenusMars />,
+          key: "sex-report",
         },
       ],
     },
-    { name: "Manage Roles", href: "/manage-role", icon: <FaUsers /> },
-    { name: "Settings", href: "/admin-settings", icon: <FaCog /> },
+    {
+      name: "Manage Roles",
+      href: "/manage-role",
+      icon: <FaUsers />,
+      key: "manage-roles",
+    },
+    {
+      name: "Settings",
+      href: "/admin-settings",
+      icon: <FaCog />,
+      key: "settings",
+    },
   ];
+
+  const filteredLinks = useMemo(() => {
+    const normalizedRole = role?.toLowerCase();
+    const allowed = ROLE_ACCESS[normalizedRole] || [];
+
+    return links
+      .filter((link) => allowed.includes(link.key))
+      .map((link) => ({
+        ...link,
+        children: link.children?.filter((child) => allowed.includes(child.key)),
+      }));
+  }, [role]);
 
   const handleMobileClose = () => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
@@ -104,7 +155,7 @@ export default function Sidebar({ open, setOpen }) {
           open ? "" : "items-center hidden sm:flex"
         }`}
       >
-        {links.map((link) => {
+        {filteredLinks.map((link) => {
           const hasChildren =
             Array.isArray(link.children) && link.children.length > 0;
           const isUserList = link.name === "User List";

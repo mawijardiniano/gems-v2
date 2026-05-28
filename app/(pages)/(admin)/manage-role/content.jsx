@@ -7,7 +7,7 @@ const ROLES = [
   "SUC President",
   "GAD Coordinator",
   "ICTU Director",
-  "Planning Director"
+  "Planning Director",
 ];
 
 export default function ManageRoleContent() {
@@ -116,7 +116,7 @@ export default function ManageRoleContent() {
           className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
           onClick={openModal}
         >
-          Create
+          Assign Role
         </button>
       </div>
 
@@ -212,7 +212,7 @@ export default function ManageRoleContent() {
                 "";
               const college = user.personal_info_id?.affiliation?.office;
               return (
-                <tr key={user._id}>
+                <tr className="border" key={user._id}>
                   <td className="border px-4 py-2">
                     {firstName} {lastName}
                   </td>

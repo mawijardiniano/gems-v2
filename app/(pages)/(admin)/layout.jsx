@@ -9,6 +9,7 @@ export default function DashboardLayout({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [initialMobileCheckDone, setInitialMobileCheckDone] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const sidebarRef = useRef(null);
   const router = useRouter();
 
@@ -26,12 +27,13 @@ export default function DashboardLayout({ children }) {
           return;
         }
 
-        if (data.user.role.toLowerCase() !== "admin") {
+        if (data.user.role.toLowerCase() !== "admin" && data.user.role.toLowerCase() !== "planning director") {
           router.replace("/not-authorized");
           return;
         }
 
         setIsAuthorized(true);
+        setUserRole(data.user.role.toLowerCase());
       } catch (err) {
         console.error(err);
         router.replace("/");
@@ -82,7 +84,7 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex relative">
       <div ref={sidebarRef}>
-        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} role={userRole} />
       </div>
 
       {sidebarOpen && isMobile && (

@@ -147,10 +147,6 @@ export default function Page() {
       <Snapshot data={filteredData} />
       <GenderPanel data={filteredData} />
       <Demographics data={filteredData} />
-      {/* <Economic data={filteredData} />
-      <Health data={filteredData} />
-      <GenderResponsive data={filteredData} />
-      <PeaceJustice data={filteredData} /> */}
     </div>
   );
 }

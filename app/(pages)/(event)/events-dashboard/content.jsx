@@ -124,7 +124,7 @@ export default function EventsDashboardContent() {
       )}
 
       {loading ? (
-        <div className="text-gray-500">Loading events...</div>
+        <div className="text-gray-500 h-screen">Loading dashboard...</div>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

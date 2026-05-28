@@ -118,7 +118,7 @@ export default function EventsListContent() {
 
   if (loading) {
     return (
-      <div className="py-10 text-center text-gray-500">
+      <div className="py-10 text-center text-gray-500 h-screen">
         Loading events...
       </div>
     );

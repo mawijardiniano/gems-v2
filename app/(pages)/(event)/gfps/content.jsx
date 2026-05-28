@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import PrintGFPS from "../components/Print/PrintGFPS";
 
 const SECTIONS = [
   { key: "chairOrHeadOfAgency", label: "Chair/Head of Agency" },
@@ -252,7 +253,7 @@ export default function GFPSManager() {
       sectionKey === "executiveCommittee" ||
       sectionKey === "technicalWorkingGroup"
     ) {
-      const members = gfps[sectionKey]?.members || [];
+      const members = gfps?.[sectionKey]?.members || [];
       const keys = members
         .map((m) => findOfficialKey(m.official?._id || m.official))
         .filter(Boolean);
@@ -432,170 +433,13 @@ export default function GFPSManager() {
     </button>
   );
 
-  const handlePrintGFPS = () => {
-    const html = `
-    <html>
-      <head>
-        <title>GFPS Report</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-          }
-
-          h2 {
-            text-align: center;
-            margin-bottom: 10px;
-          }
-
-          .header {
-            text-align: center;
-            margin-bottom: 20px;
-          }
-
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-          }
-
-          th, td {
-            border: 1px solid #333;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-          }
-
-          th {
-            background: #f2f2f2;
-            text-align: center;
-          }
-
-          .section {
-            font-weight: bold;
-            background: #fafafa;
-          }
-
-          .members {
-            white-space: pre-wrap;
-          }
-        </style>
-      </head>
-
-      <body>
-        <div class="header">
-          <h2>Gender and Development Focal Point System (GFPS)</h2>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Section</th>
-              <th>Officials</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${Object.entries(SECTIONS)
-              .map(([_, sec]) => {
-                let members = [];
-
-                if (
-                  sec.key === "executiveCommittee" ||
-                  sec.key === "technicalWorkingGroup"
-                ) {
-                  members = gfps[sec.key]?.members || [];
-                } else if (sec.key === "secretariat") {
-                  members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
-                } else if (sec.key === "chairOrHeadOfAgency") {
-                  const chair = gfps[sec.key];
-                  if (!chair) return "";
-
-                  const o = chair.official || {};
-                  const name =
-                    `${o.first_name || ""} ${o.last_name || ""}`.trim();
-                  const position = o.position || "";
-
-                  return `
-                    <tr>
-                      <td class="section">${sec.label}</td>
-                      <td>
-                        <strong>${position}</strong><br/>
-                        ${name}
-                      </td>
-                    </tr>
-                  `;
-                }
-
-                if (!members.length) return "";
-
-                const formatted = members
-                  .map((m) => {
-                    const o = m.official || {};
-                    const name =
-                      `${o.first_name || ""} ${o.last_name || ""}`.trim();
-                    const position = o.position || "";
-                    const extra =
-                      o.branch || o.college
-                        ? ` - ${o.branch || o.college}`
-                        : "";
-
-                    return `${position}${extra} (${name})`;
-                  })
-                  .join("<br/>");
-
-                return `
-                  <tr>
-                    <td class="section">${sec.label}</td>
-                    <td class="members">${formatted}</td>
-                  </tr>
-                `;
-              })
-              .join("")}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `;
-
-    const iframe = document.createElement("iframe");
-
-    Object.assign(iframe.style, {
-      position: "fixed",
-      right: "0",
-      bottom: "0",
-      width: "0",
-      height: "0",
-      border: "0",
-    });
-
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
-
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    iframe.onload = () => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between">
         <h1 className="text-3xl font-bold items-center justify-center">GFPS</h1>
         <div className="flex gap-4">
-          <button
-            className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={handlePrintGFPS}
-          >
-            Print GFPS
-          </button>
+          <PrintGFPS SECTIONS={SECTIONS} gfps={gfps} />
+
           {role !== "gad coordinator" && (
             <button
               onClick={() => {
@@ -673,9 +517,7 @@ export default function GFPSManager() {
                       );
 
                       const label =
-                        item?.position ||
-                        item?.college ||
-                        item?.branch;
+                        item?.position || item?.college || item?.branch;
 
                       const subLabel = item?.college || item?.branch;
 
@@ -743,50 +585,168 @@ export default function GFPSManager() {
 
       <div className="overflow-x-auto">
         {loadingGfps ? (
-          <div>Loading data...</div>
-        ) : ( 
+          <div className="h-screen">Loading data...</div>
+        ) : (
           <div className="">
+            <table className="min-w-full bg-white border-2 border-gray-200">
+              <thead className="rounded-md">
+                <tr className="border border-gray-200 bg-gray-200">
+                  <th className="px-4 py-2 border-r-2 border-gray-200">
+                    Section
+                  </th>
+                  <th className="px-4 py-2 border-r-2 border-gray-200">
+                    Officials
+                  </th>
+                  {role !== "gad coordinator" && (
+                    <th className="px-4 py-2">Action</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(SECTIONS).map(([idx, sec]) => {
+                  let members = [];
 
-     
-          <table className="min-w-full bg-white border-2 border-gray-200">
-            <thead className="rounded-md">
-              <tr className="border border-gray-200 bg-gray-200">
-                <th className="px-4 py-2 border-r-2 border-gray-200">Section</th>
-                <th className="px-4 py-2 border-r-2 border-gray-200">Officials</th>
-                {role !== "gad coordinator" && (
-                  <th className="px-4 py-2">Action</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(SECTIONS).map(([idx, sec]) => {
-                let members = [];
+                  if (
+                    sec.key === "executiveCommittee" ||
+                    sec.key === "technicalWorkingGroup"
+                  ) {
+                    members = gfps[sec.key]?.members || [];
+                  } else if (sec.key === "chairOrHeadOfAgency") {
+                    const chair = gfps?.[sec.key];
+                    if (!chair) return null;
+                    const official = chair.official || chair.name || chair;
+                    const firstName =
+                      official?.first_name ||
+                      official?.personal_info_id?.personal?.first_name ||
+                      official?.personal_info_id?.first_name ||
+                      "";
+                    const lastName =
+                      official?.last_name ||
+                      official?.personal_info_id?.personal?.last_name ||
+                      official?.personal_info_id?.last_name ||
+                      "";
+                    const position = official?.position || "";
+                    return (
+                      <tr key={sec.key} className="border border-gray-200">
+                        <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
+                          {sec.label}
+                        </td>
+                        <td className="px-4 py-2 border-r-2 border-gray-200">
+                          <strong>{position}</strong> ({firstName} {lastName})
+                        </td>
+                        {role !== "gad coordinator" && (
+                          <td className="px-4 py-2">
+                            <EditButton sectionKey={sec.key} />
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  } else if (sec.key === "secretariat") {
+                    members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
+                  }
 
-                if (
-                  sec.key === "executiveCommittee" ||
-                  sec.key === "technicalWorkingGroup"
-                ) {
-                  members = gfps[sec.key]?.members || [];
-                } else if (sec.key === "chairOrHeadOfAgency") {
-                  const chair = gfps[sec.key];
-                  if (!chair) return null;
-                  const official = chair.official || chair.name || chair;
-                  const firstName =
-                    official?.first_name ||
-                    official?.personal_info_id?.personal?.first_name ||
-                    official?.personal_info_id?.first_name ||
-                    "";
-                  const lastName =
-                    official?.last_name ||
-                    official?.personal_info_id?.personal?.last_name ||
-                    official?.personal_info_id?.last_name ||
-                    "";
-                  const position = official?.position || "";
+                  if (!members.length) return null;
+
+                  if (sec.key === "executiveCommittee") {
+                    const chairs = members.filter((m) => m.role === "chair");
+                    const membersOnly = members.filter(
+                      (m) => m.role !== "chair",
+                    );
+                    return (
+                      <tr key={sec.key} className="border border-gray-200">
+                        <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
+                          {sec.label}
+                        </td>
+                        <td className="px-4 py-2 border-r-2 border-gray-200">
+                          <div>
+                            <div>
+                              <strong>Chair:</strong>{" "}
+                              {chairs.length
+                                ? chairs.map((m, i) => {
+                                    const o = m.official || {};
+                                    const extra = o.branch || o.college;
+                                    return (
+                                      <span key={o._id || i}>
+                                        <strong>{o.position}</strong>
+                                        {extra && <strong> — {extra}</strong>} (
+                                        {o.first_name} {o.last_name})
+                                        {i < chairs.length - 1 && ", "}
+                                      </span>
+                                    );
+                                  })
+                                : "None"}
+                            </div>
+                            <div>
+                              <strong>Members:</strong>{" "}
+                              {membersOnly.length
+                                ? membersOnly.map((m, i) => {
+                                    const o = m.official || {};
+                                    const extra = o.branch || o.college;
+                                    return (
+                                      <span key={o._id || i}>
+                                        <strong>{o.position}</strong>
+                                        {extra && <strong> - {extra}</strong>} (
+                                        {o.first_name} {o.last_name})
+                                        {i < membersOnly.length - 1 && ", "}
+                                      </span>
+                                    );
+                                  })
+                                : "None"}
+                            </div>
+                          </div>
+                        </td>
+                        {role !== "gad coordinator" && (
+                          <td className="px-4 py-2">
+                            <EditButton sectionKey={sec.key} />
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  }
+
                   return (
-                    <tr key={sec.key}  className="border border-gray-200">
-                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
-                      <td className="px-4 py-2 border-r-2 border-gray-200">
-                        <strong>{position}</strong> ({firstName} {lastName})
+                    <tr key={sec.key} className="border border-gray-200">
+                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
+                        {sec.label}
+                      </td>
+                      <td className="px-4 py-2 border-r-2 border-gray-200 ">
+                        {members
+                          .map((m) => {
+                            if (m.official) {
+                              const position = m.official.position || "";
+                              const fn = m.official.first_name || "";
+                              const ln = m.official.last_name || "";
+                              return (
+                                <span key={m.official._id || `${fn}-${ln}`}>
+                                  <strong>{position}</strong>
+                                  <strong>
+                                    {m.official.group === "campusDirectors" && (
+                                      <> - {m.official.branch || "No Branch"}</>
+                                    )}
+                                    {m.official.group === "collegeDeans" && (
+                                      <>
+                                        {" "}
+                                        - {m.official.college || "No College"}
+                                      </>
+                                    )}
+                                    {m.official.group === "associateDeans" && (
+                                      <>
+                                        {" "}
+                                        - {m.official.college || "No College"}
+                                      </>
+                                    )}{" "}
+                                  </strong>
+                                  ({fn} {ln})
+                                </span>
+                              );
+                            }
+                            return null;
+                          })
+                          .filter(Boolean)
+                          .reduce((acc, curr, i) => {
+                            if (i === 0) return [curr];
+                            return [...acc, ", ", curr];
+                          }, [])}
                       </td>
                       {role !== "gad coordinator" && (
                         <td className="px-4 py-2">
@@ -795,112 +755,10 @@ export default function GFPSManager() {
                       )}
                     </tr>
                   );
-                } else if (sec.key === "secretariat") {
-                  members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
-                }
-
-                if (!members.length) return null;
-
-                if (sec.key === "executiveCommittee") {
-                  const chairs = members.filter((m) => m.role === "chair");
-                  const membersOnly = members.filter((m) => m.role !== "chair");
-                  return (
-                    <tr key={sec.key}  className="border border-gray-200">
-                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
-                      <td className="px-4 py-2 border-r-2 border-gray-200">
-                        <div>
-                          <div>
-                            <strong>Chair:</strong>{" "}
-                            {chairs.length
-                              ? chairs.map((m, i) => {
-                                  const o = m.official || {};
-                                  const extra = o.branch || o.college;
-                                  return (
-                                    <span key={o._id || i}>
-                                      <strong>{o.position}</strong>
-                                      {extra && <strong> — {extra}</strong>} (
-                                      {o.first_name} {o.last_name})
-                                      {i < chairs.length - 1 && ", "}
-                                    </span>
-                                  );
-                                })
-                              : "None"}
-                          </div>
-                          <div>
-                            <strong>Members:</strong>{" "}
-                            {membersOnly.length
-                              ? membersOnly.map((m, i) => {
-                                  const o = m.official || {};
-                                  const extra = o.branch || o.college;
-                                  return (
-                                    <span key={o._id || i}>
-                                      <strong>{o.position}</strong>
-                                      {extra && <strong> - {extra}</strong>} (
-                                      {o.first_name} {o.last_name})
-                                      {i < membersOnly.length - 1 && ", "}
-                                    </span>
-                                  );
-                                })
-                              : "None"}
-                          </div>
-                        </div>
-                      </td>
-                      {role !== "gad coordinator" && (
-                        <td className="px-4 py-2">
-                          <EditButton sectionKey={sec.key} />
-                        </td>
-                      )}
-                    </tr>
-                  );
-                }
-
-                return (
-                  <tr key={sec.key}  className="border border-gray-200">
-                    <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">{sec.label}</td>
-                    <td className="px-4 py-2 border-r-2 border-gray-200 ">
-                      {members
-                        .map((m) => {
-                          if (m.official) {
-                            const position = m.official.position || "";
-                            const fn = m.official.first_name || "";
-                            const ln = m.official.last_name || "";
-                            return (
-                              <span key={m.official._id || `${fn}-${ln}`}>
-                                <strong>{position}</strong>
-                                <strong>
-                                  {m.official.group === "campusDirectors" && (
-                                    <> - {m.official.branch || "No Branch"}</>
-                                  )}
-                                  {m.official.group === "collegeDeans" && (
-                                    <> - {m.official.college || "No College"}</>
-                                  )}
-                                  {m.official.group === "associateDeans" && (
-                                    <> - {m.official.college || "No College"}</>
-                                  )}{" "}
-                                </strong>
-                                ({fn} {ln})
-                              </span>
-                            );
-                          }
-                          return null;
-                        })
-                        .filter(Boolean)
-                        .reduce((acc, curr, i) => {
-                          if (i === 0) return [curr];
-                          return [...acc, ", ", curr];
-                        }, [])}
-                    </td>
-                    {role !== "gad coordinator" && (
-                      <td className="px-4 py-2">
-                        <EditButton sectionKey={sec.key} />
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-               </div>
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -161,8 +161,8 @@ export default function SexDisaggregatedContent() {
       .concat(Object.keys(yearMap).filter((y) => !yearLevels.includes(y)));
     return sortedYears.map((year) => {
       const data = [
-        { name: "Male", value: yearMap[year].Male, fill: "#3b82f6" }, // blue
-        { name: "Female", value: yearMap[year].Female, fill: "#ec4899" }, // pink
+        { name: "Male", value: yearMap[year].Male, fill: "#3b82f6" },
+        { name: "Female", value: yearMap[year].Female, fill: "#ec4899" },
       ];
       return (
         <div key={year} className="flex flex-col items-center">

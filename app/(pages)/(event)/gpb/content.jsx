@@ -143,7 +143,7 @@ export default function ProjectContent2() {
           return (
             <Link
               key={item._id}
-              href={`/projects/${item.year}`}
+              href={`/gpb/${item.year}`}
               className="group p-6 border border-gray-200 rounded-2xl bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-4">

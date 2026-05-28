@@ -9,6 +9,7 @@ import {
   FaTimes,
   FaMoneyBillWave,
 } from "react-icons/fa";
+import PrintGAABudget from "../components/Print/PrintGAABudget";
 
 function BudgetModal({ open, onClose, onSave, initial }) {
   const [year, setYear] = useState(initial?.year || new Date().getFullYear());
@@ -264,93 +265,6 @@ export default function GAABudgetContent() {
     setModalOpen(true);
   };
 
-  const handlePrintBudgets = () => {
-    const html = `
-    <html>
-      <head>
-        <title>GAA Budget Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h2 { text-align: center; margin-bottom: 10px; }
-          table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-          th, td { border: 1px solid #333; padding: 8px; text-align: center; }
-          th { background: #f2f2f2; }
-          .header { text-align: center; margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h2>Annual GAA Budget Report</h2>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Year</th>
-              <th>Total GAA (₱)</th>
-              <th>GAD %</th>
-              <th>GAD Budget (₱)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${budgets
-              .map((b) => {
-                const totalGAA = Number(b.totalGAA || 0).toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 2,
-                  },
-                );
-
-                const gadBudget = Number(b.gadAnnualBudget || 0).toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 2,
-                  },
-                );
-
-                return `
-                  <tr>
-                    <td>${b.year}</td>
-                    <td>${totalGAA}</td>
-                    <td>${b.gadPercent}%</td>
-                    <td>${gadBudget}</td>
-                  </tr>
-                `;
-              })
-              .join("")}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `;
-
-    const iframe = document.createElement("iframe");
-    Object.assign(iframe.style, {
-      position: "fixed",
-      right: "0",
-      bottom: "0",
-      width: "0",
-      height: "0",
-      border: "0",
-    });
-
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
-
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    iframe.onload = () => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
-  };
-
   return (
     <div className="min-h-screen md:p-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
@@ -365,13 +279,7 @@ export default function GAABudgetContent() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handlePrintBudgets}
-            className="flex items-center gap-2 px-4 py-2 rounded-md bg-white border border-gray-200 hover:bg-gray-100 transition shadow-sm"
-          >
-            <FaPrint />
-            Print Report
-          </button>
+          <PrintGAABudget budgets={budgets} />
 
           {role !== "gad coordinator" && (
             <button
@@ -408,7 +316,7 @@ export default function GAABudgetContent() {
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-gray-500">
+          <div className="p-10 text-center text-gray-500 h-screen">
             Loading budgets...
           </div>
         ) : (
@@ -424,9 +332,11 @@ export default function GAABudgetContent() {
                   <th className="px-6 py-4 text-left font-semibold">
                     GAD Budget
                   </th>
-                            {role !== "gad coordinator" && (
-                  <th className="px-6 py-4 text-right font-semibold">Action</th>
-                            )}
+                  {role !== "gad coordinator" && (
+                    <th className="px-6 py-4 text-right font-semibold">
+                      Action
+                    </th>
+                  )}
                 </tr>
               </thead>
 
@@ -469,18 +379,17 @@ export default function GAABudgetContent() {
                         </div>
                       </td>
 
-
-          {role !== "gad coordinator" && (
-                      <td className="px-6 py-5 text-right">
-                        <button
-                          onClick={() => handleEdit(b)}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition"
-                        >
-                          <FaEdit />
-                          Edit
-                        </button>
-                      </td>
-          )}
+                      {role !== "gad coordinator" && (
+                        <td className="px-6 py-5 text-right">
+                          <button
+                            onClick={() => handleEdit(b)}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition"
+                          >
+                            <FaEdit />
+                            Edit
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

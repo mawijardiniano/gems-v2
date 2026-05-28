@@ -1,11 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useRef } from "react";
-import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
-import axios from "axios";
-import PrintGPB from "../../components/Print/PrintGPB";
 
 function formatPerformanceIndicator({ totalSeminars, totalMale, totalFemale }) {
   const s = Number(totalSeminars) || 0;
@@ -184,7 +181,22 @@ const CommentBox = ({
   );
 };
 
-export default function ProjectContent({ sidebarOpen }) {
+export default function ProjectContent() {
+  const emptyNewProject = () => ({
+    year: new Date().getFullYear(),
+    gender_issue: "",
+    cause_gender_issue: [""],
+    gad_objective: [""],
+    supporting_statistics_data: "",
+    relevant_agency: "",
+    gad_activity: [""],
+    performance_indicator_target: [emptyIndicator()],
+    gad_budget: "",
+    source_budget: "",
+    responsible_office: "",
+  });
+
+  const [newProject, setNewProject] = useState(emptyNewProject());
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
   const [projects, setProjects] = useState([]);
@@ -202,6 +214,9 @@ export default function ProjectContent({ sidebarOpen }) {
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const [annualBudget, setAnnualBudget] = useState(null);
   const [totalGAA, setTotalGAA] = useState(null);
+  const [remainingBudget, setRemainingBudget] = useState(null);
+  const [usedBudget, setUsedBudget] = useState(0);
+  const [budgetYear, setBudgetYear] = useState(() => new Date().getFullYear());
   const [projectlist, setProjectList] = useState(null);
   const [status, setStatus] = useState("");
   const [budgetSummary, setBudgetSummary] = useState(null);
@@ -211,39 +226,7 @@ export default function ProjectContent({ sidebarOpen }) {
   const [commentType, setCommentType] = useState("approval");
   const [commentField, setCommentField] = useState(null);
   const [commentProjectId, setCommentProjectId] = useState(null);
-  const [updateStatusModal, setUpdateStatusModal] = useState(false);
-  const [statusType, setStatusType] = useState("approved");
-  const [reasonField, setReasonField] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedGPBId, setSelectedGPBId] = useState(null);
-  const [selectedGPBKey, setSelectedGPBKey] = useState(null);
-  const [selectedGPBStatus, setSelectedGPBStatus] = useState(null);
-
-  const [saving, setSaving] = useState(false);
   const router = useRouter();
-  const params = useParams();
-  const year = params?.year;
-  const budgetYear = year;
-
-  const emptyNewProject = () => ({
-    year: Number(year),
-    gender_issue: "",
-    cause_gender_issue: [""],
-    gad_objective: [""],
-    supporting_statistics_data: "",
-    relevant_agency: "",
-    gad_activity: [""],
-    performance_indicator_target: [emptyIndicator()],
-    gad_budget: "",
-    source_budget: "",
-    responsible_office: "",
-  });
-
-  const [newProject, setNewProject] = useState(emptyNewProject());
-
-  const handleUpdateStatusModal = () => {
-    setUpdateStatusModal(true);
-  };
 
   const userId = useSelector((state) => state.auth.userId);
   const role = useSelector((state) => state.auth.role);
@@ -266,10 +249,24 @@ export default function ProjectContent({ sidebarOpen }) {
     page * pageSize,
   );
 
+  const getDefaultYear = () => {
+    if (projects.length > 0) {
+      const yearCounts = projects.reduce((acc, p) => {
+        const y = Number(p.year) || new Date().getFullYear();
+        acc[y] = (acc[y] || 0) + 1;
+        return acc;
+      }, {});
+      return Number(
+        Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0][0],
+      );
+    }
+    return new Date().getFullYear();
+  };
+
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/gpb/${year}`);
+      const res = await fetch(`/api/gpb/${budgetYear}`);
       const data = await res.json();
 
       const projects = data?.data?.projects || [];
@@ -336,14 +333,9 @@ export default function ProjectContent({ sidebarOpen }) {
       }));
 
       setProjectList(normalized);
-      setStatus(data.data.status_of_gpb?.status);
+      setStatus(data.data.status);
       console.log("Comments", data.data.projects);
       setProjects(normalized);
-      console.log("Normalized", normalized);
-      setSelectedGPBId(data.data._id);
-      setSelectedGPBStatus(data.data.status_of_gpb);
-      console.log("Key", data.data.status_of_gpb);
-      console.log("GPBId", data.data._id);
     } catch (err) {
       console.error(err);
       setProjects([]);
@@ -356,14 +348,29 @@ export default function ProjectContent({ sidebarOpen }) {
   }, [budgetYear]);
 
   useEffect(() => {
+    setNewProject((prev) => ({ ...prev, year: getDefaultYear() }));
+  }, [projects]);
+
+  useEffect(() => {
     if (page > totalPages) setPage(totalPages);
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
-
+  // useEffect(() => {
+  //   if (projects.length > 0) {
+  //     const yearCounts = projects.reduce((acc, p) => {
+  //       const y = Number(p.year) || new Date().getFullYear();
+  //       acc[y] = (acc[y] || 0) + 1;
+  //       return acc;
+  //     }, {});
+  //     setBudgetYear(
+  //       Number(Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0][0]),
+  //     );
+  //   }
+  // }, [projects]);
 
   useEffect(() => {
-    if (!year) return;
-    fetch(`/api/gaa-budget?year=${year}`)
+    if (!budgetYear) return;
+    fetch(`/api/gaa-budget?year=${budgetYear}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.data.length > 0) {
@@ -372,13 +379,13 @@ export default function ProjectContent({ sidebarOpen }) {
           setTotalGAA(null);
         }
       });
-  }, [year]);
+  }, [budgetYear]);
 
   const fetchBudgetSummary = async () => {
-    if (!year) return;
+    if (!budgetYear) return;
 
     try {
-      const res = await fetch(`/api/project/budget/summary/${year}`);
+      const res = await fetch(`/api/project/budget/summary/${budgetYear}`);
       const data = await res.json();
 
       setBudgetSummary(data?.budgetSummary || null);
@@ -389,13 +396,13 @@ export default function ProjectContent({ sidebarOpen }) {
   };
 
   useEffect(() => {
-    if (!year) return;
+    if (!budgetYear) return;
     fetchBudgetSummary();
-  }, [year]);
+  }, [budgetYear]);
 
   useEffect(() => {
-    if (!year) return;
-    fetch(`/api/project/budget/summary/${year}`)
+    if (!budgetYear) return;
+    fetch(`/api/project/budget/summary/${budgetYear}`)
       .then((r) => r.json())
       .then((data) => {
         console.log("Budget", data.budgetSummary);
@@ -405,7 +412,7 @@ export default function ProjectContent({ sidebarOpen }) {
           setBudgetSummary(null);
         }
       });
-  }, [year]);
+  }, [budgetYear]);
 
   // useEffect(() => {
   //   if (annualBudget !== null) {
@@ -576,6 +583,156 @@ export default function ProjectContent({ sidebarOpen }) {
     } catch {}
   };
 
+  const handlePrintProjects = () => {
+    const year = budgetYear;
+    let totalGAAFormatted = "";
+    if (typeof totalGAA === "number" && !isNaN(totalGAA)) {
+      totalGAAFormatted = totalGAA.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+      });
+    } else if (typeof totalGAA === "string" && !isNaN(Number(totalGAA))) {
+      totalGAAFormatted = Number(totalGAA).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+      });
+    }
+
+    const html = `
+      <html><head><title>Projects List</title>
+      <style>
+        body { font-family: Arial, sans-serif; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        .gad-report-header { text-align: center; }
+        .gad-report-header h4, .agency h4 { margin: 0; }
+      </style></head><body>
+      <div class="gad-report-header">
+        <h4>ANNUAL GENDER AND DEVELOPMENT (GAD) PLAN AND BUDGET</h4>
+        <h4>FY ${year}</h4>
+      </div>
+      <div class="agency">
+        <h4><span style="font-weight:200;">Agency/Bureau/Office:</span> Marinduque State University</h4>
+        <h4><span style="font-weight:200;">Total GAA of Agency:</span> ${totalGAAFormatted}</h4>
+      </div>
+      <table>
+        <thead><tr>
+          <th>No.</th><th>Gender Issue and/or GAD Mandate</th>
+          <th>Cause of the Gender Issue</th><th>GAD Result Statement/GAD Objective</th>
+          <th>Supporting Statistics Data</th><th>Relevant Agency MFO/PAP</th>
+          <th>GAD Activity</th><th>Output Performance Indicators and Target</th>
+          <th>GAD Budget</th><th>Source of Budget</th><th>Responsible Unit/Office</th>
+        </tr></thead>
+        <tbody>
+          ${projects
+            .map((project, idx) => {
+              const causeArr = Array.isArray(project.cause_gender_issue)
+                ? project.cause_gender_issue
+                : [project.cause_gender_issue || ""];
+              const objArr = Array.isArray(project.gad_objective)
+                ? project.gad_objective
+                : [project.gad_objective || ""];
+              const actArr = Array.isArray(project.gad_activity)
+                ? project.gad_activity
+                : [project.gad_activity || ""];
+              const perfArr = Array.isArray(
+                project.performance_indicator_target,
+              )
+                ? project.performance_indicator_target
+                : [project.performance_indicator_target || ""];
+              const maxRows = Math.max(
+                causeArr.length,
+                objArr.length,
+                actArr.length,
+                perfArr.length,
+              );
+              let gadBudgetFormatted = "";
+              if (
+                !isNaN(Number(project.gad_budget)) &&
+                project.gad_budget !== ""
+              ) {
+                gadBudgetFormatted = Number(project.gad_budget).toLocaleString(
+                  undefined,
+                  { minimumFractionDigits: 2 },
+                );
+              }
+              return Array.from({ length: maxRows })
+                .map(
+                  (_, rowIdx) => `
+              <tr>
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${idx + 1}</td>` : ""}
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.gender_issue || ""}</td>` : ""}
+
+    ${
+      causeArr.length === 1
+        ? rowIdx === 0
+          ? `<td rowspan="${maxRows}">${causeArr[0]}</td>`
+          : ""
+        : `<td>${causeArr[rowIdx] || ""}</td>`
+    }
+
+
+    ${
+      objArr.length === 1
+        ? rowIdx === 0
+          ? `<td rowspan="${maxRows}">${objArr[0]}</td>`
+          : ""
+        : `<td>${objArr[rowIdx] || ""}</td>`
+    }
+
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.supporting_statistics_data || ""}</td>` : ""}
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.relevant_agency || ""}</td>` : ""}
+
+   
+    ${
+      actArr.length === 1
+        ? rowIdx === 0
+          ? `<td rowspan="${maxRows}">${actArr[0]}</td>`
+          : ""
+        : `<td>${actArr[rowIdx] || ""}</td>`
+    }
+
+
+    ${
+      perfArr.length === 1
+        ? rowIdx === 0
+          ? `<td rowspan="${maxRows}">${perfArr[0]}</td>`
+          : ""
+        : `<td>${perfArr[rowIdx] || ""}</td>`
+    }
+
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${gadBudgetFormatted}</td>` : ""}
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.source_budget || ""}</td>` : ""}
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.responsible_office || ""}</td>` : ""}
+  </tr>`,
+                )
+                .join("");
+            })
+            .join("")}
+        </tbody>
+      </table></body></html>`;
+
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, {
+      position: "fixed",
+      right: "0",
+      bottom: "0",
+      width: "0",
+      height: "0",
+      border: "0",
+    });
+    document.body.appendChild(iframe);
+    const frameDoc = iframe.contentWindow?.document;
+    if (!frameDoc) return;
+    frameDoc.open();
+    frameDoc.write(html);
+    frameDoc.close();
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
+  };
+
   const fetchComments = async () => {
     try {
       const res = await fetch(`/api/projects/${projectlist._id}/comments`);
@@ -595,51 +752,32 @@ export default function ProjectContent({ sidebarOpen }) {
   }, []);
 
   const handleSubmitComment = async () => {
-    if (!comment.trim() || !commentField || !commentProjectId) {
-      console.warn("⚠️ Missing required fields");
-      return;
-    }
+    if (!comment.trim() || !commentField || !commentProjectId) return;
 
     try {
       setLoading(true);
 
-      const payload = {
-        field: commentField,
-        userId,
-        message: comment,
-        type: commentType,
-      };
-
-      console.log("📦 PAYLOAD SENT:", payload);
-
-      const url = `/api/project/${commentProjectId}/comments`;
-      console.log("🌐 REQUEST URL:", url);
-
-      const res = await fetch(url, {
+      const res = await fetch(`/api/project/${commentProjectId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          field: commentField,
+          userId,
+          message: comment,
+          type: commentType,
+        }),
       });
 
       const data = await res.json();
-
-      console.log("📩 RESPONSE STATUS:", res.status);
-      console.log("📩 RESPONSE DATA:", data);
-
-      if (!res.ok) {
-        throw new Error(data.message || data.error || "Request failed");
-      }
-
-      console.log("✅ COMMENT SUCCESS:", data);
+      if (!res.ok) throw new Error(data.message || "Failed");
 
       setComment("");
       setShowCommentForm(false);
       setCommentField(null);
       setCommentProjectId(null);
-
       fetchProjects();
     } catch (err) {
-      console.error("❌ COMMENT ERROR:", err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -649,11 +787,8 @@ export default function ProjectContent({ sidebarOpen }) {
     try {
       setLoading(true);
 
-      // ✅ IMPORTANT: always send base field only
-      const cleanField = field.split(".")[0];
-
       const res = await fetch(
-        `/api/project/${projectId}/comments?field=${cleanField}&commentId=${commentId}`,
+        `/api/project/${projectId}/comments?field=${field}&commentId=${commentId}`,
         {
           method: "DELETE",
         },
@@ -671,192 +806,48 @@ export default function ProjectContent({ sidebarOpen }) {
     }
   };
 
-  const deleteFileByKey = async (key) => {
-    if (!key) return;
-
-    try {
-      await axios.delete("/api/upload", {
-        data: { key },
-      });
-    } catch (err) {
-      console.log("Failed to delete old file:", err);
-    }
-  };
-
-  const handleUpdateStatus = async () => {
-    try {
-      setSaving(true);
-      const oldKey = selectedGPBStatus?.scanned_copy?.key;
-
-      console.log("OLD KEY:", oldKey);
-
-      let scanned_copy = selectedGPBStatus?.scanned_copy || {
-        url: "",
-        key: "",
-      };
-
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-        formData.append("folder", "status/scanned");
-
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        const uploadData = await uploadRes.json();
-
-        scanned_copy = {
-          url: uploadData.url,
-          key: uploadData.key,
-        };
-      }
-
-      const res = await fetch(`/api/gpb/status/${selectedGPBId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: statusType,
-          reason: reasonField,
-          scanned_copy,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update status");
-      }
-
-      console.log("NEW KEY:", scanned_copy.key);
-
-      if (selectedFile && oldKey && oldKey !== scanned_copy.key) {
-        await deleteFileByKey(oldKey);
-      }
-
-      setUpdateStatusModal(false);
-      setReasonField("");
-      setStatusType("approved");
-      setSelectedFile(null);
-
-      fetchProjects();
-    } catch (error) {
-      console.error(error);
-      alert(error.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const TABLE_WIDTH = sidebarOpen ? 2000 : 1800;
-
   return (
     <div className="p-6">
-      <button
-        onClick={() => router.push("/projects")}
-        className="flex flex-row items-center mb-2 text-blue-600 gap-1"
-      >
-        <FiArrowLeft /> Back to GPB List
-      </button>
       <div className="flex justify-between">
-        <h2 className="text-3xl font-bold mb-4">GPB Year {year}</h2>
+        <h2 className="text-3xl font-bold mb-4">Projects</h2>
 
-<PrintGPB
-  totalGAA={totalGAA}
-  budgetYear={budgetYear}
-  projects={projects}
-/>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2"
+          onClick={handlePrintProjects}
+          disabled={totalGAA === null || typeof totalGAA === "undefined"}
+        >
+          Print Projects
+        </button>
+      </div>
+
+      <div className="mb-4 flex items-center gap-3">
+        <select
+          className="border rounded px-3 py-2 text-sm"
+          value={budgetYear}
+          onChange={(e) => setBudgetYear(Number(e.target.value))}
+        >
+          {Array.from(
+            { length: 10 },
+            (_, i) => new Date().getFullYear() - 8 + i,
+          ).map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className=" flex gap-2">
-
+        {/* {role === "planning director" && (
+          <button
+            onClick={() => setShowCommentForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2 mr-4"
+          >
+            Add Comment
+          </button>
+        )} */}
       </div>
-      {updateStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Update GPB Status
-              </h2>
 
-              <button
-                onClick={() => setUpdateStatusModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-3xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-
-              <select
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={statusType}
-                onChange={(e) => setStatusType(e.target.value)}
-              >
-                <option value="draft">Draft</option>
-                <option value="approved">Approved</option>
-                <option value="disapproved">Disapproved</option>
-              </select>
-            </div>
-
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reason
-              </label>
-
-              <textarea
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={4}
-                placeholder="Write the reason..."
-                value={reasonField}
-                onChange={(e) => setReasonField(e.target.value)}
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Scanned Copy (Optional)
-              </label>
-
-              <input
-                type="file"
-                className="w-full border border-gray-300 rounded-lg p-2"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setUpdateStatusModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleUpdateStatus}
-                disabled={saving}
-                className={`px-5 py-2 rounded-lg text-white transition ${
-                  saving
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : statusType === "approved"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                {saving ? "Saving..." : "Save Status"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {showCommentForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -865,9 +856,7 @@ export default function ProjectContent({ sidebarOpen }) {
               <p className="text-sm text-gray-500 mb-3 capitalize">
                 Field:{" "}
                 <span className="font-medium text-gray-700">
-                  {commentField.includes(".")
-                    ? `${commentField.split(".")[0].replace(/_/g, " ")} — item ${Number(commentField.split(".")[1]) + 1}`
-                    : commentField.replace(/_/g, " ")}
+                  {commentField.replace(/_/g, " ")}
                 </span>
               </p>
             )}
@@ -909,37 +898,15 @@ export default function ProjectContent({ sidebarOpen }) {
         </div>
       )}
 
-      <div className="flex justify-between mb-4">
-        <p className="text-md font-bold">
-          Status:{" "}
-          <span
-            className={`capitalize ${
-              status === "draft"
-                ? " text-yellow-500"
-                : status === "approved"
-                  ? " text-green-700"
-                  : " text-red-600"
-            }`}
-          >
-            {status}
-          </span>
-        </p>
-
-        {role !== "gad coordinator" && (
-          <button
-            onClick={handleUpdateStatusModal}
-            className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
-          >
-            Update Status
-          </button>
-        )}
+      <div>
+        Status: <span className="capitalize">{status}</span>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {budgetSummary !== null && (
           <div className="bg-white border border-gray-200 p-4 h-20">
             <div className="mb-2 text-sm font-medium">
-              Total GAD Budget for {year}
+              Total GAD Budget for {budgetYear}
             </div>
             <div className="flex justify-end">
               ₱{" "}
@@ -955,7 +922,7 @@ export default function ProjectContent({ sidebarOpen }) {
         {budgetSummary !== null && (
           <div className="bg-white border border-gray-200 p-4 h-20">
             <div className="mb-2 text-sm font-medium">
-              Total GAD Allocation Used for {year}
+              Total GAD Allocation Used for {budgetYear}
             </div>
             <div className="flex justify-end">
               ₱{" "}
@@ -971,7 +938,7 @@ export default function ProjectContent({ sidebarOpen }) {
         {budgetSummary !== null && (
           <div className="bg-white border border-gray-200 p-4 h-20">
             <div className="mb-4 text-sm font-medium">
-              Remaining GAD Budget for {year}
+              Remaining GAD Budget for {budgetYear}
             </div>
             <div className="flex justify-end">
               ₱{" "}
@@ -1038,20 +1005,13 @@ export default function ProjectContent({ sidebarOpen }) {
       ) : (
         <div className="overflow-x-auto">
           <form onSubmit={handleAddProject}>
-            <div
-              className="transition-all duration-300 w-full"
-              style={{
-                maxWidth: sidebarOpen
-                  ? "calc(100vw - 10px)"
-                  : "calc(100vw - 360px)",
-              }}
-            >
+            <div className="max-w-[1150px]">
               <div
                 ref={topScrollRef}
                 onScroll={handleTopScroll}
                 className="overflow-x-auto"
               >
-                <div style={{ width: `${TABLE_WIDTH}px`, height: "1px" }} />
+                <div style={{ width: "3500px", height: "1px" }} />
               </div>
 
               <div
@@ -1059,10 +1019,7 @@ export default function ProjectContent({ sidebarOpen }) {
                 onScroll={handleTableScroll}
                 className="overflow-x-auto"
               >
-                <table
-                  className="bg-white rounded shadow"
-                  style={{ minWidth: `${TABLE_WIDTH}px` }}
-                >
+                <table className="min-w-max bg-white rounded shadow pr-10">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-gray-900 border text-white">
                       <th className="py-2 px-4 border-b text-center">No.</th>
@@ -1108,289 +1065,312 @@ export default function ProjectContent({ sidebarOpen }) {
                       )}
                     </tr>
 
-                    {role !== "planning director" &&
-                      selectedGPBStatus?.status !== "approved" &&
-                      selectedGPBStatus?.status !== "disapproved" && (
-                        <tr className="bg-gray-100 sticky top-[41px] z-10">
-                          <td className="py-2 px-4 border-b">--</td>
+                    {role !== "planning director" && (
+                      <tr className="bg-gray-100 sticky top-[41px] z-10">
+                        <td className="py-2 px-4 border-b text-center">
+                          <select
+                            className="border rounded px-2 py-1 text-sm"
+                            value={newProject.year}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "year",
+                                Number(e.target.value),
+                              )
+                            }
+                            required
+                          >
+                            {Array.from(
+                              { length: 10 },
+                              (_, i) => new Date().getFullYear() - 2 + i,
+                            ).map((y) => (
+                              <option key={y} value={y}>
+                                {y}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
 
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-40 border rounded px-2 py-1"
-                              value={newProject.gender_issue}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "gender_issue",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.cause_gender_issue.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-40 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
+                        {/* <td className="py-2 px-4 border-b text-center">
+  <input
+    type="number"
+    className="w-20 border rounded px-2 py-1 text-sm"
+    value={newProject.year}
+    onChange={(e) => handleNewProjectChange("year", Number(e.target.value))}
+    min={2000}
+    max={2100}
+    required
+  />
+</td> */}
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={newProject.gender_issue}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "gender_issue",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {newProject.cause_gender_issue.map((val, idx) => (
+                            <div key={idx} className="flex items-center mb-1">
+                              <textarea
+                                className="w-40 border rounded px-2 py-1"
+                                value={val}
+                                onChange={(e) =>
+                                  handleArrayFieldChange(
+                                    "cause_gender_issue",
+                                    idx,
+                                    e.target.value,
+                                  )
+                                }
+                                required
+                              />
+                              {newProject.cause_gender_issue.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
+                                  onClick={() =>
+                                    handleRemoveArrayField(
                                       "cause_gender_issue",
                                       idx,
-                                      e.target.value,
                                     )
                                   }
-                                  required
-                                />
-                                {newProject.cause_gender_issue.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "cause_gender_issue",
-                                        idx,
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx ===
-                                  newProject.cause_gender_issue.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("cause_gender_issue")
-                                    }
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.gad_objective.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-40 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
-                                      "gad_objective",
-                                      idx,
-                                      e.target.value,
-                                    )
-                                  }
-                                  required
-                                />
-                                {newProject.gad_objective.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "gad_objective",
-                                        idx,
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx ===
-                                  newProject.gad_objective.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("gad_objective")
-                                    }
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-40 border rounded px-2 py-1"
-                              value={newProject.supporting_statistics_data}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "supporting_statistics_data",
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-40 border rounded px-2 py-1"
-                              value={newProject.relevant_agency}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "relevant_agency",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.gad_activity.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-40 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
-                                      "gad_activity",
-                                      idx,
-                                      e.target.value,
-                                    )
-                                  }
-                                  required
-                                />
-                                {newProject.gad_activity.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "gad_activity",
-                                        idx,
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx === newProject.gad_activity.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("gad_activity")
-                                    }
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.performance_indicator_target.map(
-                              (val, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-1 mb-2"
                                 >
-                                  <PerformanceIndicatorInput
-                                    value={val}
-                                    onChange={(updated) => {
-                                      const arr = [
-                                        ...newProject.performance_indicator_target,
-                                      ];
-                                      arr[idx] = updated;
-                                      handleNewProjectChange(
-                                        "performance_indicator_target",
-                                        arr,
-                                      );
-                                    }}
-                                  />
-                                  <div className="flex flex-col gap-1 mt-4">
-                                    {newProject.performance_indicator_target
-                                      .length > 1 && (
-                                      <button
-                                        type="button"
-                                        className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                        onClick={() =>
-                                          handleRemoveArrayField(
-                                            "performance_indicator_target",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        -
-                                      </button>
-                                    )}
-                                    {idx ===
-                                      newProject.performance_indicator_target
-                                        .length -
-                                        1 && (
-                                      <button
-                                        type="button"
-                                        className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                        onClick={() =>
-                                          handleAddArrayField(
-                                            "performance_indicator_target",
-                                          )
-                                        }
-                                      >
-                                        +
-                                      </button>
-                                    )}
-                                  </div>
+                                  -
+                                </button>
+                              )}
+                              {idx ===
+                                newProject.cause_gender_issue.length - 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
+                                  onClick={() =>
+                                    handleAddArrayField("cause_gender_issue")
+                                  }
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {newProject.gad_objective.map((val, idx) => (
+                            <div key={idx} className="flex items-center mb-1">
+                              <textarea
+                                className="w-40 border rounded px-2 py-1"
+                                value={val}
+                                onChange={(e) =>
+                                  handleArrayFieldChange(
+                                    "gad_objective",
+                                    idx,
+                                    e.target.value,
+                                  )
+                                }
+                                required
+                              />
+                              {newProject.gad_objective.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
+                                  onClick={() =>
+                                    handleRemoveArrayField("gad_objective", idx)
+                                  }
+                                >
+                                  -
+                                </button>
+                              )}
+                              {idx === newProject.gad_objective.length - 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
+                                  onClick={() =>
+                                    handleAddArrayField("gad_objective")
+                                  }
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={newProject.supporting_statistics_data}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "supporting_statistics_data",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={newProject.relevant_agency}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "relevant_agency",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {newProject.gad_activity.map((val, idx) => (
+                            <div key={idx} className="flex items-center mb-1">
+                              <textarea
+                                className="w-40 border rounded px-2 py-1"
+                                value={val}
+                                onChange={(e) =>
+                                  handleArrayFieldChange(
+                                    "gad_activity",
+                                    idx,
+                                    e.target.value,
+                                  )
+                                }
+                                required
+                              />
+                              {newProject.gad_activity.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
+                                  onClick={() =>
+                                    handleRemoveArrayField("gad_activity", idx)
+                                  }
+                                >
+                                  -
+                                </button>
+                              )}
+                              {idx === newProject.gad_activity.length - 1 && (
+                                <button
+                                  type="button"
+                                  className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
+                                  onClick={() =>
+                                    handleAddArrayField("gad_activity")
+                                  }
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {newProject.performance_indicator_target.map(
+                            (val, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-start gap-1 mb-2"
+                              >
+                                <PerformanceIndicatorInput
+                                  value={val}
+                                  onChange={(updated) => {
+                                    const arr = [
+                                      ...newProject.performance_indicator_target,
+                                    ];
+                                    arr[idx] = updated;
+                                    handleNewProjectChange(
+                                      "performance_indicator_target",
+                                      arr,
+                                    );
+                                  }}
+                                />
+                                <div className="flex flex-col gap-1 mt-4">
+                                  {newProject.performance_indicator_target
+                                    .length > 1 && (
+                                    <button
+                                      type="button"
+                                      className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                                      onClick={() =>
+                                        handleRemoveArrayField(
+                                          "performance_indicator_target",
+                                          idx,
+                                        )
+                                      }
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  {idx ===
+                                    newProject.performance_indicator_target
+                                      .length -
+                                      1 && (
+                                    <button
+                                      type="button"
+                                      className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                                      onClick={() =>
+                                        handleAddArrayField(
+                                          "performance_indicator_target",
+                                        )
+                                      }
+                                    >
+                                      +
+                                    </button>
+                                  )}
                                 </div>
-                              ),
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-32 border rounded px-2 py-1"
-                              value={newProject.gad_budget}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "gad_budget",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-32 border rounded px-2 py-1"
-                              value={newProject.source_budget}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "source_budget",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-40 border rounded px-2 py-1"
-                              value={newProject.responsible_office}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "responsible_office",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">—</td>
-                          <td className="py-2 px-4 border-b">
-                            <button
-                              type="submit"
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                              disabled={addLoading}
-                            >
-                              {addLoading ? "Adding..." : "Add"}
-                            </button>
-                          </td>
-                        </tr>
-                      )}
+                              </div>
+                            ),
+                          )}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-32 border rounded px-2 py-1"
+                            value={newProject.gad_budget}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "gad_budget",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-32 border rounded px-2 py-1"
+                            value={newProject.source_budget}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "source_budget",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <textarea
+                            className="w-40 border rounded px-2 py-1"
+                            value={newProject.responsible_office}
+                            onChange={(e) =>
+                              handleNewProjectChange(
+                                "responsible_office",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </td>
+                        <td className="py-2 px-4 border-b text-center">—</td>
+                        <td className="py-2 px-4 border-b">
+                          <button
+                            type="submit"
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                            disabled={addLoading}
+                          >
+                            {addLoading ? "Adding..." : "Add"}
+                          </button>
+                        </td>
+                      </tr>
+                    )}
                   </thead>
 
                   <tbody>
@@ -1757,7 +1737,6 @@ export default function ProjectContent({ sidebarOpen }) {
                               </>
                             ) : (
                               <>
-                                {/* causeArr */}
                                 {causeArr.length === 1 ? (
                                   rowIdx === 0 && (
                                     <td
@@ -1766,26 +1745,23 @@ export default function ProjectContent({ sidebarOpen }) {
                                     >
                                       {causeArr[0]}
                                       <CommentBox
-                                        field={{
-                                          value: causeArr[rowIdx],
-                                          comments: (
-                                            project._raw.cause_gender_issue
-                                              ?.comments || []
-                                          ).filter(
-                                            (c) =>
-                                              Number(c.fieldIndex) === rowIdx,
-                                          ),
-                                        }}
-                                        fieldName={`cause_gender_issue.${rowIdx}`}
+                                        field={project._raw.cause_gender_issue}
+                                        fieldName="cause_gender_issue"
                                         role={role}
                                         projectId={project._id}
                                         showAddButton={
                                           role === "planning director"
                                         }
                                         onComment={() => {
-                                          setCommentField(
-                                            `cause_gender_issue.${rowIdx}`,
-                                          );
+                                          if (!project?._id) {
+                                            console.error(
+                                              "Missing project ID",
+                                              project,
+                                            );
+                                            return;
+                                          }
+
+                                          setCommentField("cause_gender_issue");
                                           setCommentProjectId(project._id);
                                           setShowCommentForm(true);
                                         }}
@@ -1796,32 +1772,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                 ) : (
                                   <td className="py-2 px-4 border">
                                     {causeArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: causeArr[rowIdx],
-                                        comments: (
-                                          project._raw.cause_gender_issue
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) =>
-                                            Number(c.fieldIndex) === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`cause_gender_issue.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `cause_gender_issue.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
+                                    {rowIdx === 0 && (
+                                      <CommentBox
+                                        field={project._raw.cause_gender_issue}
+                                      />
+                                    )}
                                   </td>
                                 )}
 
@@ -1841,6 +1796,14 @@ export default function ProjectContent({ sidebarOpen }) {
                                           role === "planning director"
                                         }
                                         onComment={() => {
+                                          if (!project?._id) {
+                                            console.error(
+                                              "Missing project ID",
+                                              project,
+                                            );
+                                            return;
+                                          }
+
                                           setCommentField("gad_objective");
                                           setCommentProjectId(project._id);
                                           setShowCommentForm(true);
@@ -1852,31 +1815,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                 ) : (
                                   <td className="py-2 px-4 border">
                                     {objArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: objArr[rowIdx],
-                                        comments: (
-                                          project._raw.gad_objective
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`gad_objective.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `gad_objective.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
+                                    {rowIdx === 0 && (
+                                      <CommentBox
+                                        field={project._raw.gad_objective}
+                                      />
+                                    )}
                                   </td>
                                 )}
                               </>
@@ -2213,6 +2156,14 @@ export default function ProjectContent({ sidebarOpen }) {
                                           role === "planning director"
                                         }
                                         onComment={() => {
+                                          if (!project?._id) {
+                                            console.error(
+                                              "Missing project ID",
+                                              project,
+                                            );
+                                            return;
+                                          }
+
                                           setCommentField("gad_activity");
                                           setCommentProjectId(project._id);
                                           setShowCommentForm(true);
@@ -2224,31 +2175,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                 ) : (
                                   <td className="py-2 px-4 border">
                                     {actArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: actArr[rowIdx],
-                                        comments: (
-                                          project._raw.gad_activity?.comments ||
-                                          []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`gad_activity.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `gad_activity.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
+                                    {rowIdx === 0 && (
+                                      <CommentBox
+                                        field={project._raw.gad_activity}
+                                      />
+                                    )}
                                   </td>
                                 )}
 
@@ -2271,6 +2202,14 @@ export default function ProjectContent({ sidebarOpen }) {
                                           role === "planning director"
                                         }
                                         onComment={() => {
+                                          if (!project?._id) {
+                                            console.error(
+                                              "Missing project ID",
+                                              project,
+                                            );
+                                            return;
+                                          }
+
                                           setCommentField(
                                             "performance_indicator_target",
                                           );
@@ -2284,32 +2223,14 @@ export default function ProjectContent({ sidebarOpen }) {
                                 ) : (
                                   <td className="py-2 px-4 border">
                                     {perfArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: perfArr[rowIdx],
-                                        comments: (
+                                    {rowIdx === 0 && (
+                                      <CommentBox
+                                        field={
                                           project._raw
                                             .performance_indicator_target
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`performance_indicator_target.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `performance_indicator_target.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
+                                        }
+                                      />
+                                    )}
                                   </td>
                                 )}
                               </>
@@ -2509,7 +2430,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                                 className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
                                                 onClick={() =>
                                                   router.push(
-                                                    `/projects/dump/${project._id}`,
+                                                    `/projects/${project._id}`,
                                                   )
                                                 }
                                               >
