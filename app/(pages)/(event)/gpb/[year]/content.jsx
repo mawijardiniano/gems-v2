@@ -649,7 +649,6 @@ export default function ProjectContent({ sidebarOpen }) {
     try {
       setLoading(true);
 
-      // ✅ IMPORTANT: always send base field only
       const cleanField = field.split(".")[0];
 
       const res = await fetch(
@@ -751,7 +750,7 @@ export default function ProjectContent({ sidebarOpen }) {
     }
   };
 
-  const TABLE_WIDTH = sidebarOpen ? 2000 : 1800;
+  const TABLE_WIDTH = sidebarOpen ? 2500 : 2500;
 
   return (
     <div className="p-6">
@@ -1034,7 +1033,7 @@ export default function ProjectContent({ sidebarOpen }) {
       )}
 
       {loading ? (
-        <div>Loading projects...</div>
+        <div className="h-screen">Loading projects...</div>
       ) : (
         <div className="overflow-x-auto">
           <form onSubmit={handleAddProject}>

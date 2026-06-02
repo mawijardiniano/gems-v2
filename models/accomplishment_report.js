@@ -24,6 +24,7 @@ const AccomplishmentReportSchema = new Schema(
 
     photos: [FileSchema],
     attendance_sheet: FileSchema,
+    other_attachments: [FileSchema], 
     submitted_by: {
       type: Schema.Types.ObjectId,
       ref: "UserAuth",

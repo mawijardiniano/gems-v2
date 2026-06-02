@@ -284,16 +284,7 @@ export default function EventManageContent() {
     return new Date(end).getTime() < Date.now();
   }, [event]);
 
-  const formatRange = (start, end, evt) => {
-    let s = start;
-    let e = end;
-    if (evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0) {
-      s = evt.start_dates[0];
-    }
-    if (evt && Array.isArray(evt.end_dates) && evt.end_dates.length > 0) {
-      e = evt.end_dates[evt.end_dates.length - 1];
-    }
-    if (!s) return "No date";
+  const formatDate = (value) => {
     const opts = {
       month: "short",
       day: "numeric",
@@ -301,16 +292,43 @@ export default function EventManageContent() {
       hour: "numeric",
       minute: "2-digit",
     };
-    const format = (value) => {
-      const d = new Date(value);
-      return Number.isNaN(d.getTime())
-        ? "Invalid date"
-        : d.toLocaleString(undefined, opts);
-    };
-    const startStr = format(s);
-    if (!e) return startStr;
-    const endStr = format(e);
-    return `${startStr} - ${endStr}`;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? "Invalid date"
+      : d.toLocaleString(undefined, opts);
+  };
+
+  const getDateRangeLines = (start, end, evt) => {
+    const startDates =
+      evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0
+        ? evt.start_dates
+        : start
+          ? [start]
+          : [];
+    const endDates =
+      evt && Array.isArray(evt.end_dates) && evt.end_dates.length > 0
+        ? evt.end_dates
+        : end
+          ? [end]
+          : [];
+
+    if (startDates.length === 0) return ["No date"];
+
+    return startDates.map((sd, idx) => {
+      const ed = endDates[idx];
+      const startStr = formatDate(sd);
+      if (!ed) return `Day ${idx + 1}: ${startStr}`;
+      const endStr = formatDate(ed);
+      return `Day ${idx + 1}: ${startStr} - ${endStr}`;
+    });
+  };
+
+  const formatRange = (start, end, evt) => {
+    return getDateRangeLines(start, end, evt).join(" | ");
+  };
+
+  const formatRangeLines = (start, end, evt) => {
+    return getDateRangeLines(start, end, evt);
   };
 
   const formatForInput = (value) => {
@@ -396,37 +414,6 @@ export default function EventManageContent() {
     const m = now.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
     return age;
-  };
-
-  const formatCheckboxPair = (value) => {
-    const normalized = (value || "").toLowerCase();
-    const isMale = normalized === "male";
-    const isFemale = normalized === "female";
-    return `[${isMale ? "x" : " "}] Male\n[${isFemale ? "x" : " "}] Female`;
-  };
-
-  const formatGenderCheckbox = (value) => {
-    const normalized = (value || "").toLowerCase();
-    const isMale = normalized === "male";
-    const isFemale = normalized === "female";
-    const isLgbt = normalized === "lgbt" || normalized === "lgbtqia+";
-    return (
-      `[${isMale ? "x" : " "}] Male\n` +
-      `[${isFemale ? "x" : " "}] Female\n` +
-      `[${isLgbt ? "x" : " "}] LGBTQIA+`
-    );
-  };
-
-  const formatParticipantCheckbox = (value) => {
-    const normalized = (value || "").toLowerCase();
-    const isStudent = normalized === "student";
-    const isEmployee = normalized === "employee";
-    const isExternal = normalized === "external";
-    return (
-      `[${isStudent ? "x" : " "}] Student\n` +
-      `[${isEmployee ? "x" : " "}] Employee\n` +
-      `[${isExternal ? "x" : " "}] External Stakeholders`
-    );
   };
 
   const extractGuestDetails = (guest) => {
@@ -1173,7 +1160,9 @@ export default function EventManageContent() {
 
   if (loading) {
     return (
-      <div className="p-6 text-center text-gray-500">Loading event...</div>
+      <div className="p-6 text-center text-gray-500 h-screen">
+        Loading event...
+      </div>
     );
   }
 
@@ -1233,25 +1222,17 @@ export default function EventManageContent() {
         </div>
       )}
       <button
-            onClick={() => router.push("/events-list")}
-            className="p-2 text-md inline-flex items-center text-blue-500"
-            aria-label="Back to events"
-          >
-            <FiArrowLeft aria-hidden="true" /> <p className="text-blue-500"> Back to Events</p>
-          </button>
+        onClick={() => router.push("/events-list")}
+        className="p-2 text-md inline-flex items-center text-blue-500"
+        aria-label="Back to events"
+      >
+        <FiArrowLeft aria-hidden="true" />{" "}
+        <p className="text-blue-500"> Back to Events</p>
+      </button>
       <div className="flex justify-between items-center">
-      
         <div className="flex items-center gap-3">
-          
           <div>
             <h1 className="text-3xl font-bold">{event.title}</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {formatRange(
-                event.start_date || event.date,
-                event.end_date,
-                event,
-              )}
-            </p>
           </div>
         </div>
       </div>
@@ -1327,6 +1308,7 @@ export default function EventManageContent() {
           handleDeleteEvent={handleDeleteEvent}
           projects={projects}
           formatForInput={formatForInput}
+          formatRangeLines={formatRangeLines}
         />
       )}
 
@@ -1408,6 +1390,7 @@ function OverviewTabs({
   handleDeleteEvent,
   projects,
   formatForInput,
+  formatRangeLines,
 }) {
   const ELIGIBILITY_OPTIONS = [
     { value: "Scholarship Applicant", label: "Scholarship Applicant" },
@@ -1510,13 +1493,15 @@ function OverviewTabs({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
               <div>
                 <p className="text-gray-500">Date Range</p>
-                <p className="font-medium">
-                  {formatRange(
+                <div className="flex flex-col gap-1 text-sm text-gray-600 mt-1">
+                  {formatRangeLines(
                     event.start_date || event.date,
                     event.end_date,
                     event,
-                  )}
-                </p>
+                  ).map((line, idx) => (
+                    <span key={idx}>{line}</span>
+                  ))}
+                </div>
               </div>
               <div>
                 <p className="text-gray-500">Number of Days</p>
@@ -2231,7 +2216,7 @@ function GuestTabs({
               </div>
             </>
           ) : (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 h-screen">
               No guests registered yet.
             </div>
           )}
@@ -2534,64 +2519,45 @@ function InsightTab({
 }
 
 function ReportTab({ event }) {
-  const [form, setForm] = useState({
-    narrative: "",
-  });
+  const [form, setForm] = useState({ narrative: "" });
 
   const [files, setFiles] = useState({
     office_memorandum: null,
     activity_design: null,
     attendance_sheet: null,
     photos: [],
+    other_attachments: [],
   });
 
   const [uploading, setUploading] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  const [reports, setReports] = useState([]);
   const [showReport, setShowReport] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [previewImg, setPreviewImg] = useState(null);
   const [deletedPhotoKeys, setDeletedPhotoKeys] = useState([]);
+  const [deletedAttachmentKeys, setDeletedAttachmentKeys] = useState([]);
 
   const deleteFileByKey = async (key) => {
     if (!key) return;
     try {
-      await axios.delete("/api/upload", {
-        data: { key },
-      });
+      await axios.delete("/api/upload", { data: { key } });
     } catch (err) {
       console.log("Failed to delete old file:", err);
     }
   };
 
   const handleEdit = () => {
-    console.log("🟡 EDIT CLICKED");
-    console.log("Current showReport:", showReport);
-
-    setForm({
-      narrative: showReport?.narrative || "",
-    });
-
+    setForm({ narrative: showReport?.narrative || "" });
     setFiles({
       office_memorandum: showReport?.office_memorandum || null,
       activity_design: showReport?.activity_design || null,
       attendance_sheet: showReport?.attendance_sheet || null,
       photos: showReport?.photos || [],
+      other_attachments: showReport?.other_attachments || [],
     });
-
-    console.log("🟢 FORM SET FOR EDIT:", {
-      narrative: showReport?.narrative,
-      office_memorandum: showReport?.office_memorandum,
-      activity_design: showReport?.activity_design,
-      attendance_sheet: showReport?.attendance_sheet,
-      photos: showReport?.photos,
-    });
-
     setIsEditing(true);
-
-    console.log("🟣 isEditing = true");
   };
 
   const handleSingleFileUpload = async (file, field, folder) => {
@@ -2606,18 +2572,8 @@ function ReportTab({ event }) {
       });
       setFiles((prev) => {
         const oldFile = prev[field];
-
-        if (oldFile?.key) {
-          deleteFileByKey(oldFile.key);
-        }
-
-        return {
-          ...prev,
-          [field]: {
-            url: res.data.url,
-            key: res.data.key,
-          },
-        };
+        if (oldFile?.key) deleteFileByKey(oldFile.key);
+        return { ...prev, [field]: { url: res.data.url, key: res.data.key } };
       });
     } catch {
       setError(`Failed to upload ${field}`);
@@ -2628,22 +2584,18 @@ function ReportTab({ event }) {
 
   const handlePhotosUpload = async (fileList) => {
     setUploading((prev) => ({ ...prev, photos: true }));
-
     try {
       const uploaded = await Promise.all(
         Array.from(fileList).map(async (file) => {
           const formData = new FormData();
           formData.append("file", file);
           formData.append("folder", "reports/photos");
-
           const res = await axios.post("/api/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-
           return { url: res.data.url, key: res.data.key };
         }),
       );
-
       setFiles((prev) => ({
         ...prev,
         photos: isEditing ? [...prev.photos, ...uploaded] : uploaded,
@@ -2655,28 +2607,59 @@ function ReportTab({ event }) {
     }
   };
 
-  const removePhoto = (idx) => {
-    setFiles((prev) => {
-      const photo = prev.photos[idx];
-
-      return {
+  const handleOtherAttachmentsUpload = async (fileList) => {
+    setUploading((prev) => ({ ...prev, other_attachments: true }));
+    try {
+      const uploaded = await Promise.all(
+        Array.from(fileList).map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("folder", "reports/other-attachments");
+          const res = await axios.post("/api/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          return { url: res.data.url, key: res.data.key, name: file.name };
+        }),
+      );
+      setFiles((prev) => ({
         ...prev,
-        photos: prev.photos.filter((_, i) => i !== idx),
-      };
-    });
-
+        other_attachments: [...prev.other_attachments, ...uploaded], // ← always append
+      }));
+    } catch {
+      setError("Failed to upload attachments");
+    } finally {
+      setUploading((prev) => ({ ...prev, other_attachments: false }));
+    }
+  };
+  ``;
+  const removePhoto = (idx) => {
     setDeletedPhotoKeys((prev) => {
       const photo = files.photos[idx];
       if (!photo?.key) return prev;
       return [...prev, photo.key];
     });
+    setFiles((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const removeOtherAttachment = (idx) => {
+    setDeletedAttachmentKeys((prev) => {
+      const file = files.other_attachments[idx];
+      if (!file?.key) return prev;
+      return [...prev, file.key];
+    });
+    setFiles((prev) => ({
+      ...prev,
+      other_attachments: prev.other_attachments.filter((_, i) => i !== idx),
+    }));
   };
 
   const fetchReport = async () => {
     try {
       const res = await fetch(`/api/events/accomplishment-report/${event._id}`);
       const data = await res.json();
-
       setShowReport(data.data);
     } catch {
       setShowReport(null);
@@ -2697,11 +2680,15 @@ function ReportTab({ event }) {
       const url = isEditing
         ? `/api/events/accomplishment-report/${event._id}`
         : `/api/events/accomplishment-report`;
-
       const method = isEditing ? "PUT" : "POST";
 
       if (deletedPhotoKeys.length > 0) {
         await Promise.all(deletedPhotoKeys.map((key) => deleteFileByKey(key)));
+      }
+      if (deletedAttachmentKeys.length > 0) {
+        await Promise.all(
+          deletedAttachmentKeys.map((key) => deleteFileByKey(key)),
+        );
       }
 
       await fetch(url, {
@@ -2714,6 +2701,9 @@ function ReportTab({ event }) {
           activity_design: files.activity_design,
           attendance_sheet: files.attendance_sheet,
           photos: files.photos.filter((p) => !deletedPhotoKeys.includes(p.key)),
+          other_attachments: files.other_attachments.filter(
+            (p) => !deletedAttachmentKeys.includes(p.key),
+          ),
         }),
       });
 
@@ -2722,18 +2712,17 @@ function ReportTab({ event }) {
           ? "Report updated successfully."
           : "Report submitted successfully.",
       );
-
       setForm({ narrative: "" });
       setFiles({
         office_memorandum: null,
         activity_design: null,
         attendance_sheet: null,
         photos: [],
+        other_attachments: [],
       });
-
       setDeletedPhotoKeys([]);
+      setDeletedAttachmentKeys([]);
       setIsEditing(false);
-
       fetchReport();
     } catch {
       setError("Failed to submit report.");
@@ -2741,6 +2730,7 @@ function ReportTab({ event }) {
       setSubmitting(false);
     }
   };
+
   if (showReport && !isEditing) {
     return (
       <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200">
@@ -2756,10 +2746,8 @@ function ReportTab({ event }) {
           </div>
         )}
 
-        {/* HEADER */}
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold">Accomplishment Report</h3>
-
           <button
             onClick={handleEdit}
             className="px-4 py-1 text-sm border rounded hover:bg-gray-50"
@@ -2786,8 +2774,6 @@ function ReportTab({ event }) {
               <p className="text-xs text-gray-400">No file uploaded</p>
             )}
           </div>
-
-          {/* Activity Design */}
           <div>
             <h4 className="font-semibold">Activity Design</h4>
             {showReport.activity_design?.url ? (
@@ -2802,10 +2788,8 @@ function ReportTab({ event }) {
           </div>
         </div>
 
-        {/* ATTENDANCE SHEET */}
         <div>
           <h4 className="font-semibold">Attendance Sheet</h4>
-
           {showReport.attendance_sheet?.url ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <img
@@ -2819,10 +2803,8 @@ function ReportTab({ event }) {
           )}
         </div>
 
-        {/* PHOTOS */}
         <div>
           <h4 className="font-semibold">Event Photos</h4>
-
           {showReport.photos?.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {showReport.photos.map((p, i) => (
@@ -2838,9 +2820,32 @@ function ReportTab({ event }) {
             <p className="text-xs text-gray-400">No photos uploaded</p>
           )}
         </div>
+
+        {/* Other Attachments - view mode */}
+        <div>
+          <h4 className="font-semibold">Other Attachments</h4>
+          {showReport.other_attachments?.length > 0 ? (
+            <div className="flex flex-col gap-2 mt-1">
+              {showReport.other_attachments.map((file, i) => (
+                <a
+                  key={i}
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 border rounded px-3 py-2 text-sm bg-gray-50 text-blue-600 hover:underline"
+                >
+                  📎 {file.name || `Attachment ${i + 1}`}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">No attachments uploaded</p>
+          )}
+        </div>
       </div>
     );
   }
+
   return (
     <div className="space-y-6">
       <form
@@ -2848,7 +2853,6 @@ function ReportTab({ event }) {
         className="border border-gray-200 rounded-lg p-6 space-y-4 bg-white"
       >
         <h3 className="text-lg font-semibold">Post-Activity Report</h3>
-        {/* <p className="text-sm text-gray-500">Event: <span className="font-medium text-gray-800">{event?.title}</span></p> */}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
         {success && <p className="text-sm text-green-600">{success}</p>}
@@ -2870,7 +2874,6 @@ function ReportTab({ event }) {
           <label className="block text-sm font-medium mb-1">
             Office Memorandum
           </label>
-
           <input
             type="file"
             accept="image/*,.pdf"
@@ -2883,26 +2886,20 @@ function ReportTab({ event }) {
               )
             }
           />
-
           {uploading.office_memorandum && (
             <p className="text-xs text-blue-500 mt-1">Uploading...</p>
           )}
-
           {files.office_memorandum?.url && (
             <div className="relative mt-2 inline-block">
               <img
                 src={files.office_memorandum.url}
                 className="w-20 h-20 object-cover rounded border"
               />
-
               <button
                 type="button"
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
                 onClick={() =>
-                  setFiles((prev) => ({
-                    ...prev,
-                    office_memorandum: null,
-                  }))
+                  setFiles((prev) => ({ ...prev, office_memorandum: null }))
                 }
               >
                 ×
@@ -2911,12 +2908,10 @@ function ReportTab({ event }) {
           )}
         </div>
 
-        {/* Activity Design */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Activity Design
           </label>
-
           <input
             type="file"
             accept="image/*,.pdf"
@@ -2929,26 +2924,20 @@ function ReportTab({ event }) {
               )
             }
           />
-
           {uploading.activity_design && (
             <p className="text-xs text-blue-500 mt-1">Uploading...</p>
           )}
-
           {files.activity_design?.url && (
             <div className="relative mt-2 inline-block">
               <img
                 src={files.activity_design.url}
                 className="w-20 h-20 object-cover rounded border"
               />
-
               <button
                 type="button"
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
                 onClick={() =>
-                  setFiles((prev) => ({
-                    ...prev,
-                    activity_design: null,
-                  }))
+                  setFiles((prev) => ({ ...prev, activity_design: null }))
                 }
               >
                 ×
@@ -2957,12 +2946,10 @@ function ReportTab({ event }) {
           )}
         </div>
 
-        {/* Attendance Sheet */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Attendance Sheet
           </label>
-
           <input
             type="file"
             accept="image/*,.pdf"
@@ -2975,26 +2962,20 @@ function ReportTab({ event }) {
               )
             }
           />
-
           {uploading.attendance_sheet && (
             <p className="text-xs text-blue-500 mt-1">Uploading...</p>
           )}
-
           {files.attendance_sheet?.url && (
             <div className="relative mt-2 inline-block">
               <img
                 src={files.attendance_sheet.url}
                 className="w-20 h-20 object-cover rounded border"
               />
-
               <button
                 type="button"
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
                 onClick={() =>
-                  setFiles((prev) => ({
-                    ...prev,
-                    attendance_sheet: null,
-                  }))
+                  setFiles((prev) => ({ ...prev, attendance_sheet: null }))
                 }
               >
                 ×
@@ -3003,7 +2984,6 @@ function ReportTab({ event }) {
           )}
         </div>
 
-        {/* Photos */}
         <div>
           <label className="block text-sm font-medium mb-1">Event Photos</label>
           <input
@@ -3038,6 +3018,51 @@ function ReportTab({ event }) {
           )}
         </div>
 
+        {/* Other Attachments - form mode */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Other Attachments
+          </label>
+          <input
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+            multiple
+            className="border rounded px-3 py-2 text-sm w-full"
+            onChange={(e) => handleOtherAttachmentsUpload(e.target.files)}
+          />
+          {uploading.other_attachments && (
+            <p className="text-xs text-blue-500 mt-1">
+              Uploading attachments...
+            </p>
+          )}
+          {files.other_attachments.length > 0 && (
+            <div className="flex flex-col gap-2 mt-2">
+              {files.other_attachments.map((file, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 border rounded px-3 py-2 text-sm bg-gray-50"
+                >
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex-1 truncate"
+                  >
+                    📎 {file.name || `Attachment ${i + 1}`}
+                  </a>
+                  <button
+                    type="button"
+                    className="text-red-500 hover:text-red-700 text-xs px-2 shrink-0"
+                    onClick={() => removeOtherAttachment(i)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2 justify-end">
           <button
             type="submit"
@@ -3046,7 +3071,6 @@ function ReportTab({ event }) {
           >
             {submitting ? "Submitting..." : "Submit Report"}
           </button>
-
           {isEditing && (
             <button
               type="button"
@@ -3058,7 +3082,10 @@ function ReportTab({ event }) {
                   activity_design: null,
                   attendance_sheet: null,
                   photos: [],
+                  other_attachments: [],
                 });
+                setDeletedPhotoKeys([]);
+                setDeletedAttachmentKeys([]);
                 setShowReport(showReport);
               }}
               className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
@@ -3068,29 +3095,6 @@ function ReportTab({ event }) {
           )}
         </div>
       </form>
-
-      {/* {reports.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Submitted Reports</h3>
-          {reports.map((r) => (
-            <div key={r._id} className="border rounded-lg p-4 bg-white space-y-2">
-              <p className="text-sm text-gray-700">{r.narrative}</p>
-              {r.photos?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {r.photos.map((p, i) => (
-                    <img key={i} src={p.url} className="w-20 h-20 object-cover rounded border" alt={`photo-${i}`} />
-                  ))}
-                </div>
-              )}
-              <div className="flex gap-3 text-sm">
-                {r.office_memorandum?.url && <a href={r.office_memorandum.url} target="_blank" className="text-blue-600 underline">Memorandum</a>}
-                {r.activity_design?.url && <a href={r.activity_design.url} target="_blank" className="text-blue-600 underline">Activity Design</a>}
-                {r.attendance_sheet?.url && <a href={r.attendance_sheet.url} target="_blank" className="text-blue-600 underline">Attendance Sheet</a>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )} */}
     </div>
   );
 }

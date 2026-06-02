@@ -29,7 +29,7 @@ export default function Sidebar({ open, setOpen, role }) {
     admin: [
       "admin-dashboard",
       "user-list",
-      "reports",
+      "reports/sex-disaggregated-data",
       "manage-roles",
       "settings",
     ],
@@ -74,13 +74,13 @@ export default function Sidebar({ open, setOpen, role }) {
       name: "Reports",
       href: "/reports",
       icon: <FaChartPie />,
-      key: "reports",
+      key: "reports/sex-disaggregated-data",
       children: [
         {
           name: "Sex Disaggregated Data",
           href: "/reports/sex-disaggregated-data",
           icon: <FaVenusMars />,
-          key: "sex-report",
+          key: "reports/sex-disaggregated-data",
         },
       ],
     },

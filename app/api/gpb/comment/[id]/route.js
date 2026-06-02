@@ -20,7 +20,6 @@ export async function POST(req, { params }) {
       return Response.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Parse dot notation e.g. "cause_gender_issue.0"
     const dotIndex = field.lastIndexOf(".");
     const hasIndex =
       dotIndex !== -1 && !isNaN(Number(field.slice(dotIndex + 1)));

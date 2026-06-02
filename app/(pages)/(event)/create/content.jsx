@@ -433,10 +433,24 @@ export default function CreateEventsContent() {
                       Day {idx + 1} Start Date & Time{" "}
                       <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    {/* <input
                       type="datetime-local"
                       value={formData.start_dates[idx] || ""}
                       min={nowLocal}
+                      onChange={(e) =>
+                        handleDateChange("start_dates", idx, e.target.value)
+                      }
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    /> */}
+
+                    <input
+                      type="datetime-local"
+                      value={formData.start_dates[idx] || ""}
+                      min={
+                        idx === 0
+                          ? nowLocal
+                          : formData.end_dates[idx - 1] || nowLocal
+                      }
                       onChange={(e) =>
                         handleDateChange("start_dates", idx, e.target.value)
                       }

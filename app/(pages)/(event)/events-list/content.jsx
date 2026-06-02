@@ -14,7 +14,6 @@ export default function EventsListContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // filters
   const [activityType, setActivityType] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
 
@@ -88,33 +87,44 @@ export default function EventsListContent() {
     });
   }, [events, projects, activityType, selectedYear]);
 
-  const formatRange = (evt) => {
-    let start = evt.start_date || evt.date;
-    let end = evt.end_date;
+const formatRange = (evt) => {
+  let startDates = evt.start_dates || [];
+  let endDates = evt.end_dates || [];
 
-    if (Array.isArray(evt.start_dates) && evt.start_dates.length > 0) {
-      start = evt.start_dates[0];
-    }
+  if (Array.isArray(startDates) && startDates.length > 0) {
+    return startDates.map((startDate, index) => {
+      const dayNumber = index + 1;
+      const endDate = endDates[index];
+      const startStr = new Date(startDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
-    if (Array.isArray(evt.end_dates) && evt.end_dates.length > 0) {
-      end = evt.end_dates[evt.end_dates.length - 1];
-    }
+      if (!endDate) {
+        return <div key={index}>Day {dayNumber}: {startStr} {timeStart}</div>;
+      }
 
-    if (!start) return "No date";
+      const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
-    const startStr = new Date(start).toLocaleString();
-
-    if (!end) return startStr;
-
-    const endStr = new Date(end).toLocaleString();
-
-    return `${startStr} - ${endStr}`;
-  };
-
-  const getProjectYear = (projectId) => {
-    const project = projects.find((p) => p._id === projectId);
-    return project?.year || "N/A";
-  };
+      return (
+        <div key={index}>
+        <div className="flex flex-row gap-2 items-center">
+ <FaCalendar />
+          Day {dayNumber}: {startStr} {timeStart} - {timeEnd}
+        </div>
+       
+        </div>
+      );
+    });
+  }
+};
 
   if (loading) {
     return (
@@ -125,7 +135,7 @@ export default function EventsListContent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-8xl mx-auto px-6 space-y-8 h-screen">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -152,7 +162,6 @@ export default function EventsListContent() {
             ))}
           </select>
 
-          {/* ACTIVITY FILTER */}
           <select
             className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
             value={activityType}
@@ -192,7 +201,7 @@ export default function EventsListContent() {
             {filteredEvents.map((evt) => (
               <div
                 key={evt._id}
-                className="group border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition"
+                className="group border border-gray-200 rounded-md overflow-hidden bg-white shadow-sm hover:shadow-lg transition"
               >
                 {evt.event_poster?.url && (
                   <div className="overflow-hidden">
@@ -211,9 +220,6 @@ export default function EventsListContent() {
                         {evt.title}
                       </h3>
 
-                      {/* <p className="text-xs text-gray-500 mt-1">
-                        GPB Year: {getProjectYear(evt.project)}
-                      </p> */}
                     </div>
 
                     {evt.type_of_activity && (
@@ -223,9 +229,11 @@ export default function EventsListContent() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <FaCalendar />
+                  <div className="flex flex-col text-sm text-gray-500">
+         
                     {formatRange(evt)}
+               
+
                   </div>
 
                   {evt.venue && (

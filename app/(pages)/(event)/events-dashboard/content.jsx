@@ -244,7 +244,7 @@ export default function EventsDashboardContent() {
               )}
               <div className="flex justify-end">
                 <button
-                  onClick={() => router.push("/projects")}
+                  onClick={() => router.push("/gpb")}
                   className="text-xs text-blue-600 mt-2"
                 >
                   View All

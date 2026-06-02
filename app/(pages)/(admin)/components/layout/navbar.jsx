@@ -21,6 +21,9 @@ export default function Navbar({ toggleSidebar }) {
         {role !== "planning director" && (
           <span className="text-xl font-bold">Admin Dashboard</span>
         )}
+                {role === "planning director" && (
+          <span className="text-xl font-bold">Planning Director Dashboard</span>
+        )}
       </div>
     </nav>
   );

@@ -37,6 +37,7 @@ export async function PUT(req, { params }) {
         activity_design: body.activity_design,
         attendance_sheet: body.attendance_sheet,
         photos: body.photos,
+        other_attachments: body.other_attachments,
       },
       { new: true }
     );
