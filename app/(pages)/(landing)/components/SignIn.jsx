@@ -106,23 +106,6 @@ export default function LoginForm() {
     }
   };
 
-  const handleAdmin = async () => {
-    setUsername("Admin");
-    setPassword("Admin123!");
-  };
-  const handleFocal = async () => {
-    setUsername("Focal");
-    setPassword("focal123!");
-  };
-  const handleUser = async () => {
-    setUsername("JardinianoMarkLouisse");
-    setPassword("gems1234");
-  };
-
-  const handleCoordinator = async () => {
-    setUsername("DeLuna-MalinaoEunice");
-    setPassword("gems1234");
-  };
 
   return (
     <div className=" px-4 sm:px-6 md:px-8">
@@ -216,35 +199,7 @@ export default function LoginForm() {
               Sign in
             </button>
 
-            <div className="flex flex-col gap-2">
-              <h1 className="text-sm font-medium">Quick SignIn</h1>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  className="shadow px-4 py-1 rounded-md bg-white"
-                  onClick={handleAdmin}
-                >
-                  Admin
-                </button>
-                <button
-                  className="shadow px-4 py-1 rounded-md bg-white"
-                  onClick={handleFocal}
-                >
-                  Focal
-                </button>
-                <button
-                  className="shadow px-4 py-1 rounded-md bg-white"
-                  onClick={handleUser}
-                >
-                  Planning Director
-                </button>
-                <button
-                  className="shadow px-4 py-1 rounded-md bg-white"
-                  onClick={handleCoordinator}
-                >
-                  GAD Coordinator
-                </button>
-              </div>
-            </div>
+
 
             <div className="flex justify-center">
               <p className="text-sm">
