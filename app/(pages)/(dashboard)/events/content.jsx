@@ -99,27 +99,78 @@ export default function EventContent({
       );
     }
 
+        const posterUrl = (evt) =>
+      evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
+
+
+        const formatRange = (evt) => {
+  let startDates = evt.start_dates || [];
+  let endDates = evt.end_dates || [];
+
+  if (Array.isArray(startDates) && startDates.length > 0) {
+    return startDates.map((startDate, index) => {
+      const dayNumber = index + 1;
+      const endDate = endDates[index];
+      const startStr = new Date(startDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      if (!endDate) {
+        return <div key={index}>Day {dayNumber}: {startStr} {timeStart}</div>;
+      }
+
+      const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return (
+        <div key={index}>
+        <div className="flex flex-row gap-2 items-center">
+ <FaCalendar />
+          Day {dayNumber}: {startStr} {timeStart} - {timeEnd}
+        </div>
+       
+        </div>
+      );
+    });
+  }
+};
+
+
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {list.map((evt) => (
           <div
             key={evt._id}
-            className="text-left rounded-lg p-4 border border-gray-200 bg-white hover:shadow-md transition space-y-2 cursor-pointer"
+            className="text-left rounded-lg border border-gray-200 bg-white hover:shadow-md transition space-y-2 cursor-pointer"
             onClick={() => router.push(`/events/discover/${evt._id}`)}
           >
-            <h3 className="text-lg font-semibold">{evt.title}</h3>
-            <p className="text-sm text-gray-600 flex items-center gap-2">
-              <FaCalendar />
-              {formatRange(evt.start_date || evt.date, evt.end_date)}
+          {posterUrl(evt) && (
+  <img
+    src={posterUrl(evt)}
+    alt={evt.title}
+    className="w-full h-48 object-cover rounded-lg"
+  />
+)}
+<div className="p-4">
+            <h3 className="text-lg font-semibold mb-2">{evt.title}</h3>
+            <p className="text-sm text-gray-600 flex flex-col mb-2">
+               {formatRange(evt)}
             </p>
             {evt.venue && (
-              <p className="text-sm text-gray-700 flex items-center gap-2">
+              <p className="text-sm text-gray-700 flex items-center gap-2 mb-2">
                 <FaLocationArrow />
                 {evt.venue}
               </p>
             )}
             {evt.description && (
-              <p className="text-sm text-gray-700 line-clamp-2">
+              <p className="text-sm text-gray-700 line-clamp-2 mb-2">
                 {evt.description}
               </p>
             )}
@@ -160,6 +211,8 @@ export default function EventContent({
                 );
               })}
             </div>
+</div>
+
           </div>
         ))}
       </div>
@@ -272,10 +325,17 @@ export default function EventContent({
       )}
 
       <section className="space-y-4">
-        <div className="flex items-center gap-3">
+       
+        <div className="flex justify-between">
+         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Discover Events</h2>
-          <span className="text-sm text-gray-500">{discoverEvents.length}</span>
+           <span className="text-md text-gray-500">{discoverEvents.length}</span>
+                   </div>
+          <button className="text-blue-500"  onClick={() => router.push("/events/discover")}>View All</button>
         </div>
+
+         
+
         {renderCards(discoverEvents, "No available events to discover.")}
       </section>
     </div>

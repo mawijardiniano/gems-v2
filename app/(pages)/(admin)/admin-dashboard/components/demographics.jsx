@@ -10,9 +10,14 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  Legend,
 } from "recharts";
 
-export default function Demographics({ data }) {
+export default function Demographics({ data, personTypeFilter = "" }) {
+  const statusFilter = `${personTypeFilter || ""}`.trim().toLowerCase();
+  const isEmployeeFilter = statusFilter === "employee";
+  const isStudentFilter = statusFilter === "student";
+
   const safeGet = (fn, fallback = null) => {
     try {
       const v = fn();
@@ -47,6 +52,37 @@ export default function Demographics({ data }) {
     if (isStudentFlag === true) return "Student";
     if (isStudentFlag === false) return "Employee";
     return null;
+  };
+
+  const getGender = (d) => {
+    const value =
+      safeGet(() => d.personal_info_id?.gadData?.sexAtBirth) ||
+      safeGet(() => d.personal_information?.gadData?.sexAtBirth) ||
+      safeGet(() => d.personal_info_id?.personal?.sex) ||
+      safeGet(() => d.personal_information?.sex);
+    const normalized = `${value || ""}`.trim().toLowerCase();
+    if (normalized === "male" || normalized === "m") return "Male";
+    if (normalized === "female" || normalized === "f") return "Female";
+    return "Other";
+  };
+
+  const countByCategoryAndGender = (accessors, source = data) => {
+    const groups = {};
+    source.forEach((d) => {
+      let category = "Unknown";
+      for (const fn of accessors) {
+        const v = safeGet(() => fn(d));
+        if (v !== null && v !== undefined && v !== "") {
+          category = v;
+          break;
+        }
+      }
+      const gender = getGender(d);
+      if (!groups[category])
+        groups[category] = { name: category, Male: 0, Female: 0, Other: 0 };
+      groups[category][gender] = (groups[category][gender] || 0) + 1;
+    });
+    return Object.values(groups);
   };
 
   const employees = data.filter(
@@ -95,34 +131,31 @@ export default function Demographics({ data }) {
     (d) => d.personal_information?.religion,
   ]);
 
-  const employmentData = countByAccessors(
+  const employmentData = countByCategoryAndGender(
     [
       (d) =>
         d.personal_info_id?.affiliation?.employment_information
           ?.employment_status,
       (d) => d.personal_information?.employment_status,
     ],
-    "Unknown",
     employees,
   );
 
-  const appointmentData = countByAccessors(
+  const appointmentData = countByCategoryAndGender(
     [
       (d) =>
         d.personal_info_id?.affiliation?.employment_information
           ?.employment_appointment_status,
       (d) => d.personal_information?.employment_appointment_status,
     ],
-    "Unknown",
     employees,
   );
 
-  const employeeOfficeData = countByAccessors(
+  const employeeOfficeData = countByCategoryAndGender(
     [
       (d) => d.personal_info_id?.affiliation?.employment_information?.office,
       (d) => d.personal_information?.employment_information?.office,
     ],
-    "Unknown",
     employees,
   );
 
@@ -144,13 +177,46 @@ export default function Demographics({ data }) {
     students,
   );
 
-  const studentYearLevelData = countByAccessors(
-    [
-      (d) => d.personal_info_id?.affiliation?.academic_information?.year_level,
-      (d) => d.personal_information?.academic_information?.year_level,
-    ],
-    "Unknown",
-    students,
+  const sortStudentYearLevels = (rows) => {
+    const order = [
+      "grade 11",
+      "grade 12",
+      "1st year",
+      "2nd year",
+      "3rd year",
+      "4th year",
+      "5th year",
+      "graduate",
+      "graduates",
+      "unknown",
+    ];
+
+    const rank = (name) => {
+      const normalized = `${name || ""}`.trim().toLowerCase();
+      const index = order.findIndex(
+        (term) => normalized === term || normalized.includes(term),
+      );
+      return index === -1 ? order.length : index;
+    };
+
+    return [...rows].sort((a, b) => {
+      const rankA = rank(a.name);
+      const rankB = rank(b.name);
+      if (rankA !== rankB) return rankA - rankB;
+      return a.name.localeCompare(b.name);
+    });
+  };
+
+  const studentYearLevelData = sortStudentYearLevels(
+    countByAccessors(
+      [
+        (d) =>
+          d.personal_info_id?.affiliation?.academic_information?.year_level,
+        (d) => d.personal_information?.academic_information?.year_level,
+      ],
+      "Unknown",
+      students,
+    ),
   );
 
   const colors = ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444"];
@@ -243,61 +309,8 @@ export default function Demographics({ data }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h2 className="font-semibold mb-2">Employment Type (Employees)</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart
-              data={employmentData}
-              layout="horizontal"
-              margin={{ left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" type="category" />
-              <YAxis type="number" allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h2 className="font-semibold mb-2">Appointment Status (Employees)</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart
-              data={appointmentData}
-              layout="horizontal"
-              margin={{ left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" type="category" />
-              <YAxis type="number" allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#F59E0B" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="bg-gray-50 p-4 rounded-md mb-6">
-        <h2 className="font-semibold mb-2">Employee by Office</h2>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart
-            data={employeeOfficeData}
-            layout="vertical"
-            margin={{ left: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis dataKey="name" type="category" width={140} />
-            <Tooltip />
-            <Bar dataKey="value" fill="#10B981" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-        <div className="grid grid-cols-2 gap-4">
+      {!isEmployeeFilter && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-gray-50 p-4 rounded-md">
             <h2 className="font-semibold mb-2">Students by Campus</h2>
             <ResponsiveContainer width="100%" height={240}>
@@ -332,7 +345,10 @@ export default function Demographics({ data }) {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="bg-gray-50 p-4 rounded-md">
+      )}
+
+      {!isEmployeeFilter && (
+        <div className="bg-gray-50 p-4 rounded-md mb-6">
           <h2 className="font-semibold mb-2">Students by College</h2>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart
@@ -348,7 +364,72 @@ export default function Demographics({ data }) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      )}
+
+      {isStudentFilter ? null : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h2 className="font-semibold mb-2">Employment Type (Employees)</h2>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={employmentData}
+                layout="horizontal"
+                margin={{ left: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" type="category" />
+                <YAxis type="number" allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Male" fill="#3B82F6" />
+                <Bar dataKey="Female" fill="#EC4899" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h2 className="font-semibold mb-2">
+              Appointment Status (Employees)
+            </h2>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart
+                data={appointmentData}
+                layout="horizontal"
+                margin={{ left: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" type="category" />
+                <YAxis type="number" allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Male" fill="#3B82F6" />
+                <Bar dataKey="Female" fill="#EC4899" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {isStudentFilter ? null : (
+        <div className="bg-gray-50 p-4 rounded-md mb-6">
+          <h2 className="font-semibold mb-2">Employee by Office</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={employeeOfficeData}
+              layout="vertical"
+              margin={{ left: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" allowDecimals={false} />
+              <YAxis dataKey="name" type="category" width={160} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Male" fill="#3B82F6" />
+              <Bar dataKey="Female" fill="#EC4899" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

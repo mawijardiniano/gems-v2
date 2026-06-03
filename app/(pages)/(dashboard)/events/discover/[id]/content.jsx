@@ -24,6 +24,8 @@ export default function DiscoverEventContent() {
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
   const [eligibilityForm, setEligibilityForm] = useState({});
 
+ 
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -74,29 +76,6 @@ export default function DiscoverEventContent() {
     load();
   }, [eventId]);
 
-  const formatRange = useMemo(() => {
-    return (start, end) => {
-      if (!start) return "No date";
-      const opts = {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      };
-      const format = (value) => {
-        const d = new Date(value);
-        return Number.isNaN(d.getTime())
-          ? "Invalid date"
-          : d.toLocaleString(undefined, opts);
-      };
-      const startStr = format(start);
-      if (!end) return startStr;
-      const endStr = format(end);
-      return `${startStr} - ${endStr}`;
-    };
-  }, []);
-
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
     router.push(
@@ -125,6 +104,52 @@ export default function DiscoverEventContent() {
     if (isUserInList(evt.not_interested_users, userId)) return "not_interested";
     return null;
   };
+
+
+   const posterUrl = (evt) =>
+      evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
+
+    const formatRange = (evt) => {
+      let startDates = evt.start_dates || [];
+      let endDates = evt.end_dates || [];
+
+      if (Array.isArray(startDates) && startDates.length > 0) {
+        return startDates.map((startDate, index) => {
+          const dayNumber = index + 1;
+          const endDate = endDates[index];
+          const startStr = new Date(startDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+          const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          if (!endDate) {
+            return (
+              <div key={index}>
+                Day {dayNumber}: {startStr} {timeStart}
+              </div>
+            );
+          }
+
+          const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          return (
+            <div key={index}>
+              <div className="flex flex-row gap-2 items-center">
+                <FaCalendar />
+                Day {dayNumber}: {startStr} {timeStart} - {timeEnd}
+              </div>
+            </div>
+          );
+        });
+      }
+    };
 
   const handleStatus = async (evt, status) => {
     if (!evt || !evt._id) return;
@@ -171,6 +196,9 @@ export default function DiscoverEventContent() {
     setEligibilityForm({});
   };
 
+  
+
+
   if (loading) {
     return (
       <div className="p-6 text-center text-gray-500">Loading event...</div>
@@ -183,6 +211,7 @@ export default function DiscoverEventContent() {
         <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
           {error}
         </div>
+        
         <button
           onClick={() => router.push("/events/discover")}
           className="px-4 py-2 border rounded hover:bg-gray-100"
@@ -200,7 +229,7 @@ export default function DiscoverEventContent() {
   }
 
   return (
-    <div className="mx-auto p-5 font-sans space-y-6 max-w-5xl">
+    <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
       {showQrPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
@@ -276,67 +305,72 @@ export default function DiscoverEventContent() {
         </div>
       )}
 
-      <button
-        onClick={() => router.push("/events/discover")}
-        className="text-sm text-blue-600 hover:underline"
-      >
-        ← Back to Discover
-      </button>
+<div className="relative rounded-xl overflow-hidden">
+  {posterUrl(event) && (
+    <img
+      src={posterUrl(event)}
+      alt={event.title}
+      className="w-full h-[400px] object-cover"
+    />
+  )}
 
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">{event.title}</h1>
-        <p className="text-gray-700 flex items-center gap-2">
-          <FaCalendar />{" "}
-          {formatRange(event.start_date || event.date, event.end_date)}
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {event.venue && (
-            <p className="text-gray-700 flex items-center gap-2">
-              <FaLocationArrow /> {event.venue}
-            </p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {["interested", "not_interested", "going"].map((s) => {
-              const labels = {
-                interested: "Interested",
-                not_interested: "Not Interested",
-                going: "Going",
-              };
-              const active = getUserStatus(event) === s;
-              const disabled = isPast(event) || statusUpdatingId === event._id;
-              return (
-                <button
-                  key={s}
-                  onClick={() => {
-                    if (s === "going") {
-                      if (
-                        event.eligibility_criteria &&
-                        event.eligibility_criteria !== "None"
-                      ) {
-                        setShowEligibilityModal(true);
-                      } else {
-                        handleStatus(event, s);
-                      }
-                    } else {
-                      handleStatus(event, s);
-                    }
-                  }}
-                  disabled={disabled}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold border transition ${
-                    active
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white text-gray-800 border-gray-300 hover:border-blue-400"
-                  } disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed`}
-                >
-                  {labels[s]}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+  <div className="absolute inset-0 bg-black/50" />
+
+  <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
+    <button
+      onClick={() => router.push("/events/discover")}
+      className="self-start text-sm hover:underline"
+    >
+      ← Back to Discover
+    </button>
+
+    <div className="space-y-3">
+      <h1 className="text-4xl font-bold">{event.title}</h1>
+
+      <div className="flex flex-col gap-2">
+        {formatRange(event)}
       </div>
 
-      <div className="p-4 space-y-3">
+      {event.venue && (
+        <p className="flex items-center gap-2">
+          <FaLocationArrow />
+          {event.venue}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2 pt-2">
+        {["interested", "not_interested", "going"].map((s) => {
+          const labels = {
+            interested: "Interested",
+            not_interested: "Not Interested",
+            going: "Going",
+          };
+
+          const active = getUserStatus(event) === s;
+          const disabled =
+            isPast(event) || statusUpdatingId === event._id;
+
+          return (
+            <button
+              key={s}
+              onClick={() => handleStatus(event, s)}
+              disabled={disabled}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold ${
+                active
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-800"
+              }`}
+            >
+              {labels[s]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</div>
+
+      <div className=" space-y-3">
         {isPast(event) && (
           <p className="text-sm text-gray-500">This event has ended.</p>
         )}

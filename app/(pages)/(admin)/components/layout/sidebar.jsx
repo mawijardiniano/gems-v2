@@ -29,6 +29,8 @@ export default function Sidebar({ open, setOpen, role }) {
     admin: [
       "admin-dashboard",
       "user-list",
+      "students",
+      "employees",
       "reports/sex-disaggregated-data",
       "manage-roles",
       "settings",

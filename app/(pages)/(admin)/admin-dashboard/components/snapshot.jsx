@@ -93,32 +93,6 @@ export default function Snapshot({ data }) {
             </p>
           </div>
         </div>
-
-        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
-          <FaChild className="text-yellow-500 text-2xl" />
-          <div>
-            <p className="text-sm text-gray-500">Solo Parents</p>
-            <p className="text-xl font-semibold text-black">{soloParents}</p>
-          </div>
-        </div> */}
-
-        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
-          <FaHospital className="text-red-500 text-2xl" />
-          <div>
-            <p className="text-sm text-gray-500">With Health Conditions</p>
-            <p className="text-xl font-semibold text-black">
-              {healthConditions}
-            </p>
-          </div>
-        </div> */}
-
-        {/* <div className="border border-gray-200 p-4 rounded-md flex flex-col gap-2">
-          <FaExclamationTriangle className="text-orange-500 text-2xl" />
-          <div>
-            <p className="text-sm text-gray-500">High-Risk Individuals</p>
-            <p className="text-xl font-semibold text-red-600">{highRisk}</p>
-          </div>
-        </div> */}
       </div>
     </div>
   );

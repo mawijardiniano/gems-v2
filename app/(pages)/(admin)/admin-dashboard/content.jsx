@@ -146,7 +146,7 @@ export default function Page() {
 
       <Snapshot data={filteredData} />
       <GenderPanel data={filteredData} />
-      <Demographics data={filteredData} />
+      <Demographics data={filteredData} personTypeFilter={filterPersonType} />
     </div>
   );
 }

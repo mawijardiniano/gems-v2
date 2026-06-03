@@ -108,13 +108,6 @@ export default function DiscoverContent() {
       .slice(0, 4);
   }, [allEvents, registeredIds, createdIds]);
 
-  const formatRange = (start, end) => {
-    if (!start) return "No date";
-    const startStr = new Date(start).toLocaleString();
-    if (!end) return startStr;
-    return `${startStr} - ${new Date(end).toLocaleString()}`;
-  };
-
   const renderCards = (list, emptyText) => {
     if (list.length === 0) {
       return (
@@ -124,58 +117,111 @@ export default function DiscoverContent() {
       );
     }
 
+    const posterUrl = (evt) =>
+      evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
+
+    const formatRange = (evt) => {
+      let startDates = evt.start_dates || [];
+      let endDates = evt.end_dates || [];
+
+      if (Array.isArray(startDates) && startDates.length > 0) {
+        return startDates.map((startDate, index) => {
+          const dayNumber = index + 1;
+          const endDate = endDates[index];
+          const startStr = new Date(startDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+          const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          if (!endDate) {
+            return (
+              <div key={index}>
+                Day {dayNumber}: {startStr} {timeStart}
+              </div>
+            );
+          }
+
+          const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          return (
+            <div key={index}>
+              <div className="flex flex-row gap-2 items-center">
+                <FaCalendar />
+                Day {dayNumber}: {startStr} {timeStart} - {timeEnd}
+              </div>
+            </div>
+          );
+        });
+      }
+    };
+
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {list.map((evt) => (
           <div
             key={evt._id}
-            className="text-left border rounded-lg p-4 border-gray-200 bg-white hover:shadow-md transition space-y-2 cursor-pointer"
+            className="text-left border rounded-lg border-gray-200 bg-white hover:shadow-md transition space-y-2 cursor-pointer"
             onClick={() => router.push(`/events/discover/${evt._id}`)}
           >
-            <h3 className="text-lg font-semibold mb-1">{evt.title}</h3>
-            <p className="text-sm text-gray-600 mb-2 flex items-center gap-2">
-              <FaCalendar />
-              {formatRange(evt.start_date || evt.date, evt.end_date)}
-            </p>
-            {evt.venue && (
-              <p className="text-sm text-gray-700 mb-2 flex items-center gap-2">
-                <FaLocationArrow />
-                {evt.venue}
-              </p>
+            {posterUrl(evt) && (
+              <img
+                src={posterUrl(evt)}
+                alt={evt.title}
+                className="w-full h-48 object-cover rounded-lg"
+              />
             )}
-            {evt.description && (
-              <p className="text-sm text-gray-700 line-clamp-2">
-                {evt.description}
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-1">{evt.title}</h3>
+              <p className="text-sm text-gray-600 flex flex-col mb-2">
+                {formatRange(evt)}
               </p>
-            )}
+              {evt.venue && (
+                <p className="text-sm text-gray-700 mb-2 flex items-center gap-2">
+                  <FaLocationArrow />
+                  {evt.venue}
+                </p>
+              )}
+              {evt.description && (
+                <p className="text-sm text-gray-700 line-clamp-2">
+                  {evt.description}
+                </p>
+              )}
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              {["interested", "not_interested", "going"].map((s) => {
-                const labels = {
-                  interested: "Interested",
-                  not_interested: "Not Interested",
-                  going: "Going",
-                };
-                const active = getUserStatus(evt) === s;
-                const disabled = isPast(evt) || statusUpdatingId === evt._id;
-                return (
-                  <button
-                    key={s}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatus(evt, s);
-                    }}
-                    disabled={disabled}
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold border transition ${
-                      active
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-800 border-gray-300 hover:border-blue-400"
-                    } disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed`}
-                  >
-                    {labels[s]}
-                  </button>
-                );
-              })}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {["interested", "not_interested", "going"].map((s) => {
+                  const labels = {
+                    interested: "Interested",
+                    not_interested: "Not Interested",
+                    going: "Going",
+                  };
+                  const active = getUserStatus(evt) === s;
+                  const disabled = isPast(evt) || statusUpdatingId === evt._id;
+                  return (
+                    <button
+                      key={s}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatus(evt, s);
+                      }}
+                      disabled={disabled}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold border transition ${
+                        active
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-800 border-gray-300 hover:border-blue-400"
+                      } disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed`}
+                    >
+                      {labels[s]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ))}
