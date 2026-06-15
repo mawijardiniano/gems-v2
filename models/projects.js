@@ -1,6 +1,5 @@
 import { Schema, model, models } from "mongoose";
 
-
 const CommentSchema = new Schema(
   {
     userId: {
@@ -13,14 +12,30 @@ const CommentSchema = new Schema(
       type: String,
       enum: ["approval", "revision"],
     },
-    fieldIndex: { type: Number, default: null },
+   fields: [
+  {
+    type: String,
+    enum: [
+      "gender_issue",
+      "cause_gender_issue",
+      "gad_objective",
+      "supporting_statistics_data",
+      "relevant_agency",
+      "gad_activity",
+      "performance_indicator_target",
+      "gad_budget",
+      "source_budget",
+      "responsible_office",
+      "general",
+    ],
   },
-  { timestamps: true }
+],
+  },
+  { timestamps: true },
 );
 
 const FieldSchema = (type) => ({
-  value: { type, required: true },
-  comments: [CommentSchema],
+  value: { type, default: "" },
 });
 
 const ProjectSchema = new Schema({
@@ -38,11 +53,10 @@ const ProjectSchema = new Schema({
   responsible_office: FieldSchema(String),
 
   events: [{ type: Schema.Types.ObjectId, ref: "Event" }],
+  comments: [CommentSchema],
 });
 
 export default models.Project || model("Project", ProjectSchema);
-
-
 
 // import { Schema, model, models } from "mongoose";
 
@@ -67,7 +81,6 @@ export default models.Project || model("Project", ProjectSchema);
 //   },
 //   { timestamps: true }
 // );
-
 
 // const ProjectSchema = new Schema(
 //   {
@@ -99,7 +112,7 @@ export default models.Project || model("Project", ProjectSchema);
 
 //     comments: [CommentSchema],
 
-//     signed_copy: { type: String }, 
+//     signed_copy: { type: String },
 
 //   },
 //   { timestamps: true }

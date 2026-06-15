@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
 import "@/models/event";
-import GPB from "@/models/gpb"
+import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
 
 export async function GET(req) {
@@ -10,30 +10,39 @@ export async function GET(req) {
   return Response.json({ data: projects });
 }
 
-
 export async function POST(req) {
   await connectDB();
 
   const body = await req.json();
+  const year = Number(body.year);
+  const requestedBudget = Number(body.gad_budget || 0);
 
-  const budget = await GAABudget.findOne({ year: body.year });
+  if (Number.isNaN(year)) {
+    return Response.json({ message: "Invalid year" }, { status: 400 });
+  }
+
+  if (Number.isNaN(requestedBudget)) {
+    return Response.json({ message: "Invalid GAD budget" }, { status: 400 });
+  }
+
+  const budget = await GAABudget.findOne({ year });
 
   if (!budget) {
     return Response.json(
       { message: "No GAA Budget found for this year" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const used = await Project.aggregate([
-    { $match: { year: body.year } },
-    { $group: { _id: null, total: { $sum: "$gad_budget.value" } } }
+    { $match: { year } },
+    { $group: { _id: null, total: { $sum: "$gad_budget.value" } } },
   ]);
 
   const usedBudget = used[0]?.total || 0;
   const remainingBudget = budget.gadAnnualBudget - usedBudget;
 
-  if (body.gad_budget > remainingBudget) {
+  if (requestedBudget > remainingBudget) {
     return Response.json(
       {
         message: "Insufficient GAD budget",
@@ -41,64 +50,62 @@ export async function POST(req) {
           totalBudget: budget.gadAnnualBudget,
           usedBudget,
           remainingBudget,
-          requested: body.gad_budget
-        }
+          requested: requestedBudget,
+        },
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const projectData = {
-    year: body.year,
+    year,
 
     gender_issue: {
-      value: body.gender_issue,
-      comments: [],
+      value: body.gender_issue || "",
     },
 
     cause_gender_issue: {
-      value: body.cause_gender_issue,
-      comments: [],
+      value: Array.isArray(body.cause_gender_issue)
+        ? body.cause_gender_issue
+        : [body.cause_gender_issue || ""],
     },
 
     gad_objective: {
-      value: body.gad_objective,
-      comments: [],
+      value: Array.isArray(body.gad_objective)
+        ? body.gad_objective
+        : [body.gad_objective || ""],
     },
 
     supporting_statistics_data: {
-      value: body.supporting_statistics_data,
-      comments: [],
+      value: body.supporting_statistics_data || "",
     },
 
     relevant_agency: {
-      value: body.relevant_agency,
-      comments: [],
+      value: body.relevant_agency || "",
     },
 
     gad_activity: {
-      value: body.gad_activity,
-      comments: [],
+      value: Array.isArray(body.gad_activity)
+        ? body.gad_activity
+        : [body.gad_activity || ""],
     },
 
     performance_indicator_target: {
-      value: body.performance_indicator_target,
-      comments: [],
+      value: Array.isArray(body.performance_indicator_target)
+        ? body.performance_indicator_target
+        : [body.performance_indicator_target || ""],
     },
 
     gad_budget: {
-      value: body.gad_budget,
-      comments: [],
+      value: requestedBudget,
     },
 
     source_budget: {
-      value: body.source_budget,
-      comments: [],
+      value: body.source_budget || "",
     },
 
     responsible_office: {
-      value: body.responsible_office,
-      comments: [],
+      value: body.responsible_office || "",
     },
 
     events: body.events || [],
@@ -107,19 +114,19 @@ export async function POST(req) {
   const project = await Project.create(projectData);
 
   const gpb = await GPB.findOneAndUpdate(
-    { year: body.year },
+    { year },
     {
       $setOnInsert: {
-        year: body.year,
+        year,
         gaaBudgetId: budget._id,
       },
     },
-    { new: true, upsert: true }
+    { new: true, upsert: true },
   );
 
   await GPB.updateOne(
     { _id: gpb._id },
-    { $addToSet: { projects: project._id } }
+    { $addToSet: { projects: project._id } },
   );
 
   return Response.json({
@@ -131,10 +138,7 @@ export async function POST(req) {
 export async function DELETE() {
   await connectDB();
 
-  await GPB.updateMany(
-    {},
-    { $set: { projects: [] } }
-  );
+  await GPB.updateMany({}, { $set: { projects: [] } });
 
   const result = await Project.deleteMany({});
 
@@ -143,4 +147,3 @@ export async function DELETE() {
     deletedCount: result.deletedCount,
   });
 }
-

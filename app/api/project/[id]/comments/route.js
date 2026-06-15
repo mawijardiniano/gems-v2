@@ -1,49 +1,82 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
 
+const ALLOWED_FIELDS = [
+  "gender_issue",
+  "cause_gender_issue",
+  "gad_objective",
+  "supporting_statistics_data",
+  "relevant_agency",
+  "gad_activity",
+  "performance_indicator_target",
+  "gad_budget",
+  "source_budget",
+  "responsible_office",
+  "general",
+];
+
 export async function GET(req, { params }) {
   await connectDB();
 
   try {
     const { id } = await params;
 
-    const project = await Project.findById(id);
-
-    if (!project) {
-      return Response.json(
-        { message: "Project not found" },
-        { status: 404 }
-      );
-    }
-
-    return Response.json({
-      gender_issue: project.gender_issue.comments,
-      cause_gender_issue: project.cause_gender_issue.comments,
-      gad_objective: project.gad_objective.comments,
-      supporting_statistics_data: project.supporting_statistics_data.comments,
-      relevant_agency: project.relevant_agency.comments,
-      gad_activity: project.gad_activity.comments,
-      performance_indicator_target: project.performance_indicator_target.comments,
-      gad_budget: project.gad_budget.comments,
-      source_budget: project.source_budget.comments,
-      responsible_office: project.responsible_office.comments,
+    const project = await Project.findById(id).populate({
+      path: "comments.userId",
+      model: "UserAuth",
+      select: "username role personal_info_id",
     });
 
+    if (!project) {
+      return Response.json({ message: "Project not found" }, { status: 404 });
+    }
+
+    const comments = Array.isArray(project.comments) ? project.comments : [];
+
+    const byField = ALLOWED_FIELDS.reduce((acc, field) => {
+      acc[field] = comments.filter((comment) => {
+        if (Array.isArray(comment.fields)) {
+          return comment.fields.includes(field);
+        }
+
+        return comment.field === field;
+      });
+      return acc;
+    }, {});
+
+    return Response.json({
+      data: comments,
+      byField,
+    });
   } catch (error) {
-    return Response.json(
-      { message: error.message },
-      { status: 500 }
-    );
+    return Response.json({ message: error.message }, { status: 500 });
   }
 }
-
-
 export async function POST(req, { params }) {
   await connectDB();
 
   try {
     const { id } = await params;
-    const { field, message, type, userId } = await req.json();
+    const { fields, field, message, type, userId } = await req.json();
+
+    const rawFields = Array.isArray(fields)
+      ? fields
+      : field
+        ? [field]
+        : ["general"];
+
+    const cleanFields = rawFields.filter(
+      (f) => typeof f === "string" && ALLOWED_FIELDS.includes(f),
+    );
+
+    const targetFields = cleanFields.length ? cleanFields : ["general"];
+
+    if (!message || !userId) {
+      return Response.json(
+        { message: "userId and message are required" },
+        { status: 400 },
+      );
+    }
 
     const project = await Project.findById(id);
 
@@ -51,44 +84,29 @@ export async function POST(req, { params }) {
       return Response.json({ message: "Project not found" }, { status: 404 });
     }
 
-    if (!field || !message || !userId) {
-      return Response.json({ message: "Missing required fields" }, { status: 400 });
-    }
+    const now = new Date();
 
-   const parts = field.split(".");
-const baseField = parts[0];
-const fieldIndex = parts[1] !== undefined ? Number(parts[1]) : null;
-
-    const target = project[baseField];
-
-    if (!target) {
-      return Response.json({ message: "Field not found" }, { status: 400 });
-    }
-
-    if (!Array.isArray(target.comments)) {
-      target.comments = [];
-    }
-
-    target.comments.push({
+    const newComment = {
       userId,
       message,
-      type,
-      fieldIndex
-    });
+      type: type || "revision",
+      fields: [...new Set(targetFields)],
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    project.markModified(baseField);
+    project.comments.push(newComment);
+
     await project.save();
 
     return Response.json({
       success: true,
-      data: target.comments,
+      data: project.comments.at(-1),
     });
-
   } catch (error) {
-    return Response.json(
-      { message: error.message },
-      { status: 500 }
-    );
+    console.error("COMMENT ERROR:", error);
+
+    return Response.json({ message: error.message }, { status: 500 });
   }
 }
 
@@ -98,54 +116,30 @@ export async function DELETE(req, { params }) {
   try {
     const { id } = await params;
     const { searchParams } = new URL(req.url);
-
-    const fieldRaw = searchParams.get("field");
     const commentId = searchParams.get("commentId");
 
-    if (!fieldRaw || !commentId) {
-      return Response.json(
-        { message: "Missing field or commentId" },
-        { status: 400 }
-      );
+    if (!commentId) {
+      return Response.json({ message: "Missing commentId" }, { status: 400 });
     }
 
     const project = await Project.findById(id);
 
     if (!project) {
-      return Response.json(
-        { message: "Project not found" },
-        { status: 404 }
-      );
+      return Response.json({ message: "Project not found" }, { status: 404 });
     }
 
-    // ✅ FIX: remove ".0" or ".1" safely
-    const baseField = fieldRaw.split(".")[0];
-
-    const target = project[baseField];
-
-    if (!target || !Array.isArray(target.comments)) {
-      return Response.json(
-        { message: "Invalid field or no comments found" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ delete comment correctly
-    target.comments = target.comments.filter(
-      (c) => c._id.toString() !== commentId
+    project.comments = (project.comments || []).filter(
+      (c) => c._id.toString() !== commentId,
     );
 
-    project.markModified(baseField);
+    project.markModified("comments");
     await project.save();
 
     return Response.json({
       success: true,
-      data: target.comments,
+      data: project.comments,
     });
   } catch (error) {
-    return Response.json(
-      { message: error.message },
-      { status: 500 }
-    );
+    return Response.json({ message: error.message }, { status: 500 });
   }
 }

@@ -1,21 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
 
-
-const normalize = (field) => {
-  if (field === null || field === undefined) return field;
-
-  if (typeof field === "object" && field.value !== undefined) {
-    return field;
-  }
-
-  if (Array.isArray(field)) {
-    return { value: field, comments: [] };
-  }
-
-  return { value: String(field), comments: [] };
-};
-
 export async function PUT(req, { params }) {
   await connectDB();
 
@@ -30,15 +15,10 @@ export async function PUT(req, { params }) {
     }
 
     const mergeField = (key) => {
-      const existing = project[key] || {};
+      if (body[key] === undefined) return;
 
       project[key] = {
-        value:
-          body[key]?.value !== undefined
-            ? body[key].value
-            : body[key],
-
-        comments: existing.comments || [],
+        value: body[key]?.value !== undefined ? body[key].value : body[key],
       };
     };
 
@@ -60,11 +40,10 @@ export async function PUT(req, { params }) {
     console.error("PUT error:", err);
     return Response.json(
       { error: "Update failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
 
 export async function GET(req, { params }) {
   await connectDB();

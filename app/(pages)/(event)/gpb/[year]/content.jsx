@@ -127,7 +127,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
 }
 
 const CommentBox = ({
-  field,
+  fieldComments,
   onComment,
   showAddButton,
   onDeleteComment,
@@ -135,6 +135,14 @@ const CommentBox = ({
   role,
   fieldName,
 }) => {
+  const getTags = (comment) => {
+    if (Array.isArray(comment?.fields) && comment.fields.length > 0) {
+      return comment.fields;
+    }
+
+    return comment?.field ? [comment.field] : [fieldName || "general"];
+  };
+
   return (
     <div className="mt-1">
       {showAddButton && (
@@ -147,37 +155,45 @@ const CommentBox = ({
         </button>
       )}
 
-      {Array.isArray(field?.comments) && field.comments.length > 0 && (
+      {Array.isArray(fieldComments) && fieldComments.length > 0 && (
         <div className="mt-1 text-xs text-gray-600">
           <div className="font-semibold">Comments:</div>
 
-          {field.comments.map((c) => (
-            <div key={c._id} className="relative border-l pl-2 mt-2 pr-4">
-              {role === "planning director" && (
-                <button
-                  onClick={() => onDeleteComment(projectId, fieldName, c._id)}
-                  className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xs"
-                  title="Delete comment"
-                >
-                  ✕
-                </button>
-              )}
+          {fieldComments.map((c) => {
+            const tags = getTags(c);
 
-              <span
-                className={`text-xs font-medium ${
-                  c.type === "revision" ? "text-red-500" : "text-green-600"
-                }`}
-              >
-                [{c.type}]
-              </span>
+            return (
+              <div key={c._id} className="relative border-l pl-2 mt-2 pr-4">
+                {role === "planning director" && (
+                  <button
+                    onClick={() => onDeleteComment(projectId, fieldName, c._id)}
+                    className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xs"
+                    title="Delete comment"
+                  >
+                    ✕
+                  </button>
+                )}
 
-              <div>{c.message}</div>
+                <div className="text-xs">
+                  <span
+                    className={`font-medium ${
+                      c.type === "revision" ? "text-red-500" : "text-green-600"
+                    }`}
+                  >
+                    {tags
+                      .map((t) => `[${String(t).replace(/_/g, " ")}]`)
+                      .join(", ")}
+                    :
+                  </span>
+                  <span>{c.message}</span>
+                </div>
 
-              <div className="text-gray-400">
-                {new Date(c.createdAt).toLocaleString()}
+                <div className="text-gray-400">
+                  {new Date(c.createdAt).toLocaleString()}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -209,7 +225,7 @@ export default function ProjectContent({ sidebarOpen }) {
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState("");
   const [commentType, setCommentType] = useState("approval");
-  const [commentField, setCommentField] = useState(null);
+  const [commentField, setCommentField] = useState([]);
   const [commentProjectId, setCommentProjectId] = useState(null);
   const [updateStatusModal, setUpdateStatusModal] = useState(false);
   const [statusType, setStatusType] = useState("approved");
@@ -336,6 +352,7 @@ export default function ProjectContent({ sidebarOpen }) {
         gad_budget: p.gad_budget?.value ?? p.gad_budget,
         source_budget: p.source_budget?.value ?? p.source_budget,
         responsible_office: p.responsible_office?.value ?? p.responsible_office,
+        comments: Array.isArray(p.comments) ? p.comments : [],
       }));
 
       setProjectList(normalized);
@@ -614,14 +631,14 @@ export default function ProjectContent({ sidebarOpen }) {
   };
 
   const fetchComments = async () => {
+    if (!projectlist?._id) return;
     try {
-      const res = await fetch(`/api/projects/${projectlist._id}/comments`);
+      const res = await fetch(`/api/project/${projectlist._id}/comments`);
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed");
 
-      setComments(data);
-      console.log("Comments:", data);
+      setComments(data.data ?? []);
     } catch (err) {
       console.error(err);
     }
@@ -632,7 +649,14 @@ export default function ProjectContent({ sidebarOpen }) {
   }, []);
 
   const handleSubmitComment = async () => {
-    if (!comment.trim() || !commentField || !commentProjectId) {
+    const fields =
+      Array.isArray(commentField) && commentField.length > 0
+        ? commentField
+        : typeof commentField === "string" && commentField.trim()
+          ? [commentField]
+          : ["general"];
+
+    if (!comment.trim() || !commentProjectId) {
       console.warn("⚠️ Missing required fields");
       return;
     }
@@ -640,38 +664,28 @@ export default function ProjectContent({ sidebarOpen }) {
     try {
       setLoading(true);
 
-      const payload = {
-        field: commentField,
-        userId,
-        message: comment,
-        type: commentType,
-      };
-
-      console.log("📦 PAYLOAD SENT:", payload);
-
-      const url = `/api/project/${commentProjectId}/comments`;
-      console.log("🌐 REQUEST URL:", url);
-
-      const res = await fetch(url, {
+      const res = await fetch(`/api/project/${commentProjectId}/comments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields,
+          userId,
+          message: comment,
+          type: commentType,
+        }),
       });
 
       const data = await res.json();
 
-      console.log("📩 RESPONSE STATUS:", res.status);
-      console.log("📩 RESPONSE DATA:", data);
-
       if (!res.ok) {
-        throw new Error(data.message || data.error || "Request failed");
+        throw new Error(data.error || "Failed to save comment");
       }
-
-      console.log("✅ COMMENT SUCCESS:", data);
 
       setComment("");
       setShowCommentForm(false);
-      setCommentField(null);
+      setCommentField([]);
       setCommentProjectId(null);
 
       fetchProjects();
@@ -682,14 +696,17 @@ export default function ProjectContent({ sidebarOpen }) {
     }
   };
 
-  const handleDeleteComment = async (projectId, field, commentId) => {
+  const handleDeleteComment = async (
+    projectId,
+    fieldOrCommentId,
+    maybeCommentId,
+  ) => {
     try {
       setLoading(true);
-
-      const cleanField = field.split(".")[0];
+      const commentId = maybeCommentId || fieldOrCommentId;
 
       const res = await fetch(
-        `/api/project/${projectId}/comments?field=${cleanField}&commentId=${commentId}`,
+        `/api/project/${projectId}/comments?commentId=${commentId}`,
         {
           method: "DELETE",
         },
@@ -699,6 +716,7 @@ export default function ProjectContent({ sidebarOpen }) {
 
       if (!res.ok) throw new Error(data.message || "Delete failed");
 
+      setComments(data.data ?? []);
       await fetchProjects();
     } catch (err) {
       console.error("Delete comment error:", err);
@@ -904,17 +922,83 @@ export default function ProjectContent({ sidebarOpen }) {
       {showCommentForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
-            <h3 className="text-xl font-semibold mb-1">Add Comment</h3>
-            {commentField && (
-              <p className="text-sm text-gray-500 mb-3 capitalize">
-                Field:{" "}
-                <span className="font-medium text-gray-700">
-                  {commentField.includes(".")
-                    ? `${commentField.split(".")[0].replace(/_/g, " ")} — item ${Number(commentField.split(".")[1]) + 1}`
-                    : commentField.replace(/_/g, " ")}
+            <h3 className="text-xl font-semibold mb-3">Add Comment</h3>
+
+            {/* ─── Multi-select fields as checkboxes ─── */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fields{" "}
+                <span className="text-xs text-gray-400">
+                  (select one or more)
                 </span>
-              </p>
-            )}
+              </label>
+              <div className="border rounded p-2 max-h-48 overflow-y-auto flex flex-col gap-1">
+                {[
+                  { value: "general", label: "General" },
+                  { value: "gender_issue", label: "Gender Issue" },
+                  {
+                    value: "cause_gender_issue",
+                    label: "Cause of Gender Issue",
+                  },
+                  { value: "gad_objective", label: "GAD Objective" },
+                  {
+                    value: "supporting_statistics_data",
+                    label: "Supporting Statistics Data",
+                  },
+                  { value: "relevant_agency", label: "Relevant Agency" },
+                  { value: "gad_activity", label: "GAD Activity" },
+                  {
+                    value: "performance_indicator_target",
+                    label: "Performance Indicator Target",
+                  },
+                  { value: "gad_budget", label: "GAD Budget" },
+                  { value: "source_budget", label: "Source Budget" },
+                  { value: "responsible_office", label: "Responsible Office" },
+                ].map((opt) => (
+                  <label
+                    key={opt.value}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={
+                        Array.isArray(commentField) &&
+                        commentField.includes(opt.value)
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setCommentField((prev) => [
+                            ...(Array.isArray(prev) ? prev : []),
+                            opt.value,
+                          ]);
+                        } else {
+                          setCommentField((prev) =>
+                            (Array.isArray(prev) ? prev : []).filter(
+                              (f) => f !== opt.value,
+                            ),
+                          );
+                        }
+                      }}
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+              {/* Show selected tags */}
+              {Array.isArray(commentField) && commentField.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {commentField.map((f) => (
+                    <span
+                      key={f}
+                      className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full capitalize"
+                    >
+                      {f.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <textarea
               className="w-full border rounded p-2 mb-2"
               rows={3}
@@ -941,7 +1025,7 @@ export default function ProjectContent({ sidebarOpen }) {
               <button
                 onClick={() => {
                   setShowCommentForm(false);
-                  setCommentField(null);
+                  setCommentField([]);
                   setCommentProjectId(null);
                 }}
                 className="bg-gray-400 px-4 py-2 rounded"
@@ -2107,6 +2191,9 @@ export default function ProjectContent({ sidebarOpen }) {
                       <th className="py-2  border-b text-center w-10 text-xs">
                         Responsible Unit/Office
                       </th>
+                      <th className="py-2 border-b text-center w-10 text-xs">
+                        Comments
+                      </th>
                       {role !== "planning director" && (
                         <>
                           <th className="py-2 px-4 border-b text-center w-10 text-xs">
@@ -2502,29 +2589,6 @@ export default function ProjectContent({ sidebarOpen }) {
                                     <div>
                                       {project._raw.gender_issue?.value}
                                     </div>
-                                    <CommentBox
-                                      field={project._raw.gender_issue}
-                                      fieldName="gender_issue"
-                                      projectId={project._id}
-                                      role={role}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
-
-                                        setCommentField("gender_issue");
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                     {/* <pre>{JSON.stringify(project._raw.cause_gender_issue, null, 2)}</pre> */}
                                   </td>
                                 )}
@@ -2579,8 +2643,15 @@ export default function ProjectContent({ sidebarOpen }) {
                                         </div>
 
                                         <CommentBox
-                                          field={
-                                            project._raw.cause_gender_issue
+                                          fieldComments={
+                                            project.comments?.filter((c) =>
+                                              Array.isArray(c.fields)
+                                                ? c.fields.includes(
+                                                    "cause_gender_issue",
+                                                  )
+                                                : c.field ===
+                                                  "cause_gender_issue",
+                                            ) ?? []
                                           }
                                           fieldName="cause_gender_issue"
                                           projectId={project._id}
@@ -2768,63 +2839,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                       rowSpan={maxRows}
                                     >
                                       {causeArr[0]}
-                                      <CommentBox
-                                        field={{
-                                          value: causeArr[rowIdx],
-                                          comments: (
-                                            project._raw.cause_gender_issue
-                                              ?.comments || []
-                                          ).filter(
-                                            (c) =>
-                                              Number(c.fieldIndex) === rowIdx,
-                                          ),
-                                        }}
-                                        fieldName={`cause_gender_issue.${rowIdx}`}
-                                        role={role}
-                                        projectId={project._id}
-                                        showAddButton={
-                                          role === "planning director"
-                                        }
-                                        onComment={() => {
-                                          setCommentField(
-                                            `cause_gender_issue.${rowIdx}`,
-                                          );
-                                          setCommentProjectId(project._id);
-                                          setShowCommentForm(true);
-                                        }}
-                                        onDeleteComment={handleDeleteComment}
-                                      />
                                     </td>
                                   )
                                 ) : (
                                   <td className="py-2 px-4 border text-xs">
                                     {causeArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: causeArr[rowIdx],
-                                        comments: (
-                                          project._raw.cause_gender_issue
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) =>
-                                            Number(c.fieldIndex) === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`cause_gender_issue.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `cause_gender_issue.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
 
@@ -2835,51 +2854,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                       rowSpan={maxRows}
                                     >
                                       {objArr[0]}
-                                      <CommentBox
-                                        field={project._raw.gad_objective}
-                                        fieldName="gad_objective"
-                                        role={role}
-                                        projectId={project._id}
-                                        showAddButton={
-                                          role === "planning director"
-                                        }
-                                        onComment={() => {
-                                          setCommentField("gad_objective");
-                                          setCommentProjectId(project._id);
-                                          setShowCommentForm(true);
-                                        }}
-                                        onDeleteComment={handleDeleteComment}
-                                      />
                                     </td>
                                   )
                                 ) : (
                                   <td className="py-2 px-4 border text-xs">
                                     {objArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: objArr[rowIdx],
-                                        comments: (
-                                          project._raw.gad_objective
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`gad_objective.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `gad_objective.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
                               </>
@@ -2908,33 +2887,6 @@ export default function ProjectContent({ sidebarOpen }) {
                                     rowSpan={maxRows}
                                   >
                                     {project.supporting_statistics_data}
-                                    <CommentBox
-                                      field={
-                                        project._raw.supporting_statistics_data
-                                      }
-                                      fieldName="supporting_statistics_data"
-                                      projectId={project._id}
-                                      role={role}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
-
-                                        setCommentField(
-                                          "supporting_statistics_data",
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
 
@@ -2961,29 +2913,6 @@ export default function ProjectContent({ sidebarOpen }) {
                                     rowSpan={maxRows}
                                   >
                                     {project.relevant_agency}
-                                    <CommentBox
-                                      field={project._raw.relevant_agency}
-                                      fieldName="relevant_agency"
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
-
-                                        setCommentField("relevant_agency");
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
                               </>
@@ -3207,51 +3136,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                       rowSpan={maxRows}
                                     >
                                       {actArr[0]}
-                                      <CommentBox
-                                        field={project._raw.gad_activity}
-                                        fieldName="gad_activity"
-                                        projectId={project._id}
-                                        role={role}
-                                        showAddButton={
-                                          role === "planning director"
-                                        }
-                                        onComment={() => {
-                                          setCommentField("gad_activity");
-                                          setCommentProjectId(project._id);
-                                          setShowCommentForm(true);
-                                        }}
-                                        onDeleteComment={handleDeleteComment}
-                                      />
                                     </td>
                                   )
                                 ) : (
                                   <td className="py-2 px-4 border text-xs">
                                     {actArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: actArr[rowIdx],
-                                        comments: (
-                                          project._raw.gad_activity?.comments ||
-                                          []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`gad_activity.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `gad_activity.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
 
@@ -3262,57 +3151,11 @@ export default function ProjectContent({ sidebarOpen }) {
                                       rowSpan={maxRows}
                                     >
                                       {perfArr[0]}
-                                      <CommentBox
-                                        field={
-                                          project._raw
-                                            .performance_indicator_target
-                                        }
-                                        fieldName="performance_indicator_target"
-                                        projectId={project._id}
-                                        role={role}
-                                        showAddButton={
-                                          role === "planning director"
-                                        }
-                                        onComment={() => {
-                                          setCommentField(
-                                            "performance_indicator_target",
-                                          );
-                                          setCommentProjectId(project._id);
-                                          setShowCommentForm(true);
-                                        }}
-                                        onDeleteComment={handleDeleteComment}
-                                      />
                                     </td>
                                   )
                                 ) : (
                                   <td className="py-2 px-4 border text-xs">
                                     {perfArr[rowIdx] || ""}
-                                    <CommentBox
-                                      field={{
-                                        value: perfArr[rowIdx],
-                                        comments: (
-                                          project._raw
-                                            .performance_indicator_target
-                                            ?.comments || []
-                                        ).filter(
-                                          (c) => c.fieldIndex === rowIdx,
-                                        ),
-                                      }}
-                                      fieldName={`performance_indicator_target.${rowIdx}`}
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        setCommentField(
-                                          `performance_indicator_target.${rowIdx}`,
-                                        );
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
                               </>
@@ -3348,29 +3191,6 @@ export default function ProjectContent({ sidebarOpen }) {
                                       undefined,
                                       { minimumFractionDigits: 2 },
                                     )}
-                                    <CommentBox
-                                      field={project._raw.gad_budget}
-                                      fieldName="gad_budget"
-                                      projectId={project._id}
-                                      role={role}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
-
-                                        setCommentField("gad_budget");
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
                                 {editingId === project._id ? (
@@ -3396,29 +3216,6 @@ export default function ProjectContent({ sidebarOpen }) {
                                     rowSpan={maxRows}
                                   >
                                     {project.source_budget}
-                                    <CommentBox
-                                      field={project._raw.source_budget}
-                                      fieldName="source_budget"
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
-
-                                        setCommentField("source_budget");
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
                                   </td>
                                 )}
                                 {editingId === project._id ? (
@@ -3444,29 +3241,81 @@ export default function ProjectContent({ sidebarOpen }) {
                                     rowSpan={maxRows}
                                   >
                                     {project.responsible_office}
-                                    <CommentBox
-                                      field={project._raw.responsible_office}
-                                      fieldName="responsible_office"
-                                      role={role}
-                                      projectId={project._id}
-                                      showAddButton={
-                                        role === "planning director"
-                                      }
-                                      onComment={() => {
-                                        if (!project?._id) {
-                                          console.error(
-                                            "Missing project ID",
-                                            project,
-                                          );
-                                          return;
-                                        }
+                                  </td>
+                                )}
+                                {rowIdx === 0 && (
+                                  <td
+                                    className="py-2 px-4 border text-xs"
+                                    rowSpan={maxRows}
+                                  >
+                                    {Array.isArray(project.comments) &&
+                                      project.comments.length > 0 && (
+                                        <div className="flex flex-col gap-1">
+                                          {project.comments.map((c) => {
+                                            const tags = Array.isArray(c.fields)
+                                              ? c.fields
+                                              : c.field
+                                                ? [c.field]
+                                                : ["general"];
 
-                                        setCommentField("responsible_office");
-                                        setCommentProjectId(project._id);
-                                        setShowCommentForm(true);
-                                      }}
-                                      onDeleteComment={handleDeleteComment}
-                                    />
+                                            return (
+                                              <div
+                                                key={c._id}
+                                                className="flex items-start gap-1 flex-wrap"
+                                              >
+                                                <span
+                                                  className={`font-semibold text-xs ${
+                                                    c.type === "revision"
+                                                      ? "text-red-500"
+                                                      : "text-green-600"
+                                                  }`}
+                                                >
+                                                  {tags
+                                                    .map(
+                                                      (field) =>
+                                                        `[${field.replace(/_/g, " ")}]`,
+                                                    )
+                                                    .join(", ")}
+                                                  :
+                                                </span>
+                                                <span className="text-gray-700">
+                                                  {c.message}
+                                                </span>
+                                                {role?.trim().toLowerCase() ===
+                                                  "planning director" && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleDeleteComment(
+                                                        project._id,
+                                                        c._id,
+                                                      )
+                                                    }
+                                                    className="ml-1 text-red-400 hover:text-red-600 text-xs"
+                                                    title="Delete comment"
+                                                  >
+                                                    ✕
+                                                  </button>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    {role?.trim().toLowerCase() ===
+                                      "planning director" && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setCommentField(["general"]);
+                                          setCommentProjectId(project._id);
+                                          setShowCommentForm(true);
+                                        }}
+                                        className="mt-1 text-blue-500 hover:underline text-xs"
+                                      >
+                                        + Add Comment
+                                      </button>
+                                    )}
                                   </td>
                                 )}
                                 {role !== "planning director" && (
@@ -3486,6 +3335,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                       {editingId === project._id ? (
                                         <>
                                           <button
+                                            type="button"
                                             className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
                                             onClick={(e) => {
                                               e.preventDefault();
@@ -3496,6 +3346,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                             {editLoading ? "Saving..." : "Save"}
                                           </button>
                                           <button
+                                            type="button"
                                             className="px-3 py-1 bg-gray-400 text-black rounded hover:bg-gray-500 transition"
                                             onClick={(e) => {
                                               e.preventDefault();
@@ -3511,6 +3362,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                           {role !== "planning director" && (
                                             <div className="flex flex-col items-center gap-2">
                                               <button
+                                                type="button"
                                                 className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
                                                 onClick={() =>
                                                   router.push(
@@ -3525,6 +3377,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                                 selectedGPBStatus?.status !==
                                                   "disapproved" && (
                                                   <button
+                                                    type="button"
                                                     className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
                                                     onClick={() =>
                                                       startEdit(project)
@@ -3538,6 +3391,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                                 selectedGPBStatus?.status !==
                                                   "disapproved" && (
                                                   <button
+                                                    type="button"
                                                     className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
                                                     onClick={() =>
                                                       setDeleteModal({
