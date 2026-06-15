@@ -14,12 +14,14 @@ import {
 } from "flowbite-react";
 import useFetchData from "@/hooks/useSample";
 import StudentFilterTable from "../components/StudentFilterTable";
+import { useSelector } from "react-redux";
 
-export default function StudentsUserListContent() {
+export default function StudentsUserListContent({ college }) {
   const { data: rawData, loading } = useFetchData();
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
+  const [filterCourse, setFilterCourse] = useState([]);
   const [selected, setSelected] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -34,6 +36,7 @@ export default function StudentsUserListContent() {
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchName, setSearchName] = useState("");
+  const role = useSelector((state) => state.auth.role);
 
   const studentsData = useMemo(
     () =>
@@ -44,20 +47,39 @@ export default function StudentsUserListContent() {
     [rawData],
   );
 
+  const students = studentsData.filter((d) => {
+    const acad = d?.personal_info_id?.affiliation?.academic_information;
+    console.log("acad", acad);
+    return acad?.college === college;
+  });
+
   const sexOption = useMemo(
     () => [
       ...new Set(
-        studentsData
+        students
           .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
           .filter(Boolean),
       ),
     ],
-    [studentsData],
+    [students],
+  );
+    const courseOptions = useMemo(
+    () => [
+      ...new Set(
+        students
+          .map(
+            (d) =>
+              d?.personal_info_id?.affiliation.academic_information?.course,
+          )
+          .filter(Boolean),
+      ),
+    ],
+    [students],
   );
   const collegeOptions = useMemo(
     () => [
       ...new Set(
-        studentsData
+        students
           .map(
             (d) =>
               d?.personal_info_id?.affiliation.academic_information?.college,
@@ -65,12 +87,12 @@ export default function StudentsUserListContent() {
           .filter(Boolean),
       ),
     ],
-    [studentsData],
+    [students],
   );
   const yearLevelOptions = useMemo(
     () => [
       ...new Set(
-        studentsData
+        students
           .map(
             (d) =>
               d?.personal_info_id?.affiliation.academic_information?.year_level,
@@ -78,30 +100,32 @@ export default function StudentsUserListContent() {
           .filter(Boolean),
       ),
     ],
-    [studentsData],
+    [students],
   );
 
   const filteredData = useMemo(() => {
-let data = studentsData.filter((user) => {
-  const p = user.personal_info_id || {};
-  const gad = p.gadData || {};
-  const acad = p.affiliation?.academic_information || {};
-  const personal = p.personal || {};
+    let data = students.filter((user) => {
+      const p = user.personal_info_id || {};
+      const gad = p.gadData || {};
+      const acad = p.affiliation?.academic_information || {};
+      const personal = p.personal || {};
+      console.log("Role", role);
 
-  const fullName = `${personal.first_name || ""} ${personal.last_name || ""}`
-    .trim()
-    .toLowerCase();
+      const fullName =
+        `${personal.first_name || ""} ${personal.last_name || ""}`
+          .trim()
+          .toLowerCase();
 
-  const matchesSearch =
-    !searchName || fullName.includes(searchName.toLowerCase());
+      const matchesSearch =
+        !searchName || fullName.includes(searchName.toLowerCase());
 
-  return (
-    matchesSearch &&
-    (!filterSex || gad.sexAtBirth === filterSex) &&
-    (!filterYearLevel || acad.year_level === filterYearLevel) &&
-    (filterCollege.length === 0 || filterCollege.includes(acad.college))
-  );
-});
+      return (
+        matchesSearch &&
+        (!filterSex || gad.sexAtBirth === filterSex) &&
+        (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        (filterCourse.length === 0 || filterCourse.includes(acad.course))
+      );
+    });
     if (nameSort) {
       data = [...data].sort((a, b) => {
         const pa = a.personal_info_id?.personal || {};
@@ -191,15 +215,17 @@ let data = studentsData.filter((user) => {
     return data;
   }, [
     studentsData,
+    students,
     filterSex,
     filterYearLevel,
     filterCollege,
+    filterCourse,
     nameSort,
     sexSort,
     campusSort,
     courseSort,
     yearSort,
-    searchName
+    searchName,
   ]);
 
   const totalRows = filteredData.length;
@@ -282,51 +308,56 @@ let data = studentsData.filter((user) => {
             filterSex={filterSex}
             filterYearLevel={filterYearLevel}
             filterCollege={filterCollege}
+            filterCourse={filterCourse}
             setFilterSex={setFilterSex}
             setFilterYearLevel={setFilterYearLevel}
-            setFilterCollege={setFilterCollege}
+            setFilterCourse={setFilterCourse}
             sexOption={sexOption}
             yearLevelOptions={yearLevelOptions}
             collegeOptions={collegeOptions}
+            courseOptions={courseOptions}
           />
         </div>
       </div>
-      <div className="flex justify-between mb-2">
-        <div>
-          <input
-            type="checkbox"
-            checked={isAllSelected}
-            onChange={toggleSelectAll}
-            aria-label="Select all"
-          />
-          <span className="ml-2">Select All</span>
+      {role !== "dean" && (
+        <div className="flex justify-between mb-2">
+          <div>
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={toggleSelectAll}
+              aria-label="Select all"
+            />
+            <span className="ml-2">Select All</span>
+          </div>
+          <div className="flex felex-row gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="border px-3 py-2 rounded w-full max-w-sm"
+              />
+            </div>
+            {selected.length > 0 && (
+              <button
+                className="bg-red-500 px-4 py-1 text-white rounded-md"
+                onClick={handleBulkDelete}
+              >
+                Delete
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex felex-row gap-4">
-                 <div>
-  <input
-    type="text"
-    placeholder="Search by name..."
-    value={searchName}
-    onChange={(e) => setSearchName(e.target.value)}
-    className="border px-3 py-2 rounded w-full max-w-sm"
-  />
-</div>
-        {selected.length > 0 && (
-          <button
-            className="bg-red-500 px-4 py-1 text-white rounded-md"
-            onClick={handleBulkDelete}
-          >
-            Delete
-          </button>
-        )}
-
-        </div>
-      </div>
+      )}
       <div className="overflow-x-auto">
         <Table className="bg-white" striped={false} color="none">
           <TableHead className="bg-gray-200 text-black">
             <TableRow>
+                  {role !== "dean" && (
               <TableHeadCell></TableHeadCell>
+                  )}
               <TableHeadCell
                 className="cursor-pointer select-none"
                 onClick={() =>
@@ -507,6 +538,7 @@ let data = studentsData.filter((user) => {
               const acad = p.affiliation?.academic_information || {};
               return (
                 <TableRow key={user._id || index} className="hover:bg-gray-50">
+                      {role !== "dean" && (
                   <TableCell>
                     <input
                       type="checkbox"
@@ -520,6 +552,7 @@ let data = studentsData.filter((user) => {
                       }
                     />
                   </TableCell>
+                      )}
                   <TableCell>
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
@@ -551,43 +584,45 @@ let data = studentsData.filter((user) => {
                           })
                         : "—"}
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(user._id)}
-                      className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                    >
-                      Edit
-                    </button>
+                  {role !== "dean" && (
+                    <TableCell className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEdit(user._id)}
+                        className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                      >
+                        Edit
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "toggle",
-                          userId: user._id,
-                          isActive: user.is_active,
-                        })
-                      }
-                      className={`px-3 py-1 text-xs rounded-md text-white transition ${
-                        user.is_active
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      {user.is_active ? "Deactivate" : "Activate"}
-                    </button>
+                      <button
+                        onClick={() =>
+                          setConfirmAction({
+                            type: "toggle",
+                            userId: user._id,
+                            isActive: user.is_active,
+                          })
+                        }
+                        className={`px-3 py-1 text-xs rounded-md text-white transition ${
+                          user.is_active
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-green-600 hover:bg-green-700"
+                        }`}
+                      >
+                        {user.is_active ? "Deactivate" : "Activate"}
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "reset",
-                          userId: user._id,
-                        })
-                      }
-                      className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
-                    >
-                      Reset Password
-                    </button>
-                  </TableCell>
+                      <button
+                        onClick={() =>
+                          setConfirmAction({
+                            type: "reset",
+                            userId: user._id,
+                          })
+                        }
+                        className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
+                      >
+                        Reset
+                      </button>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}

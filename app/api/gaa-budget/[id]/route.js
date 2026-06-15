@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
+import GPB from "@/models/gpb";
 import { connectDB } from "@/lib/db";
 
 export async function GET(req, { params }) {
@@ -42,6 +43,13 @@ export async function DELETE(req, { params }) {
     const deleted = await GAABudget.findByIdAndDelete(id);
     if (!deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    
+    // Clear the budget reference from any GPB records that use this budget
+    await GPB.updateMany(
+      { gaaBudgetId: id },
+      { $set: { gaaBudgetId: null } }
+    );
+    
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -124,6 +124,43 @@ export default function CreateEventsContent() {
 
   const [posterFile, setPosterFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const generateDescription = async () => {
+    setGenerating(true);
+    try {
+      const {
+        title,
+        venue,
+        number_of_days,
+        type_of_activity,
+        gad_activity,
+        eligibility_criteria,
+        target_number_of_participants,
+      } = formData;
+
+      const response = await fetch("/api/events/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          venue,
+          number_of_days,
+          type_of_activity,
+          gad_activity,
+          eligibility_criteria,
+          target_number_of_participants,
+        }),
+      });
+
+      const data = await response.json();
+      setFormData((prev) => ({ ...prev, description: data.description }));
+    } catch (err) {
+      setError("Failed to generate description.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -486,6 +523,14 @@ export default function CreateEventsContent() {
             rows={4}
             placeholder="Add event description"
           />
+          <button
+            type="button"
+            onClick={generateDescription}
+            disabled={generating}
+             className="text-xs px-2 py-1 bg-blue-100 text-blue-700 font-medium rounded hover:bg-blue-200 disabled:opacity-50 flex items-center gap-1 transition-colors"
+          >
+            {generating ? "Generating..." : "✨ Generate Description"}
+          </button>
         </div>
 
         <div>

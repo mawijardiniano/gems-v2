@@ -16,6 +16,9 @@ export default function DiscoverContent() {
   const [error, setError] = useState("");
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
   const [showQrPrompt, setShowQrPrompt] = useState(false);
+  const [showParticipantModal, setShowParticipantModal] = useState(false);
+  const [assignedParticipantNumber, setAssignedParticipantNumber] =
+    useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -194,6 +197,20 @@ export default function DiscoverContent() {
                 </p>
               )}
 
+              {(() => {
+                const entry = evt.participant_numbers?.find(
+                  (p) =>
+                    (p.user_id?._id || p.user_id)?.toString() ===
+                    userId?.toString(),
+                );
+                return entry?.number ? (
+                  <div className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 mt-1">
+                    Participant{" "}
+                    <span className="font-bold">#{entry.number}</span>
+                  </div>
+                ) : null;
+              })()}
+
               <div className="flex flex-wrap gap-2 pt-1">
                 {["interested", "not_interested", "going"].map((s) => {
                   const labels = {
@@ -271,6 +288,16 @@ export default function DiscoverContent() {
 
       const updatedEvent = res.data?.event || evt;
       updateEventInLists(updatedEvent);
+      if (status === "going" || status === "interested") {
+        const entry = updatedEvent?.participant_numbers?.find(
+          (p) =>
+            (p.user_id?._id || p.user_id)?.toString() === userId?.toString(),
+        );
+        if (entry?.number) {
+          setAssignedParticipantNumber(entry.number);
+          setShowParticipantModal(true);
+        }
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -289,6 +316,28 @@ export default function DiscoverContent() {
 
   return (
     <div className="mx-auto p-5 font-sans space-y-6 max-w-5xl">
+      {showParticipantModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
+            <div className="text-5xl font-bold text-blue-600">
+              #{assignedParticipantNumber}
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              You&apos;re on the list!
+            </h2>
+            <p className="text-gray-500 text-sm">
+              This is your participant number for this event.
+            </p>
+            <button
+              onClick={() => setShowParticipantModal(false)}
+              className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
       {showQrPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">

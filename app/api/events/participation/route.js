@@ -41,6 +41,28 @@ export async function POST(req) {
       event.not_interested_users?.pull?.(uid);
     });
 
+    // Assign or remove participant numbers
+    event.participant_numbers = event.participant_numbers || [];
+    if (status === "going" || status === "interested") {
+      userIds.forEach((uid) => {
+        const alreadyAssigned = event.participant_numbers.some(
+          (p) => p.user_id.toString() === uid.toString(),
+        );
+        if (!alreadyAssigned) {
+          // Fill the lowest available gap (Option B)
+          const usedNumbers = event.participant_numbers.map((p) => p.number);
+          let nextNumber = 1;
+          while (usedNumbers.includes(nextNumber)) nextNumber++;
+          event.participant_numbers.push({ user_id: uid, number: nextNumber });
+        }
+      });
+    } else if (status === "not_interested") {
+      // Remove user's slot so it becomes available for the next person
+      event.participant_numbers = event.participant_numbers.filter(
+        (p) => !userIds.some((uid) => p.user_id.toString() === uid.toString()),
+      );
+    }
+
     if (status === "going") {
       userIds.forEach((uid) => event.registered_users.addToSet(uid));
     } else if (status === "interested") {

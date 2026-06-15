@@ -1403,6 +1403,49 @@ function OverviewTabs({
   ];
   const [posterUploading, setPosterUploading] = useState(false);
   const [posterError, setPosterError] = useState("");
+   const [generating, setGenerating] = useState(false);
+
+ const generateDescription = async () => {
+    setGenerating(true);
+    try {
+      // Pull variables from editData instead of formData
+      const {
+        title,
+        venue,
+        type_of_activity,
+        gad_activity,
+        eligibility_criteria,
+        target_number_of_participants,
+        start_dates,
+      } = editData || {};
+
+      const response = await fetch("/api/events/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          venue,
+          number_of_days: start_dates?.length || 1, // Dynamically get days
+          type_of_activity,
+          gad_activity,
+          eligibility_criteria,
+          target_number_of_participants,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.description) {
+        handleEditChange("description", data.description);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate description.");
+        } finally {
+      setGenerating(false);
+    }
+  };
+
 
   const handlePosterUpload = async (file) => {
     if (!file) return;
@@ -1722,8 +1765,18 @@ function OverviewTabs({
               </div>
             </div>
 
-            <div className="flex flex-col gap-1 mb-2">
-              <label className="text-sm text-gray-600">Description</label>
+           <div className="flex flex-col gap-1 mb-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm text-gray-600">Description</label>
+                <button
+                  type="button"
+                  onClick={generateDescription}
+                  disabled={generating}
+                  className="text-xs px-2 py-1 bg-blue-100 text-blue-700 font-medium rounded hover:bg-blue-200 disabled:opacity-50 flex items-center gap-1 transition-colors"
+                >
+                  {generating ? "Generating..." : "✨ Auto-Generate"}
+                </button>
+              </div>
               <textarea
                 rows={4}
                 className="border rounded px-3 py-2"
@@ -2656,82 +2709,121 @@ function ReportTab({ event }) {
     }));
   };
 
-  const fetchReport = async () => {
-    try {
-      const res = await fetch(`/api/events/accomplishment-report/${event._id}`);
-      const data = await res.json();
-      setShowReport(data.data);
-    } catch {
+const fetchReport = async () => {
+  try {
+    const res = await fetch(`/api/events/accomplishment-report/${event._id}`);
+    const data = await res.json();
+
+    console.log("fetchReport response:", data); 
+
+    if (!data?.data) {
       setShowReport(null);
+      return;
     }
-  };
+
+    const report = data.data;
+
+    const hasContent =
+      report.narrative?.trim() ||
+      report.office_memorandum?.url ||
+      report.activity_design?.url ||
+      report.attendance_sheet?.url ||
+      report.photos?.length > 0 ||
+      report.other_attachments?.length > 0;
+
+    if (!hasContent) {
+      setShowReport(null);
+      return;
+    }
+
+    setShowReport(report);
+  } catch {
+    setShowReport(null);
+  }
+};
 
   useEffect(() => {
     if (event?._id) fetchReport();
   }, [event?._id]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-    setSuccess("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  setError("");
+  setSuccess("");
 
-    try {
-      const url = isEditing
-        ? `/api/events/accomplishment-report/${event._id}`
-        : `/api/events/accomplishment-report`;
-      const method = isEditing ? "PUT" : "POST";
+  try {
+    const url = isEditing
+      ? `/api/events/accomplishment-report/${event._id}`
+      : `/api/events/accomplishment-report`;
+    const method = isEditing ? "PUT" : "POST";
 
-      if (deletedPhotoKeys.length > 0) {
-        await Promise.all(deletedPhotoKeys.map((key) => deleteFileByKey(key)));
-      }
-      if (deletedAttachmentKeys.length > 0) {
-        await Promise.all(
-          deletedAttachmentKeys.map((key) => deleteFileByKey(key)),
-        );
-      }
+    const currentFiles = { ...files };
+    const currentDeletedPhotoKeys = [...deletedPhotoKeys];
+    const currentDeletedAttachmentKeys = [...deletedAttachmentKeys];
 
-      await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_id: event._id,
-          narrative: form.narrative,
-          office_memorandum: files.office_memorandum,
-          activity_design: files.activity_design,
-          attendance_sheet: files.attendance_sheet,
-          photos: files.photos.filter((p) => !deletedPhotoKeys.includes(p.key)),
-          other_attachments: files.other_attachments.filter(
-            (p) => !deletedAttachmentKeys.includes(p.key),
-          ),
-        }),
-      });
-
-      setSuccess(
-        isEditing
-          ? "Report updated successfully."
-          : "Report submitted successfully.",
-      );
-      setForm({ narrative: "" });
-      setFiles({
-        office_memorandum: null,
-        activity_design: null,
-        attendance_sheet: null,
-        photos: [],
-        other_attachments: [],
-      });
-      setDeletedPhotoKeys([]);
-      setDeletedAttachmentKeys([]);
-      setIsEditing(false);
-      fetchReport();
-    } catch {
-      setError("Failed to submit report.");
-    } finally {
-      setSubmitting(false);
+    if (currentDeletedPhotoKeys.length > 0) {
+      await Promise.all(currentDeletedPhotoKeys.map((key) => deleteFileByKey(key)));
     }
-  };
+    if (currentDeletedAttachmentKeys.length > 0) {
+      await Promise.all(currentDeletedAttachmentKeys.map((key) => deleteFileByKey(key)));
+    }
 
-  if (showReport && !isEditing) {
+    const payload = {
+      event_id: event._id,
+      narrative: form.narrative,
+      office_memorandum: currentFiles.office_memorandum,
+      activity_design: currentFiles.activity_design,
+      attendance_sheet: currentFiles.attendance_sheet,
+      photos: currentFiles.photos.filter(
+        (p) => !currentDeletedPhotoKeys.includes(p.key)
+      ),
+      other_attachments: currentFiles.other_attachments.filter(
+        (p) => !currentDeletedAttachmentKeys.includes(p.key)
+      ),
+    };
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || "Failed to submit");
+    }
+
+    const responseData = await res.json();
+    const savedReport = responseData.data || responseData;
+
+    // ← directly set from response, no fetchReport needed
+    setShowReport(savedReport);
+
+    setSuccess(
+      isEditing ? "Report updated successfully." : "Report submitted successfully.",
+    );
+    setForm({ narrative: "" });
+    setFiles({
+      office_memorandum: null,
+      activity_design: null,
+      attendance_sheet: null,
+      photos: [],
+      other_attachments: [],
+    });
+    setDeletedPhotoKeys([]);
+    setDeletedAttachmentKeys([]);
+    setIsEditing(false);
+
+  } catch (err) {
+    console.error("Submit error:", err);
+    setError(err.message || "Failed to submit report.");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+if (showReport !== null && !isEditing) {
     return (
       <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200">
         {previewImg && (
@@ -2757,7 +2849,7 @@ function ReportTab({ event }) {
         </div>
 
         <div>
-          <h4 className="font-semibold text-gray-600">Narrative</h4>
+          <h4 className="font-semibold text-gray-600">Narrative </h4>
           <p className="text-sm whitespace-pre-wrap">{showReport.narrative}</p>
         </div>
 
@@ -2804,7 +2896,7 @@ function ReportTab({ event }) {
         </div>
 
         <div>
-          <h4 className="font-semibold">Event Photos</h4>
+          <h4 className="font-semibold">Event Photos </h4>
           {showReport.photos?.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {showReport.photos.map((p, i) => (
@@ -2859,7 +2951,7 @@ function ReportTab({ event }) {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Narrative Report
+            Narrative Report <span className="text-red-500">*</span>
           </label>
           <textarea
             name="narrative"
@@ -2872,7 +2964,7 @@ function ReportTab({ event }) {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Office Memorandum
+            Office Memorandum <span className="text-red-500">*</span>
           </label>
           <input
             type="file"
@@ -2910,7 +3002,7 @@ function ReportTab({ event }) {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Activity Design
+            Activity Design <span className="text-red-500">*</span>
           </label>
           <input
             type="file"
@@ -2948,7 +3040,7 @@ function ReportTab({ event }) {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Attendance Sheet
+            Attendance Sheet <span className="text-red-500">*</span>
           </label>
           <input
             type="file"
@@ -2985,7 +3077,7 @@ function ReportTab({ event }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Event Photos</label>
+          <label className="block text-sm font-medium mb-1">Event Photos <span className="text-red-500">*</span></label>
           <input
             type="file"
             accept="image/*"
@@ -3018,10 +3110,9 @@ function ReportTab({ event }) {
           )}
         </div>
 
-        {/* Other Attachments - form mode */}
         <div>
           <label className="block text-sm font-medium mb-1">
-            Other Attachments
+            Other Attachments <span className="text-red-500">*</span>
           </label>
           <input
             type="file"

@@ -52,7 +52,9 @@ const userAuthSchema = new Schema(
         "SUC President",
         "GAD Coordinator",
         "ICTU Director",
-        "Planning Director"
+        "Planning Director",
+        "Dean",
+        "Campus Director"
       ],
       default: "User",
     },

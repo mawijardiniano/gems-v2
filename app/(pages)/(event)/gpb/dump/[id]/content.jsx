@@ -30,11 +30,10 @@ export default function ProjectContent() {
     if (params.id) fetchProject();
   }, [params.id]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <div className="p-6 h-screen">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!project) return <div className="p-6">Project not found.</div>;
 
-  // Format a date range for multi-day events
   function formatDateRange(event) {
     let start = event.start_date;
     let end = event.end_date;
@@ -66,9 +65,9 @@ export default function ProjectContent() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 h-screen">
       <button
-        onClick={() => router.push("/gpb")}
+        onClick={() => router.back()}
         className="text-sm text-blue-600 hover:underline mb-4"
       >
         ← Back to Projects
@@ -123,7 +122,7 @@ export default function ProjectContent() {
           </table>
         </div>
       ) : (
-        <div className="text-gray-500">No events for this project.</div>
+        <div className="text-gray-500 ">No events for this project.</div>
       )}
     </div>
   );

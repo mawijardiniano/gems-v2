@@ -636,7 +636,7 @@ const handleResetPassword = async (id) => {
     }
     className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
   >
-    Reset
+    Reset Password
   </button>
 
 </TableCell>

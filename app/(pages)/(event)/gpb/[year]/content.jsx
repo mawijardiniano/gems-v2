@@ -81,8 +81,8 @@ function PerformanceIndicatorInput({ value, onChange }) {
   const preview = formatPerformanceIndicator(v);
 
   return (
-    <div className="flex flex-col gap-1 w-44">
-      <div className="flex gap-1">
+    <div className="flex flex-col gap-1 w-10">
+      <div className="flex flex-col gap-1">
         <div className="flex flex-col flex-1">
           <label className="text-xs text-gray-400">Seminars</label>
           <input
@@ -360,7 +360,6 @@ export default function ProjectContent({ sidebarOpen }) {
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
 
-
   useEffect(() => {
     if (!year) return;
     fetch(`/api/gaa-budget?year=${year}`)
@@ -406,20 +405,6 @@ export default function ProjectContent({ sidebarOpen }) {
         }
       });
   }, [year]);
-
-  // useEffect(() => {
-  //   if (annualBudget !== null) {
-  //     const used = projects
-  //       .filter((p) => Number(p.year) === Number(budgetYear))
-  //       .reduce((sum, p) => sum + (Number(p.gad_budget) || 0), 0);
-
-  //     setUsedBudget(used);
-  //     setRemainingBudget(annualBudget - used);
-  //   } else {
-  //     setRemainingBudget(null);
-  //     setUsedBudget(0);
-  //   }
-  // }, [annualBudget, projects, budgetYear]);
 
   const handleNewProjectChange = (field, value) =>
     setNewProject((prev) => ({ ...prev, [field]: value }));
@@ -502,12 +487,21 @@ export default function ProjectContent({ sidebarOpen }) {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+
       if (res.ok) {
         setNewProject(emptyNewProject());
         fetchProjects();
         fetchBudgetSummary();
       } else {
-        setAddError(data.error || "Failed to add project");
+        if (data.budgetSummary) {
+          setAddError(
+            `${data.message}. Remaining Budget: ₱${Number(
+              data.budgetSummary.remainingBudget,
+            ).toLocaleString()}`,
+          );
+        } else {
+          setAddError(data.message || data.error || "Failed to add project");
+        }
       }
     } catch {
       setAddError("Network error");
@@ -750,7 +744,17 @@ export default function ProjectContent({ sidebarOpen }) {
     }
   };
 
-  const TABLE_WIDTH = sidebarOpen ? 2500 : 2500;
+  useEffect(() => {
+    if (addError) {
+      const timer = setTimeout(() => {
+        setAddError("");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [addError]);
+
+  const TABLE_WIDTH = sidebarOpen ? 1400 : 1000;
 
   return (
     <div className="p-6">
@@ -763,16 +767,14 @@ export default function ProjectContent({ sidebarOpen }) {
       <div className="flex justify-between">
         <h2 className="text-3xl font-bold mb-4">GPB Year {year}</h2>
 
-<PrintGPB
-  totalGAA={totalGAA}
-  budgetYear={budgetYear}
-  projects={projects}
-/>
+        <PrintGPB
+          totalGAA={totalGAA}
+          budgetYear={budgetYear}
+          projects={projects}
+        />
       </div>
 
-      <div className=" flex gap-2">
-
-      </div>
+      <div className=" flex gap-2"></div>
       {updateStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
@@ -1037,12 +1039,18 @@ export default function ProjectContent({ sidebarOpen }) {
       ) : (
         <div className="overflow-x-auto">
           <form onSubmit={handleAddProject}>
+            {addError && (
+              <div className="whitespace-pre-line rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 mb-4">
+                {addError}
+              </div>
+            )}
             <div
               className="transition-all duration-300 w-full"
               style={{
                 maxWidth: sidebarOpen
-                  ? "calc(100vw - 10px)"
-                  : "calc(100vw - 360px)",
+                  ? "calc(100vw - 360px)"
+                  : "calc(100vw - 10px)",
+                boxSizing: "border-box",
               }}
             >
               <div
@@ -1050,7 +1058,12 @@ export default function ProjectContent({ sidebarOpen }) {
                 onScroll={handleTopScroll}
                 className="overflow-x-auto"
               >
-                <div style={{ width: `${TABLE_WIDTH}px`, height: "1px" }} />
+                <div
+                  style={{
+                    width: sidebarOpen ? `${TABLE_WIDTH}px` : "100%",
+                    height: "1px",
+                  }}
+                />
               </div>
 
               <div
@@ -1060,47 +1073,51 @@ export default function ProjectContent({ sidebarOpen }) {
               >
                 <table
                   className="bg-white rounded shadow"
-                  style={{ minWidth: `${TABLE_WIDTH}px` }}
+                  style={{
+                    minWidth: sidebarOpen ? `${TABLE_WIDTH}px` : "100%",
+                  }}
                 >
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-gray-900 border text-white">
-                      <th className="py-2 px-4 border-b text-center">No.</th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2 border-b text-center w-10 text-sm">
+                        No.
+                      </th>
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Gender Issue and/or GAD Mandate
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Cause of the Gender Issue
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40 ">
+                      <th className="py-2 border-b text-center w-10 text-xs">
                         GAD Result Statement/GAD Objective
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Supporting Statistics Data
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Relevant Agency MFO/PAP
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         GAD Activity
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Output Performance Indicators and Target
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         GAD Budget
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Source of Budget
                       </th>
-                      <th className="py-2 px-4 border-b text-center w-40">
+                      <th className="py-2  border-b text-center w-10 text-xs">
                         Responsible Unit/Office
                       </th>
                       {role !== "planning director" && (
                         <>
-                          <th className="py-2 px-4 border-b text-center w-40">
+                          <th className="py-2 px-4 border-b text-center w-10 text-xs">
                             Number of Events
                           </th>
-                          <th className="py-2 px-4 border-b text-center w-40">
+                          <th className="py-2 px-4 border-b text-center w-10 text-xs">
                             Actions
                           </th>
                         </>
@@ -1115,7 +1132,7 @@ export default function ProjectContent({ sidebarOpen }) {
 
                           <td className="py-2 px-4 border-b">
                             <textarea
-                              className="w-40 border rounded px-2 py-1"
+                              className="w-10 border rounded px-2 py-1"
                               value={newProject.gender_issue}
                               onChange={(e) =>
                                 handleNewProjectChange(
@@ -1130,7 +1147,7 @@ export default function ProjectContent({ sidebarOpen }) {
                             {newProject.cause_gender_issue.map((val, idx) => (
                               <div key={idx} className="flex items-center mb-1">
                                 <textarea
-                                  className="w-40 border rounded px-2 py-1"
+                                  className="w-10 border rounded px-2 py-1"
                                   value={val}
                                   onChange={(e) =>
                                     handleArrayFieldChange(
@@ -1174,7 +1191,7 @@ export default function ProjectContent({ sidebarOpen }) {
                             {newProject.gad_objective.map((val, idx) => (
                               <div key={idx} className="flex items-center mb-1">
                                 <textarea
-                                  className="w-40 border rounded px-2 py-1"
+                                  className="w-10 border rounded px-2 py-1"
                                   value={val}
                                   onChange={(e) =>
                                     handleArrayFieldChange(
@@ -1216,7 +1233,7 @@ export default function ProjectContent({ sidebarOpen }) {
                           </td>
                           <td className="py-2 px-4 border-b">
                             <textarea
-                              className="w-40 border rounded px-2 py-1"
+                              className="w-10 border rounded px-2 py-1"
                               value={newProject.supporting_statistics_data}
                               onChange={(e) =>
                                 handleNewProjectChange(
@@ -1228,7 +1245,7 @@ export default function ProjectContent({ sidebarOpen }) {
                           </td>
                           <td className="py-2 px-4 border-b">
                             <textarea
-                              className="w-40 border rounded px-2 py-1"
+                              className="w-10 border rounded px-2 py-1"
                               value={newProject.relevant_agency}
                               onChange={(e) =>
                                 handleNewProjectChange(
@@ -1243,7 +1260,7 @@ export default function ProjectContent({ sidebarOpen }) {
                             {newProject.gad_activity.map((val, idx) => (
                               <div key={idx} className="flex items-center mb-1">
                                 <textarea
-                                  className="w-40 border rounded px-2 py-1"
+                                  className="w-10 border rounded px-2 py-1"
                                   value={val}
                                   onChange={(e) =>
                                     handleArrayFieldChange(
@@ -1340,13 +1357,15 @@ export default function ProjectContent({ sidebarOpen }) {
                             )}
                           </td>
                           <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-32 border rounded px-2 py-1"
+                            <input
+                              type="number"
+                              min="0"
+                              className="w-20 border rounded px-2 py-1"
                               value={newProject.gad_budget}
                               onChange={(e) =>
                                 handleNewProjectChange(
                                   "gad_budget",
-                                  e.target.value,
+                                  Number(e.target.value),
                                 )
                               }
                               required
@@ -1354,7 +1373,7 @@ export default function ProjectContent({ sidebarOpen }) {
                           </td>
                           <td className="py-2 px-4 border-b">
                             <textarea
-                              className="w-32 border rounded px-2 py-1"
+                              className="w-10 border rounded px-2 py-1"
                               value={newProject.source_budget}
                               onChange={(e) =>
                                 handleNewProjectChange(
@@ -1367,7 +1386,7 @@ export default function ProjectContent({ sidebarOpen }) {
                           </td>
                           <td className="py-2 px-4 border-b">
                             <textarea
-                              className="w-40 border rounded px-2 py-1"
+                              className="w-10 border rounded px-2 py-1"
                               value={newProject.responsible_office}
                               onChange={(e) =>
                                 handleNewProjectChange(
@@ -1393,17 +1412,6 @@ export default function ProjectContent({ sidebarOpen }) {
                   </thead>
 
                   <tbody>
-                    {addError && (
-                      <tr>
-                        <td
-                          colSpan={13}
-                          className="text-red-500 text-sm px-4 py-2"
-                        >
-                          {addError}
-                        </td>
-                      </tr>
-                    )}
-
                     {paginatedProjects.map((project, idx) => {
                       const causeArr = Array.isArray(project.cause_gender_issue)
                         ? project.cause_gender_issue
@@ -1492,7 +1500,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={maxRows}
                                   >
                                     <div>
@@ -1531,7 +1539,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {editCauseArr.length === 1
                                   ? rowIdx === 0 && (
                                       <td
-                                        className="py-2 px-4 border"
+                                        className="py-2 px-4 border text-xs"
                                         rowSpan={editMaxRows}
                                       >
                                         <div className="flex items-center gap-1">
@@ -1658,7 +1666,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {editObjArr.length === 1
                                   ? rowIdx === 0 && (
                                       <td
-                                        className="py-2 px-4 border"
+                                        className="py-2 px-4 border text-xs"
                                         rowSpan={editMaxRows}
                                       >
                                         <div className="flex items-center gap-1">
@@ -1760,7 +1768,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {causeArr.length === 1 ? (
                                   rowIdx === 0 && (
                                     <td
-                                      className="py-2 px-4 border"
+                                      className="py-2 px-4 border text-xs"
                                       rowSpan={maxRows}
                                     >
                                       {causeArr[0]}
@@ -1793,7 +1801,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                     </td>
                                   )
                                 ) : (
-                                  <td className="py-2 px-4 border">
+                                  <td className="py-2 px-4 border text-xs">
                                     {causeArr[rowIdx] || ""}
                                     <CommentBox
                                       field={{
@@ -1827,7 +1835,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {objArr.length === 1 ? (
                                   rowIdx === 0 && (
                                     <td
-                                      className="py-2 px-4 border"
+                                      className="py-2 px-4 border text-xs"
                                       rowSpan={maxRows}
                                     >
                                       {objArr[0]}
@@ -1849,7 +1857,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                     </td>
                                   )
                                 ) : (
-                                  <td className="py-2 px-4 border">
+                                  <td className="py-2 px-4 border text-xs">
                                     {objArr[rowIdx] || ""}
                                     <CommentBox
                                       field={{
@@ -1884,7 +1892,7 @@ export default function ProjectContent({ sidebarOpen }) {
                               <>
                                 {editingId === project._id ? (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={editMaxRows}
                                   >
                                     <textarea
@@ -1900,7 +1908,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={maxRows}
                                   >
                                     {project.supporting_statistics_data}
@@ -1936,7 +1944,7 @@ export default function ProjectContent({ sidebarOpen }) {
 
                                 {editingId === project._id ? (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={editMaxRows}
                                   >
                                     <textarea
@@ -1953,7 +1961,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={maxRows}
                                   >
                                     {project.relevant_agency}
@@ -1990,7 +1998,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {editActArr.length === 1
                                   ? rowIdx === 0 && (
                                       <td
-                                        className="py-2 px-4 border"
+                                        className="py-2 px-4 border text-xs"
                                         rowSpan={editMaxRows}
                                       >
                                         <div className="flex items-center gap-1">
@@ -2089,7 +2097,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {editPerfArr.length === 1
                                   ? rowIdx === 0 && (
                                       <td
-                                        className="py-2 px-4 border"
+                                        className="py-2 px-4 border text-xs"
                                         rowSpan={editMaxRows}
                                       >
                                         <div className="flex items-start gap-1">
@@ -2199,7 +2207,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {actArr.length === 1 ? (
                                   rowIdx === 0 && (
                                     <td
-                                      className="py-2 px-4 border"
+                                      className="py-2 px-4 border text-xs"
                                       rowSpan={maxRows}
                                     >
                                       {actArr[0]}
@@ -2221,7 +2229,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                     </td>
                                   )
                                 ) : (
-                                  <td className="py-2 px-4 border">
+                                  <td className="py-2 px-4 border text-xs">
                                     {actArr[rowIdx] || ""}
                                     <CommentBox
                                       field={{
@@ -2254,7 +2262,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {perfArr.length === 1 ? (
                                   rowIdx === 0 && (
                                     <td
-                                      className="py-2 px-4 border"
+                                      className="py-2 px-4 border text-xs"
                                       rowSpan={maxRows}
                                     >
                                       {perfArr[0]}
@@ -2281,7 +2289,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                     </td>
                                   )
                                 ) : (
-                                  <td className="py-2 px-4 border">
+                                  <td className="py-2 px-4 border text-xs">
                                     {perfArr[rowIdx] || ""}
                                     <CommentBox
                                       field={{
@@ -2318,16 +2326,18 @@ export default function ProjectContent({ sidebarOpen }) {
                               <>
                                 {editingId === project._id ? (
                                   <td
-                                    className="py-2 px-4 border text-center"
+                                    className="py-2 px-4 border text-center text-xs"
                                     rowSpan={editMaxRows}
                                   >
-                                    <textarea
+                                    <input
+                                      type="number"
+                                      min="0"
                                       className="w-32 border rounded px-2 py-1"
                                       value={editRow.gad_budget}
                                       onChange={(e) =>
                                         handleEditRowChange(
                                           "gad_budget",
-                                          e.target.value,
+                                          Number(e.target.value),
                                         )
                                       }
                                       required
@@ -2335,7 +2345,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border text-center"
+                                    className="py-2 px-4 border text-center text-xs"
                                     rowSpan={maxRows}
                                   >
                                     {Number(project.gad_budget).toLocaleString(
@@ -2369,7 +2379,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 )}
                                 {editingId === project._id ? (
                                   <td
-                                    className="py-2 px-4 border text-center"
+                                    className="py-2 px-4 border text-center text-xs"
                                     rowSpan={editMaxRows}
                                   >
                                     <textarea
@@ -2386,7 +2396,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border text-center"
+                                    className="py-2 px-4 border text-center text-xs"
                                     rowSpan={maxRows}
                                   >
                                     {project.source_budget}
@@ -2417,7 +2427,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 )}
                                 {editingId === project._id ? (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={editMaxRows}
                                   >
                                     <textarea
@@ -2434,7 +2444,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                   </td>
                                 ) : (
                                   <td
-                                    className="py-2 px-4 border"
+                                    className="py-2 px-4 border text-xs"
                                     rowSpan={maxRows}
                                   >
                                     {project.responsible_office}
@@ -2466,7 +2476,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                 {role !== "planning director" && (
                                   <>
                                     <td
-                                      className="py-2 px-4 border"
+                                      className="py-2 px-4 border text-sm"
                                       rowSpan={editMaxRows}
                                     >
                                       {Array.isArray(project.events)
@@ -2474,7 +2484,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                         : 0}
                                     </td>
                                     <td
-                                      className="py-2 px-4 flex gap-2"
+                                      className="py-2 px-4 border text-sm"
                                       rowSpan={editMaxRows}
                                     >
                                       {editingId === project._id ? (
@@ -2503,7 +2513,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                       ) : (
                                         <>
                                           {role !== "planning director" && (
-                                            <>
+                                            <div className="flex flex-col items-center gap-2">
                                               <button
                                                 className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
                                                 onClick={() =>
@@ -2514,27 +2524,36 @@ export default function ProjectContent({ sidebarOpen }) {
                                               >
                                                 View
                                               </button>
-                                              <button
-                                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                                onClick={() =>
-                                                  startEdit(project)
-                                                }
-                                              >
-                                                Edit
-                                              </button>
-
-                                              <button
-                                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                                                onClick={() =>
-                                                  setDeleteModal({
-                                                    open: true,
-                                                    project,
-                                                  })
-                                                }
-                                              >
-                                                Delete
-                                              </button>
-                                            </>
+                                              {selectedGPBStatus?.status !==
+                                                "approved" &&
+                                                selectedGPBStatus?.status !==
+                                                  "disapproved" && (
+                                                  <button
+                                                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                                    onClick={() =>
+                                                      startEdit(project)
+                                                    }
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                )}
+                                              {selectedGPBStatus?.status !==
+                                                "approved" &&
+                                                selectedGPBStatus?.status !==
+                                                  "disapproved" && (
+                                                  <button
+                                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                                    onClick={() =>
+                                                      setDeleteModal({
+                                                        open: true,
+                                                        project,
+                                                      })
+                                                    }
+                                                  >
+                                                    Delete
+                                                  </button>
+                                                )}
+                                            </div>
                                           )}
                                         </>
                                       )}

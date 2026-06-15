@@ -20,7 +20,7 @@ export async function POST(req) {
 
   if (!budget) {
     return Response.json(
-      { message: "No GAABudget found for this year" },
+      { message: "No GAA Budget found for this year" },
       { status: 400 }
     );
   }
@@ -144,25 +144,3 @@ export async function DELETE() {
   });
 }
 
-
-// export async function POST(req) {
-//   await connectDB();
-
-//   const body = await req.json();
-//   const project = await Project.create(body);
-
-//   let gpb = await GPB.findOne({ year: project.year });
-
-//   if (!gpb) {
-//     gpb = await GPB.create({ year: project.year });
-//   }
-
-//   await GPB.findByIdAndUpdate(gpb._id, {
-//     $addToSet: { projects: project._id },
-//   });
-
-//   return Response.json({
-//     message: "Project created and linked to GPB",
-//     data: project,
-//   });
-// }

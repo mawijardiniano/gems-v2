@@ -236,7 +236,6 @@ export default function GFPSManager() {
 
   const handleEdit = (sectionKey) => {
     if (Object.keys(officials).length === 0) {
-      alert("Officials data still loading, please try again.");
       return;
     }
 
@@ -413,14 +412,12 @@ export default function GFPSManager() {
       console.log("RESPONSE DATA:", data);
 
       if (!res.ok) {
-        alert("Error: " + (data?.message || data?.error || res.status));
       } else {
         handleCloseModal();
         await fetchGfps();
       }
     } catch (err) {
       console.error("SUBMIT ERROR:", err);
-      alert("Request failed: " + err.message);
     }
   };
 

@@ -4,6 +4,8 @@ import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
+import { deleteFileFromBucket } from "@/lib/delete";
+import AccomplishmentReport from "@/models/accomplishment_report";
 
 export async function GET(req, { params }) {
   const { id } = await params;
@@ -157,24 +159,61 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   const { id } = await params;
+
   if (!id) {
     return NextResponse.json(
       { status: "error", message: "Missing event id" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
   await connectDB();
+
   const event = await Event.findById(id);
+
   if (!event) {
     return NextResponse.json(
       { status: "error", message: "Event not found" },
-      { status: 404 },
+      { status: 404 }
     );
   }
 
   try {
+    if (event.event_poster?.key) {
+      await deleteFileFromBucket(event.event_poster.key);
+    }
+
+    const report = await AccomplishmentReport.findOne({ event_id: id });
+
+    if (report) {
+      const filesToDelete = [];
+
+      if (report.office_memorandum?.key) filesToDelete.push(report.office_memorandum.key);
+      if (report.activity_design?.key) filesToDelete.push(report.activity_design.key);
+      if (report.attendance_sheet?.key) filesToDelete.push(report.attendance_sheet.key);
+
+      if (Array.isArray(report.photos)) {
+        report.photos.forEach(p => p?.key && filesToDelete.push(p.key));
+      }
+
+      if (Array.isArray(report.other_attachments)) {
+        report.other_attachments.forEach(p => p?.key && filesToDelete.push(p.key));
+      }
+
+      for (const key of filesToDelete) {
+        await deleteFileFromBucket(key);
+      }
+
+      await AccomplishmentReport.deleteOne({ event_id: id });
+    }
+
+    await Project.updateMany(
+      { events: id },
+      { $pull: { events: id } }
+    );
+
     await Event.deleteOne({ _id: id });
+
     await logActivity({
       user_id: req.user?._id || null,
       action: "EVENT_DELETE",
@@ -182,12 +221,18 @@ export async function DELETE(req, { params }) {
       req,
       metadata: { event_id: event._id },
     });
-    return NextResponse.json({ status: "success", message: "Event deleted" });
+
+    return NextResponse.json({
+      status: "success",
+      message: "Event and related files deleted successfully",
+    });
+
   } catch (error) {
     console.error("Delete failed:", error);
+
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 400 },
+      { status: 400 }
     );
   }
 }

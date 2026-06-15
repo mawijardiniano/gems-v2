@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const gaaBudgetSchema = new Schema({
-  year: { type: Number, required: true },
+  year: { type: Number, required: true,   unique: true, },
   totalGAA: { type: Number, required: true },
   gadPercent: { type: Number, default: 5 },
   gadAnnualBudget: { type: Number },

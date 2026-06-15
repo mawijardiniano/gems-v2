@@ -8,6 +8,8 @@ const ROLES = [
   "GAD Coordinator",
   "ICTU Director",
   "Planning Director",
+  "Dean",
+  "Campus Director"
 ];
 
 export default function ManageRoleContent() {
