@@ -81,36 +81,36 @@ function PerformanceIndicatorInput({ value, onChange }) {
   const preview = formatPerformanceIndicator(v);
 
   return (
-    <div className="flex flex-col gap-1 w-10">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2 w-full">
+      <div className="flex gap-3">
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400">Seminars</label>
+          <label className="text-xs text-gray-400 mb-0.5">Seminars</label>
           <input
             type="number"
             min={0}
-            className="border rounded px-1 py-0.5 w-full text-sm"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={v.totalSeminars}
             onChange={(e) => onChange({ ...v, totalSeminars: e.target.value })}
             placeholder="0"
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400">Male</label>
+          <label className="text-xs text-gray-400 mb-0.5">Male</label>
           <input
             type="number"
             min={0}
-            className="border rounded px-1 py-0.5 w-full text-sm"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={v.totalMale}
             onChange={(e) => onChange({ ...v, totalMale: e.target.value })}
             placeholder="0"
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400">Female</label>
+          <label className="text-xs text-gray-400 mb-0.5">Female</label>
           <input
             type="number"
             min={0}
-            className="border rounded px-1 py-0.5 w-full text-sm"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             value={v.totalFemale}
             onChange={(e) => onChange({ ...v, totalFemale: e.target.value })}
             placeholder="0"
@@ -118,7 +118,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
         </div>
       </div>
       {preview && (
-        <div className="text-xs text-blue-600 bg-blue-50 rounded px-2 py-1 mt-1 italic">
+        <div className="text-xs text-blue-600 bg-blue-50 rounded-lg px-2 py-1.5 italic">
           {preview}
         </div>
       )}
@@ -220,6 +220,9 @@ export default function ProjectContent({ sidebarOpen }) {
   const [selectedGPBStatus, setSelectedGPBStatus] = useState(null);
 
   const [saving, setSaving] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [showEditModal, setShowEditModal] = useState(false);
   const router = useRouter();
   const params = useParams();
   const year = params?.year;
@@ -433,7 +436,6 @@ export default function ProjectContent({ sidebarOpen }) {
     });
 
   const startEdit = (project) => {
-    setEditingId(project._id);
     setEditRow({
       ...project,
       performance_indicator_target: (
@@ -441,12 +443,13 @@ export default function ProjectContent({ sidebarOpen }) {
       ).map((p) => (typeof p === "string" ? parsePerformanceIndicator(p) : p)),
     });
     setEditError("");
+    setShowEditModal(true);
   };
 
   const cancelEdit = () => {
-    setEditingId(null);
     setEditRow(null);
     setEditError("");
+    setShowEditModal(false);
   };
 
   const handleEditRowChange = (field, value) =>
@@ -510,6 +513,46 @@ export default function ProjectContent({ sidebarOpen }) {
     }
   };
 
+  const handleWizardSubmit = async () => {
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const payload = {
+        ...newProject,
+        performance_indicator_target: serializeIndicators(
+          newProject.performance_indicator_target,
+        ),
+      };
+      const res = await fetch("/api/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewProject(emptyNewProject());
+        setShowWizard(false);
+        setWizardStep(1);
+        fetchProjects();
+        fetchBudgetSummary();
+      } else {
+        if (data.budgetSummary) {
+          setAddError(
+            `${data.message}. Remaining Budget: ₱${Number(
+              data.budgetSummary.remainingBudget,
+            ).toLocaleString()}`,
+          );
+        } else {
+          setAddError(data.message || data.error || "Failed to add project");
+        }
+      }
+    } catch {
+      setAddError("Network error");
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const saveEdit = async () => {
     if (!editRow) return;
 
@@ -532,7 +575,7 @@ export default function ProjectContent({ sidebarOpen }) {
         responsible_office: editRow.responsible_office,
       };
 
-      const res = await fetch(`/api/project/${editingId}`, {
+      const res = await fetch(`/api/project/${editRow._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -544,7 +587,7 @@ export default function ProjectContent({ sidebarOpen }) {
         throw new Error(data.error || data.message || "Failed to update");
       }
 
-      setEditingId(null);
+      setShowEditModal(false);
       setEditRow(null);
 
       await fetchProjects();
@@ -927,12 +970,28 @@ export default function ProjectContent({ sidebarOpen }) {
         </p>
 
         {role !== "gad coordinator" && (
-          <button
-            onClick={handleUpdateStatusModal}
-            className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
-          >
-            Update Status
-          </button>
+          <div className="flex items-center gap-2">
+            {role !== "planning director" &&
+              selectedGPBStatus?.status !== "approved" &&
+              selectedGPBStatus?.status !== "disapproved" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWizard(true);
+                    setWizardStep(1);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
+                >
+                  + Add Project
+                </button>
+              )}
+            <button
+              onClick={handleUpdateStatusModal}
+              className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
+            >
+              Update Status
+            </button>
+          </div>
         )}
       </div>
 
@@ -1034,6 +1093,942 @@ export default function ProjectContent({ sidebarOpen }) {
         </div>
       )}
 
+      {showEditModal && editRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Edit Project
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  All fields marked <span className="text-red-500">*</span> are
+                  required
+                </p>
+              </div>
+              <button
+                onClick={cancelEdit}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-xl transition"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div className="overflow-y-auto px-6 py-5 space-y-8 flex-1">
+              {editError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                  {editError}
+                </div>
+              )}
+
+              {/* Section 1 */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                    1
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-700">
+                    Gender Issue
+                  </h3>
+                </div>
+                <div className="space-y-4 pl-8">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Gender Issue / GAD Mandate{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      rows={3}
+                      value={editRow.gender_issue || ""}
+                      onChange={(e) =>
+                        handleEditRowChange("gender_issue", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Cause of the Gender Issue{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {(editRow.cause_gender_issue || [""]).map((val, idx) => (
+                        <div key={idx} className="flex gap-2 items-start">
+                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                            {idx + 1}.
+                          </span>
+                          <textarea
+                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                            rows={2}
+                            value={val}
+                            onChange={(e) => {
+                              const arr = [
+                                ...(editRow.cause_gender_issue || [""]),
+                              ];
+                              arr[idx] = e.target.value;
+                              handleEditRowChange("cause_gender_issue", arr);
+                            }}
+                          />
+                          <div className="flex flex-col gap-1 mt-1 shrink-0">
+                            {(editRow.cause_gender_issue || []).length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const arr = [...editRow.cause_gender_issue];
+                                  arr.splice(idx, 1);
+                                  handleEditRowChange(
+                                    "cause_gender_issue",
+                                    arr,
+                                  );
+                                }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              >
+                                −
+                              </button>
+                            )}
+                            {idx ===
+                              (editRow.cause_gender_issue || []).length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditRowChange("cause_gender_issue", [
+                                    ...(editRow.cause_gender_issue || []),
+                                    "",
+                                  ])
+                                }
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2 */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                    2
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-700">
+                    Objectives & Data
+                  </h3>
+                </div>
+                <div className="space-y-4 pl-8">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      GAD Result Statement / GAD Objective{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {(editRow.gad_objective || [""]).map((val, idx) => (
+                        <div key={idx} className="flex gap-2 items-start">
+                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                            {idx + 1}.
+                          </span>
+                          <textarea
+                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                            rows={2}
+                            value={val}
+                            onChange={(e) => {
+                              const arr = [...(editRow.gad_objective || [""])];
+                              arr[idx] = e.target.value;
+                              handleEditRowChange("gad_objective", arr);
+                            }}
+                          />
+                          <div className="flex flex-col gap-1 mt-1 shrink-0">
+                            {(editRow.gad_objective || []).length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const arr = [...editRow.gad_objective];
+                                  arr.splice(idx, 1);
+                                  handleEditRowChange("gad_objective", arr);
+                                }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              >
+                                −
+                              </button>
+                            )}
+                            {idx ===
+                              (editRow.gad_objective || []).length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditRowChange("gad_objective", [
+                                    ...(editRow.gad_objective || []),
+                                    "",
+                                  ])
+                                }
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Supporting Statistics / Data
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      rows={3}
+                      value={editRow.supporting_statistics_data || ""}
+                      onChange={(e) =>
+                        handleEditRowChange(
+                          "supporting_statistics_data",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Relevant Agency MFO/PAP{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      rows={2}
+                      value={editRow.relevant_agency || ""}
+                      onChange={(e) =>
+                        handleEditRowChange("relevant_agency", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3 */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                    3
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-700">
+                    Activity & Budget
+                  </h3>
+                </div>
+                <div className="space-y-4 pl-8">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      GAD Activity <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {(editRow.gad_activity || [""]).map((val, idx) => (
+                        <div key={idx} className="flex gap-2 items-start">
+                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                            {idx + 1}.
+                          </span>
+                          <textarea
+                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                            rows={2}
+                            value={val}
+                            onChange={(e) => {
+                              const arr = [...(editRow.gad_activity || [""])];
+                              arr[idx] = e.target.value;
+                              handleEditRowChange("gad_activity", arr);
+                            }}
+                          />
+                          <div className="flex flex-col gap-1 mt-1 shrink-0">
+                            {(editRow.gad_activity || []).length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const arr = [...editRow.gad_activity];
+                                  arr.splice(idx, 1);
+                                  handleEditRowChange("gad_activity", arr);
+                                }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              >
+                                −
+                              </button>
+                            )}
+                            {idx ===
+                              (editRow.gad_activity || []).length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditRowChange("gad_activity", [
+                                    ...(editRow.gad_activity || []),
+                                    "",
+                                  ])
+                                }
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Output Performance Indicators and Target
+                    </label>
+                    <div className="space-y-3">
+                      {(
+                        editRow.performance_indicator_target || [
+                          emptyIndicator(),
+                        ]
+                      ).map((val, idx) => (
+                        <div
+                          key={idx}
+                          className="flex gap-2 items-start bg-gray-50 rounded-xl p-3 border border-gray-200"
+                        >
+                          <div className="flex-1">
+                            <PerformanceIndicatorInput
+                              value={val}
+                              onChange={(updated) => {
+                                const arr = [
+                                  ...(editRow.performance_indicator_target ||
+                                    []),
+                                ];
+                                arr[idx] = updated;
+                                handleEditRowChange(
+                                  "performance_indicator_target",
+                                  arr,
+                                );
+                              }}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            {(editRow.performance_indicator_target || [])
+                              .length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const arr = [
+                                    ...editRow.performance_indicator_target,
+                                  ];
+                                  arr.splice(idx, 1);
+                                  handleEditRowChange(
+                                    "performance_indicator_target",
+                                    arr,
+                                  );
+                                }}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              >
+                                −
+                              </button>
+                            )}
+                            {idx ===
+                              (editRow.performance_indicator_target || [])
+                                .length -
+                                1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditRowChange(
+                                    "performance_indicator_target",
+                                    [
+                                      ...(editRow.performance_indicator_target ||
+                                        []),
+                                      emptyIndicator(),
+                                    ],
+                                  )
+                                }
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        GAD Budget <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                          ₱
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-full border border-gray-300 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          value={editRow.gad_budget || ""}
+                          onChange={(e) =>
+                            handleEditRowChange(
+                              "gad_budget",
+                              Number(e.target.value),
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Source of Budget <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                        rows={2}
+                        value={editRow.source_budget || ""}
+                        onChange={(e) =>
+                          handleEditRowChange("source_budget", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Responsible Unit/Office{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      rows={2}
+                      value={editRow.responsible_office || ""}
+                      onChange={(e) =>
+                        handleEditRowChange(
+                          "responsible_office",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="px-5 py-2 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveEdit}
+                disabled={editLoading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {editLoading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWizard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Add Project — Year {year}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowWizard(false);
+                  setWizardStep(1);
+                  setNewProject(emptyNewProject());
+                }}
+                className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 mb-6">
+              {[
+                "Gender Issue",
+                "Objectives & Data",
+                "Activity & Budget",
+                "Review",
+              ].map((label, i) => (
+                <React.Fragment key={i}>
+                  <div
+                    className={`flex items-center gap-1.5 ${
+                      wizardStep === i + 1
+                        ? "text-blue-600"
+                        : wizardStep > i + 1
+                          ? "text-green-600"
+                          : "text-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                        wizardStep === i + 1
+                          ? "border-blue-600 bg-blue-50"
+                          : wizardStep > i + 1
+                            ? "border-green-600 bg-green-50"
+                            : "border-gray-300"
+                      }`}
+                    >
+                      {wizardStep > i + 1 ? "✓" : i + 1}
+                    </div>
+                    <span className="text-xs font-medium hidden sm:block">
+                      {label}
+                    </span>
+                  </div>
+                  {i < 3 && (
+                    <div
+                      className={`flex-1 h-0.5 ${wizardStep > i + 1 ? "bg-green-400" : "bg-gray-200"}`}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {addError && (
+              <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">
+                {addError}
+              </div>
+            )}
+
+            {wizardStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Gender Issue / GAD Mandate{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    value={newProject.gender_issue}
+                    onChange={(e) =>
+                      handleNewProjectChange("gender_issue", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cause of the Gender Issue{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  {newProject.cause_gender_issue.map((val, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <textarea
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                        value={val}
+                        onChange={(e) =>
+                          handleArrayFieldChange(
+                            "cause_gender_issue",
+                            idx,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <div className="flex flex-col gap-1">
+                        {newProject.cause_gender_issue.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayField("cause_gender_issue", idx)
+                            }
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                          >
+                            -
+                          </button>
+                        )}
+                        {idx === newProject.cause_gender_issue.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddArrayField("cause_gender_issue")
+                            }
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    GAD Result Statement / GAD Objective{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  {newProject.gad_objective.map((val, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <textarea
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                        value={val}
+                        onChange={(e) =>
+                          handleArrayFieldChange(
+                            "gad_objective",
+                            idx,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <div className="flex flex-col gap-1">
+                        {newProject.gad_objective.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayField("gad_objective", idx)
+                            }
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                          >
+                            -
+                          </button>
+                        )}
+                        {idx === newProject.gad_objective.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleAddArrayField("gad_objective")}
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supporting Statistics / Data
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    value={newProject.supporting_statistics_data}
+                    onChange={(e) =>
+                      handleNewProjectChange(
+                        "supporting_statistics_data",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Relevant Agency MFO/PAP{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    value={newProject.relevant_agency}
+                    onChange={(e) =>
+                      handleNewProjectChange("relevant_agency", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    GAD Activity <span className="text-red-500">*</span>
+                  </label>
+                  {newProject.gad_activity.map((val, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <textarea
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                        value={val}
+                        onChange={(e) =>
+                          handleArrayFieldChange(
+                            "gad_activity",
+                            idx,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <div className="flex flex-col gap-1">
+                        {newProject.gad_activity.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayField("gad_activity", idx)
+                            }
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                          >
+                            -
+                          </button>
+                        )}
+                        {idx === newProject.gad_activity.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleAddArrayField("gad_activity")}
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Output Performance Indicators and Target
+                  </label>
+                  {newProject.performance_indicator_target.map((val, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2 items-start">
+                      <div className="flex-1">
+                        <PerformanceIndicatorInput
+                          value={val}
+                          onChange={(updated) => {
+                            const arr = [
+                              ...newProject.performance_indicator_target,
+                            ];
+                            arr[idx] = updated;
+                            handleNewProjectChange(
+                              "performance_indicator_target",
+                              arr,
+                            );
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 mt-4">
+                        {newProject.performance_indicator_target.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayField(
+                                "performance_indicator_target",
+                                idx,
+                              )
+                            }
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                          >
+                            -
+                          </button>
+                        )}
+                        {idx ===
+                          newProject.performance_indicator_target.length -
+                            1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddArrayField(
+                                "performance_indicator_target",
+                              )
+                            }
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      GAD Budget <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={newProject.gad_budget}
+                      onChange={(e) =>
+                        handleNewProjectChange(
+                          "gad_budget",
+                          Number(e.target.value),
+                        )
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Source of Budget <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={2}
+                      value={newProject.source_budget}
+                      onChange={(e) =>
+                        handleNewProjectChange("source_budget", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Responsible Unit/Office{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    value={newProject.responsible_office}
+                    onChange={(e) =>
+                      handleNewProjectChange(
+                        "responsible_office",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 4 && (
+              <div className="space-y-3 text-sm">
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Gender Issue:
+                    </span>
+                    <p className="mt-0.5 text-gray-800">
+                      {newProject.gender_issue || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Cause of Gender Issue:
+                    </span>
+                    <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                      {newProject.cause_gender_issue
+                        .filter(Boolean)
+                        .map((v, i) => (
+                          <li key={i}>{v}</li>
+                        ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      GAD Objective:
+                    </span>
+                    <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                      {newProject.gad_objective.filter(Boolean).map((v, i) => (
+                        <li key={i}>{v}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Supporting Statistics:
+                    </span>
+                    <p className="mt-0.5 text-gray-800">
+                      {newProject.supporting_statistics_data || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Relevant Agency:
+                    </span>
+                    <p className="mt-0.5 text-gray-800">
+                      {newProject.relevant_agency || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      GAD Activity:
+                    </span>
+                    <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                      {newProject.gad_activity.filter(Boolean).map((v, i) => (
+                        <li key={i}>{v}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Performance Indicators:
+                    </span>
+                    <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                      {serializeIndicators(
+                        newProject.performance_indicator_target,
+                      ).map((v, i) => (
+                        <li key={i}>{v}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        GAD Budget:
+                      </span>
+                      <p className="mt-0.5 text-gray-800">
+                        ₱{Number(newProject.gad_budget || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        Source of Budget:
+                      </span>
+                      <p className="mt-0.5 text-gray-800">
+                        {newProject.source_budget || "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Responsible Office:
+                    </span>
+                    <p className="mt-0.5 text-gray-800">
+                      {newProject.responsible_office || "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() =>
+                  wizardStep === 1
+                    ? (setShowWizard(false), setNewProject(emptyNewProject()))
+                    : setWizardStep(wizardStep - 1)
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+              >
+                {wizardStep === 1 ? "Cancel" : "← Back"}
+              </button>
+              {wizardStep < 4 ? (
+                <button
+                  type="button"
+                  onClick={() => setWizardStep(wizardStep + 1)}
+                  className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleWizardSubmit}
+                  disabled={addLoading}
+                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
+                >
+                  {addLoading ? "Saving..." : "Submit"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="h-screen">Loading projects...</div>
       ) : (
@@ -1124,7 +2119,8 @@ export default function ProjectContent({ sidebarOpen }) {
                       )}
                     </tr>
 
-                    {role !== "planning director" &&
+                    {false &&
+                      role !== "planning director" &&
                       selectedGPBStatus?.status !== "approved" &&
                       selectedGPBStatus?.status !== "disapproved" && (
                         <tr className="bg-gray-100 sticky top-[41px] z-10">

@@ -313,7 +313,7 @@ export default function EventContent({
               #{assignedParticipantNumber}
             </div>
             <h2 className="text-xl font-semibold text-gray-800">
-              You&apos;re on the lists!
+              You&apos;re on the list!
             </h2>
             <p className="text-gray-500 text-sm">
               This is your participant number for this event.
