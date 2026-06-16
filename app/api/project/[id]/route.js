@@ -1,5 +1,11 @@
 import { connectDB } from "@/lib/db";
+import {
+  createNotifications,
+  getPlanningDirectorIds,
+  normalizeRole,
+} from "@/lib/notifications";
 import Project from "@/models/projects";
+import UserAuth from "@/models/user";
 
 export async function PUT(req, { params }) {
   await connectDB();
@@ -33,7 +39,34 @@ export async function PUT(req, { params }) {
     mergeField("source_budget");
     mergeField("responsible_office");
 
+    let actor = null;
+
+    if (body.userId) {
+      actor = await UserAuth.findById(body.userId, "_id role username").lean();
+
+      if (actor) {
+        project.lastUpdatedBy = actor._id;
+      }
+    }
+
     await project.save();
+
+    if (actor && normalizeRole(actor.role) !== "planning director") {
+      const planningDirectorIds = await getPlanningDirectorIds(actor._id);
+
+      await createNotifications({
+        recipientIds: planningDirectorIds,
+        senderId: actor._id,
+        type: "project_updated",
+        title: "Project updated",
+        message: `${actor.username} updated a GPB project for year ${project.year}.`,
+        projectId: project._id,
+        metadata: {
+          year: project.year,
+          updatedFields: Object.keys(body).filter((key) => key !== "userId"),
+        },
+      });
+    }
 
     return Response.json({ data: project });
   } catch (err) {

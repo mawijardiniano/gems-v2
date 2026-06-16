@@ -3,6 +3,7 @@ import Project from "@/models/projects";
 import "@/models/event";
 import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
+import UserAuth from "@/models/user";
 
 export async function GET(req) {
   await connectDB();
@@ -16,6 +17,7 @@ export async function POST(req) {
   const body = await req.json();
   const year = Number(body.year);
   const requestedBudget = Number(body.gad_budget || 0);
+  const actorId = body.userId || null;
 
   if (Number.isNaN(year)) {
     return Response.json({ message: "Invalid year" }, { status: 400 });
@@ -108,8 +110,19 @@ export async function POST(req) {
       value: body.responsible_office || "",
     },
 
+    createdBy: actorId,
+    lastUpdatedBy: actorId,
+
     events: body.events || [],
   };
+
+  if (actorId) {
+    const actorExists = await UserAuth.exists({ _id: actorId });
+    if (!actorExists) {
+      projectData.createdBy = null;
+      projectData.lastUpdatedBy = null;
+    }
+  }
 
   const project = await Project.create(projectData);
 

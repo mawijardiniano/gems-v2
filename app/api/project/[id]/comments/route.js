@@ -1,5 +1,11 @@
 import { connectDB } from "@/lib/db";
+import {
+  createNotifications,
+  getPlanningDirectorIds,
+  normalizeRole,
+} from "@/lib/notifications";
 import Project from "@/models/projects";
+import UserAuth from "@/models/user";
 
 const ALLOWED_FIELDS = [
   "gender_issue",
@@ -84,6 +90,12 @@ export async function POST(req, { params }) {
       return Response.json({ message: "Project not found" }, { status: 404 });
     }
 
+    const actor = await UserAuth.findById(userId, "_id role username").lean();
+
+    if (!actor) {
+      return Response.json({ message: "User not found" }, { status: 404 });
+    }
+
     const now = new Date();
 
     const newComment = {
@@ -98,6 +110,32 @@ export async function POST(req, { params }) {
     project.comments.push(newComment);
 
     await project.save();
+
+    let recipientIds = [];
+
+    if (normalizeRole(actor.role) === "planning director") {
+      const targetUserId = project.lastUpdatedBy || project.createdBy;
+
+      if (targetUserId && String(targetUserId) !== String(actor._id)) {
+        recipientIds = [targetUserId];
+      }
+    } else {
+      recipientIds = await getPlanningDirectorIds(actor._id);
+    }
+
+    await createNotifications({
+      recipientIds,
+      senderId: actor._id,
+      type: "project_comment",
+      title: "New project comment",
+      message: `${actor.username} left a ${type || "revision"} comment on a GPB project for year ${project.year}.`,
+      projectId: project._id,
+      metadata: {
+        year: project.year,
+        commentType: type || "revision",
+        fields: [...new Set(targetFields)],
+      },
+    });
 
     return Response.json({
       success: true,

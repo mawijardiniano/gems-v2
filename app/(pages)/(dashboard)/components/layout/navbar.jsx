@@ -1,6 +1,7 @@
 "use client";
 
 import { FaBars } from "react-icons/fa";
+import NotificationBell from "@/components/NotificationBell";
 export default function Navbar({ toggleSidebar }) {
   return (
     <>
@@ -16,6 +17,9 @@ export default function Navbar({ toggleSidebar }) {
             <span className="text-xl font-bold">GENDER MANAGEMENT</span>
             <p className="text-xs text-gray-500">User Portal</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
         </div>
       </nav>
     </>

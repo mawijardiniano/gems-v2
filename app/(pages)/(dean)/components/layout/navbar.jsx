@@ -1,8 +1,8 @@
 "use client";
 
-import { FaUserCircle, FaBars } from "react-icons/fa";
+import { FaBars } from "react-icons/fa";
+import NotificationBell from "@/components/NotificationBell";
 import { useSelector } from "react-redux";
-
 
 export default function Navbar({ toggleSidebar }) {
   const role = useSelector((state) => state.auth.role);
@@ -18,9 +18,12 @@ export default function Navbar({ toggleSidebar }) {
           <FaBars size={20} />
         </button>
 
-                {role === "dean" && (
+        {role === "dean" && (
           <span className="text-xl font-bold">Dashboard</span>
         )}
+      </div>
+      <div className="flex items-center gap-2">
+        <NotificationBell />
       </div>
     </nav>
   );

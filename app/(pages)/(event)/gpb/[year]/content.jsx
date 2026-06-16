@@ -497,6 +497,7 @@ export default function ProjectContent({ sidebarOpen }) {
     try {
       const payload = {
         ...newProject,
+        userId,
         performance_indicator_target: serializeIndicators(
           newProject.performance_indicator_target,
         ),
@@ -536,6 +537,7 @@ export default function ProjectContent({ sidebarOpen }) {
     try {
       const payload = {
         ...newProject,
+        userId,
         performance_indicator_target: serializeIndicators(
           newProject.performance_indicator_target,
         ),
@@ -578,6 +580,7 @@ export default function ProjectContent({ sidebarOpen }) {
 
     try {
       const payload = {
+        userId,
         gender_issue: editRow.gender_issue,
         cause_gender_issue: editRow.cause_gender_issue,
         gad_objective: editRow.gad_objective,

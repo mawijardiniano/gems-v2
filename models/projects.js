@@ -12,24 +12,24 @@ const CommentSchema = new Schema(
       type: String,
       enum: ["approval", "revision"],
     },
-   fields: [
-  {
-    type: String,
-    enum: [
-      "gender_issue",
-      "cause_gender_issue",
-      "gad_objective",
-      "supporting_statistics_data",
-      "relevant_agency",
-      "gad_activity",
-      "performance_indicator_target",
-      "gad_budget",
-      "source_budget",
-      "responsible_office",
-      "general",
+    fields: [
+      {
+        type: String,
+        enum: [
+          "gender_issue",
+          "cause_gender_issue",
+          "gad_objective",
+          "supporting_statistics_data",
+          "relevant_agency",
+          "gad_activity",
+          "performance_indicator_target",
+          "gad_budget",
+          "source_budget",
+          "responsible_office",
+          "general",
+        ],
+      },
     ],
-  },
-],
   },
   { timestamps: true },
 );
@@ -51,6 +51,17 @@ const ProjectSchema = new Schema({
   gad_budget: FieldSchema(Number),
   source_budget: FieldSchema(String),
   responsible_office: FieldSchema(String),
+
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: "UserAuth",
+    default: null,
+  },
+  lastUpdatedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "UserAuth",
+    default: null,
+  },
 
   events: [{ type: Schema.Types.ObjectId, ref: "Event" }],
   comments: [CommentSchema],
