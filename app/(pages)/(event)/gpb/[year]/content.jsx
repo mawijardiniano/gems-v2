@@ -7,41 +7,82 @@ import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
 import axios from "axios";
 import PrintGPB from "../../components/Print/PrintGPB";
 
-function formatPerformanceIndicator({ totalSeminars, totalMale, totalFemale }) {
-  const s = Number(totalSeminars) || 0;
+const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
+
+function emptyIndicator() {
+  return {
+    activityType: "",
+    totalActivities: "",
+    totalMale: "",
+    totalFemale: "",
+  };
+}
+
+function formatPerformanceIndicator({
+  activityType,
+  totalActivities,
+  totalMale,
+  totalFemale,
+}) {
+  const a = activityType || "activity";
+  const s = Number(totalActivities) || 0;
   const m = Number(totalMale) || 0;
   const f = Number(totalFemale) || 0;
   const total = m + f;
-  const hasSeminars = s > 0;
+  const hasActivities = s > 0;
   const hasParticipants = total > 0;
 
-  if (hasSeminars && hasParticipants) {
-    return `At least ${s} training session${s !== 1 ? "s" : ""} conducted with ${total} participants (${f} Female, ${m} Male)`;
-  } else if (hasSeminars && !hasParticipants) {
-    return `No. of seminars conducted - at least ${s}`;
-  } else if (!hasSeminars && hasParticipants) {
+  if (hasActivities && hasParticipants) {
+    return `At least ${s} ${a.toLowerCase()}${s !== 1 ? "s" : ""} conducted with ${total} participants (${f} Female, ${m} Male)`;
+  } else if (hasActivities && !hasParticipants) {
+    return `No. of ${a.toLowerCase()}s conducted - at least ${s}`;
+  } else if (!hasActivities && hasParticipants) {
     return `At least ${total} participants trained. (${f} Female, ${m} Male)`;
   }
   return "";
 }
 
+const ACTIVITY_ALTERNATION = ACTIVITY_TYPE.join("|");
+
 function parsePerformanceIndicator(str) {
   if (!str || typeof str !== "string") return emptyIndicator();
 
   const bothMatch = str.match(
-    /At least (\d+) training sessions? conducted with \d+ participants \((\d+) Female, (\d+) Male\)/,
+    new RegExp(
+      `At least (\\d+) (${ACTIVITY_ALTERNATION})s? conducted with \\d+ participants \\((\\d+) Female, (\\d+) Male\\)`,
+      "i",
+    ),
   );
   if (bothMatch) {
+    const matchedType =
+      ACTIVITY_TYPE.find(
+        (t) => t.toLowerCase() === bothMatch[2].toLowerCase(),
+      ) || bothMatch[2];
     return {
-      totalSeminars: bothMatch[1],
-      totalFemale: bothMatch[2],
-      totalMale: bothMatch[3],
+      activityType: matchedType,
+      totalActivities: bothMatch[1],
+      totalFemale: bothMatch[3],
+      totalMale: bothMatch[4],
     };
   }
 
-  const seminarsOnly = str.match(/No\. of seminars conducted - at least (\d+)/);
-  if (seminarsOnly) {
-    return { totalSeminars: seminarsOnly[1], totalMale: "", totalFemale: "" };
+  const activitiesOnly = str.match(
+    new RegExp(
+      `No\\. of (${ACTIVITY_ALTERNATION})s conducted - at least (\\d+)`,
+      "i",
+    ),
+  );
+  if (activitiesOnly) {
+    const matchedType =
+      ACTIVITY_TYPE.find(
+        (t) => t.toLowerCase() === activitiesOnly[1].toLowerCase(),
+      ) || activitiesOnly[1];
+    return {
+      activityType: matchedType,
+      totalActivities: activitiesOnly[2],
+      totalMale: "",
+      totalFemale: "",
+    };
   }
 
   const participantsOnly = str.match(
@@ -49,17 +90,14 @@ function parsePerformanceIndicator(str) {
   );
   if (participantsOnly) {
     return {
-      totalSeminars: "",
+      activityType: "",
+      totalActivities: "",
       totalFemale: participantsOnly[1],
       totalMale: participantsOnly[2],
     };
   }
 
   return { _raw: str };
-}
-
-function emptyIndicator() {
-  return { totalSeminars: "", totalMale: "", totalFemale: "" };
 }
 
 function serializeIndicators(arr) {
@@ -75,22 +113,62 @@ function serializeIndicators(arr) {
 function PerformanceIndicatorInput({ value, onChange }) {
   const v =
     typeof value === "object" && value !== null && !value._raw
-      ? value
+      ? { ...emptyIndicator(), ...value }
       : emptyIndicator();
 
   const preview = formatPerformanceIndicator(v);
+
+  // Cross-validation: activityType and totalActivities require each other
+  const hasActivityType = !!v.activityType;
+  const hasActivityCount =
+    v.totalActivities !== "" && Number(v.totalActivities) > 0;
+
+  const activityTypeMissing = hasActivityCount && !hasActivityType;
+  const activityCountMissing = hasActivityType && !hasActivityCount;
 
   return (
     <div className="flex flex-col gap-2 w-full">
       <div className="flex gap-3">
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">Seminars</label>
+          <label className="text-xs text-gray-400 mb-0.5">
+            Type of Activity{" "}
+            {hasActivityCount && <span className="text-red-500">*</span>}
+          </label>
+          <select
+            className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
+              activityTypeMissing
+                ? "border-red-400 focus:ring-red-400"
+                : "border-gray-300 focus:ring-blue-400"
+            }`}
+            value={v.activityType}
+            onChange={(e) => onChange({ ...v, activityType: e.target.value })}
+          >
+            <option value="">Select</option>
+            {ACTIVITY_TYPE.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col flex-1">
+          <label className="text-xs text-gray-400 mb-0.5">
+            No. of Activity{" "}
+            {hasActivityType && <span className="text-red-500">*</span>}
+          </label>
           <input
             type="number"
             min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={v.totalSeminars}
-            onChange={(e) => onChange({ ...v, totalSeminars: e.target.value })}
+            className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
+              activityCountMissing
+                ? "border-red-400 focus:ring-red-400"
+                : "border-gray-300 focus:ring-blue-400"
+            }`}
+            value={v.totalActivities}
+            onChange={(e) =>
+              onChange({ ...v, totalActivities: e.target.value })
+            }
             placeholder="0"
           />
         </div>
@@ -117,12 +195,76 @@ function PerformanceIndicatorInput({ value, onChange }) {
           />
         </div>
       </div>
+
+      {activityTypeMissing && (
+        <div className="text-xs text-red-500 px-1">
+          Type of Activity is required when No. of Activity is filled in.
+        </div>
+      )}
+      {activityCountMissing && (
+        <div className="text-xs text-red-500 px-1">
+          No. of Activity is required when a Type of Activity is selected.
+        </div>
+      )}
+
       {preview && (
         <div className="text-xs text-blue-600 bg-blue-50 rounded-lg px-2 py-1.5 italic">
           {preview}
         </div>
       )}
     </div>
+  );
+}
+
+function isIndicatorValid(ind) {
+  if (!ind || ind._raw !== undefined) return true; // raw/legacy string, skip validation
+  const hasType = !!ind.activityType;
+  const hasCount =
+    ind.totalActivities !== "" && Number(ind.totalActivities) > 0;
+  // valid if: both filled, or both empty (i.e. they don't contradict each other)
+  return hasType === hasCount;
+}
+
+function indicatorsValid(arr) {
+  return (arr || []).every(isIndicatorValid);
+}
+
+function isStep1Valid(p) {
+  return (
+    p.gender_issue.trim() !== "" &&
+    p.cause_gender_issue.some((v) => v.trim() !== "")
+  );
+}
+
+function isStep2Valid(p) {
+  return (
+    p.gad_objective.some((v) => v.trim() !== "") &&
+    p.relevant_agency.trim() !== ""
+  );
+}
+
+function isStep3Valid(p) {
+  return (
+    p.gad_activity.some((v) => v.trim() !== "") &&
+    Number(p.gad_budget) > 0 &&
+    p.source_budget.trim() !== "" &&
+    p.responsible_office.trim() !== "" &&
+    indicatorsValid(p.performance_indicator_target)
+  );
+}
+
+function isEditRowValid(row) {
+  if (!row) return false;
+  return (
+    row.gender_issue?.trim() &&
+    (row.cause_gender_issue || []).some((v) => v.trim()) &&
+    (row.gad_objective || []).some((v) => v.trim()) &&
+    row.relevant_agency?.trim() &&
+    (row.gad_activity || []).some((v) => v.trim()) &&
+    Number(row.gad_budget) > 0 &&
+    row.source_budget?.trim() &&
+    row.responsible_office?.trim() &&
+    indicatorsValid(row.performance_indicator_target)
   );
 }
 
@@ -1102,7 +1244,10 @@ export default function ProjectContent({ sidebarOpen }) {
         {budgetSummary !== null && (
           <div className="bg-white border border-gray-200 p-4 h-20">
             <div className="mb-2 text-sm font-medium">
-              Total GAD Allocation Used for {year}
+              {status === "approved"
+                ? "Total GAD Allocation Used"
+                : "Projected GAD Allocation Utilization"}{" "}
+              for {year}
             </div>
             <div className="flex justify-end">
               ₱{" "}
@@ -1115,10 +1260,14 @@ export default function ProjectContent({ sidebarOpen }) {
           </div>
         )}
 
+        {/*Projected*/}
         {budgetSummary !== null && (
           <div className="bg-white border border-gray-200 p-4 h-20">
             <div className="mb-4 text-sm font-medium">
-              Remaining GAD Budget for {year}
+              {status === "approved"
+                ? "Remaining GAD Budget"
+                : "Projected Remaining GAD Budget"}{" "}
+              for {year}
             </div>
             <div className="flex justify-end">
               ₱{" "}
@@ -1196,7 +1345,7 @@ export default function ProjectContent({ sidebarOpen }) {
               </div>
               <button
                 onClick={cancelEdit}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-xl transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-3xl transition"
               >
                 ×
               </button>
@@ -1596,7 +1745,6 @@ export default function ProjectContent({ sidebarOpen }) {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
               <button
                 type="button"
@@ -1605,14 +1753,21 @@ export default function ProjectContent({ sidebarOpen }) {
               >
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={saveEdit}
-                disabled={editLoading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {editLoading ? "Saving..." : "Save Changes"}
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                {!isEditRowValid(editRow) && (
+                  <span className="text-xs text-red-500">
+                    Please fill in all required fields.
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={editLoading || !isEditRowValid(editRow)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {editLoading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2081,37 +2236,64 @@ export default function ProjectContent({ sidebarOpen }) {
               </div>
             )}
 
-            <div className="flex justify-between mt-6 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() =>
-                  wizardStep === 1
-                    ? (setShowWizard(false), setNewProject(emptyNewProject()))
-                    : setWizardStep(wizardStep - 1)
-                }
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-              >
-                {wizardStep === 1 ? "Cancel" : "← Back"}
-              </button>
-              {wizardStep < 4 ? (
-                <button
-                  type="button"
-                  onClick={() => setWizardStep(wizardStep + 1)}
-                  className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Next →
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleWizardSubmit}
-                  disabled={addLoading}
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
-                >
-                  {addLoading ? "Saving..." : "Submit"}
-                </button>
-              )}
-            </div>
+            {(() => {
+              const stepValid =
+                wizardStep === 1
+                  ? isStep1Valid(newProject)
+                  : wizardStep === 2
+                    ? isStep2Valid(newProject)
+                    : wizardStep === 3
+                      ? isStep3Valid(newProject)
+                      : true;
+
+              return (
+                <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-gray-200">
+                  {!stepValid && (
+                    <div className="text-xs text-red-500 text-right">
+                      Please fill in all required fields before continuing.
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        wizardStep === 1
+                          ? (setShowWizard(false),
+                            setNewProject(emptyNewProject()))
+                          : setWizardStep(wizardStep - 1)
+                      }
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                    >
+                      {wizardStep === 1 ? "Cancel" : "← Back"}
+                    </button>
+                    {wizardStep < 4 ? (
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(wizardStep + 1)}
+                        disabled={!stepValid}
+                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        Next →
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleWizardSubmit}
+                        disabled={
+                          addLoading ||
+                          !isStep3Valid(newProject) ||
+                          !isStep1Valid(newProject) ||
+                          !isStep2Valid(newProject)
+                        }
+                        className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {addLoading ? "Saving..." : "Submit"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

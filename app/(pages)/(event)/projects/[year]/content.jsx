@@ -83,6 +83,14 @@ function PerformanceIndicatorInput({ value, onChange }) {
   return (
     <div className="flex flex-col gap-1 w-44">
       <div className="flex gap-1">
+        <div>
+          <label>Type of Activity</label>
+          <select>
+            <option>haha</option>
+            <option>hehe</option>
+          </select>
+        </div>
+
         <div className="flex flex-col flex-1">
           <label className="text-xs text-gray-400">Seminars</label>
           <input
@@ -359,7 +367,6 @@ export default function ProjectContent({ sidebarOpen }) {
     if (page > totalPages) setPage(totalPages);
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
-
 
   useEffect(() => {
     if (!year) return;
@@ -764,16 +771,14 @@ export default function ProjectContent({ sidebarOpen }) {
       <div className="flex justify-between">
         <h2 className="text-3xl font-bold mb-4">GPB Year {year}</h2>
 
-<PrintGPB
-  totalGAA={totalGAA}
-  budgetYear={budgetYear}
-  projects={projects}
-/>
+        <PrintGPB
+          totalGAA={totalGAA}
+          budgetYear={budgetYear}
+          projects={projects}
+        />
       </div>
 
-      <div className=" flex gap-2">
-
-      </div>
+      <div className=" flex gap-2"></div>
       {updateStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">

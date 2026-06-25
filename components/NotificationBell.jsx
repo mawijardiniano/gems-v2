@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FaBell } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { socketMethods } from "@/utils/socket";
@@ -26,6 +27,7 @@ function formatRelativeDate(dateInput) {
 }
 
 export default function NotificationBell() {
+  const router = useRouter();
   const userId = useSelector((state) => state.auth.userId);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -82,6 +84,24 @@ export default function NotificationBell() {
     } catch (err) {
       console.error("Mark read failed:", err);
       fetchNotifications();
+    }
+  };
+
+  const handleNotificationClick = async (item) => {
+    if (!item?._id) return;
+
+    await markRead(item._id);
+    setOpen(false);
+
+    const year = item?.metadata?.year;
+
+    if (year) {
+      router.push(`/gpb/${year}`);
+      return;
+    }
+
+    if (item?.projectId) {
+      router.push(`/gpb/dump/${item.projectId}`);
     }
   };
 
@@ -163,7 +183,7 @@ export default function NotificationBell() {
                 <button
                   type="button"
                   key={item._id}
-                  onClick={() => markRead(item._id)}
+                  onClick={() => handleNotificationClick(item)}
                   className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 ${
                     item.isRead ? "bg-white" : "bg-blue-50/60"
                   }`}

@@ -2581,7 +2581,7 @@ function ReportTab({ event }) {
     photos: [],
     other_attachments: [],
   });
-
+const [generating, setGenerating] = useState(false);
   const [uploading, setUploading] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
@@ -2591,6 +2591,36 @@ function ReportTab({ event }) {
   const [previewImg, setPreviewImg] = useState(null);
   const [deletedPhotoKeys, setDeletedPhotoKeys] = useState([]);
   const [deletedAttachmentKeys, setDeletedAttachmentKeys] = useState([]);
+
+
+  const generateNarrative = async () => {
+  setGenerating(true);
+  try {
+    const response = await fetch("/api/events/generate-narrative", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: event.title,
+        venue: event.venue,
+        number_of_days: event.number_of_days ?? event.start_dates?.length ?? 1,
+        type_of_activity: event.type_of_activity,
+        gad_activity: event.gad_activity,
+        eligibility_criteria: event.eligibility_criteria,
+        target_number_of_participants: event.target_number_of_participants,
+        registered_count: event.registered_users?.length,
+        organizing_office_unit: event.organizing_office_unit,
+        start_dates: event.start_dates,
+      }),
+    });
+
+    const data = await response.json();
+    setForm((prev) => ({ ...prev, narrative: data.description }));
+  } catch (err) {
+    setError("Failed to generate narrative.");
+  } finally {
+    setGenerating(false);
+  }
+};
 
   const deleteFileByKey = async (key) => {
     if (!key) return;
@@ -2949,18 +2979,26 @@ if (showReport !== null && !isEditing) {
         {error && <p className="text-sm text-red-500">{error}</p>}
         {success && <p className="text-sm text-green-600">{success}</p>}
 
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Narrative Report <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            name="narrative"
-            value={form.narrative}
-            onChange={(e) => setForm({ ...form, narrative: e.target.value })}
-            className="w-full border rounded px-3 py-2 text-sm min-h-[100px] resize-y"
-            placeholder="Describe what happened during the event..."
-          />
-        </div>
+<div>
+  <label className="block text-sm font-medium mb-1">
+    Narrative Report <span className="text-red-500">*</span>
+  </label>
+  <textarea
+    name="narrative"
+    value={form.narrative}
+    onChange={(e) => setForm({ ...form, narrative: e.target.value })}
+    className="w-full border rounded px-3 py-2 text-sm min-h-[100px] resize-y"
+    placeholder="Describe what happened during the event..."
+  />
+  <button
+    type="button"
+    onClick={generateNarrative}
+    disabled={generating}
+    className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400"
+  >
+    {generating ? "Generating..." : "Generate Narrative"}
+  </button>
+</div>
 
         <div>
           <label className="block text-sm font-medium mb-1">
