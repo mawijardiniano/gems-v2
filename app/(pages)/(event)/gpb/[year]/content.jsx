@@ -217,35 +217,54 @@ function PerformanceIndicatorInput({ value, onChange }) {
 }
 
 function isIndicatorValid(ind) {
-  if (!ind || ind._raw !== undefined) return true; // raw/legacy string, skip validation
+  if (!ind || ind._raw !== undefined) return true; 
   const hasType = !!ind.activityType;
   const hasCount =
     ind.totalActivities !== "" && Number(ind.totalActivities) > 0;
-  // valid if: both filled, or both empty (i.e. they don't contradict each other)
   return hasType === hasCount;
 }
 
+function isIndicatorComplete(ind) {
+  if (!ind || ind._raw !== undefined) return true; 
+  const hasType = !!ind.activityType;
+  const hasCount =
+    ind.totalActivities !== "" && Number(ind.totalActivities) > 0;
+  return hasType && hasCount;
+}
+
 function indicatorsValid(arr) {
-  return (arr || []).every(isIndicatorValid);
+  return (
+    Array.isArray(arr) &&
+    arr.length > 0 &&
+    arr.every(isIndicatorComplete)
+  );
+}
+
+function isNonEmptyArrayFilled(arr) {
+  return (
+    Array.isArray(arr) &&
+    arr.length > 0 &&
+    arr.every((v) => typeof v === "string" && v.trim() !== "")
+  );
 }
 
 function isStep1Valid(p) {
   return (
     p.gender_issue.trim() !== "" &&
-    p.cause_gender_issue.some((v) => v.trim() !== "")
+    isNonEmptyArrayFilled(p.cause_gender_issue)
   );
 }
 
 function isStep2Valid(p) {
   return (
-    p.gad_objective.some((v) => v.trim() !== "") &&
+    isNonEmptyArrayFilled(p.gad_objective) &&
     p.relevant_agency.trim() !== ""
   );
 }
 
 function isStep3Valid(p) {
   return (
-    p.gad_activity.some((v) => v.trim() !== "") &&
+    isNonEmptyArrayFilled(p.gad_activity) &&
     Number(p.gad_budget) > 0 &&
     p.source_budget.trim() !== "" &&
     p.responsible_office.trim() !== "" &&
@@ -257,10 +276,10 @@ function isEditRowValid(row) {
   if (!row) return false;
   return (
     row.gender_issue?.trim() &&
-    (row.cause_gender_issue || []).some((v) => v.trim()) &&
-    (row.gad_objective || []).some((v) => v.trim()) &&
+    isNonEmptyArrayFilled(row.cause_gender_issue) &&
+    isNonEmptyArrayFilled(row.gad_objective) &&
     row.relevant_agency?.trim() &&
-    (row.gad_activity || []).some((v) => v.trim()) &&
+    isNonEmptyArrayFilled(row.gad_activity) &&
     Number(row.gad_budget) > 0 &&
     row.source_budget?.trim() &&
     row.responsible_office?.trim() &&
