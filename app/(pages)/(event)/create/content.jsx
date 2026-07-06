@@ -126,6 +126,19 @@ export default function CreateEventsContent() {
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  const canGenerateDescription = useMemo(() => {
+    return (
+      formData.title.trim().length > 0 &&
+      formData.venue.trim().length > 0 &&
+      formData.type_of_activity &&
+      Number(formData.number_of_days) > 0 &&
+      formData.start_dates.length === Number(formData.number_of_days) &&
+      formData.start_dates.every((d) => d) &&
+      formData.end_dates.length === Number(formData.number_of_days) &&
+      formData.end_dates.every((d) => d)
+    );
+  }, [formData]);
+
   const generateDescription = async () => {
     setGenerating(true);
     try {
@@ -526,8 +539,8 @@ export default function CreateEventsContent() {
           <button
             type="button"
             onClick={generateDescription}
-            disabled={generating}
-             className="text-xs px-2 py-1 bg-blue-100 text-blue-700 font-medium rounded hover:bg-blue-200 disabled:opacity-50 flex items-center gap-1 transition-colors"
+            disabled={generating || !canGenerateDescription}
+            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 font-medium rounded hover:bg-blue-200 disabled:opacity-50 flex items-center gap-1 transition-colors"
           >
             {generating ? "Generating..." : "✨ Generate Description"}
           </button>

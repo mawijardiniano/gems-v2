@@ -197,7 +197,7 @@ const formatRange = (evt) => {
             <p className="text-gray-500">No events found.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
             {filteredEvents.map((evt) => (
               <div
                 key={evt._id}
