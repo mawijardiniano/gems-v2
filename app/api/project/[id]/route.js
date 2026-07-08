@@ -28,6 +28,7 @@ export async function PUT(req, { params }) {
       };
     };
 
+mergeField("project_type");
     mergeField("gender_issue");
     mergeField("cause_gender_issue");
     mergeField("gad_objective");

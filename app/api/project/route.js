@@ -61,6 +61,9 @@ export async function POST(req) {
 
   const projectData = {
     year,
+    project_type: {
+      value: body.project_type || "",
+    },
 
     gender_issue: {
       value: body.gender_issue || "",

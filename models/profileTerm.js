@@ -38,7 +38,7 @@ const profileTermSchema = new Schema(
 );
 
 profileTermSchema.index(
-  { profile_id: 1, school_year: 1, semester: 1, currentStatus: 1 },
+  { profile_id: 1, school_year: 1, semester: 1 },
   { unique: true },
 );
 

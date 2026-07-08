@@ -1,8 +1,137 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
+  const [signatories, setSignatories] = useState({
+    focalPointName: "____________________________",
+    presidentName: "____________________________",
+  });
+
+  function toDisplayName(firstName, middleName, lastName, options = {}) {
+    const includeMiddleInitial = options.includeMiddleInitial !== false;
+    const middleInitial =
+      includeMiddleInitial && middleName
+        ? `${middleName.toString().trim().charAt(0).toUpperCase()}.`
+        : "";
+    return [firstName, middleInitial, lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+  }
+
+  function extractNameFromUserAuth(userAuth, options = {}) {
+    if (!userAuth) return "";
+    const firstName =
+      userAuth?.personal_info_id?.personal?.first_name || userAuth?.first_name;
+    const middleName =
+      userAuth?.personal_info_id?.personal?.middle_name ||
+      userAuth?.middle_name;
+    const lastName =
+      userAuth?.personal_info_id?.personal?.last_name || userAuth?.last_name;
+    const displayName = toDisplayName(firstName, middleName, lastName, options);
+    console.log("[PrintGPB] extractNameFromUserAuth", {
+      firstName,
+      middleName,
+      lastName,
+      options,
+      displayName,
+    });
+    return displayName;
+  }
+
+  function extractNameFromGfpsOfficial(official, options = {}) {
+    if (!official) return "";
+    const firstName =
+      official?.first_name ||
+      official?.name?.personal_info_id?.personal?.first_name ||
+      official?.personal_info_id?.personal?.first_name ||
+      official?.personal_info_id?.first_name;
+    const middleName =
+      official?.middle_name ||
+      official?.name?.personal_info_id?.personal?.middle_name ||
+      official?.personal_info_id?.personal?.middle_name ||
+      official?.personal_info_id?.middle_name;
+    const lastName =
+      official?.last_name ||
+      official?.name?.personal_info_id?.personal?.last_name ||
+      official?.personal_info_id?.personal?.last_name ||
+      official?.personal_info_id?.last_name;
+    const displayName = toDisplayName(firstName, middleName, lastName, options);
+    console.log("[PrintGPB] extractNameFromGfpsOfficial", {
+      firstName,
+      middleName,
+      lastName,
+      options,
+      displayName,
+      official,
+    });
+    return displayName;
+  }
+
+  useEffect(() => {
+    async function loadSignatories() {
+      try {
+        const [gfpsRes, officialsRes] = await Promise.all([
+          fetch("/api/gfps"),
+          fetch("/api/university-officials"),
+        ]);
+
+        const [gfpsJson, officialsJson] = await Promise.all([
+          gfpsRes.json(),
+          officialsRes.json(),
+        ]);
+
+        const gfps = gfpsJson?.data?.[0] || {};
+        const officials = officialsJson?.data?.[0] || {};
+
+        const presidentFromGfps = extractNameFromGfpsOfficial(
+          gfps?.chairOrHeadOfAgency?.official,
+          { includeMiddleInitial: true },
+        );
+
+        const presidentFromOfficials = extractNameFromUserAuth(
+          officials?.president?.name,
+          { includeMiddleInitial: true },
+        );
+
+        const focalEntry = (officials?.office_of_the_president || []).find(
+          (item) =>
+            item?.position
+              ?.toString()
+              .toLowerCase()
+              .includes("focal point/person, gender & development"),
+        );
+        const focalFromOfficials = extractNameFromUserAuth(focalEntry?.name);
+
+        console.log("[PrintGPB] signatory sources", {
+          presidentFromGfps,
+          presidentFromOfficials,
+          focalFromOfficials,
+          gfpsChairOfficial: gfps?.chairOrHeadOfAgency?.official,
+          focalEntry,
+        });
+
+        setSignatories({
+          focalPointName: focalFromOfficials || "____________________________",
+          presidentName:
+            presidentFromGfps ||
+            presidentFromOfficials ||
+            "____________________________",
+        });
+      } catch {
+        setSignatories({
+          focalPointName: "____________________________",
+          presidentName: "____________________________",
+        });
+      }
+    }
+
+    loadSignatories();
+  }, []);
+
   const handlePrintProjects = () => {
-    console.log("Year", budgetYear)
+    console.log("Year", budgetYear);
     let totalGAAFormatted = "";
     if (typeof totalGAA === "number" && !isNaN(totalGAA)) {
       totalGAAFormatted = totalGAA.toLocaleString(undefined, {
@@ -23,6 +152,13 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
         th { background: #f2f2f2; }
         .gad-report-header { text-align: center; }
         .gad-report-header h4, .agency h4 { margin: 0; }
+        .blank-space-1 {height: 30px; border-right: none}
+        .blank-space-2 {height: 30px; border-left: none; border-right: none}
+        .blank-space-3 {height: 30px; border-left: none}
+        .table-space {margin-top: 40px}
+        .date-border-1 {border-bottom: none}
+        .date-border-2 {border-top: none}
+        .date {width:200px}
       </style></head><body>
       <div class="gad-report-header">
         <h4>ANNUAL GENDER AND DEVELOPMENT (GAD) PLAN AND BUDGET</h4>
@@ -127,6 +263,35 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
             })
             .join("")}
         </tbody>
+
+    
+      </table>
+
+
+      <table class="table-space">
+              <thead><tr>
+          <th>Prepared By:</th>
+          <th>Approved By:</th>
+          <th class="date">Date</th>
+        </tr></thead>
+      <tbody>
+      <tr>
+      <td class="blank-space-1"></td>
+<td class="blank-space-2"></td>
+<td class="blank-space-3"></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold">${signatories.focalPointName}</td>
+    <td style="font-weight: bold">${signatories.presidentName}</td>
+<td class="date-border-1"></td>
+      </tr>
+            <tr>
+            <td style="font-weight: bold">GAD Focal Point/Person</td>
+<td style="font-weight: bold">University President</td>
+<td class="date-border-2"></td>
+      </tr>
+
+      </tbody>
       </table></body></html>`;
 
     const iframe = document.createElement("iframe");

@@ -13,7 +13,7 @@ import {
   FaChartPie,
   FaVenusMars,
   FaUsers,
-  FaFolder
+  FaFolder,
 } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ export default function Sidebar({ open, setOpen, role }) {
   const ROLE_ACCESS = {
     admin: [
       "admin-dashboard",
+      "integration-staging",
       "user-list",
       "students",
       "employees",
@@ -45,6 +46,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/admin-dashboard",
       icon: <FaHome />,
       key: "admin-dashboard",
+    },
+    {
+      name: "Integration Staging",
+      href: "/integration-staging",
+      icon: <FaFolder />,
+      key: "integration-staging",
     },
     {
       name: "GPB",

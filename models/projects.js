@@ -16,6 +16,7 @@ const CommentSchema = new Schema(
       {
         type: String,
         enum: [
+          "project_type",
           "gender_issue",
           "cause_gender_issue",
           "gad_objective",
@@ -40,7 +41,7 @@ const FieldSchema = (type) => ({
 
 const ProjectSchema = new Schema({
   year: { type: Number, required: true },
-
+  project_type: FieldSchema(String),
   gender_issue: FieldSchema(String),
   cause_gender_issue: FieldSchema([String]),
   gad_objective: FieldSchema([String]),

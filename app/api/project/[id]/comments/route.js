@@ -8,6 +8,7 @@ import Project from "@/models/projects";
 import UserAuth from "@/models/user";
 
 const ALLOWED_FIELDS = [
+  "project_type",
   "gender_issue",
   "cause_gender_issue",
   "gad_objective",
