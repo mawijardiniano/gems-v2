@@ -7,11 +7,15 @@ export default function Filter({
   filterSex,
   filterPersonType,
   filterYearLevel,
+  filterSchoolYear,
+  filterSemester,
   filterCollege,
   filterEmployment,
   filterAppointment,
   setFilterSex,
   setFilterYearLevel,
+  setFilterSchoolYear,
+  setFilterSemester,
   setFilterPersonType,
   setFilterCollege,
   setFilterEmployment,
@@ -19,6 +23,8 @@ export default function Filter({
   sexOption,
   personTypeOptions = [],
   yearLevelOptions = [],
+  schoolYearOptions = [],
+  semesterOptions = [],
   collegeOptions = [],
   employmentOptions = [],
   appointmentOptions = [],
@@ -36,6 +42,8 @@ export default function Filter({
       setFilterYearLevel("");
     } else {
       setFilterYearLevel("");
+      setFilterSchoolYear("");
+      setFilterSemester("");
       setFilterEmployment("");
       setFilterAppointment([]);
     }
@@ -44,6 +52,8 @@ export default function Filter({
     setFilterEmployment,
     setFilterAppointment,
     setFilterYearLevel,
+    setFilterSchoolYear,
+    setFilterSemester,
   ]);
   useEffect(() => {
     function onDoc(e) {
@@ -97,6 +107,37 @@ export default function Filter({
           ))}
         </select>
       )}
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSchoolYear}
+        onChange={(e) => setFilterSchoolYear(e.target.value)}
+      >
+        <option value="" disabled>
+          School Year
+        </option>
+        {schoolYearOptions.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSemester}
+        onChange={(e) => setFilterSemester(e.target.value)}
+      >
+        <option value="" disabled>
+          Semester
+        </option>
+        {semesterOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+
       {(filterPersonType === "" ||
         filterPersonType === "Student" ||
         filterPersonType === "Employee") && (

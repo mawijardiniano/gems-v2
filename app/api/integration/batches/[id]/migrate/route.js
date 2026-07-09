@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
-import Profile from "@/models/profile";
+import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
+import UserAuth from "@/models/user";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 
@@ -15,21 +16,23 @@ function asDate(value) {
 
 async function findExistingProfile(mapped, identity) {
   if (identity.student_id) {
-    const byStudent = await Profile.findOne({
+    const byStudent = await GemsProfile.findOne({
       "affiliation.academic_information.student_id": identity.student_id,
     });
     if (byStudent) return byStudent;
   }
 
   if (identity.employee_id) {
-    const byEmployee = await Profile.findOne({
+    const byEmployee = await GemsProfile.findOne({
       "affiliation.employment_information.employee_id": identity.employee_id,
     });
     if (byEmployee) return byEmployee;
   }
 
   if (identity.email) {
-    const byEmail = await Profile.findOne({ "contact.email": identity.email });
+    const byEmail = await GemsProfile.findOne({
+      "contact.email": identity.email,
+    });
     if (byEmail) return byEmail;
   }
 
@@ -38,7 +41,7 @@ async function findExistingProfile(mapped, identity) {
   const birthday = asDate(mapped?.personal?.birthday);
 
   if (first && last && birthday) {
-    const byNameDob = await Profile.findOne({
+    const byNameDob = await GemsProfile.findOne({
       "personal.first_name": first,
       "personal.last_name": last,
       "personal.birthday": birthday,
@@ -94,6 +97,60 @@ function mergeProfile(existing, mapped) {
   }
 
   return merged;
+}
+
+function normalizeUsername(value) {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
+async function ensureUserAuthForProfile(profile, identity, mapped) {
+  const linked = await UserAuth.findOne({ personal_info_id: profile._id });
+  if (linked) {
+    return { action: "exists", username: linked.username };
+  }
+
+  const emailLocal = String(identity?.email || "").split("@")[0];
+  const first = normalizeUsername(mapped?.personal?.first_name);
+  const last = normalizeUsername(mapped?.personal?.last_name);
+
+  const candidates = [
+    normalizeUsername(identity?.student_id),
+    normalizeUsername(identity?.employee_id),
+    normalizeUsername(emailLocal),
+    normalizeUsername([first, last].filter(Boolean).join(".")),
+    normalizeUsername([first, identity?.student_id].filter(Boolean).join(".")),
+  ].filter(Boolean);
+
+  let chosenUsername = "";
+  for (const candidate of candidates) {
+    const exists = await UserAuth.findOne({ username: candidate }).lean();
+    if (!exists) {
+      chosenUsername = candidate;
+      break;
+    }
+  }
+
+  if (!chosenUsername) {
+    chosenUsername = `user.${String(profile._id).slice(-8).toLowerCase()}`;
+    let counter = 1;
+    while (await UserAuth.findOne({ username: chosenUsername }).lean()) {
+      chosenUsername = `user.${String(profile._id).slice(-8).toLowerCase()}.${counter}`;
+      counter += 1;
+    }
+  }
+
+  await UserAuth.create({
+    personal_info_id: profile._id,
+    username: chosenUsername,
+    password: "gems1234",
+    role: "User",
+  });
+
+  return { action: "created", username: chosenUsername };
 }
 
 export async function POST(req, { params }) {
@@ -163,7 +220,7 @@ export async function POST(req, { params }) {
         let profileAction = "updated";
 
         if (!profile) {
-          profile = await Profile.create({
+          profile = await GemsProfile.create({
             personal: {
               ...(mapped.personal || {}),
               birthday: asDate(mapped.personal?.birthday),
@@ -181,6 +238,12 @@ export async function POST(req, { params }) {
           updated += 1;
         }
 
+        const account = await ensureUserAuthForProfile(
+          profile,
+          identity,
+          mapped,
+        );
+
         const schoolYear = mapped.school_year;
         const semester = mapped.semester;
 
@@ -190,7 +253,7 @@ export async function POST(req, { params }) {
           record.migration_result = {
             action: "skipped",
             profile_id: profile._id,
-            message: "Missing school_year or semester",
+            message: `Missing school_year or semester (account ${account.action}: ${account.username})`,
           };
           await record.save();
 
@@ -203,6 +266,10 @@ export async function POST(req, { params }) {
             executedBy: auth.user._id,
             executedByUsername: auth.user.username,
             targetProfileId: profile._id,
+            details: {
+              account_action: account.action,
+              account_username: account.username,
+            },
           });
           continue;
         }
@@ -232,7 +299,7 @@ export async function POST(req, { params }) {
           action: profileAction,
           profile_id: profile._id,
           profile_term_id: term._id,
-          message: `Profile ${profileAction} and term upserted`,
+          message: `Profile ${profileAction} and term upserted (account ${account.action}: ${account.username})`,
         };
         await record.save();
 
@@ -245,7 +312,12 @@ export async function POST(req, { params }) {
           executedByUsername: auth.user.username,
           targetProfileId: profile._id,
           targetProfileTermId: term._id,
-          details: { school_year: schoolYear, semester },
+          details: {
+            school_year: schoolYear,
+            semester,
+            account_action: account.action,
+            account_username: account.username,
+          },
         });
       } catch (e) {
         failed += 1;

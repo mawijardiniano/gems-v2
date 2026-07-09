@@ -34,7 +34,7 @@ export default function Sidebar({ open, setOpen, role }) {
       "employees",
       "reports/sex-disaggregated-data",
       "manage-roles",
-      "settings",
+
     ],
 
     "planning director": ["admin-dashboard", "gpb"],
@@ -99,12 +99,7 @@ export default function Sidebar({ open, setOpen, role }) {
       icon: <FaUsers />,
       key: "manage-roles",
     },
-    {
-      name: "Settings",
-      href: "/admin-settings",
-      icon: <FaCog />,
-      key: "settings",
-    },
+   
   ];
 
   const filteredLinks = useMemo(() => {

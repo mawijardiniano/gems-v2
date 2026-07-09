@@ -5,12 +5,18 @@ import { HiChevronDown } from "react-icons/hi";
 export default function StudentFilterTable({
   filterSex,
   filterYearLevel,
+  filterSchoolYear,
+  filterSemester,
   filterCollege,
   setFilterSex,
   setFilterYearLevel,
+  setFilterSchoolYear,
+  setFilterSemester,
   setFilterCollege,
   sexOption = [],
   yearLevelOptions = [],
+  schoolYearOptions = [],
+  semesterOptions = [],
   collegeOptions = [],
 }) {
   const [collegeOpen, setCollegeOpen] = useState(false);
@@ -51,6 +57,37 @@ export default function StudentFilterTable({
           </option>
         ))}
       </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSchoolYear}
+        onChange={(e) => setFilterSchoolYear(e.target.value)}
+      >
+        <option value="" disabled>
+          School Year
+        </option>
+        {schoolYearOptions.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSemester}
+        onChange={(e) => setFilterSemester(e.target.value)}
+      >
+        <option value="" disabled>
+          Semester
+        </option>
+        {semesterOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+
       <div className="relative" ref={collegeRef}>
         <button
           type="button"
@@ -86,10 +123,16 @@ export default function StudentFilterTable({
               >
                 <input
                   type="checkbox"
-                  checked={Array.isArray(filterCollege) ? filterCollege.includes(c) : false}
+                  checked={
+                    Array.isArray(filterCollege)
+                      ? filterCollege.includes(c)
+                      : false
+                  }
                   onChange={() =>
                     setFilterCollege((prev) =>
-                      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
+                      prev.includes(c)
+                        ? prev.filter((x) => x !== c)
+                        : [...prev, c],
                     )
                   }
                   className="form-checkbox"

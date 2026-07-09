@@ -12,6 +12,8 @@ export default function Page() {
 
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
+  const [filterSchoolYear, setFilterSchoolYear] = useState("");
+  const [filterSemester, setFilterSemester] = useState("");
   const [filterPersonType, setFilterPersonType] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterEmployment, setFilterEmployment] = useState("");
@@ -87,6 +89,36 @@ export default function Page() {
     [rawData],
   );
 
+  const schoolYearOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
+            : d?.school_year
+              ? [d.school_year]
+              : [],
+        ),
+      ),
+    ],
+    [rawData],
+  );
+
+  const semesterOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.semester).filter(Boolean)
+            : d?.semester
+              ? [d.semester]
+              : [],
+        ),
+      ),
+    ],
+    [rawData],
+  );
+
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {
       const p = d?.personal_info_id || {};
@@ -97,11 +129,22 @@ export default function Page() {
       const collegeOrOffice = acad.college || emp.office || "";
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
+      const terms = Array.isArray(d?.profile_terms) ? d.profile_terms : [];
+      const schoolYearMatches =
+        !filterSchoolYear ||
+        terms.some((term) => term?.school_year === filterSchoolYear) ||
+        d?.school_year === filterSchoolYear;
+      const semesterMatches =
+        !filterSemester ||
+        terms.some((term) => term?.semester === filterSemester) ||
+        d?.semester === filterSemester;
 
       return (
         (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
         (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        schoolYearMatches &&
+        semesterMatches &&
         (filterCollege.length === 0 ||
           filterCollege.includes(collegeOrOffice)) &&
         (!filterEmployment || empStatus === filterEmployment) &&
@@ -114,6 +157,8 @@ export default function Page() {
     filterSex,
     filterPersonType,
     filterYearLevel,
+    filterSchoolYear,
+    filterSemester,
     filterCollege,
     filterEmployment,
     filterAppointment,
@@ -126,18 +171,24 @@ export default function Page() {
           filterSex={filterSex}
           filterPersonType={filterPersonType}
           filterYearLevel={filterYearLevel}
+          filterSchoolYear={filterSchoolYear}
+          filterSemester={filterSemester}
           filterCollege={filterCollege}
           filterEmployment={filterEmployment}
           filterAppointment={filterAppointment}
           setFilterSex={setFilterSex}
           setFilterPersonType={setFilterPersonType}
           setFilterYearLevel={setFilterYearLevel}
+          setFilterSchoolYear={setFilterSchoolYear}
+          setFilterSemester={setFilterSemester}
           setFilterCollege={setFilterCollege}
           setFilterEmployment={setFilterEmployment}
           setFilterAppointment={setFilterAppointment}
           sexOption={sexOption}
           personTypeOptions={["Student", "Employee"]}
           yearLevelOptions={yearLevelOptions}
+          schoolYearOptions={schoolYearOptions}
+          semesterOptions={semesterOptions}
           collegeOptions={collegeOptions}
           employmentOptions={employmentOptions}
           appointmentOptions={appointmentOptions}

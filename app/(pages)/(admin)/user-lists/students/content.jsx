@@ -19,6 +19,8 @@ export default function StudentsUserListContent() {
   const { data: rawData, loading } = useFetchData();
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
+  const [filterSchoolYear, setFilterSchoolYear] = useState("");
+  const [filterSemester, setFilterSemester] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [selected, setSelected] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -81,27 +83,71 @@ export default function StudentsUserListContent() {
     [studentsData],
   );
 
-  const filteredData = useMemo(() => {
-let data = studentsData.filter((user) => {
-  const p = user.personal_info_id || {};
-  const gad = p.gadData || {};
-  const acad = p.affiliation?.academic_information || {};
-  const personal = p.personal || {};
-
-  const fullName = `${personal.first_name || ""} ${personal.last_name || ""}`
-    .trim()
-    .toLowerCase();
-
-  const matchesSearch =
-    !searchName || fullName.includes(searchName.toLowerCase());
-
-  return (
-    matchesSearch &&
-    (!filterSex || gad.sexAtBirth === filterSex) &&
-    (!filterYearLevel || acad.year_level === filterYearLevel) &&
-    (filterCollege.length === 0 || filterCollege.includes(acad.college))
+  const schoolYearOptions = useMemo(
+    () => [
+      ...new Set(
+        studentsData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
+            : d?.school_year
+              ? [d.school_year]
+              : [],
+        ),
+      ),
+    ],
+    [studentsData],
   );
-});
+
+  const semesterOptions = useMemo(
+    () => [
+      ...new Set(
+        studentsData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.semester).filter(Boolean)
+            : d?.semester
+              ? [d.semester]
+              : [],
+        ),
+      ),
+    ],
+    [studentsData],
+  );
+
+  const filteredData = useMemo(() => {
+    let data = studentsData.filter((user) => {
+      const p = user.personal_info_id || {};
+      const gad = p.gadData || {};
+      const acad = p.affiliation?.academic_information || {};
+      const personal = p.personal || {};
+      const terms = Array.isArray(user?.profile_terms)
+        ? user.profile_terms
+        : [];
+
+      const fullName =
+        `${personal.first_name || ""} ${personal.last_name || ""}`
+          .trim()
+          .toLowerCase();
+
+      const matchesSearch =
+        !searchName || fullName.includes(searchName.toLowerCase());
+      const schoolYearMatches =
+        !filterSchoolYear ||
+        terms.some((term) => term?.school_year === filterSchoolYear) ||
+        user?.school_year === filterSchoolYear;
+      const semesterMatches =
+        !filterSemester ||
+        terms.some((term) => term?.semester === filterSemester) ||
+        user?.semester === filterSemester;
+
+      return (
+        matchesSearch &&
+        (!filterSex || gad.sexAtBirth === filterSex) &&
+        (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        schoolYearMatches &&
+        semesterMatches &&
+        (filterCollege.length === 0 || filterCollege.includes(acad.college))
+      );
+    });
     if (nameSort) {
       data = [...data].sort((a, b) => {
         const pa = a.personal_info_id?.personal || {};
@@ -193,13 +239,15 @@ let data = studentsData.filter((user) => {
     studentsData,
     filterSex,
     filterYearLevel,
+    filterSchoolYear,
+    filterSemester,
     filterCollege,
     nameSort,
     sexSort,
     campusSort,
     courseSort,
     yearSort,
-    searchName
+    searchName,
   ]);
 
   const totalRows = filteredData.length;
@@ -281,12 +329,18 @@ let data = studentsData.filter((user) => {
           <StudentFilterTable
             filterSex={filterSex}
             filterYearLevel={filterYearLevel}
+            filterSchoolYear={filterSchoolYear}
+            filterSemester={filterSemester}
             filterCollege={filterCollege}
             setFilterSex={setFilterSex}
             setFilterYearLevel={setFilterYearLevel}
+            setFilterSchoolYear={setFilterSchoolYear}
+            setFilterSemester={setFilterSemester}
             setFilterCollege={setFilterCollege}
             sexOption={sexOption}
             yearLevelOptions={yearLevelOptions}
+            schoolYearOptions={schoolYearOptions}
+            semesterOptions={semesterOptions}
             collegeOptions={collegeOptions}
           />
         </div>
@@ -302,24 +356,23 @@ let data = studentsData.filter((user) => {
           <span className="ml-2">Select All</span>
         </div>
         <div className="flex felex-row gap-4">
-                 <div>
-  <input
-    type="text"
-    placeholder="Search by name..."
-    value={searchName}
-    onChange={(e) => setSearchName(e.target.value)}
-    className="border px-3 py-2 rounded w-full max-w-sm"
-  />
-</div>
-        {selected.length > 0 && (
-          <button
-            className="bg-red-500 px-4 py-1 text-white rounded-md"
-            onClick={handleBulkDelete}
-          >
-            Delete
-          </button>
-        )}
-
+          <div>
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="border px-3 py-2 rounded w-full max-w-sm"
+            />
+          </div>
+          {selected.length > 0 && (
+            <button
+              className="bg-red-500 px-4 py-1 text-white rounded-md"
+              onClick={handleBulkDelete}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
       <div className="overflow-x-auto">

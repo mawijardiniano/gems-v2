@@ -3,8 +3,8 @@ import addressSchema from "./address.js";
 
 const contactSchema = new Schema(
   {
-    email: { type: String, required: true, lowercase: true },
-    mobileNumber: { type: String, required: true },
+    email: { type: String, lowercase: true },
+    mobileNumber: { type: String},
     permanentAddress: { type: addressSchema },
     currentAddress: { type: addressSchema },
   },

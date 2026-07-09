@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Profile from "@/models/profile";
+import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 
@@ -35,9 +36,52 @@ export async function GET() {
     await connectDB();
 
     const users = await UserAuth.find({}).populate("personal_info_id").lean();
-    const filteredUsers = users.filter(
-      (u) => u.username !== "Admin" && u.username !== "Focal",
+    const profileIds = users
+      .map((user) => user.personal_info_id?._id)
+      .filter(Boolean);
+
+    const allTerms = profileIds.length
+      ? await ProfileTerm.aggregate([
+          { $match: { profile_id: { $in: profileIds } } },
+          { $sort: { updatedAt: -1 } },
+          {
+            $group: {
+              _id: "$profile_id",
+              profile_terms: {
+                $push: {
+                  profile_term_id: "$_id",
+                  school_year: "$school_year",
+                  semester: "$semester",
+                  updatedAt: "$updatedAt",
+                  createdAt: "$createdAt",
+                },
+              },
+              latest_school_year: { $first: "$school_year" },
+              latest_semester: { $first: "$semester" },
+              latest_profile_term_id: { $first: "$_id" },
+            },
+          },
+        ])
+      : [];
+
+    const termByProfileId = new Map(
+      allTerms.map((term) => [String(term._id), term]),
     );
+
+    const filteredUsers = users
+      .map((user) => {
+        const profileId = user.personal_info_id?._id;
+        const term = profileId ? termByProfileId.get(String(profileId)) : null;
+
+        return {
+          ...user,
+          school_year: term?.latest_school_year || null,
+          semester: term?.latest_semester || null,
+          profile_term_id: term?.latest_profile_term_id || null,
+          profile_terms: term?.profile_terms || [],
+        };
+      })
+      .filter((u) => u.username !== "Admin" && u.username !== "Focal");
 
     const usersNoPassword = filteredUsers.map((u) => {
       const { password, ...rest } = u;

@@ -5,16 +5,22 @@ import { HiChevronDown } from "react-icons/hi";
 export default function EmployeeFilterTable({
   filterSex,
   filterPersonType,
+  filterSchoolYear,
+  filterSemester,
   filterCollege,
   filterEmployment,
   filterAppointment,
   setFilterSex,
   setFilterPersonType,
+  setFilterSchoolYear,
+  setFilterSemester,
   setFilterCollege,
   setFilterEmployment,
   setFilterAppointment,
   sexOption = [],
   personTypeOptions = [],
+  schoolYearOptions = [],
+  semesterOptions = [],
   collegeOptions = [],
   employmentOptions = [],
   appointmentOptions = [],
@@ -49,7 +55,7 @@ export default function EmployeeFilterTable({
           </option>
         ))}
       </select>
-      <select
+      {/* <select
         className="border p-2 rounded bg-white"
         value={filterPersonType}
         onChange={(e) => setFilterPersonType(e.target.value)}
@@ -60,7 +66,38 @@ export default function EmployeeFilterTable({
             {c}
           </option>
         ))}
+      </select> */}
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSchoolYear}
+        onChange={(e) => setFilterSchoolYear(e.target.value)}
+      >
+        <option value="" disabled>
+          School Year
+        </option>
+        {schoolYearOptions.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
       </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSemester}
+        onChange={(e) => setFilterSemester(e.target.value)}
+      >
+        <option value="" disabled>
+          Semester
+        </option>
+        {semesterOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+
       <div className="relative" ref={collegeRef}>
         <button
           type="button"

@@ -652,6 +652,48 @@ export default function IntegrationStagingContent() {
                         </div>
                       )}
 
+                    {selectedRecord.migration_result &&
+                      (selectedRecord.migration_result.action ||
+                        selectedRecord.migration_result.message) && (
+                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                          <div className="font-semibold text-amber-700 mb-1">
+                            Migration Result:
+                          </div>
+                          <div className="space-y-1 text-amber-700">
+                            {selectedRecord.migration_result.action && (
+                              <div>
+                                • Action:{" "}
+                                {selectedRecord.migration_result.action}
+                              </div>
+                            )}
+                            {selectedRecord.migration_result.message && (
+                              <div>
+                                • Reason:{" "}
+                                {selectedRecord.migration_result.message}
+                              </div>
+                            )}
+                            {selectedRecord.migration_result.profile_id && (
+                              <div>
+                                • Profile ID:{" "}
+                                {String(
+                                  selectedRecord.migration_result.profile_id,
+                                )}
+                              </div>
+                            )}
+                            {selectedRecord.migration_result
+                              .profile_term_id && (
+                              <div>
+                                • Profile Term ID:{" "}
+                                {String(
+                                  selectedRecord.migration_result
+                                    .profile_term_id,
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                     {selectedRecord.raw_payload && (
                       <div>
                         <div className="font-semibold text-gray-900 mb-1">
@@ -699,6 +741,14 @@ export default function IntegrationStagingContent() {
                         <div className="text-xs text-gray-600">
                           {log.message}
                         </div>
+                        {log.details &&
+                          Object.keys(log.details || {}).length > 0 && (
+                            <div className="mt-1 rounded bg-gray-50 border border-gray-200 p-1.5">
+                              <pre className="text-[10px] text-gray-600 whitespace-pre-wrap">
+                                {JSON.stringify(log.details, null, 2)}
+                              </pre>
+                            </div>
+                          )}
                         <div className="text-[11px] text-gray-500">
                           {new Date(
                             log.executed_at || log.createdAt,

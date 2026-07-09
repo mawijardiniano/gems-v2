@@ -143,13 +143,54 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
       });
     }
 
+    const safeProjects = Array.isArray(projects) ? projects : [];
+
+    const getProjectTypeLabel = (project) => {
+      const rawType = project?.project_type;
+      const value =
+        rawType && typeof rawType === "object" ? rawType.value : rawType;
+
+      if (value === "Client Focused") return "Client Focused";
+      if (value === "Organization Focused") return "Organization Focused";
+      return "Uncategorized";
+    };
+
+    const projectTypeOrder = {
+      "Client Focused": 0,
+      "Organization Focused": 1,
+      Uncategorized: 2,
+    };
+
+    const orderedProjects = [...safeProjects]
+      .map((project, originalIndex) => ({ project, originalIndex }))
+      .sort((a, b) => {
+        const aType = getProjectTypeLabel(a.project);
+        const bType = getProjectTypeLabel(b.project);
+        const byType = projectTypeOrder[aType] - projectTypeOrder[bType];
+
+        if (byType !== 0) return byType;
+        return a.originalIndex - b.originalIndex;
+      })
+      .map((entry) => entry.project);
+
     const html = `
       <html><head><title>Projects List</title>
       <style>
-        body { font-family: Arial, sans-serif; }
+        body {
+          font-family: Arial, sans-serif;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { border: 1px solid #333; padding: 8px; text-align: left; }
         th { background: #f2f2f2; }
+        .type-header td {
+          font-weight: bold;
+          background-color: #fdba74 !important;
+          color: #000000 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         .gad-report-header { text-align: center; }
         .gad-report-header h4, .agency h4 { margin: 0; }
         .blank-space-1 {height: 30px; border-right: none}
@@ -177,8 +218,16 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
           <th>GAD Budget</th><th>Source of Budget</th><th>Responsible Unit/Office</th>
         </tr></thead>
         <tbody>
-          ${projects
+          ${orderedProjects
             .map((project, idx) => {
+              const projectTypeLabel = getProjectTypeLabel(project);
+              const prevProject = orderedProjects[idx - 1];
+              const prevTypeLabel = prevProject
+                ? getProjectTypeLabel(prevProject)
+                : null;
+              const shouldShowTypeHeader =
+                idx === 0 || prevTypeLabel !== projectTypeLabel;
+
               const causeArr = Array.isArray(project.cause_gender_issue)
                 ? project.cause_gender_issue
                 : [project.cause_gender_issue || ""];
@@ -209,7 +258,11 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
                   { minimumFractionDigits: 2 },
                 );
               }
-              return Array.from({ length: maxRows })
+              const sectionHeader = shouldShowTypeHeader
+                ? `<tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>`
+                : "";
+
+              const projectRows = Array.from({ length: maxRows })
                 .map(
                   (_, rowIdx) => `
               <tr>
@@ -260,6 +313,8 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
   </tr>`,
                 )
                 .join("");
+
+              return `${sectionHeader}${projectRows}`;
             })
             .join("")}
         </tbody>
