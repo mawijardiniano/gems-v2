@@ -11,13 +11,12 @@ import {
 export default function GenderPanel({ data, college }) {
   const students = data.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
-    console.log("acad", acad);
-    return acad?.college === college;
+    return !college || acad?.college === college;
   });
 
   const employees = data.filter((d) => {
     const emp = d?.personal_info_id?.affiliation?.employment_information;
-    return emp?.office === college;
+    return !college || emp?.office === college;
   });
 
   const femaleCount = employees.filter(

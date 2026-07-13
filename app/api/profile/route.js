@@ -3,6 +3,9 @@ import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function generateUsername(personal) {
   if (personal?.first_name) return personal.first_name;
@@ -31,12 +34,36 @@ function capitalizeObjectStrings(obj) {
   return newObj;
 }
 
-export async function GET() {
+export async function GET(req) {
   try {
     await connectDB();
 
     const users = await UserAuth.find({}).populate("personal_info_id").lean();
-    const profileIds = users
+
+    const token = req.cookies.get("auth_token")?.value;
+    let decoded = null;
+    if (token) {
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch {
+        decoded = null;
+      }
+    }
+
+    let scopedUsers = users;
+    if (decoded?.assignedCollege) {
+      scopedUsers = users.filter((u) => {
+        const aff = u.personal_info_id?.affiliation || {};
+        const acad = aff.academic_information || {};
+        const emp = aff.employment_information || {};
+        return (
+          acad?.college === decoded.assignedCollege ||
+          emp?.office === decoded.assignedCollege
+        );
+      });
+    }
+
+    const profileIds = scopedUsers
       .map((user) => user.personal_info_id?._id)
       .filter(Boolean);
 
@@ -68,7 +95,7 @@ export async function GET() {
       allTerms.map((term) => [String(term._id), term]),
     );
 
-    const filteredUsers = users
+    const filteredUsers = scopedUsers
       .map((user) => {
         const profileId = user.personal_info_id?._id;
         const term = profileId ? termByProfileId.get(String(profileId)) : null;

@@ -1,11 +1,12 @@
-
+"use client";
+import { useSelector } from "react-redux";
 import StudentsUserListContent from "./content";
-import React from 'react'
 
 export default function StudentsUserListPage() {
+  const college = useSelector((state) => state.auth.college);
   return (
     <div>
-      <StudentsUserListContent college="College of Information & Computing Sciences" />
+      <StudentsUserListContent college={college} />
     </div>
-  )
+  );
 }

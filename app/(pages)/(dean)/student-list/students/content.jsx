@@ -20,6 +20,8 @@ export default function StudentsUserListContent({ college }) {
   const { data: rawData, loading } = useFetchData();
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
+  const [filterSchoolYear, setFilterSchoolYear] = useState("");
+  const [filterSemester, setFilterSemester] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterCourse, setFilterCourse] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -49,8 +51,7 @@ export default function StudentsUserListContent({ college }) {
 
   const students = studentsData.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
-    console.log("acad", acad);
-    return acad?.college === college;
+    return !college || acad?.college === college;
   });
 
   const sexOption = useMemo(
@@ -103,6 +104,36 @@ export default function StudentsUserListContent({ college }) {
     [students],
   );
 
+  const schoolYearOptions = useMemo(
+    () => [
+      ...new Set(
+        students.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
+            : d?.school_year
+              ? [d.school_year]
+              : [],
+        ),
+      ),
+    ],
+    [students],
+  );
+
+  const semesterOptions = useMemo(
+    () => [
+      ...new Set(
+        students.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((term) => term?.semester).filter(Boolean)
+            : d?.semester
+              ? [d.semester]
+              : [],
+        ),
+      ),
+    ],
+    [students],
+  );
+
   const filteredData = useMemo(() => {
     let data = students.filter((user) => {
       const p = user.personal_info_id || {};
@@ -118,11 +149,24 @@ export default function StudentsUserListContent({ college }) {
 
       const matchesSearch =
         !searchName || fullName.includes(searchName.toLowerCase());
+      const terms = Array.isArray(user?.profile_terms)
+        ? user.profile_terms
+        : [];
+      const schoolYearMatches =
+        !filterSchoolYear ||
+        terms.some((term) => term?.school_year === filterSchoolYear) ||
+        user?.school_year === filterSchoolYear;
+      const semesterMatches =
+        !filterSemester ||
+        terms.some((term) => term?.semester === filterSemester) ||
+        user?.semester === filterSemester;
 
       return (
         matchesSearch &&
         (!filterSex || gad.sexAtBirth === filterSex) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
+        schoolYearMatches &&
+        semesterMatches &&
         (filterCourse.length === 0 || filterCourse.includes(acad.course))
       );
     });
@@ -218,6 +262,8 @@ export default function StudentsUserListContent({ college }) {
     students,
     filterSex,
     filterYearLevel,
+    filterSchoolYear,
+    filterSemester,
     filterCollege,
     filterCourse,
     nameSort,
@@ -307,13 +353,19 @@ export default function StudentsUserListContent({ college }) {
           <StudentFilterTable
             filterSex={filterSex}
             filterYearLevel={filterYearLevel}
+            filterSchoolYear={filterSchoolYear}
+            filterSemester={filterSemester}
             filterCollege={filterCollege}
             filterCourse={filterCourse}
             setFilterSex={setFilterSex}
             setFilterYearLevel={setFilterYearLevel}
+            setFilterSchoolYear={setFilterSchoolYear}
+            setFilterSemester={setFilterSemester}
             setFilterCourse={setFilterCourse}
             sexOption={sexOption}
             yearLevelOptions={yearLevelOptions}
+            schoolYearOptions={schoolYearOptions}
+            semesterOptions={semesterOptions}
             collegeOptions={collegeOptions}
             courseOptions={courseOptions}
           />

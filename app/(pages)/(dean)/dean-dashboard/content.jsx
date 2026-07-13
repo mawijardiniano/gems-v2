@@ -5,9 +5,12 @@ import GenderPanel from "../components/genderPanel";
 import Demographics from "../components/demographics";
 import useFetchData from "@/hooks/useSample";
 import { useState, useMemo } from "react";
+import { useSelector } from "react-redux";
 
 export default function DeanDashboardContent() {
   const { data: rawData, loading } = useFetchData();
+  const college = useSelector((state) => state.auth.college);
+  console.log("College", college)
 
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
@@ -15,6 +18,8 @@ export default function DeanDashboardContent() {
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterEmployment, setFilterEmployment] = useState("");
   const [filterAppointment, setFilterAppointment] = useState([]);
+  const [filterSchoolYear, setFilterSchoolYear] = useState("");
+  const [filterSemester, setFilterSemester] = useState("");
 
   const sexOption = useMemo(
     () => [
@@ -86,6 +91,36 @@ export default function DeanDashboardContent() {
     [rawData],
   );
 
+  const schoolYearOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((t) => t?.school_year).filter(Boolean)
+            : d?.school_year
+              ? [d.school_year]
+              : [],
+        ),
+      ),
+    ],
+    [rawData],
+  );
+
+  const semesterOptions = useMemo(
+    () => [
+      ...new Set(
+        rawData.flatMap((d) =>
+          Array.isArray(d?.profile_terms)
+            ? d.profile_terms.map((t) => t?.semester).filter(Boolean)
+            : d?.semester
+              ? [d.semester]
+              : [],
+        ),
+      ),
+    ],
+    [rawData],
+  );
+
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {
       const p = d?.personal_info_id || {};
@@ -97,6 +132,16 @@ export default function DeanDashboardContent() {
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
 
+      const terms = Array.isArray(d?.profile_terms) ? d.profile_terms : [];
+      const schoolYearMatches =
+        !filterSchoolYear ||
+        terms.some((t) => t?.school_year === filterSchoolYear) ||
+        d?.school_year === filterSchoolYear;
+      const semesterMatches =
+        !filterSemester ||
+        terms.some((t) => t?.semester === filterSemester) ||
+        d?.semester === filterSemester;
+
       return (
         (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
         (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
@@ -105,7 +150,9 @@ export default function DeanDashboardContent() {
           filterCollege.includes(collegeOrOffice)) &&
         (!filterEmployment || empStatus === filterEmployment) &&
         (filterAppointment.length === 0 ||
-          filterAppointment.includes(empAppointment))
+          filterAppointment.includes(empAppointment)) &&
+        schoolYearMatches &&
+        semesterMatches
       );
     });
   }, [
@@ -116,21 +163,54 @@ export default function DeanDashboardContent() {
     filterCollege,
     filterEmployment,
     filterAppointment,
+    filterSchoolYear,
+    filterSemester,
   ]);
   return (
     <div>
+      <div className="flex flex-wrap gap-4 mb-4 justify-end">
+        <select
+          className="border p-2 rounded bg-white"
+          value={filterSchoolYear}
+          onChange={(e) => setFilterSchoolYear(e.target.value)}
+        >
+          <option value="" disabled>
+            School Year
+          </option>
+          {schoolYearOptions.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="border p-2 rounded bg-white"
+          value={filterSemester}
+          onChange={(e) => setFilterSemester(e.target.value)}
+        >
+          <option value="" disabled>
+            Semester
+          </option>
+          {semesterOptions.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex flex-col gap-4">
         <Snapshot
           data={filteredData}
-          college="College of Information & Computing Sciences"
+          college={college}
         />
         <GenderPanel
           data={filteredData}
-          college="College of Information & Computing Sciences"
+          college={college}
         />
         <Demographics
           data={filteredData}
-          college="College of Information & Computing Sciences"
+          college={college}
         />
       </div>
     </div>

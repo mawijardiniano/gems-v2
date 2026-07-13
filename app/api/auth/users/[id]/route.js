@@ -2,6 +2,7 @@ import User from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { SCOPED_ROLES } from "@/lib/colleges";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -74,12 +75,23 @@ export async function PUT(req, { params }) {
       );
     }
 
+    if (SCOPED_ROLES.includes(body.role) && !body.assignedCollege) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `assignedCollege is required for role ${body.role}`,
+        },
+        { status: 400 },
+      );
+    }
+
     await connectDB();
-    const updated = await User.findByIdAndUpdate(
-      id,
-      { role: body.role },
-      { new: true },
-    ).lean();
+    const update = { role: body.role };
+    if (body.assignedCollege !== undefined)
+      update.assignedCollege = body.assignedCollege;
+    const updated = await User.findByIdAndUpdate(id, update, {
+      new: true,
+    }).lean();
 
     if (!updated) {
       return NextResponse.json(

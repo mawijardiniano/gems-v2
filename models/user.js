@@ -58,6 +58,19 @@ const userAuthSchema = new Schema(
       ],
       default: "User",
     },
+    assignedCollege: {
+      type: String,
+      default: null,
+      validate: {
+        validator: function (v) {
+          if (this.role === "Dean" || this.role === "GAD Coordinator")
+            return !!v;
+          return true;
+        },
+        message:
+          "assignedCollege is required for users with role Dean or GAD Coordinator",
+      },
+    },
     is_active: {
       type: Boolean,
       default: true,

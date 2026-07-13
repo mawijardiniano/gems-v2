@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { COLLEGES, SCOPED_ROLES } from "@/lib/colleges";
 
 const ROLES = [
   "User",
@@ -18,6 +19,7 @@ export default function ManageRoleContent() {
     setSearch("");
     setSelectedUser(user);
     setSelectedRole(user.role);
+    setAssignedCollege(user.assignedCollege || "");
     setSuccess("");
     setError("");
   };
@@ -27,6 +29,7 @@ export default function ManageRoleContent() {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(ROLES[0]);
+  const [assignedCollege, setAssignedCollege] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -64,6 +67,7 @@ export default function ManageRoleContent() {
     setSearch("");
     setSelectedUser(null);
     setSelectedRole(ROLES[0]);
+    setAssignedCollege("");
     setSuccess("");
     setError("");
   };
@@ -79,7 +83,12 @@ export default function ManageRoleContent() {
       const res = await fetch(`/api/auth/users/${selectedUser._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: selectedRole }),
+        body: JSON.stringify({
+          role: selectedRole,
+          assignedCollege: SCOPED_ROLES.includes(selectedRole)
+            ? assignedCollege
+            : undefined,
+        }),
         credentials: "include",
       });
       const data = await res.json();
@@ -87,7 +96,15 @@ export default function ManageRoleContent() {
         setSuccess("Role assigned successfully!");
         setUsers((prev) =>
           prev.map((u) =>
-            u._id === selectedUser._id ? { ...u, role: selectedRole } : u,
+            u._id === selectedUser._id
+              ? {
+                  ...u,
+                  role: selectedRole,
+                  assignedCollege: SCOPED_ROLES.includes(selectedRole)
+                    ? assignedCollege
+                    : u.assignedCollege,
+                }
+              : u,
           ),
         );
         setShowModal(false);
@@ -171,10 +188,29 @@ export default function ManageRoleContent() {
                 </option>
               ))}
             </select>
+
+            {SCOPED_ROLES.includes(selectedRole) && (
+              <>
+                <label className="block mb-1">Assigned College: *</label>
+                <select
+                  className="border px-2 py-1 w-full mb-2"
+                  value={assignedCollege}
+                  onChange={(e) => setAssignedCollege(e.target.value)}
+                >
+                  <option value="">Select College</option>
+                  {COLLEGES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+
             <button
               className="bg-green-600 text-white px-4 py-2 rounded w-full"
               onClick={handleAssign}
-              disabled={!selectedUser || loading}
+              disabled={!selectedUser || loading || (SCOPED_ROLES.includes(selectedRole) && !assignedCollege)}
             >
               {loading ? "Assigning..." : "Assign Role"}
             </button>
@@ -212,7 +248,10 @@ export default function ManageRoleContent() {
                 user.personal_info_id?.personal?.last_name ||
                 user.personal_info_id?.last_name ||
                 "";
-              const college = user.personal_info_id?.affiliation?.office;
+              const college =
+                user.assignedCollege ||
+                user.personal_info_id?.affiliation?.office ||
+                "—";
               return (
                 <tr className="border" key={user._id}>
                   <td className="border px-4 py-2">

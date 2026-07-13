@@ -20,13 +20,12 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
 
   const studentPerCollege = data.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
-    console.log("acad", acad);
-    return acad?.college === college;
+    return !college || acad?.college === college;
   });
 
   const employeesPerOffice = data.filter((d) => {
     const emp = d?.personal_info_id?.affiliation?.employment_information;
-    return emp?.office === college;
+    return !college || emp?.office === college;
   });
 
   const safeGet = (fn, fallback = null) => {
@@ -181,8 +180,9 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
 
   const cicsStudents = students.filter(
     (d) =>
+      !college ||
       d?.personal_info_id?.affiliation?.academic_information?.college ===
-      college,
+        college,
   );
 
   const studentProgramData = countByAccessors(

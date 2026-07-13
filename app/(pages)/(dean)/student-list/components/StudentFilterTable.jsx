@@ -5,14 +5,20 @@ import { HiChevronDown } from "react-icons/hi";
 export default function StudentFilterTable({
   filterSex,
   filterYearLevel,
+  filterSchoolYear,
+  filterSemester,
   filterCollege,
   filterCourse,
   setFilterSex,
   setFilterYearLevel,
+  setFilterSchoolYear,
+  setFilterSemester,
   setFilterCollege,
   setFilterCourse,
   sexOption = [],
   yearLevelOptions = [],
+  schoolYearOptions = [],
+  semesterOptions = [],
   collegeOptions = [],
   courseOptions= [],
 }) {
@@ -54,6 +60,37 @@ export default function StudentFilterTable({
           </option>
         ))}
       </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSchoolYear}
+        onChange={(e) => setFilterSchoolYear(e.target.value)}
+      >
+        <option value="" disabled>
+          School Year
+        </option>
+        {schoolYearOptions.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="border p-2 rounded bg-white"
+        value={filterSemester}
+        onChange={(e) => setFilterSemester(e.target.value)}
+      >
+        <option value="" disabled>
+          Semester
+        </option>
+        {semesterOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+
       <div className="relative" ref={collegeRef}>
         <button
           type="button"

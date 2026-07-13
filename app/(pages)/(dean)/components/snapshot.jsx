@@ -11,12 +11,12 @@ export default function Snapshot({ data, college }) {
 
   const students = data.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
-    return acad?.college === college;
+    return !college || acad?.college === college;
   });
 
   const employees = data.filter((d) => {
     const emp = d?.personal_info_id?.affiliation?.employment_information;
-    return emp?.office === college;
+    return !college || emp?.office === college;
   });
 
   const studentsByYear = students.reduce((acc, d) => {
@@ -63,7 +63,7 @@ export default function Snapshot({ data, college }) {
           <FaUsers className="text-blue-500 text-2xl" />
           <div>
             <p className="text-sm text-gray-500">
-              Total No. of Student in CICS
+              Total No. of Student in {college || "CICS"}
             </p>
             <p className="text-xl font-semibold text-black">
               {studentTotal}

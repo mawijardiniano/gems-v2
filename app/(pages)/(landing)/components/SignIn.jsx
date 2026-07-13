@@ -42,6 +42,7 @@ export default function LoginForm() {
         loginSuccess({
           userId: user._id,
           role,
+          college: user.assignedCollege,
           hasProfile: false,
         }),
       );
@@ -85,6 +86,7 @@ export default function LoginForm() {
         loginSuccess({
           userId: user._id,
           role,
+          college: user.assignedCollege,
           hasProfile,
         }),
       );
@@ -254,12 +256,12 @@ export default function LoginForm() {
                 >
                   GAD Coordinator
                 </button>
-                 {/* <button
+                  <button
                   className="shadow px-4 py-1 rounded-md bg-white"
                   onClick={handleDean}
                 >
                   Dean
-                </button> */}
+                </button> 
               </div>
             </div>
 
