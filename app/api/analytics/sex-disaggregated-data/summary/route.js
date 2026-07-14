@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
+import ProfileTerm from "@/models/profileTerm";
 
 export async function GET(req) {
   try {
@@ -9,6 +10,22 @@ export async function GET(req) {
 
     const url = new URL(req.url);
     const collegeFilter = url.searchParams.get("college")?.trim();
+    const schoolYear = url.searchParams.get("school_year")?.trim();
+    const semester = url.searchParams.get("semester")?.trim();
+
+    // Apply term filtering when school year and/or semester is provided.
+    let termProfileIds = null;
+    if (schoolYear || semester) {
+      const termFilter = {};
+      if (schoolYear) termFilter.school_year = schoolYear;
+      if (semester) termFilter.semester = semester;
+
+      const matchingTerms = await ProfileTerm.find(termFilter, {
+        profile_id: 1,
+      }).lean();
+
+      termProfileIds = new Set(matchingTerms.map((t) => String(t.profile_id)));
+    }
 
     const users = await UserAuth.find({})
       .populate({
@@ -37,16 +54,25 @@ export async function GET(req) {
       );
     };
 
-    const filteredUsers = users.filter((user) =>
-      matchesCollege(user.personal_info_id || {}),
-    );
+    const matchesTerm = (profile) => {
+      // If no term filter, include all
+      if (!termProfileIds) return true;
+      // Only include profiles that have a matching ProfileTerm
+      return profile && termProfileIds.has(String(profile._id));
+    };
+
+    const filteredUsers = users.filter((user) => {
+      const profile = user.personal_info_id || {};
+      return matchesCollege(profile) && matchesTerm(profile);
+    });
 
     if (!filteredUsers.length) {
       return NextResponse.json(
         {
-          message: collegeFilter
-            ? `No users found for college/office: ${collegeFilter}`
-            : "No users found for summary",
+          message:
+            collegeFilter || schoolYear || semester
+              ? "No users found for selected filters"
+              : "No users found for summary",
         },
         { status: 404 },
       );

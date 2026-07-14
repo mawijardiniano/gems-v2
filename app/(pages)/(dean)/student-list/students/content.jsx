@@ -15,6 +15,15 @@ import {
 import useFetchData from "@/hooks/useSample";
 import StudentFilterTable from "../components/StudentFilterTable";
 import { useSelector } from "react-redux";
+import {
+  FaEye,
+  FaTimes,
+  FaUser,
+  FaIdCard,
+  FaVenusMars,
+  FaGraduationCap,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 
 export default function StudentsUserListContent({ college }) {
   const { data: rawData, loading } = useFetchData();
@@ -38,6 +47,8 @@ export default function StudentsUserListContent({ college }) {
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchName, setSearchName] = useState("");
+  const [viewModalUser, setViewModalUser] = useState(null);
+  const [viewTab, setViewTab] = useState("personal");
   const role = useSelector((state) => state.auth.role);
 
   const studentsData = useMemo(
@@ -64,7 +75,7 @@ export default function StudentsUserListContent({ college }) {
     ],
     [students],
   );
-    const courseOptions = useMemo(
+  const courseOptions = useMemo(
     () => [
       ...new Set(
         students
@@ -346,6 +357,275 @@ export default function StudentsUserListContent({ college }) {
     }
   };
 
+  const handleEdit = (id) => {
+    // Edit handler placeholder
+  };
+
+  const renderViewModal = () => {
+    if (!viewModalUser) return null;
+    const p = viewModalUser.personal_info_id || {};
+    const personal = p.personal || {};
+    const gad = p.gadData || {};
+    const contact = p.contact || {};
+    const acad = p.affiliation?.academic_information || {};
+    const currentAddr = p.contact?.currentAddress || {};
+    const permanentAddr = p.contact?.permanentAddress || {};
+
+    const tabs = [
+      { id: "personal", label: "Personal Info", icon: FaUser },
+      { id: "academic", label: "Academic Info", icon: FaGraduationCap },
+      { id: "gad", label: "GAD Data", icon: FaVenusMars },
+      { id: "contact", label: "Contact Info", icon: FaMapMarkerAlt },
+    ];
+
+    const renderPersonalTab = () => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {[
+          { label: "First Name", value: personal.first_name },
+          { label: "Middle Name", value: personal.middle_name },
+          { label: "Last Name", value: personal.last_name },
+          { label: "Civil Status", value: personal.civil_status },
+          { label: "Religion", value: personal.religion },
+          { label: "Nationality", value: personal.nationality },
+          { label: "Current Status", value: personal.currentStatus },
+          {
+            label: "Birthday",
+            value: personal.birthday
+              ? new Date(personal.birthday).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+              : null,
+          },
+          { label: "Blood Type", value: personal.bloodType },
+        ].map((field) => (
+          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+              {field.label}
+            </label>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {field.value || "—"}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+
+    const renderContactTab = () => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="bg-gray-50 rounded-lg p-3">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Email
+            </label>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {contact.email || "—"}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Mobile Number
+            </label>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {contact.mobileNumber || "—"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            Permanent Address
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              { label: "Region", value: permanentAddr.region?.name },
+              { label: "Province", value: permanentAddr.province?.name },
+              { label: "City/Municipality", value: permanentAddr.city?.name },
+              { label: "Barangay", value: permanentAddr.barangay?.name },
+            ].map((field) => (
+              <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {field.label}
+                </label>
+                <p className="mt-1 text-sm font-medium text-gray-900">
+                  {field.value || "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            Current Address
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              { label: "Region", value: currentAddr.region?.name },
+              { label: "Province", value: currentAddr.province?.name },
+              { label: "City/Municipality", value: currentAddr.city?.name },
+              { label: "Barangay", value: currentAddr.barangay?.name },
+            ].map((field) => (
+              <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {field.label}
+                </label>
+                <p className="mt-1 text-sm font-medium text-gray-900">
+                  {field.value || "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderGadTab = () => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {[
+          { label: "Sex at Birth", value: gad.sexAtBirth },
+          { label: "Gender Preference", value: gad.gender_preference },
+          { label: "Socio-economic Status", value: gad.socioEconomicStatus },
+          {
+            label: "Person with Disability",
+            value:
+              gad.isPWD === true
+                ? `Yes${gad.pwd_type ? ` (${gad.pwd_type})` : ""}`
+                : gad.isPWD === false
+                  ? "No"
+                  : null,
+          },
+          {
+            label: "Indigenous Person",
+            value:
+              gad.isIndigenousPerson === true
+                ? "Yes"
+                : gad.isIndigenousPerson === false
+                  ? "No"
+                  : null,
+          },
+          { label: "Head of Household", value: gad.headOfHousehold },
+        ].map((field) => (
+          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+              {field.label}
+            </label>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {field.value || "—"}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+
+    const renderAcademicTab = () => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {[
+          { label: "Student ID", value: acad.student_id },
+          { label: "Campus", value: acad.campus },
+          { label: "College", value: acad.college },
+          { label: "Course", value: acad.course },
+          { label: "Year Level", value: acad.year_level },
+          { label: "Scholarship Status", value: acad.isScholar },
+        ].map((field) => (
+          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+              {field.label}
+            </label>
+            <p className="mt-1 text-sm font-medium text-gray-900">
+              {field.value || "—"}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+
+    const tabContent = {
+      personal: renderPersonalTab(),
+      academic: renderAcademicTab(),
+      gad: renderGadTab(),
+      contact: renderContactTab(),
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-xs">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                {(personal.first_name?.[0] || "").toUpperCase()}
+                {(personal.last_name?.[0] || "").toUpperCase()}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {personal.first_name || ""}{" "}
+                  {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
+                  {personal.last_name || ""}
+                </h2>
+                <p className="text-xs text-gray-500">
+                  {acad.college || ""}
+                  {acad.course ? ` • ${acad.course}` : ""}
+                  {acad.year_level ? ` • ${acad.year_level}` : ""}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setViewModalUser(null);
+                setViewTab("personal");
+              }}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+            >
+              <FaTimes size={14} />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="px-6 border-b border-gray-100">
+            <div className="flex gap-1 -mb-px">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setViewTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
+                      viewTab === tab.id
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="px-6 py-5">{tabContent[viewTab]}</div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+            <button
+              onClick={() => {
+                setViewModalUser(null);
+                setViewTab("personal");
+              }}
+              className="px-5 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-end">
@@ -407,9 +687,7 @@ export default function StudentsUserListContent({ college }) {
         <Table className="bg-white" striped={false} color="none">
           <TableHead className="bg-gray-200 text-black">
             <TableRow>
-                  {role !== "dean" && (
-              <TableHeadCell></TableHeadCell>
-                  )}
+              {role !== "dean" && <TableHeadCell></TableHeadCell>}
               <TableHeadCell
                 className="cursor-pointer select-none"
                 onClick={() =>
@@ -578,8 +856,7 @@ export default function StudentsUserListContent({ college }) {
                   </span>
                 </span>
               </TableHeadCell>
-              <TableHeadCell>Created At</TableHeadCell>
-              <TableHeadCell />
+              <TableHeadCell className="text-center">Action</TableHeadCell>
             </TableRow>
           </TableHead>
           <TableBody className="divide-y">
@@ -590,21 +867,21 @@ export default function StudentsUserListContent({ college }) {
               const acad = p.affiliation?.academic_information || {};
               return (
                 <TableRow key={user._id || index} className="hover:bg-gray-50">
-                      {role !== "dean" && (
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(
-                        user._id || user.personal_info_id?._id || user,
-                      )}
-                      onChange={() =>
-                        toggleSelect(
+                  {role !== "dean" && (
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(
                           user._id || user.personal_info_id?._id || user,
-                        )
-                      }
-                    />
-                  </TableCell>
-                      )}
+                        )}
+                        onChange={() =>
+                          toggleSelect(
+                            user._id || user.personal_info_id?._id || user,
+                          )
+                        }
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
@@ -621,20 +898,14 @@ export default function StudentsUserListContent({ college }) {
                   <TableCell>{acad.campus || "—"}</TableCell>
                   <TableCell>{acad.course || "—"}</TableCell>
                   <TableCell>{acad.year_level || "—"}</TableCell>
-                  <TableCell>
-                    {p.createdAt
-                      ? new Date(p.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                        : "—"}
+                  <TableCell className="text-center">
+                    <button
+                      onClick={() => setViewModalUser(user)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition shadow-sm"
+                    >
+                      <FaEye size={12} />
+                      View
+                    </button>
                   </TableCell>
                   {role !== "dean" && (
                     <TableCell className="flex items-center gap-2">
@@ -680,7 +951,7 @@ export default function StudentsUserListContent({ college }) {
             })}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6">
+                <TableCell colSpan={9} className="text-center py-6">
                   No users found
                 </TableCell>
               </TableRow>
@@ -807,6 +1078,8 @@ export default function StudentsUserListContent({ college }) {
           </div>
         </div>
       )}
+
+      {renderViewModal()}
     </div>
   );
 }

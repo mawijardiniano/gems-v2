@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
+import ProfileTerm from "@/models/profileTerm";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -11,6 +12,21 @@ export async function GET(req) {
 
     const url = new URL(req.url);
     const collegeFilter = url.searchParams.get("college")?.trim();
+    const schoolYear = url.searchParams.get("school_year")?.trim();
+    const semester = url.searchParams.get("semester")?.trim();
+
+    let termProfileIds = null;
+    if (schoolYear || semester) {
+      const termFilter = {};
+      if (schoolYear) termFilter.school_year = schoolYear;
+      if (semester) termFilter.semester = semester;
+
+      const matchingTerms = await ProfileTerm.find(termFilter, {
+        profile_id: 1,
+      }).lean();
+
+      termProfileIds = new Set(matchingTerms.map((t) => String(t.profile_id)));
+    }
 
     const users = await UserAuth.find({})
       .populate({
@@ -39,16 +55,23 @@ export async function GET(req) {
       );
     };
 
-    const filteredUsers = users.filter((user) =>
-      matchesCollege(user.personal_info_id || {}),
-    );
+    const matchesTerm = (profile) => {
+      if (!termProfileIds) return true;
+      return profile && termProfileIds.has(String(profile._id));
+    };
+
+    const filteredUsers = users.filter((user) => {
+      const profile = user.personal_info_id || {};
+      return matchesCollege(profile) && matchesTerm(profile);
+    });
 
     if (!filteredUsers.length) {
       return NextResponse.json(
         {
-          message: collegeFilter
-            ? `No users found for college/office: ${collegeFilter}`
-            : "No users found for report",
+          message:
+            collegeFilter || schoolYear || semester
+              ? "No users found for selected filters"
+              : "No users found for report",
         },
         { status: 404 },
       );
@@ -154,24 +177,32 @@ export async function GET(req) {
     if (collegeFilter) {
       doc.text(`College/Office: ${collegeFilter}`, 14, 28);
     }
+    if (schoolYear || semester) {
+      const termLabel = [
+        schoolYear || "All school years",
+        semester || "All semesters",
+      ].join(" - ");
+      doc.text(`School Year/Semester: ${termLabel}`, 14, 34);
+    }
 
     const sectionLabel = collegeFilter || "All Colleges/Offices";
     doc.setFontSize(10);
     doc.text(
       `Faculty Composition in ${sectionLabel}`,
       14,
-      collegeFilter ? 32 : 28,
+      schoolYear || semester ? 38 : collegeFilter ? 32 : 28,
     );
     doc.setFontSize(8);
     autoTable(doc, {
-      startY: collegeFilter ? 36 : 32,
+      startY: schoolYear || semester ? 42 : collegeFilter ? 36 : 32,
       head: [employeeHeader],
       body: employeeRows.length ? employeeRows : [["No data", 0]],
       styles: { fontSize: 8 },
       headStyles: { fillColor: [33, 150, 243] },
     });
     let tableStartY =
-      (doc.lastAutoTable?.finalY || (collegeFilter ? 36 : 32)) + 8;
+      (doc.lastAutoTable?.finalY ||
+        (schoolYear || semester ? 42 : collegeFilter ? 36 : 32)) + 8;
 
     const summaryLabel = collegeFilter || "All Colleges/Offices";
 
@@ -316,7 +347,7 @@ export async function GET(req) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="sex-disaggregated-report-${collegeFilter || "all"}-${nowISO}.pdf"`,
+        "Content-Disposition": `attachment; filename="sex-disaggregated-report-${collegeFilter || "all"}-${schoolYear || "all-years"}-${semester || "all-semesters"}-${nowISO}.pdf"`,
         "Cache-Control": "no-store",
       },
     });

@@ -18,9 +18,29 @@ export default function SexDisaggregatedContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState("");
   const [college, setCollege] = useState("");
+  const [terms, setTerms] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
+
+  const semesterOrder = { "1st": 1, "2nd": 2, Summer: 3 };
+
+  const emptySummaryData = {
+    employees: {
+      appointmentStatus: [],
+      totals: { Male: 0, Female: 0, Unspecified: 0 },
+      officeSex: [],
+    },
+    students: {
+      courseYear: [],
+      totals: { Male: 0, Female: 0, Unspecified: 0 },
+      collegeSex: [],
+      yearLevelSex: [],
+    },
+  };
 
   const formatPercent = (value, total) => {
     if (!total || total === 0) return "0%";
@@ -49,11 +69,52 @@ export default function SexDisaggregatedContent() {
     "Offices under the Office of the Vice President for Student Affairs and Services",
   ];
 
+  const availableSemesters = useMemo(() => {
+    if (!selectedSchoolYear) return [];
+
+    return terms
+      .filter((t) => t.school_year === selectedSchoolYear)
+      .sort(
+        (a, b) =>
+          (semesterOrder[a.semester] || 0) - (semesterOrder[b.semester] || 0),
+      );
+  }, [terms, selectedSchoolYear]);
+
+  const buildQuery = () => {
+    const params = new URLSearchParams();
+    if (college) params.set("college", college);
+    if (selectedSchoolYear) params.set("school_year", selectedSchoolYear);
+    if (selectedSchoolYear && selectedSemester) {
+      params.set("semester", selectedSemester);
+    }
+
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  };
+
+  useEffect(() => {
+    const fetchTerms = async () => {
+      try {
+        const res = await fetch("/api/analytics/terms");
+        if (!res.ok) throw new Error("Failed to load terms");
+        const data = await res.json();
+        setTerms(data.terms || []);
+        setSchoolYears(data.schoolYears || []);
+      } catch (err) {
+        console.error(err);
+        setTerms([]);
+        setSchoolYears([]);
+      }
+    };
+
+    fetchTerms();
+  }, []);
+
   const handleGenerate = async () => {
     setStatus("");
     setIsGenerating(true);
     try {
-      const query = college ? `?college=${encodeURIComponent(college)}` : "";
+      const query = buildQuery();
 
       const res = await fetch(
         `/api/analytics/sex-disaggregated-data/report${query}`,
@@ -91,10 +152,14 @@ export default function SexDisaggregatedContent() {
     setSummaryError("");
     setSummaryLoading(true);
     try {
-      const query = college ? `?college=${encodeURIComponent(college)}` : "";
+      const query = buildQuery();
       const res = await fetch(
         `/api/analytics/sex-disaggregated-data/summary${query}`,
       );
+      if (res.status === 404) {
+        setSummary(emptySummaryData);
+        return;
+      }
       if (!res.ok) throw new Error("Failed to load summary");
       const data = await res.json();
       setSummary(data);
@@ -108,7 +173,7 @@ export default function SexDisaggregatedContent() {
 
   useEffect(() => {
     fetchSummary();
-  }, [college]);
+  }, [college, selectedSchoolYear, selectedSemester]);
 
   const studentCourseData = useMemo(() => {
     if (!summary?.students?.courseYear) return [];
@@ -205,7 +270,7 @@ export default function SexDisaggregatedContent() {
       </header>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-4">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               College / Office (optional)
@@ -219,6 +284,54 @@ export default function SexDisaggregatedContent() {
               {colleges.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              School Year (optional)
+            </label>
+            <select
+              value={selectedSchoolYear}
+              onChange={(e) => {
+                const nextYear = e.target.value;
+                setSelectedSchoolYear(nextYear);
+                setSelectedSemester("");
+              }}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All school years</option>
+              {schoolYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Semester (optional)
+            </label>
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              disabled={!selectedSchoolYear}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+            >
+              <option value="">All semesters</option>
+              {availableSemesters.map((t) => (
+                <option
+                  key={`${t.school_year}-${t.semester}`}
+                  value={t.semester}
+                >
+                  {t.semester === "1st"
+                    ? "1st Semester"
+                    : t.semester === "2nd"
+                      ? "2nd Semester"
+                      : "Summer"}
                 </option>
               ))}
             </select>

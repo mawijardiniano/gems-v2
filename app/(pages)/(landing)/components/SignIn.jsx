@@ -137,6 +137,11 @@ export default function LoginForm() {
     setPassword("gems1234");
   };
 
+    const handleDean1 = async () => {
+    setUsername("PlataMarvin");
+    setPassword("gems1234");
+  };
+
   return (
     <div className=" px-4 sm:px-6 md:px-8">
       <div className="flex justify-center items-center  py-16 px-6">
@@ -259,6 +264,12 @@ export default function LoginForm() {
                   <button
                   className="shadow px-4 py-1 rounded-md bg-white"
                   onClick={handleDean}
+                >
+                  Dean
+                </button> 
+                 <button
+                  className="shadow px-4 py-1 rounded-md bg-white"
+                  onClick={handleDean1}
                 >
                   Dean
                 </button> 

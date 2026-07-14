@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   XAxis,
   YAxis,
@@ -12,18 +12,66 @@ import {
 } from "recharts";
 import PrintSummaryButton from "./PrintSummaryButton";
 
+const semesterOrder = { "1st": 1, "2nd": 2, Summer: 3 };
+
 export default function ProfileStats() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [terms, setTerms] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [showOfficeTable, setShowOfficeTable] = useState(false);
   const [showCollegeTable, setShowCollegeTable] = useState(false);
   const [showYearTable, setShowYearTable] = useState(false);
 
   useEffect(() => {
-    fetch("/api/analytics/sex-disaggregated-data/summary")
+    fetch("/api/analytics/terms")
       .then((res) => res.json())
+      .then((json) => {
+        const termList = json.terms || [];
+        const yearList = json.schoolYears || [];
+        setTerms(termList);
+        setSchoolYears(yearList);
+
+        if (yearList.length > 0) {
+          const firstYear = yearList[0];
+          setSelectedSchoolYear(firstYear);
+
+          const semestersForYear = termList
+            .filter((t) => t.school_year === firstYear)
+            .sort(
+              (a, b) =>
+                (semesterOrder[a.semester] || 0) -
+                (semesterOrder[b.semester] || 0),
+            );
+          if (semestersForYear.length > 0) {
+            setSelectedSemester(semestersForYear[0].semester);
+          }
+        }
+      })
+      .catch(() => {
+        setTerms([]);
+        setSchoolYears([]);
+      });
+  }, []);
+
+  // Fetch summary data with the selected term filters
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    setError("");
+
+    const params = new URLSearchParams();
+    if (selectedSchoolYear) params.set("school_year", selectedSchoolYear);
+    if (selectedSemester) params.set("semester", selectedSemester);
+
+    fetch(`/api/analytics/sex-disaggregated-data/summary?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
       .then((json) => {
         setData(json);
         setLoading(false);
@@ -32,9 +80,50 @@ export default function ProfileStats() {
         setError("Failed to load stats");
         setLoading(false);
       });
-  }, []);
+  }, [selectedSchoolYear, selectedSemester]);
 
-  if (loading) {
+  useEffect(() => {
+    if (selectedSchoolYear && selectedSemester) {
+      fetchData();
+    }
+  }, [selectedSchoolYear, selectedSemester, fetchData]);
+
+  // Get available semesters for the selected school year
+  const availableSemesters = selectedSchoolYear
+    ? terms
+        .filter((t) => t.school_year === selectedSchoolYear)
+        .sort(
+          (a, b) =>
+            (semesterOrder[a.semester] || 0) -
+            (semesterOrder[b.semester] || 0),
+        )
+    : [];
+
+  const handleSchoolYearChange = (e) => {
+    const newYear = e.target.value;
+    setSelectedSchoolYear(newYear);
+    setData(null);
+
+    // Reset semester to first available for this year
+    const semestersForYear = terms
+      .filter((t) => t.school_year === newYear)
+      .sort(
+        (a, b) =>
+          (semesterOrder[a.semester] || 0) - (semesterOrder[b.semester] || 0),
+      );
+    if (semestersForYear.length > 0) {
+      setSelectedSemester(semestersForYear[0].semester);
+    } else {
+      setSelectedSemester("");
+    }
+  };
+
+  const handleSemesterChange = (e) => {
+    setSelectedSemester(e.target.value);
+    setData(null);
+  };
+
+  if (loading && !data) {
     return (
       <div className="py-10 text-center text-gray-500">
         Loading statistics...
@@ -42,7 +131,7 @@ export default function ProfileStats() {
     );
   }
 
-  if (error || !data) {
+  if (error && !data) {
     return (
       <div className="py-10 text-center text-red-600">
         Failed to load statistics.
@@ -50,8 +139,8 @@ export default function ProfileStats() {
     );
   }
 
-  const empTotals = data.employees?.totals || {};
-  const stuTotals = data.students?.totals || {};
+  const empTotals = data?.employees?.totals || {};
+  const stuTotals = data?.students?.totals || {};
 
   const totalMale = (empTotals.Male || 0) + (stuTotals.Male || 0);
   const totalFemale = (empTotals.Female || 0) + (stuTotals.Female || 0);
@@ -74,7 +163,7 @@ export default function ProfileStats() {
   const totalStudent =
     totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
-  const officeData = (data.employees?.officeSex || [])
+  const officeData = (data?.employees?.officeSex || [])
     .filter((row) => row.office && row.office !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.office === row.office);
@@ -95,7 +184,7 @@ export default function ProfileStats() {
       return acc;
     }, []);
 
-  const collegeData = (data.students?.collegeSex || [])
+  const collegeData = (data?.students?.collegeSex || [])
     .filter((row) => row.college && row.college !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.college === row.college);
@@ -118,7 +207,7 @@ export default function ProfileStats() {
 
   const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
-  const yearLineData = (data.students?.yearLevelSex || [])
+  const yearLineData = (data?.students?.yearLevelSex || [])
     .filter((row) => row.yearLevel && row.yearLevel !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.year === row.yearLevel);
@@ -147,6 +236,61 @@ export default function ProfileStats() {
           Campus Gender Equality Overview
         </h2>
 
+        {/* TERM SELECTORS */}
+        <div className="flex justify-center gap-4 mb-4">
+          <div>
+            <label
+              htmlFor="school-year-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              School Year
+            </label>
+            <select
+              id="school-year-select"
+              value={selectedSchoolYear}
+              onChange={handleSchoolYearChange}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            >
+              {schoolYears.length === 0 && (
+                <option value="">No terms available</option>
+              )}
+              {schoolYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="semester-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Semester
+            </label>
+            <select
+              id="semester-select"
+              value={selectedSemester}
+              onChange={handleSemesterChange}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            >
+              {availableSemesters.length === 0 && (
+                <option value="">No semesters available</option>
+              )}
+              {availableSemesters.map((t) => (
+                <option key={t.semester} value={t.semester}>
+                  {t.semester === "1st"
+                    ? "1st Semester"
+                    : t.semester === "2nd"
+                      ? "2nd Semester"
+                      : "Summer"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <PrintSummaryButton
           totalPopulation={totalPopulation}
           totalMale={totalMale}
@@ -165,10 +309,16 @@ export default function ProfileStats() {
           officeData={officeData}
         />
 
-        <p className="text-gray-600">
-          See a quick overview of gender distribution among students and
-          employees.
-        </p>
+        {selectedSchoolYear && selectedSemester && (
+          <p className="text-sm text-gray-500 mt-1">
+            Showing data for {selectedSchoolYear} —{" "}
+            {selectedSemester === "1st"
+              ? "1st Semester"
+              : selectedSemester === "2nd"
+                ? "2nd Semester"
+                : "Summer"}
+          </p>
+        )}
       </div>
 
       {/* OVERALL */}

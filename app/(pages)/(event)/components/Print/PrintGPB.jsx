@@ -40,57 +40,14 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
     return displayName;
   }
 
-  function extractNameFromGfpsOfficial(official, options = {}) {
-    if (!official) return "";
-    const firstName =
-      official?.first_name ||
-      official?.name?.personal_info_id?.personal?.first_name ||
-      official?.personal_info_id?.personal?.first_name ||
-      official?.personal_info_id?.first_name;
-    const middleName =
-      official?.middle_name ||
-      official?.name?.personal_info_id?.personal?.middle_name ||
-      official?.personal_info_id?.personal?.middle_name ||
-      official?.personal_info_id?.middle_name;
-    const lastName =
-      official?.last_name ||
-      official?.name?.personal_info_id?.personal?.last_name ||
-      official?.personal_info_id?.personal?.last_name ||
-      official?.personal_info_id?.last_name;
-    const displayName = toDisplayName(firstName, middleName, lastName, options);
-    console.log("[PrintGPB] extractNameFromGfpsOfficial", {
-      firstName,
-      middleName,
-      lastName,
-      options,
-      displayName,
-      official,
-    });
-    return displayName;
-  }
-
   useEffect(() => {
     async function loadSignatories() {
       try {
-        const [gfpsRes, officialsRes] = await Promise.all([
-          fetch("/api/gfps"),
-          fetch("/api/university-officials"),
-        ]);
-
-        const [gfpsJson, officialsJson] = await Promise.all([
-          gfpsRes.json(),
-          officialsRes.json(),
-        ]);
-
-        const gfps = gfpsJson?.data?.[0] || {};
+        const officialsRes = await fetch("/api/university-officials");
+        const officialsJson = await officialsRes.json();
         const officials = officialsJson?.data?.[0] || {};
 
-        const presidentFromGfps = extractNameFromGfpsOfficial(
-          gfps?.chairOrHeadOfAgency?.official,
-          { includeMiddleInitial: true },
-        );
-
-        const presidentFromOfficials = extractNameFromUserAuth(
+        const presidentName = extractNameFromUserAuth(
           officials?.president?.name,
           { includeMiddleInitial: true },
         );
@@ -102,22 +59,18 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
               .toLowerCase()
               .includes("focal point/person, gender & development"),
         );
-        const focalFromOfficials = extractNameFromUserAuth(focalEntry?.name);
+        const focalName = extractNameFromUserAuth(focalEntry?.name);
 
         console.log("[PrintGPB] signatory sources", {
-          presidentFromGfps,
-          presidentFromOfficials,
-          focalFromOfficials,
-          gfpsChairOfficial: gfps?.chairOrHeadOfAgency?.official,
+          presidentName,
+          focalName,
+          presidentOfficial: officials?.president,
           focalEntry,
         });
 
         setSignatories({
-          focalPointName: focalFromOfficials || "____________________________",
-          presidentName:
-            presidentFromGfps ||
-            presidentFromOfficials ||
-            "____________________________",
+          focalPointName: focalName || "____________________________",
+          presidentName: presidentName || "____________________________",
         });
       } catch {
         setSignatories({
