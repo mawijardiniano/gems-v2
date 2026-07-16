@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 
@@ -14,6 +14,10 @@ export default function ProjectContent2() {
   const [availableBudgets, setAvailableBudgets] = useState([]);
   const [selectedBudget, setSelectedBudget] = useState("");
   const [creating, setCreating] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef(null);
   const role = useSelector((state) => state.auth.role);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,6 +108,32 @@ export default function ProjectContent2() {
     }
   };
 
+  const handleDelete = async (year) => {
+    try {
+      setDeleting(true);
+      await axios.delete(`/api/gpb/${year}`);
+      setDeleteConfirmId(null);
+      setOpenMenuId(null);
+      await loadGPB();
+    } catch (err) {
+      console.log(err);
+      alert(err?.response?.data?.message || "Failed to delete GPB");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const availableYears = useMemo(() => {
     return availableBudgets.map((b) => b.year);
   }, [availableBudgets]);
@@ -140,71 +170,137 @@ export default function ProjectContent2() {
           const gaa = item.gaaBudgetId;
 
           return (
-            <Link
+            <div
               key={item._id}
-              href={`/gpb/${item.year}`}
-              className="group p-6 border border-gray-200 rounded-2xl bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+              className="relative group p-6 border border-gray-200 rounded-2xl bg-white shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-600 font-medium">
-                  GPB YEAR
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-600 font-medium">
+                    GPB YEAR
+                  </span>
 
-                <span
-                  className={`text-xs px-2 py-1 rounded-full capitalize ${
-                    item.status_of_gpb?.status === "draft"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : item.status_of_gpb?.status === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {item.status_of_gpb?.status}
-                </span>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full capitalize ${
+                      item.status_of_gpb?.status === "draft"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : item.status_of_gpb?.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {item.status_of_gpb?.status}
+                  </span>
+                </div>
+
+                {/* 3-dot menu */}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenMenuId(openMenuId === item._id ? null : item._id);
+                    }}
+                    className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                    </svg>
+                  </button>
+
+                  {openMenuId === item._id && (
+                    <div className="absolute right-0 top-10 z-50 w-40 bg-white border border-gray-200 rounded-xl shadow-xl py-1">
+                      {deleteConfirmId === item._id ? (
+                        <div className="px-3 py-2">
+                          <p className="text-xs text-gray-600 mb-2">Delete this GPB and all its projects?</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDelete(item.year);
+                              }}
+                              disabled={deleting}
+                              className="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {deleting ? "..." : "Yes"}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDeleteConfirmId(null);
+                              }}
+                              className="flex-1 px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            >
+                              No
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDeleteConfirmId(item._id);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <h2 className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition">
-                {item.year}
-              </h2>
+              <Link href={`/gpb/${item.year}`} className="block">
+                <h2 className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition">
+                  {item.year}
+                </h2>
 
-              <div className="my-4 border-t border-gray-100" />
+                <div className="my-4 border-t border-gray-100" />
 
-              <div className="space-y-2 text-sm text-gray-600">
-                <p className="flex justify-between">
-                  <span className="text-gray-500">Projects</span>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p className="flex justify-between">
+                    <span className="text-gray-500">Projects</span>
 
-                  <span className="font-medium text-gray-900">
-                    {item.projects?.length || 0}
-                  </span>
-                </p>
+                    <span className="font-medium text-gray-900">
+                      {item.projects?.length || 0}
+                    </span>
+                  </p>
 
-                <p className="flex justify-between">
-                  <span className="text-gray-500">Total GAA</span>
+                  <p className="flex justify-between">
+                    <span className="text-gray-500">Total GAA</span>
 
-                  <span className="font-medium text-gray-900">
-                    ₱{" "}
-                    {gaa?.totalGAA
-                      ? Number(gaa.totalGAA).toLocaleString()
-                      : "-"}
-                  </span>
-                </p>
+                    <span className="font-medium text-gray-900">
+                      ₱{" "}
+                      {gaa?.totalGAA
+                        ? Number(gaa.totalGAA).toLocaleString()
+                        : "-"}
+                    </span>
+                  </p>
 
-                <p className="flex justify-between">
-                  <span className="text-gray-500">GAD Budget</span>
+                  <p className="flex justify-between">
+                    <span className="text-gray-500">GAD Budget</span>
 
-                  <span className="font-medium text-green-600">
-                    ₱{" "}
-                    {gaa?.gadAnnualBudget
-                      ? Number(gaa.gadAnnualBudget).toLocaleString()
-                      : "-"}
-                  </span>
-                </p>
-              </div>
+                    <span className="font-medium text-green-600">
+                      ₱{" "}
+                      {gaa?.gadAnnualBudget
+                        ? Number(gaa.gadAnnualBudget).toLocaleString()
+                        : "-"}
+                    </span>
+                  </p>
+                </div>
 
-              <div className="mt-5 text-sm text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition">
-                Open year →
-              </div>
-            </Link>
+                <div className="mt-5 text-sm text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition">
+                  Open year →
+                </div>
+              </Link>
+            </div>
           );
         })}
       </div>
@@ -218,33 +314,18 @@ export default function ProjectContent2() {
           Previous
         </button>
 
-       <div className="flex items-center gap-2">
-  <label className="text-sm text-gray-600">
-    Items per page:
-  </label>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Items per page:</label>
 
- <input
+          <input
             type="number"
             min={1}
             max={100}
             value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(e.target.value)}
-            onBlur={() => {
-              let val = parseInt(itemsPerPage, 10);
-              if (isNaN(val) || val < 1) val = 1;
-              if (val > 100) val = 100;
-              setPageSize(val);
-              setPage(1);
-              setItemsPerPage(String(val));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.target.blur();
-              }
-            }}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
             className="w-16 border rounded px-2 py-1"
           />
-</div>
+        </div>
 
         <button
           onClick={() =>

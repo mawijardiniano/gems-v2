@@ -1849,7 +1849,6 @@ export default function ProjectContent({ sidebarOpen }) {
                 onClick={() => {
                   setShowWizard(false);
                   setWizardStep(1);
-                  setNewProject(emptyNewProject());
                 }}
                 className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
               >
@@ -2350,8 +2349,7 @@ export default function ProjectContent({ sidebarOpen }) {
                       type="button"
                       onClick={() =>
                         wizardStep === 1
-                          ? (setShowWizard(false),
-                            setNewProject(emptyNewProject()))
+                          ? (setShowWizard(false), setWizardStep(1))
                           : setWizardStep(wizardStep - 1)
                       }
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
