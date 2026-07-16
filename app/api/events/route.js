@@ -80,7 +80,7 @@ export async function POST(req) {
       target_number_of_participants,
       project,
       gad_activity,
-      event_poster 
+      event_poster,
     } = body;
 
     if (
@@ -152,9 +152,9 @@ export async function POST(req) {
       ...(project ? { project } : {}),
       gad_activity,
       event_poster: event_poster || {
-  url: "",
-  key: "",
-}
+        url: "",
+        key: "",
+      },
     });
 
     if (project) {

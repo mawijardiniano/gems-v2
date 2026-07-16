@@ -95,6 +95,11 @@ const EventSchema = new Schema(
       required: true,
     },
     updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    status_updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    status_updated_at: { type: Date },
+    cancelled_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    cancelled_at: { type: Date },
+    cancel_reason: { type: String, default: "" },
     registered_users: [{ type: Schema.Types.ObjectId, ref: "UserAuth" }],
     interested_users: [
       { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
@@ -135,5 +140,11 @@ const EventSchema = new Schema(
   },
   { timestamps: true },
 );
+
+
+EventSchema.index({ status: 1, createdAt: -1 });
+EventSchema.index({ created_by: 1 });
+EventSchema.index({ project: 1 });
+EventSchema.index({ "start_dates.0": 1 });
 
 export default models.Event || model("Event", EventSchema);

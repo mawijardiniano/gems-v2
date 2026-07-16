@@ -4,6 +4,7 @@ import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { logActivity } from "@/lib/activityLog";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -176,7 +177,23 @@ export async function POST(req) {
     const profilePayload = { ...body, personal };
     delete profilePayload.personal_information;
 
-    const profile = await Profile.create(profilePayload);
+    const token = req.cookies.get("auth_token")?.value;
+    let createdByUserId = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        createdByUserId = decoded.id;
+      } catch {
+        
+      }
+    }
+
+    const profilePayloadWithAudit = {
+      ...profilePayload,
+      created_by: createdByUserId,
+    };
+
+    const profile = await Profile.create(profilePayloadWithAudit);
     const role = body.role ? body.role : "User";
 
     const username = generateUsername(personal);
@@ -187,6 +204,15 @@ export async function POST(req) {
       username,
       password: tempPassword,
       role,
+    });
+
+    await logActivity({
+      req,
+      action: "PROFILE_CREATE",
+      description: `Profile created for ${personal.first_name} ${personal.last_name} (role: ${role})`,
+      resource_type: "profile",
+      resource_id: profile._id,
+      severity: "info",
     });
 
     if (global.io) {
@@ -224,6 +250,15 @@ export async function DELETE() {
 
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ role: "User" });
+
+    await logActivity({
+      req,
+      action: "BULK_PROFILE_DELETE",
+      description: `Bulk deleted ${usersToDelete.length} user(s) with role "User"`,
+      resource_type: "profile",
+      severity: "critical",
+      metadata: { count: usersToDelete.length },
+    });
 
     if (global.io) {
       global.io.emit("profile:deleted");

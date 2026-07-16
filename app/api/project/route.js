@@ -4,6 +4,7 @@ import "@/models/event";
 import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
 import UserAuth from "@/models/user";
+import { logActivity } from "@/lib/activityLog";
 
 export async function GET(req) {
   await connectDB();
@@ -129,6 +130,16 @@ export async function POST(req) {
 
   const project = await Project.create(projectData);
 
+  await logActivity({
+    req,
+    action: "PROJECT_CREATE",
+    description: `GPB project created for year ${year}`,
+    resource_type: "project",
+    resource_id: project._id,
+    severity: "info",
+    metadata: { year, actorId },
+  });
+
   const gpb = await GPB.findOneAndUpdate(
     { year },
     {
@@ -157,6 +168,15 @@ export async function DELETE() {
   await GPB.updateMany({}, { $set: { projects: [] } });
 
   const result = await Project.deleteMany({});
+
+  await logActivity({
+    req,
+    action: "PROJECT_BULK_DELETE",
+    description: `All GPB projects deleted (${result.deletedCount})`,
+    resource_type: "project",
+    severity: "critical",
+    metadata: { deletedCount: result.deletedCount },
+  });
 
   return Response.json({
     message: "All projects deleted successfully",

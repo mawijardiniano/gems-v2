@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
 import { connectDB } from "@/lib/db";
+import { logActivity } from "@/lib/activityLog";
 export async function POST(req) {
   await connectDB();
   const body = await req.json();
@@ -30,6 +31,15 @@ export async function POST(req) {
     });
 
     await budget.save();
+
+    await logActivity({
+      req,
+      action: "GAA_BUDGET_CREATE",
+      description: `GAA Budget created for year ${body.year}`,
+      resource_type: "gaa_budget",
+      resource_id: budget._id,
+      severity: "info",
+    });
 
     const gpb = await GPB.findOne({
       year: Number(body.year),

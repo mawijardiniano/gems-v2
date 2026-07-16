@@ -12,11 +12,62 @@ export async function POST(req) {
     await connectDB();
     const { username, password } = await req.json();
 
-    const user = await UserAuth.findOne({ username });
-    if (!user)
-      return NextResponse.json({ error: "User not found" }, { status: 401 });
+    const user = await UserAuth.findOne({ username }).select("+password");
+    
+    if (!user) {
+
+      await logActivity({
+        user_id: null,
+        action: "LOGIN_FAILED",
+        description: `Login failed - invalid credentials for username: ${username}`,
+        req,
+        metadata: { module: "auth", username },
+        resource_type: "user",
+        severity: "warning",
+      });
+      
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
+    }
+
+    if (user.isLocked()) {
+      const lockTimeRemaining = Math.ceil(
+        (user.lockUntil - Date.now()) / 1000 / 60,
+      );
+      
+      await logActivity({
+        user_id: user._id,
+        action: "LOGIN_FAILED",
+        description: `Login blocked - account locked for ${lockTimeRemaining} minutes`,
+        req,
+        metadata: { module: "auth", lockTimeRemaining },
+        resource_type: "user",
+        resource_id: user._id,
+        severity: "warning",
+      });
+
+      return NextResponse.json(
+        {
+          error: `Account temporarily locked. Try again in ${lockTimeRemaining} minutes.`,
+        },
+        { status: 429 },
+      );
+    }
 
     if (user.is_active === false) {
+      await logActivity({
+        user_id: user._id,
+        action: "LOGIN_FAILED",
+        description: "Login blocked - account deactivated",
+        req,
+        metadata: { module: "auth" },
+        resource_type: "user",
+        resource_id: user._id,
+        severity: "warning",
+      });
+
       return NextResponse.json(
         { error: "Account is deactivated. Contact administrator." },
         { status: 403 },
@@ -24,28 +75,59 @@ export async function POST(req) {
     }
 
     const isValid = await user.matchPassword(password);
-    if (!isValid)
+    if (!isValid) {
+
+      await user.incrementLoginAttempts();
+
+      await logActivity({
+        user_id: user._id,
+        action: "LOGIN_FAILED",
+        description: `Login failed - invalid password (attempt ${user.loginAttempts})`,
+        req,
+        metadata: {
+          module: "auth",
+          loginAttempts: user.loginAttempts,
+        },
+        resource_type: "user",
+        resource_id: user._id,
+        severity: "warning",
+      });
+
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
       );
+    }
+
+    await user.resetLoginAttempts();
 
     await logActivity({
       user_id: user._id,
       action: "LOGIN",
-      description: "User logged in",
+      description: `User logged in as ${user.role}`,
       req,
+      metadata: { module: "auth", role: user.role },
+      resource_type: "user",
+      resource_id: user._id,
+      severity: "info",
     });
 
+ 
     const token = jwt.sign(
-      { id: user._id, role: user.role, assignedCollege: user.assignedCollege },
+      {
+        id: user._id,
+        role: user.role,
+        assignedCollege: user.assignedCollege,
+        passwordChangedAt: user.passwordChangedAt?.getTime(),
+      },
       JWT_SECRET,
       { expiresIn: "1d" },
     );
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
 
-    const { password: _, ...userWithoutPassword } = user.toObject();
+    const userObj = user.toObject();
+    const { password: _, ...userWithoutPassword } = userObj;
 
     const res = NextResponse.json({
       success: true,

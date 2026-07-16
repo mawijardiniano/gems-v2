@@ -5,6 +5,7 @@ import "@/models/gaa_budget";
 import Project from "@/models/projects";
 import "@/models/profile";
 import UserAuth from "@/models/user";
+import { logActivity } from "@/lib/activityLog";
 
 export async function GET(req, { params }) {
   await connectDB();
@@ -85,6 +86,15 @@ export async function DELETE(req, { params }) {
   if (!gpb) {
     return Response.json({ message: "GPB not found" }, { status: 404 });
   }
+
+  await logActivity({
+    req,
+    action: "GPB_DELETE",
+    description: `GPB deleted for year ${yearNum}`,
+    resource_type: "gpb",
+    resource_id: gpb._id,
+    severity: "warning",
+  });
 
   return Response.json({
     message: "GPB deleted successfully",

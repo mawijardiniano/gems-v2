@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
+import { logActivity } from "@/lib/activityLog";
 
 const POPULATE_PATHS = [
   "president.name",
@@ -90,6 +91,15 @@ export async function PATCH(req, { params }) {
       path: POPULATE_PATHS,
       populate: { path: "personal_info_id" },
     });
+    await logActivity({
+      req,
+      action: "OFFICIAL_UPDATE",
+      description: `University official updated (section "${section}")`,
+      resource_type: "university_official",
+      resource_id: id,
+      severity: "info",
+      metadata: { section },
+    });
     return Response.json({ success: true, data: doc });
   } catch (error) {
     return Response.json(
@@ -124,6 +134,15 @@ export async function PUT(req, { params }) {
         { status: 404 },
       );
     }
+    await logActivity({
+      req,
+      action: "OFFICIAL_UPDATE",
+      description: `University official replaced (section "${section}")`,
+      resource_type: "university_official",
+      resource_id: id,
+      severity: "info",
+      metadata: { section },
+    });
     return Response.json({ success: true, data: updated });
   } catch (error) {
     return Response.json(
@@ -143,5 +162,13 @@ export async function DELETE(req, { params }) {
       { status: 404 },
     );
   }
+  await logActivity({
+    req,
+    action: "OFFICIAL_DELETE",
+    description: `University officials record deleted`,
+    resource_type: "university_official",
+    resource_id: id,
+    severity: "warning",
+  });
   return Response.json({ success: true, data: deleted });
 }

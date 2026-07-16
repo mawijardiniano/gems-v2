@@ -14,6 +14,7 @@ import {
   FaVenusMars,
   FaUsers,
   FaFolder,
+  FaHistory,
 } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -28,13 +29,13 @@ export default function Sidebar({ open, setOpen, role }) {
   const ROLE_ACCESS = {
     admin: [
       "admin-dashboard",
+      "activity-logs",
       "integration-staging",
       "user-list",
       "students",
       "employees",
       "reports/sex-disaggregated-data",
       "manage-roles",
-
     ],
 
     "planning director": ["admin-dashboard", "gpb"],
@@ -46,6 +47,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/admin-dashboard",
       icon: <FaHome />,
       key: "admin-dashboard",
+    },
+    {
+      name: "Logs",
+      href: "/activity-logs",
+      icon: <FaHistory />,
+      key: "activity-logs",
     },
     {
       name: "Integration Staging",

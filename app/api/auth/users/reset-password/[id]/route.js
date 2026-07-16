@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import jwt from "jsonwebtoken";
+import { logActivity } from "@/lib/activityLog";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -29,7 +30,7 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const user = await UserAuth.findById(id);
+    const user = await UserAuth.findById(id).select("+password");
 
     if (!user) {
       return NextResponse.json(
@@ -43,6 +44,15 @@ export async function PATCH(req, { params }) {
     user.password = tempPassword;
 
     await user.save();
+
+    await logActivity({
+      req,
+      action: "RESET_PASSWORD",
+      description: "User password was reset to default",
+      resource_type: "user",
+      resource_id: id,
+      severity: "warning",
+    });
 
     return NextResponse.json({
       message: "Password reset successful",

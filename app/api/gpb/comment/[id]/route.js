@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
 import GPB from "@/models/gpb";
+import { logActivity } from "@/lib/activityLog";
 export async function POST(req, { params }) {
   await connectDB();
 
@@ -40,6 +41,16 @@ export async function POST(req, { params }) {
 
     await gpb.save();
 
+    await logActivity({
+      req,
+      action: "GPB_COMMENT",
+      description: `Comment added to GPB project`,
+      resource_type: "gpb",
+      resource_id: gpb._id,
+      severity: "info",
+      metadata: { projectId: id },
+    });
+
     return Response.json({
       success: true,
       comment: project.comments.at(-1),
@@ -76,6 +87,16 @@ project.comments = project.comments.filter(
 );
 
 await gpb.save();
+
+await logActivity({
+  req,
+  action: "GPB_COMMENT_DELETE",
+  description: `Comment removed from GPB project`,
+  resource_type: "gpb",
+  resource_id: gpb._id,
+  severity: "warning",
+  metadata: { projectId: id, commentId },
+});
 
     return Response.json({ success: true });
   } catch (error) {

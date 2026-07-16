@@ -11,11 +11,41 @@ const gemsProfileSchema = new Schema(
     gadData: gadDataSchema,
     affiliation: affiliationSchema,
     contact: contactSchema,
+
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: "UserAuth",
+      default: null,
+    },
+    updated_by: {
+      type: Schema.Types.ObjectId,
+      ref: "UserAuth",
+      default: null,
+    },
+    last_viewed_at: {
+      type: Date,
+      default: null,
+    },
+    data_version: {
+      type: Number,
+      default: 1,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+gemsProfileSchema.virtual("fullName").get(function () {
+  const p = this.personal;
+  if (!p) return "";
+  return [p.first_name, p.middle_name, p.last_name]
+    .filter(Boolean)
+    .join(" ");
+});
+
+gemsProfileSchema.set("toJSON", { virtuals: true });
+gemsProfileSchema.set("toObject", { virtuals: true });
 
 const GemsProfile =
   mongoose.models.GemsProfile ||

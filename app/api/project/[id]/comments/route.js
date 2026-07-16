@@ -6,6 +6,7 @@ import {
 } from "@/lib/notifications";
 import Project from "@/models/projects";
 import UserAuth from "@/models/user";
+import { logActivity } from "@/lib/activityLog";
 
 const ALLOWED_FIELDS = [
   "project_type",
@@ -112,6 +113,16 @@ export async function POST(req, { params }) {
 
     await project.save();
 
+    await logActivity({
+      req,
+      action: "PROJECT_COMMENT",
+      description: `${actor.username} left a ${type || "revision"} comment`,
+      resource_type: "project",
+      resource_id: id,
+      severity: "info",
+      metadata: { year: project.year, commentType: type || "revision" },
+    });
+
     let recipientIds = [];
 
     if (normalizeRole(actor.role) === "planning director") {
@@ -173,6 +184,16 @@ export async function DELETE(req, { params }) {
 
     project.markModified("comments");
     await project.save();
+
+    await logActivity({
+      req,
+      action: "PROJECT_COMMENT_DELETE",
+      description: `Comment removed from GPB project`,
+      resource_type: "project",
+      resource_id: id,
+      severity: "warning",
+      metadata: { commentId },
+    });
 
     return Response.json({
       success: true,

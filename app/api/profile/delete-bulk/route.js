@@ -2,6 +2,7 @@ import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/activityLog";
 
 export async function DELETE(req) {
   try {
@@ -16,9 +17,18 @@ export async function DELETE(req) {
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ _id: { $in: ids } });
 
+    await logActivity({
+      req,
+      action: "PROFILE_BULK_DELETE",
+      description: `Bulk deleted ${ids.length} user(s) and linked profiles`,
+      resource_type: "profile",
+      severity: "critical",
+      metadata: { ids },
+    });
+
     if (global.io) {
       profileIds.forEach(pid => {
-        global.io.emit("profile:deleted", { id: pid.toString() });
+        io.emit("profile:deleted", { id: pid.toString() });
       });
     }
 

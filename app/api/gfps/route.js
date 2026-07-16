@@ -40,6 +40,7 @@
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
 import UniversityOfficial from "@/models/universityOfficials";
+import { logActivity } from "@/lib/activityLog";
 
 const userAuthPopulate = {
   path: "personal_info_id",
@@ -262,6 +263,8 @@ export async function POST(req) {
 
   let doc = await GFPS.findOne({});
 
+  const isCreate = !doc;
+
   if (!doc) {
     doc = await GFPS.create(body);
   } else {
@@ -333,6 +336,17 @@ if (body.secretariat) {
 
     await doc.save();
   }
+
+  await logActivity({
+    req,
+    action: isCreate ? "GFP_CREATE" : "GFP_UPDATE",
+    description: isCreate
+      ? "GFPS structure created"
+      : "GFPS structure updated",
+    resource_type: "gfps",
+    resource_id: doc._id,
+    severity: "info",
+  });
 
   return Response.json({ success: true, data: doc });
 }

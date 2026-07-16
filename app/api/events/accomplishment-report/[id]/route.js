@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/activityLog";
 
 export async function GET(_, { params }) {
   await connectDB();
@@ -48,6 +49,16 @@ export async function PUT(req, { params }) {
         { status: 404 }
       );
     }
+
+    await logActivity({
+      req,
+      action: "ACCOMPLISHMENT_UPDATE",
+      description: `Accomplishment report updated`,
+      resource_type: "accomplishment",
+      resource_id: id,
+      severity: "info",
+      metadata: { event_id: id },
+    });
 
     return NextResponse.json({
       success: true,

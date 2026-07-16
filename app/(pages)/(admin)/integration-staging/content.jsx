@@ -239,7 +239,7 @@ export default function IntegrationStagingContent() {
               type="text"
               value={defaultSchoolYear}
               onChange={(e) => setDefaultSchoolYear(e.target.value)}
-              placeholder="Default school year (e.g. 2026-2027)"
+              placeholder="School year (e.g. 2026-2027)"
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             />
             <select
@@ -247,7 +247,7 @@ export default function IntegrationStagingContent() {
               onChange={(e) => setDefaultSemester(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             >
-              <option value="">Default semester</option>
+              <option value="">Select semester</option>
               <option value="1st">1st</option>
               <option value="2nd">2nd</option>
               <option value="Summer">Summer</option>
@@ -290,7 +290,7 @@ export default function IntegrationStagingContent() {
               type="text"
               value={defaultSchoolYear}
               onChange={(e) => setDefaultSchoolYear(e.target.value)}
-              placeholder="Default school year (e.g. 2026-2027)"
+              placeholder="School year (e.g. 2026-2027)"
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             />
             <select
@@ -298,7 +298,7 @@ export default function IntegrationStagingContent() {
               onChange={(e) => setDefaultSemester(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             >
-              <option value="">Default semester</option>
+              <option value="">Select semester</option>
               <option value="1st">1st</option>
               <option value="2nd">2nd</option>
               <option value="Summer">Summer</option>

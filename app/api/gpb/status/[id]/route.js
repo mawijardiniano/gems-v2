@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import GPB from "@/models/gpb";
+import { logActivity } from "@/lib/activityLog";
 
 export async function GET(req, { params }) {
   await connectDB();
@@ -48,6 +49,15 @@ export async function POST(req, { params }) {
     };
 
     await gpb.save();
+
+    await logActivity({
+      req,
+      action: "GPB_STATUS",
+      description: `GPB status updated to "${gpb.status_of_gpb?.status}"`,
+      resource_type: "gpb",
+      resource_id: id,
+      severity: "info",
+    });
 
     return Response.json({
       success: true,

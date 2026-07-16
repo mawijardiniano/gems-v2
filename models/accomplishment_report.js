@@ -1,37 +1,38 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const FileSchema = new Schema({
-  url: { type: String, default: "" },
-  key: { type: String, default: "" },
-});
-
-const AccomplishmentReportSchema = new Schema(
+const accomplishmentReportSchema = new mongoose.Schema(
   {
-    event_id: {
-      type: Schema.Types.ObjectId,
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
       required: true,
-      unique: true,
     },
-
-    office_memorandum: FileSchema,
-    activity_design: FileSchema,
-
-    narrative: {
-      type: String,
-      default: "",
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
     },
-
-    photos: [FileSchema],
-    attendance_sheet: FileSchema,
-    other_attachments: [FileSchema], 
     submitted_by: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "UserAuth",
+      required: true,
+    },
+
+    updated_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserAuth",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["draft", "submitted", "approved", "needs_revision"],
+      default: "draft",
     },
   },
   { timestamps: true },
 );
 
-export default models.AccomplishmentReport ||
-  model("AccomplishmentReport", AccomplishmentReportSchema);
+accomplishmentReportSchema.index({ eventId: 1 });
+accomplishmentReportSchema.index({ submitted_by: 1 });
+
+export default mongoose.models.AccomplishmentReport ||
+  mongoose.model("AccomplishmentReport", accomplishmentReportSchema);

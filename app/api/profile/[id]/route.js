@@ -2,6 +2,7 @@ import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 import { logActivity } from "@/lib/activityLog";
 
 export async function GET(req, { params }) {
@@ -73,6 +74,20 @@ export async function PUT(req, { params }) {
     );
   }
   try {
+    profile.data_version = (profile.data_version || 1) + 1;
+    
+    try {
+      const token = req.cookies.get("auth_token")?.value;
+      if (token) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback");
+        if (decoded?.id) {
+          profile.updated_by = decoded.id;
+        }
+      }
+    } catch {
+      
+    }
+
     const updated = await profile.save();
 
     const user = await UserAuth.findOne({ personal_info_id: profile._id });
@@ -81,10 +96,15 @@ export async function PUT(req, { params }) {
     if (userId) {
       await logActivity({
         user_id: userId,
-        action: "UPDATE_PROFILE",
+        action: "PROFILE_UPDATE",
         description: "User updated their profile",
+        req,
+        metadata: { profile_id: profile._id, data_version: profile.data_version },
+        resource_type: "profile",
+        resource_id: profile._id,
+        severity: "info",
       });
-      console.log("✅ Logged activity: UPDATE_PROFILE");
+      console.log("✅ Logged activity: PROFILE_UPDATE");
     }
 
     if (global.io) {

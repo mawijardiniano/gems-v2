@@ -47,8 +47,22 @@ const NotificationSchema = new Schema(
       type: Date,
       default: null,
     },
+ 
+    deliveredAt: {
+      type: Date,
+      default: null,
+    },
+
+    socketSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
+
+
+NotificationSchema.index({ recipientId: 1, isRead: 1, createdAt: -1 });
+NotificationSchema.index({ type: 1, createdAt: -1 });
 
 export default models.Notification || model("Notification", NotificationSchema);

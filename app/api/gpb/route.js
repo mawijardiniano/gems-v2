@@ -6,6 +6,7 @@ import "@/models/event";
 import "@/models/gaa_budget";
 import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
+import { logActivity } from "@/lib/activityLog";
 
 
 export async function GET() {
@@ -119,6 +120,15 @@ export async function POST(req) {
     const populated = await GPB.findById(newGPB._id)
       .populate("gaaBudgetId")
       .populate("projects");
+
+    await logActivity({
+      req,
+      action: "GPB_CREATE",
+      description: `GPB created for year ${year}`,
+      resource_type: "gpb",
+      resource_id: newGPB._id,
+      severity: "info",
+    });
 
     return Response.json({
       success: true,

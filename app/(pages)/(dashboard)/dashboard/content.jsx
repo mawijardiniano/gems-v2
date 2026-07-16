@@ -90,14 +90,15 @@ export default function DashboardContent({ profile, userId }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/activity?user_id=${userId}`)
+    fetch("/api/activity")
       .then((res) => res.json())
       .then((data) => {
         const latestActivities = (data.activities || []).slice(0, 4);
         setActivities(latestActivities);
         setLoading(false);
-      });
-  }, [userId]);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   if (loading) return <p className="text-gray-500">Loading Dashboard...</p>;
   if (activities.length === 0)

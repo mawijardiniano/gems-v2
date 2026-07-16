@@ -6,6 +6,7 @@ import {
 } from "@/lib/notifications";
 import Project from "@/models/projects";
 import UserAuth from "@/models/user";
+import { logActivity } from "@/lib/activityLog";
 
 export async function PUT(req, { params }) {
   await connectDB();
@@ -52,6 +53,19 @@ mergeField("project_type");
 
     await project.save();
 
+    await logActivity({
+      req,
+      action: "PROJECT_UPDATE",
+      description: `GPB project updated for year ${project.year}`,
+      resource_type: "project",
+      resource_id: id,
+      severity: "info",
+      metadata: {
+        year: project.year,
+        updatedFields: Object.keys(body).filter((key) => key !== "userId"),
+      },
+    });
+
     if (actor && normalizeRole(actor.role) !== "planning director") {
       const planningDirectorIds = await getPlanningDirectorIds(actor._id);
 
@@ -92,5 +106,15 @@ export async function DELETE(req, { params }) {
   const { id } = await params;
   const projects = await Project.findByIdAndDelete(id);
   if (!projects) return Response.json({ error: "Not found" }, { status: 404 });
+
+  await logActivity({
+    req,
+    action: "PROJECT_DELETE",
+    description: `GPB project deleted`,
+    resource_type: "project",
+    resource_id: id,
+    severity: "warning",
+  });
+
   return Response.json({ data: projects });
 }

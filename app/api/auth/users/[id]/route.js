@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { SCOPED_ROLES } from "@/lib/colleges";
+import { logActivity } from "@/lib/activityLog";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -100,6 +101,15 @@ export async function PUT(req, { params }) {
       );
     }
 
+    await logActivity({
+      req,
+      action: "ROLE_CHANGE",
+      description: `Assigned role "${body.role}"${body.assignedCollege ? ` to ${body.assignedCollege}` : ""}`,
+      resource_type: "user",
+      resource_id: id,
+      severity: "warning",
+    });
+
     return NextResponse.json({ status: "success", data: updated });
   } catch (error) {
     console.error("PUT error:", error);
@@ -131,6 +141,15 @@ export async function DELETE(request, { params }) {
         { status: 404 },
       );
     }
+
+    await logActivity({
+      req,
+      action: "USER_DELETE",
+      description: `Deleted user ${id}`,
+      resource_type: "user",
+      resource_id: id,
+      severity: "warning",
+    });
 
     return NextResponse.json({ status: "success", message: "User deleted" });
   } catch (error) {

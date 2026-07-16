@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const VICE_POSITIONS = [
   "VP for Academic Affairs",
@@ -118,161 +118,174 @@ const POSITION_UNDER_VICE_PRESIDENT_RESEARCH_EXTENSION = [
   "Manager, Innovation & Technology Support Office",
 ];
 
-const universityOfficialSchema = new mongoose.Schema({
-  president: {
-    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
-    name: {
+const universityOfficialSchema = new mongoose.Schema(
+  {
+    president: {
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      name: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "UserAuth",
+        required: true,
+      },
+      position: {
+        type: String,
+        enum: ["University President"],
+        required: true,
+      },
+    },
+    vicePresidents: [
+      {
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+        position: {
+          type: String,
+          enum: VICE_POSITIONS,
+          required: true,
+        },
+      },
+    ],
+    campusDirectors: [
+      {
+        position: {
+          type: String,
+          enum: CAMPUS_DIRECTOR_POSITION,
+          required: true,
+        },
+        branch: {
+          type: String,
+          enum: MARSU_BRANCH,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+    collegeDeans: [
+      {
+        position: {
+          type: String,
+          enum: DEANS,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+        college: {
+          type: String,
+          enum: COLLEGE,
+          required: true,
+        },
+      },
+    ],
+    associateDeans: [
+      {
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+        college: {
+          type: String,
+          enum: COLLEGE,
+          required: true,
+        },
+        position: {
+          type: String,
+          enum: DEANS,
+        },
+      },
+    ],
+    office_of_the_president: [
+      {
+        position: {
+          type: String,
+          enum: POSITION_UNDER_PRESIDENT,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+    office_of_the_vice_president_academic_affairs: [
+      {
+        position: {
+          type: String,
+          enum: POSITION_UNDER_VICE_PRESIDENT_ACADEMIC_AFFAIRS,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+    office_of_the_vice_president_admin_finance: [
+      {
+        position: {
+          type: String,
+          enum: POSITION_UNDER_VICE_PRESIDENT_ADMIN_FINANCE,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+    office_of_the_vice_president_student_affairs: [
+      {
+        position: {
+          type: String,
+          enum: POSITION_UNDER_VICE_PRESIDENT_STUDENT_AFFAIRS,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+    office_of_the_vice_president_research_extension: [
+      {
+        position: {
+          type: String,
+          enum: POSITION_UNDER_VICE_PRESIDENT_RESEARCH_EXTENSION,
+          required: true,
+        },
+        name: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "UserAuth",
+          required: true,
+        },
+      },
+    ],
+
+    updated_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "UserAuth",
-      required: true,
+      default: null,
     },
-    position: {
-      type: String,
-      enum: ["University President"],
-      required: true,
+
+    version: {
+      type: Number,
+      default: 1,
     },
   },
-  vicePresidents: [
-    {
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-      position: {
-        type: String,
-        enum: VICE_POSITIONS,
-        required: true,
-      },
-    },
-  ],
-  campusDirectors: [
-    {
-      position: {
-        type: String,
-        enum: CAMPUS_DIRECTOR_POSITION,
-        required: true,
-      },
-      branch: {
-        type: String,
-        enum: MARSU_BRANCH,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-  collegeDeans: [
-    {
-      position: {
-        type: String,
-        enum: DEANS,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-      college: {
-        type: String,
-        enum: COLLEGE,
-        required: true,
-      },
-    },
-  ],
-  associateDeans: [
-    {
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-      college: {
-        type: String,
-        enum: COLLEGE,
-        required: true,
-      },
-      position: {
-        type: String,
-        enum: DEANS,
-      },
-    },
-  ],
-  office_of_the_president: [
-    {
-      position: {
-        type: String,
-        enum: POSITION_UNDER_PRESIDENT,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-  office_of_the_vice_president_academic_affairs: [
-    {
-      position: {
-        type: String,
-        enum: POSITION_UNDER_VICE_PRESIDENT_ACADEMIC_AFFAIRS,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-  office_of_the_vice_president_admin_finance: [
-    {
-      position: {
-        type: String,
-        enum: POSITION_UNDER_VICE_PRESIDENT_ADMIN_FINANCE,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-  office_of_the_vice_president_student_affairs: [
-    {
-      position: {
-        type: String,
-        enum: POSITION_UNDER_VICE_PRESIDENT_STUDENT_AFFAIRS,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-  office_of_the_vice_president_research_extension: [
-    {
-      position: {
-        type: String,
-        enum: POSITION_UNDER_VICE_PRESIDENT_RESEARCH_EXTENSION,
-        required: true,
-      },
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserAuth",
-        required: true,
-      },
-    },
-  ],
-});
+  { timestamps: true },
+);
 
-module.exports =
-  mongoose.models.UniversityOfficial ||
+export default mongoose.models.UniversityOfficial ||
   mongoose.model("UniversityOfficial", universityOfficialSchema);

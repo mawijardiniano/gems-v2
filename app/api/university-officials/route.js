@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
+import { logActivity } from "@/lib/activityLog";
 
 const POPULATE_PATHS = [
   "president.name",
@@ -60,6 +61,14 @@ export async function POST(req) {
     }).populate({
       path: POPULATE_PATHS,
       populate: { path: "personal_info_id" },
+    });
+    await logActivity({
+      req,
+      action: "OFFICIAL_CREATE",
+      description: `University official added to section "${section}"`,
+      resource_type: "university_official",
+      severity: "info",
+      metadata: { section },
     });
     return Response.json({ success: true, data: updated });
   } catch (error) {

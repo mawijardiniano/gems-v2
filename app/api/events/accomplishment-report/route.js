@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { NextResponse } from "next/server";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req) {
   try {
@@ -8,6 +9,16 @@ export async function POST(req) {
     const body = await req.json();
 
     const report = await AccomplishmentReport.create(body);
+
+    await logActivity({
+      req,
+      action: "ACCOMPLISHMENT_CREATE",
+      description: `Accomplishment report created`,
+      resource_type: "accomplishment",
+      resource_id: report._id,
+      severity: "info",
+      metadata: { event_id: body.event_id },
+    });
 
     return NextResponse.json({ status: "success", data: report });
   } catch (err) {

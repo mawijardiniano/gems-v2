@@ -9,17 +9,28 @@ const ActivityLogSchema = new mongoose.Schema(
     },
     action: {
       type: String,
-      required: true, 
+      required: true,
     },
     description: {
       type: String,
     },
+    severity: {
+      type: String,
+      enum: ["info", "warning", "error", "critical"],
+      default: "info",
+    },
+    resource_type: {
+      type: String,
+    },
+    resource_id: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
     ip_address: String,
     user_agent: String,
-    metadata: Object, 
+    metadata: Object,
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

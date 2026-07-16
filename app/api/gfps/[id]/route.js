@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
 import UniversityOfficial from "@/models/universityOfficials";
+import { logActivity } from "@/lib/activityLog";
 
 async function normalizeOfficialId(id) {
   if (!id) return null;
@@ -96,6 +97,15 @@ export async function PUT(req, { params }) {
     }
 
     await existing.save();
+
+    await logActivity({
+      req,
+      action: "GFP_UPDATE",
+      description: "GFPS structure updated",
+      resource_type: "gfps",
+      resource_id: id,
+      severity: "info",
+    });
 
     console.log("[GFPS PUT] Updated doc:", JSON.stringify(existing, null, 2));
 

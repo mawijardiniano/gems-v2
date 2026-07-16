@@ -3,6 +3,7 @@ import Event from "@/models/event";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { logActivity } from "@/lib/activityLog";
 
 const VALID_STATUSES = ["interested", "not_interested", "going"];
 
@@ -92,6 +93,16 @@ export async function POST(req) {
     }
 
     await event.save();
+
+    await logActivity({
+      req,
+      action: "EVENT_PARTICIPATE",
+      description: `User participation set to "${status}" for event`,
+      resource_type: "event",
+      resource_id: event_id,
+      severity: "info",
+      metadata: { status, userIds },
+    });
 
     const populated = await event.populate([
       {

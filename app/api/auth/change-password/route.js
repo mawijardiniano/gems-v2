@@ -43,33 +43,52 @@ export async function POST(req) {
       );
     }
 
-    const user = await UserAuth.findById(userId);
+    // SECURITY: Must explicitly select password field since it's hidden by default
+    const user = await UserAuth.findById(userId).select("+password");
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const match = await bcrypt.compare(currentPassword, user.password);
     if (!match) {
+      await logActivity({
+        user_id: user._id,
+        action: "CHANGE_PASSWORD",
+        description: "Failed password change - current password incorrect",
+        req,
+        metadata: { module: "auth" },
+        resource_type: "user",
+        resource_id: user._id,
+        severity: "warning",
+      });
+
       return NextResponse.json(
         { error: "Current password is incorrect" },
         { status: 403 },
       );
     }
 
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      return NextResponse.json(
+        { error: "New password must be at least 8 characters" },
+        { status: 400 },
+      );
+    }
+
     user.password = newPassword;
     await user.save();
 
-    try {
-      await logActivity({
-        user_id: user._id,
-        action: "CHANGE_PASSWORD",
-        description: "User changed their password",
-        req,
-      });
-      console.log("✅ Logged activity: CHANGE_PASSWORD");
-    } catch (err) {
-      console.error("Failed to log activity CHANGE_PASSWORD:", err);
-    }
+    await logActivity({
+      user_id: user._id,
+      action: "CHANGE_PASSWORD",
+      description: "User changed their password successfully",
+      req,
+      metadata: { module: "auth" },
+      resource_type: "user",
+      resource_id: user._id,
+      severity: "info",
+    });
 
     return NextResponse.json(
       { success: true, message: "Password updated" },

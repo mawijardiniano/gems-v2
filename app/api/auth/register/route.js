@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req) {
   try {
@@ -20,6 +21,15 @@ export async function POST(req) {
       username,
       password,
       role, 
+    });
+
+    await logActivity({
+      req,
+      action: "REGISTER",
+      description: `Admin account created: ${username}`,
+      resource_type: "user",
+      resource_id: admin._id,
+      severity: "info",
     });
 
     const { password: _, ...adminData } = admin.toObject();

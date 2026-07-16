@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req, { params }) {
   try {
@@ -21,6 +22,16 @@ export async function POST(req, { params }) {
     });
 
     await gfps.save();
+
+    await logActivity({
+      req,
+      action: "GFP_MEMBER_ADD",
+      description: `Added member to GFPS section "${sectionKey}"`,
+      resource_type: "gfps",
+      resource_id: params.id,
+      severity: "info",
+      metadata: { sectionKey },
+    });
 
     return Response.json({ success: true, message: "Member added" });
   } catch (err) {
