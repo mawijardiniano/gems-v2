@@ -32,7 +32,7 @@ export default function StudentFilterTable({
   }, []);
 
   return (
-    <div className="flex flex-wrap gap-4 mb-6">
+    <div className="flex flex-wrap gap-4 mb-6 text-black text-xs">
       <select
         className="border p-2 rounded bg-white"
         value={filterSex}
@@ -137,7 +137,7 @@ export default function StudentFilterTable({
                   }
                   className="form-checkbox"
                 />
-                <span className="text-sm">{c}</span>
+                <span className="text-xs">{c}</span>
               </label>
             ))}
           </div>

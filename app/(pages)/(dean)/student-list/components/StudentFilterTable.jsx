@@ -35,7 +35,7 @@ export default function StudentFilterTable({
   }, []);
 
   return (
-    <div className="flex flex-wrap gap-4 mb-6">
+    <div className="flex flex-wrap gap-4 mb-6 text-black text-xs">
       <select
         className="border p-2 rounded bg-white"
         value={filterSex}
@@ -108,7 +108,7 @@ export default function StudentFilterTable({
           />
         </button>
         {collegeOpen && (
-          <div className="absolute z-10 mt-1 w-64 bg-white border rounded shadow max-h-48 overflow-auto p-2">
+          <div className="absolute z-10 mt-1 w-64 bg-white border rounded shadow max-h-48 overflow-auto p-2 ">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600">Select Course</span>
               <button
@@ -122,7 +122,7 @@ export default function StudentFilterTable({
             {courseOptions.map((c) => (
               <label
                 key={c}
-                className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded"
+                className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded "
               >
                 <input
                   type="checkbox"
@@ -132,9 +132,9 @@ export default function StudentFilterTable({
                       prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
                     )
                   }
-                  className="form-checkbox"
+                  className="form-checkbox "
                 />
-                <span className="text-sm">{c}</span>
+                <span className="text-xs">{c}</span>
               </label>
             ))}
           </div>

@@ -615,7 +615,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                 {};
               return (
                 <TableRow key={user._id || index} className="hover:bg-gray-50">
-                  <TableCell>
+                  <TableCell >
                     <input
                       type="checkbox"
                       checked={selected.includes(
@@ -628,16 +628,16 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                       }
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell  className="text-black text-xs">
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell>{gad.sexAtBirth || "—"}</TableCell>
-                  <TableCell>{emp.office || "—"}</TableCell>
-                  <TableCell>{emp.employment_status || "—"}</TableCell>
-                  <TableCell>
+                  <TableCell  className="text-black text-xs">{gad.sexAtBirth || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">{emp.office || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">{emp.employment_status || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">
                     {emp.employment_appointment_status || "—"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell  className="text-black text-xs">
                     {(() => {
                       const dateStr =
                         p.createdAt || emp.created_at || user.createdAt;

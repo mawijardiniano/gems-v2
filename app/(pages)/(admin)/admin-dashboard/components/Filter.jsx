@@ -66,7 +66,7 @@ export default function Filter({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
   return (
-    <div className="flex flex-wrap gap-4 mb-6">
+    <div className="flex flex-wrap gap-4 mb-6 text-black text-xs">
       <select
         className="border p-2 rounded bg-white"
         value={filterSex}
@@ -201,7 +201,7 @@ export default function Filter({
                     }
                     className="form-checkbox"
                   />
-                  <span className="text-sm">{c}</span>
+                  <span className="text-xs">{c}</span>
                 </label>
               ))}
             </div>
@@ -279,7 +279,7 @@ export default function Filter({
                     }
                     className="form-checkbox"
                   />
-                  <span className="text-sm">{a}</span>
+                  <span className="text-xs">{a}</span>
                 </label>
               ))}
             </div>

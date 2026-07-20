@@ -573,10 +573,10 @@ export default function StudentsUserListContent() {
                       }
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-black text-xs">
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell>
+                  <TableCell  className="text-black text-xs">
                     {gad.sexAtBirth
                       ? gad.sexAtBirth.toLowerCase() === "male"
                         ? "Male"
@@ -585,11 +585,11 @@ export default function StudentsUserListContent() {
                           : gad.sexAtBirth
                       : "—"}
                   </TableCell>
-                  <TableCell>{acad.college || "—"}</TableCell>
-                  <TableCell>{acad.campus || "—"}</TableCell>
-                  <TableCell>{acad.course || "—"}</TableCell>
-                  <TableCell>{acad.year_level || "—"}</TableCell>
-                  <TableCell>
+                  <TableCell  className="text-black text-xs">{acad.college || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">{acad.campus || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">{acad.course || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">{acad.year_level || "—"}</TableCell>
+                  <TableCell  className="text-black text-xs">
                     {p.createdAt
                       ? new Date(p.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",

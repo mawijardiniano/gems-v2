@@ -49,6 +49,8 @@ export default function StudentsUserListContent({ college }) {
   const [searchName, setSearchName] = useState("");
   const [viewModalUser, setViewModalUser] = useState(null);
   const [viewTab, setViewTab] = useState("personal");
+  const [generating, setGenerating] = useState(false);
+  const [reportStatus, setReportStatus] = useState("");
   const role = useSelector((state) => state.auth.role);
 
   const studentsData = useMemo(
@@ -151,7 +153,6 @@ export default function StudentsUserListContent({ college }) {
       const gad = p.gadData || {};
       const acad = p.affiliation?.academic_information || {};
       const personal = p.personal || {};
-      console.log("Role", role);
 
       const fullName =
         `${personal.first_name || ""} ${personal.last_name || ""}`
@@ -328,8 +329,6 @@ export default function StudentsUserListContent({ college }) {
 
   const handleToggleStatus = async (id, isActive) => {
     try {
-      console.log("Toggle ID:", id);
-
       const res = await axios.patch(
         `/api/auth/users/toggle-status/${id}`,
         {
@@ -337,8 +336,6 @@ export default function StudentsUserListContent({ college }) {
         },
         { withCredentials: true },
       );
-
-      console.log("Toggle response:", res.data);
       window.location.reload();
     } catch (err) {
       console.error("Toggle error:", err.response?.data || err);
@@ -359,6 +356,220 @@ export default function StudentsUserListContent({ college }) {
 
   const handleEdit = (id) => {
     // Edit handler placeholder
+  };
+
+  const normalizeStr = (s) => (s || "").toString().trim().toLowerCase();
+
+  // Builds the student-only sex-disaggregated report data.
+  // NOTE: only exact "Male" / "Female" matches are counted into their bucket.
+  // Any record with missing/blank/unexpected sexAtBirth is left out of the
+  // Male/Female split (it is no longer silently counted as Female), but is
+  // still included in the overall total below.
+  const buildReportData = () => {
+    const courseYearMap = {};
+    let studentMaleTotal = 0;
+    let studentFemaleTotal = 0;
+    let studentGrandTotal = 0;
+
+    students.forEach((u) => {
+      const acad = u.personal_info_id?.affiliation?.academic_information || {};
+      const course = acad.course || "Unspecified";
+      const yearLevel = acad.year_level || "Unspecified";
+      const sex = u.personal_info_id?.gadData?.sexAtBirth || "";
+
+      if (!courseYearMap[course]) courseYearMap[course] = {};
+      if (!courseYearMap[course][yearLevel])
+        courseYearMap[course][yearLevel] = { Male: 0, Female: 0, Total: 0 };
+
+      if (sex === "Male") {
+        courseYearMap[course][yearLevel].Male += 1;
+        studentMaleTotal += 1;
+      } else if (sex === "Female") {
+        courseYearMap[course][yearLevel].Female += 1;
+        studentFemaleTotal += 1;
+      }
+
+      // every student counts toward the total, regardless of sex data
+      courseYearMap[course][yearLevel].Total += 1;
+      studentGrandTotal += 1;
+    });
+
+    return {
+      courseYearMap,
+      studentTotals: {
+        Male: studentMaleTotal,
+        Female: studentFemaleTotal,
+        Total: studentGrandTotal,
+      },
+    };
+  };
+
+  const wrapText = (doc, text, x, y, maxWidth, lineHeight) => {
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach((line) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, x, y);
+      y += lineHeight;
+    });
+    return y;
+  };
+
+  const generatePDF = async () => {
+    setGenerating(true);
+    setReportStatus("");
+    try {
+      const jsPDF = (await import("jspdf")).default;
+      const autoTable = (await import("jspdf-autotable")).default;
+      const doc = new jsPDF();
+
+      const report = buildReportData();
+      const collegeLabel = college || "College of Information and Computing Sciences";
+      const yearLabel = filterSchoolYear || "AY 2024-2025";
+      const semLabel = filterSemester || "2nd Semester";
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+      const maxTextWidth = pageWidth - margin * 2;
+
+      let y = 20;
+      doc.setFontSize(14);
+      doc.text("College of Information and Computing Sciences (CICS)", margin, y);
+      y += 7;
+      doc.setFontSize(12);
+      doc.text("Sex-disaggregated Data (Students)", margin, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.text(`${semLabel} ${yearLabel}`, margin, y);
+      y += 10;
+
+      // ===== SECTION 1: STUDENT ENROLLMENT BY PROGRAM =====
+      doc.setFontSize(11);
+      doc.text("1. Student Enrollment by Program", margin, y);
+      y += 8;
+
+      const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+      const courses = Object.keys(report.courseYearMap).sort();
+
+      courses.forEach((course) => {
+        const yearMap = report.courseYearMap[course];
+        const rows = [];
+        let courseMale = 0;
+        let courseFemale = 0;
+        let courseTotal = 0;
+
+        yearOrder.forEach((yr) => {
+          if (yearMap[yr]) {
+            const m = yearMap[yr].Male || 0;
+            const f = yearMap[yr].Female || 0;
+            const t = yearMap[yr].Total || m + f;
+            rows.push([yr, m, f, t]);
+            courseMale += m;
+            courseFemale += f;
+            courseTotal += t;
+          }
+        });
+        Object.entries(yearMap).forEach(([yr, counts]) => {
+          if (!yearOrder.includes(yr)) {
+            const m = counts.Male || 0;
+            const f = counts.Female || 0;
+            const t = counts.Total || m + f;
+            rows.push([yr, m, f, t]);
+            courseMale += m;
+            courseFemale += f;
+            courseTotal += t;
+          }
+        });
+
+        if (y > 240) { doc.addPage(); y = 20; }
+
+        const courseLabel = `Student Enrollment in the ${course} Program`;
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        doc.text(courseLabel, margin, y);
+        y += 6;
+
+        const tableRows = rows.length ? [...rows] : [["No data", 0, 0, 0]];
+        tableRows.push(["TOTAL", courseMale, courseFemale, courseTotal]);
+
+        autoTable(doc, {
+          startY: y,
+          head: [["Year Level", "Male", "Female", "Total"]],
+          body: tableRows,
+          styles: { fontSize: 9, halign: "center" },
+          headStyles: { fillColor: [33, 150, 243], halign: "center" },
+          columnStyles: { 0: { halign: "left" } },
+        });
+        y = doc.lastAutoTable.finalY + 6;
+
+        // Course interpretation
+        doc.setFontSize(9);
+        doc.setFont(undefined, "italic");
+        y = wrapText(doc, `Interpretation:`, margin, y, maxTextWidth, 5);
+        doc.setFont(undefined, "normal");
+
+        const malePct = courseTotal > 0 ? Math.round((courseMale / courseTotal) * 100) : 0;
+        const femalePct = courseTotal > 0 ? Math.round((courseFemale / courseTotal) * 100) : 0;
+        const firstYr = yearMap["1st Year"] || { Male: 0, Female: 0, Total: 0 };
+        const firstYrTotal = firstYr.Total || firstYr.Male + firstYr.Female;
+        const fourthYr = yearMap["4th Year"] || { Male: 0, Female: 0, Total: 0 };
+        const fourthYrTotal = fourthYr.Total || fourthYr.Male + fourthYr.Female;
+        const secondYr = yearMap["2nd Year"] || { Male: 0, Female: 0, Total: 0 };
+        const secondYrTotal = secondYr.Total || secondYr.Male + secondYr.Female;
+
+        y = wrapText(doc, `The total student population in the ${course} program is ${courseTotal} students, with ${courseMale} males (${malePct}%) and ${courseFemale} females (${femalePct}%).`, margin, y, maxTextWidth, 4.5);
+
+        if (malePct > femalePct) {
+          y = wrapText(doc, `Gender Distribution: The ${course} program remains male-dominated, with males consistently outnumbering females in all year levels.`, margin, y, maxTextWidth, 4.5);
+        } else if (femalePct > malePct) {
+          y = wrapText(doc, `Gender Distribution: Females outnumber males in this course.`, margin, y, maxTextWidth, 4.5);
+        } else {
+          y = wrapText(doc, `Gender Distribution: Male and female enrollment is evenly split in this course.`, margin, y, maxTextWidth, 4.5);
+        }
+
+        y = wrapText(doc, `The highest enrollment is in 1st Year (${firstYrTotal} students), but the numbers drop as the year level increases (only ${fourthYrTotal} students remain in 4th Year).`, margin, y, maxTextWidth, 4.5);
+
+        if (firstYrTotal > 0 && secondYrTotal < firstYrTotal) {
+          const dropPct = Math.round(((firstYrTotal - secondYrTotal) / firstYrTotal) * 100);
+          y = wrapText(doc, `Drop in 2nd Year: There is a decrease in enrollment from 1st to 2nd year (from ${firstYrTotal} to ${secondYrTotal} students, a ${dropPct}% drop).`, margin, y, maxTextWidth, 4.5);
+          y = wrapText(doc, `This may suggest: Academic challenges or course shifting, financial constraints affecting retention, and students transferring to other institutions.`, margin, y, maxTextWidth, 4.5);
+        }
+
+        y += 6;
+      });
+
+      // ===== SECTION 2: OVERALL STUDENT SUMMARY =====
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setFont(undefined, "normal");
+      doc.text("2. Overall Student Summary", margin, y);
+      y += 8;
+
+      autoTable(doc, {
+        startY: y,
+        head: [["Category", "Male", "Female", "Total"]],
+        body: [
+          [
+            "Students",
+            report.studentTotals.Male,
+            report.studentTotals.Female,
+            report.studentTotals.Total,
+          ],
+        ],
+        styles: { fontSize: 9, halign: "center" },
+        headStyles: { fillColor: [33, 150, 243], halign: "center" },
+        columnStyles: { 0: { halign: "left" } },
+      });
+
+      doc.save(`cics-sex-disaggregated-report-${filterSchoolYear || "all"}-${filterSemester || "all"}.pdf`);
+      setReportStatus("PDF report downloaded successfully!");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      setReportStatus("Could not generate the report.");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const renderViewModal = () => {
@@ -400,7 +611,7 @@ export default function StudentsUserListContent({ college }) {
           },
           { label: "Blood Type", value: personal.bloodType },
         ].map((field) => (
-          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+          <div key={field.label}>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               {field.label}
             </label>
@@ -415,7 +626,7 @@ export default function StudentsUserListContent({ college }) {
     const renderContactTab = () => (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div >
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               Email
             </label>
@@ -423,7 +634,7 @@ export default function StudentsUserListContent({ college }) {
               {contact.email || "—"}
             </p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div >
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               Mobile Number
             </label>
@@ -445,7 +656,7 @@ export default function StudentsUserListContent({ college }) {
               { label: "City/Municipality", value: permanentAddr.city?.name },
               { label: "Barangay", value: permanentAddr.barangay?.name },
             ].map((field) => (
-              <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+              <div key={field.label} >
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {field.label}
                 </label>
@@ -469,7 +680,7 @@ export default function StudentsUserListContent({ college }) {
               { label: "City/Municipality", value: currentAddr.city?.name },
               { label: "Barangay", value: currentAddr.barangay?.name },
             ].map((field) => (
-              <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+              <div key={field.label} >
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {field.label}
                 </label>
@@ -509,7 +720,7 @@ export default function StudentsUserListContent({ college }) {
           },
           { label: "Head of Household", value: gad.headOfHousehold },
         ].map((field) => (
-          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+          <div key={field.label} >
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               {field.label}
             </label>
@@ -531,7 +742,7 @@ export default function StudentsUserListContent({ college }) {
           { label: "Year Level", value: acad.year_level },
           { label: "Scholarship Status", value: acad.isScholar },
         ].map((field) => (
-          <div key={field.label} className="bg-gray-50 rounded-lg p-3">
+          <div key={field.label}>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               {field.label}
             </label>
@@ -606,10 +817,10 @@ export default function StudentsUserListContent({ college }) {
             </div>
           </div>
 
-          {/* Content */}
+
           <div className="px-6 py-5">{tabContent[viewTab]}</div>
 
-          {/* Footer */}
+  
           <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
             <button
               onClick={() => {
@@ -683,6 +894,35 @@ export default function StudentsUserListContent({ college }) {
           </div>
         </div>
       )}
+      <div className="flex items-center justify-between mb-3 p-3 bg-white border border-gray-200 rounded-lg">
+        <div>
+          <p className="text-sm font-medium text-black">
+            Generate Sex-Disaggregated Data Report (Students)
+          </p>
+          <p className="text-xs text-black">
+            {college ? `College: ${college}` : "All colleges/offices"}
+            {filterSchoolYear ? ` | School Year: ${filterSchoolYear}` : ""}
+            {filterSemester ? ` | Semester: ${filterSemester}` : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {reportStatus && (
+            <span className={`text-xs font-medium ${reportStatus.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
+              {reportStatus}
+            </span>
+          )}
+          <button
+            onClick={generatePDF}
+            disabled={generating}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition shadow-sm"
+          >
+            <svg className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {generating ? "Generating..." : "Download PDF Report"}
+          </button>
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <Table className="bg-white" striped={false} color="none">
           <TableHead className="bg-gray-200 text-black">
@@ -882,10 +1122,10 @@ export default function StudentsUserListContent({ college }) {
                       />
                     </TableCell>
                   )}
-                  <TableCell>
+                  <TableCell className="text-black text-xs">
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-black text-xs">
                     {gad.sexAtBirth
                       ? gad.sexAtBirth.toLowerCase() === "male"
                         ? "Male"
@@ -894,10 +1134,10 @@ export default function StudentsUserListContent({ college }) {
                           : gad.sexAtBirth
                       : "—"}
                   </TableCell>
-                  <TableCell>{acad.college || "—"}</TableCell>
-                  <TableCell>{acad.campus || "—"}</TableCell>
-                  <TableCell>{acad.course || "—"}</TableCell>
-                  <TableCell>{acad.year_level || "—"}</TableCell>
+                  <TableCell className="text-black text-xs">{acad.college || "—"}</TableCell>
+                  <TableCell className="text-black text-xs">{acad.campus || "—"}</TableCell>
+                  <TableCell className="text-black text-xs">{acad.course || "—"}</TableCell>
+                  <TableCell className="text-black text-xs">{acad.year_level || "—"}</TableCell>
                   <TableCell className="text-center">
                     <button
                       onClick={() => setViewModalUser(user)}
