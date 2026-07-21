@@ -147,22 +147,27 @@ export default function Sidebar({ open, setOpen, role }) {
       </nav>
 
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-medium">Confirm Logout</h2>
-            <p className="mb-6 text-gray-600">
-              Are you sure you want to log out?
-            </p>
-            <div className="flex justify-end gap-2">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 space-y-6 text-center">
+            <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
+              <FaSignOutAlt className="text-2xl text-red-500" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-gray-900">Confirm Logout</h2>
+              <p className="text-sm text-gray-500">
+                Are you sure you want to log out? You will need to sign in again to access your account.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 onClick={handleLogout}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-sm font-medium text-white hover:bg-red-700 transition-colors"
               >
                 Logout
               </button>

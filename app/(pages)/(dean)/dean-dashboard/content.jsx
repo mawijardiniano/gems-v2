@@ -168,7 +168,7 @@ export default function DeanDashboardContent() {
   ]);
   return (
     <div>
-      <div className="flex flex-wrap gap-4 mb-4 justify-end">
+      <div className="flex flex-wrap gap-4 mb-4 justify-end text-xs">
         <select
           className="border p-2 rounded bg-white"
           value={filterSchoolYear}

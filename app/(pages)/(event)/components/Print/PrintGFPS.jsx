@@ -1,10 +1,7 @@
-"use client"
+"use client";
 
-export default function PrintGFPS({
-SECTIONS = {},
-gfps = {}
-}) {
-const handlePrintGFPS = () => {
+export default function PrintGFPS({ SECTIONS = {}, gfps = {} }) {
+  const handlePrintGFPS = () => {
     const html = `
     <html>
       <head>
@@ -157,12 +154,12 @@ const handlePrintGFPS = () => {
     };
   };
 
- return (
-          <button
-            className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={handlePrintGFPS}
-          >
-            Print GFPS
-          </button>
- )
+  return (
+    <button
+      className="px-4 py-2 bg-blue-600 text-white rounded-xl  hover:bg-blue-700"
+      onClick={handlePrintGFPS}
+    >
+      Print GFPS
+    </button>
+  );
 }

@@ -43,7 +43,6 @@ export async function POST(req) {
       );
     }
 
-    // SECURITY: Must explicitly select password field since it's hidden by default
     const user = await UserAuth.findById(userId).select("+password");
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -68,7 +67,6 @@ export async function POST(req) {
       );
     }
 
-    // Validate new password strength
     if (newPassword.length < 8) {
       return NextResponse.json(
         { error: "New password must be at least 8 characters" },

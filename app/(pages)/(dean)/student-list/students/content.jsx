@@ -355,16 +355,11 @@ export default function StudentsUserListContent({ college }) {
   };
 
   const handleEdit = (id) => {
-    // Edit handler placeholder
+
   };
 
   const normalizeStr = (s) => (s || "").toString().trim().toLowerCase();
 
-  // Builds the student-only sex-disaggregated report data.
-  // NOTE: only exact "Male" / "Female" matches are counted into their bucket.
-  // Any record with missing/blank/unexpected sexAtBirth is left out of the
-  // Male/Female split (it is no longer silently counted as Female), but is
-  // still included in the overall total below.
   const buildReportData = () => {
     const courseYearMap = {};
     let studentMaleTotal = 0;
@@ -389,7 +384,6 @@ export default function StudentsUserListContent({ college }) {
         studentFemaleTotal += 1;
       }
 
-      // every student counts toward the total, regardless of sex data
       courseYearMap[course][yearLevel].Total += 1;
       studentGrandTotal += 1;
     });
@@ -417,54 +411,30 @@ export default function StudentsUserListContent({ college }) {
     return y;
   };
 
-  const generatePDF = async () => {
+  const generatePDF = () => {
     setGenerating(true);
     setReportStatus("");
     try {
-      const jsPDF = (await import("jspdf")).default;
-      const autoTable = (await import("jspdf-autotable")).default;
-      const doc = new jsPDF();
-
       const report = buildReportData();
-      const collegeLabel = college || "College of Information and Computing Sciences";
+      const collegeLabel = college || "College of Information and Computing Sciences (CICS)";
       const yearLabel = filterSchoolYear || "AY 2024-2025";
       const semLabel = filterSemester || "2nd Semester";
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 14;
-      const maxTextWidth = pageWidth - margin * 2;
-
-      let y = 20;
-      doc.setFontSize(14);
-      doc.text("College of Information and Computing Sciences (CICS)", margin, y);
-      y += 7;
-      doc.setFontSize(12);
-      doc.text("Sex-disaggregated Data (Students)", margin, y);
-      y += 7;
-      doc.setFontSize(10);
-      doc.text(`${semLabel} ${yearLabel}`, margin, y);
-      y += 10;
-
-      // ===== SECTION 1: STUDENT ENROLLMENT BY PROGRAM =====
-      doc.setFontSize(11);
-      doc.text("1. Student Enrollment by Program", margin, y);
-      y += 8;
-
       const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
       const courses = Object.keys(report.courseYearMap).sort();
 
-      courses.forEach((course) => {
+      const buildCourseSection = (course) => {
         const yearMap = report.courseYearMap[course];
-        const rows = [];
         let courseMale = 0;
         let courseFemale = 0;
         let courseTotal = 0;
+        let bodyRows = "";
 
         yearOrder.forEach((yr) => {
           if (yearMap[yr]) {
             const m = yearMap[yr].Male || 0;
             const f = yearMap[yr].Female || 0;
             const t = yearMap[yr].Total || m + f;
-            rows.push([yr, m, f, t]);
+            bodyRows += `<tr><td style="text-align:left">${yr}</td><td>${m}</td><td>${f}</td><td>${t}</td></tr>`;
             courseMale += m;
             courseFemale += f;
             courseTotal += t;
@@ -475,39 +445,14 @@ export default function StudentsUserListContent({ college }) {
             const m = counts.Male || 0;
             const f = counts.Female || 0;
             const t = counts.Total || m + f;
-            rows.push([yr, m, f, t]);
+            bodyRows += `<tr><td style="text-align:left">${yr}</td><td>${m}</td><td>${f}</td><td>${t}</td></tr>`;
             courseMale += m;
             courseFemale += f;
             courseTotal += t;
           }
         });
 
-        if (y > 240) { doc.addPage(); y = 20; }
-
-        const courseLabel = `Student Enrollment in the ${course} Program`;
-        doc.setFontSize(10);
-        doc.setFont(undefined, "normal");
-        doc.text(courseLabel, margin, y);
-        y += 6;
-
-        const tableRows = rows.length ? [...rows] : [["No data", 0, 0, 0]];
-        tableRows.push(["TOTAL", courseMale, courseFemale, courseTotal]);
-
-        autoTable(doc, {
-          startY: y,
-          head: [["Year Level", "Male", "Female", "Total"]],
-          body: tableRows,
-          styles: { fontSize: 9, halign: "center" },
-          headStyles: { fillColor: [33, 150, 243], halign: "center" },
-          columnStyles: { 0: { halign: "left" } },
-        });
-        y = doc.lastAutoTable.finalY + 6;
-
-        // Course interpretation
-        doc.setFontSize(9);
-        doc.setFont(undefined, "italic");
-        y = wrapText(doc, `Interpretation:`, margin, y, maxTextWidth, 5);
-        doc.setFont(undefined, "normal");
+        bodyRows += `<tr class="total-row"><td style="text-align:left">TOTAL</td><td>${courseMale}</td><td>${courseFemale}</td><td>${courseTotal}</td></tr>`;
 
         const malePct = courseTotal > 0 ? Math.round((courseMale / courseTotal) * 100) : 0;
         const femalePct = courseTotal > 0 ? Math.round((courseFemale / courseTotal) * 100) : 0;
@@ -518,54 +463,126 @@ export default function StudentsUserListContent({ college }) {
         const secondYr = yearMap["2nd Year"] || { Male: 0, Female: 0, Total: 0 };
         const secondYrTotal = secondYr.Total || secondYr.Male + secondYr.Female;
 
-        y = wrapText(doc, `The total student population in the ${course} program is ${courseTotal} students, with ${courseMale} males (${malePct}%) and ${courseFemale} females (${femalePct}%).`, margin, y, maxTextWidth, 4.5);
-
+        let genderStatement = "";
         if (malePct > femalePct) {
-          y = wrapText(doc, `Gender Distribution: The ${course} program remains male-dominated, with males consistently outnumbering females in all year levels.`, margin, y, maxTextWidth, 4.5);
+          genderStatement = `Gender Distribution: The ${course} program remains male-dominated, with males consistently outnumbering females in all year levels.`;
         } else if (femalePct > malePct) {
-          y = wrapText(doc, `Gender Distribution: Females outnumber males in this course.`, margin, y, maxTextWidth, 4.5);
+          genderStatement = `Gender Distribution: Females outnumber males in this course.`;
         } else {
-          y = wrapText(doc, `Gender Distribution: Male and female enrollment is evenly split in this course.`, margin, y, maxTextWidth, 4.5);
+          genderStatement = `Gender Distribution: Male and female enrollment is evenly split in this course.`;
         }
 
-        y = wrapText(doc, `The highest enrollment is in 1st Year (${firstYrTotal} students), but the numbers drop as the year level increases (only ${fourthYrTotal} students remain in 4th Year).`, margin, y, maxTextWidth, 4.5);
-
+        let dropStatement = "";
         if (firstYrTotal > 0 && secondYrTotal < firstYrTotal) {
           const dropPct = Math.round(((firstYrTotal - secondYrTotal) / firstYrTotal) * 100);
-          y = wrapText(doc, `Drop in 2nd Year: There is a decrease in enrollment from 1st to 2nd year (from ${firstYrTotal} to ${secondYrTotal} students, a ${dropPct}% drop).`, margin, y, maxTextWidth, 4.5);
-          y = wrapText(doc, `This may suggest: Academic challenges or course shifting, financial constraints affecting retention, and students transferring to other institutions.`, margin, y, maxTextWidth, 4.5);
+          dropStatement = `
+            <p><strong>Drop in 2nd Year:</strong> There is a decrease in enrollment from 1st to 2nd year (from ${firstYrTotal} to ${secondYrTotal} students, a ${dropPct}% drop).</p>
+            <p>This may suggest: Academic challenges or course shifting, financial constraints affecting retention, and students transferring to other institutions.</p>
+          `;
         }
 
-        y += 6;
+        return `
+          <h3>Student Enrollment in the ${course} Program</h3>
+          <table>
+            <thead><tr><th style="text-align:left">Year Level</th><th>Male</th><th>Female</th><th>Total</th></tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+          <div class="interpretation">
+            <p><strong>Interpretation:</strong></p>
+            <p>The total student population in the ${course} program is ${courseTotal} students, with ${courseMale} males (${malePct}%) and ${courseFemale} females (${femalePct}%).</p>
+            <p>${genderStatement}</p>
+            <p>The highest enrollment is in 1st Year (${firstYrTotal} students), but the numbers drop as the year level increases (only ${fourthYrTotal} students remain in 4th Year).</p>
+            ${dropStatement}
+          </div>
+        `;
+      };
+
+      let courseSections = "";
+      courses.forEach((course) => {
+        courseSections += buildCourseSection(course);
       });
 
-      // ===== SECTION 2: OVERALL STUDENT SUMMARY =====
-      if (y > 240) { doc.addPage(); y = 20; }
-      doc.setFontSize(11);
-      doc.setFont(undefined, "normal");
-      doc.text("2. Overall Student Summary", margin, y);
-      y += 8;
+const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>CICS Sex-Disaggregated Data Report - Students</title>
+          <style>
+            @page { margin: 15mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5; font-size: 11pt; }
+            .report-container { max-width: 1100px; margin: 0 auto; padding: 10px; }
+            h1 { font-size: 14pt; color: #000; margin-bottom: 4px; text-align: center; }
+            .subtitle { text-align: center; font-size: 11pt; color: #000; margin-bottom: 20px; }
+            h2 { font-size: 12pt; color: #000; margin-top: 24px; margin-bottom: 8px; border-bottom: 2px solid #1a237e; padding-bottom: 4px; }
+            h3 { font-size: 11pt; color: #000; margin-top: 18px; margin-bottom: 6px; }
+            table { width: 100%; border-collapse: collapse; margin: 8px 0 12px 0; }
+            th { background-color: #1565c0; color: #000; padding: 6px 8px; text-align: center; font-weight: 600; font-size: 10pt; }
+            td { padding: 5px 8px; text-align: center; border: 1px solid #b0bec5; font-size: 10pt; color: #000; }
+            tr:nth-child(even) { background-color: #f5f5f5; }
+            .total-row { background-color: #e3f2fd !important; font-weight: bold; }
+            .interpretation { margin-top: 6px; padding: 8px 10px; background: #f5f5f5; border-left: 4px solid #1565c0; border-radius: 4px; }
+            .interpretation p { margin: 3px 0; font-size: 10pt; color: #000; }
+            .interpretation strong { color: #000; }
+            .summary-section { margin-top: 24px; }
+            .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 9pt; color: #000; text-align: center; }
+            .college-label { color: #000; }
+          </style>
+        </head>
+        <body>
+          <div class="report-container">
+            <h1 class="college-label">${collegeLabel}</h1>
+            <h1 style="font-size:12pt;margin-top:0">Sex-Disaggregated Data (Students)</h1>
+            <div class="subtitle">${semLabel} ${yearLabel}</div>
 
-      autoTable(doc, {
-        startY: y,
-        head: [["Category", "Male", "Female", "Total"]],
-        body: [
-          [
-            "Students",
-            report.studentTotals.Male,
-            report.studentTotals.Female,
-            report.studentTotals.Total,
-          ],
-        ],
-        styles: { fontSize: 9, halign: "center" },
-        headStyles: { fillColor: [33, 150, 243], halign: "center" },
-        columnStyles: { 0: { halign: "left" } },
+            <h2>1. Student Enrollment by Program</h2>
+            ${courseSections}
+
+            <h2 class="summary-section">2. Overall Student Summary</h2>
+            <table>
+              <thead><tr><th style="text-align:left">Category</th><th>Male</th><th>Female</th><th>Total</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="text-align:left">Students</td>
+                  <td>${report.studentTotals.Male}</td>
+                  <td>${report.studentTotals.Female}</td>
+                  <td>${report.studentTotals.Total}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="footer">
+              Generated on ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} |
+              College of Information and Computing Sciences
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const iframe = document.createElement("iframe");
+      Object.assign(iframe.style, {
+        position: "fixed",
+        right: "0",
+        bottom: "0",
+        width: "0",
+        height: "0",
+        border: "0",
       });
-
-      doc.save(`cics-sex-disaggregated-report-${filterSchoolYear || "all"}-${filterSemester || "all"}.pdf`);
-      setReportStatus("PDF report downloaded successfully!");
+      document.body.appendChild(iframe);
+      const frameDoc = iframe.contentWindow?.document;
+      if (!frameDoc) return;
+      frameDoc.open();
+      frameDoc.write(html);
+      frameDoc.close();
+      iframe.onload = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      };
+      setReportStatus("Print dialog opened. Save as PDF using the Print dialog.");
     } catch (err) {
-      console.error("PDF generation failed:", err);
+      console.error("HTML report generation failed:", err);
       setReportStatus("Could not generate the report.");
     } finally {
       setGenerating(false);
@@ -906,11 +923,7 @@ export default function StudentsUserListContent({ college }) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {reportStatus && (
-            <span className={`text-xs font-medium ${reportStatus.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
-              {reportStatus}
-            </span>
-          )}
+         
           <button
             onClick={generatePDF}
             disabled={generating}

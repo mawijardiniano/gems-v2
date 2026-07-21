@@ -31,6 +31,73 @@ const OFFICIAL_GROUPS_ORDER = [
   "office_of_the_vice_president_research_extension",
 ];
 
+const SECTION_STYLES = {
+  chairOrHeadOfAgency: {
+    border: "border-purple-200",
+    bg: "bg-purple-50",
+    headerBg: "bg-purple-100/50",
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    badge: "bg-purple-100 text-purple-700",
+    avatarBg: "bg-purple-100",
+    avatarText: "text-purple-600",
+  },
+  executiveCommittee: {
+    border: "border-blue-200",
+    bg: "bg-blue-50",
+    headerBg: "bg-blue-100/50",
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    badge: "bg-blue-100 text-blue-700",
+    avatarBg: "bg-blue-100",
+    avatarText: "text-blue-600",
+  },
+  technicalWorkingGroup: {
+    border: "border-emerald-200",
+    bg: "bg-emerald-50",
+    headerBg: "bg-emerald-100/50",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    badge: "bg-emerald-100 text-emerald-700",
+    avatarBg: "bg-emerald-100",
+    avatarText: "text-emerald-600",
+  },
+  secretariat: {
+    border: "border-amber-200",
+    bg: "bg-amber-50",
+    headerBg: "bg-amber-100/50",
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badge: "bg-amber-100 text-amber-700",
+    avatarBg: "bg-amber-100",
+    avatarText: "text-amber-600",
+  },
+};
+
+const SECTION_ICONS = {
+  chairOrHeadOfAgency: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  executiveCommittee: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  ),
+  technicalWorkingGroup: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  secretariat: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+  ),
+};
+
 function CheckboxTree({ officials, selected, onChange }) {
   const [expanded, setExpanded] = React.useState({});
 
@@ -63,44 +130,72 @@ function CheckboxTree({ officials, selected, onChange }) {
   };
 
   return (
-    <div className="border rounded p-2 max-h-50 overflow-y-auto bg-gray-50">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white divide-y divide-gray-100 max-h-64 overflow-y-auto">
       {OFFICIAL_GROUPS_ORDER.map((section) => {
         let items = officials[section];
         if (items && !Array.isArray(items)) items = [items];
         if (!items || items.length === 0) return null;
+        const sectionChecked =
+          Array.isArray(items) &&
+          items.length > 0 &&
+          items.every((item) =>
+            selectedSet.has(
+              `${section}:${item.name?._id || item._id || item.name}`,
+            ),
+          );
+        const sectionSomeChecked =
+          Array.isArray(items) &&
+          items.some((item) =>
+            selectedSet.has(
+              `${section}:${item.name?._id || item._id || item.name}`,
+            ),
+          );
         return (
-          <div key={section} className="mb-2">
-            <div className="flex items-center">
+          <div key={section} className="hover:bg-gray-50 transition-colors">
+            <div className="flex items-center px-3 py-2.5">
               <button
                 type="button"
-                className="mr-2 text-xs"
+                className="mr-2 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                 onClick={() => handleSectionToggle(section)}
               >
-                {expanded[section] ? "▼" : "▶"}
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded[section] ? "rotate-90" : ""}`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </button>
-              <input
-                type="checkbox"
-                checked={
-                  Array.isArray(items) &&
-                  items.length > 0 &&
-                  items.every((item) =>
-                    selectedSet.has(
-                      `${section}:${item.name?._id || item._id || item.name}`,
-                    ),
-                  )
-                }
-                onChange={(e) => handleSectionCheck(section, e.target.checked)}
-                className="mr-2"
-              />
-              <span className="font-semibold">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={sectionChecked}
+                  ref={(el) => {
+                    if (el) el.indeterminate = sectionSomeChecked && !sectionChecked;
+                  }}
+                  onChange={(e) => handleSectionCheck(section, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+              </div>
+              <span
+                className="ml-2.5 text-sm font-medium text-gray-700 cursor-pointer select-none"
+                onClick={() => handleSectionToggle(section)}
+              >
                 {section
                   .replace(/_/g, " ")
                   .replace(/([A-Z])/g, " $1")
                   .replace(/^./, (str) => str.toUpperCase())}
               </span>
+              <span className="ml-auto text-xs text-gray-400">
+                {items.length}
+              </span>
             </div>
             {expanded[section] && Array.isArray(items) && (
-              <div className="ml-6 mt-1">
+              <div className="ml-7 pb-1.5 space-y-0.5 border-l-2 border-gray-100 ml-4 pl-4">
                 {items.map((item) => {
                   const id = item.name?._id || item._id || item.name;
                   const key = `${section}:${id}`;
@@ -140,17 +235,22 @@ function CheckboxTree({ officials, selected, onChange }) {
                     );
                   })();
                   return (
-                    <div key={key} className="flex items-center mb-1">
+                    <label
+                      key={key}
+                      className="flex items-center py-1.5 px-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedSet.has(key)}
                         onChange={(e) =>
                           handleItemCheck(section, id, e.target.checked)
                         }
-                        className="mr-2"
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                       />
-                      <span>{label}</span>
-                    </div>
+                      <span className="ml-2.5 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                        {label}
+                      </span>
+                    </label>
                   );
                 })}
               </div>
@@ -158,6 +258,93 @@ function CheckboxTree({ officials, selected, onChange }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-gray-200 rounded w-32" />
+              <div className="h-3 bg-gray-100 rounded w-20" />
+            </div>
+          </div>
+          <div className="px-5 py-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-full" />
+              <div className="space-y-1.5 flex-1">
+                <div className="h-3.5 bg-gray-100 rounded w-3/4" />
+                <div className="h-3 bg-gray-50 rounded w-1/2" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-full" />
+              <div className="space-y-1.5 flex-1">
+                <div className="h-3.5 bg-gray-100 rounded w-2/3" />
+                <div className="h-3 bg-gray-50 rounded w-1/3" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ onAdd }) {
+  return (
+    <div className="text-center py-16">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-1">No GFPS Members Yet</h3>
+      <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+        Get started by adding members to the Gender and Development Focal Point System.
+      </p>
+      {onAdd && (
+        <button
+          onClick={onAdd}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-lg shadow-blue-200"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Member
+        </button>
+      )}
+    </div>
+  );
+}
+
+function OfficialRow({ official, avatarBg, avatarText }) {
+  const o = official || {};
+  const initials = `${(o.first_name?.[0] || "").toUpperCase()}${(o.last_name?.[0] || "").toUpperCase()}`;
+  const extra = o.branch || o.college;
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`flex-shrink-0 w-8 h-8 rounded-full ${avatarBg} flex items-center justify-center`}>
+        <span className={`text-xs font-semibold ${avatarText}`}>
+          {initials || "?"}
+        </span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-gray-700 truncate">
+          {o.position}
+          {extra && (
+            <span className="text-gray-400 font-normal"> — {extra}</span>
+          )}
+        </p>
+        <p className="text-xs text-gray-400 truncate">
+          {o.first_name} {o.last_name}
+        </p>
+      </div>
     </div>
   );
 }
@@ -171,6 +358,7 @@ export default function GFPSManager() {
   const [officials, setOfficials] = useState({});
   const [execRoles, setExecRoles] = useState({});
   const [editingSection, setEditingSection] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const role = useSelector((state) => state.auth.role);
 
   useEffect(() => {
@@ -220,8 +408,8 @@ export default function GFPSManager() {
       if (!items || items.length === 0) continue;
 
       const match = items.find((item) => {
-        const nameId = item.name?._id?.toString(); // populated UserAuth _id
-        const nameStr = item.name?.toString(); // raw ObjectId as string
+        const nameId = item.name?._id?.toString();
+        const nameStr = item.name?.toString();
         const subId = item._id?.toString();
         return nameId === idStr || nameStr === idStr || subId === idStr;
       });
@@ -289,6 +477,7 @@ export default function GFPSManager() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     let payload = {};
 
     const getOfficialNames = (key) => {
@@ -328,29 +517,15 @@ export default function GFPSManager() {
     };
 
     try {
-      console.log("SECTION:", section);
-      console.log("EDITING SECTION:", editingSection);
-      console.log("SELECTED OFFICIALS KEYS:", selectedOfficials);
-      console.log("EXEC ROLES:", execRoles);
-
       const debugResolved = selectedOfficials.map((key) => {
         const data = getOfficialNames(key);
-
-        console.log("🔍 RESOLVING:", key, data);
-
-        return {
-          key,
-          ...data,
-        };
+        return { key, ...data };
       });
-
-      console.log("FULL RESOLVED OFFICIALS:", debugResolved);
 
       if (section === "executiveCommittee") {
         payload[section] = {
           members: selectedOfficials.map((key) => {
             const d = debugResolved.find((x) => x.key === key);
-
             return {
               official: d?.officialId,
               role: execRoles[key] || "member",
@@ -363,7 +538,6 @@ export default function GFPSManager() {
         payload[section] = {
           members: selectedOfficials.map((key) => {
             const d = debugResolved.find((x) => x.key === key);
-
             return {
               official: d?.officialId,
               first_name: d?.first_name || "",
@@ -373,7 +547,6 @@ export default function GFPSManager() {
         };
       } else if (section === "chairOrHeadOfAgency") {
         const d = debugResolved[0];
-
         payload[section] = {
           official: d?.officialId,
           first_name: d?.first_name || "",
@@ -382,7 +555,6 @@ export default function GFPSManager() {
       } else if (section === "secretariat") {
         payload[section] = selectedOfficials.map((key) => {
           const d = debugResolved.find((x) => x.key === key);
-
           return {
             official: d?.officialId,
             first_name: d?.first_name || "",
@@ -391,14 +563,9 @@ export default function GFPSManager() {
         });
       }
 
-      console.log("FINAL PAYLOAD:", JSON.stringify(payload, null, 2));
-      console.log("=======================================");
-
       const isEditing = !!editingSection;
       const method = isEditing ? "PUT" : "POST";
       const url = isEditing ? `/api/gfps/${gfps._id}` : "/api/gfps";
-
-      console.log("REQUEST:", { method, url });
 
       const res = await fetch(url, {
         method,
@@ -408,35 +575,62 @@ export default function GFPSManager() {
 
       const data = await res.json().catch(() => ({}));
 
-      console.log("RESPONSE STATUS:", res.status);
-      console.log("RESPONSE DATA:", data);
-
       if (!res.ok) {
+        alert(data?.message || "Failed to save GFPS");
       } else {
         handleCloseModal();
         await fetchGfps();
       }
     } catch (err) {
       console.error("SUBMIT ERROR:", err);
+      alert("An error occurred while saving");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const EditButton = ({ sectionKey }) => (
     <button
       onClick={() => handleEdit(sectionKey)}
-      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
     >
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
       Edit
     </button>
   );
 
-  return (
-    <div className="p-6">
-      <div className="flex justify-between">
-        <h1 className="text-3xl font-bold items-center justify-center">GFPS</h1>
-        <div className="flex gap-4">
-          <PrintGFPS SECTIONS={SECTIONS} gfps={gfps} />
+  const hasData = Object.keys(gfps).length > 0 && SECTIONS.some((sec) => {
+    if (sec.key === "chairOrHeadOfAgency") return !!gfps[sec.key];
+    if (sec.key === "executiveCommittee" || sec.key === "technicalWorkingGroup") return gfps[sec.key]?.members?.length > 0;
+    if (sec.key === "secretariat") return Array.isArray(gfps[sec.key]) && gfps[sec.key].length > 0;
+    return false;
+  });
 
+  return (
+    <div className="p-6 max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                GFPS
+              </h1>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Gender and Development Focal Point System — manage committee members and their roles
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <PrintGFPS className="justify-center items-center flex" SECTIONS={SECTIONS} gfps={gfps} />
           {role !== "gad coordinator" && (
             <button
               onClick={() => {
@@ -446,82 +640,111 @@ export default function GFPSManager() {
                 setSection(SECTION_CHOICES[0].key);
                 setShowModal(true);
               }}
-              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300"
             >
-              + Add Member
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Member
             </button>
           )}
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 p-4">
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-6 rounded shadow-lg w-full max-w-md space-y-4"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
           >
-            <h2 className="text-lg font-bold">
-              {editingSection ? "Edit Section" : "Add Member"}
-            </h2>
-
-            <div>
-              <label className="block mb-1 font-semibold">Section</label>
-              <select
-                name="section"
-                value={section}
-                onChange={(e) => {
-                  if (!editingSection) setSection(e.target.value);
-                }}
-                disabled={!!editingSection}
-                className="w-full border rounded px-2 py-1 disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                {SECTION_CHOICES.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={editingSection ? "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" : "M12 4v16m8-8H4"} />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {editingSection ? "Edit Section" : "Add Member"}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {editingSection
+                        ? `Update members in ${SECTION_CHOICES.find((s) => s.key === editingSection)?.label}`
+                        : "Assign officials to a GFPS section"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label className="block mb-1 font-semibold">
-                Select Officials
-              </label>
-              <CheckboxTree
-                officials={officials}
-                selected={selectedOfficials}
-                onChange={setSelectedOfficials}
-              />
+            {/* Modal Body */}
+            <div className="px-6 py-5 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Section
+                </label>
+                <select
+                  name="section"
+                  value={section}
+                  onChange={(e) => {
+                    if (!editingSection) setSection(e.target.value);
+                  }}
+                  disabled={!!editingSection}
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {SECTION_CHOICES.map((s) => (
+                    <option key={s.key} value={s.key}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              {section === "executiveCommittee" &&
-                selectedOfficials.length > 0 && (
-                  <div className="mt-2 overflow-y-auto h-40 border rounded-sm px-4">
-                    <label className="block mb-1 font-semibold sticky top-0 bg-white z-10 py-2">
-                      Assign Role
-                    </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Select Officials
+                </label>
+                <CheckboxTree
+                  officials={officials}
+                  selected={selectedOfficials}
+                  onChange={setSelectedOfficials}
+                />
+              </div>
+
+              {section === "executiveCommittee" && selectedOfficials.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assign Roles
+                  </label>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-48 overflow-y-auto">
                     {selectedOfficials.map((key) => {
                       const [group, id] = key.split(":");
-
                       let groupItems = officials[group];
-
                       if (groupItems && !Array.isArray(groupItems)) {
                         groupItems = [groupItems];
                       }
-
                       const item = groupItems?.find(
                         (o) =>
                           (o.name?._id || o._id || o.name)?.toString() === id,
                       );
-
-                      const label =
-                        item?.position || item?.college || item?.branch;
-
+                      const label = item?.position || item?.college || item?.branch;
                       const subLabel = item?.college || item?.branch;
-
                       const firstName =
                         item?.name?.personal_info_id?.personal?.first_name ||
                         item?.first_name;
-
                       const lastName =
                         item?.name?.personal_info_id?.personal?.last_name ||
                         item?.last_name;
@@ -529,18 +752,22 @@ export default function GFPSManager() {
                       return (
                         <div
                           key={key}
-                          className="flex justify-between items-center mb-1 space-x-2"
+                          className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                         >
-                          <div className="flex flex-col">
-                            <p className="font-semibold">
-                              {label} {subLabel}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {label}
+                              {subLabel && (
+                                <span className="text-gray-500 font-normal">
+                                  {" "}
+                                  — {subLabel}
+                                </span>
+                              )}
                             </p>
-
-                            <p>
-                              ({firstName} {lastName})
+                            <p className="text-xs text-gray-500">
+                              {firstName} {lastName}
                             </p>
                           </div>
-
                           <select
                             value={execRoles[key] || "member"}
                             onChange={(e) =>
@@ -549,7 +776,7 @@ export default function GFPSManager() {
                                 [key]: e.target.value,
                               }))
                             }
-                            className="border rounded px-2 py-1"
+                            className="ml-3 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                           >
                             <option value="member">Member</option>
                             <option value="chair">Chair</option>
@@ -558,206 +785,177 @@ export default function GFPSManager() {
                       );
                     })}
                   </div>
-                )}
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end space-x-2">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                {editingSection ? "Save Changes" : "Add"}
-              </button>
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={selectedOfficials.length === 0 || submitting}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                {submitting && (
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                )}
+                {submitting ? "Saving..." : editingSection ? "Save Changes" : "Add Members"}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        {loadingGfps ? (
-          <div className="h-screen">Loading data...</div>
-        ) : (
-          <div className="">
-            <table className="min-w-full bg-white border-2 border-gray-200">
-              <thead className="rounded-md">
-                <tr className="border border-gray-200 bg-gray-200">
-                  <th className="px-4 py-2 border-r-2 border-gray-200">
-                    Section
-                  </th>
-                  <th className="px-4 py-2 border-r-2 border-gray-200">
-                    Officials
-                  </th>
+      {/* Content - Cards Grid */}
+      {loadingGfps ? (
+        <LoadingSkeleton />
+      ) : !hasData ? (
+        <EmptyState
+          onAdd={
+            role !== "gad coordinator"
+              ? () => {
+                  setEditingSection(null);
+                  setSelectedOfficials([]);
+                  setExecRoles({});
+                  setSection(SECTION_CHOICES[0].key);
+                  setShowModal(true);
+                }
+              : null
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-5 items-start">
+          {Object.entries(SECTIONS).map(([idx, sec]) => {
+            let members = [];
+            let chairData = null;
+
+            if (
+              sec.key === "executiveCommittee" ||
+              sec.key === "technicalWorkingGroup"
+            ) {
+              members = gfps[sec.key]?.members || [];
+            } else if (sec.key === "chairOrHeadOfAgency") {
+              const chair = gfps?.[sec.key];
+              if (!chair) return null;
+              chairData = chair;
+            } else if (sec.key === "secretariat") {
+              members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
+            }
+
+            if (!chairData && !members.length) return null;
+
+            const style = SECTION_STYLES[sec.key] || SECTION_STYLES.executiveCommittee;
+
+            return (
+              <div
+                key={sec.key}
+                className={`rounded-2xl border ${style.border} ${style.bg} overflow-hidden transition-all duration-200 hover:shadow-lg`}
+              >
+                {/* Card Header */}
+                <div className={`px-5 py-4 border-b border-white/50 ${style.headerBg} flex items-center justify-between`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`p-2 rounded-lg ${style.iconBg} ${style.iconColor} flex-shrink-0`}>
+                      {SECTION_ICONS[sec.key]}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">{sec.label}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${style.badge} inline-block mt-0.5`}>
+                        {chairData
+                          ? "1 Member"
+                          : `${members.length} Member${members.length !== 1 ? "s" : ""}`
+                        }
+                        {sec.key === "executiveCommittee" && (
+                          <> · {members.filter((m) => m.role === "chair").length} Chair{members.filter((m) => m.role === "chair").length !== 1 ? "s" : ""}</>
+                        )}
+                      </span>
+                    </div>
+                  </div>
                   {role !== "gad coordinator" && (
-                    <th className="px-4 py-2">Action</th>
+                    <EditButton sectionKey={sec.key} />
                   )}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(SECTIONS).map(([idx, sec]) => {
-                  let members = [];
+                </div>
 
-                  if (
-                    sec.key === "executiveCommittee" ||
-                    sec.key === "technicalWorkingGroup"
-                  ) {
-                    members = gfps[sec.key]?.members || [];
-                  } else if (sec.key === "chairOrHeadOfAgency") {
-                    const chair = gfps?.[sec.key];
-                    if (!chair) return null;
-                    const official = chair.official || chair.name || chair;
-                    const firstName =
-                      official?.first_name ||
-                      official?.personal_info_id?.personal?.first_name ||
-                      official?.personal_info_id?.first_name ||
-                      "";
-                    const lastName =
-                      official?.last_name ||
-                      official?.personal_info_id?.personal?.last_name ||
-                      official?.personal_info_id?.last_name ||
-                      "";
-                    const position = official?.position || "";
-                    return (
-                      <tr key={sec.key} className="border border-gray-200">
-                        <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
-                          {sec.label}
-                        </td>
-                        <td className="px-4 py-2 border-r-2 border-gray-200">
-                          <strong>{position}</strong> ({firstName} {lastName})
-                        </td>
-                        {role !== "gad coordinator" && (
-                          <td className="px-4 py-2">
-                            <EditButton sectionKey={sec.key} />
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  } else if (sec.key === "secretariat") {
-                    members = Array.isArray(gfps[sec.key]) ? gfps[sec.key] : [];
-                  }
-
-                  if (!members.length) return null;
-
-                  if (sec.key === "executiveCommittee") {
-                    const chairs = members.filter((m) => m.role === "chair");
-                    const membersOnly = members.filter(
-                      (m) => m.role !== "chair",
-                    );
-                    return (
-                      <tr key={sec.key} className="border border-gray-200">
-                        <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
-                          {sec.label}
-                        </td>
-                        <td className="px-4 py-2 border-r-2 border-gray-200">
-                          <div>
-                            <div>
-                              <strong>Chair:</strong>{" "}
-                              {chairs.length
-                                ? chairs.map((m, i) => {
-                                    const o = m.official || {};
-                                    const extra = o.branch || o.college;
-                                    return (
-                                      <span key={o._id || i}>
-                                        <strong>{o.position}</strong>
-                                        {extra && <strong> — {extra}</strong>} (
-                                        {o.first_name} {o.last_name})
-                                        {i < chairs.length - 1 && ", "}
-                                      </span>
-                                    );
-                                  })
-                                : "None"}
-                            </div>
-                            <div>
-                              <strong>Members:</strong>{" "}
-                              {membersOnly.length
-                                ? membersOnly.map((m, i) => {
-                                    const o = m.official || {};
-                                    const extra = o.branch || o.college;
-                                    return (
-                                      <span key={o._id || i}>
-                                        <strong>{o.position}</strong>
-                                        {extra && <strong> - {extra}</strong>} (
-                                        {o.first_name} {o.last_name})
-                                        {i < membersOnly.length - 1 && ", "}
-                                      </span>
-                                    );
-                                  })
-                                : "None"}
-                            </div>
-                          </div>
-                        </td>
-                        {role !== "gad coordinator" && (
-                          <td className="px-4 py-2">
-                            <EditButton sectionKey={sec.key} />
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  }
-
-                  return (
-                    <tr key={sec.key} className="border border-gray-200">
-                      <td className="px-4 py-2 border-r-2 border-gray-200 font-medium">
-                        {sec.label}
-                      </td>
-                      <td className="px-4 py-2 border-r-2 border-gray-200 ">
-                        {members
-                          .map((m) => {
-                            if (m.official) {
-                              const position = m.official.position || "";
-                              const fn = m.official.first_name || "";
-                              const ln = m.official.last_name || "";
-                              return (
-                                <span key={m.official._id || `${fn}-${ln}`}>
-                                  <strong>{position}</strong>
-                                  <strong>
-                                    {m.official.group === "campusDirectors" && (
-                                      <> - {m.official.branch || "No Branch"}</>
-                                    )}
-                                    {m.official.group === "collegeDeans" && (
-                                      <>
-                                        {" "}
-                                        - {m.official.college || "No College"}
-                                      </>
-                                    )}
-                                    {m.official.group === "associateDeans" && (
-                                      <>
-                                        {" "}
-                                        - {m.official.college || "No College"}
-                                      </>
-                                    )}{" "}
-                                  </strong>
-                                  ({fn} {ln})
-                                </span>
-                              );
-                            }
-                            return null;
-                          })
-                          .filter(Boolean)
-                          .reduce((acc, curr, i) => {
-                            if (i === 0) return [curr];
-                            return [...acc, ", ", curr];
-                          }, [])}
-                      </td>
-                      {role !== "gad coordinator" && (
-                        <td className="px-4 py-2">
-                          <EditButton sectionKey={sec.key} />
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                {/* Card Body */}
+                <div className="px-5 py-4 min-h-[100px]">
+                  {chairData ? (
+                    <OfficialRow
+                      official={chairData.official || chairData}
+                      avatarBg={style.avatarBg}
+                      avatarText={style.avatarText}
+                    />
+                  ) : sec.key === "executiveCommittee" ? (
+                    <div className="space-y-4">
+                      {(() => {
+                        const chairs = members.filter((m) => m.role === "chair");
+                        const regulars = members.filter((m) => m.role !== "chair");
+                        return (
+                          <>
+                            {chairs.length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
+                                  Chair
+                                </p>
+                                <div className="space-y-2.5">
+                                  {chairs.map((m, i) => (
+                                    <OfficialRow
+                                      key={m.official?._id || i}
+                                      official={m.official}
+                                      avatarBg={style.avatarBg}
+                                      avatarText={style.avatarText}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {regulars.length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
+                                  Members
+                                </p>
+                                <div className="space-y-2.5">
+                                  {regulars.map((m, i) => (
+                                    <OfficialRow
+                                      key={m.official?._id || i}
+                                      official={m.official}
+                                      avatarBg="bg-white"
+                                      avatarText="text-gray-600"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {members.map((m, i) => (
+                        <OfficialRow
+                          key={m.official?._id || i}
+                          official={m.official}
+                          avatarBg="bg-white"
+                          avatarText="text-gray-600"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
