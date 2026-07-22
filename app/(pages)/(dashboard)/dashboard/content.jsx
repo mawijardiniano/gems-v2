@@ -229,7 +229,7 @@ export default function DashboardContent({ profile, userId }) {
 
   return (
     <div className="py-6 px-0 md:px-2 max-w-7xl mx-auto">
-      {/* Header Section */}
+   
       <div className="mb-8">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
@@ -242,7 +242,7 @@ export default function DashboardContent({ profile, userId }) {
         </div>
       </div>
 
-      {/* Profile Stats Grid */}
+  
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Profile Overview</h2>

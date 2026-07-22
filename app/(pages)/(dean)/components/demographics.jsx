@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   PieChart,
@@ -13,87 +15,358 @@ import {
   Legend,
 } from "recharts";
 
+const PIE_COLORS = [
+  "#8B5CF6",
+  "#3B82F6",
+  "#F59E0B",
+  "#10B981",
+  "#EF4444",
+  "#EC4899",
+];
+const GENDER_BAR_COLORS = {
+  Male: "#3B82F6",
+  Female: "#EC4899",
+  Other: "#A3E635",
+};
+
+const safeGet = (fn, fb = null) => {
+  try {
+    const v = fn();
+    return v === undefined || v === null || v === "" ? fb : v;
+  } catch {
+    return fb;
+  }
+};
+
+const getStatus = (d) =>
+  safeGet(() => d.personal_info_id?.personal?.currentStatus) ||
+  safeGet(() => d.personal_information?.person_type) ||
+  (safeGet(() => d.personal_information?.is_student) === true
+    ? "Student"
+    : null);
+
+const getGender = (d) => {
+  const v = (
+    safeGet(() => d.personal_info_id?.gadData?.sexAtBirth) ||
+    safeGet(() => d.personal_information?.gadData?.sexAtBirth) ||
+    safeGet(() => d.personal_info_id?.personal?.sex) ||
+    ""
+  ).toLowerCase();
+  if (v === "male" || v === "m") return "Male";
+  if (v === "female" || v === "f") return "Female";
+  return "Other";
+};
+
+/* ------------------------------------------------------------------ */
+/*  Aggregation helpers                                                */
+/* ------------------------------------------------------------------ */
+
+const countBy = (data, accessor, fb = "Unknown") => {
+  const counts = {};
+  data.forEach((d) => {
+    const v = accessor(d) || fb;
+    counts[v] = (counts[v] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+};
+
+const countByGender = (data, accessor, fb = "Unknown") => {
+  const groups = {};
+  data.forEach((d) => {
+    const cat = accessor(d) || fb;
+    const g = getGender(d);
+    if (!groups[cat]) groups[cat] = { name: cat, Male: 0, Female: 0, Other: 0 };
+    groups[cat][g] = (groups[cat][g] || 0) + 1;
+  });
+  return Object.values(groups);
+};
+
+const calcAge = (birthday) => {
+  if (!birthday) return null;
+  const birth = new Date(birthday);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+  return age < 0 ? null : age;
+};
+
+const chartTooltipStyle = {
+  borderRadius: 8,
+  border: "1px solid #f3f4f6",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  fontSize: 12,
+};
+
+function InlineLegend({ data, colors }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+      {data.map((entry, i) => (
+        <div
+          key={entry.name}
+          className="flex items-center gap-1.5 text-xs text-gray-600"
+        >
+          <span
+            className="inline-block h-2 w-2 rounded-full shrink-0"
+            style={{ backgroundColor: colors[i % colors.length] }}
+          />
+          {entry.name}:{" "}
+          <span className="font-semibold ml-0.5">
+            {entry.value?.toLocaleString() ??
+              ((entry.Male || 0) + (entry.Female || 0)).toLocaleString()}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chart card components                                              */
+/* ------------------------------------------------------------------ */
+
+function PieCard({
+  title,
+  data,
+  height = 200,
+  innerRadius = 35,
+  outerRadius = 60,
+}) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="mb-3 text-xs text-gray-400">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={height}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={outerRadius}
+            innerRadius={innerRadius}
+            label={({ name, percent }) =>
+              `${name}: ${(percent * 100).toFixed(0)}%`
+            }
+          >
+            {data.map((entry, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={chartTooltipStyle}
+            formatter={(v) => `${v} people`}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <InlineLegend data={data} colors={PIE_COLORS} />
+    </div>
+  );
+}
+
+function HorzBarCard({
+  title,
+  data,
+  dataKey = "value",
+  height = 240,
+}) {
+  const total = data.reduce((s, d) => s + (d[dataKey] || 0), 0);
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="mb-3 text-xs text-gray-400">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#f3f4f6"
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={120}
+            tick={{ fontSize: 11, fill: "#6B7280" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            contentStyle={chartTooltipStyle}
+            formatter={(v) => `${v} people`}
+          />
+          <Bar dataKey={dataKey} radius={[0, 4, 4, 0]}>
+            {data.map((entry, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      <InlineLegend data={data} colors={PIE_COLORS} />
+    </div>
+  );
+}
+
+function VertBarCard({ title, data, height = 240 }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="mb-3 text-xs text-gray-400">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} margin={{ left: 0, right: 0 }} barSize={24}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: "#6B7280" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            {data.map((entry, i) => (
+              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      <InlineLegend data={data} colors={PIE_COLORS} />
+    </div>
+  );
+}
+
+function GenderBarCard({ title, data, height = 260 }) {
+  const total = data.reduce(
+    (s, d) => s + (d.Male || 0) + (d.Female || 0),
+    0,
+  );
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="mb-3 text-xs text-gray-400">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} barSize={20} margin={{ left: 0, right: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: "#6B7280" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Legend
+            iconType="circle"
+            wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+          />
+          <Bar
+            dataKey="Male"
+            fill={GENDER_BAR_COLORS.Male}
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="Female"
+            fill={GENDER_BAR_COLORS.Female}
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+      <InlineLegend data={data} colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]} />
+    </div>
+  );
+}
+
+function GenderHorzBarCard({ title, data, height = 300 }) {
+  const total = data.reduce(
+    (s, d) => s + (d.Male || 0) + (d.Female || 0),
+    0,
+  );
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="mb-3 text-xs text-gray-400">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#f3f4f6"
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={160}
+            tick={{ fontSize: 11, fill: "#6B7280" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Legend
+            iconType="circle"
+            wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+          />
+          <Bar
+            dataKey="Male"
+            fill={GENDER_BAR_COLORS.Male}
+            radius={[0, 4, 4, 0]}
+          />
+          <Bar
+            dataKey="Female"
+            fill={GENDER_BAR_COLORS.Female}
+            radius={[0, 4, 4, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+      <InlineLegend data={data} colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]} />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
+
 export default function Demographics({ data, personTypeFilter = "", college }) {
   const statusFilter = `${personTypeFilter || ""}`.trim().toLowerCase();
   const isEmployeeFilter = statusFilter === "employee";
   const isStudentFilter = statusFilter === "student";
-
-  const studentPerCollege = data.filter((d) => {
-    const acad = d?.personal_info_id?.affiliation?.academic_information;
-    return !college || acad?.college === college;
-  });
-
-  const employeesPerOffice = data.filter((d) => {
-    const emp = d?.personal_info_id?.affiliation?.employment_information;
-    return !college || emp?.office === college;
-  });
-
-  const safeGet = (fn, fallback = null) => {
-    try {
-      const v = fn();
-      return v === undefined || v === null || v === "" ? fallback : v;
-    } catch (e) {
-      return fallback;
-    }
-  };
-
-  const countByAccessors = (accessors, fallback = "Unknown", source = data) => {
-    const counts = {};
-    source.forEach((d) => {
-      let value = fallback;
-      for (const fn of accessors) {
-        const v = safeGet(() => fn(d));
-        if (v !== null && v !== undefined && v !== "") {
-          value = v;
-          break;
-        }
-      }
-      counts[value] = (counts[value] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  };
-
-  const getStatus = (d) => {
-    const status =
-      safeGet(() => d.personal_info_id?.personal?.currentStatus) ||
-      safeGet(() => d.personal_information?.person_type);
-    if (status) return status;
-    const isStudentFlag = safeGet(() => d.personal_information?.is_student);
-    if (isStudentFlag === true) return "Student";
-    if (isStudentFlag === false) return "Employee";
-    return null;
-  };
-
-  const getGender = (d) => {
-    const value =
-      safeGet(() => d.personal_info_id?.gadData?.sexAtBirth) ||
-      safeGet(() => d.personal_information?.gadData?.sexAtBirth) ||
-      safeGet(() => d.personal_info_id?.personal?.sex) ||
-      safeGet(() => d.personal_information?.sex);
-    const normalized = `${value || ""}`.trim().toLowerCase();
-    if (normalized === "male" || normalized === "m") return "Male";
-    if (normalized === "female" || normalized === "f") return "Female";
-    return "Other";
-  };
-
-  const countByCategoryAndGender = (accessors, source = data) => {
-    const groups = {};
-    source.forEach((d) => {
-      let category = "Unknown";
-      for (const fn of accessors) {
-        const v = safeGet(() => fn(d));
-        if (v !== null && v !== undefined && v !== "") {
-          category = v;
-          break;
-        }
-      }
-      const gender = getGender(d);
-      if (!groups[category])
-        groups[category] = { name: category, Male: 0, Female: 0, Other: 0 };
-      groups[category][gender] = (groups[category][gender] || 0) + 1;
-    });
-    return Object.values(groups);
-  };
 
   const employees = data.filter(
     (d) => (getStatus(d) || "").toLowerCase() === "employee",
@@ -102,104 +375,50 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     (d) => (getStatus(d) || "").toLowerCase() === "student",
   );
 
+  /* ---- Age groups ---- */
   const ageData = (() => {
     const counts = {};
-
-    const calcAge = (birthday) => {
-      if (!birthday) return null;
-      const birth = new Date(birthday);
-      if (Number.isNaN(birth.getTime())) return null;
-      const now = new Date();
-      let age = now.getFullYear() - birth.getFullYear();
-      const m = now.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
-      return age < 0 ? null : age;
-    };
-
-    employeesPerOffice.forEach((d) => {
+    data.forEach((d) => {
       const age = calcAge(
         safeGet(() => d.personal_info_id?.personal?.birthday) ||
           safeGet(() => d.personal_information?.birthday),
       );
       if (age === null) return;
       const bucket = Math.floor(age / 10) * 10;
-      const label = `${bucket}-${bucket + 9}`;
+      const label = `${bucket}–${bucket + 9}`;
       counts[label] = (counts[label] || 0) + 1;
     });
-
     return Object.entries(counts)
       .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
       .map(([name, value]) => ({ name, value }));
   })();
-  const civilData = countByAccessors([
-    (d) => d.personal_info_id?.personal?.civil_status,
-    (d) => d.personal_information?.civil_status,
-  ]);
 
-  const religionData = countByAccessors([
-    (d) => d.personal_info_id?.personal?.religion,
-    (d) => d.personal_information?.religion,
-  ]);
-
-  const employmentData = countByCategoryAndGender(
-    [
-      (d) =>
-        d.personal_info_id?.affiliation?.employment_information
-          ?.employment_status,
-      (d) => d.personal_information?.employment_status,
-    ],
-    employees,
-  );
-
-  const appointmentData = countByCategoryAndGender(
-    [
-      (d) =>
-        d.personal_info_id?.affiliation?.employment_information
-          ?.employment_appointment_status,
-      (d) => d.personal_information?.employment_appointment_status,
-    ],
-    employees,
-  );
-
-  const employeeOfficeData = countByCategoryAndGender(
-    [
-      (d) => d.personal_info_id?.affiliation?.employment_information?.office,
-      (d) => d.personal_information?.employment_information?.office,
-    ],
-    employees,
-  );
-
-  const studentCollegeData = countByAccessors(
-    [
-      (d) => d.personal_info_id?.affiliation?.academic_information?.college,
-      (d) => d.personal_information?.academic_information?.college,
-    ],
-    "Unknown",
-    students,
-  );
-
-  const cicsStudents = students.filter(
+  const civilData = countBy(
+    data,
     (d) =>
-      !college ||
-      d?.personal_info_id?.affiliation?.academic_information?.college ===
-        college,
+      safeGet(() => d.personal_info_id?.personal?.civil_status) ||
+      safeGet(() => d.personal_information?.civil_status),
   );
 
-  const studentProgramData = countByAccessors(
-    [(d) => d.personal_info_id?.affiliation?.academic_information?.course],
-
-    "Unknown",
-
-    cicsStudents,
+  const religionData = countBy(
+    data,
+    (d) =>
+      safeGet(() => d.personal_info_id?.personal?.religion) ||
+      safeGet(() => d.personal_information?.religion),
   );
 
-  const studentCampusData = countByAccessors(
-    [
-      (d) => d.personal_info_id?.affiliation?.academic_information?.campus,
-      (d) => d.personal_information?.academic_information?.campus,
-    ],
-    "Unknown",
-    students,
+  /* ---- Student data (filtered by college) ---- */
+  const collegeFilteredStudents = students.filter((d) => {
+    const acad = d?.personal_info_id?.affiliation?.academic_information;
+    return !college || acad?.college === college;
+  });
+
+  const studentProgramData = countBy(
+    collegeFilteredStudents,
+    (d) =>
+      safeGet(
+        () => d.personal_info_id?.affiliation?.academic_information?.course,
+      ),
   );
 
   const sortStudentYearLevels = (rows) => {
@@ -215,53 +434,37 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
       "graduates",
       "unknown",
     ];
-
     const rank = (name) => {
-      const normalized = `${name || ""}`.trim().toLowerCase();
-      const index = order.findIndex(
-        (term) => normalized === term || normalized.includes(term),
-      );
-      return index === -1 ? order.length : index;
+      const n = `${name || ""}`.trim().toLowerCase();
+      const i = order.findIndex((t) => n === t || n.includes(t));
+      return i === -1 ? order.length : i;
     };
-
-    return [...rows].sort((a, b) => {
-      const rankA = rank(a.name);
-      const rankB = rank(b.name);
-      if (rankA !== rankB) return rankA - rankB;
-      return a.name.localeCompare(b.name);
-    });
+    return [...rows].sort(
+      (a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name),
+    );
   };
 
   const studentYearLevelData = sortStudentYearLevels(
-    countByAccessors(
-      [
-        (d) =>
-          d.personal_info_id?.affiliation?.academic_information?.year_level,
-        (d) => d.personal_information?.academic_information?.year_level,
-      ],
-      "Unknown",
-      cicsStudents,
+    countBy(
+      collegeFilteredStudents,
+      (d) =>
+        safeGet(
+          () =>
+            d.personal_info_id?.affiliation?.academic_information?.year_level,
+        ),
     ),
   );
 
+  /* ---- Student year x course cross-tab ---- */
   const studentYearCourseData = (() => {
     const grouped = {};
-
-    cicsStudents.forEach((d) => {
+    collegeFilteredStudents.forEach((d) => {
       const acad = d?.personal_info_id?.affiliation?.academic_information || {};
-
       const year = acad.year_level || "Unknown";
       const course = acad.course || "Unknown";
-
-      if (!grouped[year]) {
-        grouped[year] = {
-          name: year,
-        };
-      }
-
+      if (!grouped[year]) grouped[year] = { name: year };
       grouped[year][course] = (grouped[year][course] || 0) + 1;
     });
-
     const order = {
       "1st Year": 1,
       "2nd Year": 2,
@@ -269,231 +472,154 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
       "4th Year": 4,
       "5th Year": 5,
     };
-
     return Object.values(grouped).sort(
       (a, b) => (order[a.name] || 999) - (order[b.name] || 999),
     );
   })();
 
-  const colors = ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444"];
+  /* ---- Extract unique course keys for dynamic bars ---- */
+  const courseKeys = (() => {
+    const keys = new Set();
+    studentYearCourseData.forEach((row) => {
+      Object.keys(row).forEach((k) => {
+        if (k !== "name") keys.add(k);
+      });
+    });
+    return Array.from(keys).sort();
+  })();
+
+  /* ---- Generate a stable color for each course key ---- */
+  const courseColors = (() => {
+    const palette = [
+      "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
+      "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
+      "#14B8A6", "#D946EF", "#0EA5E9", "#22C55E", "#EAB308",
+    ];
+    const map = {};
+    courseKeys.forEach((key, i) => {
+      map[key] = palette[i % palette.length];
+    });
+    return map;
+  })();
+
+  /* ---- Employee data (filtered by college/office) ---- */
+  const collegeFilteredEmployees = employees.filter((d) => {
+    const emp = d?.personal_info_id?.affiliation?.employment_information;
+    return !college || emp?.office === college;
+  });
+
+  const employmentData = countByGender(
+    collegeFilteredEmployees,
+    (d) =>
+      safeGet(
+        () =>
+          d.personal_info_id?.affiliation?.employment_information
+            ?.employment_status,
+      ),
+  );
+
+  const appointmentData = countByGender(
+    collegeFilteredEmployees,
+    (d) =>
+      safeGet(
+        () =>
+          d.personal_info_id?.affiliation?.employment_information
+            ?.employment_appointment_status,
+      ),
+  );
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-md px-8 py-6">
-      <div className="mb-4">
-        <h1 className="text-lg font-medium text-black">
+    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-gray-900">
           Demographic & Employment Profile
-        </h1>
-        <p className="text-sm text-gray-500">
+        </h2>
+        <p className="mt-0.5 text-sm text-gray-500">
           Personnel and occupational overview
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h2 className="font-semibold mb-2">Age Groups</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={ageData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                innerRadius={35}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {ageData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={colors[index % colors.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `${value} people`} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h2 className="font-semibold mb-2">Civil Status</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={civilData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                innerRadius={35}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {civilData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={colors[index % colors.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `${value} people`} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Age & Civil Status */}
+      <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <PieCard title="Age Groups" data={ageData} />
+        <PieCard title="Civil Status" data={civilData} />
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-md mb-6">
-        <h2 className="font-semibold mb-2">Religion</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={religionData} layout="vertical" margin={{ left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis dataKey="name" type="category" width={120} />
-            <Tooltip formatter={(value) => `${value} people`} />
-            <Bar dataKey="value">
-              {religionData.map((entry, index) => (
-                <Cell
-                  key={`cell-bar-${index}`}
-                  fill={colors[index % colors.length]}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Religion */}
+      <div className="mb-6">
+        <HorzBarCard title="Religion" data={religionData} height={300} />
       </div>
+
+      {/* Student sections */}
+      {!isEmployeeFilter && (
+        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <VertBarCard
+            title="Students by Program"
+            data={studentProgramData}
+          />
+          <VertBarCard
+            title="Students by Year Level"
+            data={studentYearLevelData}
+          />
+        </div>
+      )}
 
       {!isEmployeeFilter && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="font-semibold mb-2">Students by Course</h2>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart
-                data={studentProgramData}
-                layout="horizontal"
-                margin={{ left: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" type="category" width={120} />
-                <YAxis type="number" allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8B5CF6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="font-semibold mb-2">
+        <div className="mb-6">
+          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">
               Students by Year Level and Course
-            </h2>
-
+            </h3>
+            <p className="mb-3 text-xs text-gray-400">
+              {collegeFilteredStudents.length.toLocaleString()} total
+            </p>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={studentYearCourseData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-
-                <Bar
-                  dataKey="Bachelor of Science in Information Technology"
-                  fill="#3B82F6"
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: "#6B7280" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <Bar
-                  dataKey="Bachelor of Science in Information System"
-                  fill="#10B981"
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
                 />
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Legend
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                />
+                {courseKeys.map((course) => (
+                  <Bar
+                    key={course}
+                    dataKey={course}
+                    fill={courseColors[course]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
 
-      {/* {!isEmployeeFilter && (
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
-          <h2 className="font-semibold mb-2">Students by College</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart
-              data={studentCollegeData}
-              layout="vertical"
-              margin={{ left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" allowDecimals={false} />
-              <YAxis dataKey="name" type="category" width={140} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#10B981" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )} */}
-
-      {isStudentFilter ? null : (
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="font-semibold mb-2">Employment Type (Employees)</h2>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart
-                data={employmentData}
-                layout="horizontal"
-                margin={{ left: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" type="category" />
-                <YAxis type="number" allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Male" fill="#3B82F6" />
-                <Bar dataKey="Female" fill="#EC4899" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          {/* 
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="font-semibold mb-2">
-              Appointment Status (Employees)
-            </h2>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart
-                data={appointmentData}
-                layout="horizontal"
-                margin={{ left: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" type="category" />
-                <YAxis type="number" allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Male" fill="#3B82F6" />
-                <Bar dataKey="Female" fill="#EC4899" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div> */}
+      {/* Employee sections */}
+      {!isStudentFilter && (
+        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <GenderBarCard
+            title="Employment Type (Employees)"
+            data={employmentData}
+          />
+          <GenderBarCard
+            title="Appointment Status (Employees)"
+            data={appointmentData}
+          />
         </div>
       )}
-
-      {/* {isStudentFilter ? null : (
-        <div className="bg-gray-50 p-4 rounded-md mb-6">
-          <h2 className="font-semibold mb-2">Employee by Office</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={employeeOfficeData}
-              layout="vertical"
-              margin={{ left: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" allowDecimals={false} />
-              <YAxis dataKey="name" type="category" width={160} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Male" fill="#3B82F6" />
-              <Bar dataKey="Female" fill="#EC4899" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )} */}
     </div>
   );
 }

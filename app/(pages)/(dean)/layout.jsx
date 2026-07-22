@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }) {
           router.replace("/not-authorized");
           return;
         }
-
+        console.log(data.user.role);
         setIsAuthorized(true);
         setUserRole(data.user.role.toLowerCase());
       } catch (err) {

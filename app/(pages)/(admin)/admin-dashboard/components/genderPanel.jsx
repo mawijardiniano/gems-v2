@@ -3,10 +3,94 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981", "#EF4444"];
+
+const RADIAN = Math.PI / 180;
+
+const renderOutsideLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  name,
+}) => {
+  if (percent < 0.03) return null;
+  const radius = outerRadius + 24;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="currentColor"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      className="fill-gray-500 text-[11px]"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+function DonutCard({ title, total, data, colors }) {
+  return (
+    <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
+      <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
+      <p className="text-xs text-gray-400 mb-3">
+        {total.toLocaleString()} total
+      </p>
+      <ResponsiveContainer width="100%" height={240}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={85}
+            innerRadius={50}
+            label={renderOutsideLabel}
+            labelLine={false}
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={colors[index % colors.length]}
+                stroke="transparent"
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              borderRadius: 8,
+              border: "1px solid #f3f4f6",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              fontSize: 12,
+            }}
+            formatter={(value) => [value.toLocaleString(), "Count"]}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        {data.map((entry, i) => (
+          <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-600">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: colors[i % colors.length] }}
+            />
+            {entry.name}: <span className="font-semibold">{entry.value.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function GenderPanel({ data }) {
   const femaleCount = data.filter(
@@ -36,78 +120,33 @@ export default function GenderPanel({ data }) {
 
   const preferenceData =
     unspecifiedCount > 0
-      ? [
-          ...preferenceCounts,
-          { name: "Not specified", value: unspecifiedCount },
-        ]
+      ? [...preferenceCounts, { name: "Not specified", value: unspecifiedCount }]
       : preferenceCounts;
 
-  const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981", "#ef4444"]; // purple, blue, yellow, green, red
-
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-md px-8 py-6">
-      <div className="mb-4">
-        <h1 className="text-lg font-medium text-black">
+    <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-gray-900">
           Gender, Sex & Identity Panel
-        </h1>
-        <p className="text-sm text-gray-500">
+        </h2>
+        <p className="mt-0.5 text-sm text-gray-500">
           Used for gender analysis, equity monitoring, and GAD compliance
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="bg-gray-50 p-4 w-full rounded-md">
-          <h2 className="font-semibold mb-2">Sex at Birth Breakdown</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={genderData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                innerRadius={50}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {genderData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value}`, "Count"]} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-gray-50 p-4 w-full rounded-md">
-          <h2 className="font-semibold mb-2">Gender Preference</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={preferenceData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                innerRadius={50}
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {preferenceData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[(index + 2) % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value}`, "Count"]} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <DonutCard
+          title="Sex at Birth"
+          total={genderData.reduce((a, b) => a + b.value, 0)}
+          data={genderData}
+          colors={[COLORS[0], COLORS[1]]}
+        />
+        <DonutCard
+          title="Gender Identity / Preference"
+          total={preferenceData.reduce((a, b) => a + b.value, 0)}
+          data={preferenceData}
+          colors={[COLORS[0], COLORS[1], COLORS[2], COLORS[3]]}
+        />
       </div>
     </div>
   );

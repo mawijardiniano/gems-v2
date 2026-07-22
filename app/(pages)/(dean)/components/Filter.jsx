@@ -9,7 +9,6 @@ export default function Filter({
   filterYearLevel,
   filterSchoolYear,
   filterSemester,
-  filterCollege,
   filterEmployment,
   filterAppointment,
   setFilterSex,
@@ -17,7 +16,6 @@ export default function Filter({
   setFilterSchoolYear,
   setFilterSemester,
   setFilterPersonType,
-  setFilterCollege,
   setFilterEmployment,
   setFilterAppointment,
   sexOption,
@@ -25,13 +23,10 @@ export default function Filter({
   yearLevelOptions = [],
   schoolYearOptions = [],
   semesterOptions = [],
-  collegeOptions = [],
   employmentOptions = [],
   appointmentOptions = [],
 }) {
-  const [collegeOpen, setCollegeOpen] = useState(false);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
-  const collegeRef = useRef(null);
   const appointmentRef = useRef(null);
 
   useEffect(() => {
@@ -58,8 +53,6 @@ export default function Filter({
 
   useEffect(() => {
     function onDoc(e) {
-      if (collegeRef.current && !collegeRef.current.contains(e.target))
-        setCollegeOpen(false);
       if (appointmentRef.current && !appointmentRef.current.contains(e.target))
         setAppointmentOpen(false);
     }
@@ -217,28 +210,6 @@ export default function Filter({
         onChange={setFilterSemester}
         options={semesterOptions}
       />
-
-      {(filterPersonType === "" ||
-        filterPersonType === "Student" ||
-        filterPersonType === "Employee") && (
-        <MultiCheckbox
-          label={
-            filterPersonType === "Employee"
-              ? "Select Offices"
-              : "Select Colleges"
-          }
-          placeholder={
-            filterPersonType === "Employee"
-              ? "Offices"
-              : filterPersonType === "Student"
-                ? "Colleges"
-                : "Colleges / Offices"
-          }
-          options={collegeOptions}
-          value={filterCollege}
-          onChange={setFilterCollege}
-        />
-      )}
 
       {filterPersonType === "Employee" && (
         <Select

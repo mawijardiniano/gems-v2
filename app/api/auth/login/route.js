@@ -13,9 +13,8 @@ export async function POST(req) {
     const { username, password } = await req.json();
 
     const user = await UserAuth.findOne({ username }).select("+password");
-    
-    if (!user) {
 
+    if (!user) {
       await logActivity({
         user_id: null,
         action: "LOGIN_FAILED",
@@ -25,7 +24,7 @@ export async function POST(req) {
         resource_type: "user",
         severity: "warning",
       });
-      
+
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
@@ -36,7 +35,7 @@ export async function POST(req) {
       const lockTimeRemaining = Math.ceil(
         (user.lockUntil - Date.now()) / 1000 / 60,
       );
-      
+
       await logActivity({
         user_id: user._id,
         action: "LOGIN_FAILED",
@@ -76,7 +75,6 @@ export async function POST(req) {
 
     const isValid = await user.matchPassword(password);
     if (!isValid) {
-
       await user.incrementLoginAttempts();
 
       await logActivity({
@@ -112,7 +110,6 @@ export async function POST(req) {
       severity: "info",
     });
 
- 
     const token = jwt.sign(
       {
         id: user._id,
