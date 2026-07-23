@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { FaBars, FaCog, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import NotificationBell from "@/components/NotificationBell";
 import { logout as reduxLogout } from "@/store/slices/authSlice";
@@ -16,7 +16,6 @@ export default function Navbar({ toggleSidebar }) {
   const dropdownRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
-  const role = useSelector((state) => state.auth.role);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,7 +42,7 @@ export default function Navbar({ toggleSidebar }) {
     if (user?.username) {
       return user.username[0].toUpperCase();
     }
-    return "U";
+    return "P";
   }, [profile, user]);
 
   const getDisplayName = useCallback(() => {
@@ -51,7 +50,7 @@ export default function Navbar({ toggleSidebar }) {
       const { first_name, middle_name, last_name } = profile.personal;
       return [first_name, middle_name, last_name].filter(Boolean).join(" ");
     }
-    return user?.username || "User";
+    return user?.username || "Planning Director";
   }, [profile, user]);
 
   const getEmail = useCallback(() => {
@@ -81,11 +80,10 @@ export default function Navbar({ toggleSidebar }) {
     router.push("/");
   };
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
-
-  const isGadRole = role !== "planning director";
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   return (
     <nav className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/80 flex justify-between items-center px-4 z-30 shadow-sm">
@@ -100,10 +98,10 @@ export default function Navbar({ toggleSidebar }) {
         </button>
         <div className="hidden sm:block">
           <span className="text-lg font-bold tracking-tight text-gray-900">
-            EVENTS MANAGEMENT
+            GENDER MANAGEMENT
           </span>
           <p className="text-[11px] text-gray-400 font-medium tracking-wide uppercase">
-            {isGadRole ? "GAD Engagement" : "Planning Director"}
+            Planning Director Portal
           </p>
         </div>
       </div>
@@ -156,7 +154,6 @@ export default function Navbar({ toggleSidebar }) {
                         {getEmail()}
                       </p>
                     )}
-
                   </div>
                 </div>
               </div>
@@ -165,7 +162,7 @@ export default function Navbar({ toggleSidebar }) {
                 <button
                   onClick={() => {
                     setDropdownOpen(false);
-                    router.push("/gad-settings");
+                    router.push("/planning-director/settings");
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                 >

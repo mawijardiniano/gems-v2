@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { FaBars, FaCog, FaSignOutAlt, FaChevronDown, FaShieldAlt } from "react-icons/fa";
+import {
+  FaBars,
+  FaCog,
+  FaSignOutAlt,
+  FaChevronDown,
+  FaShieldAlt,
+} from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -81,11 +87,13 @@ export default function Navbar({ toggleSidebar }) {
     router.push("/");
   };
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
-  const roleLabel = role === "planning director" ? "Planning Director" : "Admin";
+  const roleLabel =
+    role === "planning director" ? "Planning Director" : "Admin";
 
   return (
     <nav className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/80 flex justify-between items-center px-4 z-30 shadow-sm">
@@ -156,10 +164,6 @@ export default function Navbar({ toggleSidebar }) {
                         {getEmail()}
                       </p>
                     )}
-                    <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-semibold rounded-full uppercase tracking-wider">
-                      <FaShieldAlt size={8} />
-                      {roleLabel}
-                    </span>
                   </div>
                 </div>
               </div>

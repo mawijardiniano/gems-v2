@@ -61,7 +61,7 @@ export default function LoginForm() {
 
       if (role === "planning director") {
         console.log("Focal detected, redirecting to /gpb");
-        router.push("/admin-dashboard");
+        router.push("/planning-director/dashboard");
         return;
       }
 
@@ -70,6 +70,7 @@ export default function LoginForm() {
         router.push("/dean/dashboard");
         return;
       }
+      
 
       const profileRes = await axios.get("/api/profile/my-profile", {
         withCredentials: true,

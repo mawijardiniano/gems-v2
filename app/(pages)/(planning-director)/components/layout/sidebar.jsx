@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   FaHome,
+  FaCog,
   FaSignOutAlt,
   FaFolder,
-  FaMoneyBill,
-  FaUsers,
-  FaCalendarAlt,
-  FaClipboardList,
-  FaCog,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -35,78 +31,20 @@ export default function Sidebar({ open, setOpen, role }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const ROLE_ACCESS = {
-    "gad focal person": [
-      "events-dashboard",
-      "university-officials",
-      "gfps",
-      "gaa-budget",
-      "gpb",
-      "events-list",
-     "gad-settings"
-    ],
-    "gad coordinator": [
-      "events-dashboard",
-      "university-officials",
-      "gfps",
-      "gaa-budget",
-      "gpb",
-      "events-list",
-      "gad-settings"
-    ],
-
-  };
-
   const links = [
     {
       name: "Dashboard",
-      href: "/events-dashboard",
+      href: "/planning-director/dashboard",
       icon: <FaHome size={16} />,
-      key: "events-dashboard",
-    },
-    {
-      name: "Dashboard",
-      href: "/admin-dashboard",
-      icon: <FaHome size={16} />,
-      key: "admin-dashboard",
-    },
-    {
-      name: "University Officials",
-      href: "/university-officials",
-      icon: <FaUsers size={16} />,
-      key: "university-officials",
-    },
-    {
-      name: "GFPS",
-      href: "/gfps",
-      icon: <FaClipboardList size={16} />,
-      key: "gfps",
-    },
-    {
-      name: "GAA Budget",
-      href: "/gaa-budget",
-      icon: <FaMoneyBill size={16} />,
-      key: "gaa-budget",
+      key: "planning-director-dashboard",
     },
     {
       name: "GPB",
-      href: "/gpb",
+      href: "/planning-director/gpb",
       icon: <FaFolder size={16} />,
-      key: "gpb",
-    },
-    {
-      name: "Events",
-      href: "/events-list",
-      icon: <FaCalendarAlt size={16} />,
-      key: "events-list",
+      key: "planning-director-gpb",
     },
   ];
-
-  const filteredLinks = useMemo(() => {
-    const normalizedRole = role?.toLowerCase();
-    const allowed = ROLE_ACCESS[normalizedRole] || [];
-    return links.filter((link) => allowed.includes(link.key));
-  }, [role]);
 
   const handleMobileClose = useCallback(() => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
@@ -130,8 +68,7 @@ export default function Sidebar({ open, setOpen, role }) {
 
   const isActive = useCallback(
     (href) => {
-      if (href === "/events-dashboard") return pathname === "/events-dashboard";
-      if (href === "/admin-dashboard") return pathname === "/admin-dashboard";
+      if (href === "/planning-director/dashboard") return pathname === "/planning-director/dashboard";
       return pathname?.startsWith(href);
     },
     [pathname]
@@ -159,7 +96,7 @@ export default function Sidebar({ open, setOpen, role }) {
       const { first_name, last_name } = profile.personal;
       return `${(first_name?.[0] || "").toUpperCase()}${(last_name?.[0] || "").toUpperCase()}`;
     }
-    return user?.username?.[0]?.toUpperCase() || "G";
+    return user?.username?.[0]?.toUpperCase() || "P";
   }, [profile, user]);
 
   const getDisplayName = useCallback(() => {
@@ -167,13 +104,7 @@ export default function Sidebar({ open, setOpen, role }) {
       const { first_name, middle_name, last_name } = profile.personal;
       return [first_name, middle_name, last_name].filter(Boolean).join(" ");
     }
-    return user?.username || "User";
-  }, [profile, user]);
-
-  const getEmail = useCallback(() => {
-    if (profile?.contact?.email) return profile.contact.email;
-    if (user?.username?.includes("@")) return user.username;
-    return "";
+    return user?.username || "Planning Director";
   }, [profile, user]);
 
   const avatarColor = getDisplayName()
@@ -205,11 +136,9 @@ export default function Sidebar({ open, setOpen, role }) {
                 <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
                   {getDisplayName()}
                 </p>
-                {getEmail() && (
-                  <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                    {getEmail()}
-                  </p>
-                )}
+                <p className="text-[11px] font-medium text-indigo-600 truncate mt-0.5 uppercase tracking-wider">
+                  Planning Director
+                </p>
               </div>
             </div>
           ) : (
@@ -232,11 +161,11 @@ export default function Sidebar({ open, setOpen, role }) {
         >
           {open && (
             <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-              GAD Engagement
+              Planning Director
             </p>
           )}
 
-          {filteredLinks.map((link) => {
+          {links.map((link) => {
             const linkActive = isActive(link.href);
             return (
               <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
@@ -247,7 +176,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     open ? "p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                      ? "bg-gradient-to-r from-indigo-50 to-purple-50/50 text-indigo-700"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
@@ -264,7 +193,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     </span>
                   )}
                   {linkActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-full" />
                   )}
                 </Link>
               </TooltipWrapper>
@@ -280,12 +209,12 @@ export default function Sidebar({ open, setOpen, role }) {
         >
           <TooltipWrapper label="Settings" collapsed={!open}>
             <Link
-              href="/gad-settings"
+              href="/planning-director/settings"
               onClick={handleMobileClose}
               className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
-                pathname === "/gad-settings"
+                pathname === "/planning-director/settings"
                   ? "bg-gradient-to-r from-gray-50 to-gray-100/50 text-gray-800"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               }`}

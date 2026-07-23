@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
 
-export default function DashboardLayout({ children }) {
+export default function PlanningDirectorLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }) {
           return;
         }
 
-        if (data.user.role.toLowerCase() !== "admin") {
+        if (data.user.role.toLowerCase() !== "planning director") {
           router.replace("/not-authorized");
           return;
         }
@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }) {
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="mt-16 px-4 sm:px-6 bg-gray-50 h-screen">
+        <main className="mt-16 px-4 sm:px-6 bg-gray-50 min-h-screen">
           {children}
         </main>
       </div>

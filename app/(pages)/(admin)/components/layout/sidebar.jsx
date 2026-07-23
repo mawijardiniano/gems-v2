@@ -57,7 +57,6 @@ export default function Sidebar({ open, setOpen, role }) {
       "reports/sex-disaggregated-data",
       "manage-roles",
     ],
-    "planning director": ["admin-dashboard", "gpb"],
   };
 
   const links = [
