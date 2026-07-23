@@ -290,7 +290,6 @@ export default function DashboardContent({ profile, userId }) {
             </div>
           </div>
 
-          {/* Past Events (renamed from "Your Events") */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between p-5 border-b border-gray-50">
               <h2 className="text-base font-semibold text-gray-900">Your Events</h2>

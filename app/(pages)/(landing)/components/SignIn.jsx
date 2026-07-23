@@ -67,7 +67,7 @@ export default function LoginForm() {
 
             if (role === "dean") {
         console.log("Focal detected, redirecting to /dean-dashboard");
-        router.push("/dean-dashboard");
+        router.push("/dean/dashboard");
         return;
       }
 

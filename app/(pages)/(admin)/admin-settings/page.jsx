@@ -1,5 +1,5 @@
-import React from "react";
+import AdminSettingsContent from "./content";
 
-export default function Settings() {
-  return <div>Settings Manage your account settings and preferences</div>;
+export default function Page() {
+  return <AdminSettingsContent />;
 }

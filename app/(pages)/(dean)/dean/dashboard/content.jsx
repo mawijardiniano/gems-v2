@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import Snapshot from "../components/snapshot";
-import GenderPanel from "../components/genderPanel";
-import Demographics from "../components/demographics";
+import Snapshot from "../../components/snapshot";
+import GenderPanel from "../../components/genderPanel";
+import Demographics from "../../components/demographics";
 import useFetchData from "@/hooks/useSample";
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";

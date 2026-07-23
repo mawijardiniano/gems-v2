@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "flowbite-react";
 import useFetchData from "@/hooks/useSample";
-import StudentFilterTable from "../components/StudentFilterTable";
+import StudentFilterTable from "./components/StudentFilterTable";
 import { useSelector } from "react-redux";
 import {
   FaEye,
@@ -1119,7 +1119,7 @@ const html = `
               const gad = p.gadData || {};
               const acad = p.affiliation?.academic_information || {};
               return (
-                <TableRow key={user._id || index} className="hover:bg-gray-50">
+                <TableRow key={user._id || index} className="hover:bg-gray-50 text-xs">
                   {role !== "dean" && (
                     <TableCell>
                       <input

@@ -14,6 +14,7 @@ const ROLE_ACCESS = {
     "gpb",
     "events-list",
     "create",
+    "gad-settings"
   ],
   "gad coordinator": [
     "events-dashboard",
@@ -23,8 +24,9 @@ const ROLE_ACCESS = {
     "gpb",
     "events-list",
     "create",
+    "gad-settings"
   ],
-  "planning director": ["admin-dashboard", "gpb"],
+  "planning director": ["admin-dashboard", "gpb", "gad-settings"],
 };
 
 export default function DashboardLayout({ children }) {
