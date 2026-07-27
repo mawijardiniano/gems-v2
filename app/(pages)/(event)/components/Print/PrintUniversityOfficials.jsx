@@ -135,7 +135,7 @@ getUserFullName
  return (
           <button
             onClick={handlePrintOfficials}
-            className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
+            className="px-5 py-2 rounded-xl bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
           >
             Print Officials
           </button>

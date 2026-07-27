@@ -35,16 +35,23 @@ export default function Navbar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
               GE
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-violet-700 to-indigo-700 bg-clip-text text-transparent">
+            <span className={`text-lg font-bold transition-all duration-300 ${
+              scrolled
+                ? "bg-gradient-to-r from-violet-700 to-indigo-700 bg-clip-text text-transparent"
+                : "text-white drop-shadow-sm"
+            }`}>
               Gender Equality
             </span>
           </Link>
 
-          {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
             <Link
               href="/profile-registration"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-violet-700 hover:text-violet-900 hover:bg-violet-50 rounded-xl transition-all duration-200"
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                scrolled
+                  ? "text-violet-700 hover:text-violet-900 hover:bg-violet-50"
+                  : "text-white/90 hover:text-white hover:bg-white/10"
+              }`}
             >
               <FaUserPlus size={14} />
               Sign up
@@ -58,10 +65,13 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl text-violet-700 hover:bg-violet-50 transition-colors"
+            className={`sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
+              scrolled
+                ? "text-violet-700 hover:bg-violet-50"
+                : "text-white hover:bg-white/10"
+            }`}
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
@@ -69,7 +79,6 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 sm:hidden">
           <div

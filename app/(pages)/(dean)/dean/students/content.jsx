@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 
 import axios from "axios";
 import {
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -19,7 +18,6 @@ import {
   FaEye,
   FaTimes,
   FaUser,
-  FaIdCard,
   FaVenusMars,
   FaGraduationCap,
   FaMapMarkerAlt,
@@ -33,8 +31,6 @@ export default function StudentsUserListContent({ college }) {
   const [filterSemester, setFilterSemester] = useState("");
   const [filterCollege, setFilterCollege] = useState([]);
   const [filterCourse, setFilterCourse] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [nameSort, setNameSort] = useState(null);
   const [sexSort, setSexSort] = useState(null);
@@ -293,40 +289,6 @@ export default function StudentsUserListContent({ college }) {
     return filteredData.slice(start, start + pageSize);
   }, [filteredData, page, pageSize]);
 
-  const allIds = useMemo(
-    () =>
-      paginatedData.map(
-        (user) => user._id || user.personal_info_id?._id || user,
-      ),
-    [paginatedData],
-  );
-  const isAllSelected = selected.length === allIds.length && allIds.length > 0;
-  const toggleSelectAll = () => {
-    if (isAllSelected) setSelected([]);
-    else setSelected(allIds);
-  };
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
-  const handleBulkDelete = () => {
-    setShowConfirmModal(true);
-  };
-  const confirmBulkDelete = async () => {
-    try {
-      await axios.delete("/api/profile/delete-bulk", {
-        data: { ids: selected },
-      });
-      setSelected([]);
-      setShowConfirmModal(false);
-      window.location.reload();
-    } catch (err) {
-      setShowConfirmModal(false);
-      setShowErrorModal(true);
-    }
-  };
-
   const handleToggleStatus = async (id, isActive) => {
     try {
       const res = await axios.patch(
@@ -354,9 +316,7 @@ export default function StudentsUserListContent({ college }) {
     }
   };
 
-  const handleEdit = (id) => {
-
-  };
+  const handleEdit = (id) => {};
 
   const normalizeStr = (s) => (s || "").toString().trim().toLowerCase();
 
@@ -416,7 +376,8 @@ export default function StudentsUserListContent({ college }) {
     setReportStatus("");
     try {
       const report = buildReportData();
-      const collegeLabel = college || "College of Information and Computing Sciences (CICS)";
+      const collegeLabel =
+        college || "College of Information and Computing Sciences (CICS)";
       const yearLabel = filterSchoolYear || "AY 2024-2025";
       const semLabel = filterSemester || "2nd Semester";
       const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
@@ -454,13 +415,23 @@ export default function StudentsUserListContent({ college }) {
 
         bodyRows += `<tr class="total-row"><td style="text-align:left">TOTAL</td><td>${courseMale}</td><td>${courseFemale}</td><td>${courseTotal}</td></tr>`;
 
-        const malePct = courseTotal > 0 ? Math.round((courseMale / courseTotal) * 100) : 0;
-        const femalePct = courseTotal > 0 ? Math.round((courseFemale / courseTotal) * 100) : 0;
+        const malePct =
+          courseTotal > 0 ? Math.round((courseMale / courseTotal) * 100) : 0;
+        const femalePct =
+          courseTotal > 0 ? Math.round((courseFemale / courseTotal) * 100) : 0;
         const firstYr = yearMap["1st Year"] || { Male: 0, Female: 0, Total: 0 };
         const firstYrTotal = firstYr.Total || firstYr.Male + firstYr.Female;
-        const fourthYr = yearMap["4th Year"] || { Male: 0, Female: 0, Total: 0 };
+        const fourthYr = yearMap["4th Year"] || {
+          Male: 0,
+          Female: 0,
+          Total: 0,
+        };
         const fourthYrTotal = fourthYr.Total || fourthYr.Male + fourthYr.Female;
-        const secondYr = yearMap["2nd Year"] || { Male: 0, Female: 0, Total: 0 };
+        const secondYr = yearMap["2nd Year"] || {
+          Male: 0,
+          Female: 0,
+          Total: 0,
+        };
         const secondYrTotal = secondYr.Total || secondYr.Male + secondYr.Female;
 
         let genderStatement = "";
@@ -474,7 +445,9 @@ export default function StudentsUserListContent({ college }) {
 
         let dropStatement = "";
         if (firstYrTotal > 0 && secondYrTotal < firstYrTotal) {
-          const dropPct = Math.round(((firstYrTotal - secondYrTotal) / firstYrTotal) * 100);
+          const dropPct = Math.round(
+            ((firstYrTotal - secondYrTotal) / firstYrTotal) * 100,
+          );
           dropStatement = `
             <p><strong>Drop in 2nd Year:</strong> There is a decrease in enrollment from 1st to 2nd year (from ${firstYrTotal} to ${secondYrTotal} students, a ${dropPct}% drop).</p>
             <p>This may suggest: Academic challenges or course shifting, financial constraints affecting retention, and students transferring to other institutions.</p>
@@ -502,7 +475,7 @@ export default function StudentsUserListContent({ college }) {
         courseSections += buildCourseSection(course);
       });
 
-const html = `
+      const html = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -580,7 +553,9 @@ const html = `
         iframe.contentWindow?.print();
         setTimeout(() => document.body.removeChild(iframe), 1000);
       };
-      setReportStatus("Print dialog opened. Save as PDF using the Print dialog.");
+      setReportStatus(
+        "Print dialog opened. Save as PDF using the Print dialog.",
+      );
     } catch (err) {
       console.error("HTML report generation failed:", err);
       setReportStatus("Could not generate the report.");
@@ -643,7 +618,7 @@ const html = `
     const renderContactTab = () => (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div >
+          <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               Email
             </label>
@@ -651,7 +626,7 @@ const html = `
               {contact.email || "—"}
             </p>
           </div>
-          <div >
+          <div>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               Mobile Number
             </label>
@@ -673,7 +648,7 @@ const html = `
               { label: "City/Municipality", value: permanentAddr.city?.name },
               { label: "Barangay", value: permanentAddr.barangay?.name },
             ].map((field) => (
-              <div key={field.label} >
+              <div key={field.label}>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {field.label}
                 </label>
@@ -697,7 +672,7 @@ const html = `
               { label: "City/Municipality", value: currentAddr.city?.name },
               { label: "Barangay", value: currentAddr.barangay?.name },
             ].map((field) => (
-              <div key={field.label} >
+              <div key={field.label}>
                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
                   {field.label}
                 </label>
@@ -737,7 +712,7 @@ const html = `
           },
           { label: "Head of Household", value: gad.headOfHousehold },
         ].map((field) => (
-          <div key={field.label} >
+          <div key={field.label}>
             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
               {field.label}
             </label>
@@ -834,10 +809,8 @@ const html = `
             </div>
           </div>
 
-
           <div className="px-6 py-5">{tabContent[viewTab]}</div>
 
-  
           <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
             <button
               onClick={() => {
@@ -879,38 +852,25 @@ const html = `
           />
         </div>
       </div>
-      {role !== "dean" && (
-        <div className="flex justify-between mb-2">
-          <div>
-            <input
-              type="checkbox"
-              checked={isAllSelected}
-              onChange={toggleSelectAll}
-              aria-label="Select all"
-            />
-            <span className="ml-2">Select All</span>
-          </div>
-          <div className="flex felex-row gap-4">
-            <div>
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                className="border px-3 py-2 rounded w-full max-w-sm"
-              />
-            </div>
-            {selected.length > 0 && (
-              <button
-                className="bg-red-500 px-4 py-1 text-white rounded-md"
-                onClick={handleBulkDelete}
-              >
-                Delete
-              </button>
-            )}
-          </div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm text-gray-500">
+          <span className="font-medium text-gray-700">{totalRows}</span> student{totalRows !== 1 ? "s" : ""}
         </div>
-      )}
+        <div className="relative w-full max-w-xs">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          />
+        </div>
+      </div>
       <div className="flex items-center justify-between mb-3 p-3 bg-white border border-gray-200 rounded-lg">
         <div>
           <p className="text-sm font-medium text-black">
@@ -923,7 +883,6 @@ const html = `
           </p>
         </div>
         <div className="flex items-center gap-3">
-         
           <button
             onClick={generatePDF}
             disabled={generating}
@@ -936,209 +895,98 @@ const html = `
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
         <Table className="bg-white" striped={false} color="none">
-          <TableHead className="bg-gray-200 text-black">
+          <TableHead className="bg-white text-gray-500 border-b border-gray-200">
             <TableRow>
-              {role !== "dean" && <TableHeadCell></TableHeadCell>}
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 Name
-                <span className="ml-1 align-middle inline-block">
-                  <span
-                    className={
-                      nameSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      nameSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={nameSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={nameSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 Sex
-                <span className="ml-1">
-                  <span
-                    className={
-                      sexSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      sexSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={sexSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={sexSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setCollegeSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setCollegeSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 College
-                <span className="ml-1">
-                  <span
-                    className={
-                      collegeSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      collegeSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={collegeSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={collegeSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setCampusSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setCampusSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 Campus
-                <span className="ml-1">
-                  <span
-                    className={
-                      campusSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      campusSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={campusSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={campusSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setCourseSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setCourseSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 Course
-                <span className="ml-1">
-                  <span
-                    className={
-                      courseSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      courseSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={courseSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={courseSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
-                className="cursor-pointer select-none"
-                onClick={() =>
-                  setYearSort((prev) => (prev === "asc" ? "desc" : "asc"))
-                }
+                className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
+                onClick={() => setYearSort((prev) => (prev === "asc" ? "desc" : "asc"))}
               >
                 Year Level
-                <span className="ml-1">
-                  <span
-                    className={
-                      yearSort === "asc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={
-                      yearSort === "desc"
-                        ? "text-blue-600 font-bold"
-                        : "text-gray-400"
-                    }
-                  >
-                    ▼
-                  </span>
+                <span className="ml-1.5 text-[10px]">
+                  <span className={yearSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
+                  <span className={yearSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
                 </span>
               </TableHeadCell>
-              <TableHeadCell className="text-center">Action</TableHeadCell>
+              <TableHeadCell className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-center">
+                Action
+              </TableHeadCell>
+              {role !== "dean" && (
+                <TableHeadCell className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-center">
+                  Manage
+                </TableHeadCell>
+              )}
             </TableRow>
           </TableHead>
-          <TableBody className="divide-y">
+          <TableBody className="divide-y divide-gray-100">
             {paginatedData.map((user, index) => {
               const p = user.personal_info_id || {};
               const personal = p.personal || {};
               const gad = p.gadData || {};
               const acad = p.affiliation?.academic_information || {};
               return (
-                <TableRow key={user._id || index} className="hover:bg-gray-50 text-xs">
-                  {role !== "dean" && (
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(
-                          user._id || user.personal_info_id?._id || user,
-                        )}
-                        onChange={() =>
-                          toggleSelect(
-                            user._id || user.personal_info_id?._id || user,
-                          )
-                        }
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell className="text-black text-xs">
-                    {personal.first_name || ""} {personal.last_name || ""}
+                <TableRow key={user._id || index} className="hover:bg-gray-50 transition-colors">
+                  <TableCell className="px-4 py-3 text-sm text-gray-800">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-600 shrink-0">
+                        {(personal.first_name?.[0] || "?").toUpperCase()}
+                        {(personal.last_name?.[0] || "").toUpperCase()}
+                      </div>
+                      <span>{personal.first_name || ""} {personal.last_name || ""}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-black text-xs">
+                  <TableCell className="px-4 py-3 text-sm text-gray-600">
                     {gad.sexAtBirth
                       ? gad.sexAtBirth.toLowerCase() === "male"
                         ? "Male"
@@ -1147,56 +995,53 @@ const html = `
                           : gad.sexAtBirth
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-black text-xs">{acad.college || "—"}</TableCell>
-                  <TableCell className="text-black text-xs">{acad.campus || "—"}</TableCell>
-                  <TableCell className="text-black text-xs">{acad.course || "—"}</TableCell>
-                  <TableCell className="text-black text-xs">{acad.year_level || "—"}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="px-4 py-3 text-sm text-gray-600 max-w-[160px] truncate">
+                    {acad.college || "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm text-gray-600">
+                    {acad.campus || "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm text-gray-600 max-w-[180px] truncate">
+                    {acad.course || "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm text-gray-600">
+                    {acad.year_level || "—"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-center">
                     <button
                       onClick={() => setViewModalUser(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
                     >
                       <FaEye size={12} />
                       View
                     </button>
                   </TableCell>
                   {role !== "dean" && (
-                    <TableCell className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(user._id)}
-                        className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setConfirmAction({
-                            type: "toggle",
-                            userId: user._id,
-                            isActive: user.is_active,
-                          })
-                        }
-                        className={`px-3 py-1 text-xs rounded-md text-white transition ${
-                          user.is_active
-                            ? "bg-red-500 hover:bg-red-600"
-                            : "bg-green-600 hover:bg-green-700"
-                        }`}
-                      >
-                        {user.is_active ? "Deactivate" : "Activate"}
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setConfirmAction({
-                            type: "reset",
-                            userId: user._id,
-                          })
-                        }
-                        className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
-                      >
-                        Reset
-                      </button>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 justify-center">
+                        <button
+                          onClick={() => handleEdit(user._id)}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setConfirmAction({ type: "toggle", userId: user._id, isActive: user.is_active })}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                            user.is_active
+                              ? "bg-white text-red-600 border-red-200 hover:bg-red-50"
+                              : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                          }`}
+                        >
+                          {user.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmAction({ type: "reset", userId: user._id })}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-amber-600 border border-amber-200 hover:bg-amber-50 transition-all"
+                        >
+                          Reset
+                        </button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
@@ -1204,8 +1049,14 @@ const html = `
             })}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-6">
-                  No users found
+                <TableCell colSpan={role !== "dean" ? 8 : 7} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-2">
+                    <svg className="w-10 h-10 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p className="text-sm text-gray-500">No students found</p>
+                    <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -1214,7 +1065,7 @@ const html = `
       </div>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
         <div className="flex items-center gap-2">
-          <span>Rows per page:</span>
+          <span className="text-sm text-gray-500">Rows per page:</span>
           <input
             type="number"
             min={1}
@@ -1229,27 +1080,21 @@ const html = `
               setPage(1);
               setPageSizeInput(String(val));
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.target.blur();
-              }
-            }}
-            className="w-16 border rounded px-2 py-1"
+            onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+            className="w-16 border border-gray-200 rounded px-2 py-1 text-sm"
           />
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="px-2 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
             Prev
           </button>
-          <span>
-            Page {page} of {totalPages}
-          </span>
+          <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
           <button
-            className="px-2 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
@@ -1258,72 +1103,31 @@ const html = `
         </div>
       </div>
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
-            <div className="text-center text-red-600 mb-6">
-              Are you sure you want to delete the selected users?
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                onClick={confirmBulkDelete}
-              >
-                Yes, Delete
-              </button>
-              <button
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
             <h2 className="text-lg font-semibold mb-3">
-              {confirmAction.type === "reset"
-                ? "Reset Password"
-                : "Change User Status"}
+              {confirmAction.type === "reset" ? "Reset Password" : confirmAction.isActive ? "Deactivate User" : "Activate User"}
             </h2>
-
             <p className="text-sm text-gray-600 mb-6">
               {confirmAction.type === "reset"
-                ? "This will reset password to default."
+                ? "This will reset the user's password to the default value."
                 : confirmAction.isActive
-                  ? "This will deactivate the user."
-                  : "This will activate the user."}
+                  ? "This will deactivate the user account."
+                  : "This will activate the user account."}
             </p>
-
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="px-4 py-2 text-sm rounded bg-gray-300 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-
+              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
               <button
                 onClick={async () => {
                   try {
-                    if (confirmAction.type === "reset") {
-                      await handleResetPassword(confirmAction.userId);
-                    } else {
-                      await handleToggleStatus(
-                        confirmAction.userId,
-                        confirmAction.isActive,
-                      );
-                    }
-                  } finally {
-                    setConfirmAction(null);
-                  }
+                    if (confirmAction.type === "reset") await handleResetPassword(confirmAction.userId);
+                    else await handleToggleStatus(confirmAction.userId, confirmAction.isActive);
+                  } finally { setConfirmAction(null); }
                 }}
-                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                className={`px-4 py-2 text-sm font-medium rounded-lg text-white transition shadow-sm ${
+                  confirmAction.type === "reset" ? "bg-amber-500 hover:bg-amber-600" : confirmAction.isActive ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"
+                }`}
               >
                 Confirm
               </button>
