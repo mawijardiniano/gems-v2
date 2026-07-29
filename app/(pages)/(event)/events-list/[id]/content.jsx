@@ -118,6 +118,7 @@ export default function EventManageContent() {
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
   const [projects, setProjects] = useState([]);
+  const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -272,6 +273,21 @@ export default function EventManageContent() {
       }
     };
     buildQr();
+  }, [baseUrl, eventId]);
+
+  // Generate Attendance QR
+  useEffect(() => {
+    const buildAttendanceQr = async () => {
+      if (!baseUrl || !eventId) return;
+      try {
+        const deepLink = `${baseUrl}/events/attendance/${eventId}`;
+        const dataUrl = await QRCode.toDataURL(deepLink, { width: 220 });
+        setAttendanceQrDataUrl(dataUrl);
+      } catch (e) {
+        setAttendanceQrDataUrl("");
+      }
+    };
+    buildAttendanceQr();
   }, [baseUrl, eventId]);
 
   const isPast = useMemo(() => {
@@ -1144,6 +1160,14 @@ const blankRowHtml = () =>
     link.click();
   };
 
+  const handleDownloadAttendanceQr = () => {
+    if (!attendanceQrDataUrl) return;
+    const link = document.createElement("a");
+    link.href = attendanceQrDataUrl;
+    link.download = `${event?.title || "event"}-attendance-qr.png`;
+    link.click();
+  };
+
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
     if (userId) {
@@ -1296,6 +1320,8 @@ const blankRowHtml = () =>
           eventId={eventId}
           qrDataUrl={qrDataUrl}
           handleDownloadQr={handleDownloadQr}
+          attendanceQrDataUrl={attendanceQrDataUrl}
+          handleDownloadAttendanceQr={handleDownloadAttendanceQr}
           showQrPrompt={showQrPrompt}
           setShowQrPrompt={setShowQrPrompt}
           handleQrYesAccount={handleQrYesAccount}
@@ -1378,6 +1404,8 @@ function OverviewTabs({
   eventId,
   qrDataUrl,
   handleDownloadQr,
+  attendanceQrDataUrl,
+  handleDownloadAttendanceQr,
   showQrPrompt,
   setShowQrPrompt,
   handleQrYesAccount,
@@ -1939,7 +1967,6 @@ function OverviewTabs({
               their account status.
             </p>
           </div>
-          <div><h3>Attendance qr</h3></div>
           <button
             onClick={handleDownloadQr}
             disabled={!qrDataUrl}
@@ -1966,6 +1993,48 @@ function OverviewTabs({
           <p className="text-sm text-gray-600">Generating QR...</p>
         )}
       </div>
+
+      {/* Attendance QR Section */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200 border-green-300">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <span className="text-green-600">✅</span> Attendance QR
+            </h3>
+            <p className="text-sm text-gray-600">
+              Guests can scan on the day of the event to mark themselves as attended.
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadAttendanceQr}
+            disabled={!attendanceQrDataUrl}
+            className="px-3 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
+          >
+            Download Attendance QR
+          </button>
+        </div>
+        {attendanceQrDataUrl ? (
+          <div className="flex items-center gap-4 flex-wrap">
+            <img
+              src={attendanceQrDataUrl}
+              alt="Attendance QR code"
+              className="w-40 h-40 border rounded-lg p-2 bg-white"
+            />
+            <div className="text-sm text-gray-700">
+              <p className="font-semibold">Scan destination</p>
+              <p className="break-all text-gray-600">
+                {`${baseUrl}/events/attendance/${eventId}`}
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                → Marks user as "attended" immediately
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">Generating QR...</p>
+        )}
+      </div>
+
       <div>
         <button
           className="px-4 py-2 bg-red-600 text-white rounded"

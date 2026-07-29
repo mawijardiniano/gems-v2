@@ -107,6 +107,12 @@ const EventSchema = new Schema(
     not_interested_users: [
       { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
     ],
+    attended_users: [
+      {
+        user_id: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+        attended_at: { type: Date, default: Date.now },
+      },
+    ],
     participant_numbers: [
       {
         user_id: { type: Schema.Types.ObjectId, ref: "UserAuth" },
