@@ -442,7 +442,7 @@ export default function EventContent({
             </div>
             <h2 className="text-xl font-bold text-gray-900">You're on the list!</h2>
             <p className="text-gray-500 text-sm">
-              This is your participant number for this event. Keep this for your records.
+              Thank You for choosing the College of Information and Computing Sciences. Your attendance is expected. See you there.
             </p>
             <button
               onClick={() => setShowParticipantModal(false)}

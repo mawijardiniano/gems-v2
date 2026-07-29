@@ -1939,6 +1939,7 @@ function OverviewTabs({
               their account status.
             </p>
           </div>
+          <div><h3>Attendance qr</h3></div>
           <button
             onClick={handleDownloadQr}
             disabled={!qrDataUrl}
