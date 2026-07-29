@@ -103,8 +103,7 @@ function normalizeUsername(value) {
   if (!value) return "";
   return String(value)
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "");
+    .replace(/[^a-zA-Z0-9._-]/g, "");
 }
 
 async function ensureUserAuthForProfile(profile, identity, mapped) {

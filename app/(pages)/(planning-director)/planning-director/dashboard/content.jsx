@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useFetchData from "@/hooks/useSample";
 import Snapshot from "../../../(admin)/admin-dashboard/components/snapshot";
 import GenderPanel from "../../../(admin)/admin-dashboard/components/genderPanel";
@@ -100,7 +100,7 @@ export default function PlanningDirectorDashboard() {
               : [],
         ),
       ),
-    ],
+    ].sort((a, b) => String(b).localeCompare(String(a))),
     [rawData],
   );
 
@@ -119,6 +119,12 @@ export default function PlanningDirectorDashboard() {
     [rawData],
   );
 
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear]);
+
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {
       const p = d?.personal_info_id || {};
@@ -130,21 +136,22 @@ export default function PlanningDirectorDashboard() {
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
       const terms = Array.isArray(d?.profile_terms) ? d.profile_terms : [];
-      const schoolYearMatches =
-        !filterSchoolYear ||
-        terms.some((term) => term?.school_year === filterSchoolYear) ||
-        d?.school_year === filterSchoolYear;
-      const semesterMatches =
-        !filterSemester ||
-        terms.some((term) => term?.semester === filterSemester) ||
-        d?.semester === filterSemester;
+      const termMatches =
+        !filterSchoolYear && !filterSemester
+          ? true
+          : terms.some(
+              (term) =>
+                (!filterSchoolYear || term?.school_year === filterSchoolYear) &&
+                (!filterSemester || term?.semester === filterSemester),
+            ) ||
+            (!filterSchoolYear || d?.school_year === filterSchoolYear) &&
+            (!filterSemester || d?.semester === filterSemester);
 
       return (
         (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
         (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        schoolYearMatches &&
-        semesterMatches &&
+        termMatches &&
         (filterCollege.length === 0 ||
           filterCollege.includes(collegeOrOffice)) &&
         (!filterEmployment || empStatus === filterEmployment) &&

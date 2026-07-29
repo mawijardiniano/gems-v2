@@ -34,7 +34,7 @@ export default function SimplifyGender() {
   ];
 
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
+    <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-700 via-purple-700 to-violet-800" />
       <div className="absolute inset-0 opacity-20">

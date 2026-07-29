@@ -21,6 +21,9 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaHistory,
+  FaGraduationCap,
+  FaSave,
+  FaSpinner,
 } from "react-icons/fa";
 
 function timeAgo(date) {
@@ -51,19 +54,52 @@ function formatDateTime(dateStr) {
 }
 
 const ACTION_CONFIG = {
-  LOGIN: { icon: <FaSignInAlt />, color: "bg-blue-100 text-blue-600", label: "Login" },
-  UPDATE_PROFILE: { icon: <FaUserEdit />, color: "bg-purple-100 text-purple-600", label: "Profile Updated" },
-  EVENT_REGISTER: { icon: <FaCalendarCheck />, color: "bg-emerald-100 text-emerald-600", label: "Event Registration" },
-  EVENT_CREATE: { icon: <FaPlusCircle />, color: "bg-green-100 text-green-600", label: "Event Created" },
-  EVENT_STATUS_UPDATE: { icon: <FaTimesCircle />, color: "bg-red-100 text-red-600", label: "Event Status Change" },
-  EVENT_UPDATE: { icon: <FaEdit />, color: "bg-yellow-100 text-yellow-600", label: "Event Updated" },
-  CHANGE_PASSWORD: { icon: <FaEdit />, color: "bg-orange-100 text-orange-600", label: "Password Changed" },
+  LOGIN: {
+    icon: <FaSignInAlt />,
+    color: "bg-blue-100 text-blue-600",
+    label: "Login",
+  },
+  UPDATE_PROFILE: {
+    icon: <FaUserEdit />,
+    color: "bg-purple-100 text-purple-600",
+    label: "Profile Updated",
+  },
+  EVENT_REGISTER: {
+    icon: <FaCalendarCheck />,
+    color: "bg-emerald-100 text-emerald-600",
+    label: "Event Registration",
+  },
+  EVENT_CREATE: {
+    icon: <FaPlusCircle />,
+    color: "bg-green-100 text-green-600",
+    label: "Event Created",
+  },
+  EVENT_STATUS_UPDATE: {
+    icon: <FaTimesCircle />,
+    color: "bg-red-100 text-red-600",
+    label: "Event Status Change",
+  },
+  EVENT_UPDATE: {
+    icon: <FaEdit />,
+    color: "bg-yellow-100 text-yellow-600",
+    label: "Event Updated",
+  },
+  CHANGE_PASSWORD: {
+    icon: <FaEdit />,
+    color: "bg-orange-100 text-orange-600",
+    label: "Password Changed",
+  },
 };
 
 function ActivityIcon({ action }) {
-  const cfg = ACTION_CONFIG[action] || { icon: <FaSignInAlt />, color: "bg-gray-100 text-gray-600" };
+  const cfg = ACTION_CONFIG[action] || {
+    icon: <FaSignInAlt />,
+    color: "bg-gray-100 text-gray-600",
+  };
   return (
-    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs ${cfg.color}`}>
+    <div
+      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs ${cfg.color}`}
+    >
       {cfg.icon}
     </div>
   );
@@ -89,11 +125,23 @@ export default function AdminSettings() {
   // Activity log state
   const [activities, setActivities] = useState([]);
   const [activityLoading, setActivityLoading] = useState(true);
-  const [pagination, setPagination] = useState({ total: 0, totalPages: 0, page: 1, limit: 10 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 10,
+  });
   const [filterAction, setFilterAction] = useState("");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Academic Term state
+  const [termSchoolYear, setTermSchoolYear] = useState("");
+  const [termSemester, setTermSemester] = useState("");
+  const [termLoading, setTermLoading] = useState(true);
+  const [termSaving, setTermSaving] = useState(false);
+  const [termMessage, setTermMessage] = useState(null);
 
   const firstInputRef = useRef(null);
 
@@ -102,6 +150,65 @@ export default function AdminSettings() {
       firstInputRef.current.focus();
     }
   }, [passwordModalOpen]);
+
+  // Fetch active term
+  useEffect(() => {
+    (async () => {
+      setTermLoading(true);
+      setTermMessage(null);
+      try {
+        const res = await fetch("/api/settings?key=active_term");
+        const data = await res.json();
+        if (data.success && data.data?.value) {
+          setTermSchoolYear(data.data.value.school_year || "");
+          setTermSemester(data.data.value.semester || "");
+        } else {
+          setTermSchoolYear("");
+          setTermSemester("");
+        }
+      } catch (e) {
+        console.error("Failed to fetch active term:", e);
+      } finally {
+        setTermLoading(false);
+      }
+    })();
+  }, []);
+
+  async function saveActiveTerm() {
+    if (!termSchoolYear || !termSemester) {
+      setTermMessage({
+        type: "error",
+        text: "Please select both school year and semester.",
+      });
+      return;
+    }
+    setTermSaving(true);
+    setTermMessage(null);
+    try {
+      const res = await axios.put("/api/settings", {
+        key: "active_term",
+        value: { school_year: termSchoolYear, semester: termSemester },
+      });
+      if (res.data.success) {
+        setTermMessage({
+          type: "success",
+          text: "Active academic term saved successfully.",
+        });
+      } else {
+        setTermMessage({
+          type: "error",
+          text: res.data.error || "Failed to save.",
+        });
+      }
+    } catch (err) {
+      setTermMessage({
+        type: "error",
+        text: err?.response?.data?.error || "Server error.",
+      });
+    } finally {
+      setTermSaving(false);
+    }
+  }
 
   // Fetch user info (includes passwordChangedAt)
   useEffect(() => {
@@ -120,24 +227,29 @@ export default function AdminSettings() {
     })();
   }, []);
 
-  const fetchActivities = useCallback(async (page = 1) => {
-    setActivityLoading(true);
-    try {
-      const params = new URLSearchParams({ page, limit: 10 });
-      if (filterAction) params.set("action", filterAction);
-      if (filterFrom) params.set("from", filterFrom);
-      if (filterTo) params.set("to", filterTo);
+  const fetchActivities = useCallback(
+    async (page = 1) => {
+      setActivityLoading(true);
+      try {
+        const params = new URLSearchParams({ page, limit: 10 });
+        if (filterAction) params.set("action", filterAction);
+        if (filterFrom) params.set("from", filterFrom);
+        if (filterTo) params.set("to", filterTo);
 
-      const res = await fetch(`/api/activity?${params}`);
-      const data = await res.json();
-      setActivities(data.activities || []);
-      setPagination(data.pagination || { total: 0, totalPages: 0, page: 1, limit: 10 });
-    } catch {
-      setActivities([]);
-    } finally {
-      setActivityLoading(false);
-    }
-  }, [filterAction, filterFrom, filterTo]);
+        const res = await fetch(`/api/activity?${params}`);
+        const data = await res.json();
+        setActivities(data.activities || []);
+        setPagination(
+          data.pagination || { total: 0, totalPages: 0, page: 1, limit: 10 },
+        );
+      } catch {
+        setActivities([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    },
+    [filterAction, filterFrom, filterTo],
+  );
 
   useEffect(() => {
     fetchActivities(1);
@@ -149,7 +261,10 @@ export default function AdminSettings() {
       return false;
     }
     if (newPassword.length < 8) {
-      setMessage({ type: "error", text: "New password must be at least 8 characters." });
+      setMessage({
+        type: "error",
+        text: "New password must be at least 8 characters.",
+      });
       return false;
     }
     if (newPassword !== confirmPassword) {
@@ -198,7 +313,7 @@ export default function AdminSettings() {
           const userData = await userRes.json();
           if (userData?.user) setUserInfo(userData.user);
         } catch (e) {}
-        
+
         setMessage({ type: "success", text: "Password changed successfully." });
         setCurrentPassword("");
         setNewPassword("");
@@ -207,7 +322,10 @@ export default function AdminSettings() {
       } else {
         setMessage({
           type: "error",
-          text: res.data?.error || res.data?.message || "Failed to change password.",
+          text:
+            res.data?.error ||
+            res.data?.message ||
+            "Failed to change password.",
         });
       }
     } catch (err) {
@@ -239,7 +357,9 @@ export default function AdminSettings() {
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Admin Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your account credentials, security, and activity log</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Manage your account credentials, security, and activity log
+        </p>
       </div>
 
       {/* Security Section */}
@@ -251,8 +371,12 @@ export default function AdminSettings() {
                 <FaLock />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Security</h2>
-                <p className="text-xs text-gray-500">Manage your password and account security</p>
+                <h2 className="text-base font-semibold text-gray-900">
+                  Security
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Manage your password and account security
+                </p>
               </div>
             </div>
           </div>
@@ -268,7 +392,9 @@ export default function AdminSettings() {
                 </button>
                 <div className="text-xs text-gray-500">
                   {userInfoLoading ? (
-                    <span className="text-gray-400">Loading security info...</span>
+                    <span className="text-gray-400">
+                      Loading security info...
+                    </span>
                   ) : (
                     <div className="space-y-2 mt-1">
                       {passwordChangedAt ? (
@@ -284,7 +410,9 @@ export default function AdminSettings() {
                       ) : (
                         <div className="flex items-center gap-2">
                           <FaExclamationCircle className="text-amber-400 shrink-0" />
-                          <span className="text-amber-600">Password has never been changed</span>
+                          <span className="text-amber-600">
+                            Password has never been changed
+                          </span>
                         </div>
                       )}
                       {lastLogin && (
@@ -315,6 +443,103 @@ export default function AdminSettings() {
         </div>
       </section>
 
+      {/* Academic Term Section */}
+      <section className="mb-8">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                <FaGraduationCap />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Academic Term</h2>
+                <p className="text-xs text-gray-500">
+                  Set the active school year and semester for new profile registrations
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="px-6 py-5">
+            {termLoading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <FaSpinner className="animate-spin" />
+                Loading active term...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      School Year
+                    </label>
+                    <select
+                      value={termSchoolYear}
+                      onChange={(e) => setTermSchoolYear(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 bg-white"
+                    >
+                      <option value="">Select School Year</option>
+                      <option value="2024-2025">2024-2025</option>
+                      <option value="2025-2026">2025-2026</option>
+                      <option value="2026-2027">2026-2027</option>
+                      <option value="2027-2028">2027-2028</option>
+                      <option value="2028-2029">2028-2029</option>
+                      <option value="2029-2030">2029-2030</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Semester
+                    </label>
+                    <select
+                      value={termSemester}
+                      onChange={(e) => setTermSemester(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 bg-white"
+                    >
+                      <option value="">Select Semester</option>
+                      <option value="1st">1st Semester</option>
+                      <option value="2nd">2nd Semester</option>
+                      <option value="Summer">Summer</option>
+                    </select>
+                  </div>
+                </div>
+
+                {termMessage && (
+                  <div
+                    className={`p-3 rounded-lg text-sm ${
+                      termMessage.type === "error"
+                        ? "bg-red-50 text-red-700 border border-red-100"
+                        : "bg-green-50 text-green-700 border border-green-100"
+                    }`}
+                  >
+                    {termMessage.text}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={saveActiveTerm}
+                    disabled={termSaving}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                  >
+                    {termSaving ? (
+                      <>
+                        <FaSpinner className="animate-spin text-xs" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave className="text-xs" />
+                        Save
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Activity Log Section */}
       <section className="mb-8">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -325,7 +550,9 @@ export default function AdminSettings() {
                   <FaClipboardList />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Activity Log</h2>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Activity Log
+                  </h2>
                   <p className="text-xs text-gray-500">
                     {pagination.total > 0
                       ? `${pagination.total} activity record${pagination.total !== 1 ? "s" : ""} found`
@@ -352,7 +579,9 @@ export default function AdminSettings() {
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Action Type</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Action Type
+                  </label>
                   <select
                     value={filterAction}
                     onChange={(e) => setFilterAction(e.target.value)}
@@ -364,12 +593,16 @@ export default function AdminSettings() {
                     <option value="EVENT_REGISTER">Event Registration</option>
                     <option value="EVENT_CREATE">Event Created</option>
                     <option value="EVENT_UPDATE">Event Updated</option>
-                    <option value="EVENT_STATUS_UPDATE">Event Status Change</option>
+                    <option value="EVENT_STATUS_UPDATE">
+                      Event Status Change
+                    </option>
                     <option value="CHANGE_PASSWORD">Password Changed</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    From
+                  </label>
                   <input
                     type="date"
                     value={filterFrom}
@@ -378,7 +611,9 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    To
+                  </label>
                   <input
                     type="date"
                     value={filterTo}
@@ -412,7 +647,10 @@ export default function AdminSettings() {
             {activityLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 animate-pulse"
+                  >
                     <div className="w-9 h-9 rounded-full bg-gray-200" />
                     <div className="flex-1 space-y-1.5">
                       <div className="h-3 bg-gray-200 rounded w-3/4" />
@@ -424,7 +662,9 @@ export default function AdminSettings() {
             ) : activities.length === 0 ? (
               <div className="text-center py-8">
                 <FaClipboardList className="mx-auto text-gray-300 text-3xl mb-3" />
-                <p className="text-sm text-gray-500">No activity records found.</p>
+                <p className="text-sm text-gray-500">
+                  No activity records found.
+                </p>
                 <p className="text-xs text-gray-400 mt-1">
                   {filterAction || filterFrom || filterTo
                     ? "Try adjusting your filters."
@@ -434,7 +674,9 @@ export default function AdminSettings() {
             ) : (
               <ul className="space-y-1">
                 {activities.map((a) => {
-                  const description = a.description || `${ACTION_CONFIG[a.action]?.label || a.action} action performed`;
+                  const description =
+                    a.description ||
+                    `${ACTION_CONFIG[a.action]?.label || a.action} action performed`;
                   return (
                     <li
                       key={a._id}
@@ -476,7 +718,11 @@ export default function AdminSettings() {
                 {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
                   .filter((p) => {
                     const cur = pagination.page;
-                    return p === 1 || p === pagination.totalPages || Math.abs(p - cur) <= 1;
+                    return (
+                      p === 1 ||
+                      p === pagination.totalPages ||
+                      Math.abs(p - cur) <= 1
+                    );
                   })
                   .map((p, idx, arr) => (
                     <React.Fragment key={p}>
@@ -511,19 +757,28 @@ export default function AdminSettings() {
       {/* Password Change Modal */}
       {passwordModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={closePasswordModal} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={closePasswordModal}
+          />
           <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
-                <p className="text-sm text-gray-500 mt-1">Update your account password</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Change Password
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Update your account password
+                </p>
               </div>
 
               {message && (
                 <div
                   role="alert"
                   className={`mb-3 p-3 rounded-lg text-sm ${
-                    message.type === "error" ? "bg-red-50 text-red-700 border border-red-100" : "bg-green-50 text-green-700 border border-green-100"
+                    message.type === "error"
+                      ? "bg-red-50 text-red-700 border border-red-100"
+                      : "bg-green-50 text-green-700 border border-green-100"
                   }`}
                 >
                   {message.text}
@@ -532,7 +787,9 @@ export default function AdminSettings() {
 
               <form onSubmit={handleModalSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Current Password</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Current Password
+                  </label>
                   <div className="mt-1 relative">
                     <input
                       ref={firstInputRef}
@@ -552,7 +809,9 @@ export default function AdminSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">New Password</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    New Password
+                  </label>
                   <div className="mt-1 relative">
                     <input
                       type={showNew ? "text" : "password"}
@@ -568,11 +827,15 @@ export default function AdminSettings() {
                       {showNew ? "Hide" : "Show"}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">At least 8 characters. Include letters and numbers.</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    At least 8 characters. Include letters and numbers.
+                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Confirm New Password
+                  </label>
                   <div className="mt-1 relative">
                     <input
                       type={showConfirm ? "text" : "password"}
@@ -615,12 +878,18 @@ export default function AdminSettings() {
       {/* Confirmation Modal */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setConfirmOpen(false)}
+          />
           <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Confirm Password Change</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirm Password Change
+              </h3>
               <p className="text-sm text-gray-600 mt-2">
-                Are you sure you want to change your password? This action will update your account credentials immediately.
+                Are you sure you want to change your password? This action will
+                update your account credentials immediately.
               </p>
               <div className="mt-6 flex justify-end gap-2">
                 <button

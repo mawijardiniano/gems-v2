@@ -19,10 +19,14 @@ const gadDataSchema = new Schema(
     pwd_type: {
       type: String,
       enum: [
-        "Visual Impairment",
-        "Hearing Impairment",
+        "Psychosocial Disability",
+        "Chronic Illness",
+        "Learning Disability",
+        "Visual Disability",
+        "Hearing Disability",
         "Physical Disability",
         "Mental Disability",
+        "Speech and Language Impairment",
         "Multiple Disabilities",
         "Other",
       ],

@@ -56,9 +56,16 @@ export function mapToStagingPayload(raw, defaults = {}) {
     toSemester(raw.semester || raw.Semester || raw.term) ||
     toSemester(defaults.semester);
 
-  const sexAtBirth = normalizeString(
-    raw.sexAtBirth || raw.Sex || raw.sex || raw.gender,
-  );
+function toSexAtBirth(value) {
+  const v = normalizeString(value).toLowerCase();
+  if (["f", "F", "female"].includes(v)) return "Female";
+  if (["m","M", "male"].includes(v)) return "Male";
+  return normalizeString(value);
+}
+
+const sexAtBirth = toSexAtBirth(
+  raw.sexAtBirth || raw.Sex || raw.sex || raw.gender || raw.Gender,
+);
 
   const currentStatus = toCurrentStatus(status, studentId, employeeId);
 
@@ -100,6 +107,8 @@ export function mapToStagingPayload(raw, defaults = {}) {
       middle_name: middleName,
       last_name: lastName,
       birthday: raw.birthday || raw.Birthday || null,
+      nationality: raw.Nationality || raw.nationality || null,
+      civil_status: raw.CivilStatus || raw.civilstatus || raw.civil_status || null,
       currentStatus,
     },
     gadData: {
@@ -134,12 +143,12 @@ export function buildIdentity(mappedPayload) {
   const employeeId =
     mappedPayload?.affiliation?.employment_information?.employee_id?.trim?.() ||
     "";
-  const email = mappedPayload?.contact?.email?.trim?.().toLowerCase?.() || "";
+  // const email = mappedPayload?.contact?.email?.trim?.().toLowerCase?.() || "";
 
   return {
     student_id: studentId,
     employee_id: employeeId,
-    email,
+    // email,
   };
 }
 

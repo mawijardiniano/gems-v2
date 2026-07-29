@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import axios from "axios";
 import {
@@ -94,7 +94,7 @@ export default function StudentsUserListContent() {
               : [],
         ),
       ),
-    ],
+    ].sort((a, b) => String(b).localeCompare(String(a))),
     [studentsData],
   );
 
@@ -113,6 +113,12 @@ export default function StudentsUserListContent() {
     [studentsData],
   );
 
+    useEffect(() => {
+      if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+        setFilterSchoolYear(schoolYearOptions[0]);
+      }
+    }, [schoolYearOptions, filterSchoolYear]);
+
   const filteredData = useMemo(() => {
     let data = studentsData.filter((user) => {
       const p = user.personal_info_id || {};
@@ -130,21 +136,22 @@ export default function StudentsUserListContent() {
 
       const matchesSearch =
         !searchName || fullName.includes(searchName.toLowerCase());
-      const schoolYearMatches =
-        !filterSchoolYear ||
-        terms.some((term) => term?.school_year === filterSchoolYear) ||
-        user?.school_year === filterSchoolYear;
-      const semesterMatches =
-        !filterSemester ||
-        terms.some((term) => term?.semester === filterSemester) ||
-        user?.semester === filterSemester;
+      const termMatches =
+        !filterSchoolYear && !filterSemester
+          ? true
+          : terms.some(
+              (term) =>
+                (!filterSchoolYear || term?.school_year === filterSchoolYear) &&
+                (!filterSemester || term?.semester === filterSemester),
+            ) ||
+            (!filterSchoolYear || user?.school_year === filterSchoolYear) &&
+            (!filterSemester || user?.semester === filterSemester);
 
       return (
         matchesSearch &&
         (!filterSex || gad.sexAtBirth === filterSex) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        schoolYearMatches &&
-        semesterMatches &&
+        termMatches &&
         (filterCollege.length === 0 || filterCollege.includes(acad.college))
       );
     });
@@ -576,7 +583,7 @@ export default function StudentsUserListContent() {
                   <TableCell className="text-black text-xs">
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell  className="text-black text-xs">
+                  <TableCell className="text-black text-xs">
                     {gad.sexAtBirth
                       ? gad.sexAtBirth.toLowerCase() === "male"
                         ? "Male"
@@ -585,11 +592,19 @@ export default function StudentsUserListContent() {
                           : gad.sexAtBirth
                       : "—"}
                   </TableCell>
-                  <TableCell  className="text-black text-xs">{acad.college || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">{acad.campus || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">{acad.course || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">{acad.year_level || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">
+                  <TableCell className="text-black text-xs">
+                    {acad.college || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
+                    {acad.campus || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
+                    {acad.course || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
+                    {acad.year_level || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
                     {p.createdAt
                       ? new Date(p.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",

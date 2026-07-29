@@ -34,6 +34,8 @@ export default function ProfileRegistration() {
       case 2:
         if (currentStatus === "Student") return <AcademicInformation />;
         if (currentStatus === "Employee") return <EmploymentInformation />;
+       
+        return <PersonalInformation />;
       case 3:
         return <GadInformation />;
       case 4:
@@ -46,9 +48,11 @@ export default function ProfileRegistration() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Navbar />
-      <main className="py-30">{renderStep()}</main>
-    </>
+      <main className="pt-16">
+        {renderStep()}
+      </main>
+    </div>
   );
 }

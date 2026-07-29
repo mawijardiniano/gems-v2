@@ -14,7 +14,7 @@ export default function PromotingFairness() {
   ];
 
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
+    <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background with warm gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-red-600" />
       <div className="absolute inset-0 opacity-20">

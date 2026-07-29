@@ -365,7 +365,7 @@ export default function ContactInformationContent({ profile }) {
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
                   <input
-                    type="text"
+                    type="number"
                     className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
                     value={formData.mobileNumber}
                     onChange={(e) => handleChange("mobileNumber", e.target.value)}

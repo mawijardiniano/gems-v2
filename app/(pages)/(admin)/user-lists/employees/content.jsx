@@ -135,7 +135,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
               : [],
         ),
       ),
-    ],
+    ].sort((a, b) => String(b).localeCompare(String(a))),
     [rawData],
   );
 
@@ -154,6 +154,12 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     [rawData],
   );
 
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear]);
+
   const filteredData = useMemo(() => {
     let data = rawData.filter((user) => {
       const p = user.personal_info_id || {};
@@ -168,14 +174,16 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
       const terms = Array.isArray(user?.profile_terms)
         ? user.profile_terms
         : [];
-      const schoolYearMatches =
-        !filterSchoolYear ||
-        terms.some((term) => term?.school_year === filterSchoolYear) ||
-        user?.school_year === filterSchoolYear;
-      const semesterMatches =
-        !filterSemester ||
-        terms.some((term) => term?.semester === filterSemester) ||
-        user?.semester === filterSemester;
+      const termMatches =
+        !filterSchoolYear && !filterSemester
+          ? true
+          : terms.some(
+              (term) =>
+                (!filterSchoolYear || term?.school_year === filterSchoolYear) &&
+                (!filterSemester || term?.semester === filterSemester),
+            ) ||
+            (!filterSchoolYear || user?.school_year === filterSchoolYear) &&
+            (!filterSemester || user?.semester === filterSemester);
 
       if (personal.currentStatus !== "Employee") return false;
 
@@ -183,8 +191,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
         (!filterSex || gad.sexAtBirth === filterSex) &&
         (!filterPersonType || personal.currentStatus === filterPersonType) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        schoolYearMatches &&
-        semesterMatches &&
+        termMatches &&
         (filterCollege.length === 0 ||
           filterCollege.includes(collegeOrOffice)) &&
         (!filterEmployment || empStatus === filterEmployment) &&
@@ -615,7 +622,7 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                 {};
               return (
                 <TableRow key={user._id || index} className="hover:bg-gray-50">
-                  <TableCell >
+                  <TableCell>
                     <input
                       type="checkbox"
                       checked={selected.includes(
@@ -628,16 +635,22 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                       }
                     />
                   </TableCell>
-                  <TableCell  className="text-black text-xs">
+                  <TableCell className="text-black text-xs">
                     {personal.first_name || ""} {personal.last_name || ""}
                   </TableCell>
-                  <TableCell  className="text-black text-xs">{gad.sexAtBirth || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">{emp.office || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">{emp.employment_status || "—"}</TableCell>
-                  <TableCell  className="text-black text-xs">
+                  <TableCell className="text-black text-xs">
+                    {gad.sexAtBirth || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
+                    {emp.office || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
+                    {emp.employment_status || "—"}
+                  </TableCell>
+                  <TableCell className="text-black text-xs">
                     {emp.employment_appointment_status || "—"}
                   </TableCell>
-                  <TableCell  className="text-black text-xs">
+                  <TableCell className="text-black text-xs">
                     {(() => {
                       const dateStr =
                         p.createdAt || emp.created_at || user.createdAt;

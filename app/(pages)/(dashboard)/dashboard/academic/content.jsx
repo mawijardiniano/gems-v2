@@ -16,23 +16,75 @@ import {
   FaSchool,
 } from "react-icons/fa";
 
-const COURSE = ["Information System", "Information Technology"];
+// College -> valid programs. Course options are derived from this map
+// based on whichever college is currently selected.
+const COLLEGE_TO_PROGRAMS = {
+  "Graduate School": [
+    "Doctor of Education",
+    "Master in Information Technology",
+    "Master in Public Administration",
+    "Master of Arts in Education",
+  ],
+  "College of Agriculture": [
+    "Bachelor in Agricultural Technology",
+    "Bachelor of Science in Agriculture",
+  ],
+  "College of Allied Health Sciences": [
+    "Bachelor of Science in Midwifery",
+    "Bachelor of Science in Nursing",
+  ],
+  "College of Arts and Social Sciences": [
+    "Bachelor of Arts in Communication",
+    "Bachelor of Arts in English Language Studies",
+    "Bachelor of Science in Social Work",
+  ],
+  "College of Business and Accountancy": [
+    "Bachelor of Science in Accountancy",
+    "Bachelor of Science in Accounting Information System",
+    "Bachelor of Science in Business Administration",
+    "Bachelor of Science in Entrepreneurship",
+    "Bachelor of Science in Tourism Management",
+  ],
+  "College of Criminal Justice Education": [
+    "Bachelor of Science in Criminology",
+    "Bachelor of Science in Law Enforcement Administration",
+  ],
+  "College of Education": [
+    "Bachelor of Culture and Arts Education",
+    "Bachelor of Elementary Education",
+    "Bachelor of Secondary Education",
+    "Bachelor of Technology and Livelihood Education",
+    "Certificate in Teachers Professional Education",
+  ],
+  "College of Engineering": [
+    "Bachelor of Science in Civil Engineering",
+    "Bachelor of Science in Computer Engineering",
+    "Bachelor of Science in Electrical Engineering",
+    "Bachelor of Science in Electronics Engineering",
+    "Bachelor of Science in Mechanical Engineering",
+  ],
+  "College of Environmental Studies": [
+    "Bachelor of Science in Environmental Science",
+  ],
+  "College of Fisheries and Aquatic Sciences": [
+    "Bachelor of Science in Fisheries",
+  ],
+  "College of Governance": [
+    "Bachelor in Public Administration",
+    "Bachelor of Arts in Political Science",
+  ],
+  "College of Industrial Technology": [
+    "Bachelor of Science in Industrial Technology",
+  ],
+  "College of Information and Computing Sciences": [
+    "Bachelor of Science in Information Systems",
+    "Bachelor of Science in Information Technology",
+  ],
+  "Laboratory School": ["Senior-High School"],
+};
+
+const COLLEGES = Object.keys(COLLEGE_TO_PROGRAMS);
 const CAMPUS = ["Boac", "Sta. Cruz"];
-const COLLEGES = [
-  "Graduate School",
-  "College of Agriculture",
-  "College of Allied Health Sciences",
-  "College of Arts & Social Sciences",
-  "College of Business & Accountancy",
-  "College of Criminal Justice Education",
-  "College of Education",
-  "College of Engineering",
-  "College of Environmental Studies",
-  "College of Fisheries & Aquatic Sciences",
-  "College of Governance",
-  "College of Industrial Technology",
-  "College of Information & Computing Sciences",
-];
 const YEAR_LEVELS = [
   "1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "6th Year",
 ];
@@ -128,6 +180,12 @@ export default function AcademicContent() {
   const handleChange = (key, value) =>
     setFormData((p) => ({ ...p, [key]: value }));
 
+  // College and Course are dependent: changing college must clear
+  // whatever course was previously selected, since it may not belong
+  // to the newly selected college's program list.
+  const handleCollegeChange = (value) =>
+    setFormData((p) => ({ ...p, college: value, course: "" }));
+
   const handleSave = async () => {
     const required = [formData.student_id, formData.campus, formData.college, formData.course, formData.year_level, formData.isScholar];
 
@@ -216,6 +274,8 @@ export default function AcademicContent() {
     { icon: <FaLayerGroup />, label: "Year Level", value: formData.year_level, color: "bg-amber-50 text-amber-600" },
     { icon: <FaAward />, label: "Scholarship", value: formData.isScholar, color: "bg-sky-50 text-sky-600" },
   ];
+
+  const availableCourses = COLLEGE_TO_PROGRAMS[formData.college] || [];
 
   return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
@@ -324,7 +384,7 @@ export default function AcademicContent() {
                 <select
                   className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
                   value={formData.college}
-                  onChange={(e) => handleChange("college", e.target.value)}
+                  onChange={(e) => handleCollegeChange(e.target.value)}
                 >
                   <option value="">Select College</option>
                   {COLLEGES.map((c) => (<option key={c} value={c}>{c}</option>))}
@@ -333,12 +393,15 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Course <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   value={formData.course}
                   onChange={(e) => handleChange("course", e.target.value)}
+                  disabled={!formData.college}
                 >
-                  <option value="">Select Course</option>
-                  {COURSE.map((c) => (<option key={c} value={c}>{c}</option>))}
+                  <option value="">
+                    {formData.college ? "Select Course" : "Select College first"}
+                  </option>
+                  {availableCourses.map((c) => (<option key={c} value={c}>{c}</option>))}
                 </select>
               </div>
               <div>

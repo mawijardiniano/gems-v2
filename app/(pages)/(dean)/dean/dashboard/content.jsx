@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, {useEffect} from "react";
 import Snapshot from "../../components/snapshot";
 import GenderPanel from "../../components/genderPanel";
 import Demographics from "../../components/demographics";
@@ -91,20 +91,33 @@ export default function DeanDashboardContent() {
     [rawData],
   );
 
-  const schoolYearOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((t) => t?.school_year).filter(Boolean)
-            : d?.school_year
-              ? [d.school_year]
-              : [],
-        ),
+const schoolYearOptions = useMemo(
+  () => [
+    ...new Set(
+      rawData.flatMap((d) =>
+        Array.isArray(d?.profile_terms)
+          ? d.profile_terms.map((t) => t?.school_year).filter(Boolean)
+          : d?.school_year
+            ? [d.school_year]
+            : [],
       ),
-    ],
-    [rawData],
-  );
+    ),
+  ].sort((a, b) => String(b).localeCompare(String(a))), 
+  [rawData],
+);
+
+useEffect(() => {
+  if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+    setFilterSchoolYear(schoolYearOptions[0]);
+  }
+}, [schoolYearOptions, filterSchoolYear]);
+
+
+useEffect(() => {
+  if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+    setFilterSchoolYear(schoolYearOptions[0]);
+  }
+}, [schoolYearOptions, filterSchoolYear, setFilterSchoolYear]);
 
   const semesterOptions = useMemo(
     () => [
@@ -132,15 +145,17 @@ export default function DeanDashboardContent() {
       const empStatus = emp.employment_status || "";
       const empAppointment = emp.employment_appointment_status || "";
 
-      const terms = Array.isArray(d?.profile_terms) ? d.profile_terms : [];
-      const schoolYearMatches =
-        !filterSchoolYear ||
-        terms.some((t) => t?.school_year === filterSchoolYear) ||
-        d?.school_year === filterSchoolYear;
-      const semesterMatches =
-        !filterSemester ||
-        terms.some((t) => t?.semester === filterSemester) ||
-        d?.semester === filterSemester;
+const termMatches =
+  !filterSchoolYear && !filterSemester
+    ? true
+    : (Array.isArray(d?.profile_terms) &&
+        d.profile_terms.some(
+          (t) =>
+            (!filterSchoolYear || t?.school_year === filterSchoolYear) &&
+            (!filterSemester || t?.semester === filterSemester),
+        )) ||
+      (!filterSchoolYear || d?.school_year === filterSchoolYear) &&
+      (!filterSemester || d?.semester === filterSemester);
 
       return (
         (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
@@ -151,8 +166,7 @@ export default function DeanDashboardContent() {
         (!filterEmployment || empStatus === filterEmployment) &&
         (filterAppointment.length === 0 ||
           filterAppointment.includes(empAppointment)) &&
-        schoolYearMatches &&
-        semesterMatches
+        termMatches
       );
     });
   }, [
@@ -200,10 +214,12 @@ export default function DeanDashboardContent() {
         </select>
       </div>
       <div className="flex flex-col gap-4">
-        <Snapshot
-          data={filteredData}
-          college={college}
-        />
+ <Snapshot
+  data={filteredData}
+  college={college}
+  filterSchoolYear={filterSchoolYear}
+  filterSemester={filterSemester}
+/>
         <GenderPanel
           data={filteredData}
           college={college}

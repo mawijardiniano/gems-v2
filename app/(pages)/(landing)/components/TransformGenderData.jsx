@@ -34,7 +34,7 @@ export default function TransformGenderData() {
   ];
 
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
+    <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
       <div className="absolute inset-0 opacity-20">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useFetchData from "@/hooks/useSample";
 import Snapshot from "./components/snapshot";
 import GenderPanel from "./components/genderPanel";
@@ -100,7 +100,7 @@ export default function Page() {
               : [],
         ),
       ),
-    ],
+    ].sort((a, b) => String(b).localeCompare(String(a))),
     [rawData],
   );
 
@@ -118,6 +118,18 @@ export default function Page() {
     ],
     [rawData],
   );
+
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear]);
+
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear, setFilterSchoolYear]);
 
   const filteredData = useMemo(() => {
     return rawData.filter((d) => {

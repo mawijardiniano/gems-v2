@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
+import SystemSetting from "@/models/systemSetting";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
@@ -8,9 +9,56 @@ import { logActivity } from "@/lib/activityLog";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-function generateUsername(personal) {
-  if (personal?.first_name) return personal.first_name;
-  return "user";
+async function generateUniqueUsername(personal, affiliation) {
+  const isStudent = personal?.currentStatus === "Student";
+  const isEmployee = personal?.currentStatus === "Employee";
+
+  const candidates = [];
+
+  if (isStudent) {
+    const studentId = affiliation?.academic_information?.student_id;
+    if (studentId) {
+      candidates.push(studentId);
+    }
+  }
+
+  if (isEmployee) {
+    const firstName = personal?.first_name || "";
+    const lastName = personal?.last_name || "";
+    if (firstName && lastName) {
+     
+      const combined =
+        firstName.charAt(0).toUpperCase() +
+        firstName.slice(1).toLowerCase() +
+        lastName.charAt(0).toUpperCase() +
+        lastName.slice(1).toLowerCase();
+      candidates.push(combined);
+    }
+  }
+
+  const first = personal?.first_name || "";
+  if (first) {
+    candidates.push(first.charAt(0).toUpperCase() + first.slice(1).toLowerCase());
+  }
+
+  const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
+
+  for (const candidate of uniqueCandidates) {
+    const exists = await UserAuth.findOne({ username: candidate }).lean();
+    if (!exists) {
+      return candidate;
+    }
+  }
+
+  // Fallback: generate a unique username with random suffix
+  const randomSuffix = Math.random().toString(36).substring(2, 10).toLowerCase();
+  let fallback = `user${randomSuffix}`;
+  let counter = 1;
+  while (await UserAuth.findOne({ username: fallback }).lean()) {
+    fallback = `user${randomSuffix}${counter}`;
+    counter += 1;
+  }
+  return fallback;
 }
 
 function generateTempPassword() {
@@ -183,9 +231,7 @@ export async function POST(req) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         createdByUserId = decoded.id;
-      } catch {
-        
-      }
+      } catch {}
     }
 
     const profilePayloadWithAudit = {
@@ -196,7 +242,7 @@ export async function POST(req) {
     const profile = await Profile.create(profilePayloadWithAudit);
     const role = body.role ? body.role : "User";
 
-    const username = generateUsername(personal);
+    const username = await generateUniqueUsername(personal, body.affiliation);
     const tempPassword = generateTempPassword();
 
     await UserAuth.create({
@@ -205,6 +251,26 @@ export async function POST(req) {
       password: tempPassword,
       role,
     });
+
+    // Auto-create ProfileTerm from admin-configured active term
+    try {
+      const activeTermSetting = await SystemSetting.findOne({
+        key: "active_term",
+      }).lean();
+      if (activeTermSetting?.value) {
+        const { school_year, semester } = activeTermSetting.value;
+        if (school_year && semester) {
+          await ProfileTerm.create({
+            profile_id: profile._id,
+            school_year,
+            semester,
+            affiliation: profile.affiliation || {},
+          });
+        }
+      }
+    } catch (termError) {
+      console.error("Failed to create ProfileTerm:", termError);
+    }
 
     await logActivity({
       req,

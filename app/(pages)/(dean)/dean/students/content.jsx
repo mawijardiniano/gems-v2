@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import axios from "axios";
 import {
@@ -114,17 +114,18 @@ export default function StudentsUserListContent({ college }) {
   );
 
   const schoolYearOptions = useMemo(
-    () => [
-      ...new Set(
-        students.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
-            : d?.school_year
-              ? [d.school_year]
-              : [],
+    () =>
+      [
+        ...new Set(
+          students.flatMap((d) =>
+            Array.isArray(d?.profile_terms)
+              ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
+              : d?.school_year
+                ? [d.school_year]
+                : [],
+          ),
         ),
-      ),
-    ],
+      ].sort((a, b) => String(b).localeCompare(String(a))),
     [students],
   );
 
@@ -143,6 +144,12 @@ export default function StudentsUserListContent({ college }) {
     [students],
   );
 
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear]);
+
   const filteredData = useMemo(() => {
     let data = students.filter((user) => {
       const p = user.personal_info_id || {};
@@ -157,7 +164,7 @@ export default function StudentsUserListContent({ college }) {
 
       const matchesSearch =
         !searchName || fullName.includes(searchName.toLowerCase());
-      const terms = Array.isArray(user?.profile_terms)
+            const terms = Array.isArray(user?.profile_terms)
         ? user.profile_terms
         : [];
       const schoolYearMatches =
@@ -166,10 +173,12 @@ export default function StudentsUserListContent({ college }) {
         user?.school_year === filterSchoolYear;
       const semesterMatches =
         !filterSemester ||
-        terms.some((term) => term?.semester === filterSemester) ||
-        user?.semester === filterSemester;
-
-      return (
+        terms.some((term) => {
+          const yearOk = !filterSchoolYear || term?.school_year === filterSchoolYear;
+          return yearOk && term?.semester === filterSemester;
+        }) ||
+        (!filterSchoolYear && user?.semester === filterSemester);
+            return (
         matchesSearch &&
         (!filterSex || gad.sexAtBirth === filterSex) &&
         (!filterYearLevel || acad.year_level === filterYearLevel) &&
@@ -854,12 +863,23 @@ export default function StudentsUserListContent({ college }) {
       </div>
       <div className="flex items-center justify-between mb-2">
         <div className="text-sm text-gray-500">
-          <span className="font-medium text-gray-700">{totalRows}</span> student{totalRows !== 1 ? "s" : ""}
+          <span className="font-medium text-gray-700">{totalRows}</span> student
+          {totalRows !== 1 ? "s" : ""}
         </div>
         <div className="relative w-full max-w-xs">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
           <input
@@ -888,8 +908,18 @@ export default function StudentsUserListContent({ college }) {
             disabled={generating}
             className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition shadow-sm"
           >
-            <svg className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             {generating ? "Generating..." : "Download PDF Report"}
           </button>
@@ -901,62 +931,146 @@ export default function StudentsUserListContent({ college }) {
             <TableRow>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setNameSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 Name
                 <span className="ml-1.5 text-[10px]">
-                  <span className={nameSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={nameSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      nameSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      nameSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setSexSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 Sex
                 <span className="ml-1.5 text-[10px]">
-                  <span className={sexSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={sexSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      sexSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      sexSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setCollegeSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setCollegeSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 College
                 <span className="ml-1.5 text-[10px]">
-                  <span className={collegeSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={collegeSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      collegeSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      collegeSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setCampusSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setCampusSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 Campus
                 <span className="ml-1.5 text-[10px]">
-                  <span className={campusSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={campusSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      campusSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      campusSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setCourseSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setCourseSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 Course
                 <span className="ml-1.5 text-[10px]">
-                  <span className={courseSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={courseSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      courseSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      courseSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-                onClick={() => setYearSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                onClick={() =>
+                  setYearSort((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
               >
                 Year Level
                 <span className="ml-1.5 text-[10px]">
-                  <span className={yearSort === "asc" ? "text-blue-600" : "text-gray-300"}>▲</span>
-                  <span className={yearSort === "desc" ? "text-blue-600" : "text-gray-300"}>▼</span>
+                  <span
+                    className={
+                      yearSort === "asc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▲
+                  </span>
+                  <span
+                    className={
+                      yearSort === "desc" ? "text-blue-600" : "text-gray-300"
+                    }
+                  >
+                    ▼
+                  </span>
                 </span>
               </TableHeadCell>
               <TableHeadCell className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-center">
@@ -976,14 +1090,19 @@ export default function StudentsUserListContent({ college }) {
               const gad = p.gadData || {};
               const acad = p.affiliation?.academic_information || {};
               return (
-                <TableRow key={user._id || index} className="hover:bg-gray-50 transition-colors">
+                <TableRow
+                  key={user._id || index}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <TableCell className="px-4 py-3 text-sm text-gray-800">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-600 shrink-0">
                         {(personal.first_name?.[0] || "?").toUpperCase()}
                         {(personal.last_name?.[0] || "").toUpperCase()}
                       </div>
-                      <span>{personal.first_name || ""} {personal.last_name || ""}</span>
+                      <span>
+                        {personal.first_name || ""} {personal.last_name || ""}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-sm text-gray-600">
@@ -1026,7 +1145,13 @@ export default function StudentsUserListContent({ college }) {
                           Edit
                         </button>
                         <button
-                          onClick={() => setConfirmAction({ type: "toggle", userId: user._id, isActive: user.is_active })}
+                          onClick={() =>
+                            setConfirmAction({
+                              type: "toggle",
+                              userId: user._id,
+                              isActive: user.is_active,
+                            })
+                          }
                           className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
                             user.is_active
                               ? "bg-white text-red-600 border-red-200 hover:bg-red-50"
@@ -1036,7 +1161,12 @@ export default function StudentsUserListContent({ college }) {
                           {user.is_active ? "Deactivate" : "Activate"}
                         </button>
                         <button
-                          onClick={() => setConfirmAction({ type: "reset", userId: user._id })}
+                          onClick={() =>
+                            setConfirmAction({
+                              type: "reset",
+                              userId: user._id,
+                            })
+                          }
                           className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-amber-600 border border-amber-200 hover:bg-amber-50 transition-all"
                         >
                           Reset
@@ -1049,13 +1179,28 @@ export default function StudentsUserListContent({ college }) {
             })}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={role !== "dean" ? 8 : 7} className="text-center py-12">
+                <TableCell
+                  colSpan={role !== "dean" ? 8 : 7}
+                  className="text-center py-12"
+                >
                   <div className="flex flex-col items-center gap-2">
-                    <svg className="w-10 h-10 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="w-10 h-10 text-gray-200"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                     <p className="text-sm text-gray-500">No students found</p>
-                    <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
+                    <p className="text-xs text-gray-400">
+                      Try adjusting your search or filters
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -1080,7 +1225,9 @@ export default function StudentsUserListContent({ college }) {
               setPage(1);
               setPageSizeInput(String(val));
             }}
-            onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.target.blur();
+            }}
             className="w-16 border border-gray-200 rounded px-2 py-1 text-sm"
           />
         </div>
@@ -1092,7 +1239,9 @@ export default function StudentsUserListContent({ college }) {
           >
             Prev
           </button>
-          <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
+          <span className="text-sm text-gray-600">
+            Page {page} of {totalPages}
+          </span>
           <button
             className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -1107,7 +1256,11 @@ export default function StudentsUserListContent({ college }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
             <h2 className="text-lg font-semibold mb-3">
-              {confirmAction.type === "reset" ? "Reset Password" : confirmAction.isActive ? "Deactivate User" : "Activate User"}
+              {confirmAction.type === "reset"
+                ? "Reset Password"
+                : confirmAction.isActive
+                  ? "Deactivate User"
+                  : "Activate User"}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               {confirmAction.type === "reset"
@@ -1117,16 +1270,32 @@ export default function StudentsUserListContent({ college }) {
                   : "This will activate the user account."}
             </p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">Cancel</button>
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
               <button
                 onClick={async () => {
                   try {
-                    if (confirmAction.type === "reset") await handleResetPassword(confirmAction.userId);
-                    else await handleToggleStatus(confirmAction.userId, confirmAction.isActive);
-                  } finally { setConfirmAction(null); }
+                    if (confirmAction.type === "reset")
+                      await handleResetPassword(confirmAction.userId);
+                    else
+                      await handleToggleStatus(
+                        confirmAction.userId,
+                        confirmAction.isActive,
+                      );
+                  } finally {
+                    setConfirmAction(null);
+                  }
                 }}
                 className={`px-4 py-2 text-sm font-medium rounded-lg text-white transition shadow-sm ${
-                  confirmAction.type === "reset" ? "bg-amber-500 hover:bg-amber-600" : confirmAction.isActive ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"
+                  confirmAction.type === "reset"
+                    ? "bg-amber-500 hover:bg-amber-600"
+                    : confirmAction.isActive
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-emerald-500 hover:bg-emerald-600"
                 }`}
               >
                 Confirm

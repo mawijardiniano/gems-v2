@@ -1,6 +1,12 @@
 "use client";
 
-import { FaUsers, FaVenusMars, FaWheelchair, FaLeaf, FaGraduationCap } from "react-icons/fa";
+import {
+  FaUsers,
+  FaVenusMars,
+  FaWheelchair,
+  FaLeaf,
+  FaGraduationCap,
+} from "react-icons/fa";
 
 const statCards = [
   {
@@ -82,9 +88,16 @@ const getGender = (d) => {
 
 const sortYearLevels = (rows) => {
   const order = [
-    "grade 11", "grade 12",
-    "1st year", "2nd year", "3rd year", "4th year", "5th year",
-    "graduate", "graduates", "unknown",
+    "grade 11",
+    "grade 12",
+    "1st year",
+    "2nd year",
+    "3rd year",
+    "4th year",
+    "5th year",
+    "graduate",
+    "graduates",
+    "unknown",
   ];
   const rank = (name) => {
     const n = `${name || ""}`.trim().toLowerCase();
@@ -96,37 +109,64 @@ const sortYearLevels = (rows) => {
   );
 };
 
-export default function Snapshot({ data, college }) {
-  const students = data.filter((d) => {
+export default function Snapshot({ data, college, filterSchoolYear, filterSemester }) {
+  const filterByTerm = (d) => {
+    const schoolYearMatches =
+      !filterSchoolYear ||
+      d?.school_year === filterSchoolYear ||
+      (!d?.school_year &&
+        Array.isArray(d?.profile_terms) &&
+        d.profile_terms.some((t) => t?.school_year === filterSchoolYear));
+
+    const semesterMatches =
+      !filterSemester ||
+      d?.semester === filterSemester ||
+      (!d?.semester &&
+        !filterSchoolYear &&
+        Array.isArray(d?.profile_terms) &&
+        d.profile_terms.some((t) => t?.semester === filterSemester)) ||
+      (!d?.semester &&
+        filterSchoolYear &&
+        Array.isArray(d?.profile_terms) &&
+        d.profile_terms.some((t) => t?.school_year === filterSchoolYear && t?.semester === filterSemester));
+
+    return schoolYearMatches && semesterMatches;
+  };
+
+  const filteredData = filterSchoolYear || filterSemester
+    ? data.filter(filterByTerm)
+    : data;
+
+  const students = filteredData.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
     return !college || acad?.college === college;
   });
 
-  const employees = data.filter((d) => {
+  const employees = filteredData.filter((d) => {
     const emp = d?.personal_info_id?.affiliation?.employment_information;
     return !college || emp?.office === college;
   });
 
-  const total = data.length;
-  const femaleCount = data.filter(
+  const total = filteredData.length;
+  const femaleCount = filteredData.filter(
     (d) => d.personal_info_id?.gadData?.sexAtBirth === "Female",
   ).length;
-  const maleCount = data.filter(
+  const maleCount = filteredData.filter(
     (d) => d.personal_info_id?.gadData?.sexAtBirth === "Male",
   ).length;
   const pwdCount =
-    data.filter((d) => d.personal_info_id?.gadData?.isPWD === true).length || 0;
+    filteredData.filter((d) => d.personal_info_id?.gadData?.isPWD === true).length || 0;
   const ipCount =
-    data.filter((d) => d.personal_info_id?.gadData?.isIndigenousPerson === true)
+    filteredData.filter((d) => d.personal_info_id?.gadData?.isIndigenousPerson === true)
       .length || 0;
 
-  /* ---- Students by Year Level with gender breakdown ---- */
   const studentYearGenderData = (() => {
     const grouped = {};
     students.forEach((d) => {
       const acad = d?.personal_info_id?.affiliation?.academic_information || {};
       const year = acad.year_level || "Unknown";
-      if (!grouped[year]) grouped[year] = { label: year, Female: 0, Male: 0, Other: 0, total: 0 };
+      if (!grouped[year])
+        grouped[year] = { label: year, Female: 0, Male: 0, Other: 0, total: 0 };
       const g = getGender(d);
       grouped[year][g] = (grouped[year][g] || 0) + 1;
       grouped[year].total += 1;
@@ -217,7 +257,9 @@ export default function Snapshot({ data, college }) {
                   <span className="text-purple-600">{row.Female}</span>
                   <span className="text-sm font-normal text-gray-400">·</span>
                   <span className="text-blue-600">{row.Male}</span>
-                  <span className="text-xs font-normal text-gray-400">(F · M)</span>
+                  <span className="text-xs font-normal text-gray-400">
+                    (F · M)
+                  </span>
                 </div>
                 {row.total > 0 && (
                   <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">

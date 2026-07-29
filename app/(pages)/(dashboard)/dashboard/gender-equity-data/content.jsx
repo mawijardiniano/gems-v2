@@ -20,12 +20,15 @@ const SEX_AT_BIRTH = ["Male", "Female"];
 const GENDER_PREFERENCE = ["Male", "Female", "LGBTQIA+"];
 const SOCIO_ECONOMIC = ["Low Income", "Middle Income", "High Income"];
 const PWD_TYPES = [
-  "Visual Impairment",
-  "Hearing Impairment",
-  "Physical Disability",
-  "Mental Disability",
-  "Multiple Disabilities",
-  "Other",
+        "Psychosocial Disability",
+        "Chronic Illness",
+        "Learning Disability",
+        "Visual Disability",
+        "Hearing Disability",
+        "Physical Disability",
+        "Mental Disability",
+        "Speech and Language Impairment",
+        "Multiple Disabilities",
 ];
 
 function DetailCard({ icon, label, value, color }) {
