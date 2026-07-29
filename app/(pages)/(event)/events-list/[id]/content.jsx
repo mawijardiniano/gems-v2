@@ -339,14 +339,15 @@ export default function EventManageContent() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  const toAcronym = (value) => {
-    if (!value || typeof value !== "string") return "";
-    const cleaned = value.replace(/\bof\b/gi, " ");
-    const matches = cleaned.replace(/[()]/g, " ").match(/\b[A-Za-z0-9]/g);
-    if (!matches) return value.trim();
-    return matches.join("").toUpperCase();
-  };
-
+const toAcronym = (value) => {
+  if (!value || typeof value !== "string") return "";
+  const cleaned = value
+    .replace(/\b(of|and|the|&)\b/gi, " ")
+    .replace(/[()]/g, " ");
+  const matches = cleaned.match(/\b[A-Za-z0-9]/g);
+  if (!matches) return value.trim();
+  return matches.join("").toUpperCase();
+};
   const goingProfiles = useMemo(
     () =>
       (event?.registered_users || [])
@@ -997,46 +998,46 @@ export default function EventManageContent() {
   const handleDownloadBlankGuestsPdf = async () => {
     if (typeof window === "undefined") return;
 
-    const blankRowHtml = () =>
-      `<tr>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Male<br/>[ ] Female</td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Male<br/>[ ] Female<br/>[ ] LGBTQIA+</td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px;">[ ] Student<br/>[ ] Employee<br/>[ ] External Stakeholders</td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-      <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px;"></td>
-    </tr>`;
+const blankRowHtml = () =>
+  `<tr>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 5%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 22%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px; width: 6%;">[ ] Male<br/>[ ] Female</td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px; width: 8%;">[ ] Male<br/>[ ] Female<br/>[ ] LGBTQIA+</td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 4%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: left; font-size: 12px; width: 8%;">[ ] Student<br/>[ ] Employee<br/>[ ] Stakeholder</td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 10%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 10%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 10%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 10%;"></td>
+  <td style="border: 1px solid #ccc; padding:10px; text-align: center; font-size: 12px; width: 14%;"></td>
+</tr>`;
 
     const blankRowsFirst = Array.from({ length: 5 }, blankRowHtml).join("");
     const blankRowsSecond = Array.from({ length: 9 }, blankRowHtml).join("");
 
-    const tableHeader = `
-    <thead>
-      <tr>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">No.</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Full Name</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Sex</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Gender <br/> Identity</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Age</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Participant Type</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Department / <br/>Office /<br/> Organization</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Position /<br/> Designation <br/>(Employee/<br/>Stakeholders)</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Program / Year / <br/> Section (For Student)</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Contact No.</th>
-        <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5;">Signature</th>
-      </tr>
-    </thead>
-  `;
+   const tableHeader = `
+<thead>
+  <tr>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 5%;">No.</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 22%;">Full Name</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 6%;">Sex</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 8%;">Gender <br/> Identity</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 4%;">Age</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 8%;">Participant Type</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 10%;">Department / <br/>Office /<br/> Organization</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 10%;">Position /<br/> Designation <br/>(Employee/<br/>Stakeholders)</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 10%;">Program / Year / <br/> Section (For Student)</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 10%;">Contact No.</th>
+    <th style="border: 1px solid #ccc; padding: 6px; text-align: center; font-size: 12px; background: #f5f5f5; width: 14%;">Signature</th>
+  </tr>
+</thead>
+`;
 
     const dateLabel = formatRange(
       event.start_date || event.date,
       event.end_date,
-    );
+    )
 
     const ACTIVITY_TYPES = [
       "Academic",
@@ -1107,7 +1108,7 @@ export default function EventManageContent() {
     <h4><span style="font-weight: bold;">Type of Activity:</span> ${typeOfActivityHTML}</h4>
     <h4> <span style="font-weight: bold;">Date:</span>${dateLabel}</h4>
     <h4><span style="font-weight: bold;">Venue:</span> ${event.venue || ""}</h4>
-     <h4><span style="font-weight: bold;">Organizing Office/Unit::</span> ${event.organizing_office_unit || ""}</h4>
+     <h4><span style="font-weight: bold;">Organizing Office/Unit:</span> ${event.organizing_office_unit || ""}</h4>
     </div>
 
   <h4 style="margin:12px 0px 24px 0px; font-weight: bold;">II.<b style="margin-left: 20px;">Participating Attendance</b></h4>
