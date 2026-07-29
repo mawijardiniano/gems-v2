@@ -332,7 +332,7 @@ export default function DiscoverContent() {
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
     if (userId) return;
-    router.push("/authentication/signin?redirect=/events/discover?qr=1");
+    router.push("/?redirect=/events/discover?qr=1");
   };
 
   const handleQrNoAccount = () => {
