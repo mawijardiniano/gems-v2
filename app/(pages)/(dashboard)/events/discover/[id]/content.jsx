@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
 import { QRCodeCanvas } from "qrcode.react";
 import eligibilityRequirementsMap from "@/lib/eligibilityRequirements";
+import AttendanceModal from "../../components/AttendanceModal";
 
 export default function DiscoverEventContent() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function DiscoverEventContent() {
   const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [assignedParticipantNumber, setAssignedParticipantNumber] =
     useState(null);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -48,10 +50,15 @@ export default function DiscoverEventContent() {
   }, []);
 
   useEffect(() => {
-    if (searchParams?.get("qr") === "1" && profileChecked && !userId) {
+    const qr = searchParams?.get("qr");
+    const attendance = searchParams?.get("attendance");
+    if (qr === "1" && profileChecked && !userId) {
       setShowQrPrompt(true);
     } else {
       setShowQrPrompt(false);
+    }
+    if (attendance === "1" && profileChecked && userId) {
+      setShowAttendanceModal(true);
     }
   }, [searchParams, profileChecked, userId]);
 
@@ -382,6 +389,15 @@ export default function DiscoverEventContent() {
               </div>
             )}
 
+            {userId && event && (
+              <button
+                onClick={() => setShowAttendanceModal(true)}
+                className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                Mark Attendance
+              </button>
+            )}
+
             <div className="flex flex-wrap gap-2 pt-2">
               {["interested", "not_interested", "going"].map((s) => {
                 const labels = {
@@ -444,6 +460,12 @@ export default function DiscoverEventContent() {
           <div className="text-sm text-gray-600 mt-2">You must be logged in to get your QR code.</div>
         )} */}
       </div>
+
+      <AttendanceModal
+        eventId={event._id}
+        isOpen={showAttendanceModal}
+        onClose={() => setShowAttendanceModal(false)}
+      />
     </div>
   );
 }
