@@ -15,7 +15,12 @@ const NotificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ["project_comment", "project_updated"],
+      enum: [
+        "project_comment",
+        "project_updated",
+        "profile_missing_fields",
+        "password_not_changed",
+      ],
       required: true,
     },
     title: {

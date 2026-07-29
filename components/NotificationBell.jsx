@@ -102,6 +102,17 @@ export default function NotificationBell() {
 
     if (item?.projectId) {
       router.push(`/gpb/dump/${item.projectId}`);
+      return;
+    }
+
+    if (item?.type === "profile_missing_fields") {
+      router.push("/dashboard/personal-information");
+      return;
+    }
+
+    if (item?.type === "password_not_changed") {
+      router.push("/settings");
+      return;
     }
   };
 

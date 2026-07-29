@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
 import { logActivity } from "@/lib/activityLog";
+import Notification from "@/models/notification";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -102,7 +103,7 @@ export async function POST(req) {
     await logActivity({
       user_id: user._id,
       action: "LOGIN",
-      description: `User logged in as ${user.role}`,
+      description: `Account logged in successfully`,
       req,
       metadata: { module: "auth", role: user.role },
       resource_type: "user",
@@ -122,6 +123,118 @@ export async function POST(req) {
     );
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
+
+    // Check for missing profile fields and password change status, then create notifications
+    try {
+      const missingFields = [];
+
+      if (profile) {
+        const personal = profile.personal || {};
+        const contact = profile.contact || {};
+        const affiliation = profile.affiliation || {};
+        const academic = affiliation.academic_information || {};
+        const employment = affiliation.employment_information || {};
+
+        const gadData = profile.gadData || {};
+
+        // Check required personal fields
+        if (!personal.first_name) missingFields.push("First Name");
+        if (!personal.last_name) missingFields.push("Last Name");
+        if (!personal.currentStatus) missingFields.push("Status (Student/Employee)");
+        if (!personal.birthday) missingFields.push("Birthday");
+        if (!personal.civil_status) missingFields.push("Civil Status");
+        if (!gadData.sexAtBirth) missingFields.push("Sex at Birth");
+
+        // Check contact fields
+        if (!contact.email) missingFields.push("Email");
+        if (!contact.mobileNumber) missingFields.push("Mobile Number");
+
+        // Check academic/employment fields based on status
+        if (personal.currentStatus === "Student") {
+          if (!academic.campus) missingFields.push("Campus");
+          if (!academic.college) missingFields.push("College");
+          if (!academic.course) missingFields.push("Course");
+          if (!academic.year_level) missingFields.push("Year Level");
+          if (!academic.student_id) missingFields.push("Student ID");
+        } else if (personal.currentStatus === "Employee") {
+          if (!employment.office) missingFields.push("Office");
+          if (!employment.employment_status) missingFields.push("Employment Status");
+          if (!employment.employment_appointment_status) missingFields.push("Appointment Status");
+          if (!employment.employee_id) missingFields.push("Employee ID");
+        }
+      } else {
+        missingFields.push("No profile exists");
+      }
+
+      // Create notification for missing profile fields
+      if (missingFields.length > 0) {
+        const existingMissingNotif = await Notification.findOne({
+          recipientId: user._id,
+          type: "profile_missing_fields",
+          isRead: false,
+        });
+
+        if (!existingMissingNotif) {
+          await Notification.create({
+            recipientId: user._id,
+            senderId: user._id,
+            type: "profile_missing_fields",
+            title: "Complete Your Profile",
+            message: `Your profile is missing the following required fields: ${missingFields.join(", ")}. Please update your profile to complete your registration.`,
+            metadata: { missingFields },
+          });
+
+          if (global.io) {
+            global.io.emit("notification:new", {
+              recipientId: String(user._id),
+              notification: {
+                _id: "pending",
+                type: "profile_missing_fields",
+                title: "Complete Your Profile",
+                message: `Your profile is missing the following required fields: ${missingFields.join(", ")}. Please update your profile to complete your registration.`,
+                isRead: false,
+                createdAt: new Date().toISOString(),
+              },
+            });
+          }
+        }
+      }
+
+      if (!user.passwordChangedAt) {
+        const existingPwdNotif = await Notification.findOne({
+          recipientId: user._id,
+          type: "password_not_changed",
+          isRead: false,
+        });
+
+        if (!existingPwdNotif) {
+          await Notification.create({
+            recipientId: user._id,
+            senderId: user._id,
+            type: "password_not_changed",
+            title: "Change Your Password",
+            message: "For security purposes, please change your default password. Go to Settings to update your password.",
+            metadata: {},
+          });
+
+          if (global.io) {
+            global.io.emit("notification:new", {
+              recipientId: String(user._id),
+              notification: {
+                _id: "pending",
+                type: "password_not_changed",
+                title: "Change Your Password",
+                message: "For security purposes, please change your default password. Go to Settings to update your password.",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+              },
+            });
+          }
+        }
+      }
+    } catch (notifError) {
+      console.error("Failed to create login notifications:", notifError);
+    }
 
     const userObj = user.toObject();
     const { password: _, ...userWithoutPassword } = userObj;
