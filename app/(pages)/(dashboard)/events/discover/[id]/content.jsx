@@ -80,7 +80,7 @@ export default function DiscoverEventContent() {
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
     router.push(
-      `/authentication/signin?redirect=/events/discover/${eventId}?qr=1`,
+      `/?redirect=/events/discover/${eventId}?qr=1`,
     );
   };
 
