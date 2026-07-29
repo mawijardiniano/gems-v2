@@ -14,7 +14,7 @@ export default function AttendancePageContent() {
   const [error, setError] = useState("");
   const [userId, setUserId] = useState(null);
   const [profileChecked, setProfileChecked] = useState(false);
-  const [attendanceStatus, setAttendanceStatus] = useState(null); // 'success' | 'already' | 'error'
+  const [attendanceStatus, setAttendanceStatus] = useState(null);
   const [attendanceMessage, setAttendanceMessage] = useState("");
   const [attendedAt, setAttendedAt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
