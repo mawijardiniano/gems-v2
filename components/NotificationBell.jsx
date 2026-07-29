@@ -111,7 +111,7 @@ export default function NotificationBell() {
     }
 
     if (item?.type === "password_not_changed") {
-      router.push("/settings");
+      router.push(`/settings`);
       return;
     }
   };
@@ -176,7 +176,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+        <div className="fixed sm:absolute right-4 sm:right-0 mt-2 w-96 max-w-[calc(100vw-32px)] sm:max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-lg z-50">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h4 className="font-semibold text-gray-800">Notifications</h4>
             <span className="text-xs text-gray-500">{unreadCount} unread</span>
