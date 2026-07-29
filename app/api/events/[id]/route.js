@@ -25,6 +25,8 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
+        select:
+          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
       },
     })
     .populate({
@@ -34,6 +36,8 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
+        select:
+          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
       },
     })
     .populate({
@@ -43,6 +47,8 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
+        select:
+          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
       },
     })
     .populate({
@@ -52,6 +58,8 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
+        select:
+          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
       },
     })
     .lean();
@@ -163,7 +171,7 @@ export async function DELETE(req, { params }) {
   if (!id) {
     return NextResponse.json(
       { status: "error", message: "Missing event id" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -174,7 +182,7 @@ export async function DELETE(req, { params }) {
   if (!event) {
     return NextResponse.json(
       { status: "error", message: "Event not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -188,16 +196,21 @@ export async function DELETE(req, { params }) {
     if (report) {
       const filesToDelete = [];
 
-      if (report.office_memorandum?.key) filesToDelete.push(report.office_memorandum.key);
-      if (report.activity_design?.key) filesToDelete.push(report.activity_design.key);
-      if (report.attendance_sheet?.key) filesToDelete.push(report.attendance_sheet.key);
+      if (report.office_memorandum?.key)
+        filesToDelete.push(report.office_memorandum.key);
+      if (report.activity_design?.key)
+        filesToDelete.push(report.activity_design.key);
+      if (report.attendance_sheet?.key)
+        filesToDelete.push(report.attendance_sheet.key);
 
       if (Array.isArray(report.photos)) {
-        report.photos.forEach(p => p?.key && filesToDelete.push(p.key));
+        report.photos.forEach((p) => p?.key && filesToDelete.push(p.key));
       }
 
       if (Array.isArray(report.other_attachments)) {
-        report.other_attachments.forEach(p => p?.key && filesToDelete.push(p.key));
+        report.other_attachments.forEach(
+          (p) => p?.key && filesToDelete.push(p.key),
+        );
       }
 
       for (const key of filesToDelete) {
@@ -207,10 +220,7 @@ export async function DELETE(req, { params }) {
       await AccomplishmentReport.deleteOne({ event_id: id });
     }
 
-    await Project.updateMany(
-      { events: id },
-      { $pull: { events: id } }
-    );
+    await Project.updateMany({ events: id }, { $pull: { events: id } });
 
     await Event.deleteOne({ _id: id });
 
@@ -226,13 +236,12 @@ export async function DELETE(req, { params }) {
       status: "success",
       message: "Event and related files deleted successfully",
     });
-
   } catch (error) {
     console.error("Delete failed:", error);
 
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 400 }
+      { status: 400 },
     );
   }
 }

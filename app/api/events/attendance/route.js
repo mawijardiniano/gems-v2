@@ -35,7 +35,6 @@ export async function POST(req) {
     );
 
     if (alreadyAttended) {
-      // Return existing attendance record
       const existing = event.attended_users.find(
         (a) => a.user_id?.toString() === user_id.toString(),
       );
@@ -53,7 +52,6 @@ export async function POST(req) {
       attended_at: new Date(),
     });
 
-    // Also ensure user is in registered_users if not already
     if (!event.registered_users?.some((id) => id.toString() === user_id.toString())) {
       event.registered_users.push(user_id);
     }

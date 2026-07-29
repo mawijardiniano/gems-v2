@@ -187,6 +187,33 @@ export async function POST(req) {
       );
     }
 
+    // Check for duplicate student_id or employee_id
+    if (body?.affiliation?.academic_information?.student_id) {
+      const studentId = body.affiliation.academic_information.student_id;
+      const existingProfile = await Profile.findOne({
+        "affiliation.academic_information.student_id": studentId,
+      });
+      if (existingProfile) {
+        return NextResponse.json(
+          { success: false, error: "This Student ID is already registered in the system" },
+          { status: 409 },
+        );
+      }
+    }
+
+    if (body?.affiliation?.employment_information?.employee_id) {
+      const employeeId = body.affiliation.employment_information.employee_id;
+      const existingProfile = await Profile.findOne({
+        "affiliation.employment_information.employee_id": employeeId,
+      });
+      if (existingProfile) {
+        return NextResponse.json(
+          { success: false, error: "This Employee ID is already registered in the system" },
+          { status: 409 },
+        );
+      }
+    }
+
     if (personal.religion) {
       const allowedReligions = [
         "Roman Catholic",

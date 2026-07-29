@@ -6,7 +6,9 @@ import {
   nextStep,
   prevStep,
 } from "@/store/slices/profileRegistrationSlice";
-import { FaGraduationCap, FaArrowRight, FaArrowLeft } from "react-icons/fa";
+import { FaGraduationCap, FaArrowRight, FaArrowLeft, FaSpinner } from "react-icons/fa";
+import axios from "axios";
+import { useState, useEffect, useRef } from "react";
 
 const collegeToPrograms = {
   "Graduate School": [
@@ -80,6 +82,10 @@ export default function AcademicInformation() {
     (s) => s.profile.affiliation.academic_information,
   );
 
+  const [idError, setIdError] = useState("");
+  const [idChecking, setIdChecking] = useState(false);
+  const debounceRef = useRef(null);
+
   const update = (field, value) => {
     dispatch(
       setAffiliation({
@@ -88,6 +94,43 @@ export default function AcademicInformation() {
       }),
     );
   };
+
+  const handleStudentIdChange = (value) => {
+    update("student_id", value);
+
+    // Clear previous error
+    setIdError("");
+
+    // Clear previous debounce
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    // Don't check if empty
+    if (!value || value.trim() === "") return;
+
+    // Debounce: wait 500ms after user stops typing
+    setIdChecking(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await axios.post("/api/profile/check-id", {
+          student_id: value.trim(),
+        });
+        if (res.data.exists) {
+          setIdError(res.data.message);
+        }
+      } catch {
+        // Silently fail - don't block the user
+      } finally {
+        setIdChecking(false);
+      }
+    }, 500);
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   // When college changes, update it and clear the previously selected
   // course, since a course from a different college is no longer valid.
@@ -112,7 +155,7 @@ export default function AcademicInformation() {
   ];
   const isNextDisabled = requiredFields.some(
     (field) => !academic?.[field] || academic[field].toString().trim() === "",
-  );
+  ) || !!idError || idChecking;
 
   if (personal.currentStatus !== "Student") {
     return (
@@ -188,12 +231,28 @@ export default function AcademicInformation() {
                 <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
                   Student ID <span className="text-red-400">*</span>
                 </label>
-                <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
-                  value={academic?.student_id || ""}
-                  onChange={(e) => update("student_id", e.target.value)}
-                  placeholder="Enter Student ID"
-                />
+                <div className="relative">
+                  <input
+                    className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all bg-gray-50 hover:bg-white ${
+                      idError
+                        ? "border-red-400 focus:ring-red-200 focus:border-red-400"
+                        : "border-gray-200 focus:ring-blue-200 focus:border-blue-400"
+                    }`}
+                    value={academic?.student_id || ""}
+                    onChange={(e) => handleStudentIdChange(e.target.value)}
+                    placeholder="Enter Student ID"
+                  />
+                  {idChecking && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <FaSpinner className="animate-spin text-gray-400" />
+                    </div>
+                  )}
+                  {idError && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <span>⚠</span> {idError}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
