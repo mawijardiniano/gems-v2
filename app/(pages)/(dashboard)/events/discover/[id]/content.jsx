@@ -398,34 +398,36 @@ export default function DiscoverEventContent() {
               </button>
             )}
 
-            <div className="flex flex-wrap gap-2 pt-2">
-              {["interested", "not_interested", "going"].map((s) => {
-                const labels = {
-                  interested: "Interested",
-                  not_interested: "Not Interested",
-                  going: "Going",
-                };
+            {userId && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {["interested", "not_interested", "going"].map((s) => {
+                  const labels = {
+                    interested: "Interested",
+                    not_interested: "Not Interested",
+                    going: "Going",
+                  };
 
-                const active = getUserStatus(event) === s;
-                const disabled =
-                  isPast(event) || statusUpdatingId === event._id;
+                  const active = getUserStatus(event) === s;
+                  const disabled =
+                    isPast(event) || statusUpdatingId === event._id;
 
-                return (
-                  <button
-                    key={s}
-                    onClick={() => handleStatus(event, s)}
-                    disabled={disabled}
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold ${
-                      active
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-800"
-                    }`}
-                  >
-                    {labels[s]}
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => handleStatus(event, s)}
+                      disabled={disabled}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold ${
+                        active
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-800"
+                      }`}
+                    >
+                      {labels[s]}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

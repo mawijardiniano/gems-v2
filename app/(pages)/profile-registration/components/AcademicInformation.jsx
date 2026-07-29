@@ -132,8 +132,7 @@ export default function AcademicInformation() {
     };
   }, []);
 
-  // When college changes, update it and clear the previously selected
-  // course, since a course from a different college is no longer valid.
+
   const handleCollegeChange = (value) => {
     dispatch(
       setAffiliation({
