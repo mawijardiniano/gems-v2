@@ -87,14 +87,14 @@ export default function Navbar() {
           />
           <div className="absolute top-16 left-0 right-0 mx-4 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-slide-down">
             <div className="p-4 space-y-2">
-              <Link
+              {/* <Link
                 href="/profile-registration"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-xl transition-colors"
               >
                 <FaUserPlus size={16} className="text-violet-500" />
                 Sign up
-              </Link>
+              </Link> */}
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

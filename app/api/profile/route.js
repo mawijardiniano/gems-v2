@@ -26,7 +26,6 @@ async function generateUniqueUsername(personal, affiliation) {
     const firstName = personal?.first_name || "";
     const lastName = personal?.last_name || "";
     if (firstName && lastName) {
-     
       const combined =
         firstName.charAt(0).toUpperCase() +
         firstName.slice(1).toLowerCase() +
@@ -38,7 +37,9 @@ async function generateUniqueUsername(personal, affiliation) {
 
   const first = personal?.first_name || "";
   if (first) {
-    candidates.push(first.charAt(0).toUpperCase() + first.slice(1).toLowerCase());
+    candidates.push(
+      first.charAt(0).toUpperCase() + first.slice(1).toLowerCase(),
+    );
   }
 
   const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
@@ -51,7 +52,10 @@ async function generateUniqueUsername(personal, affiliation) {
   }
 
   // Fallback: generate a unique username with random suffix
-  const randomSuffix = Math.random().toString(36).substring(2, 10).toLowerCase();
+  const randomSuffix = Math.random()
+    .toString(36)
+    .substring(2, 10)
+    .toLowerCase();
   let fallback = `user${randomSuffix}`;
   let counter = 1;
   while (await UserAuth.findOne({ username: fallback }).lean()) {
@@ -195,7 +199,21 @@ export async function POST(req) {
       });
       if (existingProfile) {
         return NextResponse.json(
-          { success: false, error: "This Student ID is already registered in the system" },
+          {
+            success: false,
+            error: "This Student ID is already registered in the system",
+          },
+          { status: 409 },
+        );
+      }
+      // Also check if student_id is already taken as a username
+      const existingUsername = await UserAuth.findOne({ username: studentId }).lean();
+      if (existingUsername) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This Student ID is already registered in the system",
+          },
           { status: 409 },
         );
       }
@@ -208,7 +226,21 @@ export async function POST(req) {
       });
       if (existingProfile) {
         return NextResponse.json(
-          { success: false, error: "This Employee ID is already registered in the system" },
+          {
+            success: false,
+            error: "This Employee ID is already registered in the system",
+          },
+          { status: 409 },
+        );
+      }
+
+      const existingUsername = await UserAuth.findOne({ username: employeeId }).lean();
+      if (existingUsername) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This Employee ID is already registered in the system",
+          },
           { status: 409 },
         );
       }

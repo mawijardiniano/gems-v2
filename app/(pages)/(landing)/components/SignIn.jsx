@@ -209,7 +209,7 @@ export default function LoginForm() {
 
 
 
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
               <p className="text-sm">
                 Don't have an account?{" "}
                 <Link
@@ -219,7 +219,7 @@ export default function LoginForm() {
                   Register here
                 </Link>
               </p>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>

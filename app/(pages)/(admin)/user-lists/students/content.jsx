@@ -14,6 +14,16 @@ import {
 } from "flowbite-react";
 import useFetchData from "@/hooks/useSample";
 import StudentFilterTable from "../components/StudentFilterTable";
+import {
+  FaEye,
+  FaTimes,
+  FaUser,
+  FaVenusMars,
+  FaGraduationCap,
+  FaMapMarkerAlt,
+  FaIdBadge,
+  FaShieldAlt,
+} from "react-icons/fa";
 
 export default function StudentsUserListContent() {
   const { data: rawData, loading } = useFetchData();
@@ -36,6 +46,8 @@ export default function StudentsUserListContent() {
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchName, setSearchName] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("personal");
 
   const studentsData = useMemo(
     () =>
@@ -329,6 +341,236 @@ export default function StudentsUserListContent() {
     }
   };
 
+  const tabs = [
+    { id: "personal", label: "Personal Info" },
+    { id: "academic", label: "Academic" },
+    { id: "gad", label: "GAD" },
+    { id: "contact", label: "Contact" },
+    { id: "account", label: "Account" },
+  ];
+
+  const renderTabContent = (user) => {
+    const p = user.personal_info_id || {};
+    const personal = p.personal || {};
+    const gad = p.gadData || {};
+    const acad = p.affiliation?.academic_information || {};
+    const contact = p.contact || {};
+
+    switch (activeTab) {
+      case "personal":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">First Name:</span>
+              <p className="text-gray-900">{personal.first_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Middle Name:</span>
+              <p className="text-gray-900">{personal.middle_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Last Name:</span>
+              <p className="text-gray-900">{personal.last_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Date of Birth:</span>
+              <p className="text-gray-900">
+                {personal.birthday
+                  ? new Date(personal.birthday).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Civil Status:</span>
+              <p className="text-gray-900">{personal.civil_status || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Nationality:</span>
+              <p className="text-gray-900">{personal.nationality || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Religion:</span>
+              <p className="text-gray-900">{personal.religion || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Blood Type:</span>
+              <p className="text-gray-900">{personal.bloodType || "—"}</p>
+            </div>
+          </div>
+        );
+      case "academic":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">College:</span>
+              <p className="text-gray-900">{acad.college || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Course:</span>
+              <p className="text-gray-900">{acad.course || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Major:</span>
+              <p className="text-gray-900">{acad.major || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Year Level:</span>
+              <p className="text-gray-900">{acad.year_level || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Campus:</span>
+              <p className="text-gray-900">{acad.campus || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Student ID:</span>
+              <p className="text-gray-900">{acad.student_id || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Section:</span>
+              <p className="text-gray-900">{acad.section || "—"}</p>
+            </div>
+          </div>
+        );
+      case "gad":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Sex at Birth:</span>
+              <p className="text-gray-900">
+                {gad.sexAtBirth
+                  ? gad.sexAtBirth.toLowerCase() === "male"
+                    ? "Male"
+                    : gad.sexAtBirth.toLowerCase() === "female"
+                      ? "Female"
+                      : gad.sexAtBirth
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Gender Preference:</span>
+              <p className="text-gray-900">{gad.gender_preference || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Indigenous Person:</span>
+              <p className="text-gray-900">{gad.isIndigenousPerson ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">PWD:</span>
+              <p className="text-gray-900">{gad.isPWD ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">PWD Type:</span>
+              <p className="text-gray-900">{gad.pwd_type || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Socio-Economic Status:</span>
+              <p className="text-gray-900">{gad.socioEconomicStatus || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Head of Household:</span>
+              <p className="text-gray-900">{gad.headOfHousehold || "—"}</p>
+            </div>
+          </div>
+        );
+      case "contact":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Email:</span>
+              <p className="text-gray-900">{contact.email || user.email || "—"}</p>
+            </div>
+ 
+            <div>
+              <span className="font-semibold text-gray-600">Mobile:</span>
+              <p className="text-gray-900">{contact.mobileNumber || "—"}</p>
+            </div>
+
+            <div className="col-span-2">
+              <span className="font-semibold text-gray-600">Current Address:</span>
+              <p className="text-gray-900">
+                {contact.currentAddress
+                  ? [
+                      contact.currentAddress.barangay?.name,
+                      contact.currentAddress.city?.name,
+                      contact.currentAddress.province?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "—"
+                  : "—"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <span className="font-semibold text-gray-600">Permanent Address:</span>
+              <p className="text-gray-900">
+                {contact.permanentAddress
+                  ? [
+                      contact.permanentAddress.barangay?.name,
+                      contact.permanentAddress.city?.name,
+                      contact.permanentAddress.province?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "—"
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        );
+      case "account":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Username:</span>
+              <p className="text-gray-900">{user.username || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Email:</span>
+              <p className="text-gray-900">{user.email || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Role:</span>
+              <p className="text-gray-900">{user.role || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Status:</span>
+              <p className={`font-medium ${user.is_active ? "text-green-600" : "text-red-600"}`}>
+                {user.is_active ? "Active" : "Inactive"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Created At:</span>
+              <p className="text-gray-900">
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Last Updated:</span>
+              <p className="text-gray-900">
+                {user.updatedAt
+                  ? new Date(user.updatedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-end">
@@ -619,41 +861,15 @@ export default function StudentsUserListContent() {
                           })
                         : "—"}
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
+                  <TableCell>
                     <button
-                      onClick={() => handleEdit(user._id)}
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setActiveTab("personal");
+                      }}
                       className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
                     >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "toggle",
-                          userId: user._id,
-                          isActive: user.is_active,
-                        })
-                      }
-                      className={`px-3 py-1 text-xs rounded-md text-white transition ${
-                        user.is_active
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      {user.is_active ? "Deactivate" : "Activate"}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "reset",
-                          userId: user._id,
-                        })
-                      }
-                      className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
-                    >
-                      Reset Password
+                      View
                     </button>
                   </TableCell>
                 </TableRow>
@@ -661,7 +877,7 @@ export default function StudentsUserListContent() {
             })}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6">
+                <TableCell colSpan={9} className="text-center py-6">
                   No users found
                 </TableCell>
               </TableRow>
@@ -788,6 +1004,142 @@ export default function StudentsUserListContent() {
           </div>
         </div>
       )}
+
+      {/* View User Modal */}
+      {selectedUser && (() => {
+        const p = selectedUser.personal_info_id || {};
+        const personal = p.personal || {};
+        const acad = p.affiliation?.academic_information || {};
+
+        const viewTabs = [
+          { id: "personal", label: "Personal Info", icon: FaUser },
+          { id: "academic", label: "Academic", icon: FaGraduationCap },
+          { id: "gad", label: "GAD Data", icon: FaVenusMars },
+          { id: "contact", label: "Contact", icon: FaMapMarkerAlt },
+          { id: "account", label: "Account", icon: FaShieldAlt },
+        ];
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                    {(personal.first_name?.[0] || "").toUpperCase()}
+                    {(personal.last_name?.[0] || "").toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {personal.first_name || ""}{" "}
+                      {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
+                      {personal.last_name || ""}
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      {acad.college || ""}
+                      {acad.course ? ` • ${acad.course}` : ""}
+                      {acad.year_level ? ` • ${acad.year_level}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedUser(null);
+                    setActiveTab("personal");
+                  }}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className="px-6 border-b border-gray-100">
+                <div className="flex gap-1 -mb-px">
+                  {viewTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
+                          activeTab === tab.id
+                            ? "border-blue-600 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }`}
+                      >
+                        <Icon size={14} />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="px-6 py-5">
+                {renderTabContent(selectedUser)}
+              </div>
+
+              {/* Modal Footer with Actions */}
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-2.5">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    selectedUser.is_active
+                      ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                      : "bg-red-50 text-red-700 ring-1 ring-red-600/20"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      selectedUser.is_active ? "bg-green-500" : "bg-red-500"
+                    }`} />
+                    {selectedUser.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setConfirmAction({
+                        type: "toggle",
+                        userId: selectedUser._id,
+                        isActive: selectedUser.is_active,
+                      });
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition ${
+                      selectedUser.is_active
+                        ? "bg-red-50 text-red-700 ring-1 ring-red-600/20 hover:bg-red-100"
+                        : "bg-green-50 text-green-700 ring-1 ring-green-600/20 hover:bg-green-100"
+                    }`}
+                  >
+                    {selectedUser.is_active ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setConfirmAction({
+                        type: "reset",
+                        userId: selectedUser._id,
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 hover:bg-amber-100 transition"
+                  >
+                    Reset Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setActiveTab("personal");
+                    }}
+                    className="px-4 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
