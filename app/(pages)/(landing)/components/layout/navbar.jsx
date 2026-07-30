@@ -45,7 +45,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden sm:flex items-center gap-3">
-            <Link
+            {/* <Link
               href="/profile-registration"
               className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
                 scrolled
@@ -55,7 +55,7 @@ export default function Navbar() {
             >
               <FaUserPlus size={14} />
               Sign up
-            </Link>
+            </Link> */}
             <button
               onClick={() => setShowSignIn(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
