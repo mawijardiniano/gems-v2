@@ -99,9 +99,19 @@ export default function DiscoverEventContent() {
   };
 
   const isPast = (evt) => {
+    if (!evt) return false;
+    const endDates = Array.isArray(evt.end_dates)
+      ? evt.end_dates.filter(Boolean).map((d) => new Date(d).getTime())
+      : [];
     const end = evt?.end_date || evt?.start_date || evt?.date;
-    if (!end) return false;
-    return new Date(end).getTime() < Date.now();
+    const latestEnd =
+      endDates.length > 0
+        ? Math.max(...endDates)
+        : end
+          ? new Date(end).getTime()
+          : null;
+    if (latestEnd === null) return false;
+    return latestEnd < Date.now();
   };
 
   const isAttendanceAllowed = (evt) => {
