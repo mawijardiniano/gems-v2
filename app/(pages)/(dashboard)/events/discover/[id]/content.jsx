@@ -57,10 +57,12 @@ export default function DiscoverEventContent() {
     } else {
       setShowQrPrompt(false);
     }
-    if (attendance === "1" && profileChecked && userId) {
-      setShowAttendanceModal(true);
+    if (attendance === "1" && profileChecked && userId && event) {
+      if (isAttendanceAllowed(event)) {
+        setShowAttendanceModal(true);
+      }
     }
-  }, [searchParams, profileChecked, userId]);
+  }, [searchParams, profileChecked, userId, event]);
 
   useEffect(() => {
     const load = async () => {
@@ -100,6 +102,25 @@ export default function DiscoverEventContent() {
     const end = evt?.end_date || evt?.start_date || evt?.date;
     if (!end) return false;
     return new Date(end).getTime() < Date.now();
+  };
+
+  const isAttendanceAllowed = (evt) => {
+    if (!evt) return false;
+    const now = Date.now();
+    const startDates = Array.isArray(evt.start_dates)
+      ? evt.start_dates.filter(Boolean).map((d) => new Date(d).getTime())
+      : [];
+    const endDates = Array.isArray(evt.end_dates)
+      ? evt.end_dates.filter(Boolean).map((d) => new Date(d).getTime())
+      : [];
+
+    const earliestStart =
+      startDates.length > 0 ? Math.min(...startDates) : null;
+    const latestEnd = endDates.length > 0 ? Math.max(...endDates) : null;
+
+    if (earliestStart !== null && now < earliestStart) return false;
+    if (latestEnd !== null && now > latestEnd) return false;
+    return true;
   };
 
   const isUserInList = (list = [], id) =>
@@ -163,6 +184,17 @@ export default function DiscoverEventContent() {
           </div>
         );
       });
+    }
+  };
+
+  const reloadEvent = async () => {
+    if (!eventId) return;
+    try {
+      const res = await axios.get(`/api/events/${eventId}`);
+      const data = res.data?.data || null;
+      if (data) setEvent(data);
+    } catch (err) {
+      console.error("Failed to reload event after attendance:", err);
     }
   };
 
@@ -389,14 +421,21 @@ export default function DiscoverEventContent() {
               </div>
             )}
 
-            {userId && event && (
-              <button
-                onClick={() => setShowAttendanceModal(true)}
-                className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors"
-              >
-                Mark Attendance
-              </button>
-            )}
+            {userId && event &&
+              (isAttendanceAllowed(event) ? (
+                <button
+                  onClick={() => setShowAttendanceModal(true)}
+                  className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors"
+                >
+                  Mark Attendance
+                </button>
+              ) : (
+                <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
+                  {isPast(event)
+                    ? "Attendance closed - Event has ended"
+                    : "Attendance opens when the event starts"}
+                </div>
+              ))}
 
             {userId && (
               <div className="flex flex-wrap gap-2 pt-2">
@@ -467,6 +506,7 @@ export default function DiscoverEventContent() {
         eventId={event._id}
         isOpen={showAttendanceModal}
         onClose={() => setShowAttendanceModal(false)}
+        onAttendanceRecorded={reloadEvent}
       />
     </div>
   );

@@ -32,7 +32,9 @@ export default function DashboardLayout({ children }) {
         console.log("Dashboard auth check data:", data);
 
         if (!res.ok || !data.user) {
-          router.replace("/");
+          const currentPath =
+            window.location.pathname + window.location.search;
+          router.replace(`/?redirect=${encodeURIComponent(currentPath)}`);
           return;
         }
 
@@ -45,7 +47,8 @@ export default function DashboardLayout({ children }) {
         setIsAuthorized(true);
       } catch (err) {
         console.error(err);
-        router.replace("/");
+        const currentPath = window.location.pathname + window.location.search;
+        router.replace(`/?redirect=${encodeURIComponent(currentPath)}`);
       }
     };
 

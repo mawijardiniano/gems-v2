@@ -124,7 +124,6 @@ export async function POST(req) {
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
 
-    // Check for missing profile fields and password change status, then create notifications
     try {
       const missingFields = [];
 

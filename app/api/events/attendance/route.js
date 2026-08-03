@@ -29,6 +29,38 @@ export async function POST(req) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
+    // Check if attendance is within the event's scheduled date/time window
+    const now = Date.now();
+    const startTimes = (event.start_dates || [])
+      .filter(Boolean)
+      .map((d) => new Date(d).getTime());
+    const endTimes = (event.end_dates || [])
+      .filter(Boolean)
+      .map((d) => new Date(d).getTime());
+
+    const earliestStart = startTimes.length > 0 ? Math.min(...startTimes) : null;
+    const latestEnd = endTimes.length > 0 ? Math.max(...endTimes) : null;
+
+    if (earliestStart !== null && now < earliestStart) {
+      return NextResponse.json(
+        {
+          message: "Attendance is not yet open. The event has not started yet.",
+          code: "EVENT_NOT_STARTED",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (latestEnd !== null && now > latestEnd) {
+      return NextResponse.json(
+        {
+          message: "The QR code has expired. This event has already ended.",
+          code: "EVENT_EXPIRED",
+        },
+        { status: 400 },
+      );
+    }
+
     // Check if user is already marked as attended
     const alreadyAttended = event.attended_users?.some(
       (a) => a.user_id?.toString() === user_id.toString(),

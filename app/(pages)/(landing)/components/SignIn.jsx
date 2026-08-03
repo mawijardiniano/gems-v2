@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { loginSuccess } from "@/store/slices/authSlice";
 
-export default function LoginForm() {
+export default function LoginForm({ redirect }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -92,7 +92,7 @@ export default function LoginForm() {
         }),
       );
 
-      const redirectUrl = hasProfile ? "/dashboard" : "/";
+      const redirectUrl = redirect || (hasProfile ? "/dashboard" : "/");
       console.log("Redirecting to:", redirectUrl);
       router.push(redirectUrl);
     } catch (err) {

@@ -20,6 +20,14 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Auto-open sign-in modal when arriving with a ?redirect= param (e.g. from attendance QR)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("redirect")) {
+      setShowSignIn(true);
+    }
+  }, []);
+
   return (
     <>
       <nav
@@ -128,7 +136,9 @@ export default function Navbar() {
               <FaTimes size={14} />
             </button>
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-0 sm:p-2 min-w-[360px] max-w-full border border-white/40">
-              <SignIn />
+              <SignIn
+                redirect={new URLSearchParams(window.location.search).get("redirect")}
+              />
             </div>
           </div>
         </div>

@@ -1,6 +1,4 @@
 profile_id,student_id,full_name,username,is_active,role,issue
-6a4deed28c12bb0aa285bd27,"25B0633","Kent Cedric Linga Capadngan","25b0633",Yes,User,"Username "25b0633" does not match student ID "25B0633""
-6a4df72b8c12bb0aa286a71e,"25B1405","Hanz Lenard Vargas Evangelista","25b1405",Yes,User,"Username "25b1405" does not match student ID "25B1405""
 6a69f2be688d7d9119e3b5d4,"26B1396","Dean Earl Manuel Mampusti","Dean earl",Yes,User,"Username "Dean earl" does not match student ID "26B1396""
 6a69f2f830b56dc66d1d8c1f,"26B1431","Althea Lorea Monleon Bustamante","Althea lorea",Yes,User,"Username "Althea lorea" does not match student ID "26B1431""
 6a69f34b688d7d9119e3b61a,"26B1492","Hannah Mae  Preclaro  Enriquez ","Hannah mae",Yes,User,"Username "Hannah mae" does not match student ID "26B1492""

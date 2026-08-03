@@ -314,6 +314,44 @@ export default function EventManageContent() {
       : d.toLocaleString(undefined, opts);
   };
 
+  const formatDateOnly = (value) => {
+    const opts = {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    };
+    const d = new Date(value);
+    return Number.isNaN(d.getTime())
+      ? "Invalid date"
+      : d.toLocaleString(undefined, opts);
+  };
+
+  const getDateRangeLinesOnly = (start, end, evt) => {
+    const startDates =
+      evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0
+        ? evt.start_dates
+        : start
+          ? [start]
+          : [];
+    const endDates =
+      evt && Array.isArray(evt.end_dates) && evt.end_dates.length > 0
+        ? evt.end_dates
+        : end
+          ? [end]
+          : [];
+
+    if (startDates.length === 0) return ["No date"];
+
+    return startDates.map((sd, idx) => {
+      const ed = endDates[idx];
+      const startStr = formatDateOnly(sd);
+      if (!ed) return `${startStr}`;
+      const endStr = formatDateOnly(ed);
+      if (startStr === endStr) return `${startStr}`;
+      return `${startStr} - ${endStr}`;
+    });
+  };
+
   const getDateRangeLines = (start, end, evt) => {
     const startDates =
       evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0
@@ -363,6 +401,15 @@ const toAcronym = (value) => {
   const matches = cleaned.match(/\b[A-Za-z0-9]/g);
   if (!matches) return value.trim();
   return matches.join("").toUpperCase();
+};
+
+const capitalizeName = (value) => {
+  if (!value || typeof value !== "string") return value;
+  return value
+    .trim()
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
 };
   const goingProfiles = useMemo(
     () =>
@@ -526,7 +573,7 @@ const toAcronym = (value) => {
         isDepartmentHeader: false,
         data: [
           rowIdx++,
-          details.name,
+          capitalizeName(details.name),
           details.sex || "",
           details.genderPreference || "",
           details.age ?? "",
@@ -705,10 +752,11 @@ const toAcronym = (value) => {
       })
       .join("");
 
-    const dateLabel = formatRange(
+    const dateLabel = getDateRangeLinesOnly(
       event.start_date || event.date,
       event.end_date,
-    );
+      event,
+    ).join(", ");
 
     const ACTIVITY_TYPES = [
       "Academic",

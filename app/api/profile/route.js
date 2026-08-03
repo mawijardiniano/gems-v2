@@ -311,7 +311,6 @@ export async function POST(req) {
       role,
     });
 
-    // Auto-create ProfileTerm from admin-configured active term
     try {
       const activeTermSetting = await SystemSetting.findOne({
         key: "active_term",

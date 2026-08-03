@@ -3,7 +3,12 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-export default function AttendanceModal({ eventId, isOpen, onClose }) {
+export default function AttendanceModal({
+  eventId,
+  isOpen,
+  onClose,
+  onAttendanceRecorded,
+}) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -85,11 +90,23 @@ export default function AttendanceModal({ eventId, isOpen, onClose }) {
           setAttendanceMessage("Attendance recorded successfully!");
           setAttendedAt(res.data.attended_at);
         }
+        onAttendanceRecorded?.();
       } catch (err) {
         setAttendanceStatus("error");
-        setAttendanceMessage(
-          err.response?.data?.message || "Failed to record attendance.",
-        );
+        const code = err.response?.data?.code;
+        if (code === "EVENT_NOT_STARTED") {
+          setAttendanceMessage(
+            "Attendance is not yet open. The event has not started yet.",
+          );
+        } else if (code === "EVENT_EXPIRED") {
+          setAttendanceMessage(
+            "The QR code has expired. This event has already ended.",
+          );
+        } else {
+          setAttendanceMessage(
+            err.response?.data?.message || "Failed to record attendance.",
+          );
+        }
       } finally {
         setSubmitting(false);
       }
