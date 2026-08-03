@@ -19,6 +19,7 @@ import {
   Cell,
 } from "recharts";
 import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
+import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/lib/colleges";
 
 function CheckboxDropdown({ label, options, selected, onChange, required }) {
   const [open, setOpen] = useState(false);
@@ -117,6 +118,10 @@ export default function EventManageContent() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
+  const [guestCollegeFilter, setGuestCollegeFilter] = useState("");
+  const [guestCourseFilter, setGuestCourseFilter] = useState("");
+  const [guestYearFilter, setGuestYearFilter] = useState("");
+  const [guestSearch, setGuestSearch] = useState("");
   const [projects, setProjects] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
 
@@ -143,10 +148,21 @@ export default function EventManageContent() {
       })
       .filter((guest) => {
         const details = extractGuestDetails(guest);
-        if (!interestedSearch) return true;
-        return details.name
-          ?.toLowerCase()
-          .includes(interestedSearch.toLowerCase());
+        if (guestCollegeFilter && details.college !== guestCollegeFilter)
+          return false;
+        if (guestCourseFilter && details.course !== guestCourseFilter)
+          return false;
+        if (guestYearFilter && details.yearLevel !== guestYearFilter)
+          return false;
+        if (!guestSearch) return true;
+        const searchTerm = guestSearch.toLowerCase();
+        return (
+          details.name?.toLowerCase().includes(searchTerm) ||
+          details.course?.toLowerCase().includes(searchTerm) ||
+          details.college?.toLowerCase().includes(searchTerm) ||
+          details.department?.toLowerCase().includes(searchTerm) ||
+          details.programYearSection?.toLowerCase().includes(searchTerm)
+        );
       });
   };
   const handleDeleteEvent = async () => {
@@ -520,6 +536,8 @@ const capitalizeName = (value) => {
       age: calculateAge(personal?.birthday),
       sex: gadData?.sexAtBirth || "",
       college: academic.college || "",
+      course: academic.course || "",
+      yearLevel: academic.year_level || "",
       office: employment.office || "",
       department,
       genderPreference,
@@ -1406,6 +1424,16 @@ const blankRowHtml = () =>
           handlePrintGuests={handlePrintGuests}
           guestTypeFilter={guestTypeFilter}
           setGuestTypeFilter={setGuestTypeFilter}
+          guestCollegeFilter={guestCollegeFilter}
+          setGuestCollegeFilter={setGuestCollegeFilter}
+          guestCourseFilter={guestCourseFilter}
+          setGuestCourseFilter={setGuestCourseFilter}
+          guestYearFilter={guestYearFilter}
+          setGuestYearFilter={setGuestYearFilter}
+          guestSearch={guestSearch}
+          setGuestSearch={setGuestSearch}
+          COLLEGE_TO_PROGRAMS={COLLEGE_TO_PROGRAMS}
+          YEAR_LEVELS={YEAR_LEVELS}
           getFilteredGuests={getFilteredGuests}
         />
       )}
@@ -2150,6 +2178,16 @@ function GuestTabs({
   handlePrintGuests,
   guestTypeFilter,
   setGuestTypeFilter,
+  guestCollegeFilter,
+  setGuestCollegeFilter,
+  guestCourseFilter,
+  setGuestCourseFilter,
+  guestYearFilter,
+  setGuestYearFilter,
+  guestSearch,
+  setGuestSearch,
+  COLLEGE_TO_PROGRAMS,
+  YEAR_LEVELS,
   getFilteredGuests,
 }) {
   const [goingPage, setGoingPage] = useState(1);
@@ -2164,7 +2202,16 @@ function GuestTabs({
 
   useEffect(() => {
     setGoingPage(1);
-  }, [guestTypeFilter, event.registered_users, guestTab, pageSize]);
+  }, [
+    guestTypeFilter,
+    guestCollegeFilter,
+    guestCourseFilter,
+    guestYearFilter,
+    guestSearch,
+    event.registered_users,
+    guestTab,
+    pageSize,
+  ]);
 
   useEffect(() => {
     setPageSizeInput(String(pageSize));
@@ -2193,53 +2240,115 @@ function GuestTabs({
       </button>
       {guestTab === "going" && (
         <div>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 gap-2">
+          <div className="py-3">
             <h2 className="text-lg font-medium">
               Guest List ({filteredGoingGuests.length})
             </h2>
-            <div className="flex flex-wrap items-center gap-3">
-              {/* <label className="flex items-center gap-1 text-sm">
-                Page size:
-                <select
-                  className="border rounded px-1 py-0.5 text-sm"
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                >
-                  {[5, 10, 20, 50, 100].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </label> */}
-              <select
-                className="border rounded px-2 py-1 text-sm"
-                value={guestTypeFilter}
-                onChange={(e) => setGuestTypeFilter(e.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="student">Students Only</option>
-                <option value="employee">Employees Only</option>
-              </select>
+          </div>
+
+          {/* Filter controls row */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-2">
+            <select
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+              value={guestTypeFilter}
+              onChange={(e) => setGuestTypeFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="student">Students Only</option>
+              <option value="employee">Employees Only</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Search guests..."
+              value={guestSearch}
+              onChange={(e) => setGuestSearch(e.target.value)}
+              className="border rounded px-2 py-1.5 text-sm w-40"
+            />
+
+            <select
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+              value={guestCollegeFilter}
+              onChange={(e) => {
+                setGuestCollegeFilter(e.target.value);
+                setGuestCourseFilter("");
+              }}
+            >
+              <option value="">All Colleges</option>
+              {Object.keys(COLLEGE_TO_PROGRAMS || {}).map((college) => (
+                <option key={college} value={college}>
+                  {college}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+              value={guestCourseFilter}
+              onChange={(e) => setGuestCourseFilter(e.target.value)}
+              disabled={!guestCollegeFilter}
+            >
+              <option value="">All Courses</option>
+              {(COLLEGE_TO_PROGRAMS?.[guestCollegeFilter] || []).map(
+                (course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ),
+              )}
+            </select>
+
+            <select
+              className="border rounded px-2 py-1.5 text-sm bg-white"
+              value={guestYearFilter}
+              onChange={(e) => setGuestYearFilter(e.target.value)}
+            >
+              <option value="">All Years</option>
+              {(YEAR_LEVELS || []).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            {(guestCollegeFilter ||
+              guestCourseFilter ||
+              guestYearFilter ||
+              guestSearch) && (
               <button
-                onClick={() => handleDownloadGuestsPdf(filteredGoingGuests)}
-                className="text-sm text-blue-600 hover:underline"
+                onClick={() => {
+                  setGuestCollegeFilter("");
+                  setGuestCourseFilter("");
+                  setGuestYearFilter("");
+                  setGuestSearch("");
+                }}
+                className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2 whitespace-nowrap"
               >
-                Download PDF
+                Clear filters
               </button>
-              <button
-                onClick={() => handleDownloadBlankGuestsPdf()}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Blank Attendance Print
-              </button>
-              <button
-                onClick={() => handlePrintGuests(filteredGoingGuests)}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Print
-              </button>
-            </div>
+            )}
+          </div>
+
+          {/* Action buttons row */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 py-2 border-t border-gray-100">
+            <button
+              onClick={() => handleDownloadGuestsPdf(filteredGoingGuests)}
+              className="text-sm text-blue-600 hover:underline whitespace-nowrap"
+            >
+              Download PDF
+            </button>
+            <button
+              onClick={() => handleDownloadBlankGuestsPdf()}
+              className="text-sm text-blue-600 hover:underline whitespace-nowrap"
+            >
+              Blank Attendance Print
+            </button>
+            <button
+              onClick={() => handlePrintGuests(filteredGoingGuests)}
+              className="text-sm text-blue-600 hover:underline whitespace-nowrap"
+            >
+              Print
+            </button>
           </div>
           {filteredGoingGuests.length > 0 ? (
             <>
