@@ -1,4 +1,4 @@
-const CACHE_NAME = "gems-attendance-v1";
+const CACHE_NAME = "gems-attendance-v2";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -64,23 +64,21 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Helper: is this a navigation request for the attendance flow?
-const isAttendanceFlow = (url) => {
-  const path = url.pathname;
-  return (
-    path.startsWith("/events/discover") ||
-    path.startsWith("/events/attendance") ||
-    path === "/" ||
-    path.startsWith("/authentication")
-  );
-};
-
 // Helper: is this an API request we should handle?
 const isApiRequest = (url) => url.pathname.startsWith("/api/");
 
 // Helper: should this request be network-first?
 const isNetworkFirst = (url) => {
   return NETWORK_FIRST_URLS.some((prefix) => url.pathname.startsWith(prefix));
+};
+
+// Helper: build a cache key with the query string stripped, so
+// /events/discover/[id]?attendance=1 matches the cached /events/discover/[id]
+const stripQuery = (requestUrl) => {
+  const u = new URL(requestUrl);
+  u.search = "";
+  u.hash = "";
+  return u.toString();
 };
 
 // Fetch handler
@@ -91,10 +89,10 @@ self.addEventListener("fetch", (event) => {
   // Same-origin only
   if (url.origin !== self.location.origin) return;
 
-  // Skip non-GET requests (except we handle POST /api/events/attendance via background sync)
+  // Skip non-GET requests (except POST /api/events/attendance handled via background sync)
   if (request.method !== "GET") return;
 
-  // API requests: network-first with cache fallback for attendance/event data
+  // API requests: network-first with cache fallback
   if (isApiRequest(url)) {
     if (isNetworkFirst(url)) {
       event.respondWith(
@@ -107,22 +105,29 @@ self.addEventListener("fetch", (event) => {
             }
             return response;
           })
-          .catch(() =>
-            caches.match(request).then((cached) => {
-              if (cached) return cached;
-              // For API errors, return a JSON error response
-              return new Response(
-                JSON.stringify({
-                  message: "You are offline. Please check your connection.",
-                  offline: true,
-                }),
-                {
-                  status: 503,
-                  headers: { "Content-Type": "application/json" },
-                },
-              );
-            }),
-          ),
+          .catch(() => {
+            // Try exact URL first, then without query string
+            return caches
+              .match(request)
+              .then((cached) => {
+                if (cached) return cached;
+                return caches.match(stripQuery(request.url));
+              })
+              .then((cached) => {
+                if (cached) return cached;
+                // For API errors, return a JSON error response
+                return new Response(
+                  JSON.stringify({
+                    message: "You are offline. Please check your connection.",
+                    offline: true,
+                  }),
+                  {
+                    status: 503,
+                    headers: { "Content-Type": "application/json" },
+                  },
+                );
+              });
+          }),
       );
     } else {
       // Other API: network-only (don't cache mutations)
@@ -131,7 +136,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigation requests for the attendance flow: network-first, fallback to cache
+  // Navigation requests: network-first, fallback to cache
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -140,29 +145,39 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() =>
-          caches.match(request).then((cached) => {
-            if (cached) return cached;
-            // Fallback to the events discover page if cached
-            return caches.match("/events/discover").then((discoverFallback) => {
-              if (discoverFallback) return discoverFallback;
-              // Fallback to the landing page if cached
-              return caches.match("/").then((landingFallback) => {
-                if (landingFallback) return landingFallback;
-                return new Response(
-                  "<html><body><h1>Offline</h1><p>You need an internet connection to access this page.</p></body></html>",
-                  { headers: { "Content-Type": "text/html" } },
-                );
+        .catch(() => {
+          // Try exact URL first, then without query string
+          return caches
+            .match(request)
+            .then((cached) => {
+              if (cached) return cached;
+              return caches.match(stripQuery(request.url));
+            })
+            .then((cached) => {
+              if (cached) return cached;
+              // Fallback to the events discover page if cached
+              return caches.match("/events/discover").then((discoverFallback) => {
+                if (discoverFallback) return discoverFallback;
+                // Fallback to the landing page if cached
+                return caches.match("/").then((landingFallback) => {
+                  if (landingFallback) return landingFallback;
+                  return new Response(
+                    "<html><body><h1>Offline</h1><p>You need an internet connection to access this page.</p></body></html>",
+                    { headers: { "Content-Type": "text/html" } },
+                  );
+                });
               });
             });
-          }),
-        ),
+        }),
     );
     return;
   }
 
   // Static assets: cache-first
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/")
+  ) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached;
@@ -204,8 +219,8 @@ async function replayAttendanceQueue() {
         });
 
         if (response.ok || response.status === 400) {
-          // 400 means the server accepted the request but rejected it (e.g. already attended,
-          // event not started) - we should drop it from the queue since retrying won't help
+          // 400 means the server rejected it (e.g. already attended, event not started)
+          // drop from queue since retrying won't help
           await store.delete(item.id);
         }
         // Other statuses (5xx, network errors) - keep in queue and retry next sync
