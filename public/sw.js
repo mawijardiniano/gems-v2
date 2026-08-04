@@ -146,7 +146,7 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-          // Try exact URL first, then without query string
+  
           return caches
             .match(request)
             .then((cached) => {

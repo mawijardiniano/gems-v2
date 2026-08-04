@@ -100,9 +100,7 @@ export default function DiscoverEventContent() {
 
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
-    router.push(
-      `/?redirect=/events/discover/${eventId}?${loginRedirect}`,
-    );
+    router.push(`/?redirect=/events/discover/${eventId}?${loginRedirect}`);
   };
 
   const handleQrNoAccount = () => {
@@ -443,7 +441,8 @@ export default function DiscoverEventContent() {
               </div>
             )}
 
-            {userId && event &&
+            {userId &&
+              event &&
               (isAttendanceAllowed(event) ? (
                 <button
                   onClick={() => setShowAttendanceModal(true)}
