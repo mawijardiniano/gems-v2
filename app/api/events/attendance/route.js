@@ -8,7 +8,7 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    const { event_id, user_id } = await req.json();
+    const { event_id, user_id, captured_at } = await req.json();
 
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
       return NextResponse.json(
@@ -29,8 +29,11 @@ export async function POST(req) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
-    // Check if attendance is within the event's scheduled date/time window
     const now = Date.now();
+    const hasCapturedAt = captured_at && !isNaN(new Date(captured_at).getTime());
+    const referenceTime = hasCapturedAt
+      ? new Date(captured_at).getTime()
+      : now;
     const startTimes = (event.start_dates || [])
       .filter(Boolean)
       .map((d) => new Date(d).getTime());
@@ -41,7 +44,7 @@ export async function POST(req) {
     const earliestStart = startTimes.length > 0 ? Math.min(...startTimes) : null;
     const latestEnd = endTimes.length > 0 ? Math.max(...endTimes) : null;
 
-    if (earliestStart !== null && now < earliestStart) {
+    if (earliestStart !== null && referenceTime < earliestStart) {
       return NextResponse.json(
         {
           message: "Attendance is not yet open. The event has not started yet.",
@@ -51,7 +54,7 @@ export async function POST(req) {
       );
     }
 
-    if (latestEnd !== null && now > latestEnd) {
+    if (latestEnd !== null && referenceTime > latestEnd) {
       return NextResponse.json(
         {
           message: "The QR code has expired. This event has already ended.",
@@ -77,11 +80,11 @@ export async function POST(req) {
       });
     }
 
-    // Mark user as attended
+    // Mark user as attended — use captured_at for offline-queued submissions
     event.attended_users = event.attended_users || [];
     event.attended_users.push({
       user_id: user_id,
-      attended_at: new Date(),
+      attended_at: hasCapturedAt ? new Date(captured_at) : new Date(),
     });
 
     if (!event.registered_users?.some((id) => id.toString() === user_id.toString())) {

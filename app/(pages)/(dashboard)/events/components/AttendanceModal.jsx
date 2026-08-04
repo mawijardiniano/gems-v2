@@ -2,6 +2,12 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import {
+  queueAttendance,
+  registerAttendanceSync,
+  isOnline,
+  getQueuedAttendance,
+} from "@/lib/pwa/attendanceQueue";
 
 export default function AttendanceModal({
   eventId,
@@ -18,6 +24,7 @@ export default function AttendanceModal({
   const [attendanceMessage, setAttendanceMessage] = useState("");
   const [attendedAt, setAttendedAt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [queued, setQueued] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -54,7 +61,14 @@ export default function AttendanceModal({
         }
         setEvent(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event.");
+        const offline = err?.response?.status === 503 || !navigator.onLine;
+        if (offline) {
+          setError(
+            "You're offline. Attendance will be queued and sync automatically.",
+          );
+        } else {
+          setError(err.response?.data?.message || "Unable to load event.");
+        }
       } finally {
         setLoading(false);
       }
@@ -75,10 +89,40 @@ export default function AttendanceModal({
 
     const submitAttendance = async () => {
       setSubmitting(true);
+      const captured_at = new Date().toISOString();
+
+      // If offline, queue the attendance and show success state
+      if (!isOnline()) {
+        try {
+          await queueAttendance({
+            event_id: eventId,
+            user_id: userId,
+            captured_at,
+          });
+          await registerAttendanceSync();
+          setQueued(true);
+          setAttendanceStatus("success");
+          setAttendanceMessage(
+            "You're offline — your attendance is saved and will sync automatically when you're back online.",
+          );
+          setAttendedAt(captured_at);
+          onAttendanceRecorded?.();
+        } catch (queueErr) {
+          setAttendanceStatus("error");
+          setAttendanceMessage(
+            "Failed to save attendance. Please try again when you have a connection.",
+          );
+        } finally {
+          setSubmitting(false);
+        }
+        return;
+      }
+
       try {
         const res = await axios.post("/api/events/attendance", {
           event_id: eventId,
           user_id: userId,
+          captured_at,
         });
 
         if (res.data.already_attended) {
@@ -92,20 +136,45 @@ export default function AttendanceModal({
         }
         onAttendanceRecorded?.();
       } catch (err) {
-        setAttendanceStatus("error");
-        const code = err.response?.data?.code;
-        if (code === "EVENT_NOT_STARTED") {
-          setAttendanceMessage(
-            "Attendance is not yet open. The event has not started yet.",
-          );
-        } else if (code === "EVENT_EXPIRED") {
-          setAttendanceMessage(
-            "The QR code has expired. This event has already ended.",
-          );
+        // If network fails mid-request, queue it for background sync
+        const status = err?.response?.status;
+        if (status === undefined || status >= 500) {
+          try {
+            await queueAttendance({
+              event_id: eventId,
+              user_id: userId,
+              captured_at,
+            });
+            await registerAttendanceSync();
+            setQueued(true);
+            setAttendanceStatus("success");
+            setAttendanceMessage(
+              "Attendance saved — will sync automatically when the connection is restored.",
+            );
+            setAttendedAt(captured_at);
+            onAttendanceRecorded?.();
+          } catch (queueErr) {
+            setAttendanceStatus("error");
+            setAttendanceMessage(
+              err.response?.data?.message || "Failed to record attendance.",
+            );
+          }
         } else {
-          setAttendanceMessage(
-            err.response?.data?.message || "Failed to record attendance.",
-          );
+          setAttendanceStatus("error");
+          const code = err.response?.data?.code;
+          if (code === "EVENT_NOT_STARTED") {
+            setAttendanceMessage(
+              "Attendance is not yet open. The event has not started yet.",
+            );
+          } else if (code === "EVENT_EXPIRED") {
+            setAttendanceMessage(
+              "The QR code has expired. This event has already ended.",
+            );
+          } else {
+            setAttendanceMessage(
+              err.response?.data?.message || "Failed to record attendance.",
+            );
+          }
         }
       } finally {
         setSubmitting(false);
@@ -114,6 +183,27 @@ export default function AttendanceModal({
 
     submitAttendance();
   }, [profileChecked, event, eventId, userId, isOpen]);
+
+  useEffect(() => {
+    // Check if there's already a queued attendance for this event
+    if (!isOpen || !userId || !eventId) return;
+    const checkQueued = async () => {
+      const queuedItems = await getQueuedAttendance();
+      const hasQueued = queuedItems.some(
+        (q) =>
+          q.event_id?.toString() === eventId?.toString() &&
+          q.user_id?.toString() === userId?.toString(),
+      );
+      if (hasQueued) {
+        setQueued(true);
+        setAttendanceStatus("success");
+        setAttendanceMessage(
+          "You have a pending offline attendance for this event — it will sync automatically.",
+        );
+      }
+    };
+    checkQueued();
+  }, [isOpen, userId, eventId]);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";

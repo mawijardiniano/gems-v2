@@ -7,6 +7,7 @@ import { FaCalendar, FaLocationArrow } from "react-icons/fa";
 import { QRCodeCanvas } from "qrcode.react";
 import eligibilityRequirementsMap from "@/lib/eligibilityRequirements";
 import AttendanceModal from "../../components/AttendanceModal";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 export default function DiscoverEventContent() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function DiscoverEventContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showQrPrompt, setShowQrPrompt] = useState(false);
+  const [loginRedirect, setLoginRedirect] = useState("qr=1");
   const [userId, setUserId] = useState(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -52,10 +54,20 @@ export default function DiscoverEventContent() {
   useEffect(() => {
     const qr = searchParams?.get("qr");
     const attendance = searchParams?.get("attendance");
-    if (qr === "1" && profileChecked && !userId) {
-      setShowQrPrompt(true);
-    } else {
-      setShowQrPrompt(false);
+    if (profileChecked) {
+      if (!userId) {
+        if (qr === "1") {
+          setLoginRedirect("qr=1");
+          setShowQrPrompt(true);
+        } else if (attendance === "1") {
+          setLoginRedirect("attendance=1");
+          setShowQrPrompt(true);
+        } else {
+          setShowQrPrompt(false);
+        }
+      } else {
+        setShowQrPrompt(false);
+      }
     }
     if (attendance === "1" && profileChecked && userId && event) {
       if (isAttendanceAllowed(event)) {
@@ -89,7 +101,7 @@ export default function DiscoverEventContent() {
   const handleQrYesAccount = () => {
     setShowQrPrompt(false);
     router.push(
-      `/?redirect=/events/discover/${eventId}?qr=1`,
+      `/?redirect=/events/discover/${eventId}?${loginRedirect}`,
     );
   };
 
@@ -518,6 +530,8 @@ export default function DiscoverEventContent() {
         onClose={() => setShowAttendanceModal(false)}
         onAttendanceRecorded={reloadEvent}
       />
+
+      <PWAInstallPrompt />
     </div>
   );
 }
