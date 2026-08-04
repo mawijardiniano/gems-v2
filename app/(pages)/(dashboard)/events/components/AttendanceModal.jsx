@@ -7,6 +7,7 @@ import {
   registerAttendanceSync,
   isOnline,
   getQueuedAttendance,
+  removeQueuedAttendance,
 } from "@/lib/pwa/attendanceQueue";
 
 export default function AttendanceModal({
@@ -25,6 +26,22 @@ export default function AttendanceModal({
   const [attendedAt, setAttendedAt] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [queued, setQueued] = useState(false);
+
+  // Reset all state when the modal opens so stale state from a previous
+  // open doesn't leak into the new session.
+  useEffect(() => {
+    if (!isOpen) return;
+    setEvent(null);
+    setLoading(true);
+    setError("");
+    setAttendanceStatus(null);
+    setAttendanceMessage("");
+    setAttendedAt(null);
+    setSubmitting(false);
+    setQueued(false);
+    setProfileChecked(false);
+    setUserId(null);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,6 +94,10 @@ export default function AttendanceModal({
     load();
   }, [eventId, isOpen]);
 
+  // Single effect that handles the full attendance flow:
+  // 1. Check if there's already a queued item for this event+user → show queued state, don't submit again
+  // 2. If offline → queue it
+  // 3. If online → POST to server, and on success remove any stale queued items
   useEffect(() => {
     if (!profileChecked || !event || !eventId || !isOpen) return;
 
@@ -91,8 +112,29 @@ export default function AttendanceModal({
       setSubmitting(true);
       const captured_at = new Date().toISOString();
 
-      // If offline, queue the attendance and show success state
+      // STEP 1: Check if there's already a queued attendance for this event+user.
+      const queuedItems = await getQueuedAttendance();
+      const alreadyQueued = queuedItems.some(
+        (q) =>
+          q.event_id?.toString() === eventId?.toString() &&
+          q.user_id?.toString() === userId?.toString(),
+      );
+
+      // STEP 2: If offline, queue the attendance and show queued state
       if (!isOnline()) {
+        // If there's already a queued item, just show the queued state
+        if (alreadyQueued) {
+          setQueued(true);
+          setAttendanceStatus("success");
+          setAttendanceMessage(
+            "You have a pending offline attendance for this event — it will sync automatically.",
+          );
+          setAttendedAt(captured_at);
+          setSubmitting(false);
+          onAttendanceRecorded?.();
+          return;
+        }
+
         try {
           await queueAttendance({
             event_id: eventId,
@@ -118,12 +160,28 @@ export default function AttendanceModal({
         return;
       }
 
+      // STEP 3: Online — POST to the server.
+      // Even if there's a queued item, try to sync it now. If the server
+      // accepts it, remove the queued item and show "Attendance Confirmed!" (✅).
+      // Only fall back to the queued state if the network actually fails.
       try {
         const res = await axios.post("/api/events/attendance", {
           event_id: eventId,
           user_id: userId,
           captured_at,
         });
+
+        // On success, remove any queued items for this event+user
+        // so the queue doesn't show outdated data.
+        const staleQueued = await getQueuedAttendance();
+        for (const q of staleQueued) {
+          if (
+            q.event_id?.toString() === eventId?.toString() &&
+            q.user_id?.toString() === userId?.toString()
+          ) {
+            await removeQueuedAttendance(q.id);
+          }
+        }
 
         if (res.data.already_attended) {
           setAttendanceStatus("already");
@@ -140,11 +198,14 @@ export default function AttendanceModal({
         const status = err?.response?.status;
         if (status === undefined || status >= 500) {
           try {
-            await queueAttendance({
-              event_id: eventId,
-              user_id: userId,
-              captured_at,
-            });
+            // Only queue if there isn't already a queued item
+            if (!alreadyQueued) {
+              await queueAttendance({
+                event_id: eventId,
+                user_id: userId,
+                captured_at,
+              });
+            }
             await registerAttendanceSync();
             setQueued(true);
             setAttendanceStatus("success");
@@ -183,27 +244,6 @@ export default function AttendanceModal({
 
     submitAttendance();
   }, [profileChecked, event, eventId, userId, isOpen]);
-
-  useEffect(() => {
-    // Check if there's already a queued attendance for this event
-    if (!isOpen || !userId || !eventId) return;
-    const checkQueued = async () => {
-      const queuedItems = await getQueuedAttendance();
-      const hasQueued = queuedItems.some(
-        (q) =>
-          q.event_id?.toString() === eventId?.toString() &&
-          q.user_id?.toString() === userId?.toString(),
-      );
-      if (hasQueued) {
-        setQueued(true);
-        setAttendanceStatus("success");
-        setAttendanceMessage(
-          "You have a pending offline attendance for this event — it will sync automatically.",
-        );
-      }
-    };
-    checkQueued();
-  }, [isOpen, userId, eventId]);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "";

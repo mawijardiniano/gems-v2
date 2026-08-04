@@ -218,6 +218,17 @@ export default function DiscoverEventContent() {
     }
   };
 
+  const handleCloseAttendanceModal = () => {
+    setShowAttendanceModal(false);
+    // Remove the attendance=1 query param so the modal doesn't reopen
+    // when the event state changes (e.g. after reloadEvent)
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("attendance");
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
   const handleStatus = async (evt, status) => {
     if (!evt || !evt._id) return;
     if (!userId) {
@@ -526,7 +537,7 @@ export default function DiscoverEventContent() {
       <AttendanceModal
         eventId={event._id}
         isOpen={showAttendanceModal}
-        onClose={() => setShowAttendanceModal(false)}
+        onClose={handleCloseAttendanceModal}
         onAttendanceRecorded={reloadEvent}
       />
 
