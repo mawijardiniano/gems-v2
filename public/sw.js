@@ -204,6 +204,21 @@ self.addEventListener("sync", (event) => {
   }
 });
 
+// Notify all open pages that queued attendance has been synced
+async function notifyClientsAttendanceSynced(syncedItems) {
+  if (!syncedItems || syncedItems.length === 0) return;
+  const clients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+  for (const client of clients) {
+    client.postMessage({
+      type: "ATTENDANCE_SYNCED",
+      items: syncedItems,
+    });
+  }
+}
+
 // Replay queued attendance POSTs from IndexedDB
 async function replayAttendanceQueue() {
   try {
@@ -211,6 +226,8 @@ async function replayAttendanceQueue() {
     const tx = db.transaction("attendance", "readwrite");
     const store = tx.objectStore("attendance");
     const queued = await store.getAll();
+
+    const syncedItems = [];
 
     for (const item of queued) {
       try {
@@ -228,6 +245,20 @@ async function replayAttendanceQueue() {
           // 400 means the server rejected it (e.g. already attended, event not started)
           // drop from queue since retrying won't help
           await store.delete(item.id);
+          let alreadyAttended = false;
+          let errorCode = null;
+          try {
+            const body = await response.json();
+            alreadyAttended = !!body.already_attended;
+            errorCode = body.code || null;
+          } catch (e) {
+            // Non-JSON response — assume it was recorded successfully
+          }
+          syncedItems.push({
+            ...item,
+            already_attended: alreadyAttended,
+            error_code: errorCode,
+          });
         }
         // Other statuses (5xx, network errors) - keep in queue and retry next sync
       } catch (err) {
@@ -235,6 +266,9 @@ async function replayAttendanceQueue() {
         console.error("Attendance sync failed for item", item.id, err);
       }
     }
+
+    // Tell all open pages that their queued attendance was confirmed
+    await notifyClientsAttendanceSynced(syncedItems);
   } catch (err) {
     console.error("Failed to replay attendance queue:", err);
   }
