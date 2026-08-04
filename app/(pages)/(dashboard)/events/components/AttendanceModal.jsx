@@ -226,7 +226,9 @@ export default function AttendanceModal({
         <div
           className={`p-6 text-center ${
             attendanceStatus === "success"
-              ? "bg-green-600"
+              ? queued
+                ? "bg-amber-500"
+                : "bg-green-600"
               : attendanceStatus === "already"
                 ? "bg-blue-600"
                 : attendanceStatus === "error"
@@ -243,10 +245,14 @@ export default function AttendanceModal({
             </>
           ) : attendanceStatus === "success" ? (
             <>
-              <div className="text-5xl mb-3">✅</div>
-              <h2 className="text-xl font-bold">Attendance Confirmed!</h2>
-              <p className="text-green-100 text-sm mt-1">
-                You are now marked as attended
+              <div className="text-5xl mb-3">{queued ? "📶" : "✅"}</div>
+              <h2 className="text-xl font-bold">
+                {queued ? "Attendance Saved Offline" : "Attendance Confirmed!"}
+              </h2>
+              <p className="text-white/90 text-sm mt-1">
+                {queued
+                  ? "Will sync automatically when you're back online"
+                  : "You are now marked as attended"}
               </p>
             </>
           ) : attendanceStatus === "already" ? (
@@ -298,7 +304,16 @@ export default function AttendanceModal({
             </div>
           )}
 
-          {attendanceStatus === "success" && (
+          {attendanceStatus === "success" && queued && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+              Your attendance was captured at{" "}
+              {attendedAt ? formatDateTime(attendedAt) : "the time you tapped"}.
+              It will be submitted automatically once your device reconnects —
+              even if the event has ended by then.
+            </div>
+          )}
+
+          {attendanceStatus === "success" && !queued && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
               Your attendance has been recorded for this event.
             </div>
