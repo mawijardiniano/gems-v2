@@ -16,6 +16,7 @@ const NETWORK_FIRST_URLS = [
   "/api/profile/my-profile",
   "/api/auth/login",
   "/api/auth/logout",
+  "/api/events",
   "/api/events/",
 ];
 
@@ -57,7 +58,9 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)),
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
         ),
       )
       .then(() => self.clients.claim()),
@@ -101,7 +104,9 @@ self.addEventListener("fetch", (event) => {
             // Cache successful GET responses
             if (response.ok || response.status === 404) {
               const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+              caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put(request, clone));
             }
             return response;
           })
@@ -146,7 +151,6 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-  
           return caches
             .match(request)
             .then((cached) => {
@@ -156,17 +160,19 @@ self.addEventListener("fetch", (event) => {
             .then((cached) => {
               if (cached) return cached;
               // Fallback to the events discover page if cached
-              return caches.match("/events/discover").then((discoverFallback) => {
-                if (discoverFallback) return discoverFallback;
-                // Fallback to the landing page if cached
-                return caches.match("/").then((landingFallback) => {
-                  if (landingFallback) return landingFallback;
-                  return new Response(
-                    "<html><body><h1>Offline</h1><p>You need an internet connection to access this page.</p></body></html>",
-                    { headers: { "Content-Type": "text/html" } },
-                  );
+              return caches
+                .match("/events/discover")
+                .then((discoverFallback) => {
+                  if (discoverFallback) return discoverFallback;
+                  // Fallback to the landing page if cached
+                  return caches.match("/").then((landingFallback) => {
+                    if (landingFallback) return landingFallback;
+                    return new Response(
+                      "<html><body><h1>Offline</h1><p>You need an internet connection to access this page.</p></body></html>",
+                      { headers: { "Content-Type": "text/html" } },
+                    );
+                  });
                 });
-              });
             });
         }),
     );
@@ -241,7 +247,10 @@ function openAttendanceDB() {
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains("attendance")) {
-        db.createObjectStore("attendance", { keyPath: "id", autoIncrement: true });
+        db.createObjectStore("attendance", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
       }
     };
     request.onsuccess = (e) => resolve(e.target.result);
