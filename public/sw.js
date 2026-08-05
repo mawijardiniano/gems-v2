@@ -6,11 +6,10 @@ const STATIC_ASSETS = [
   "/icons/icon-maskable-512.png",
 ];
 
-// Routes to precache during install so the app works
-// even on the very first open after installation (offline)
+
 const PRECACHE_ROUTES = ["/", "/events/discover"];
 
-// Attendance flow API routes to cache with network-first strategy
+
 const NETWORK_FIRST_URLS = [
   "/api/events/attendance",
   "/api/profile/my-profile",
@@ -20,7 +19,7 @@ const NETWORK_FIRST_URLS = [
   "/api/events/",
 ];
 
-// Install: precache static assets AND the attendance flow pages
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -29,9 +28,7 @@ self.addEventListener("install", (event) => {
         // Cache static assets first
         await cache.addAll(STATIC_ASSETS);
 
-        // Best-effort precache of critical routes (HTML shells)
-        // so the app works offline even on first open after install.
-        // Individual failures won't break the whole install.
+
         await Promise.allSettled(
           PRECACHE_ROUTES.map(async (route) => {
             try {
@@ -51,7 +48,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Activate: clean up old caches
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
@@ -67,16 +64,15 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Helper: is this an API request we should handle?
+
 const isApiRequest = (url) => url.pathname.startsWith("/api/");
 
-// Helper: should this request be network-first?
+
 const isNetworkFirst = (url) => {
   return NETWORK_FIRST_URLS.some((prefix) => url.pathname.startsWith(prefix));
 };
 
-// Helper: build a cache key with the query string stripped, so
-// /events/discover/[id]?attendance=1 matches the cached /events/discover/[id]
+
 const stripQuery = (requestUrl) => {
   const u = new URL(requestUrl);
   u.search = "";
@@ -84,24 +80,23 @@ const stripQuery = (requestUrl) => {
   return u.toString();
 };
 
-// Fetch handler
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Same-origin only
+
   if (url.origin !== self.location.origin) return;
 
-  // Skip non-GET requests (except POST /api/events/attendance handled via background sync)
+
   if (request.method !== "GET") return;
 
-  // API requests: network-first with cache fallback
+
   if (isApiRequest(url)) {
     if (isNetworkFirst(url)) {
       event.respondWith(
         fetch(request)
           .then((response) => {
-            // Cache successful GET responses
+            
             if (response.ok || response.status === 404) {
               const clone = response.clone();
               caches
@@ -111,7 +106,7 @@ self.addEventListener("fetch", (event) => {
             return response;
           })
           .catch(() => {
-            // Try exact URL first, then without query string
+   
             return caches
               .match(request)
               .then((cached) => {
@@ -120,7 +115,7 @@ self.addEventListener("fetch", (event) => {
               })
               .then((cached) => {
                 if (cached) return cached;
-                // For API errors, return a JSON error response
+
                 return new Response(
                   JSON.stringify({
                     message: "You are offline. Please check your connection.",
@@ -135,13 +130,12 @@ self.addEventListener("fetch", (event) => {
           }),
       );
     } else {
-      // Other API: network-only (don't cache mutations)
+
       event.respondWith(fetch(request));
     }
     return;
   }
 
-  // Navigation requests: network-first, fallback to cache
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -159,12 +153,12 @@ self.addEventListener("fetch", (event) => {
             })
             .then((cached) => {
               if (cached) return cached;
-              // Fallback to the events discover page if cached
+             
               return caches
                 .match("/events/discover")
                 .then((discoverFallback) => {
                   if (discoverFallback) return discoverFallback;
-                  // Fallback to the landing page if cached
+         
                   return caches.match("/").then((landingFallback) => {
                     if (landingFallback) return landingFallback;
                     return new Response(
@@ -179,7 +173,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first
   if (
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/")
@@ -197,14 +190,13 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// Background Sync: replay queued attendance requests
 self.addEventListener("sync", (event) => {
   if (event.tag === "attendance-sync") {
     event.waitUntil(replayAttendanceQueue());
   }
 });
 
-// Notify all open pages that queued attendance has been synced
+
 async function notifyClientsAttendanceSynced(syncedItems) {
   if (!syncedItems || syncedItems.length === 0) return;
   const clients = await self.clients.matchAll({
@@ -219,7 +211,6 @@ async function notifyClientsAttendanceSynced(syncedItems) {
   }
 }
 
-// Replay queued attendance POSTs from IndexedDB
 async function replayAttendanceQueue() {
   try {
     const db = await openAttendanceDB();
@@ -242,8 +233,7 @@ async function replayAttendanceQueue() {
         });
 
         if (response.ok || response.status === 400) {
-          // 400 means the server rejected it (e.g. already attended, event not started)
-          // drop from queue since retrying won't help
+
           await store.delete(item.id);
           let alreadyAttended = false;
           let errorCode = null;
@@ -252,7 +242,7 @@ async function replayAttendanceQueue() {
             alreadyAttended = !!body.already_attended;
             errorCode = body.code || null;
           } catch (e) {
-            // Non-JSON response — assume it was recorded successfully
+
           }
           syncedItems.push({
             ...item,
@@ -260,21 +250,19 @@ async function replayAttendanceQueue() {
             error_code: errorCode,
           });
         }
-        // Other statuses (5xx, network errors) - keep in queue and retry next sync
+
       } catch (err) {
-        // Network error - keep in queue, retry later
+
         console.error("Attendance sync failed for item", item.id, err);
       }
     }
 
-    // Tell all open pages that their queued attendance was confirmed
     await notifyClientsAttendanceSynced(syncedItems);
   } catch (err) {
     console.error("Failed to replay attendance queue:", err);
   }
 }
 
-// Open IndexedDB for the attendance queue
 function openAttendanceDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("gems-pwa", 1);

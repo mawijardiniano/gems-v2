@@ -85,6 +85,14 @@ export async function PUT(req, { params }) {
   const body = await req.json();
   console.log("body", body);
 
+  // Sanitize empty project/gad_activity values to avoid ObjectId cast errors
+  if (body.project === "" || body.project === null || body.project === undefined) {
+    body.project = null;
+  }
+  if (body.gad_activity === "" || body.gad_activity === null || body.gad_activity === undefined) {
+    body.gad_activity = "";
+  }
+
   const event = await Event.findById(id);
   if (!event) {
     return NextResponse.json(

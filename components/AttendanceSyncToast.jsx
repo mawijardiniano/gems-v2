@@ -10,17 +10,16 @@ export default function AttendanceSyncToast() {
   const [toasts, setToasts] = useState([]);
   const syncingRef = useRef(false);
 
-  // Show a toast notification to the user
+
   const showToast = (message, type = "success") => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, message, type }]);
-    // Auto-dismiss after 6 seconds
+
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 6000);
   };
 
-  // Build an appropriate message from the synced items
   const buildSyncMessage = (items) => {
     const alreadyAttended = items.filter((item) => item.already_attended);
     const rejected = items.filter((item) => item.error_code);
@@ -28,7 +27,6 @@ export default function AttendanceSyncToast() {
       (item) => !item.already_attended && !item.error_code,
     );
 
-    // If any were rejected because the event wasn't open, tell the user
     if (rejected.length > 0) {
       return {
         message: "Attendance Failed",
@@ -49,7 +47,7 @@ export default function AttendanceSyncToast() {
     };
   };
 
-  // Handle when the service worker confirms queued attendance was synced
+
   const handleServiceWorkerMessage = (event) => {
     const data = event?.data;
     if (!data) return;
@@ -61,7 +59,7 @@ export default function AttendanceSyncToast() {
     }
   };
 
-  // Try to sync the queue. Returns true if anything was synced.
+
   const attemptSync = async () => {
     if (syncingRef.current) return false;
     syncingRef.current = true;
@@ -82,17 +80,15 @@ export default function AttendanceSyncToast() {
   };
 
   useEffect(() => {
-    // Listen for service worker messages about synced attendance
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
     }
 
-    // Listen for the browser coming back online (fallback for no Background Sync)
+
     window.addEventListener("online", attemptSync);
 
-    // Periodically check the queue — navigator.onLine is unreliable on mobile,
-    // so we just try to sync every 10 seconds if there's anything queued.
-    // This guarantees the sync happens even if the "online" event never fires.
+
     const interval = setInterval(async () => {
       const hasQueued = await hasQueuedAttendance();
       if (hasQueued) {

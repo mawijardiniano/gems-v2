@@ -134,6 +134,24 @@ export async function POST(req) {
       );
     }
 
+    if (type_of_activity === "GAD") {
+      if (!project) {
+        return NextResponse.json(
+          { message: "A project is required when the type of activity is GAD." },
+          { status: 400 },
+        );
+      }
+      if (!gad_activity || !String(gad_activity).trim()) {
+        return NextResponse.json(
+          {
+            message:
+              "A GAD Activity is required when the type of activity is GAD.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const newEvent = await Event.create({
       title,
       description,

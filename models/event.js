@@ -127,11 +127,31 @@ const EventSchema = new Schema(
     project: {
       type: Schema.Types.ObjectId,
       ref: "Project",
-      required: true,
+      default: null,
+      validate: {
+        validator: function (value) {
+          if (this.type_of_activity === "GAD") {
+            return value != null;
+          }
+          return true;
+        },
+        message:
+          "Project is required when type of activity is GAD.",
+      },
     },
     gad_activity: {
       type: String,
-      required: true,
+      default: "",
+      validate: {
+        validator: function (value) {
+          if (this.type_of_activity === "GAD") {
+            return Boolean(value && String(value).trim().length > 0);
+          }
+          return true;
+        },
+        message:
+          "GAD Activity is required when type of activity is GAD.",
+      },
     },
     event_poster: {
       url: {
