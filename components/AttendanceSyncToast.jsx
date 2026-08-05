@@ -76,9 +76,7 @@ export default function AttendanceSyncToast() {
     }
   };
 
-  // Fallback: when the browser comes back online, manually replay the queue
-  // (covers browsers that don't support Background Sync, and also gives
-  // immediate feedback instead of waiting for the SW sync event)
+
   const handleOnline = async () => {
     if (syncingRef.current) return;
     syncingRef.current = true;

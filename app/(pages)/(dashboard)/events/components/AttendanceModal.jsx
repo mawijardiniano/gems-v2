@@ -8,6 +8,7 @@ import {
   isOnline,
   getQueuedAttendance,
   removeQueuedAttendance,
+  syncQueuedAttendance,
 } from "@/lib/pwa/attendanceQueue";
 
 export default function AttendanceModal({
@@ -94,10 +95,68 @@ export default function AttendanceModal({
     load();
   }, [eventId, isOpen]);
 
+  // When the browser reconnects while the modal is still showing "Saved Offline",
+  // immediately sync the queue and update the modal to the real result.
+  useEffect(() => {
+    if (!isOpen || !queued || !eventId || !userId) return;
+
+    const handleOnline = async () => {
+      try {
+        const synced = await syncQueuedAttendance();
+        const myItem = synced.find(
+          (s) =>
+            s.event_id?.toString() === eventId?.toString() &&
+            s.user_id?.toString() === userId?.toString(),
+        );
+        if (!myItem) return;
+
+        if (myItem.error_code) {
+          setQueued(false);
+          setAttendanceStatus("error");
+          if (myItem.error_code === "EVENT_NOT_STARTED") {
+            setAttendanceMessage(
+              "Your offline attendance could not be recorded — the event had not started yet.",
+            );
+          } else if (myItem.error_code === "EVENT_EXPIRED") {
+            setAttendanceMessage(
+              "Your offline attendance could not be recorded — the event had already ended.",
+            );
+          } else {
+            setAttendanceMessage(
+              "Your offline attendance could not be recorded.",
+            );
+          }
+          return;
+        }
+
+        if (myItem.already_attended) {
+          setQueued(false);
+          setAttendanceStatus("already");
+          setAttendanceMessage("You are already marked as attended!");
+          setAttendedAt(myItem.captured_at || new Date().toISOString());
+          onAttendanceRecorded?.();
+          return;
+        }
+
+        // Successfully synced
+        setQueued(false);
+        setAttendanceStatus("success");
+        setAttendanceMessage("Attendance recorded successfully!");
+        setAttendedAt(myItem.captured_at || new Date().toISOString());
+        onAttendanceRecorded?.();
+      } catch (err) {
+        console.error("Failed to sync after reconnecting:", err);
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [isOpen, queued, eventId, userId, onAttendanceRecorded]);
+
   // Single effect that handles the full attendance flow:
-  // 1. Check if there's already a queued item for this event+user → show queued state, don't submit again
-  // 2. If offline → queue it
-  // 3. If online → POST to server, and on success remove any stale queued items
+  // 1. Check if there's already a queued item for this event+user → if online, sync it now and show result
+  // 2. If offline → queue it and show queued state
+  // 3. If online and no queued item → POST to server
   useEffect(() => {
     if (!profileChecked || !event || !eventId || !isOpen) return;
 
@@ -119,6 +178,63 @@ export default function AttendanceModal({
           q.event_id?.toString() === eventId?.toString() &&
           q.user_id?.toString() === userId?.toString(),
       );
+
+      // STEP 1.5: If there's a queued item and we're now online, replay the
+      // full queue and show the user the result right in the modal.
+      if (alreadyQueued && isOnline()) {
+        try {
+          const synced = await syncQueuedAttendance();
+          const myItem = synced.find(
+            (s) =>
+              s.event_id?.toString() === eventId?.toString() &&
+              s.user_id?.toString() === userId?.toString(),
+          );
+
+          if (myItem) {
+            if (myItem.error_code) {
+              setQueued(false);
+              setAttendanceStatus("error");
+              if (myItem.error_code === "EVENT_NOT_STARTED") {
+                setAttendanceMessage(
+                  "Your offline attendance could not be recorded — the event had not started yet.",
+                );
+              } else if (myItem.error_code === "EVENT_EXPIRED") {
+                setAttendanceMessage(
+                  "Your offline attendance could not be recorded — the event had already ended.",
+                );
+              } else {
+                setAttendanceMessage(
+                  "Your offline attendance could not be recorded.",
+                );
+              }
+              setSubmitting(false);
+              return;
+            }
+
+            if (myItem.already_attended) {
+              setQueued(false);
+              setAttendanceStatus("already");
+              setAttendanceMessage("You are already marked as attended!");
+              setAttendedAt(myItem.captured_at || captured_at);
+              setSubmitting(false);
+              onAttendanceRecorded?.();
+              return;
+            }
+
+            // Successfully synced
+            setQueued(false);
+            setAttendanceStatus("success");
+            setAttendanceMessage("Attendance recorded successfully!");
+            setAttendedAt(myItem.captured_at || captured_at);
+            setSubmitting(false);
+            onAttendanceRecorded?.();
+            return;
+          }
+        } catch (err) {
+          // Sync failed — fall through to queued state below
+          console.error("Failed to sync queued attendance on modal open:", err);
+        }
+      }
 
       // STEP 2: If offline, queue the attendance and show queued state
       if (!isOnline()) {
@@ -184,10 +300,12 @@ export default function AttendanceModal({
         }
 
         if (res.data.already_attended) {
+          setQueued(false);
           setAttendanceStatus("already");
           setAttendanceMessage("You are already marked as attended!");
           setAttendedAt(res.data.attended_at);
         } else {
+          setQueued(false);
           setAttendanceStatus("success");
           setAttendanceMessage("Attendance recorded successfully!");
           setAttendedAt(res.data.attended_at);
