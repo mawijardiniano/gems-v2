@@ -28,8 +28,6 @@ export default function AttendanceModal({
   const [submitting, setSubmitting] = useState(false);
   const [queued, setQueued] = useState(false);
 
-  // Reset all state when the modal opens so stale state from a previous
-  // open doesn't leak into the new session.
   useEffect(() => {
     if (!isOpen) return;
     setEvent(null);
@@ -95,8 +93,6 @@ export default function AttendanceModal({
     load();
   }, [eventId, isOpen]);
 
-  // When the browser reconnects while the modal is still showing "Saved Offline",
-  // immediately sync the queue and update the modal to the real result.
   useEffect(() => {
     if (!isOpen || !queued || !eventId || !userId) return;
 
@@ -153,10 +149,6 @@ export default function AttendanceModal({
     return () => window.removeEventListener("online", handleOnline);
   }, [isOpen, queued, eventId, userId, onAttendanceRecorded]);
 
-  // Single effect that handles the full attendance flow.
-  // IMPORTANT: We do NOT rely on navigator.onLine — it's unreliable on mobile
-  // (can report false even with a working connection). Instead we always try
-  // the network first, and only queue if the request actually fails.
   useEffect(() => {
     if (!profileChecked || !event || !eventId || !isOpen) return;
 
@@ -171,7 +163,6 @@ export default function AttendanceModal({
       setSubmitting(true);
       const captured_at = new Date().toISOString();
 
-      // STEP 1: Check if there's already a queued attendance for this event+user.
       const queuedItems = await getQueuedAttendance();
       const alreadyQueued = queuedItems.some(
         (q) =>
@@ -179,12 +170,7 @@ export default function AttendanceModal({
           q.user_id?.toString() === userId?.toString(),
       );
 
-      // STEP 2: If there's a queued item, try to sync it now.
-      // If the network is actually available, this succeeds and we show the
-      // real result (confirmed / already attended / rejected). If the network
-      // is truly down, syncQueuedAttendance returns [] and we fall through
-      // to the queued state below.
-      if (alreadyQueued) {
+    if (alreadyQueued) {
         try {
           const synced = await syncQueuedAttendance();
           const myItem = synced.find(
@@ -240,9 +226,6 @@ export default function AttendanceModal({
         }
       }
 
-      // STEP 3: Try to POST to the server directly.
-      // This is the primary path — we always attempt the network request
-      // regardless of navigator.onLine. Only if it actually fails do we queue.
       try {
         const res = await axios.post("/api/events/attendance", {
           event_id: eventId,
@@ -250,8 +233,7 @@ export default function AttendanceModal({
           captured_at,
         });
 
-        // On success, remove any queued items for this event+user
-        // so the queue doesn't show outdated data.
+
         const staleQueued = await getQueuedAttendance();
         for (const q of staleQueued) {
           if (
@@ -275,11 +257,11 @@ export default function AttendanceModal({
         }
         onAttendanceRecorded?.();
       } catch (err) {
-        // If the network request actually failed, queue it for background sync
+ 
         const status = err?.response?.status;
         if (status === undefined || status >= 500) {
           try {
-            // Only queue if there isn't already a queued item
+
             if (!alreadyQueued) {
               await queueAttendance({
                 event_id: eventId,

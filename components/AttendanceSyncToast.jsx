@@ -30,39 +30,21 @@ export default function AttendanceSyncToast() {
 
     // If any were rejected because the event wasn't open, tell the user
     if (rejected.length > 0) {
-      const rejectedMsgs = rejected.map((item) => {
-        if (item.error_code === "EVENT_NOT_STARTED") {
-          return "the event hadn't started yet";
-        }
-        if (item.error_code === "EVENT_EXPIRED") {
-          return "the event had already ended";
-        }
-        return "the event was no longer valid";
-      });
       return {
-        message: `Your offline attendance could not be recorded — ${rejectedMsgs.join(
-          ", ",
-        )}.`,
+        message: "Attendance Failed",
         type: "error",
       };
     }
 
     if (alreadyAttended.length > 0 && confirmed.length === 0) {
       return {
-        message: `You were already marked as attended for ${alreadyAttended.length} event(s).`,
+        message: "Already Attended",
         type: "info",
       };
     }
 
-    if (confirmed.length > 0 && alreadyAttended.length === 0) {
-      return {
-        message: `Your attendance for ${confirmed.length} event(s) has been confirmed! ✅`,
-        type: "success",
-      };
-    }
-
     return {
-      message: `Your offline attendance has been synced — ${confirmed.length} confirmed, ${alreadyAttended.length} already marked.`,
+      message: "Attendance Confirmed!",
       type: "success",
     };
   };
