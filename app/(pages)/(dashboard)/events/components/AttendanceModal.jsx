@@ -153,10 +153,10 @@ export default function AttendanceModal({
     return () => window.removeEventListener("online", handleOnline);
   }, [isOpen, queued, eventId, userId, onAttendanceRecorded]);
 
-  // Single effect that handles the full attendance flow:
-  // 1. Check if there's already a queued item for this event+user → if online, sync it now and show result
-  // 2. If offline → queue it and show queued state
-  // 3. If online and no queued item → POST to server
+  // Single effect that handles the full attendance flow.
+  // IMPORTANT: We do NOT rely on navigator.onLine — it's unreliable on mobile
+  // (can report false even with a working connection). Instead we always try
+  // the network first, and only queue if the request actually fails.
   useEffect(() => {
     if (!profileChecked || !event || !eventId || !isOpen) return;
 
@@ -179,9 +179,12 @@ export default function AttendanceModal({
           q.user_id?.toString() === userId?.toString(),
       );
 
-      // STEP 1.5: If there's a queued item and we're now online, replay the
-      // full queue and show the user the result right in the modal.
-      if (alreadyQueued && isOnline()) {
+      // STEP 2: If there's a queued item, try to sync it now.
+      // If the network is actually available, this succeeds and we show the
+      // real result (confirmed / already attended / rejected). If the network
+      // is truly down, syncQueuedAttendance returns [] and we fall through
+      // to the queued state below.
+      if (alreadyQueued) {
         try {
           const synced = await syncQueuedAttendance();
           const myItem = synced.find(
@@ -230,56 +233,16 @@ export default function AttendanceModal({
             onAttendanceRecorded?.();
             return;
           }
+          // myItem is undefined → sync failed (network down). Fall through.
         } catch (err) {
           // Sync failed — fall through to queued state below
           console.error("Failed to sync queued attendance on modal open:", err);
         }
       }
 
-      // STEP 2: If offline, queue the attendance and show queued state
-      if (!isOnline()) {
-        // If there's already a queued item, just show the queued state
-        if (alreadyQueued) {
-          setQueued(true);
-          setAttendanceStatus("success");
-          setAttendanceMessage(
-            "You have a pending offline attendance for this event — it will sync automatically.",
-          );
-          setAttendedAt(captured_at);
-          setSubmitting(false);
-          onAttendanceRecorded?.();
-          return;
-        }
-
-        try {
-          await queueAttendance({
-            event_id: eventId,
-            user_id: userId,
-            captured_at,
-          });
-          await registerAttendanceSync();
-          setQueued(true);
-          setAttendanceStatus("success");
-          setAttendanceMessage(
-            "You're offline — your attendance is saved and will sync automatically when you're back online.",
-          );
-          setAttendedAt(captured_at);
-          onAttendanceRecorded?.();
-        } catch (queueErr) {
-          setAttendanceStatus("error");
-          setAttendanceMessage(
-            "Failed to save attendance. Please try again when you have a connection.",
-          );
-        } finally {
-          setSubmitting(false);
-        }
-        return;
-      }
-
-      // STEP 3: Online — POST to the server.
-      // Even if there's a queued item, try to sync it now. If the server
-      // accepts it, remove the queued item and show "Attendance Confirmed!" (✅).
-      // Only fall back to the queued state if the network actually fails.
+      // STEP 3: Try to POST to the server directly.
+      // This is the primary path — we always attempt the network request
+      // regardless of navigator.onLine. Only if it actually fails do we queue.
       try {
         const res = await axios.post("/api/events/attendance", {
           event_id: eventId,
@@ -312,7 +275,7 @@ export default function AttendanceModal({
         }
         onAttendanceRecorded?.();
       } catch (err) {
-        // If network fails mid-request, queue it for background sync
+        // If the network request actually failed, queue it for background sync
         const status = err?.response?.status;
         if (status === undefined || status >= 500) {
           try {

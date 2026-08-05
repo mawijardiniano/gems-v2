@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { syncQueuedAttendance } from "@/lib/pwa/attendanceQueue";
+import {
+  syncQueuedAttendance,
+  hasQueuedAttendance,
+} from "@/lib/pwa/attendanceQueue";
 
 export default function AttendanceSyncToast() {
   const [toasts, setToasts] = useState([]);
@@ -76,18 +79,21 @@ export default function AttendanceSyncToast() {
     }
   };
 
-
-  const handleOnline = async () => {
-    if (syncingRef.current) return;
+  // Try to sync the queue. Returns true if anything was synced.
+  const attemptSync = async () => {
+    if (syncingRef.current) return false;
     syncingRef.current = true;
     try {
       const synced = await syncQueuedAttendance();
       if (synced.length > 0) {
         const { message, type } = buildSyncMessage(synced);
         showToast(message, type);
+        return true;
       }
+      return false;
     } catch (err) {
-      console.error("Failed to sync queued attendance after going online:", err);
+      console.error("Failed to sync queued attendance:", err);
+      return false;
     } finally {
       syncingRef.current = false;
     }
@@ -100,13 +106,24 @@ export default function AttendanceSyncToast() {
     }
 
     // Listen for the browser coming back online (fallback for no Background Sync)
-    window.addEventListener("online", handleOnline);
+    window.addEventListener("online", attemptSync);
+
+    // Periodically check the queue — navigator.onLine is unreliable on mobile,
+    // so we just try to sync every 10 seconds if there's anything queued.
+    // This guarantees the sync happens even if the "online" event never fires.
+    const interval = setInterval(async () => {
+      const hasQueued = await hasQueuedAttendance();
+      if (hasQueued) {
+        await attemptSync();
+      }
+    }, 10000);
 
     return () => {
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
       }
-      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("online", attemptSync);
+      clearInterval(interval);
     };
   }, []);
 
