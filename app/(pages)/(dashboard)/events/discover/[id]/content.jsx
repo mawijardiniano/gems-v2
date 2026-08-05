@@ -454,20 +454,13 @@ export default function DiscoverEventContent() {
 
             {userId &&
               event &&
-              (isAttendanceAllowed(event) ? (
-                <button
-                  onClick={() => setShowAttendanceModal(true)}
-                  className="mt-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors"
-                >
-                  Mark Attendance
-                </button>
-              ) : (
+              !isAttendanceAllowed(event) && (
                 <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
                   {isPast(event)
                     ? "Attendance closed - Event has ended"
                     : "Attendance opens when the event starts"}
                 </div>
-              ))}
+              )}
 
             {userId && (
               <div className="flex flex-wrap gap-2 pt-2">

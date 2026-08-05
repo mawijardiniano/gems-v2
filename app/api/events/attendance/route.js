@@ -64,34 +64,34 @@ export async function POST(req) {
       );
     }
 
-    // Check if user is already marked as attended
-    const alreadyAttended = event.attended_users?.some(
-      (a) => a.user_id?.toString() === user_id.toString(),
+    // Atomically mark the user as attended — only if they are NOT already in
+    // attended_users. This prevents duplicates when the modal POST and the
+    // background-sync replay fire at the same time.
+    const attendedAt = hasCapturedAt ? new Date(captured_at) : new Date();
+    const updated = await Event.findOneAndUpdate(
+      {
+        _id: event_id,
+        "attended_users.user_id": { $ne: user_id },
+      },
+      {
+        $push: { attended_users: { user_id, attended_at: attendedAt } },
+        $addToSet: { registered_users: user_id },
+      },
+      { new: true },
     );
 
-    if (alreadyAttended) {
-      const existing = event.attended_users.find(
+    if (!updated) {
+      // The user is already in attended_users — fetch the existing entry
+      const existingEvent = await Event.findById(event_id);
+      const existing = existingEvent?.attended_users?.find(
         (a) => a.user_id?.toString() === user_id.toString(),
       );
       return NextResponse.json({
         message: "Already marked as attended",
         already_attended: true,
-        attended_at: existing.attended_at,
+        attended_at: existing?.attended_at,
       });
     }
-
-    // Mark user as attended — use captured_at for offline-queued submissions
-    event.attended_users = event.attended_users || [];
-    event.attended_users.push({
-      user_id: user_id,
-      attended_at: hasCapturedAt ? new Date(captured_at) : new Date(),
-    });
-
-    if (!event.registered_users?.some((id) => id.toString() === user_id.toString())) {
-      event.registered_users.push(user_id);
-    }
-
-    await event.save();
 
     await logActivity({
       req,
