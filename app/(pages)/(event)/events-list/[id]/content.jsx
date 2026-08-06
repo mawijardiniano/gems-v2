@@ -18,7 +18,7 @@ import {
   handleDownloadBlankGuestsPdf,
 } from "./components/PrintUtils";
 
-export default function EventManageContent() {
+export default function EventManageContent({ backPath = "/events-list" }) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -106,7 +106,7 @@ export default function EventManageContent() {
       await axios.delete(`/api/events/${eventId}`);
 
       setShowDeleteModal(false);
-      router.push("/events-list");
+      router.push(backPath);
     } catch (err) {
       setDeleteError(err?.response?.data?.message || "Failed to delete event.");
     } finally {
@@ -670,7 +670,7 @@ export default function EventManageContent() {
     return (
       <div className="page-container">
         <div className="alert-error mb-4">{error}</div>
-        <button onClick={() => router.push("/events-list")} className="btn-secondary">
+        <button onClick={() => router.push(backPath)} className="btn-secondary">
           <FiArrowLeft aria-hidden="true" /> Back to Events
         </button>
       </div>
@@ -721,7 +721,7 @@ export default function EventManageContent() {
       )}
 
       <button
-        onClick={() => router.push("/events-list")}
+        onClick={() => router.push(backPath)}
         className="btn-ghost !px-3 !py-2 !rounded-lg"
         aria-label="Back to events"
       >

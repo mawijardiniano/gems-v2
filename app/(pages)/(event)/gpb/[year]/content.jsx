@@ -357,7 +357,7 @@ const CommentBox = ({
   );
 };
 
-export default function ProjectContent({ sidebarOpen }) {
+export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
   const [projects, setProjects] = useState([]);
@@ -1012,7 +1012,7 @@ export default function ProjectContent({ sidebarOpen }) {
   return (
     <div className="p-6">
       <button
-        onClick={() => router.push("/gpb")}
+        onClick={() => router.push(backPath)}
         className="flex flex-row items-center mb-2 text-blue-600 gap-1"
       >
         <FiArrowLeft /> Back to GPB List
@@ -3693,7 +3693,7 @@ export default function ProjectContent({ sidebarOpen }) {
                                                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
                                                     onClick={() =>
                                                       router.push(
-                                                        `/gpb/dump/${project._id}`,
+                                                        `/gpb/projects/${project._id}`,
                                                       )
                                                     }
                                                   >

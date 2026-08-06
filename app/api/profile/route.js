@@ -183,8 +183,6 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-
-
     await connectDB();
 
     const body = await req.json();
@@ -212,7 +210,9 @@ export async function POST(req) {
         );
       }
       // Also check if student_id is already taken as a username
-      const existingUsername = await UserAuth.findOne({ username: studentId }).lean();
+      const existingUsername = await UserAuth.findOne({
+        username: studentId,
+      }).lean();
       if (existingUsername) {
         return NextResponse.json(
           {
@@ -239,7 +239,9 @@ export async function POST(req) {
         );
       }
 
-      const existingUsername = await UserAuth.findOne({ username: employeeId }).lean();
+      const existingUsername = await UserAuth.findOne({
+        username: employeeId,
+      }).lean();
       if (existingUsername) {
         return NextResponse.json(
           {

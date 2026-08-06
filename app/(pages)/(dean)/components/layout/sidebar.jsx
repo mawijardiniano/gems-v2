@@ -7,6 +7,7 @@ import {
   FaSignOutAlt,
   FaChevronDown,
   FaUserGraduate,
+  FaFolder,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -33,7 +34,7 @@ export default function Sidebar({ open, setOpen, role }) {
   const pathname = usePathname();
 
   const ROLE_ACCESS = {
-    dean: ["dean-dashboard", "student-list"],
+    dean: ["dean-dashboard", "student-list", "projects"],
   };
 
   const links = [
@@ -48,6 +49,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/dean/students",
       icon: <FaUserGraduate size={16} />,
       key: "student-list",
+    },
+    {
+      name: "Projects",
+      href: "/dean/projects",
+      icon: <FaFolder size={16} />,
+      key: "projects",
     },
   ];
 

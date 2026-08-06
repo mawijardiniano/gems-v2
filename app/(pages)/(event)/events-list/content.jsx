@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
   FaCalendar,
   FaLocationArrow,
@@ -134,6 +135,7 @@ const SkeletonCard = () => (
 
 export default function EventsListContent() {
   const router = useRouter();
+  const userId = useSelector((state) => state.auth.userId);
 
   const [events, setEvents] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -186,6 +188,14 @@ export default function EventsListContent() {
 
   const filteredEvents = useMemo(() => {
     return events.filter((evt) => {
+      // Only show events created by the currently logged-in user
+      const creatorId =
+        typeof evt.created_by === "object" && evt.created_by?._id
+          ? evt.created_by._id.toString()
+          : evt.created_by?.toString?.() || "";
+
+      const matchesCreator = userId ? creatorId === userId.toString() : true;
+
       const matchesType =
         !activityType ||
         evt.type_of_activity?.toLowerCase() === activityType.toLowerCase();
@@ -199,9 +209,9 @@ export default function EventsListContent() {
           Number(relatedProject.year) === Number(selectedYear);
       }
 
-      return matchesType && matchesYear;
+      return matchesCreator && matchesType && matchesYear;
     });
-  }, [events, projects, activityType, selectedYear]);
+  }, [events, projects, activityType, selectedYear, userId]);
 
   const formatRange = (evt) => {
     let startDates = evt.start_dates || [];

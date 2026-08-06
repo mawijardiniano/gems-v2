@@ -4,7 +4,7 @@ import YearContent from '../../../../(event)/gpb/[year]/content'
 export default function YearPage({ params }) {
   return (
     <div>
-      <YearContent params={params} />
+      <YearContent params={params} backPath="/planning-director/gpb" />
     </div>
   )
 }

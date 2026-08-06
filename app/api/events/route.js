@@ -7,6 +7,12 @@ import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 
+const ALLOWED_CREATOR_ROLES = [
+  "GAD Focal Person",
+  "GAD Coordinator",
+  "Dean",
+];
+
 export async function GET(req) {
   try {
     const { error, status } = await requireAuth(req);
@@ -14,7 +20,12 @@ export async function GET(req) {
 
     await connectDB();
 
-    const events = await Event.find()
+    const { searchParams } = new URL(req.url);
+    const created_by = searchParams.get("created_by");
+
+    const filter = created_by ? { created_by } : {};
+
+    const events = await Event.find(filter)
       .populate({
         path: "created_by",
         model: "UserAuth",
@@ -122,9 +133,9 @@ export async function POST(req) {
       );
     }
 
-    if (user.role !== "GAD Focal Person" && user.role !== "GAD Coordinator") {
+    if (!ALLOWED_CREATOR_ROLES.includes(user.role)) {
       console.error(
-        "POST /api/events: Forbidden - user is not Focal or Coordinator",
+        "POST /api/events: Forbidden - user is not allowed to create events",
         {
           userId: user._id,
           username: user.username,
@@ -133,8 +144,7 @@ export async function POST(req) {
       );
       return NextResponse.json(
         {
-          message:
-            "Only GAD Focal Person or GAD Coordinator can create events.",
+          message: `Only ${ALLOWED_CREATOR_ROLES.join(", ")} can create events.`,
           debug: { userId: user._id, username: user.username, role: user.role },
         },
         { status: 403 },
@@ -197,6 +207,14 @@ export async function POST(req) {
       req,
       metadata: { event_id: newEvent?._id },
     });
+
+    // Emit socket event for real-time updates
+    if (global.io) {
+      global.io.emit("event:created", {
+        event: newEvent,
+        createdBy: user._id,
+      });
+    }
 
     return NextResponse.json(
       { message: "Event created successfully", event: newEvent },

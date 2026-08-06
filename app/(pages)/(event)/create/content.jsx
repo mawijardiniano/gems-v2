@@ -236,6 +236,7 @@ export default function CreateEventsContent() {
   ];
 
   const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -293,6 +294,7 @@ export default function CreateEventsContent() {
       try {
         const res = await axios.get("/api/profile/my-profile");
         setUserId(res.data?.user?._id || null);
+        setUserRole(res.data?.user?.role?.toLowerCase() || null);
       } catch (err) {
         console.error("Error loading profile", err);
       }
@@ -500,7 +502,8 @@ export default function CreateEventsContent() {
       await axios.post("/api/events", payload);
       setSuccess("Event created successfully");
 
-      setTimeout(() => router.push("/events-list"), 1200);
+      const redirectPath = userRole === "dean" ? "/dean/projects" : "/events-list";
+      setTimeout(() => router.push(redirectPath), 1200);
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -936,7 +939,7 @@ export default function CreateEventsContent() {
         <div className="flex items-center justify-end gap-3 pt-2 pb-8">
           <button
             type="button"
-            onClick={() => router.push("/events-list")}
+            onClick={() => router.push(userRole === "dean" ? "/dean/projects" : "/events-list")}
             className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
           >
             Cancel

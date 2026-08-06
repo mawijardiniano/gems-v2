@@ -94,7 +94,7 @@ function StatCard({ icon: Icon, label, value, color = "blue" }) {
 }
 
 // ─── Main Component ────────────────────────────────────────────────
-export default function ProjectContent2() {
+export default function ProjectContent2({ basePath = "/gpb" }) {
   const role = useSelector((state) => state.auth.role);
   const [gpbList, setGpbList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -407,7 +407,7 @@ export default function ProjectContent2() {
                     </div>
 
                     {/* Year */}
-                    <Link href={`/gpb/${item.year}`} className="block">
+                    <Link href={`${basePath}/${item.year}`} className="block">
                       <div className="mb-4">
                         <span className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                           {item.year}

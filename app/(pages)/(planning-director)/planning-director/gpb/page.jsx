@@ -4,7 +4,7 @@ import ProjectContent from '../../../(event)/gpb/content'
 export default function GPBPage() {
   return (
     <div>
-      <ProjectContent />
+      <ProjectContent basePath="/planning-director/gpb" />
     </div>
   )
 }
