@@ -2,9 +2,13 @@ import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
 
 export async function POST(req) {
   try {
+     const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
     await connectDB();
     const body = await req.json();
 
@@ -31,6 +35,8 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
+     const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
     await connectDB();
 
     const { searchParams } = new URL(req.url);

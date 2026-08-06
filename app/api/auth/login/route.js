@@ -5,11 +5,21 @@ import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
 import { logActivity } from "@/lib/activityLog";
 import Notification from "@/models/notification";
+import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
+    // Rate limit: 5 login attempts per minute per IP
+    const rateLimitResult = await rateLimiters.login(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
     await connectDB();
     const { username, password } = await req.json();
 

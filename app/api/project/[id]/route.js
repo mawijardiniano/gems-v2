@@ -7,8 +7,12 @@ import {
 import Project from "@/models/projects";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
 
 export async function PUT(req, { params }) {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const { id } = await params;
@@ -94,6 +98,8 @@ mergeField("project_type");
 }
 
 export async function GET(req, { params }) {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const projects = await Project.findById(id).populate("events");
@@ -102,6 +108,8 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const projects = await Project.findByIdAndDelete(id);

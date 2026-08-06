@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
 
 const POPULATE_PATHS = [
   "president.name",
@@ -28,6 +30,8 @@ const ARRAY_SECTIONS = [
 ];
 
 export async function GET(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const officials = await UniversityOfficial.find().populate({
@@ -38,6 +42,8 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const body = await req.json();
   const { section, data } = body;

@@ -7,10 +7,14 @@ import "@/models/gaa_budget";
 import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
-
-export async function GET() {
+export async function GET(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const gpb = await GPB.find()
@@ -43,6 +47,9 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const body = await req.json();

@@ -4,11 +4,15 @@ import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 const VALID_STATUSES = ["interested", "not_interested", "going"];
 
 export async function POST(req) {
   try {
+    const { error, status: authStatus } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status: authStatus });
+
     await connectDB();
 
     const { event_id, user_id, status } = await req.json();

@@ -5,14 +5,22 @@ import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 export async function GET(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   await connectDB();
   const projects = await Project.find().populate("events");
   return Response.json({ data: projects });
 }
 
 export async function POST(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   await connectDB();
 
   const body = await req.json();
@@ -162,7 +170,10 @@ export async function POST(req) {
   });
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   await connectDB();
 
   await GPB.updateMany({}, { $set: { projects: [] } });

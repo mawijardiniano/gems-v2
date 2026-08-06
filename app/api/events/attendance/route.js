@@ -3,9 +3,13 @@ import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const { event_id, user_id, captured_at } = await req.json();

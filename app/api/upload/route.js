@@ -1,4 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { rateLimiters } from "@/lib/rateLimit";
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -11,6 +14,18 @@ const s3 = new S3Client({
 
 export async function POST(req) {
   try {
+    // Rate limit: 10 uploads per minute per user
+    const rateLimitResult = await rateLimiters.upload(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     const formData = await req.formData();
     const file = formData.get("file");
     const folder = formData.get("folder") || "uploads"; // default to uploads
@@ -49,6 +64,18 @@ export async function POST(req) {
 
 export async function DELETE(req) {
   try {
+    // Rate limit: 10 deletes per minute per user
+    const rateLimitResult = await rateLimiters.upload(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     const { key } = await req.json();
 
     if (!key) {

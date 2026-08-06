@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
 import { connectDB } from "@/lib/db";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
 export async function POST(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const body = await req.json();
 
@@ -19,7 +23,7 @@ export async function POST(req) {
           success: false,
           message: `A GAA Budget for year ${body.year} already exists.`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -55,14 +59,13 @@ export async function POST(req) {
       data: budget,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function GET(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { searchParams } = new URL(req.url);
   const year = searchParams.get("year");

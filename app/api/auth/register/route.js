@@ -3,9 +3,19 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
+import { rateLimiters } from "@/lib/rateLimit";
 
 export async function POST(req) {
   try {
+    // Rate limit: 3 registration attempts per hour per IP
+    const rateLimitResult = await rateLimiters.register(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
     await connectDB();
 
     const { username, password, role } = await req.json();

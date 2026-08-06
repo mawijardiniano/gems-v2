@@ -6,6 +6,7 @@ import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -89,6 +90,9 @@ function capitalizeObjectStrings(obj) {
 
 export async function GET(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const users = await UserAuth.find({}).populate("personal_info_id").lean();
@@ -179,6 +183,8 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+
+
     await connectDB();
 
     const body = await req.json();
@@ -191,7 +197,6 @@ export async function POST(req) {
       );
     }
 
-    // Check for duplicate student_id or employee_id
     if (body?.affiliation?.academic_information?.student_id) {
       const studentId = body.affiliation.academic_information.student_id;
       const existingProfile = await Profile.findOne({
@@ -363,8 +368,11 @@ export async function POST(req) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const usersToDelete = await UserAuth.find({ role: "User" }).select(

@@ -5,9 +5,13 @@ import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const events = await Event.find()
@@ -61,6 +65,9 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const body = await req.json();
@@ -204,8 +211,11 @@ export async function POST(req) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const result = await Event.deleteMany({});

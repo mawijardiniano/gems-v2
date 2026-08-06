@@ -4,11 +4,21 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
+import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
+    // Rate limit: 3 password changes per hour per user
+    const rateLimitResult = await rateLimiters.passwordChange(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
     await connectDB();
 
     const token = req.cookies.get("auth_token")?.value;

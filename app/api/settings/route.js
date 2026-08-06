@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { requireAuth } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -19,6 +20,9 @@ function getAdminId(req) {
 // GET /api/settings?key=active_term
 export async function GET(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const { searchParams } = new URL(req.url);
@@ -54,6 +58,9 @@ export async function GET(req) {
 // Body: { key: "active_term", value: { school_year: "...", semester: "..." } }
 export async function PUT(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     const adminId = getAdminId(req);
     if (!adminId) {
       return NextResponse.json(

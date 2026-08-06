@@ -1,9 +1,16 @@
 import jwt from "jsonwebtoken";
 import UserAuth from "@/models/user";
+import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function requireAdmin(req) {
+
+  const rateLimitResult = await rateLimiters.integration(req);
+  if (rateLimitResult.error) {
+    return { error: rateLimitResult.error, status: rateLimitResult.status, headers: rateLimitResult.headers };
+  }
+
   const token = req.cookies.get("auth_token")?.value;
   if (!token) {
     return { error: "No token provided", status: 401 };

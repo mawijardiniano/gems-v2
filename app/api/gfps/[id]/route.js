@@ -2,6 +2,9 @@ import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
 import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
+
 
 async function normalizeOfficialId(id) {
   if (!id) return null;
@@ -62,6 +65,8 @@ async function normalizeSectionOfficials(section) {
 }
 
 export async function PUT(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   const { id } = await params; // ← fix: await params first
   await connectDB();
   const body = await req.json();

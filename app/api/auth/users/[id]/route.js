@@ -1,40 +1,55 @@
 import User from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import { SCOPED_ROLES } from "@/lib/colleges";
 import { logActivity } from "@/lib/activityLog";
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 
 export async function GET(req, { params }) {
-  const { id } = await params;
-  console.log("id:", id);
+  try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
 
-  if (!id) {
+    const { id } = await params;
+    console.log("id:", id);
+
+    if (!id) {
+      return NextResponse.json(
+        { status: "error", message: "Missing user id" },
+        { status: 400 },
+      );
+    }
+
+    await connectDB();
+
+    const user = await User.findById(id, { password: 0 }).lean();
+
+    if (!user) {
+      return NextResponse.json(
+        { status: "error", message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ status: "success", data: user });
+  } catch (error) {
+    console.error("GET /api/users/[id] error:", error);
     return NextResponse.json(
-      { status: "error", message: "Missing user id" },
-      { status: 400 },
+      { status: "error", message: error.message },
+      { status: 500 },
     );
   }
-
-  await connectDB();
-
-  const user = await User.findById(id, { password: 0 }).lean();
-
-  if (!user) {
-    return NextResponse.json(
-      { status: "error", message: "User not found" },
-      { status: 404 },
-    );
-  }
-
-  return NextResponse.json({ status: "success", data: user });
 }
-
 
 export async function PUT(req, { params }) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { id } = await params;
     console.log("PUT id:", id);
 
@@ -45,27 +60,6 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const token = req.cookies.get("auth_token")?.value
-    if (!token) {
-      return NextResponse.json({ error: "No token provided" }, { status: 401 });
-    }
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-       if (decoded.role !== "Admin") {
-      return NextResponse.json(
-        { status: "error", message: "Forbidden: Admins only" },
-        { status: 403 },
-      );
-    }
-
-    } catch (err) {
-      return NextResponse.json(
-        { status: "error", message: "Invalid token" },
-        { status: 401 },
-      );
-    }
-
-   
     const body = await req.json();
     console.log("PUT body:", body);
 
@@ -120,8 +114,13 @@ export async function PUT(req, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(req, { params }) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { id } = await params;
     console.log("DELETE id:", id);
 

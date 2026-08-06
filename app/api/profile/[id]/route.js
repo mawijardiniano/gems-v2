@@ -4,8 +4,12 @@ import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   const { id } = await params;
 
   if (!id)
@@ -28,6 +32,9 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   const { id } = await params;
   if (!id) {
     return NextResponse.json(
@@ -123,6 +130,9 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   const { id } = await params;
 
   if (!id) {

@@ -1,8 +1,13 @@
 import { connectDB } from "@/lib/db";
 import GPB from "@/models/gpb";
 import { logActivity } from "@/lib/activityLog";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
+
 
 export async function GET(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   try {
@@ -27,6 +32,8 @@ export async function GET(req, { params }) {
 }
 
 export async function POST(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   try {

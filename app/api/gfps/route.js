@@ -1,46 +1,10 @@
-// import { connectDB } from "@/lib/db";
-// import GFPS from "@/models/gfps";
-
-// // GET GFPS
-// export async function GET() {
-//   try {
-//     await connectDB();
-
-//     const data = await GFPS.findOne({ isActive: true })
-//       .populate("sections.PRESIDENT.members.official")
-//       .populate("sections.COLLEGE_DEANS.members.official");
-
-//     return Response.json({ success: true, data });
-//   } catch (err) {
-//     return Response.json({ success: false, error: err.message }, { status: 500 });
-//   }
-// }
-
-// // CREATE INITIAL GFPS (optional setup)
-// export async function POST() {
-//   try {
-//     await connectDB();
-
-//     const exists = await GFPS.findOne({ isActive: true });
-//     if (exists) {
-//       return Response.json({ success: true, data: exists });
-//     }
-
-//     const gfps = await GFPS.create({
-//       name: "GFPS Organization",
-//       sections: {},
-//     });
-
-//     return Response.json({ success: true, data: gfps });
-//   } catch (err) {
-//     return Response.json({ success: false, error: err.message }, { status: 500 });
-//   }
-// }
-
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
 import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
+
 
 const userAuthPopulate = {
   path: "personal_info_id",
@@ -216,6 +180,8 @@ function makeFilterHelpers(universityOfficials) {
 }
 
 export async function GET() {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const universityOfficials = await UniversityOfficial.findOne({})
@@ -239,6 +205,8 @@ export async function GET() {
 }
 
 export async function POST(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const body = await req.json();
@@ -355,6 +323,8 @@ if (body.secretariat) {
 // DELETE
 // ─────────────────────────────────────────────
 export async function DELETE() {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   await GFPS.deleteMany({});
   return Response.json({ success: true });

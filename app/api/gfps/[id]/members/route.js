@@ -1,7 +1,11 @@
 import GFPS from "@/models/gfps";
 import { connectDB } from "@/lib/db";
+ import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
 
 export async function PATCH(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   try {
      await connectDB();
     const body = await req.json();

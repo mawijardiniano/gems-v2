@@ -18,7 +18,7 @@ export async function POST(req) {
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },
-        { status: auth.status },
+        { status: auth.status, headers: auth.headers },
       );
     }
 

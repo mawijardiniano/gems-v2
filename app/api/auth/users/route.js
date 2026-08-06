@@ -1,8 +1,15 @@
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     await connectDB();
 
     const users = await UserAuth.find({}, { password: 0 }).lean();
@@ -17,8 +24,13 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     await connectDB();
 
     const result = await UserAuth.deleteMany({});

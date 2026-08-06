@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import {NextResponse} from "next/server"
 
 const POPULATE_PATHS = [
   "president.name",
@@ -16,6 +18,8 @@ const POPULATE_PATHS = [
 ].join(" ");
 
 export async function GET(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const officials = await UniversityOfficial.find().populate({
@@ -32,6 +36,8 @@ export async function GET(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const body = await req.json();
@@ -110,6 +116,8 @@ export async function PATCH(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = params;
   const body = await req.json();
@@ -153,6 +161,8 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+   const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const deleted = await UniversityOfficial.findByIdAndDelete(id);

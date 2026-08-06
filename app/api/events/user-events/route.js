@@ -2,9 +2,13 @@ import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req) {
   try {
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const url = new URL(req.url);

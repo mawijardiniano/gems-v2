@@ -4,8 +4,11 @@ import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
 import { connectDB } from "@/lib/db";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   try {
@@ -19,6 +22,8 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const body = await req.json();
@@ -46,19 +51,18 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   try {
     const deleted = await GAABudget.findByIdAndDelete(id);
     if (!deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
-    
+
     // Clear the budget reference from any GPB records that use this budget
-    await GPB.updateMany(
-      { gaaBudgetId: id },
-      { $set: { gaaBudgetId: null } }
-    );
-    
+    await GPB.updateMany({ gaaBudgetId: id }, { $set: { gaaBudgetId: null } });
+
     await logActivity({
       req,
       action: "GAA_BUDGET_DELETE",

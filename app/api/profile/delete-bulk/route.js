@@ -3,9 +3,15 @@ import UserAuth from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 
 export async function DELETE(req) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     await connectDB();
     const { ids } = await req.json();
     if (!Array.isArray(ids) || ids.length === 0) {
