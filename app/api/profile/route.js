@@ -5,12 +5,23 @@ import SystemSetting from "@/models/systemSetting";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-async function generateUniqueUsername(personal, affiliation) {
+const CAPITALIZE_KEYS = new Set([
+  "first_name",
+  "last_name",
+  "middle_name",
+  "nationality",
+  "student_id",
+  "headOfHousehold",
+]);
+
+async function generateUniqueUsername(personal, affiliation, contact) {
   const isStudent = personal?.currentStatus === "Student";
   const isEmployee = personal?.currentStatus === "Employee";
 
@@ -19,28 +30,15 @@ async function generateUniqueUsername(personal, affiliation) {
   if (isStudent) {
     const studentId = affiliation?.academic_information?.student_id;
     if (studentId) {
-      candidates.push(studentId);
+      candidates.push(studentId.toUpperCase());
     }
   }
 
   if (isEmployee) {
-    const firstName = personal?.first_name || "";
-    const lastName = personal?.last_name || "";
-    if (firstName && lastName) {
-      const combined =
-        firstName.charAt(0).toUpperCase() +
-        firstName.slice(1).toLowerCase() +
-        lastName.charAt(0).toUpperCase() +
-        lastName.slice(1).toLowerCase();
-      candidates.push(combined);
+    const email = contact?.email;
+    if (email) {
+      candidates.push(email.toLowerCase());
     }
-  }
-
-  const first = personal?.first_name || "";
-  if (first) {
-    candidates.push(
-      first.charAt(0).toUpperCase() + first.slice(1).toLowerCase(),
-    );
   }
 
   const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
@@ -52,18 +50,9 @@ async function generateUniqueUsername(personal, affiliation) {
     }
   }
 
-  // Fallback: generate a unique username with random suffix
-  const randomSuffix = Math.random()
-    .toString(36)
-    .substring(2, 10)
-    .toLowerCase();
-  let fallback = `user${randomSuffix}`;
-  let counter = 1;
-  while (await UserAuth.findOne({ username: fallback }).lean()) {
-    fallback = `user${randomSuffix}${counter}`;
-    counter += 1;
-  }
-  return fallback;
+  throw new Error(
+    "Unable to generate a unique username. Please provide a valid student ID (for students) or email (for employees).",
+  );
 }
 
 function generateTempPassword() {
@@ -77,12 +66,16 @@ function capitalizeWords(str) {
     .join(" ");
 }
 
-function capitalizeObjectStrings(obj) {
-  if (!obj) return obj;
-  const newObj = { ...obj };
+function capitalizeObjectStrings(value) {
+  if (!value) return value;
+  if (Array.isArray(value)) return value.map(capitalizeObjectStrings);
+
+  const newObj = { ...value };
   for (const key in newObj) {
-    if (typeof newObj[key] === "string") {
+    if (CAPITALIZE_KEYS.has(key) && typeof newObj[key] === "string") {
       newObj[key] = capitalizeWords(newObj[key]);
+    } else if (typeof newObj[key] === "object") {
+      newObj[key] = capitalizeObjectStrings(newObj[key]);
     }
   }
   return newObj;
@@ -183,20 +176,60 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    // Rate limit: 10 registrations per hour per IP (accommodates shared Wi-Fi)
+    const rateLimitResult = await rateLimiters.register(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { success: false, error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
+      );
+    }
+
     await connectDB();
 
     const body = await req.json();
 
-    let personal = body.personal || body.personal_information;
-    personal = capitalizeObjectStrings(personal);
+    const capitalizedBody = capitalizeObjectStrings(body);
+
+    if (capitalizedBody?.affiliation?.academic_information?.student_id) {
+      capitalizedBody.affiliation.academic_information.student_id =
+        capitalizedBody.affiliation.academic_information.student_id.toUpperCase();
+    }
+
+    let personal =
+      capitalizedBody.personal || capitalizedBody.personal_information;
     if (!personal || !personal.first_name || !personal.last_name) {
       throw new Error(
         "personal.first_name and personal.last_name are required",
       );
     }
 
-    if (body?.affiliation?.academic_information?.student_id) {
-      const studentId = body.affiliation.academic_information.student_id;
+    if (personal.birthday) {
+      const birthdayDate = new Date(personal.birthday);
+      const existingByNameAndBirthday = await Profile.findOne({
+        "personal.first_name": {
+          $regex: new RegExp(`^${personal.first_name}$`, "i"),
+        },
+        "personal.last_name": {
+          $regex: new RegExp(`^${personal.last_name}$`, "i"),
+        },
+        "personal.birthday": birthdayDate,
+      });
+      if (existingByNameAndBirthday) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "A user with the same name and birthday already exists in the system",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    if (capitalizedBody?.affiliation?.academic_information?.student_id) {
+      const studentId =
+        capitalizedBody.affiliation.academic_information.student_id;
       const existingProfile = await Profile.findOne({
         "affiliation.academic_information.student_id": studentId,
       });
@@ -209,9 +242,9 @@ export async function POST(req) {
           { status: 409 },
         );
       }
-      // Also check if student_id is already taken as a username
+
       const existingUsername = await UserAuth.findOne({
-        username: studentId,
+        username: studentId.toUpperCase(),
       }).lean();
       if (existingUsername) {
         return NextResponse.json(
@@ -224,8 +257,9 @@ export async function POST(req) {
       }
     }
 
-    if (body?.affiliation?.employment_information?.employee_id) {
-      const employeeId = body.affiliation.employment_information.employee_id;
+    if (capitalizedBody?.affiliation?.employment_information?.employee_id) {
+      const employeeId =
+        capitalizedBody.affiliation.employment_information.employee_id;
       const existingProfile = await Profile.findOne({
         "affiliation.employment_information.employee_id": employeeId,
       });
@@ -288,7 +322,7 @@ export async function POST(req) {
         ) || personal.bloodType;
     }
 
-    const profilePayload = { ...body, personal };
+    const profilePayload = { ...capitalizedBody, personal };
     delete profilePayload.personal_information;
 
     const token = req.cookies.get("auth_token")?.value;
@@ -305,56 +339,94 @@ export async function POST(req) {
       created_by: createdByUserId,
     };
 
-    const profile = await Profile.create(profilePayloadWithAudit);
-    const role = body.role ? body.role : "User";
+    // Check for duplicate email
+    const email = capitalizedBody?.contact?.email;
+    if (email) {
+      const existingEmail = await Profile.findOne({ "contact.email": email });
+      if (existingEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This email is already registered in the system",
+          },
+          { status: 409 },
+        );
+      }
+    }
 
-    const username = await generateUniqueUsername(personal, body.affiliation);
+    // Public registration — never trust role from request body
+    const role = "User";
+
+    const username = await generateUniqueUsername(
+      personal,
+      capitalizedBody.affiliation,
+      capitalizedBody.contact,
+    );
     const tempPassword = generateTempPassword();
 
-    await UserAuth.create({
-      personal_info_id: profile._id,
-      username,
-      password: tempPassword,
-      role,
-    });
-
+    // Use a transaction so all records are created atomically
+    const session = await mongoose.startSession();
+    let profile;
     try {
-      const activeTermSetting = await SystemSetting.findOne({
-        key: "active_term",
-      }).lean();
-      if (activeTermSetting?.value) {
-        const { school_year, semester } = activeTermSetting.value;
-        if (school_year && semester) {
-          await ProfileTerm.create({
-            profile_id: profile._id,
-            school_year,
-            semester,
-            affiliation: profile.affiliation || {},
-          });
+      await session.withTransaction(async () => {
+        profile = await Profile.create([profilePayloadWithAudit], { session });
+
+        await UserAuth.create(
+          [
+            {
+              personal_info_id: profile[0]._id,
+              username,
+              password: tempPassword,
+              role,
+            },
+          ],
+          { session },
+        );
+
+        const activeTermSetting = await SystemSetting.findOne({
+          key: "active_term",
+        }).lean();
+        if (activeTermSetting?.value) {
+          const { school_year, semester } = activeTermSetting.value;
+          if (school_year && semester) {
+            await ProfileTerm.create(
+              [
+                {
+                  profile_id: profile[0]._id,
+                  school_year,
+                  semester,
+                  affiliation: profile[0].affiliation || {},
+                },
+              ],
+              { session },
+            );
+          }
         }
-      }
-    } catch (termError) {
-      console.error("Failed to create ProfileTerm:", termError);
+      });
+    } finally {
+      await session.endSession();
     }
+
+    const createdProfile = profile[0];
 
     await logActivity({
       req,
       action: "PROFILE_CREATE",
       description: `Profile created for ${personal.first_name} ${personal.last_name} (role: ${role})`,
       resource_type: "profile",
-      resource_id: profile._id,
+      resource_id: createdProfile._id,
       severity: "info",
     });
 
     if (global.io) {
-      global.io.emit("profile:new", profile);
-      console.log("✅ Emitted profile:new", profile._id);
+      global.io.emit("profile:new", createdProfile);
+      console.log("✅ Emitted profile:new", createdProfile._id);
     }
 
     return NextResponse.json(
       {
         success: true,
-        profile_id: profile._id,
+        profile_id: createdProfile._id,
         username,
         temporary_password: tempPassword,
         role,

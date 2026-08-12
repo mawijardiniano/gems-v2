@@ -33,10 +33,6 @@ export default function Sidebar({ open, setOpen, role }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const ROLE_ACCESS = {
-    dean: ["dean-dashboard", "student-list", "projects"],
-  };
-
   const links = [
     {
       name: "Dashboard",
@@ -58,12 +54,7 @@ export default function Sidebar({ open, setOpen, role }) {
     },
   ];
 
-  const filteredLinks = useMemo(() => {
-    const normalizedRole = role?.toLowerCase();
-    const allowed = ROLE_ACCESS[normalizedRole] || [];
-    return links.filter((link) => allowed.includes(link.key));
-  }, [role]);
-
+  const filteredLinks = useMemo(() => links, []);
   const handleMobileClose = useCallback(() => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
       setOpen(false);

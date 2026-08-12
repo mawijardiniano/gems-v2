@@ -179,7 +179,7 @@ function makeFilterHelpers(universityOfficials) {
   return { filterOfficialWithDetails, filterSectionWithDetails };
 }
 
-export async function GET() {
+export async function GET(req) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();

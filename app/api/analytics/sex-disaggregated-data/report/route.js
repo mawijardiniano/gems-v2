@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
@@ -28,44 +29,54 @@ export async function GET(req) {
       termProfileIds = new Set(matchingTerms.map((t) => String(t.profile_id)));
     }
 
-    const users = await UserAuth.find({})
-      .populate({
-        path: "personal_info_id",
-        model: GemsProfile,
-        select: "personal gadData affiliation",
-      })
-      .lean();
 
-    if (!users || users.length === 0) {
-      return NextResponse.json(
-        { message: "No users found for report" },
-        { status: 404 },
-      );
-    }
+    const pipeline = [];
 
-    const matchesCollege = (profile) => {
-      if (!collegeFilter) return true;
-      const academicCollege =
-        profile?.affiliation?.academic_information?.college || "";
-      const employmentOffice =
-        profile?.affiliation?.employment_information?.office || "";
-      return (
-        academicCollege.toLowerCase() === collegeFilter.toLowerCase() ||
-        employmentOffice.toLowerCase() === collegeFilter.toLowerCase()
-      );
-    };
-
-    const matchesTerm = (profile) => {
-      if (!termProfileIds) return true;
-      return profile && termProfileIds.has(String(profile._id));
-    };
-
-    const filteredUsers = users.filter((user) => {
-      const profile = user.personal_info_id || {};
-      return matchesCollege(profile) && matchesTerm(profile);
+    pipeline.push({
+      $lookup: {
+        from: GemsProfile.collection.name,
+        localField: "personal_info_id",
+        foreignField: "_id",
+        as: "personal_info_id",
+      },
     });
 
-    if (!filteredUsers.length) {
+    pipeline.push({
+      $unwind: { path: "$personal_info_id", preserveNullAndEmptyArrays: true },
+    });
+
+    if (collegeFilter) {
+      pipeline.push({
+        $match: {
+          $or: [
+            {
+              "personal_info_id.affiliation.academic_information.college":
+                collegeFilter,
+            },
+            {
+              "personal_info_id.affiliation.employment_information.office":
+                collegeFilter,
+            },
+          ],
+        },
+      });
+    }
+
+    if (termProfileIds) {
+      const termProfileObjectIds = [...termProfileIds]
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+
+      pipeline.push({
+        $match: {
+          "personal_info_id._id": { $in: termProfileObjectIds },
+        },
+      });
+    }
+
+    const filteredUsers = await UserAuth.aggregate(pipeline);
+
+    if (!filteredUsers || filteredUsers.length === 0) {
       return NextResponse.json(
         {
           message:

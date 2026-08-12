@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FaCalendarAlt,
   FaMapMarkerAlt,
@@ -213,6 +213,8 @@ function AlertBanner({ type = "error", message }) {
 // ─── Main Component ──────────────────────────────────────────────
 export default function CreateEventsContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isDeanRoute = pathname?.startsWith("/dean");
 
   const OFFICE_OPTIONS = [
     "Graduate School",
@@ -265,6 +267,13 @@ export default function CreateEventsContent() {
   const posterInputRef = useRef(null);
 
   const isGAD = formData.type_of_activity === "GAD";
+
+  const filteredActivityTypes = useMemo(() => {
+    if (userRole === "dean" || isDeanRoute) {
+      return ACTIVITY_TYPES.filter((type) => type !== "GAD");
+    }
+    return ACTIVITY_TYPES;
+  }, [userRole, isDeanRoute]);
 
   const nowLocal = useMemo(() => {
     const now = new Date();
@@ -549,7 +558,7 @@ export default function CreateEventsContent() {
               Type of Activity <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {ACTIVITY_TYPES.map((type) => (
+              {filteredActivityTypes.map((type) => (
                 <button
                   type="button"
                   key={type}

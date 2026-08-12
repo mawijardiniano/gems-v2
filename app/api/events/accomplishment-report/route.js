@@ -2,8 +2,7 @@ import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
- import { requireAuth } from "@/lib/auth";
-import {NextResponse} from "next/server"
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req) {
   try {

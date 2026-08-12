@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { FiEdit2, FiTrash2, FiDownload, FiX } from "react-icons/fi";
 import {
   FaPlus,
@@ -79,6 +80,8 @@ export default function OverviewTab({
   formatForInput,
   formatRangeLines,
 }) {
+  const pathname = usePathname();
+  const isDeanRoute = pathname?.startsWith("/dean");
   const [posterUploading, setPosterUploading] = useState(false);
   const [posterError, setPosterError] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -149,7 +152,10 @@ export default function OverviewTab({
 
   const resetEditData = () => {
     setEditData({
-      type_of_activity: event.type_of_activity,
+      type_of_activity:
+        isDeanRoute && event.type_of_activity === "GAD"
+          ? "Academic"
+          : event.type_of_activity,
       project: event.project,
       gad_activity: event.gad_activity,
       title: event.title || "",
@@ -403,10 +409,10 @@ export default function OverviewTab({
                 >
                   <option value="Academic">Academic</option>
                   <option value="Administrative">Administrative</option>
-                  <option value="GAD">GAD</option>
-                  <option value="Extension Research">Extension Research</option>
+                  {!isDeanRoute && <option value="GAD">GAD</option>}
+                  <option value="Extension">Extension</option>
+                  <option value="Research">Research</option>
                   <option value="Students">Students</option>
-                  <option value="Others">Others</option>
                 </select>
               </div>
 

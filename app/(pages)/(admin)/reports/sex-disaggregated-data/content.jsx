@@ -146,8 +146,30 @@ export default function SexDisaggregatedContent() {
         var res = await fetch("/api/analytics/terms");
         if (!res.ok) throw new Error("Failed to load terms");
         var data = await res.json();
-        setTerms(data.terms || []);
-        setSchoolYears(data.schoolYears || []);
+        var termList = data.terms || [];
+        var yearList = data.schoolYears || [];
+        setTerms(termList);
+        setSchoolYears(yearList);
+
+        // Auto-select the latest school year and its first semester
+        if (yearList.length > 0) {
+          var latestYear = yearList[0];
+          setSelectedSchoolYear(latestYear);
+
+          var semestersForYear = termList
+            .filter(function (t) {
+              return t.school_year === latestYear;
+            })
+            .sort(function (a, b) {
+              return (
+                (semesterOrder[a.semester] || 0) -
+                (semesterOrder[b.semester] || 0)
+              );
+            });
+          if (semestersForYear.length > 0) {
+            setSelectedSemester(semestersForYear[0].semester);
+          }
+        }
       } catch (err) {
         console.error(err);
         setTerms([]);
