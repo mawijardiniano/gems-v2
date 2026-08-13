@@ -1,8 +1,22 @@
 import ai from "@/lib/gemini";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { rateLimiters } from "@/lib/rateLimit";
 
 export async function POST(req) {
   try {
+    // Rate limit: 10 AI generations per minute per user
+    const rateLimitResult = await rateLimiters.ai(req);
+    if (rateLimitResult.error) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+      );
+    }
+
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     const data = await req.json();
 
     const prompt = `

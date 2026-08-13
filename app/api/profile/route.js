@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -339,7 +340,6 @@ export async function POST(req) {
       created_by: createdByUserId,
     };
 
-    // Check for duplicate email
     const email = capitalizedBody?.contact?.email;
     if (email) {
       const existingEmail = await Profile.findOne({ "contact.email": email });
@@ -354,7 +354,6 @@ export async function POST(req) {
       }
     }
 
-    // Public registration — never trust role from request body
     const role = "User";
 
     const username = await generateUniqueUsername(
@@ -364,7 +363,6 @@ export async function POST(req) {
     );
     const tempPassword = generateTempPassword();
 
-    // Use a transaction so all records are created atomically
     const session = await mongoose.startSession();
     let profile;
     try {
@@ -444,7 +442,7 @@ export async function POST(req) {
 
 export async function DELETE(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status } = await requireAdmin(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();

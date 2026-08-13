@@ -208,7 +208,6 @@ export async function POST(req) {
       metadata: { event_id: newEvent?._id },
     });
 
-    // Emit socket event for real-time updates
     if (global.io) {
       global.io.emit("event:created", {
         event: newEvent,
