@@ -57,10 +57,6 @@ const getGender = (d) => {
   return "Other";
 };
 
-/* ------------------------------------------------------------------ */
-/*  Aggregation helpers                                                */
-/* ------------------------------------------------------------------ */
-
 const countBy = (data, accessor, fb = "Unknown") => {
   const counts = {};
   data.forEach((d) => {
@@ -123,10 +119,6 @@ function InlineLegend({ data, colors }) {
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Chart card components                                              */
-/* ------------------------------------------------------------------ */
 
 function PieCard({
   title,
@@ -359,14 +351,125 @@ function GenderHorzBarCard({ title, data, height = 300 }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main component                                                     */
-/* ------------------------------------------------------------------ */
 
-export default function Demographics({ data, personTypeFilter = "", college }) {
+export default function Demographics({
+  data,
+  personTypeFilter = "",
+  college,
+  demographics,
+  serverStudentProgramData,
+  serverStudentYearCourseData,
+  serverCourseKeys,
+  studentCount,
+}) {
   const statusFilter = `${personTypeFilter || ""}`.trim().toLowerCase();
   const isEmployeeFilter = statusFilter === "employee";
   const isStudentFilter = statusFilter === "student";
+
+  if (demographics) {
+    const palette = [
+      "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
+      "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
+      "#14B8A6", "#D946EF", "#0EA5E9", "#22C55E", "#EAB308",
+    ];
+    const keys = serverCourseKeys || [];
+    const courseColorsMap = {};
+    keys.forEach((key, i) => {
+      courseColorsMap[key] = palette[i % palette.length];
+    });
+
+    return (
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Demographic & Employment Profile
+          </h2>
+          <p className="mt-0.5 text-sm text-gray-500">
+            Personnel and occupational overview
+          </p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <PieCard title="Age Groups" data={demographics.ageData || []} />
+          <PieCard title="Civil Status" data={demographics.civilData || []} />
+        </div>
+
+        <div className="mb-6">
+          <HorzBarCard
+            title="Religion"
+            data={demographics.religionData || []}
+            height={300}
+          />
+        </div>
+
+        {!isEmployeeFilter && serverStudentProgramData && (
+          <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <VertBarCard title="Students by Program" data={serverStudentProgramData} />
+            <VertBarCard
+              title="Students by Year Level"
+              data={demographics.studentYearLevelData || []}
+            />
+          </div>
+        )}
+
+        {!isEmployeeFilter && serverStudentYearCourseData && serverStudentYearCourseData.length > 0 && (
+          <div className="mb-6">
+            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                Students by Year Level and Course
+              </h3>
+              <p className="mb-3 text-xs text-gray-400">
+                {(studentCount || 0).toLocaleString()} total
+              </p>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={serverStudentYearCourseData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "#6B7280" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip contentStyle={chartTooltipStyle} />
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                  />
+                  {keys.map((course) => (
+                    <Bar
+                      key={course}
+                      dataKey={course}
+                      fill={courseColorsMap[course]}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {!isStudentFilter && (
+          <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <GenderBarCard
+              title="Employment Type (Employees)"
+              data={demographics.employmentData || []}
+            />
+            <GenderBarCard
+              title="Appointment Status (Employees)"
+              data={demographics.appointmentData || []}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const employees = data.filter(
     (d) => (getStatus(d) || "").toLowerCase() === "employee",
@@ -375,7 +478,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     (d) => (getStatus(d) || "").toLowerCase() === "student",
   );
 
-  /* ---- Age groups ---- */
   const ageData = (() => {
     const counts = {};
     data.forEach((d) => {
@@ -407,7 +509,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
       safeGet(() => d.personal_information?.religion),
   );
 
-  /* ---- Student data (filtered by college) ---- */
   const collegeFilteredStudents = students.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
     return !college || acad?.college === college;
@@ -455,7 +556,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     ),
   );
 
-  /* ---- Student year x course cross-tab ---- */
   const studentYearCourseData = (() => {
     const grouped = {};
     collegeFilteredStudents.forEach((d) => {
@@ -477,7 +577,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     );
   })();
 
-  /* ---- Extract unique course keys for dynamic bars ---- */
   const courseKeys = (() => {
     const keys = new Set();
     studentYearCourseData.forEach((row) => {
@@ -488,7 +587,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     return Array.from(keys).sort();
   })();
 
-  /* ---- Generate a stable color for each course key ---- */
   const courseColors = (() => {
     const palette = [
       "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
@@ -502,7 +600,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
     return map;
   })();
 
-  /* ---- Employee data (filtered by college/office) ---- */
   const collegeFilteredEmployees = employees.filter((d) => {
     const emp = d?.personal_info_id?.affiliation?.employment_information;
     return !college || emp?.office === college;
@@ -539,18 +636,15 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
         </p>
       </div>
 
-      {/* Age & Civil Status */}
       <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
         <PieCard title="Age Groups" data={ageData} />
         <PieCard title="Civil Status" data={civilData} />
       </div>
 
-      {/* Religion */}
       <div className="mb-6">
         <HorzBarCard title="Religion" data={religionData} height={300} />
       </div>
 
-      {/* Student sections */}
       {!isEmployeeFilter && (
         <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <VertBarCard
@@ -607,7 +701,6 @@ export default function Demographics({ data, personTypeFilter = "", college }) {
         </div>
       )}
 
-      {/* Employee sections */}
       {!isStudentFilter && (
         <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <GenderBarCard

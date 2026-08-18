@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import jwt from "jsonwebtoken";
 import { logActivity } from "@/lib/activityLog";
+import { invalidateUserCache } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -47,6 +48,8 @@ export async function PATCH(req, { params }) {
     }
 
     await user.save();
+
+    invalidateUserCache(id);
 
     await logActivity({
       req,

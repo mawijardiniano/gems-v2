@@ -129,7 +129,6 @@ userAuthSchema.methods.incrementLoginAttempts = async function () {
   return Model.updateOne({ _id: this._id }, update);
 };
 
-//Reset login attempt
 userAuthSchema.methods.resetLoginAttempts = async function () {
   return this.model("UserAuth").updateOne(
     { _id: this._id },
@@ -139,6 +138,7 @@ userAuthSchema.methods.resetLoginAttempts = async function () {
 
 userAuthSchema.index({ role: 1 });
 userAuthSchema.index({ is_active: 1 });
+userAuthSchema.index({ personal_info_id: 1 });
 
 export default mongoose.models.UserAuth ||
   mongoose.model("UserAuth", userAuthSchema);

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import { logActivity } from "@/lib/activityLog";
+import { cacheDelPrefix } from "@/lib/cache";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -75,6 +76,9 @@ export async function PATCH(req, context) {
     }
 
     await event.save();
+
+    // Status changed - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
 
     await logActivity({
       user_id: userId,

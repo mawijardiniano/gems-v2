@@ -92,7 +92,40 @@ function DonutCard({ title, total, data, colors }) {
   );
 }
 
-export default function GenderPanel({ data, college }) {
+export default function GenderPanel({ data, college, genderPanel }) {
+  if (genderPanel) {
+    const genderData = genderPanel.genderData || [];
+    const preferenceData = genderPanel.preferenceData || [];
+
+    return (
+      <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Gender, Sex & Identity Panel
+          </h2>
+          <p className="mt-0.5 text-sm text-gray-500">
+            Used for gender analysis, equity monitoring, and GAD compliance
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <DonutCard
+            title="Sex at Birth"
+            total={genderData.reduce((a, b) => a + b.value, 0)}
+            data={genderData}
+            colors={[COLORS[0], COLORS[1]]}
+          />
+          <DonutCard
+            title="Gender Identity / Preference"
+            total={preferenceData.reduce((a, b) => a + b.value, 0)}
+            data={preferenceData}
+            colors={[COLORS[0], COLORS[1], COLORS[2], COLORS[3]]}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const students = data.filter((d) => {
     const acad = d?.personal_info_id?.affiliation?.academic_information;
     return !college || acad?.college === college;

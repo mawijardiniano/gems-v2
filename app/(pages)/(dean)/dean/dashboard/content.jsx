@@ -1,16 +1,15 @@
 "use client";
-import React, {useEffect} from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Snapshot from "../../components/snapshot";
 import GenderPanel from "../../components/genderPanel";
 import Demographics from "../../components/demographics";
-import useFetchData from "@/hooks/useSample";
-import { useState, useMemo } from "react";
+import useDashboardData from "@/hooks/useDashboardData";
+import useDashboardFilters from "@/hooks/useDashboardFilters";
 import { useSelector } from "react-redux";
 
 export default function DeanDashboardContent() {
-  const { data: rawData, loading } = useFetchData();
   const college = useSelector((state) => state.auth.college);
-  console.log("College", college)
+  const { data: filters, loading: filtersLoading } = useDashboardFilters();
 
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
@@ -21,165 +20,54 @@ export default function DeanDashboardContent() {
   const [filterSchoolYear, setFilterSchoolYear] = useState("");
   const [filterSemester, setFilterSemester] = useState("");
 
-  const sexOption = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth ?? "Unknown")
-          .filter(Boolean),
-      ),
+  const effectiveCollege =
+    college || (filterCollege?.length ? filterCollege[0] : "");
+
+  const schoolYearOptions = useMemo(() => filters?.schoolYears || [], [filters]);
+  const semesterOptions = useMemo(() => filters?.semesters || [], [filters]);
+  const collegeOptions = useMemo(() => filters?.collegeOptions || [], [filters]);
+  const yearLevelOptions = useMemo(() => filters?.yearLevelOptions || [], [filters]);
+  const sexOption = useMemo(() => filters?.sexOptions || [], [filters]);
+  const employmentOptions = useMemo(() => filters?.employmentStatuses || [], [filters]);
+  const appointmentOptions = useMemo(() => filters?.appointmentStatuses || [], [filters]);
+
+  useEffect(() => {
+    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
+      setFilterSchoolYear(schoolYearOptions[0]);
+    }
+  }, [schoolYearOptions, filterSchoolYear]);
+
+  const filtersReady =
+    !filtersLoading && (schoolYearOptions.length === 0 || filterSchoolYear !== "");
+
+  const dashboardFilters = useMemo(
+    () => ({
+      college: effectiveCollege,
+      school_year: filterSchoolYear,
+      semester: filterSemester,
+      sex: filterSex,
+      person_type: filterPersonType,
+      year_level: filterYearLevel,
+      employment: filterEmployment,
+      appointment: filterAppointment?.length ? filterAppointment[0] : "",
+    }),
+    [
+      effectiveCollege,
+      filterSchoolYear,
+      filterSemester,
+      filterSex,
+      filterPersonType,
+      filterYearLevel,
+      filterEmployment,
+      filterAppointment,
     ],
-    [rawData],
   );
 
-  const collegeOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.college ||
-              d?.personal_info_id?.affiliation.employment_information?.office,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
+  const { data: dashboardData, loading: dashboardLoading } = useDashboardData(
+    dashboardFilters,
+    filtersReady,
   );
 
-  const employmentOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.employment_information
-                ?.employment_status,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const appointmentOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.employment_information
-                ?.employment_appointment_status,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const yearLevelOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.year_level,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-const schoolYearOptions = useMemo(
-  () => [
-    ...new Set(
-      rawData.flatMap((d) =>
-        Array.isArray(d?.profile_terms)
-          ? d.profile_terms.map((t) => t?.school_year).filter(Boolean)
-          : d?.school_year
-            ? [d.school_year]
-            : [],
-      ),
-    ),
-  ].sort((a, b) => String(b).localeCompare(String(a))), 
-  [rawData],
-);
-
-useEffect(() => {
-  if (schoolYearOptions.length > 0 && !filterSchoolYear) {
-    setFilterSchoolYear(schoolYearOptions[0]);
-  }
-}, [schoolYearOptions, filterSchoolYear]);
-
-
-useEffect(() => {
-  if (schoolYearOptions.length > 0 && !filterSchoolYear) {
-    setFilterSchoolYear(schoolYearOptions[0]);
-  }
-}, [schoolYearOptions, filterSchoolYear, setFilterSchoolYear]);
-
-  const semesterOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((t) => t?.semester).filter(Boolean)
-            : d?.semester
-              ? [d.semester]
-              : [],
-        ),
-      ),
-    ],
-    [rawData],
-  );
-
-  const filteredData = useMemo(() => {
-    return rawData.filter((d) => {
-      const p = d?.personal_info_id || {};
-      if (!p || Object.keys(p).length === 0) return false;
-
-      const acad = p.affiliation?.academic_information || {};
-      const emp = p.affiliation?.employment_information || {};
-      const collegeOrOffice = acad.college || emp.office || "";
-      const empStatus = emp.employment_status || "";
-      const empAppointment = emp.employment_appointment_status || "";
-
-const termMatches =
-  !filterSchoolYear && !filterSemester
-    ? true
-    : (Array.isArray(d?.profile_terms) &&
-        d.profile_terms.some(
-          (t) =>
-            (!filterSchoolYear || t?.school_year === filterSchoolYear) &&
-            (!filterSemester || t?.semester === filterSemester),
-        )) ||
-      (!filterSchoolYear || d?.school_year === filterSchoolYear) &&
-      (!filterSemester || d?.semester === filterSemester);
-
-      return (
-        (!filterSex || (p.gadData?.sexAtBirth ?? "Unknown") === filterSex) &&
-        (!filterPersonType || p.personal.currentStatus === filterPersonType) &&
-        (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        (filterCollege.length === 0 ||
-          filterCollege.includes(collegeOrOffice)) &&
-        (!filterEmployment || empStatus === filterEmployment) &&
-        (filterAppointment.length === 0 ||
-          filterAppointment.includes(empAppointment)) &&
-        termMatches
-      );
-    });
-  }, [
-    rawData,
-    filterSex,
-    filterPersonType,
-    filterYearLevel,
-    filterCollege,
-    filterEmployment,
-    filterAppointment,
-    filterSchoolYear,
-    filterSemester,
-  ]);
   return (
     <div>
       <div className="flex flex-wrap gap-4 mb-4 justify-end text-xs">
@@ -214,20 +102,31 @@ const termMatches =
         </select>
       </div>
       <div className="flex flex-col gap-4">
- <Snapshot
-  data={filteredData}
-  college={college}
-  filterSchoolYear={filterSchoolYear}
-  filterSemester={filterSemester}
-/>
-        <GenderPanel
-          data={filteredData}
-          college={college}
-        />
-        <Demographics
-          data={filteredData}
-          college={college}
-        />
+        {dashboardLoading || !dashboardData ? (
+          <div className="flex justify-center py-10">
+            <div className="h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <Snapshot
+              snapshot={dashboardData.snapshot}
+              serverYearGenderData={dashboardData.studentYearGenderData}
+            />
+            <GenderPanel genderPanel={dashboardData.employeeGenderPanel} />
+            <Demographics
+              demographics={dashboardData.demographics}
+              serverStudentProgramData={dashboardData.studentProgramData}
+              serverStudentYearCourseData={dashboardData.studentYearCourseData}
+              serverCourseKeys={dashboardData.courseKeys}
+              studentCount={
+                (dashboardData.studentProgramData || []).reduce(
+                  (s, r) => s + r.value,
+                  0,
+                ) || 0
+              }
+            />
+          </>
+        )}
       </div>
     </div>
   );

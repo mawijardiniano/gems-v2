@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activityLog";
 import { deleteFileFromBucket } from "@/lib/delete";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { requireAuth } from "@/lib/auth";
+import { cacheDelPrefix } from "@/lib/cache";
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -135,6 +136,9 @@ export async function PUT(req, { params }) {
   try {
     await event.save();
 
+    // Event updated - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
+
     const populated = await Event.findById(id)
       .populate({
         path: "created_by",
@@ -241,6 +245,9 @@ export async function DELETE(req, { params }) {
     await Project.updateMany({ events: id }, { $pull: { events: id } });
 
     await Event.deleteOne({ _id: id });
+
+    // Event deleted - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
 
     await logActivity({
       user_id: req.user?._id || null,

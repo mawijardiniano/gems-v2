@@ -146,7 +146,7 @@ export default function ManageRoleContent() {
 
   useEffect(() => {
     setPageLoading(true);
-    fetch("/api/profile")
+    fetch("/api/profile/search?limit=100")
       .then((res) => res.json())
       .then((data) => setUsers(data.data || []))
       .finally(() => setPageLoading(false));
@@ -157,18 +157,27 @@ export default function ManageRoleContent() {
     return () => clearTimeout(handler);
   }, [modalSearch]);
 
+  const [modalUsers, setModalUsers] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const q = debouncedSearch.trim();
+    fetch(`/api/profile/search?q=${encodeURIComponent(q)}&limit=30`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setModalUsers(data.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setModalUsers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch]);
+
   const filteredModalUsers = useMemo(() => {
-    if (!debouncedSearch) return users.slice(0, 30);
-    const s = debouncedSearch.toLowerCase();
-    return users
-      .filter(
-        (u) =>
-          u.username?.toLowerCase().includes(s) ||
-          u.personal_info_id?.personal?.first_name?.toLowerCase().includes(s) ||
-          u.personal_info_id?.personal?.last_name?.toLowerCase().includes(s)
-      )
-      .slice(0, 30);
-  }, [debouncedSearch, users]);
+    return modalUsers;
+  }, [modalUsers]);
 
   const specialRoleUsers = useMemo(
     () => users.filter((u) => ROLES.slice(1).includes(u.role)),
@@ -287,7 +296,7 @@ export default function ManageRoleContent() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Toast */}
+
       {toast && (
         <Toast
           message={toast.message}
@@ -296,7 +305,7 @@ export default function ManageRoleContent() {
         />
       )}
 
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
@@ -315,7 +324,6 @@ export default function ManageRoleContent() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative mb-6">
         <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
@@ -327,7 +335,6 @@ export default function ManageRoleContent() {
         />
       </div>
 
-      {/* Table Card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -418,7 +425,6 @@ export default function ManageRoleContent() {
           </table>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
             <p className="text-sm text-gray-500">
@@ -483,7 +489,6 @@ export default function ManageRoleContent() {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -516,9 +521,7 @@ export default function ManageRoleContent() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="px-6 py-5 space-y-5">
-              {/* User Search */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Select User
@@ -585,7 +588,6 @@ export default function ManageRoleContent() {
                 </div>
               </div>
 
-              {/* Role Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Select Role
@@ -637,7 +639,6 @@ export default function ManageRoleContent() {
               )}
             </div>
 
-            {/* Modal Footer */}
             <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
               <button
                 onClick={closeModal}
@@ -688,7 +689,6 @@ export default function ManageRoleContent() {
         </div>
       )}
 
-      {/* Animations */}
       <style jsx>{`
         @keyframes slide-in {
           from {

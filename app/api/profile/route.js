@@ -10,6 +10,9 @@ import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { rateLimiters } from "@/lib/rateLimit";
+import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+
+const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -89,8 +92,6 @@ export async function GET(req) {
 
     await connectDB();
 
-    const users = await UserAuth.find({}).populate("personal_info_id").lean();
-
     const token = req.cookies.get("auth_token")?.value;
     let decoded = null;
     if (token) {
@@ -101,70 +102,100 @@ export async function GET(req) {
       }
     }
 
-    let scopedUsers = users;
-    if (decoded?.assignedCollege) {
-      scopedUsers = users.filter((u) => {
-        const aff = u.personal_info_id?.affiliation || {};
-        const acad = aff.academic_information || {};
-        const emp = aff.employment_information || {};
-        return (
-          acad?.college === decoded.assignedCollege ||
-          emp?.office === decoded.assignedCollege
-        );
-      });
-    }
+    const assignedCollege = decoded?.assignedCollege || null;
+    const cacheKey = `profile:list:${assignedCollege || "all"}`;
 
-    const profileIds = scopedUsers
-      .map((user) => user.personal_info_id?._id)
-      .filter(Boolean);
+    const usersNoPassword = await cacheOrSet(
+      cacheKey,
+      async () => {
 
-    const allTerms = profileIds.length
-      ? await ProfileTerm.aggregate([
-          { $match: { profile_id: { $in: profileIds } } },
-          { $sort: { updatedAt: -1 } },
+        const match = {};
+        if (assignedCollege) {
+          match.$or = [
+            {
+              "personal_info_id.affiliation.academic_information.college":
+                assignedCollege,
+            },
+            {
+              "personal_info_id.affiliation.employment_information.office":
+                assignedCollege,
+            },
+          ];
+        }
+
+        const pipeline = [
           {
-            $group: {
-              _id: "$profile_id",
-              profile_terms: {
-                $push: {
-                  profile_term_id: "$_id",
-                  school_year: "$school_year",
-                  semester: "$semester",
-                  updatedAt: "$updatedAt",
-                  createdAt: "$createdAt",
-                },
-              },
-              latest_school_year: { $first: "$school_year" },
-              latest_semester: { $first: "$semester" },
-              latest_profile_term_id: { $first: "$_id" },
+            $lookup: {
+              from: Profile.collection.name,
+              localField: "personal_info_id",
+              foreignField: "_id",
+              as: "personal_info_id",
             },
           },
-        ])
-      : [];
+          { $unwind: { path: "$personal_info_id", preserveNullAndEmptyArrays: true } },
+        ];
 
-    const termByProfileId = new Map(
-      allTerms.map((term) => [String(term._id), term]),
+        if (assignedCollege) {
+          pipeline.push({ $match: match });
+        }
+
+        const scopedUsers = await UserAuth.aggregate(pipeline);
+
+        const profileIds = scopedUsers
+          .map((user) => user.personal_info_id?._id)
+          .filter(Boolean);
+
+        const allTerms = profileIds.length
+          ? await ProfileTerm.aggregate([
+              { $match: { profile_id: { $in: profileIds } } },
+              { $sort: { updatedAt: -1 } },
+              {
+                $group: {
+                  _id: "$profile_id",
+                  profile_terms: {
+                    $push: {
+                      profile_term_id: "$_id",
+                      school_year: "$school_year",
+                      semester: "$semester",
+                      updatedAt: "$updatedAt",
+                      createdAt: "$createdAt",
+                    },
+                  },
+                  latest_school_year: { $first: "$school_year" },
+                  latest_semester: { $first: "$semester" },
+                  latest_profile_term_id: { $first: "$_id" },
+                },
+              },
+            ])
+          : [];
+
+        const termByProfileId = new Map(
+          allTerms.map((term) => [String(term._id), term]),
+        );
+
+        const filteredUsers = scopedUsers
+          .map((user) => {
+            const profileId = user.personal_info_id?._id;
+            const term = profileId ? termByProfileId.get(String(profileId)) : null;
+
+            return {
+              ...user,
+              school_year: term?.latest_school_year || null,
+              semester: term?.latest_semester || null,
+              profile_term_id: term?.latest_profile_term_id || null,
+              profile_terms: term?.profile_terms || [],
+            };
+          })
+          .filter((u) => u.username !== "Admin" && u.username !== "Focal");
+
+        return filteredUsers.map((u) => {
+          const { password, ...rest } = u;
+          return rest;
+        });
+      },
+      PROFILE_LIST_CACHE_TTL,
     );
 
-    const filteredUsers = scopedUsers
-      .map((user) => {
-        const profileId = user.personal_info_id?._id;
-        const term = profileId ? termByProfileId.get(String(profileId)) : null;
-
-        return {
-          ...user,
-          school_year: term?.latest_school_year || null,
-          semester: term?.latest_semester || null,
-          profile_term_id: term?.latest_profile_term_id || null,
-          profile_terms: term?.profile_terms || [],
-        };
-      })
-      .filter((u) => u.username !== "Admin" && u.username !== "Focal");
-
-    const usersNoPassword = filteredUsers.map((u) => {
-      const { password, ...rest } = u;
-      return rest;
-    });
     return NextResponse.json({ status: "success", data: usersNoPassword });
   } catch (error) {
     console.error("GET /api/users error:", error);
@@ -177,7 +208,6 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    // Rate limit: 10 registrations per hour per IP (accommodates shared Wi-Fi)
     const rateLimitResult = await rateLimiters.register(req);
     if (rateLimitResult.error) {
       return NextResponse.json(
@@ -407,6 +437,8 @@ export async function POST(req) {
 
     const createdProfile = profile[0];
 
+    cacheDelPrefix("profile:list:");
+
     await logActivity({
       req,
       action: "PROFILE_CREATE",
@@ -454,6 +486,8 @@ export async function DELETE(req) {
 
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ role: "User" });
+
+    cacheDelPrefix("profile:list:");
 
     await logActivity({
       req,

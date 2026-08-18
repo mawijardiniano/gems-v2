@@ -2,6 +2,9 @@ import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+
+const USERS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 export async function GET(req) {
   try {
@@ -12,7 +15,13 @@ export async function GET(req) {
 
     await connectDB();
 
-    const users = await UserAuth.find({}, { password: 0 }).lean();
+    const users = await cacheOrSet(
+      "auth:users:list",
+      async () => {
+        return UserAuth.find({}, { password: 0 }).lean();
+      },
+      USERS_LIST_CACHE_TTL,
+    );
 
     return Response.json({ status: "success", data: users }, { status: 200 });
   } catch (error) {
@@ -34,6 +43,8 @@ export async function DELETE(req) {
     await connectDB();
 
     const result = await UserAuth.deleteMany({});
+
+    cacheDelPrefix("auth:users:");
 
     return NextResponse.json({
       status: "success",

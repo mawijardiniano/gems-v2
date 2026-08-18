@@ -6,6 +6,9 @@ import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+
+const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 const ALLOWED_CREATOR_ROLES = [
   "GAD Focal Person",
@@ -24,45 +27,52 @@ export async function GET(req) {
     const created_by = searchParams.get("created_by");
 
     const filter = created_by ? { created_by } : {};
+    const cacheKey = `events:list:${created_by || "all"}`;
 
-    const events = await Event.find(filter)
-      .populate({
-        path: "created_by",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: {
-          path: "personal_info_id",
-          model: "GemsProfile",
-        },
-      })
-      .populate({
-        path: "registered_users",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: {
-          path: "personal_info_id",
-          model: "GemsProfile",
-        },
-      })
-      .populate({
-        path: "interested_users",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: {
-          path: "personal_info_id",
-          model: "GemsProfile",
-        },
-      })
-      .populate({
-        path: "not_interested_users",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: {
-          path: "personal_info_id",
-          model: "GemsProfile",
-        },
-      })
-      .lean();
+    const events = await cacheOrSet(
+      cacheKey,
+      async () => {
+        return Event.find(filter)
+          .populate({
+            path: "created_by",
+            model: "UserAuth",
+            select: "username role personal_info_id",
+            populate: {
+              path: "personal_info_id",
+              model: "GemsProfile",
+            },
+          })
+          .populate({
+            path: "registered_users",
+            model: "UserAuth",
+            select: "username role personal_info_id",
+            populate: {
+              path: "personal_info_id",
+              model: "GemsProfile",
+            },
+          })
+          .populate({
+            path: "interested_users",
+            model: "UserAuth",
+            select: "username role personal_info_id",
+            populate: {
+              path: "personal_info_id",
+              model: "GemsProfile",
+            },
+          })
+          .populate({
+            path: "not_interested_users",
+            model: "UserAuth",
+            select: "username role personal_info_id",
+            populate: {
+              path: "personal_info_id",
+              model: "GemsProfile",
+            },
+          })
+          .lean();
+      },
+      EVENTS_LIST_CACHE_TTL,
+    );
 
     return NextResponse.json({ status: "success", data: events });
   } catch (error) {
@@ -169,6 +179,9 @@ export async function POST(req) {
       }
     }
 
+    // Event created - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
+
     const newEvent = await Event.create({
       title,
       description,
@@ -236,6 +249,9 @@ export async function DELETE(req) {
     await connectDB();
 
     const result = await Event.deleteMany({});
+
+    // Events deleted - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
 
     return NextResponse.json({
       status: "success",

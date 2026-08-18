@@ -42,6 +42,8 @@ profileTermSchema.index(
   { unique: true },
 );
 
+profileTermSchema.index({ school_year: 1, semester: 1 });
+
 const ProfileTerm =
   mongoose.models.ProfileTerm ||
   mongoose.model("ProfileTerm", profileTermSchema);

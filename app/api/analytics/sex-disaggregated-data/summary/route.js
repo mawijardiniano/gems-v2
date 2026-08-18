@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
-import UserAuth from "@/models/user";
-import GemsProfile from "@/models/profile";
-import ProfileTerm from "@/models/profileTerm";
 import { cacheOrSet } from "@/lib/cache";
+import { runAnalyticsAggregation } from "@/lib/analytics";
 
 const SUMMARY_CACHE_TTL = 60 * 1000; // 60 seconds
 
@@ -23,64 +20,11 @@ export async function GET(req) {
     const result = await cacheOrSet(
       cacheKey,
       async () => {
-        let termProfileIds = null;
-        if (schoolYear || semester) {
-          const termFilter = {};
-          if (schoolYear) termFilter.school_year = schoolYear;
-          if (semester) termFilter.semester = semester;
-
-          const matchingTerms = await ProfileTerm.find(termFilter, {
-            profile_id: 1,
-          }).lean();
-
-          termProfileIds = new Set(matchingTerms.map((t) => String(t.profile_id)));
-        }
-
-        const pipeline = [];
-
-        pipeline.push({
-          $lookup: {
-            from: GemsProfile.collection.name,
-            localField: "personal_info_id",
-            foreignField: "_id",
-            as: "personal_info_id",
-          },
+        const users = await runAnalyticsAggregation({
+          collegeFilter,
+          schoolYear,
+          semester,
         });
-
-        pipeline.push({
-          $unwind: { path: "$personal_info_id", preserveNullAndEmptyArrays: true },
-        });
-
-        if (collegeFilter) {
-          pipeline.push({
-            $match: {
-              $or: [
-                {
-                  "personal_info_id.affiliation.academic_information.college":
-                    collegeFilter,
-                },
-                {
-                  "personal_info_id.affiliation.employment_information.office":
-                    collegeFilter,
-                },
-              ],
-            },
-          });
-        }
-
-        if (termProfileIds) {
-          const termProfileObjectIds = [...termProfileIds]
-            .filter((id) => mongoose.Types.ObjectId.isValid(id))
-            .map((id) => new mongoose.Types.ObjectId(id));
-
-          pipeline.push({
-            $match: {
-              "personal_info_id._id": { $in: termProfileObjectIds },
-            },
-          });
-        }
-
-        const users = await UserAuth.aggregate(pipeline);
 
         if (!users || users.length === 0) {
           return {

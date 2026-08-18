@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { cacheDelPrefix } from "@/lib/cache";
 
 export async function POST(req) {
   try {
@@ -96,6 +97,9 @@ export async function POST(req) {
         attended_at: existing?.attended_at,
       });
     }
+
+    // Attendance recorded - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
 
     await logActivity({
       req,

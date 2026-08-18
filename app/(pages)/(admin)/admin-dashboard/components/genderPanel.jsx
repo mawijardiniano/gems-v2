@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, memo } from "react";
 import {
   PieChart,
   Pie,
@@ -9,16 +9,17 @@ import {
 
 const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981", "#EF4444"];
 
+const SEX_COLORS = [COLORS[0], COLORS[1]];
+const PREFERENCE_COLORS = [COLORS[0], COLORS[1], COLORS[2], COLORS[3]];
+
 const RADIAN = Math.PI / 180;
 
 const renderOutsideLabel = ({
   cx,
   cy,
   midAngle,
-  innerRadius,
   outerRadius,
   percent,
-  name,
 }) => {
   if (percent < 0.03) return null;
   const radius = outerRadius + 24;
@@ -38,7 +39,14 @@ const renderOutsideLabel = ({
   );
 };
 
-function DonutCard({ title, total, data, colors }) {
+const tooltipContentStyle = {
+  borderRadius: 8,
+  border: "1px solid #f3f4f6",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  fontSize: 12,
+};
+
+const DonutCard = memo(function DonutCard({ title, total, data, colors }) {
   return (
     <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
@@ -60,68 +68,85 @@ function DonutCard({ title, total, data, colors }) {
           >
             {data.map((entry, index) => (
               <Cell
-                key={`cell-${index}`}
+                key={entry.name}
                 fill={colors[index % colors.length]}
                 stroke="transparent"
               />
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{
-              borderRadius: 8,
-              border: "1px solid #f3f4f6",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              fontSize: 12,
-            }}
+            contentStyle={tooltipContentStyle}
             formatter={(value) => [value.toLocaleString(), "Count"]}
           />
         </PieChart>
       </ResponsiveContainer>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
         {data.map((entry, i) => (
-          <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-600">
+          <div
+            key={entry.name}
+            className="flex items-center gap-1.5 text-xs text-gray-600"
+          >
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ backgroundColor: colors[i % colors.length] }}
             />
-            {entry.name}: <span className="font-semibold">{entry.value.toLocaleString()}</span>
+            {entry.name}:{" "}
+            <span className="font-semibold">
+              {entry.value.toLocaleString()}
+            </span>
           </div>
         ))}
       </div>
     </div>
   );
-}
+});
 
-export default function GenderPanel({ data }) {
-  const femaleCount = data.filter(
-    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Female",
-  ).length;
-  const maleCount = data.filter(
-    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Male",
-  ).length;
+function GenderPanel({ data, genderPanel }) {
+  const { genderData, preferenceData } = useMemo(() => {
+    if (genderPanel) {
+      return {
+        genderData: genderPanel.genderData || [],
+        preferenceData: genderPanel.preferenceData || [],
+      };
+    }
 
-  const genderData = [
-    { name: "Female", value: femaleCount },
-    { name: "Male", value: maleCount },
-  ];
+    let femaleCount = 0;
+    let maleCount = 0;
+    const prefCounts = { Male: 0, Female: 0, "LGBTQIA+": 0 };
+    let unspecifiedCount = 0;
 
-  const preferenceOptions = ["Male", "Female", "LGBTQIA+"];
-  const preferenceCounts = preferenceOptions.map((option) => ({
-    name: option,
-    value: data.filter(
-      (d) => d.personal_info_id?.gadData?.gender_preference === option,
-    ).length,
-  }));
+    for (const d of data) {
+      const gad = d.personal_info_id?.gadData;
+      if (gad?.sexAtBirth === "Female") femaleCount += 1;
+      if (gad?.sexAtBirth === "Male") maleCount += 1;
 
-  const unspecifiedCount = data.filter((d) => {
-    const pref = d.personal_info_id?.gadData?.gender_preference;
-    return !preferenceOptions.includes(pref);
-  }).length;
+      const pref = gad?.gender_preference;
+      if (pref === "Male") prefCounts.Male += 1;
+      else if (pref === "Female") prefCounts.Female += 1;
+      else if (pref === "LGBTQIA+") prefCounts["LGBTQIA+"] += 1;
+      else unspecifiedCount += 1;
+    }
 
-  const preferenceData =
-    unspecifiedCount > 0
-      ? [...preferenceCounts, { name: "Not specified", value: unspecifiedCount }]
-      : preferenceCounts;
+    const preferenceRows = [
+      { name: "Male", value: prefCounts.Male },
+      { name: "Female", value: prefCounts.Female },
+      { name: "LGBTQIA+", value: prefCounts["LGBTQIA+"] },
+    ];
+
+    return {
+      genderData: [
+        { name: "Female", value: femaleCount },
+        { name: "Male", value: maleCount },
+      ],
+      preferenceData:
+        unspecifiedCount > 0
+          ? [...preferenceRows, { name: "Not specified", value: unspecifiedCount }]
+          : preferenceRows,
+    };
+  }, [data, genderPanel]);
+
+  const sexTotal = genderData.reduce((a, b) => a + b.value, 0);
+  const prefTotal = preferenceData.reduce((a, b) => a + b.value, 0);
 
   return (
     <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -137,17 +162,19 @@ export default function GenderPanel({ data }) {
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <DonutCard
           title="Sex at Birth"
-          total={genderData.reduce((a, b) => a + b.value, 0)}
+          total={sexTotal}
           data={genderData}
-          colors={[COLORS[0], COLORS[1]]}
+          colors={SEX_COLORS}
         />
         <DonutCard
           title="Gender Identity / Preference"
-          total={preferenceData.reduce((a, b) => a + b.value, 0)}
+          total={prefTotal}
           data={preferenceData}
-          colors={[COLORS[0], COLORS[1], COLORS[2], COLORS[3]]}
+          colors={PREFERENCE_COLORS}
         />
       </div>
     </div>
   );
 }
+
+export default memo(GenderPanel);

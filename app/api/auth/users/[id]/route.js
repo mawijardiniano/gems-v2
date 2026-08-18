@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { SCOPED_ROLES } from "@/lib/colleges";
 import { logActivity } from "@/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { invalidateUserCache } from "@/lib/auth";
 
 export async function GET(req, { params }) {
   try {
@@ -95,6 +96,8 @@ export async function PUT(req, { params }) {
       );
     }
 
+    invalidateUserCache(id);
+
     await logActivity({
       req,
       action: "ROLE_CHANGE",
@@ -140,6 +143,8 @@ export async function DELETE(req, { params }) {
         { status: 404 },
       );
     }
+
+    invalidateUserCache(id);
 
     await logActivity({
       req,

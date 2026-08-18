@@ -1,5 +1,4 @@
-"use client";
-
+import { useMemo, memo } from "react";
 import {
   FaUsers,
   FaVenusMars,
@@ -46,7 +45,7 @@ const statCards = [
   },
 ];
 
-function StatCard({ card, children }) {
+const StatCard = memo(function StatCard({ card, children }) {
   const Icon = card.icon;
   return (
     <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
@@ -71,21 +70,37 @@ function StatCard({ card, children }) {
       </div>
     </div>
   );
-}
+});
 
-export default function Snapshot({ data }) {
-  const total = data.length;
-  const femaleCount = data.filter(
-    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Female",
-  ).length;
-  const maleCount = data.filter(
-    (d) => d.personal_info_id?.gadData?.sexAtBirth === "Male",
-  ).length;
-  const pwdCount =
-    data.filter((d) => d.personal_info_id?.gadData?.isPWD === true).length || 0;
-  const ipCount =
-    data.filter((d) => d.personal_info_id?.gadData?.isIndigenousPerson === true)
-      .length || 0;
+function Snapshot({ data, snapshot }) {
+  const { total, femaleCount, maleCount, pwdCount, ipCount } = useMemo(() => {
+    if (snapshot) {
+      return {
+        total: snapshot.total || 0,
+        femaleCount: snapshot.femaleCount || 0,
+        maleCount: snapshot.maleCount || 0,
+        pwdCount: snapshot.pwdCount || 0,
+        ipCount: snapshot.ipCount || 0,
+      };
+    }
+
+    let t = 0;
+    let f = 0;
+    let m = 0;
+    let pwd = 0;
+    let ip = 0;
+
+    for (const d of data) {
+      t += 1;
+      const gad = d.personal_info_id?.gadData;
+      if (gad?.sexAtBirth === "Female") f += 1;
+      if (gad?.sexAtBirth === "Male") m += 1;
+      if (gad?.isPWD === true) pwd += 1;
+      if (gad?.isIndigenousPerson === true) ip += 1;
+    }
+
+    return { total: t, femaleCount: f, maleCount: m, pwdCount: pwd, ipCount: ip };
+  }, [data, snapshot]);
 
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -144,3 +159,5 @@ export default function Snapshot({ data }) {
     </div>
   );
 }
+
+export default memo(Snapshot);

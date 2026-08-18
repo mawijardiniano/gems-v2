@@ -5,12 +5,12 @@ import { connectDB } from "@/lib/db";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { rateLimiters } from "@/lib/rateLimit";
+import { invalidateUserCache } from "@/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   try {
-    // Rate limit: 3 password changes per hour per user
     const rateLimitResult = await rateLimiters.passwordChange(req);
     if (rateLimitResult.error) {
       return NextResponse.json(
@@ -86,6 +86,8 @@ export async function POST(req) {
 
     user.password = newPassword;
     await user.save();
+
+    invalidateUserCache(userId);
 
     await logActivity({
       user_id: user._id,

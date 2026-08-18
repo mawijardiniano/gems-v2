@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { cacheDelPrefix } from "@/lib/cache";
 
 const VALID_STATUSES = ["interested", "not_interested", "going"];
 
@@ -97,6 +98,9 @@ export async function POST(req) {
     }
 
     await event.save();
+
+    // Participation changed - invalidate cached event lists.
+    cacheDelPrefix("events:list:");
 
     await logActivity({
       req,

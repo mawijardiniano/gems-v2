@@ -1,6 +1,4 @@
-"use client";
-
-import React from "react";
+import React, { useMemo, memo } from "react";
 import {
   PieChart,
   Pie,
@@ -66,31 +64,16 @@ const getGender = (d) => {
   return "Other";
 };
 
-/* ------------------------------------------------------------------ */
-/*  Aggregation helpers                                                */
-/* ------------------------------------------------------------------ */
 
-const countBy = (data, accessor, fb = "Unknown") => {
-  const counts = {};
-  data.forEach((d) => {
-    const v = accessor(d) || fb;
-    counts[v] = (counts[v] || 0) + 1;
-  });
-  return Object.entries(counts)
+const addGender = (groups, cat, gender) => {
+  if (!groups[cat]) groups[cat] = { name: cat, Male: 0, Female: 0, Other: 0 };
+  groups[cat][gender] = (groups[cat][gender] || 0) + 1;
+};
+
+const countToRows = (counts) =>
+  Object.entries(counts)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
-};
-
-const countByGender = (data, accessor, fb = "Unknown") => {
-  const groups = {};
-  data.forEach((d) => {
-    const cat = accessor(d) || fb;
-    const g = getGender(d);
-    if (!groups[cat]) groups[cat] = { name: cat, Male: 0, Female: 0, Other: 0 };
-    groups[cat][g] = (groups[cat][g] || 0) + 1;
-  });
-  return Object.values(groups);
-};
 
 const calcAge = (birthday) => {
   if (!birthday) return null;
@@ -103,6 +86,29 @@ const calcAge = (birthday) => {
   return age < 0 ? null : age;
 };
 
+const sortStudentYearLevels = (rows) => {
+  const order = [
+    "grade 11",
+    "grade 12",
+    "1st year",
+    "2nd year",
+    "3rd year",
+    "4th year",
+    "5th year",
+    "graduate",
+    "graduates",
+    "unknown",
+  ];
+  const rank = (name) => {
+    const n = `${name || ""}`.trim().toLowerCase();
+    const i = order.findIndex((t) => n === t || n.includes(t));
+    return i === -1 ? order.length : i;
+  };
+  return [...rows].sort(
+    (a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name),
+  );
+};
+
 const chartTooltipStyle = {
   borderRadius: 8,
   border: "1px solid #f3f4f6",
@@ -111,7 +117,7 @@ const chartTooltipStyle = {
 };
 
 
-function InlineLegend({ data, colors }) {
+const InlineLegend = memo(function InlineLegend({ data, colors }) {
   return (
     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
       {data.map((entry, i) => (
@@ -132,13 +138,9 @@ function InlineLegend({ data, colors }) {
       ))}
     </div>
   );
-}
+});
 
-/* ------------------------------------------------------------------ */
-/*  Chart card components                                              */
-/* ------------------------------------------------------------------ */
-
-function PieCard({
+const PieCard = memo(function PieCard({
   title,
   data,
   height = 200,
@@ -167,7 +169,7 @@ function PieCard({
             }
           >
             {data.map((entry, i) => (
-              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              <Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />
             ))}
           </Pie>
           <Tooltip
@@ -179,9 +181,9 @@ function PieCard({
       <InlineLegend data={data} colors={PIE_COLORS} />
     </div>
   );
-}
+});
 
-function HorzBarCard({
+const HorzBarCard = memo(function HorzBarCard({
   title,
   data,
   dataKey = "value",
@@ -221,7 +223,7 @@ function HorzBarCard({
           />
           <Bar dataKey={dataKey} radius={[0, 4, 4, 0]}>
             {data.map((entry, i) => (
-              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              <Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />
             ))}
           </Bar>
         </BarChart>
@@ -229,9 +231,9 @@ function HorzBarCard({
       <InlineLegend data={data} colors={PIE_COLORS} />
     </div>
   );
-}
+});
 
-function VertBarCard({ title, data, height = 240 }) {
+const VertBarCard = memo(function VertBarCard({ title, data, height = 240 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -257,7 +259,7 @@ function VertBarCard({ title, data, height = 240 }) {
           <Tooltip contentStyle={chartTooltipStyle} />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
             {data.map((entry, i) => (
-              <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              <Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />
             ))}
           </Bar>
         </BarChart>
@@ -265,9 +267,9 @@ function VertBarCard({ title, data, height = 240 }) {
       <InlineLegend data={data} colors={PIE_COLORS} />
     </div>
   );
-}
+});
 
-function GenderBarCard({ title, data, height = 260 }) {
+const GenderBarCard = memo(function GenderBarCard({ title, data, height = 260 }) {
   const total = data.reduce(
     (s, d) => s + (d.Male || 0) + (d.Female || 0),
     0,
@@ -310,12 +312,19 @@ function GenderBarCard({ title, data, height = 260 }) {
           />
         </BarChart>
       </ResponsiveContainer>
-      <InlineLegend data={data} colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]} />
+      <InlineLegend
+        data={data}
+        colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]}
+      />
     </div>
   );
-}
+});
 
-function GenderHorzBarCard({ title, data, height = 300 }) {
+const GenderHorzBarCard = memo(function GenderHorzBarCard({
+  title,
+  data,
+  height = 300,
+}) {
   const total = data.reduce(
     (s, d) => s + (d.Male || 0) + (d.Female || 0),
     0,
@@ -364,140 +373,162 @@ function GenderHorzBarCard({ title, data, height = 300 }) {
           />
         </BarChart>
       </ResponsiveContainer>
-      <InlineLegend data={data} colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]} />
+      <InlineLegend
+        data={data}
+        colors={[GENDER_BAR_COLORS.Male, GENDER_BAR_COLORS.Female]}
+      />
     </div>
   );
-}
+});
 
-/* ------------------------------------------------------------------ */
-/*  Main component                                                     */
-/* ------------------------------------------------------------------ */
+const UNKNOWN = "Unknown";
 
-export default function Demographics({ data, personTypeFilter = "" }) {
+function Demographics({ data, personTypeFilter = "", demographics }) {
   const statusFilter = `${personTypeFilter || ""}`.trim().toLowerCase();
   const isEmployeeFilter = statusFilter === "employee";
   const isStudentFilter = statusFilter === "student";
 
-  const employees = data.filter(
-    (d) => (getStatus(d) || "").toLowerCase() === "employee",
-  );
-  const students = data.filter(
-    (d) => (getStatus(d) || "").toLowerCase() === "student",
-  );
+  const {
+    ageData,
+    civilData,
+    religionData,
+    studentCollegeData,
+    studentCampusData,
+    studentYearLevelData,
+    employmentData,
+    appointmentData,
+    employeeOfficeData,
+  } = useMemo(() => {
+    if (demographics) {
+      return {
+        ageData: demographics.ageData || [],
+        civilData: demographics.civilData || [],
+        religionData: demographics.religionData || [],
+        studentCollegeData: demographics.studentCollegeData || [],
+        studentCampusData: demographics.studentCampusData || [],
+        studentYearLevelData: demographics.studentYearLevelData || [],
+        employmentData: demographics.employmentData || [],
+        appointmentData: demographics.appointmentData || [],
+        employeeOfficeData: demographics.employeeOfficeData || [],
+      };
+    }
+    const ageCounts = {};
+    const civilCounts = {};
+    const religionCounts = {};
+    const studentCollegeCounts = {};
+    const studentCampusCounts = {};
+    const studentYearLevelCounts = {};
+    const employmentGroups = {};
+    const appointmentGroups = {};
+    const officeGroups = {};
 
-  /* ---- Age groups ---- */
-  const ageData = (() => {
-    const counts = {};
-    data.forEach((d) => {
+    for (const d of data) {
+      const status = (getStatus(d) || "").toLowerCase();
+      const isStu = status === "student";
+      const isEmp = status === "employee";
+      const gender = getGender(d);
+
       const age = calcAge(
         safeGet(() => d.personal_info_id?.personal?.birthday) ||
           safeGet(() => d.personal_information?.birthday),
       );
-      if (age === null) return;
-      const bucket = Math.floor(age / 10) * 10;
-      const label = `${bucket}–${bucket + 9}`;
-      counts[label] = (counts[label] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
-      .map(([name, value]) => ({ name, value }));
-  })();
+      if (age !== null) {
+        const bucket = Math.floor(age / 10) * 10;
+        const label = `${bucket}–${bucket + 9}`;
+        ageCounts[label] = (ageCounts[label] || 0) + 1;
+      }
 
-  const civilData = countBy(
-    data,
-    (d) =>
-      safeGet(() => d.personal_info_id?.personal?.civil_status) ||
-      safeGet(() => d.personal_information?.civil_status),
-  );
+      const civil =
+        safeGet(() => d.personal_info_id?.personal?.civil_status) ||
+        safeGet(() => d.personal_information?.civil_status) ||
+        UNKNOWN;
+      civilCounts[civil] = (civilCounts[civil] || 0) + 1;
 
-  const religionData = countBy(
-    data,
-    (d) =>
-      safeGet(() => d.personal_info_id?.personal?.religion) ||
-      safeGet(() => d.personal_information?.religion),
-  );
+      const religion =
+        safeGet(() => d.personal_info_id?.personal?.religion) ||
+        safeGet(() => d.personal_information?.religion) ||
+        UNKNOWN;
+      religionCounts[religion] = (religionCounts[religion] || 0) + 1;
 
-  /* ---- Student data ---- */
-  const studentCollegeData = countBy(
-    students,
-    (d) =>
-      safeGet(
-        () => d.personal_info_id?.affiliation?.academic_information?.college,
-      ) || safeGet(() => d.personal_information?.academic_information?.college),
-  );
+      if (isStu) {
+        const college =
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.academic_information?.college,
+          ) ||
+          safeGet(() => d.personal_information?.academic_information?.college) ||
+          UNKNOWN;
+        studentCollegeCounts[college] = (studentCollegeCounts[college] || 0) + 1;
 
-  const studentCampusData = countBy(
-    students,
-    (d) =>
-      safeGet(
-        () => d.personal_info_id?.affiliation?.academic_information?.campus,
-      ) || safeGet(() => d.personal_information?.academic_information?.campus),
-  );
+        const campus =
+          safeGet(
+            () => d.personal_info_id?.affiliation?.academic_information?.campus,
+          ) ||
+          safeGet(() => d.personal_information?.academic_information?.campus) ||
+          UNKNOWN;
+        studentCampusCounts[campus] = (studentCampusCounts[campus] || 0) + 1;
 
-  const sortStudentYearLevels = (rows) => {
-    const order = [
-      "grade 11",
-      "grade 12",
-      "1st year",
-      "2nd year",
-      "3rd year",
-      "4th year",
-      "5th year",
-      "graduate",
-      "graduates",
-      "unknown",
-    ];
-    const rank = (name) => {
-      const n = `${name || ""}`.trim().toLowerCase();
-      const i = order.findIndex((t) => n === t || n.includes(t));
-      return i === -1 ? order.length : i;
+        const yearLevel =
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.academic_information?.year_level,
+          ) ||
+          safeGet(() => d.personal_information?.academic_information?.year_level) ||
+          UNKNOWN;
+        studentYearLevelCounts[yearLevel] =
+          (studentYearLevelCounts[yearLevel] || 0) + 1;
+      }
+
+      if (isEmp) {
+        const empStatus =
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.employment_information
+                ?.employment_status,
+          ) ||
+          safeGet(() => d.personal_information?.employment_status) ||
+          UNKNOWN;
+        addGender(employmentGroups, empStatus, gender);
+
+        const appointment =
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.employment_information
+                ?.employment_appointment_status,
+          ) ||
+          safeGet(
+            () => d.personal_information?.employment_appointment_status,
+          ) ||
+          UNKNOWN;
+        addGender(appointmentGroups, appointment, gender);
+
+        const office =
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.employment_information?.office,
+          ) ||
+          safeGet(() => d.personal_information?.employment_information?.office) ||
+          UNKNOWN;
+        addGender(officeGroups, office, gender);
+      }
+    }
+
+    return {
+      ageData: Object.entries(ageCounts)
+        .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
+        .map(([name, value]) => ({ name, value })),
+      civilData: countToRows(civilCounts),
+      religionData: countToRows(religionCounts),
+      studentCollegeData: countToRows(studentCollegeCounts),
+      studentCampusData: countToRows(studentCampusCounts),
+      studentYearLevelData: sortStudentYearLevels(
+        countToRows(studentYearLevelCounts),
+      ),
+      employmentData: Object.values(employmentGroups),
+      appointmentData: Object.values(appointmentGroups),
+      employeeOfficeData: Object.values(officeGroups),
     };
-    return [...rows].sort(
-      (a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name),
-    );
-  };
-
-  const studentYearLevelData = sortStudentYearLevels(
-    countBy(
-      students,
-      (d) =>
-        safeGet(
-          () =>
-            d.personal_info_id?.affiliation?.academic_information?.year_level,
-        ) ||
-        safeGet(() => d.personal_information?.academic_information?.year_level),
-    ),
-  );
-
-  /* ---- Employee data ---- */
-  const employmentData = countByGender(
-    employees,
-    (d) =>
-      safeGet(
-        () =>
-          d.personal_info_id?.affiliation?.employment_information
-            ?.employment_status,
-      ) || safeGet(() => d.personal_information?.employment_status),
-  );
-
-  const appointmentData = countByGender(
-    employees,
-    (d) =>
-      safeGet(
-        () =>
-          d.personal_info_id?.affiliation?.employment_information
-            ?.employment_appointment_status,
-      ) || safeGet(() => d.personal_information?.employment_appointment_status),
-  );
-
-  const employeeOfficeData = countByGender(
-    employees,
-    (d) =>
-      safeGet(
-        () => d.personal_info_id?.affiliation?.employment_information?.office,
-      ) ||
-      safeGet(() => d.personal_information?.employment_information?.office),
-  );
+  }, [data, demographics]);
 
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -510,18 +541,15 @@ export default function Demographics({ data, personTypeFilter = "" }) {
         </p>
       </div>
 
-      {/* Age & Civil Status */}
       <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
         <PieCard title="Age Groups" data={ageData} />
         <PieCard title="Civil Status" data={civilData} />
       </div>
 
-      {/* Religion */}
       <div className="mb-6">
         <HorzBarCard title="Religion" data={religionData} height={300} />
       </div>
 
-      {/* Student sections */}
       {!isEmployeeFilter && (
         <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <VertBarCard title="Students by Campus" data={studentCampusData} />
@@ -542,7 +570,6 @@ export default function Demographics({ data, personTypeFilter = "" }) {
         </div>
       )}
 
-      {/* Employee sections */}
       {!isStudentFilter && (
         <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <GenderBarCard
@@ -567,3 +594,5 @@ export default function Demographics({ data, personTypeFilter = "" }) {
     </div>
   );
 }
+
+export default memo(Demographics);

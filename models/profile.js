@@ -44,6 +44,14 @@ gemsProfileSchema.virtual("fullName").get(function () {
     .join(" ");
 });
 
+gemsProfileSchema.index({ "personal.currentStatus": 1 });
+gemsProfileSchema.index({ "gadData.sexAtBirth": 1 });
+gemsProfileSchema.index({ "affiliation.academic_information.college": 1 });
+gemsProfileSchema.index({ "affiliation.academic_information.student_id": 1 });
+gemsProfileSchema.index({ "affiliation.employment_information.office": 1 });
+gemsProfileSchema.index({ "affiliation.employment_information.employee_id": 1 });
+gemsProfileSchema.index({ "contact.email": 1 });
+
 gemsProfileSchema.set("toJSON", { virtuals: true });
 gemsProfileSchema.set("toObject", { virtuals: true });
 

@@ -1,5 +1,6 @@
-"use client"
+"use client";
 
+import { memo } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -11,9 +12,16 @@ import {
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28EFF"];
 
-export default function GenderChart({ data }) {
+const TOOLTIP_STYLE = {
+  fontSize: 12,
+  borderRadius: 8,
+  border: "1px solid #f3f4f6",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
+
+function GenderChart({ data }) {
   return (
-    <div className="bg-white shadow rounded ">
+    <div className="bg-white shadow rounded">
       <div className="bg-gray-200 px-4 py-2">
         <h2 className="text-xl font-semibold text-center">Gender Breakdown</h2>
       </div>
@@ -30,10 +38,13 @@ export default function GenderChart({ data }) {
               label
             >
               {data.map((entry, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                <Cell
+                  key={entry.name}
+                  fill={COLORS[i % COLORS.length]}
+                />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -41,3 +52,5 @@ export default function GenderChart({ data }) {
     </div>
   );
 }
+
+export default memo(GenderChart);
