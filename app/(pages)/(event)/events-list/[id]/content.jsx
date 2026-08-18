@@ -624,6 +624,27 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     }
   };
 
+  const handleManualAddUsers = async (userIds) => {
+    if (!eventId || !Array.isArray(userIds) || userIds.length === 0) {
+      return { success: false, message: "No users selected." };
+    }
+    try {
+      await axios.post("/api/events/participation", {
+        event_id: eventId,
+        user_id: userIds,
+        status: "going",
+      });
+      const res = await axios.get(`/api/events/${eventId}`);
+      setEvent(res.data?.data || event);
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || "Failed to add users.",
+      };
+    }
+  };
+
   const handleDownloadQr = () => {
     if (!qrDataUrl) return;
     const link = document.createElement("a");
@@ -815,6 +836,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           interestedSelected={interestedSelected}
           setInterestedSelected={setInterestedSelected}
           handleAssignGoing={handleAssignGoing}
+          handleManualAddUsers={handleManualAddUsers}
           extractGuestDetails={extractGuestDetails}
           buildGuestRows={buildRows}
           handleDownloadGuestsPdf={(guests) =>

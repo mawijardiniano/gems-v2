@@ -73,6 +73,7 @@ export async function GET(req) {
               "personal_info_id._id": 1,
               "personal_info_id.personal.first_name": 1,
               "personal_info_id.personal.last_name": 1,
+              "personal_info_id.personal.currentStatus": 1,
             },
           },
         );

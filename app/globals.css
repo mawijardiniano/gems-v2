@@ -64,14 +64,10 @@ body {
   animation: slide-in-left 0.3s ease-out;
 }
 
-/* ─── Component Classes ─────────────────────────────────────────── */
 
-/* Card */
 .card {
   @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
 }
-
-/* Input/Select/Textarea */
 .input {
   @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 outline-none;
 }
@@ -122,19 +118,19 @@ select.input {
   @apply overflow-hidden rounded-2xl border border-gray-200 bg-white;
 }
 .table {
-  @apply min-w-full text-sm;
+  @apply min-w-full text-xs;
 }
 .table thead {
   @apply bg-slate-50;
 }
 .table thead th {
-  @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap;
+  @apply px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500;
 }
 .table tbody {
   @apply divide-y divide-gray-100;
 }
 .table tbody td {
-  @apply px-4 py-3 text-sm text-gray-700 align-middle;
+  @apply px-4 py-3 text-xs text-gray-700 align-middle;
 }
 .table tbody tr {
   @apply transition-colors duration-150;
