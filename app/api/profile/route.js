@@ -148,7 +148,22 @@ export async function GET(req) {
         const allTerms = profileIds.length
           ? await ProfileTerm.aggregate([
               { $match: { profile_id: { $in: profileIds } } },
-              { $sort: { updatedAt: -1 } },
+
+              {
+                $addFields: {
+                  semester_rank: {
+                    $switch: {
+                      branches: [
+                        { case: { $eq: ["$semester", "Summer"] }, then: 3 },
+                        { case: { $eq: ["$semester", "2nd"] }, then: 2 },
+                        { case: { $eq: ["$semester", "1st"] }, then: 1 },
+                      ],
+                      default: 0,
+                    },
+                  },
+                },
+              },
+              { $sort: { school_year: -1, semester_rank: -1 } },
               {
                 $group: {
                   _id: "$profile_id",

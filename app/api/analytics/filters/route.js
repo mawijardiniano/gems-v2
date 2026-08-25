@@ -24,7 +24,15 @@ export async function GET(req) {
         const offices = await Profile.distinct(
           "affiliation.employment_information.office",
         );
+
         const collegeOptions = [...new Set([...colleges, ...offices])]
+          .filter(Boolean)
+          .sort((a, b) => String(a).localeCompare(String(b)));
+
+        const academicCollegeOptions = [...new Set(colleges)]
+          .filter(Boolean)
+          .sort((a, b) => String(a).localeCompare(String(b)));
+        const officeOptions = [...new Set(offices)]
           .filter(Boolean)
           .sort((a, b) => String(a).localeCompare(String(b)));
 
@@ -48,6 +56,8 @@ export async function GET(req) {
 
         return {
           collegeOptions,
+          academicCollegeOptions,
+          officeOptions,
           yearLevelOptions: yearLevels.filter(Boolean).sort((a, b) => String(a).localeCompare(String(b))),
           sexOptions: sexOptions.filter(Boolean),
           employmentStatuses: employmentStatuses.filter(Boolean),

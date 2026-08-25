@@ -10,6 +10,7 @@ import {
   FaCalendarAlt,
   FaClipboardList,
   FaCog,
+  FaFileAlt,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -32,6 +33,7 @@ export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [profile, setProfile] = useState(null);
   const [user, setUser] = useState(null);
+  const [showReports, setShowReports] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -43,7 +45,8 @@ export default function Sidebar({ open, setOpen, role }) {
       "gaa-budget",
       "gpb",
       "events-list",
-     "gad-settings"
+      "gad-ars",
+      "gad-settings"
     ],
     "gad coordinator": [
       "events-dashboard",
@@ -52,6 +55,7 @@ export default function Sidebar({ open, setOpen, role }) {
       "gaa-budget",
       "gpb",
       "events-list",
+      "gad-ars",
       "gad-settings"
     ],
 
@@ -106,6 +110,11 @@ export default function Sidebar({ open, setOpen, role }) {
     const normalizedRole = role?.toLowerCase();
     const allowed = ROLE_ACCESS[normalizedRole] || [];
     return links.filter((link) => allowed.includes(link.key));
+  }, [role]);
+
+  const userAllowedPages = useMemo(() => {
+    const normalizedRole = role?.toLowerCase();
+    return ROLE_ACCESS[normalizedRole] || [];
   }, [role]);
 
   const handleMobileClose = useCallback(() => {
@@ -270,6 +279,74 @@ export default function Sidebar({ open, setOpen, role }) {
               </TooltipWrapper>
             );
           })}
+
+          {/* ===== REPORTS SECTION ===== */}
+          {userAllowedPages.includes("gad-ars") && (
+            <>
+              {open ? (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setShowReports((prev) => !prev)}
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full ${
+                      showReports || pathname?.startsWith("/gad-ars")
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                  >
+                    <FaFileAlt size={16} className="flex-shrink-0" />
+                    <span className="text-sm font-medium truncate flex-1 text-left">
+                      Reports
+                    </span>
+                    <span
+                      className={`text-xs transition-transform ${
+                        showReports ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+
+                  {showReports && (
+                    <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-3">
+                      <TooltipWrapper label="GAD AR" collapsed={!open}>
+                        <Link
+                          href="/gad-ars"
+                          onClick={handleMobileClose}
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                            pathname?.startsWith("/gad-ars")
+                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                        >
+                          <FaFileAlt size={14} className="flex-shrink-0 opacity-60" />
+                          <span className="text-sm font-medium truncate">
+                            GAD Accomplishment Report
+                          </span>
+                          {pathname?.startsWith("/gad-ars") && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                          )}
+                        </Link>
+                      </TooltipWrapper>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <TooltipWrapper label="Reports" collapsed={!open}>
+                  <Link
+                    href="/gad-ars"
+                    onClick={handleMobileClose}
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                      pathname?.startsWith("/gad-ars")
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                  >
+                    <FaFileAlt size={16} className="flex-shrink-0" />
+                  </Link>
+                </TooltipWrapper>
+              )}
+            </>
+          )}
         </nav>
 
         {/* ===== BOTTOM ACTIONS ===== */}

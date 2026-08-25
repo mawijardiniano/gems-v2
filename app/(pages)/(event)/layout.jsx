@@ -14,6 +14,7 @@ const ROLE_ACCESS = {
     "gpb",
     "events-list",
     "create",
+    "gad-ars",
     "gad-settings"
   ],
   "gad coordinator": [
@@ -24,6 +25,7 @@ const ROLE_ACCESS = {
     "gpb",
     "events-list",
     "create",
+    "gad-ars",
     "gad-settings"
   ],
   "planning director": ["admin-dashboard", "gpb", "gad-settings"],

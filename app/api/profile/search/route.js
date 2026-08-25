@@ -27,10 +27,11 @@ export async function GET(req) {
     const data = await cacheOrSet(
       cacheKey,
       async () => {
-        const match = {};
-        if (role) {
-          match.role = role;
-        }
+const match = { role: { $ne: "Admin" } };
+if (role) {
+  match.role = { $ne: "Admin", $eq: role };
+}
+
 
         const pipeline = [
           {

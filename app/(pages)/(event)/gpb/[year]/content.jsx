@@ -6,6 +6,7 @@ import { useRef } from "react";
 import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
 import axios from "axios";
 import PrintGPB from "../../components/Print/PrintGPB";
+import { findDuplicates } from "@/lib/duplicateDetection";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -111,10 +112,42 @@ function serializeIndicators(arr) {
 }
 
 function PerformanceIndicatorInput({ value, onChange }) {
-  const v =
-    typeof value === "object" && value !== null && !value._raw
-      ? { ...emptyIndicator(), ...value }
-      : emptyIndicator();
+  const isRawText = value?._raw !== undefined;
+  const v = isRawText
+    ? { _raw: value._raw || "" }
+    : { ...emptyIndicator(), ...(value || {}) };
+
+  // ── FREE TEXT MODE ─────────────────────────────────────
+  if (isRawText) {
+    return (
+      <div className="flex flex-col gap-2 w-full">
+        {/* Format toggle */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-gray-400">Format:</span>
+          <button
+            type="button"
+            onClick={() => onChange(emptyIndicator())}
+            className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
+          >
+            ○ Structured
+          </button>
+          <button
+            type="button"
+            className="px-2 py-0.5 rounded-full bg-blue-600 text-white"
+          >
+            ● Free Text
+          </button>
+        </div>
+        <textarea
+          rows={3}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          placeholder="Type any performance indicator... (e.g. At least 50% increase in male scholarship applicants)"
+          value={value._raw || ""}
+          onChange={(e) => onChange({ _raw: e.target.value })}
+        />
+      </div>
+    );
+  }
 
   const preview = formatPerformanceIndicator(v);
 
@@ -127,6 +160,24 @@ function PerformanceIndicatorInput({ value, onChange }) {
 
   return (
     <div className="flex flex-col gap-2 w-full">
+      {/* Format toggle */}
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-gray-400">Format:</span>
+        <button
+          type="button"
+          className="px-2 py-0.5 rounded-full bg-blue-600 text-white"
+        >
+          ● Structured
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange({ _raw: preview || "" })}
+          className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
+        >
+          ○ Free Text
+        </button>
+      </div>
+
       <div className="flex gap-3">
         <div className="flex flex-col flex-1">
           <label className="text-xs text-gray-400 mb-0.5">
@@ -243,7 +294,14 @@ function isNonEmptyArrayFilled(arr) {
   );
 }
 
+function isAttributedProgram(p) {
+  return p?.project_type === "Attributed Program";
+}
+
 function isStep1Valid(p) {
+  if (isAttributedProgram(p)) {
+    return p.project_type?.trim() !== "";
+  }
   return (
     p.project_type?.trim() !== "" &&
     p.gender_issue.trim() !== "" &&
@@ -252,12 +310,23 @@ function isStep1Valid(p) {
 }
 
 function isStep2Valid(p) {
+  if (isAttributedProgram(p)) {
+    return true;
+  }
   return (
     isNonEmptyArrayFilled(p.gad_objective) && p.relevant_agency.trim() !== ""
   );
 }
 
 function isStep3Valid(p) {
+  if (isAttributedProgram(p)) {
+    return (
+      isNonEmptyArrayFilled(p.gad_activity) &&
+      Number(p.gad_budget) > 0 &&
+      p.source_budget.trim() !== "" &&
+      p.responsible_office.trim() !== ""
+    );
+  }
   return (
     isNonEmptyArrayFilled(p.gad_activity) &&
     Number(p.gad_budget) > 0 &&
@@ -269,6 +338,15 @@ function isStep3Valid(p) {
 
 function isEditRowValid(row) {
   if (!row) return false;
+  if (isAttributedProgram(row)) {
+    return (
+      row.project_type?.trim() &&
+      isNonEmptyArrayFilled(row.gad_activity) &&
+      Number(row.gad_budget) > 0 &&
+      row.source_budget?.trim() &&
+      row.responsible_office?.trim()
+    );
+  }
   return (
     row.project_type?.trim() &&
     row.gender_issue?.trim() &&
@@ -396,6 +474,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [duplicateWarnings, setDuplicateWarnings] = useState([]);
+  const [editDuplicateWarnings, setEditDuplicateWarnings] = useState([]);
   const router = useRouter();
   const params = useParams();
   const year = params?.year;
@@ -425,6 +505,44 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const userId = useSelector((state) => state.auth.userId);
   const role = useSelector((state) => state.auth.role);
 
+  // ── Creator-only permission helpers ─────────────────────
+  const isReviewerRole =
+    role === "planning director" ||
+    role === "suc president" ||
+    role === "admin";
+
+  const canEditDeleteProject = (project) => {
+    if (isReviewerRole) return true;
+    const creatorId = String(
+      project.createdBy?._id || project.createdBy || "",
+    );
+    return creatorId === String(userId);
+  };
+
+  // ── Creator name display helpers ────────────────────────
+  const getCreatorName = (project) => {
+    const creator = project.createdBy;
+    if (!creator) return "—";
+    const profile = creator.personal_info_id;
+    if (profile?.personal) {
+      return `${profile.personal.first_name || ""} ${
+        profile.personal.last_name || ""
+      }`.trim();
+    }
+    return creator.username || "—";
+  };
+
+  const getCreatorRole = (project) => {
+    return project.createdBy?.role || "";
+  };
+
+  const getCreatorInitials = (project) => {
+    const name = getCreatorName(project);
+    const parts = name.split(" ").filter(Boolean);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.slice(0, 2).toUpperCase() || "?";
+  };
+
   const topScrollRef = useRef(null);
   const tableScrollRef = useRef(null);
 
@@ -444,13 +562,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
     if (value === "Client Focused") return "Client Focused";
     if (value === "Organization Focused") return "Organization Focused";
+    if (value === "Attributed Program") return "Attributed Program";
     return "Uncategorized";
   };
 
   const projectTypeOrder = {
     "Client Focused": 0,
     "Organization Focused": 1,
-    Uncategorized: 2,
+    "Attributed Program": 2,
+    Uncategorized: 3,
   };
 
   const orderedProjects = [...safeProjects]
@@ -614,8 +734,17 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       });
   }, [year]);
 
-  const handleNewProjectChange = (field, value) =>
+  const handleNewProjectChange = (field, value) => {
     setNewProject((prev) => ({ ...prev, [field]: value }));
+    if (field === "gender_issue" && value?.trim()) {
+      const sameYearProjects = projects.filter(
+        (p) => Number(p.year) === Number(year),
+      );
+      setDuplicateWarnings(findDuplicates(value, sameYearProjects, 0.7));
+    } else if (field === "gender_issue") {
+      setDuplicateWarnings([]);
+    }
+  };
 
   const handleArrayFieldChange = (field, idx, value) =>
     setNewProject((prev) => {
@@ -657,8 +786,17 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     setShowEditModal(false);
   };
 
-  const handleEditRowChange = (field, value) =>
+  const handleEditRowChange = (field, value) => {
     setEditRow((prev) => ({ ...prev, [field]: value }));
+    if (field === "gender_issue" && value?.trim()) {
+      const sameYearProjects = projects.filter(
+        (p) => Number(p.year) === Number(year) && p._id !== editRow?._id,
+      );
+      setEditDuplicateWarnings(findDuplicates(value, sameYearProjects, 0.7));
+    } else if (field === "gender_issue") {
+      setEditDuplicateWarnings([]);
+    }
+  };
 
   const handleEditIndicatorChange = (idx, value) => {
     const arr = [...(editRow.performance_indicator_target || [])];
@@ -698,6 +836,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       const data = await res.json();
 
       if (res.ok) {
+        if (data.duplicateWarnings?.length > 0) {
+          setDuplicateWarnings(data.duplicateWarnings);
+        }
         setNewProject(emptyNewProject());
         fetchProjects();
         fetchBudgetSummary();
@@ -737,6 +878,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       });
       const data = await res.json();
       if (res.ok) {
+        if (data.duplicateWarnings?.length > 0) {
+          setDuplicateWarnings(data.duplicateWarnings);
+        }
         setNewProject(emptyNewProject());
         setShowWizard(false);
         setWizardStep(1);
@@ -794,6 +938,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to update");
+      }
+
+      if (data.duplicateWarnings?.length > 0) {
+        setEditDuplicateWarnings(data.duplicateWarnings);
       }
 
       setShowEditModal(false);
@@ -1431,88 +1579,105 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <option value="Organization Focused">
                       Organization Focused
                     </option>
+                    <option value="Attributed Program">
+                      Attributed Program
+                    </option>
                   </select>
                 </div>
 
-                <div className="space-y-4 pl-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Gender Issue / GAD Mandate{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                      rows={3}
-                      value={editRow.gender_issue || ""}
-                      onChange={(e) =>
-                        handleEditRowChange("gender_issue", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Cause of the Gender Issue{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {(editRow.cause_gender_issue || [""]).map((val, idx) => (
-                        <div key={idx} className="flex gap-2 items-start">
-                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
-                            {idx + 1}.
-                          </span>
-                          <textarea
-                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                            rows={2}
-                            value={val}
-                            onChange={(e) => {
-                              const arr = [
-                                ...(editRow.cause_gender_issue || [""]),
-                              ];
-                              arr[idx] = e.target.value;
-                              handleEditRowChange("cause_gender_issue", arr);
-                            }}
-                          />
-                          <div className="flex flex-col gap-1 mt-1 shrink-0">
-                            {(editRow.cause_gender_issue || []).length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const arr = [...editRow.cause_gender_issue];
-                                  arr.splice(idx, 1);
-                                  handleEditRowChange(
-                                    "cause_gender_issue",
-                                    arr,
-                                  );
-                                }}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
-                              >
-                                −
-                              </button>
-                            )}
-                            {idx ===
-                              (editRow.cause_gender_issue || []).length - 1 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleEditRowChange("cause_gender_issue", [
-                                    ...(editRow.cause_gender_issue || []),
-                                    "",
-                                  ])
-                                }
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
-                              >
-                                +
-                              </button>
-                            )}
-                          </div>
+                {!isAttributedProgram(editRow) && (
+                  <div className="space-y-4 pl-8">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Gender Issue / GAD Mandate{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                        rows={3}
+                        value={editRow.gender_issue || ""}
+                        onChange={(e) =>
+                          handleEditRowChange("gender_issue", e.target.value)
+                        }
+                      />
+                      {editDuplicateWarnings.length > 0 && (
+                        <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs space-y-1">
+                          <p className="font-semibold flex items-center gap-1">
+                            ⚠️ Similar Gender Issue / GAD Mandate exists:
+                          </p>
+                          {editDuplicateWarnings.map((w, i) => (
+                            <p key={i} className="pl-4">
+                              "{w.gender_issue}" ({Math.round(w.similarity * 100)}% match)
+                            </p>
+                          ))}
                         </div>
-                      ))}
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Cause of the Gender Issue{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-2">
+                        {(editRow.cause_gender_issue || [""]).map((val, idx) => (
+                          <div key={idx} className="flex gap-2 items-start">
+                            <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                              {idx + 1}.
+                            </span>
+                            <textarea
+                              className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              rows={2}
+                              value={val}
+                              onChange={(e) => {
+                                const arr = [
+                                  ...(editRow.cause_gender_issue || [""]),
+                                ];
+                                arr[idx] = e.target.value;
+                                handleEditRowChange("cause_gender_issue", arr);
+                              }}
+                            />
+                            <div className="flex flex-col gap-1 mt-1 shrink-0">
+                              {(editRow.cause_gender_issue || []).length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const arr = [...editRow.cause_gender_issue];
+                                    arr.splice(idx, 1);
+                                    handleEditRowChange(
+                                      "cause_gender_issue",
+                                      arr,
+                                    );
+                                  }}
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                                >
+                                  −
+                                </button>
+                              )}
+                              {idx ===
+                                (editRow.cause_gender_issue || []).length - 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleEditRowChange("cause_gender_issue", [
+                                      ...(editRow.cause_gender_issue || []),
+                                      "",
+                                    ])
+                                  }
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                                >
+                                  +
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Section 2 */}
+              {!isAttributedProgram(editRow) && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
@@ -1610,6 +1775,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Section 3 */}
               <div>
@@ -1922,72 +2088,91 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <option value="Organization Focused">
                       Organization Focused
                     </option>
+                    <option value="Attributed Program">
+                      Attributed Program
+                    </option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gender Issue / GAD Mandate{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    value={newProject.gender_issue}
-                    onChange={(e) =>
-                      handleNewProjectChange("gender_issue", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cause of the Gender Issue{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  {newProject.cause_gender_issue.map((val, idx) => (
-                    <div key={idx} className="flex gap-2 mb-2">
+                {!isAttributedProgram(newProject) && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Gender Issue / GAD Mandate{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
                       <textarea
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                        value={val}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={3}
+                        value={newProject.gender_issue}
                         onChange={(e) =>
-                          handleArrayFieldChange(
-                            "cause_gender_issue",
-                            idx,
-                            e.target.value,
-                          )
+                          handleNewProjectChange("gender_issue", e.target.value)
                         }
                       />
-                      <div className="flex flex-col gap-1">
-                        {newProject.cause_gender_issue.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleRemoveArrayField("cause_gender_issue", idx)
-                            }
-                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                          >
-                            -
-                          </button>
-                        )}
-                        {idx === newProject.cause_gender_issue.length - 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleAddArrayField("cause_gender_issue")
-                            }
-                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                          >
-                            +
-                          </button>
-                        )}
-                      </div>
+                      {duplicateWarnings.length > 0 && (
+                        <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs space-y-1">
+                          <p className="font-semibold flex items-center gap-1">
+                            ⚠️ Similar Gender Issue / GAD Mandate exists:
+                          </p>
+                          {duplicateWarnings.map((w, i) => (
+                            <p key={i} className="pl-4">
+                              "{w.gender_issue}" ({Math.round(w.similarity * 100)}% match)
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cause of the Gender Issue{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      {newProject.cause_gender_issue.map((val, idx) => (
+                        <div key={idx} className="flex gap-2 mb-2">
+                          <textarea
+                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={2}
+                            value={val}
+                            onChange={(e) =>
+                              handleArrayFieldChange(
+                                "cause_gender_issue",
+                                idx,
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <div className="flex flex-col gap-1">
+                            {newProject.cause_gender_issue.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveArrayField("cause_gender_issue", idx)
+                                }
+                                className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                              >
+                                -
+                              </button>
+                            )}
+                            {idx === newProject.cause_gender_issue.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleAddArrayField("cause_gender_issue")
+                                }
+                                className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
-            {wizardStep === 2 && (
+            {wizardStep === 2 && !isAttributedProgram(newProject) && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2111,6 +2296,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     </div>
                   ))}
                 </div>
+                {!isAttributedProgram(newProject) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Output Performance Indicators and Target
@@ -2166,6 +2352,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     </div>
                   ))}
                 </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2347,11 +2534,16 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   <div className="flex justify-between">
                     <button
                       type="button"
-                      onClick={() =>
-                        wizardStep === 1
-                          ? (setShowWizard(false), setWizardStep(1))
-                          : setWizardStep(wizardStep - 1)
-                      }
+                      onClick={() => {
+                        if (wizardStep === 1) {
+                          setShowWizard(false);
+                          setWizardStep(1);
+                        } else if (isAttributedProgram(newProject) && wizardStep === 3) {
+                          setWizardStep(1);
+                        } else {
+                          setWizardStep(wizardStep - 1);
+                        }
+                      }}
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
                     >
                       {wizardStep === 1 ? "Cancel" : "← Back"}
@@ -2359,7 +2551,13 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     {wizardStep < 4 ? (
                       <button
                         type="button"
-                        onClick={() => setWizardStep(wizardStep + 1)}
+                        onClick={() => {
+                          if (isAttributedProgram(newProject) && wizardStep === 1) {
+                            setWizardStep(3);
+                          } else {
+                            setWizardStep(wizardStep + 1);
+                          }
+                        }}
                         disabled={!stepValid}
                         className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
@@ -2467,6 +2665,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         Responsible Unit/Office
                       </th>
                       <th className="py-2 border-b text-center w-10 text-xs">
+                        Created By
+                      </th>
+                      <th className="py-2 border-b text-center w-10 text-xs">
                         Comments
                       </th>
                       {role !== "planning director" && (
@@ -2500,6 +2701,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               }
                               required
                             />
+                            {duplicateWarnings.length > 0 && (
+                              <div className="mt-1 p-2 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px]">
+                                ⚠️ Similar: "{duplicateWarnings[0].gender_issue}" ({Math.round(duplicateWarnings[0].similarity * 100)}%)
+                              </div>
+                            )}
                           </td>
                           <td className="py-2 px-4 border-b">
                             {newProject.cause_gender_issue.map((val, idx) => (
@@ -3569,6 +3775,25 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
                                       >
+                                      
+                                        <div className="flex items-center gap-2 w-16">
+                                          
+                                          <div className="min-w-0">
+                                            <p className="text-xs font-medium text-gray-900 truncate">
+                                              {getCreatorName(project)}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 capitalize">
+                                              {getCreatorRole(project)}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </td>
+                                    )}
+                                    {rowIdx === 0 && (
+                                      <td
+                                        className="py-2 px-4 border text-xs"
+                                        rowSpan={maxRows}
+                                      >
                                         {Array.isArray(project.comments) &&
                                           project.comments.length > 0 && (
                                             <div className="flex flex-col gap-1">
@@ -3699,8 +3924,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                   >
                                                     View
                                                   </button>
-                                                  {selectedGPBStatus?.status !==
-                                                    "approved" &&
+                                                  {canEditDeleteProject(project) &&
+                                                    selectedGPBStatus?.status !==
+                                                      "approved" &&
                                                     selectedGPBStatus?.status !==
                                                       "disapproved" && (
                                                       <button
@@ -3713,8 +3939,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                         Edit
                                                       </button>
                                                     )}
-                                                  {selectedGPBStatus?.status !==
-                                                    "approved" &&
+                                                  {canEditDeleteProject(project) &&
+                                                    selectedGPBStatus?.status !==
+                                                      "approved" &&
                                                     selectedGPBStatus?.status !==
                                                       "disapproved" && (
                                                       <button
@@ -3730,6 +3957,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                         Delete
                                                       </button>
                                                     )}
+                                                  {/* {!canEditDeleteProject(project) && (
+                                                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                                                      🔒 Locked
+                                                    </span>
+                                                  )} */}
                                                 </div>
                                               )}
                                             </>

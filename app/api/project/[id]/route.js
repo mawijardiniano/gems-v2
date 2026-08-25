@@ -8,6 +8,7 @@ import Project from "@/models/projects";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { findDuplicates } from "@/lib/duplicateDetection";
 import {NextResponse} from "next/server"
 
 export async function PUT(req, { params }) {
@@ -44,6 +45,16 @@ mergeField("project_type");
     mergeField("gad_budget");
     mergeField("source_budget");
     mergeField("responsible_office");
+
+    // GAD AR fields
+    if (body.actual_accomplishment !== undefined) {
+      project.actual_accomplishment = Array.isArray(body.actual_accomplishment)
+        ? body.actual_accomplishment
+        : [body.actual_accomplishment || ""];
+    }
+    if (body.actual_expenditures !== undefined) {
+      project.actual_expenditures = Number(body.actual_expenditures) || 0;
+    }
 
     let actor = null;
 
@@ -87,7 +98,19 @@ mergeField("project_type");
       });
     }
 
-    return Response.json({ data: project });
+    // Check for duplicate Gender Issue / GAD Mandate in the same year (warn only, exclude self)
+    let duplicateWarnings = [];
+    try {
+      const existingProjects = await Project.find({
+        year: project.year,
+        _id: { $ne: id },
+      }).select("gender_issue");
+      duplicateWarnings = findDuplicates(body.gender_issue, existingProjects, 0.7);
+    } catch (err) {
+      console.error("Duplicate check error:", err);
+    }
+
+    return Response.json({ data: project, duplicateWarnings });
   } catch (err) {
     console.error("PUT error:", err);
     return Response.json(

@@ -7,23 +7,69 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { loginSuccess } from "@/store/slices/authSlice";
 
+const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || "";
+
+const QUICK_ACCOUNTS = [
+  {
+    label: "Admin",
+    username: process.env.NEXT_PUBLIC_ADMIN_USERNAME,
+    password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || DEFAULT_PASSWORD,
+  },
+  {
+    label: "GAD Focal",
+    username: process.env.NEXT_PUBLIC_FOCAL_USERNAME,
+    password: process.env.NEXT_PUBLIC_FOCAL_PASSWORD || DEFAULT_PASSWORD,
+  },
+    {
+    label: "GAD Coordinator",
+    username: process.env.NEXT_PUBLIC_COORDINATOR_USERNAME,
+    password: DEFAULT_PASSWORD,
+  },
+  {
+    label: "Dean",
+    username: process.env.NEXT_PUBLIC_DEAN_USERNAME,
+    password: DEFAULT_PASSWORD,
+  },
+  {
+    label: "Planning Director",
+    username: process.env.NEXT_PUBLIC_PLANNINGDIRECTOR_USERNAME,
+    password: DEFAULT_PASSWORD,
+  },
+  {
+    label: "Student",
+    username: process.env.NEXT_PUBLIC_STUDENT_USERNAME,
+    password: DEFAULT_PASSWORD,
+  },
+];
+
 export default function LoginForm({ redirect }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (e, creds) => {
+    e?.preventDefault();
     setError("");
 
+    const loginUsername = creds?.username || username;
+    const loginPassword = creds?.password || password;
+
+    if (!loginUsername || !loginPassword) {
+      setError("Please enter your username and password.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      console.log("Logging in with:", { username, password });
+      console.log("Logging in with:", { username: loginUsername });
 
       const res = await axios.post(
         "/api/auth/login",
-        { username, password },
+        { username: loginUsername, password: loginPassword },
         { withCredentials: true },
       );
 
@@ -65,12 +111,11 @@ export default function LoginForm({ redirect }) {
         return;
       }
 
-            if (role === "dean") {
+      if (role === "dean") {
         console.log("Focal detected, redirecting to /dean-dashboard");
         router.push("/dean/dashboard");
         return;
       }
-      
 
       const profileRes = await axios.get("/api/profile/my-profile", {
         withCredentials: true,
@@ -112,7 +157,16 @@ export default function LoginForm({ redirect }) {
       }
 
       setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleQuickLogin = (e, acc) => {
+    e.preventDefault();
+    setUsername(acc.username || "");
+    setPassword(acc.password || "");
+    handleLogin(e, { username: acc.username, password: acc.password });
   };
 
   return (
@@ -202,12 +256,37 @@ export default function LoginForm({ redirect }) {
 
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-900 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign in
+              {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Quick Sign In
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {QUICK_ACCOUNTS.filter((acc) => acc.username).map((acc) => (
+                <button
+                  key={acc.label}
+                  type="button"
+                  disabled={loading}
+                  onClick={(e) => handleQuickLogin(e, acc)}
+                  className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-purple-50 hover:border-purple-300 hover:text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {acc.label}
+                </button>
+              ))}
+            </div>
+
             {/* <div className="flex justify-center">
               <p className="text-sm">
                 Don't have an account?{" "}

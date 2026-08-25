@@ -11,15 +11,6 @@ export default function useFetchData() {
     ...d,
     personal_information:
       d.personal_info_id?.personal || d.personal || {},
-    economic_financial_role: d.personal_info_id?.economic_financial_role || {},
-    reproductive_family_role:
-      d.personal_info_id?.reproductive_family_role || {},
-    household_managing_role: d.personal_info_id?.household_managing_role || {},
-    community_involvement: d.personal_info_id?.community_involvement || {},
-    social_development: d.personal_info_id?.social_development || {},
-    environmental_climate: d.personal_info_id?.environmental_climate || {},
-    gender_responsive: d.personal_info_id?.gender_responsive || {},
-    security_peace: d.personal_info_id?.security_peace || {},
   });
 
   useEffect(() => {

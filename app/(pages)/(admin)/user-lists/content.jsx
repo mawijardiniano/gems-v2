@@ -12,11 +12,29 @@ import {
   TableRow,
   Modal,
 } from "flowbite-react";
-import useFetchData from "@/hooks/useSample";
+import useProfileList from "@/hooks/useProfileList";
 import Filter from "../admin-dashboard/components/Filter";
 
-export default function UserListPageContent({ users = [], defaultType = "" }) {
-  const { data: rawData, loading } = useFetchData();
+export default function UserListPageContent({
+  users = [],
+  total: propTotal = 0,
+  totalPages: propTotalPages = 1,
+  defaultType = "",
+}) {
+  const [pageSize, setPageSize] = useState(50);
+  const {
+    data: rawData,
+    loading,
+    page,
+    total: serverTotal,
+    totalPages: serverTotalPages,
+    goToPage,
+  } = useProfileList({
+    initialData: users,
+    initialTotal: propTotal,
+    initialTotalPages: propTotalPages,
+    limit: pageSize,
+  });
 
   const [filterSex, setFilterSex] = useState("");
   const [filterPersonType, setFilterPersonType] = useState(defaultType);
@@ -242,6 +260,13 @@ export default function UserListPageContent({ users = [], defaultType = "" }) {
         )}
       </div>
 
+      {loading && (
+        <div className="flex justify-center py-10 text-gray-500">
+          Loading users...
+        </div>
+      )}
+
+      {!loading && (
       <div className="overflow-x-auto">
         <Table className="bg-white" striped={false} color="none">
           <TableHead className="bg-gray-200 text-black">
@@ -346,38 +371,47 @@ export default function UserListPageContent({ users = [], defaultType = "" }) {
           </TableBody>
         </Table>
       </div>
+      )}
 
-      {/* <Modal show={showConfirmModal} onClose={() => setShowConfirmModal(false)}>
-        <Modal.Header>Confirm Delete</Modal.Header>
-        <Modal.Body>
-          <div className="text-center text-red-600">
-            Are you sure you want to delete the selected users?
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button color="failure" onClick={confirmBulkDelete}>
-            Yes, Delete
-          </Button>
-          <Button color="gray" onClick={() => setShowConfirmModal(false)}>
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Rows per page:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+            className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+        <span className="text-sm text-gray-600">
+          {loading ? "Loading..." : `${serverTotal} total users`}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => goToPage(page - 1)}
+            disabled={page <= 1 || loading}
+          >
+            Prev
+          </button>
+          <span>
+            Page {page} of {serverTotalPages}
+          </span>
+          <button
+            className="px-2 py-1 border rounded disabled:opacity-50"
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= serverTotalPages || loading}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
-
-      <Modal show={showErrorModal} onClose={() => setShowErrorModal(false)}>
-        <Modal.Header>Error</Modal.Header>
-        <Modal.Body>
-          <div className="text-center text-red-600">
-            Failed to delete selected users.
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button color="failure" onClick={() => setShowErrorModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
+     
     </div>
   );
 }

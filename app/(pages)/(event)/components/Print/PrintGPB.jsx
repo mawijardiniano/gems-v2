@@ -105,13 +105,15 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
 
       if (value === "Client Focused") return "Client Focused";
       if (value === "Organization Focused") return "Organization Focused";
+      if (value === "Attributed Program") return "Attributed Program";
       return "Uncategorized";
     };
 
     const projectTypeOrder = {
       "Client Focused": 0,
       "Organization Focused": 1,
-      Uncategorized: 2,
+      "Attributed Program": 2,
+      Uncategorized: 3,
     };
 
     const orderedProjects = [...safeProjects]

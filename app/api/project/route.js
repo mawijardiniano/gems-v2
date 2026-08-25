@@ -6,6 +6,7 @@ import GAABudget from "@/models/gaa_budget";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { findDuplicates } from "@/lib/duplicateDetection";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -164,9 +165,20 @@ export async function POST(req) {
     { $addToSet: { projects: project._id } },
   );
 
+  // Check for duplicate Gender Issue / GAD Mandate in the same year (warn only)
+  let duplicateWarnings = [];
+  try {
+    const existingProjects = await Project.find({ year, _id: { $ne: project._id } })
+      .select("gender_issue");
+    duplicateWarnings = findDuplicates(body.gender_issue, existingProjects, 0.7);
+  } catch (err) {
+    console.error("Duplicate check error:", err);
+  }
+
   return Response.json({
     message: "Project created successfully",
     data: project,
+    duplicateWarnings,
   });
 }
 

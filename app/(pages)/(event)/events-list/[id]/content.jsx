@@ -55,13 +55,18 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     const fetchProjects = async () => {
       try {
         const res = await axios.get("/api/project");
-        setProjects(res.data?.data || []);
+        const allProjects = res.data?.data || [];
+        // Only show projects created by the current user
+        const myProjects = allProjects.filter(
+          (p) => p.createdBy?.toString() === userId?.toString(),
+        );
+        setProjects(myProjects);
       } catch (err) {
         setProjects([]);
       }
     };
     fetchProjects();
-  }, []);
+  }, [userId]);
 
   const getFilteredGuests = (guests) => {
     return guests

@@ -12,7 +12,7 @@ import {
   TableHeadCell,
   TableRow,
 } from "flowbite-react";
-import useFetchData from "@/hooks/useSample";
+import useProfileList from "@/hooks/useProfileList";
 import StudentFilterTable from "../components/StudentFilterTable";
 import {
   FaEye,
@@ -25,8 +25,12 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 
-export default function StudentsUserListContent() {
-  const { data: rawData, loading } = useFetchData();
+export default function StudentsUserListContent({
+  users = [],
+  total: propTotal = 0,
+  totalPages: propTotalPages = 1,
+}) {
+  const [pageSize, setPageSize] = useState(50);
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
   const [filterSchoolYear, setFilterSchoolYear] = useState("");
@@ -42,12 +46,48 @@ export default function StudentsUserListContent() {
   const [courseSort, setCourseSort] = useState(null);
   const [yearSort, setYearSort] = useState(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [pageSizeInput, setPageSizeInput] = useState("10");
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchName, setSearchName] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeTab, setActiveTab] = useState("personal");
+
+
+  const filterValues = {
+    sex: filterSex,
+    yearLevel: filterYearLevel,
+    colleges: filterCollege,
+    schoolYear: filterSchoolYear,
+    semester: filterSemester,
+    searchName,
+  };
+  const [serverFilters, setServerFilters] = useState(filterValues);
+  useEffect(() => {
+    const t = setTimeout(() => setServerFilters(filterValues), 200);
+    return () => clearTimeout(t);
+  }, [
+    filterSex,
+    filterYearLevel,
+    filterCollege,
+    filterSchoolYear,
+    filterSemester,
+    searchName,
+  ]);
+
+  const {
+    data: rawData,
+    loading,
+    page: serverPage,
+    total: serverTotal,
+    totalPages: serverTotalPages,
+    goToPage: goToServerPage,
+  } = useProfileList({
+    initialData: users,
+    initialTotal: propTotal,
+    initialTotalPages: propTotalPages,
+    type: "Student",
+    limit: pageSize,
+    filters: serverFilters,
+  });
 
   const studentsData = useMemo(
     () =>
@@ -58,115 +98,41 @@ export default function StudentsUserListContent() {
     [rawData],
   );
 
-  const sexOption = useMemo(
-    () => [
-      ...new Set(
-        studentsData
-          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
-          .filter(Boolean),
-      ),
-    ],
-    [studentsData],
-  );
-  const collegeOptions = useMemo(
-    () => [
-      ...new Set(
-        studentsData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.college,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [studentsData],
-  );
-  const yearLevelOptions = useMemo(
-    () => [
-      ...new Set(
-        studentsData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.year_level,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [studentsData],
-  );
+  const [filterOptions, setFilterOptions] = useState({
+    sexOptions: [],
+    academicCollegeOptions: [],
+    yearLevelOptions: [],
+    schoolYears: [],
+    semesters: [],
+  });
+  useEffect(() => {
+    let active = true;
+    fetch("/api/analytics/filters")
+      .then((res) => (res.ok ? res.json() : Promise.resolve({})))
+      .then((data) => {
+        if (!active) return;
+        setFilterOptions({
+          sexOptions: data.sexOptions || [],
+          academicCollegeOptions: data.academicCollegeOptions || [],
+          yearLevelOptions: data.yearLevelOptions || [],
+          schoolYears: data.schoolYears || [],
+          semesters: data.semesters || [],
+        });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const schoolYearOptions = useMemo(
-    () => [
-      ...new Set(
-        studentsData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
-            : d?.school_year
-              ? [d.school_year]
-              : [],
-        ),
-      ),
-    ].sort((a, b) => String(b).localeCompare(String(a))),
-    [studentsData],
-  );
-
-  const semesterOptions = useMemo(
-    () => [
-      ...new Set(
-        studentsData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((term) => term?.semester).filter(Boolean)
-            : d?.semester
-              ? [d.semester]
-              : [],
-        ),
-      ),
-    ],
-    [studentsData],
-  );
-
-    useEffect(() => {
-      if (schoolYearOptions.length > 0 && !filterSchoolYear) {
-        setFilterSchoolYear(schoolYearOptions[0]);
-      }
-    }, [schoolYearOptions, filterSchoolYear]);
+  const sexOption = filterOptions.sexOptions;
+  const collegeOptions = filterOptions.academicCollegeOptions;
+  const yearLevelOptions = filterOptions.yearLevelOptions;
+  const schoolYearOptions = filterOptions.schoolYears;
+  const semesterOptions = filterOptions.semesters;
 
   const filteredData = useMemo(() => {
-    let data = studentsData.filter((user) => {
-      const p = user.personal_info_id || {};
-      const gad = p.gadData || {};
-      const acad = p.affiliation?.academic_information || {};
-      const personal = p.personal || {};
-      const terms = Array.isArray(user?.profile_terms)
-        ? user.profile_terms
-        : [];
-
-      const fullName =
-        `${personal.first_name || ""} ${personal.last_name || ""}`
-          .trim()
-          .toLowerCase();
-
-      const matchesSearch =
-        !searchName || fullName.includes(searchName.toLowerCase());
-      const termMatches =
-        !filterSchoolYear && !filterSemester
-          ? true
-          : terms.some(
-              (term) =>
-                (!filterSchoolYear || term?.school_year === filterSchoolYear) &&
-                (!filterSemester || term?.semester === filterSemester),
-            ) ||
-            (!filterSchoolYear || user?.school_year === filterSchoolYear) &&
-            (!filterSemester || user?.semester === filterSemester);
-
-      return (
-        matchesSearch &&
-        (!filterSex || gad.sexAtBirth === filterSex) &&
-        (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        termMatches &&
-        (filterCollege.length === 0 || filterCollege.includes(acad.college))
-      );
-    });
+    let data = [...studentsData];
     if (nameSort) {
       data = [...data].sort((a, b) => {
         const pa = a.personal_info_id?.personal || {};
@@ -256,25 +222,15 @@ export default function StudentsUserListContent() {
     return data;
   }, [
     studentsData,
-    filterSex,
-    filterYearLevel,
-    filterSchoolYear,
-    filterSemester,
-    filterCollege,
     nameSort,
     sexSort,
     campusSort,
     courseSort,
     yearSort,
-    searchName,
   ]);
 
   const totalRows = filteredData.length;
-  const totalPages = Math.ceil(totalRows / pageSize) || 1;
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, page, pageSize]);
+  const paginatedData = filteredData;
 
   const allIds = useMemo(
     () =>
@@ -887,44 +843,36 @@ export default function StudentsUserListContent() {
       </div>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
         <div className="flex items-center gap-2">
-          <span>Rows per page:</span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={pageSizeInput}
-            onChange={(e) => setPageSizeInput(e.target.value)}
-            onBlur={() => {
-              let val = parseInt(pageSizeInput, 10);
-              if (isNaN(val) || val < 1) val = 1;
-              if (val > 100) val = 100;
-              setPageSize(val);
-              setPage(1);
-              setPageSizeInput(String(val));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.target.blur();
-              }
-            }}
-            className="w-16 border rounded px-2 py-1"
-          />
+          <span className="text-sm text-gray-600">Rows per page:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+            className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
         </div>
+        <span className="text-sm text-gray-600">
+          {loading ? "Loading..." : `${serverTotal} total students`}
+        </span>
         <div className="flex items-center gap-2">
           <button
             className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
+            onClick={() => goToServerPage(serverPage - 1)}
+            disabled={serverPage <= 1 || loading}
           >
             Prev
           </button>
           <span>
-            Page {page} of {totalPages}
+            Page {serverPage} of {serverTotalPages}
           </span>
           <button
             className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
+            onClick={() => goToServerPage(serverPage + 1)}
+            disabled={serverPage >= serverTotalPages || loading}
           >
             Next
           </button>
@@ -1005,7 +953,6 @@ export default function StudentsUserListContent() {
         </div>
       )}
 
-      {/* View User Modal */}
       {selectedUser && (() => {
         const p = selectedUser.personal_info_id || {};
         const personal = p.personal || {};
@@ -1022,7 +969,6 @@ export default function StudentsUserListContent() {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
-              {/* Modal Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -1053,7 +999,7 @@ export default function StudentsUserListContent() {
                 </button>
               </div>
 
-              {/* Tabs */}
+        
               <div className="px-6 border-b border-gray-100">
                 <div className="flex gap-1 -mb-px">
                   {viewTabs.map((tab) => {
@@ -1076,12 +1022,12 @@ export default function StudentsUserListContent() {
                 </div>
               </div>
 
-              {/* Tab Content */}
+             
               <div className="px-6 py-5">
                 {renderTabContent(selectedUser)}
               </div>
 
-              {/* Modal Footer with Actions */}
+    
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                 <div className="flex items-center gap-2.5">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${

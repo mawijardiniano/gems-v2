@@ -11,11 +11,24 @@ import {
   TableHeadCell,
   TableRow,
 } from "flowbite-react";
-import useFetchData from "@/hooks/useSample";
+import useProfileList from "@/hooks/useProfileList";
 import EmployeeFilterTable from "../components/EmployeeFilterTable";
+import {
+  FaTimes,
+  FaUser,
+  FaVenusMars,
+  FaBriefcase,
+  FaMapMarkerAlt,
+  FaShieldAlt,
+} from "react-icons/fa";
 
-export default function EmployeeListPageContent({ defaultType = "" }) {
-  const { data: rawData, loading } = useFetchData();
+export default function EmployeeListPageContent({
+  users = [],
+  total: propTotal = 0,
+  totalPages: propTotalPages = 1,
+  defaultType = "",
+}) {
+  const [pageSize, setPageSize] = useState(50);
 
   const [filterSex, setFilterSex] = useState("");
   const [filterPersonType, setFilterPersonType] = useState(defaultType);
@@ -36,68 +49,88 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
   const [appointmentSort, setAppointmentSort] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchName, setSearchName] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("personal");
 
-  const sexOption = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map((d) => d?.personal_info_id?.gadData?.sexAtBirth)
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const collegeOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.college ||
-              d?.personal_info_id?.affiliation.employment_information?.office,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const employmentOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.employment_information
-                ?.employment_status,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const appointmentOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.employment_information
-                ?.employment_appointment_status,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
+  const filterValues = {
+    sex: filterSex,
+    yearLevel: filterYearLevel,
+    offices: filterCollege,
+    employmentStatus: filterEmployment,
+    appointmentStatus: filterAppointment,
+    schoolYear: filterSchoolYear,
+    semester: filterSemester,
+    searchName,
+  };
+  const [serverFilters, setServerFilters] = useState(filterValues);
   useEffect(() => {
-    if (defaultType && filterPersonType !== defaultType) {
-      setFilterPersonType(defaultType);
-    }
-  }, [defaultType, filterPersonType]);
+    const t = setTimeout(() => setServerFilters(filterValues), 200);
+    return () => clearTimeout(t);
+  }, [
+    filterSex,
+    filterYearLevel,
+    filterCollege,
+    filterEmployment,
+    filterAppointment,
+    filterSchoolYear,
+    filterSemester,
+    searchName,
+  ]);
+
+  const {
+    data: rawData,
+    loading,
+    page: serverPage,
+    total: serverTotal,
+    totalPages: serverTotalPages,
+    goToPage: goToServerPage,
+  } = useProfileList({
+    initialData: users,
+    initialTotal: propTotal,
+    initialTotalPages: propTotalPages,
+    type: "Employee",
+    limit: pageSize,
+    filters: serverFilters,
+  });
+
+  const [filterOptions, setFilterOptions] = useState({
+    sexOptions: [],
+    officeOptions: [],
+    employmentStatuses: [],
+    appointmentStatuses: [],
+    yearLevelOptions: [],
+    schoolYears: [],
+    semesters: [],
+  });
+  useEffect(() => {
+    let active = true;
+    fetch("/api/analytics/filters")
+      .then((res) => (res.ok ? res.json() : Promise.resolve({})))
+      .then((data) => {
+        if (!active) return;
+        setFilterOptions({
+          sexOptions: data.sexOptions || [],
+          officeOptions: data.officeOptions || [],
+          employmentStatuses: data.employmentStatuses || [],
+          appointmentStatuses: data.appointmentStatuses || [],
+          yearLevelOptions: data.yearLevelOptions || [],
+          schoolYears: data.schoolYears || [],
+          semesters: data.semesters || [],
+        });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const sexOption = filterOptions.sexOptions;
+  const collegeOptions = filterOptions.officeOptions;
+  const employmentOptions = filterOptions.employmentStatuses;
+  const appointmentOptions = filterOptions.appointmentStatuses;
+  const yearLevelOptions = filterOptions.yearLevelOptions;
+  const schoolYearOptions = filterOptions.schoolYears;
+  const semesterOptions = filterOptions.semesters;
 
   const personTypeOptions = useMemo(() => {
     const list = [
@@ -110,108 +143,14 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     return list.length > 0 ? list : ["Student", "Employee"];
   }, [rawData]);
 
-  const yearLevelOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData
-          .map(
-            (d) =>
-              d?.personal_info_id?.affiliation.academic_information?.year_level,
-          )
-          .filter(Boolean),
-      ),
-    ],
-    [rawData],
-  );
-
-  const schoolYearOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((term) => term?.school_year).filter(Boolean)
-            : d?.school_year
-              ? [d.school_year]
-              : [],
-        ),
-      ),
-    ].sort((a, b) => String(b).localeCompare(String(a))),
-    [rawData],
-  );
-
-  const semesterOptions = useMemo(
-    () => [
-      ...new Set(
-        rawData.flatMap((d) =>
-          Array.isArray(d?.profile_terms)
-            ? d.profile_terms.map((term) => term?.semester).filter(Boolean)
-            : d?.semester
-              ? [d.semester]
-              : [],
-        ),
-      ),
-    ],
-    [rawData],
-  );
-
   useEffect(() => {
-    if (schoolYearOptions.length > 0 && !filterSchoolYear) {
-      setFilterSchoolYear(schoolYearOptions[0]);
+    if (defaultType && filterPersonType !== defaultType) {
+      setFilterPersonType(defaultType);
     }
-  }, [schoolYearOptions, filterSchoolYear]);
+  }, [defaultType, filterPersonType]);
 
   const filteredData = useMemo(() => {
-    let data = rawData.filter((user) => {
-      const p = user.personal_info_id || {};
-      const gad = p.gadData || {};
-      const personal = p.personal || {};
-      const affiliation = p.affiliation || {};
-      const acad = affiliation.academic_information || {};
-      const emp = affiliation.employment_information || {};
-      const collegeOrOffice = acad.college || emp.office || "";
-      const empStatus = emp.employment_status || "";
-      const empAppointment = emp.employment_appointment_status || "";
-      const terms = Array.isArray(user?.profile_terms)
-        ? user.profile_terms
-        : [];
-      const termMatches =
-        !filterSchoolYear && !filterSemester
-          ? true
-          : terms.some(
-              (term) =>
-                (!filterSchoolYear || term?.school_year === filterSchoolYear) &&
-                (!filterSemester || term?.semester === filterSemester),
-            ) ||
-            (!filterSchoolYear || user?.school_year === filterSchoolYear) &&
-            (!filterSemester || user?.semester === filterSemester);
-
-      if (personal.currentStatus !== "Employee") return false;
-
-      return (
-        (!filterSex || gad.sexAtBirth === filterSex) &&
-        (!filterPersonType || personal.currentStatus === filterPersonType) &&
-        (!filterYearLevel || acad.year_level === filterYearLevel) &&
-        termMatches &&
-        (filterCollege.length === 0 ||
-          filterCollege.includes(collegeOrOffice)) &&
-        (!filterEmployment || empStatus === filterEmployment) &&
-        (filterAppointment.length === 0 ||
-          filterAppointment.includes(empAppointment))
-      );
-    });
-
-    if (searchName.trim()) {
-      const q = searchName.toLowerCase();
-
-      data = data.filter((user) => {
-        const p = user.personal_info_id?.personal || {};
-        const fullName = `${p.first_name || ""} ${p.last_name || ""}`
-          .toLowerCase()
-          .trim();
-
-        return fullName.includes(q);
-      });
-    }
+    let data = [...rawData];
 
     if (nameSort) {
       data = [...data].sort((a, b) => {
@@ -294,31 +233,15 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
     return data;
   }, [
     rawData,
-    filterSex,
-    filterPersonType,
-    filterYearLevel,
-    filterSchoolYear,
-    filterSemester,
-    filterCollege,
-    filterEmployment,
-    filterAppointment,
     nameSort,
     sexSort,
     officeSort,
     employmentSort,
     appointmentSort,
-    searchName,
   ]);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [pageSizeInput, setPageSizeInput] = useState("10");
   const totalRows = filteredData.length;
-  const totalPages = Math.ceil(totalRows / pageSize) || 1;
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, page, pageSize]);
+  const paginatedData = filteredData;
 
   const allIds = useMemo(
     () =>
@@ -394,6 +317,216 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
       );
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const renderTabContent = (user) => {
+    const p = user.personal_info_id || {};
+    const personal = p.personal || {};
+    const gad = p.gadData || {};
+    const emp = p.affiliation?.employment_information || {};
+    const contact = p.contact || {};
+
+    switch (activeTab) {
+      case "personal":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">First Name:</span>
+              <p className="text-gray-900">{personal.first_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Middle Name:</span>
+              <p className="text-gray-900">{personal.middle_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Last Name:</span>
+              <p className="text-gray-900">{personal.last_name || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Date of Birth:</span>
+              <p className="text-gray-900">
+                {personal.birthday
+                  ? new Date(personal.birthday).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Civil Status:</span>
+              <p className="text-gray-900">{personal.civil_status || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Nationality:</span>
+              <p className="text-gray-900">{personal.nationality || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Religion:</span>
+              <p className="text-gray-900">{personal.religion || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Blood Type:</span>
+              <p className="text-gray-900">{personal.bloodType || "—"}</p>
+            </div>
+          </div>
+        );
+      case "employment":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Employee ID:</span>
+              <p className="text-gray-900">{emp.employee_id || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Office:</span>
+              <p className="text-gray-900">{emp.office || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Employment Status:</span>
+              <p className="text-gray-900">{emp.employment_status || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Appointment Status:</span>
+              <p className="text-gray-900">
+                {emp.employment_appointment_status || "—"}
+              </p>
+            </div>
+          </div>
+        );
+      case "gad":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Sex at Birth:</span>
+              <p className="text-gray-900">
+                {gad.sexAtBirth
+                  ? gad.sexAtBirth.toLowerCase() === "male"
+                    ? "Male"
+                    : gad.sexAtBirth.toLowerCase() === "female"
+                      ? "Female"
+                      : gad.sexAtBirth
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Gender Preference:</span>
+              <p className="text-gray-900">{gad.gender_preference || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Indigenous Person:</span>
+              <p className="text-gray-900">{gad.isIndigenousPerson ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">PWD:</span>
+              <p className="text-gray-900">{gad.isPWD ? "Yes" : "No"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">PWD Type:</span>
+              <p className="text-gray-900">{gad.pwd_type || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Socio-Economic Status:</span>
+              <p className="text-gray-900">{gad.socioEconomicStatus || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Head of Household:</span>
+              <p className="text-gray-900">{gad.headOfHousehold || "—"}</p>
+            </div>
+          </div>
+        );
+      case "contact":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Email:</span>
+              <p className="text-gray-900">{contact.email || user.email || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Mobile:</span>
+              <p className="text-gray-900">{contact.mobileNumber || "—"}</p>
+            </div>
+            <div className="col-span-2">
+              <span className="font-semibold text-gray-600">Current Address:</span>
+              <p className="text-gray-900">
+                {contact.currentAddress
+                  ? [
+                      contact.currentAddress.barangay?.name,
+                      contact.currentAddress.city?.name,
+                      contact.currentAddress.province?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "—"
+                  : "—"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <span className="font-semibold text-gray-600">Permanent Address:</span>
+              <p className="text-gray-900">
+                {contact.permanentAddress
+                  ? [
+                      contact.permanentAddress.barangay?.name,
+                      contact.permanentAddress.city?.name,
+                      contact.permanentAddress.province?.name,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "—"
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        );
+      case "account":
+        return (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold text-gray-600">Username:</span>
+              <p className="text-gray-900">{user.username || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Email:</span>
+              <p className="text-gray-900">{user.email || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Role:</span>
+              <p className="text-gray-900">{user.role || "—"}</p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Status:</span>
+              <p className={`font-medium ${user.is_active ? "text-green-600" : "text-red-600"}`}>
+                {user.is_active ? "Active" : "Inactive"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Created At:</span>
+              <p className="text-gray-900">
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="font-semibold text-gray-600">Last Updated:</span>
+              <p className="text-gray-900">
+                {user.updatedAt
+                  ? new Date(user.updatedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -665,40 +798,15 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
                     <button
-                      onClick={() => handleEdit(user._id)}
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setActiveTab("personal");
+                      }}
                       className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
                     >
-                      Edit
+                      View
                     </button>
-
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "toggle",
-                          userId: user._id,
-                          isActive: user.is_active,
-                        })
-                      }
-                      className={`px-3 py-1 text-xs rounded-md text-white transition ${
-                        user.is_active
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      {user.is_active ? "Deactivate" : "Activate"}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setConfirmAction({
-                          type: "reset",
-                          userId: user._id,
-                        })
-                      }
-                      className="px-3 py-1 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition"
-                    >
-                      Reset Password
-                    </button>
+                   
                   </TableCell>
                 </TableRow>
               );
@@ -717,44 +825,36 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
         <div className="flex items-center gap-2">
-          <span>Rows per page:</span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={pageSizeInput}
-            onChange={(e) => setPageSizeInput(e.target.value)}
-            onBlur={() => {
-              let val = parseInt(pageSizeInput, 10);
-              if (isNaN(val) || val < 1) val = 1;
-              if (val > 100) val = 100;
-              setPageSize(val);
-              setPage(1);
-              setPageSizeInput(String(val));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.target.blur();
-              }
-            }}
-            className="w-16 border rounded px-2 py-1"
-          />
+          <span className="text-sm text-gray-600">Rows per page:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+            className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
         </div>
+        <span className="text-sm text-gray-600">
+          {loading ? "Loading..." : `${serverTotal} total employees`}
+        </span>
         <div className="flex items-center gap-2">
           <button
             className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
+            onClick={() => goToServerPage(serverPage - 1)}
+            disabled={serverPage <= 1 || loading}
           >
             Prev
           </button>
           <span>
-            Page {page} of {totalPages}
+            Page {serverPage} of {serverTotalPages}
           </span>
           <button
             className="px-2 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
+            onClick={() => goToServerPage(serverPage + 1)}
+            disabled={serverPage >= serverTotalPages || loading}
           >
             Next
           </button>
@@ -834,6 +934,141 @@ export default function EmployeeListPageContent({ defaultType = "" }) {
           </div>
         </div>
       )}
+
+      {selectedUser && (() => {
+        const p = selectedUser.personal_info_id || {};
+        const personal = p.personal || {};
+        const emp = p.affiliation?.employment_information || {};
+
+        const viewTabs = [
+          { id: "personal", label: "Personal Info", icon: FaUser },
+          { id: "employment", label: "Employment", icon: FaBriefcase },
+          { id: "gad", label: "GAD Data", icon: FaVenusMars },
+          { id: "contact", label: "Contact", icon: FaMapMarkerAlt },
+          { id: "account", label: "Account", icon: FaShieldAlt },
+        ];
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+      
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                    {(personal.first_name?.[0] || "").toUpperCase()}
+                    {(personal.last_name?.[0] || "").toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {personal.first_name || ""}{" "}
+                      {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
+                      {personal.last_name || ""}
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      {emp.office || ""}
+                      {emp.employment_status ? ` • ${emp.employment_status}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedUser(null);
+                    setActiveTab("personal");
+                  }}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
+
+       
+              <div className="px-6 border-b border-gray-100">
+                <div className="flex gap-1 -mb-px">
+                  {viewTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
+                          activeTab === tab.id
+                            ? "border-blue-600 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }`}
+                      >
+                        <Icon size={14} /> {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
+              <div className="px-6 py-5">
+                {renderTabContent(selectedUser)}
+              </div>
+
+  
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex items-center gap-2.5">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    selectedUser.is_active
+                      ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                      : "bg-red-50 text-red-700 ring-1 ring-red-600/20"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      selectedUser.is_active ? "bg-green-500" : "bg-red-500"
+                    }`} />
+                    {selectedUser.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setConfirmAction({
+                        type: "toggle",
+                        userId: selectedUser._id,
+                        isActive: selectedUser.is_active,
+                      });
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition ${
+                      selectedUser.is_active
+                        ? "bg-red-50 text-red-700 ring-1 ring-red-600/20 hover:bg-red-100"
+                        : "bg-green-50 text-green-700 ring-1 ring-green-600/20 hover:bg-green-100"
+                    }`}
+                  >
+                    {selectedUser.is_active ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setConfirmAction({
+                        type: "reset",
+                        userId: selectedUser._id,
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 hover:bg-amber-100 transition"
+                  >
+                    Reset Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setActiveTab("personal");
+                    }}
+                    className="px-4 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
