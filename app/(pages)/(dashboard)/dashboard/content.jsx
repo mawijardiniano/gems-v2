@@ -21,6 +21,7 @@ import {
 } from "react-icons/fa";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { EventCardSkeletonList } from "@/components/Skeleton";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -276,7 +277,7 @@ export default function DashboardContent({ profile, userId }) {
             </div>
             <div className="p-4 space-y-2">
               {eventsLoading ? (
-                <p className="text-sm text-gray-400 py-4 text-center">Loading events...</p>
+                <EventCardSkeletonList count={3} />
               ) : discoverEvents.length > 0 ? (
                 discoverEvents.map((evt) => (
                   <EventCard key={evt._id} event={evt} onClick={(id) => router.push(`/events/discover/${id}`)} />
@@ -302,7 +303,7 @@ export default function DashboardContent({ profile, userId }) {
             </div>
             <div className="p-4 space-y-2">
               {eventsLoading ? (
-                <p className="text-sm text-gray-400 py-4 text-center">Loading events...</p>
+                <EventCardSkeletonList count={3} />
               ) : pastEvents.length > 0 ? (
                 pastEvents.map((evt) => (
                   <EventCard key={evt._id} event={evt} onClick={(id) => router.push(`/events/discover/${id}`)} />

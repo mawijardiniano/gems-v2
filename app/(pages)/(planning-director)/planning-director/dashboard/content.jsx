@@ -7,6 +7,7 @@ import Snapshot from "../../../(admin)/admin-dashboard/components/snapshot";
 import GenderPanel from "../../../(admin)/admin-dashboard/components/genderPanel";
 import Demographics from "../../../(admin)/admin-dashboard/components/demographics";
 import Filter from "../../../(admin)/admin-dashboard/components/Filter";
+import { AnalyticsDashboardSkeleton } from "@/components/Skeleton";
 
 export default function PlanningDirectorDashboard() {
   const { data: filters, loading: filtersLoading } = useDashboardFilters();
@@ -97,9 +98,7 @@ export default function PlanningDirectorDashboard() {
       </div>
 
       {dashboardLoading || !dashboardData ? (
-        <div className="flex justify-center py-10">
-          <div className="h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
-        </div>
+        <AnalyticsDashboardSkeleton />
       ) : (
         <>
           <Snapshot snapshot={dashboardData?.snapshot} />

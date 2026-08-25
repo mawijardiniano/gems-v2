@@ -56,6 +56,42 @@ body {
   50% { opacity: 0.4; }
 }
 
+/* Skeleton shimmer — transform-only so it stays on the GPU compositor */
+@keyframes skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #e5e7eb;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }

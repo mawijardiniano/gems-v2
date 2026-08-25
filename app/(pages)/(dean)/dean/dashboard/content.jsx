@@ -5,6 +5,7 @@ import GenderPanel from "../../components/genderPanel";
 import Demographics from "../../components/demographics";
 import useDashboardData from "@/hooks/useDashboardData";
 import useDashboardFilters from "@/hooks/useDashboardFilters";
+import { AnalyticsDashboardSkeleton } from "@/components/Skeleton";
 import { useSelector } from "react-redux";
 
 export default function DeanDashboardContent() {
@@ -103,9 +104,7 @@ export default function DeanDashboardContent() {
       </div>
       <div className="flex flex-col gap-4">
         {dashboardLoading || !dashboardData ? (
-          <div className="flex justify-center py-10">
-            <div className="h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
-          </div>
+          <AnalyticsDashboardSkeleton />
         ) : (
           <>
             <Snapshot
