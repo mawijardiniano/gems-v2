@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
 import { connectDB } from "@/lib/db";
+import { linkBudgetToMatchingGpb } from "@/lib/budgetLinking";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -45,14 +46,7 @@ export async function POST(req) {
       severity: "info",
     });
 
-    const gpb = await GPB.findOne({
-      year: Number(body.year),
-    });
-
-    if (gpb) {
-      gpb.gaaBudgetId = budget._id;
-      await gpb.save();
-    }
+    await linkBudgetToMatchingGpb(GPB, budget);
 
     return NextResponse.json({
       success: true,

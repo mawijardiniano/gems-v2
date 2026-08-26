@@ -113,6 +113,12 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
 
   const totalGAA = Number(gaaBudget?.totalGAA) || 0;
   const originalBudget = Number(gaaBudget?.gadAnnualBudget) || 0;
+  const hasBudget = Boolean(gaaBudget);
+
+  const totalGAADisplay = hasBudget ? `₱ ${fmt(totalGAA)}` : "To follow";
+  const originalBudgetDisplay = hasBudget
+    ? `₱ ${fmt(originalBudget)}`
+    : "To follow";
 
   const utilPct =
     originalBudget > 0
@@ -411,7 +417,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           </tr>
           <!-- Row 4: Full width -->
           <tr class="full-row">
-            <td class="label" colspan="2">Total Budget/GAA of Organization: <strong>₱ ${fmt(totalGAA)}</strong></td>
+            <td class="label" colspan="2">Total Budget/GAA of Organization: <strong>${totalGAADisplay}</strong></td>
           </tr>
         </table>
 
@@ -424,7 +430,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           <td class="label">Actual GAD Expenditure</td>
           <td class="num">₱ ${fmt(totalExpenditures)}</td>
           <td class="label">Original Budget</td>
-          <td class="num">₱ ${fmt(originalBudget)}</td>
+          <td class="num">${originalBudgetDisplay}</td>
         </tr>
         <tr>
           <td class="empty"></td>

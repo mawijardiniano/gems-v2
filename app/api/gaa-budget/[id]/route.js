@@ -32,6 +32,23 @@ export async function PUT(req, { params }) {
     if (!budget) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+
+    const nextYear = Number(body.year);
+    if (Number.isFinite(nextYear) && nextYear !== Number(budget.year)) {
+      const linkedGpbs = await GPB.find({ gaaBudgetId: id }).select("year");
+      const mismatched = linkedGpbs.filter((g) => Number(g.year) !== nextYear);
+      if (mismatched.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Cannot change the budget year to ${nextYear}: it is linked to GPB record(s) for year(s) ${mismatched
+              .map((g) => g.year)
+              .join(", ")}. Detach or re-attach those GPBs first.`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     budget.year = body.year;
     budget.totalGAA = body.totalGAA;
     budget.gadPercent = body.gadPercent;
@@ -60,7 +77,6 @@ export async function DELETE(req, { params }) {
     if (!deleted)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // Clear the budget reference from any GPB records that use this budget
     await GPB.updateMany({ gaaBudgetId: id }, { $set: { gaaBudgetId: null } });
 
     await logActivity({

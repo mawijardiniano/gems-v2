@@ -94,6 +94,8 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
       totalGAAFormatted = Number(totalGAA).toLocaleString(undefined, {
         minimumFractionDigits: 2,
       });
+    } else {
+      totalGAAFormatted = "To follow";
     }
 
     const safeProjects = Array.isArray(projects) ? projects : [];
@@ -329,7 +331,6 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
     <button
       className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2"
       onClick={handlePrintProjects}
-      disabled={totalGAA === null || typeof totalGAA === "undefined"}
     >
       Print Projects
     </button>

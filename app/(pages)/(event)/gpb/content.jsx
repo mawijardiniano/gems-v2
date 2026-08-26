@@ -20,9 +20,10 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaPrint,
+  FaLink,
 } from "react-icons/fa";
 
-// ─── Skeleton ──────────────────────────────────────────────────────
+
 function SkeletonCard() {
   return (
     <div className="animate-pulse rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
@@ -41,7 +42,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Empty State ───────────────────────────────────────────────────
 function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 col-span-full">
@@ -55,7 +55,6 @@ function EmptyState({ icon: Icon, title, description, action }) {
   );
 }
 
-// ─── Status Badge ──────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const styles = {
     draft: "bg-amber-50 text-amber-700 border-amber-200",
@@ -70,7 +69,6 @@ function StatusBadge({ status }) {
   );
 }
 
-// ─── Stat Card ─────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color = "blue" }) {
   const colorMap = {
     blue: "bg-blue-50 text-blue-600",
@@ -93,7 +91,6 @@ function StatCard({ icon: Icon, label, value, color = "blue" }) {
   );
 }
 
-// ─── Main Component ────────────────────────────────────────────────
 export default function ProjectContent2({ basePath = "/gpb" }) {
   const role = useSelector((state) => state.auth.role);
   const [gpbList, setGpbList] = useState([]);
@@ -101,24 +98,27 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // Create modal
   const [showModal, setShowModal] = useState(false);
   const [selectedYear, setSelectedYear] = useState("");
   const [availableBudgets, setAvailableBudgets] = useState([]);
   const [selectedBudget, setSelectedBudget] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Delete
+  const [attachModal, setAttachModal] = useState(null); // { gpb }
+  const [attachBudgetOptions, setAttachBudgetOptions] = useState([]);
+  const [attachBudgetId, setAttachBudgetId] = useState("");
+  const [attaching, setAttaching] = useState(false);
+
+
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
-  const menuRef = useRef(null);
 
-  // Pagination
+  const menuRefs = useRef({});
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
 
-  // Auto-dismiss
   useEffect(() => {
     if (success) { const t = setTimeout(() => setSuccess(""), 3000); return () => clearTimeout(t); }
   }, [success]);
@@ -129,15 +129,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+
+      const el = menuRefs.current[openMenuId];
+      if (el && !el.contains(e.target)) {
         setOpenMenuId(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [openMenuId]);
 
-  // ── Data fetching ──────────────────────────────────────────────
   const loadGPB = useCallback(async () => {
     setLoading(true);
     try {
@@ -163,11 +164,9 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
       );
       setAvailableBudgets(filtered);
     } catch {
-      // silent
     }
   }, [gpbList]);
 
-  // ── Modal handlers ─────────────────────────────────────────────
   const openModal = async () => {
     await loadBudgets();
     setSelectedYear("");
@@ -207,7 +206,6 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     }
   };
 
-  // ── Delete handler ─────────────────────────────────────────────
   const handleDelete = async (year) => {
     try {
       setDeleting(true);
@@ -223,8 +221,55 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     }
   };
 
-  // ── Computed values ────────────────────────────────────────────
-  const availableYears = useMemo(() => availableBudgets.map((b) => b.year), [availableBudgets]);
+  const openAttachModal = async (item) => {
+    setOpenMenuId(null);
+    setAttachModal({ gpb: item });
+    setAttachBudgetId(item.gaaBudgetId?._id || "");
+    try {
+      const res = await axios.get("/api/gaa-budget");
+      setAttachBudgetOptions(res.data?.data || []);
+    } catch {
+      setAttachBudgetOptions([]);
+    }
+  };
+
+  const closeAttachModal = () => {
+    setAttachModal(null);
+    setAttachBudgetId("");
+  };
+
+  const attachableBudgets =
+    attachModal && !loading
+      ? attachBudgetOptions.filter(
+          (b) => Number(b.year) === Number(attachModal.gpb.year),
+        )
+      : [];
+
+  const handleAttach = async () => {
+    if (!attachModal || !attachBudgetId) return;
+    try {
+      setAttaching(true);
+      await axios.patch(`/api/gpb/${attachModal.gpb.year}`, {
+        gaaBudgetId: attachBudgetId,
+      });
+      setSuccess(
+        `GAA budget linked to GPB ${attachModal.gpb.year} successfully.`,
+      );
+      closeAttachModal();
+      await loadGPB();
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to attach budget");
+    } finally {
+      setAttaching(false);
+    }
+  };
+
+  const yearAlreadyExists = useMemo(
+    () =>
+      selectedYear !== "" &&
+      gpbList.some((g) => Number(g.year) === Number(selectedYear)),
+    [gpbList, selectedYear],
+  );
 
   const totalPages = Math.ceil(gpbList.length / itemsPerPage);
   const paginatedGPB = gpbList.slice(
@@ -244,7 +289,6 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-      {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -267,7 +311,6 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         </div>
       </div>
 
-      {/* ── Success / Error Banners ─────────────────────────────── */}
       {success && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm animate-slide-up">
           <FaCheckCircle className="h-5 w-5 shrink-0" />
@@ -281,7 +324,6 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         </div>
       )}
 
-      {/* ── Summary Cards ───────────────────────────────────────── */}
       {!loading && gpbList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-4">
           <StatCard icon={FaCalendarAlt} label="Total GPB Records" value={String(stats.total)} color="blue" />
@@ -291,7 +333,6 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         </div>
       )}
 
-      {/* ── GPB Grid ────────────────────────────────────────────── */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
@@ -325,7 +366,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   key={item._id}
                   className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
                 >
-                  {/* Top accent bar */}
+                
                   <div className={`h-1.5 w-full ${
                     item.status_of_gpb?.status === "approved"
                       ? "bg-emerald-500"
@@ -335,18 +376,28 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   }`} />
 
                   <div className="p-6">
-                    {/* Header row */}
+                  
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
                           GPB
                         </span>
                         <StatusBadge status={item.status_of_gpb?.status} />
+                        {!item.gaaBudgetId && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-200">
+                            Awaiting GAA budget
+                          </span>
+                        )}
                       </div>
 
-                      {/* 3-dot menu */}
+                   
                       {canManage && (
-                        <div className="relative" ref={menuRef}>
+                        <div
+                          className="relative"
+                          ref={(el) => {
+                            menuRefs.current[item._id] = el;
+                          }}
+                        >
                           <button
                             onClick={(e) => {
                               e.preventDefault();
@@ -400,13 +451,25 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                                   Delete GPB
                                 </button>
                               )}
+                              <div className="border-t border-gray-100 my-1" />
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  openAttachModal(item);
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                              >
+                                <FaLink className="h-3.5 w-3.5" />
+                                {item.gaaBudgetId
+                                  ? "Change Budget"
+                                  : "Attach Budget"}
+                              </button>
                             </div>
                           )}
                         </div>
                       )}
                     </div>
-
-                    {/* Year */}
                     <Link href={`${basePath}/${item.year}`} className="block">
                       <div className="mb-4">
                         <span className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -435,7 +498,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                           <span className="font-semibold text-gray-900">
                             {gaa?.totalGAA
                               ? `₱ ${Number(gaa.totalGAA).toLocaleString()}`
-                              : "—"}
+                              : "To follow"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -446,7 +509,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                           <span className="font-semibold text-emerald-600">
                             {gaa?.gadAnnualBudget
                               ? `₱ ${Number(gaa.gadAnnualBudget).toLocaleString()}`
-                              : "—"}
+                              : "To follow"}
                           </span>
                         </div>
                       </div>
@@ -462,7 +525,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             })}
           </div>
 
-          {/* ── Pagination ───────────────────────────────────────── */}
+        
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <span>Showing</span>
@@ -537,7 +600,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         </>
       )}
 
-      {/* ── Create GPB Modal ────────────────────────────────────── */}
+
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
@@ -550,7 +613,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   </div>
                   <div>
                     <h2 className="text-base font-semibold text-gray-900">Create GPB</h2>
-                    <p className="text-xs text-gray-500">Link a GAA budget to create a new GPB record</p>
+                    <p className="text-xs text-gray-500">Create a GPB record — link its GAA budget now or later</p>
                   </div>
                 </div>
                 <button
@@ -563,33 +626,64 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             </div>
 
             <div className="p-6 space-y-5">
-              {/* Year selection */}
+       
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-                  Select Year
+                  GPB Year
                 </label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                  <select
+                  <input
+                    type="number"
+                    min="2000"
+                    max="2100"
+                    placeholder={`e.g. ${new Date().getFullYear() + 1}`}
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white appearance-none"
-                  >
-                    <option value="">Select a year</option>
-                    {availableYears.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+                  />
                 </div>
-                {availableYears.length === 0 && (
-                  <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                {yearAlreadyExists ? (
+                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
                     <FaExclamationTriangle className="h-3 w-3" />
-                    No available budgets. Create a GAA budget first.
+                    A GPB for {selectedYear} already exists.
                   </p>
+                ) : (
+                  selectedYear !== "" &&
+                  !selectedBudget && (
+                    <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                      <FaExclamationTriangle className="h-3 w-3" />
+                      No GAA budget for {selectedYear} yet — you can create the
+                      GPB now and link the budget later.
+                    </p>
+                  )
                 )}
               </div>
 
-              {/* Budget preview */}
+       
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                  Link GAA Budget{" "}
+                  <span className="normal-case font-normal text-gray-400">
+                    (optional)
+                  </span>
+                </label>
+                <select
+                  value={selectedBudget}
+                  onChange={(e) => setSelectedBudget(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white appearance-none"
+                >
+                  <option value="">No budget — link later</option>
+                  {availableBudgets.map((budget) => (
+                    <option key={budget._id} value={budget._id}>
+                      FY {budget.year} — ₱{" "}
+                      {Number(budget.gadAnnualBudget || 0).toLocaleString()}{" "}
+                      GAD budget
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {selectedBudget && (
                 <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Linked Budget</p>
@@ -620,7 +714,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 </div>
               )}
 
-              {/* Actions */}
+            
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <button
                   onClick={closeModal}
@@ -629,7 +723,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   Cancel
                 </button>
                 <button
-                  disabled={!selectedYear || !selectedBudget || creating}
+                  disabled={!selectedYear || yearAlreadyExists || creating}
                   onClick={handleCreate}
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
                 >
@@ -644,6 +738,90 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   ) : (
                     "Create GPB"
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {attachModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center shadow-sm">
+                    <FaLink className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">
+                      {attachModal.gpb.gaaBudgetId
+                        ? "Change Budget"
+                        : "Attach Budget"}
+                    </h2>
+                    <p className="text-xs text-gray-500">Link a GAA budget to GPB {attachModal.gpb.year}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeAttachModal}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                >
+                  <FaTimes className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {attachableBudgets.length === 0 ? (
+                <p className="text-sm text-gray-500 flex items-start gap-2">
+                  <FaExclamationTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <span>
+                    No GAA budget exists for {attachModal.gpb.year} yet. Create
+                    it under GAA Budget and this GPB will link automatically.
+                  </span>
+                </p>
+              ) : (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                    GAA Budget for {attachModal.gpb.year}
+                  </label>
+                  <select
+                    value={attachBudgetId}
+                    onChange={(e) => setAttachBudgetId(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white appearance-none"
+                  >
+                    <option value="">Select a budget</option>
+                    {attachableBudgets.map((budget) => (
+                      <option key={budget._id} value={budget._id}>
+                        FY {budget.year} — ₱{" "}
+                        {Number(budget.gadAnnualBudget || 0).toLocaleString()}{" "}
+                        GAD budget
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+   
+              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  onClick={closeAttachModal}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!attachBudgetId || attaching}
+                  onClick={handleAttach}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
+                >
+                  {attaching
+                    ? "Linking..."
+                    : attachModal.gpb.gaaBudgetId
+                      ? "Update Budget"
+                      : "Attach Budget"}
                 </button>
               </div>
             </div>

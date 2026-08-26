@@ -7,6 +7,11 @@ import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
+import {
+  NO_BUDGET_WARNING,
+  OVER_BUDGET_WARNING,
+  buildBudgetSummary,
+} from "@/lib/budgetLinking";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -39,34 +44,25 @@ export async function POST(req) {
 
   const budget = await GAABudget.findOne({ year });
 
-  if (!budget) {
-    return Response.json(
-      { message: "No GAA Budget found for this year" },
-      { status: 400 },
-    );
-  }
+  let overBudgetWarning = null;
+  let budgetSummary = null;
 
-  const used = await Project.aggregate([
-    { $match: { year } },
-    { $group: { _id: null, total: { $sum: "$gad_budget.value" } } },
-  ]);
+  if (budget) {
+    const used = await Project.aggregate([
+      { $match: { year } },
+      { $group: { _id: null, total: { $sum: "$gad_budget.value" } } },
+    ]);
 
-  const usedBudget = used[0]?.total || 0;
-  const remainingBudget = budget.gadAnnualBudget - usedBudget;
+    const usedBudget = used[0]?.total || 0;
+    const remainingBudget = budget.gadAnnualBudget - usedBudget;
 
-  if (requestedBudget > remainingBudget) {
-    return Response.json(
-      {
-        message: "Insufficient GAD budget",
-        budgetSummary: {
-          totalBudget: budget.gadAnnualBudget,
-          usedBudget,
-          remainingBudget,
-          requested: requestedBudget,
-        },
-      },
-      { status: 400 },
-    );
+    if (requestedBudget > remainingBudget) {
+      overBudgetWarning = OVER_BUDGET_WARNING;
+      budgetSummary = buildBudgetSummary({
+        budget,
+        usedBudget: usedBudget + requestedBudget,
+      });
+    }
   }
 
   const projectData = {
@@ -149,13 +145,15 @@ export async function POST(req) {
     metadata: { year, actorId },
   });
 
+  const setOnInsert = { year };
+  if (budget) {
+    setOnInsert.gaaBudgetId = budget._id;
+  }
+
   const gpb = await GPB.findOneAndUpdate(
     { year },
     {
-      $setOnInsert: {
-        year,
-        gaaBudgetId: budget._id,
-      },
+      $setOnInsert: setOnInsert,
     },
     { new: true, upsert: true },
   );
@@ -165,7 +163,6 @@ export async function POST(req) {
     { $addToSet: { projects: project._id } },
   );
 
-  // Check for duplicate Gender Issue / GAD Mandate in the same year (warn only)
   let duplicateWarnings = [];
   try {
     const existingProjects = await Project.find({ year, _id: { $ne: project._id } })
@@ -179,6 +176,8 @@ export async function POST(req) {
     message: "Project created successfully",
     data: project,
     duplicateWarnings,
+    ...(budget ? {} : { warning: NO_BUDGET_WARNING }),
+    ...(overBudgetWarning ? { warning: overBudgetWarning, budgetSummary } : {}),
   });
 }
 

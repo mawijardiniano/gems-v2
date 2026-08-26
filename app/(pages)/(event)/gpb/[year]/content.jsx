@@ -4,11 +4,82 @@ import { useRouter, useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useRef } from "react";
 import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
+import {
+  FaPiggyBank,
+  FaClipboardList,
+} from "react-icons/fa";
+import { FaScaleBalanced } from "react-icons/fa6";
 import axios from "axios";
 import PrintGPB from "../../components/Print/PrintGPB";
 import { findDuplicates } from "@/lib/duplicateDetection";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
+
+
+function describeBudgetRejection(data) {
+  const remaining = data?.budgetSummary?.remainingBudget;
+  const base = data.message || data.error || "Failed to add project";
+  return remaining !== null &&
+    remaining !== undefined &&
+    Number.isFinite(Number(remaining))
+    ? `${base}. Remaining Budget: ₱${Number(remaining).toLocaleString()}`
+    : base;
+}
+
+function describeBudgetWarning(data) {
+  const base = data.warning;
+  const overBy = data?.budgetSummary?.overBy;
+  return base &&
+    overBy !== null &&
+    overBy !== undefined &&
+    Number.isFinite(Number(overBy)) &&
+    Number(overBy) > 0
+    ? `${base} Exceeds budget by ₱${Number(overBy).toLocaleString()}.`
+    : base;
+}
+
+// ─── Budget Summary Stat Card ─────────────────────────────────────────
+// Matches the card pattern used across the app (gpb, gaa-budget, gad-ars)
+// so the GPB year page feels like part of the same design system.
+function StatCard({ icon: Icon, label, value, sub, color = "blue", badge, danger = false }) {
+  const colorMap = {
+    blue: "bg-blue-50 text-blue-600",
+    green: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
+    violet: "bg-violet-50 text-violet-600",
+    red: "bg-red-50 text-red-600",
+  };
+
+  return (
+    <div
+      className={`rounded-2xl border shadow-sm p-5 transition-all duration-200 ${
+        danger
+          ? "border-red-200 bg-red-50/50 hover:shadow-md"
+          : "bg-white border-gray-100 hover:shadow-md"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={`h-12 w-12 rounded-xl ${colorMap[color] || colorMap.blue} flex items-center justify-center shrink-0`}
+        >
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            {label}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-0.5">
+            <p className={`text-xl font-bold truncate ${danger ? "text-red-700" : "text-gray-900"}`}>
+              {value}
+            </p>
+            {badge}
+          </div>
+          {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function emptyIndicator() {
   return {
@@ -476,6 +547,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [duplicateWarnings, setDuplicateWarnings] = useState([]);
   const [editDuplicateWarnings, setEditDuplicateWarnings] = useState([]);
+  // Shown when a project is created while no GAA budget exists for the year.
+  const [addWarning, setAddWarning] = useState("");
   const router = useRouter();
   const params = useParams();
   const year = params?.year;
@@ -820,6 +893,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     e.preventDefault();
     setAddLoading(true);
     setAddError("");
+    setAddWarning("");
     try {
       const payload = {
         ...newProject,
@@ -839,16 +913,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         if (data.duplicateWarnings?.length > 0) {
           setDuplicateWarnings(data.duplicateWarnings);
         }
+        if (data.warning) {
+          setAddWarning(describeBudgetWarning(data));
+        }
         setNewProject(emptyNewProject());
         fetchProjects();
         fetchBudgetSummary();
       } else {
         if (data.budgetSummary) {
-          setAddError(
-            `${data.message}. Remaining Budget: ₱${Number(
-              data.budgetSummary.remainingBudget,
-            ).toLocaleString()}`,
-          );
+          setAddError(describeBudgetRejection(data));
         } else {
           setAddError(data.message || data.error || "Failed to add project");
         }
@@ -863,6 +936,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const handleWizardSubmit = async () => {
     setAddLoading(true);
     setAddError("");
+    setAddWarning("");
     try {
       const payload = {
         ...newProject,
@@ -880,6 +954,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       if (res.ok) {
         if (data.duplicateWarnings?.length > 0) {
           setDuplicateWarnings(data.duplicateWarnings);
+        }
+        if (data.warning) {
+          setAddWarning(describeBudgetWarning(data));
         }
         setNewProject(emptyNewProject());
         setShowWizard(false);
@@ -1155,18 +1232,62 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
   }, [addError]);
 
+  useEffect(() => {
+    if (addWarning) {
+      const timer = setTimeout(() => {
+        setAddWarning("");
+      }, 6000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [addWarning]);
+
   const TABLE_WIDTH = sidebarOpen ? 1400 : 1000;
+
+  // Late-budget support: total/remaining are null until a GAA budget exists.
+  const overBudget = Boolean(
+    budgetSummary?.hasBudget && budgetSummary.overBudget,
+  );
+  const fmtMoney = (n) =>
+    n === null || n === undefined
+      ? ""
+      : Number(n).toLocaleString(undefined, { minimumFractionDigits: 2 });
 
   return (
     <div className="p-6">
       <button
         onClick={() => router.push(backPath)}
-        className="flex flex-row items-center mb-2 text-blue-600 gap-1"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline mb-4 transition-colors"
       >
-        <FiArrowLeft /> Back to GPB List
+        <FiArrowLeft className="h-4 w-4" /> Back to GPB List
       </button>
-      <div className="flex justify-between">
-        <h2 className="text-3xl font-bold mb-4">GPB Year {year}</h2>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            GPB Year {year}
+          </h2>
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full capitalize ${
+              status === "approved"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : status === "disapproved"
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                status === "approved"
+                  ? "bg-emerald-500"
+                  : status === "disapproved"
+                    ? "bg-red-500"
+                    : "bg-amber-500"
+              }`}
+            />
+            {status || "draft"}
+          </span>
+        </div>
 
         <PrintGPB
           totalGAA={totalGAA}
@@ -1175,7 +1296,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         />
       </div>
 
-      <div className=" flex gap-2"></div>
       {updateStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
@@ -1375,22 +1495,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         </div>
       )}
 
-      <div className="flex justify-between mb-4">
-        <p className="text-md font-bold">
-          Status:{" "}
-          <span
-            className={`capitalize ${
-              status === "draft"
-                ? " text-yellow-500"
-                : status === "approved"
-                  ? " text-green-700"
-                  : " text-red-600"
-            }`}
-          >
-            {status}
-          </span>
-        </p>
-
+      <div className="flex justify-end mb-4">
+      
         {role !== "gad coordinator" && (
           <div className="flex items-center gap-2">
             {role !== "planning director" &&
@@ -1417,60 +1523,69 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {budgetSummary !== null && (
-          <div className="bg-white border border-gray-200 p-4 h-20">
-            <div className="mb-2 text-sm font-medium">
-              Total GAD Budget for {year}
-            </div>
-            <div className="flex justify-end">
-              ₱{" "}
-              <span className="text-red-600">
-                {budgetSummary.totalBudget.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </div>
+          <StatCard
+            icon={FaPiggyBank}
+            color="blue"
+            label="Total GAD Budget"
+            value={
+              budgetSummary.hasBudget
+                ? `₱ ${fmtMoney(budgetSummary.totalBudget)}`
+                : "To follow"
+            }
+            sub={`Allocated GAA GAD budget · ${year}`}
+          />
         )}
 
         {budgetSummary !== null && (
-          <div className="bg-white border border-gray-200 p-4 h-20">
-            <div className="mb-2 text-sm font-medium">
-              {status === "approved"
+          <StatCard
+            icon={FaClipboardList}
+            color="green"
+            label={
+              status === "approved"
                 ? "Total GAD Allocation Used"
-                : "Projected GAD Allocation Utilization"}{" "}
-              for {year}
-            </div>
-            <div className="flex justify-end">
-              ₱{" "}
-              <span className="text-red-600">
-                {budgetSummary.usedBudget.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </div>
+                : "Projected GAD Allocation Utilization"
+            }
+            value={`₱ ${fmtMoney(budgetSummary.usedBudget ?? 0)}`}
+            badge={
+              overBudget && (
+                <span className="text-xs font-semibold text-red-700 bg-red-100 border border-red-300 rounded-full px-2 py-0.5 whitespace-nowrap">
+                  ⚠ Over budget
+                </span>
+              )
+            }
+            sub={`Sum of all project GAD budgets · ${year}`}
+          />
         )}
 
-        {/*Projected*/}
         {budgetSummary !== null && (
-          <div className="bg-white border border-gray-200 p-4 h-20">
-            <div className="mb-4 text-sm font-medium">
-              {status === "approved"
+          <StatCard
+            icon={FaScaleBalanced}
+            color={overBudget ? "red" : "green"}
+            danger={overBudget}
+            label={
+              status === "approved"
                 ? "Remaining GAD Budget"
-                : "Projected Remaining GAD Budget"}{" "}
-              for {year}
-            </div>
-            <div className="flex justify-end">
-              ₱{" "}
-              <span className="text-red-600">
-                {budgetSummary.remainingBudget.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </div>
+                : "Projected Remaining GAD Budget"
+            }
+            value={
+              budgetSummary.hasBudget
+                ? `₱ ${fmtMoney(budgetSummary.remainingBudget)}`
+                : "To follow"
+            }
+            sub={
+              !budgetSummary.hasBudget ? (
+                "Budget allocation pending"
+              ) : overBudget ? (
+                <span className="font-semibold text-red-600">
+                  Over budget by ₱{fmtMoney(budgetSummary.overBy)}
+                </span>
+              ) : (
+                `${status === "approved" ? "Remaining" : "Projected"} GAD budget for ${year}`
+              )
+            }
+          />
         )}
       </div>
 
@@ -2063,9 +2178,23 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               ))}
             </div>
 
+            {budgetSummary !== null && !budgetSummary.hasBudget && (
+              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+                No GAA budget allocated for {year} yet — you can still record
+                this project. Utilization will be tracked and capped
+                automatically once the budget arrives.
+              </div>
+            )}
+
             {addError && (
               <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">
                 {addError}
+              </div>
+            )}
+
+            {addWarning && (
+              <div className="mb-4 p-3 rounded bg-amber-50 border border-amber-200 text-amber-700 text-sm whitespace-pre-line">
+                {addWarning}
               </div>
             )}
 
@@ -2591,9 +2720,23 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       ) : (
         <div className="overflow-x-auto">
           <form onSubmit={handleAddProject}>
+            {budgetSummary !== null && !budgetSummary.hasBudget && (
+              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+                No GAA budget allocated for {year} yet — you can still record
+                this project. Utilization will be tracked and capped
+                automatically once the budget arrives.
+              </div>
+            )}
+
             {addError && (
               <div className="whitespace-pre-line rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 mb-4">
                 {addError}
+              </div>
+            )}
+
+            {addWarning && (
+              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+                {addWarning}
               </div>
             )}
             <div
@@ -2672,9 +2815,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       </th>
                       {role !== "planning director" && (
                         <>
-                          <th className="py-2 px-4 border-b text-center w-10 text-xs">
+                          {/* <th className="py-2 px-4 border-b text-center w-10 text-xs">
                             Number of Events
-                          </th>
+                          </th> */}
                           <th className="py-2 px-4 border-b text-center w-10 text-xs">
                             Actions
                           </th>
@@ -3870,14 +4013,14 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                     )}
                                     {role !== "planning director" && (
                                       <>
-                                        <td
+                                        {/* <td
                                           className="py-2 px-4 border text-sm"
                                           rowSpan={editMaxRows}
                                         >
                                           {Array.isArray(project.events)
                                             ? project.events.length
                                             : 0}
-                                        </td>
+                                        </td> */}
                                         <td
                                           className="py-2 px-4 border text-sm"
                                           rowSpan={editMaxRows}

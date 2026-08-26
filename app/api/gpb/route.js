@@ -8,6 +8,7 @@ import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { validateBudgetLink } from "@/lib/budgetLinking";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -66,16 +67,6 @@ export async function POST(req) {
       );
     }
 
-    if (!gaaBudgetId) {
-      return Response.json(
-        {
-          success: false,
-          message: "GAA Budget is required",
-        },
-        { status: 400 }
-      );
-    }
-
     const existingGPB = await GPB.findOne({ year });
 
     if (existingGPB) {
@@ -88,31 +79,25 @@ export async function POST(req) {
       );
     }
 
-    const budget = await GAABudget.findById(gaaBudgetId);
+    let budget = null;
+    if (gaaBudgetId) {
+      budget = await GAABudget.findById(gaaBudgetId);
 
-    if (!budget) {
-      return Response.json(
-        {
-          success: false,
-          message: "Selected budget not found",
-        },
-        { status: 404 }
-      );
-    }
-
-    if (budget.year !== year) {
-      return Response.json(
-        {
-          success: false,
-          message: `Budget year (${budget.year}) does not match GPB year (${year})`,
-        },
-        { status: 400 }
-      );
+      const validation = validateBudgetLink(budget, year);
+      if (!validation.ok) {
+        return Response.json(
+          {
+            success: false,
+            message: validation.message,
+          },
+          { status: validation.status }
+        );
+      }
     }
 
     const newGPB = await GPB.create({
       year,
-      gaaBudgetId,
+      ...(gaaBudgetId ? { gaaBudgetId: budget._id } : {}),
       projects: [],
       status_of_gpb: {
         status: "draft",
@@ -131,7 +116,7 @@ export async function POST(req) {
     await logActivity({
       req,
       action: "GPB_CREATE",
-      description: `GPB created for year ${year}`,
+      description: `GPB created for year ${year}${budget ? "" : " (without GAA budget)"}`,
       resource_type: "gpb",
       resource_id: newGPB._id,
       severity: "info",
