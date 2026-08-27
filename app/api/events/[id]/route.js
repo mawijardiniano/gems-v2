@@ -6,11 +6,25 @@ import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 import { deleteFileFromBucket } from "@/lib/delete";
 import AccomplishmentReport from "@/models/accomplishment_report";
-import { requireAuth } from "@/lib/auth";
+import mongoose from "mongoose";
+import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
 
+
+const USER_POPULATE_BASE = {
+  model: "UserAuth",
+  select: "username role personal_info_id",
+  populate: {
+    path: "personal_info_id",
+    model: "GemsProfile",
+    select:
+      "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
+  },
+};
+
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+
+  const { user, error, status } = await optionalAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -21,60 +35,57 @@ export async function GET(req, { params }) {
       { status: 400 },
     );
 
-  await connectDB();
-  const event = await Event.findById(id)
-    .populate({
-      path: "created_by",
-      model: "UserAuth",
-      select: "username role personal_info_id",
-      populate: {
-        path: "personal_info_id",
-        model: "GemsProfile",
-        select:
-          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
-      },
-    })
-    .populate({
-      path: "registered_users",
-      model: "UserAuth",
-      select: "username role personal_info_id",
-      populate: {
-        path: "personal_info_id",
-        model: "GemsProfile",
-        select:
-          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
-      },
-    })
-    .populate({
-      path: "interested_users",
-      model: "UserAuth",
-      select: "username role personal_info_id",
-      populate: {
-        path: "personal_info_id",
-        model: "GemsProfile",
-        select:
-          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
-      },
-    })
-    .populate({
-      path: "not_interested_users",
-      model: "UserAuth",
-      select: "username role personal_info_id",
-      populate: {
-        path: "personal_info_id",
-        model: "GemsProfile",
-        select:
-          "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
-      },
-    })
-    .lean();
-  if (!event)
+  // Guard against CastError crashes from malformed ids (e.g. mangled QR URLs)
+  if (!mongoose.isValidObjectId(id))
     return NextResponse.json(
       { status: "error", message: "Event not found" },
       { status: 404 },
     );
 
-  return NextResponse.json({ status: "success", data: event });
+  try {
+    await connectDB();
+
+    let query = Event.findById(id);
+
+    if (!user) {
+      query = query.select(
+        "-registered_users -interested_users -not_interested_users -participant_numbers",
+      );
+    }
+
+    const event = await query
+      .populate({
+        path: "created_by",
+        ...USER_POPULATE_BASE,
+      })
+      .populate({
+        path: "registered_users",
+        ...USER_POPULATE_BASE,
+      })
+      .populate({
+        path: "interested_users",
+        ...USER_POPULATE_BASE,
+      })
+      .populate({
+        path: "not_interested_users",
+        ...USER_POPULATE_BASE,
+      })
+      .lean();
+
+    if (!event)
+      return NextResponse.json(
+        { status: "error", message: "Event not found" },
+        { status: 404 },
+      );
+
+    return NextResponse.json({ status: "success", data: event });
+  } catch (err) {
+    console.error("GET /api/events/[id] failed:", err);
+    return NextResponse.json(
+      { status: "error", message: "Unable to load event." },
+      { status: err?.name === "CastError" ? 404 : 500 },
+    );
+  }
 }
 
 export async function PUT(req, { params }) {

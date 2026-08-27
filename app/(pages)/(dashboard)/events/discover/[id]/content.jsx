@@ -18,8 +18,6 @@ export default function DiscoverEventContent() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showQrPrompt, setShowQrPrompt] = useState(false);
-  const [loginRedirect, setLoginRedirect] = useState("qr=1");
   const [userId, setUserId] = useState(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -51,24 +49,15 @@ export default function DiscoverEventContent() {
     loadProfile();
   }, []);
 
+
+  const fromEventQr = searchParams?.get("qr") === "1";
+  const fromAttendanceQr = searchParams?.get("attendance") === "1";
+  const loginRedirectParam = fromAttendanceQr ? "attendance=1" : "qr=1";
+  const accountGateActive =
+    profileChecked && !userId && (fromEventQr || fromAttendanceQr);
+
   useEffect(() => {
-    const qr = searchParams?.get("qr");
     const attendance = searchParams?.get("attendance");
-    if (profileChecked) {
-      if (!userId) {
-        if (qr === "1") {
-          setLoginRedirect("qr=1");
-          setShowQrPrompt(true);
-        } else if (attendance === "1") {
-          setLoginRedirect("attendance=1");
-          setShowQrPrompt(true);
-        } else {
-          setShowQrPrompt(false);
-        }
-      } else {
-        setShowQrPrompt(false);
-      }
-    }
     if (attendance === "1" && profileChecked && userId && event) {
       if (isAttendanceAllowed(event)) {
         setShowAttendanceModal(true);
@@ -89,7 +78,15 @@ export default function DiscoverEventContent() {
         }
         setEvent(data);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event.");
+        const errStatus = err.response?.status;
+
+        if (errStatus !== 401 && errStatus !== 403) {
+          setError(
+            err.response?.data?.message ||
+              err.response?.data?.error ||
+              "Unable to load event.",
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -99,12 +96,12 @@ export default function DiscoverEventContent() {
   }, [eventId]);
 
   const handleQrYesAccount = () => {
-    setShowQrPrompt(false);
-    router.push(`/?redirect=/events/discover/${eventId}?${loginRedirect}`);
+    router.push(
+      `/?redirect=${encodeURIComponent(`/events/discover/${eventId}?${loginRedirectParam}`)}`,
+    );
   };
 
   const handleQrNoAccount = () => {
-    setShowQrPrompt(false);
     router.push("/profile-registration");
   };
 
@@ -284,38 +281,40 @@ export default function DiscoverEventContent() {
     setEligibilityForm({});
   };
 
-  if (loading) {
+  if (loading || !profileChecked) {
     return (
       <div className="p-6 text-center text-gray-500">Loading event...</div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-6 space-y-4 max-w-5xl mx-auto">
-        <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
-          {error}
+  if (!accountGateActive) {
+    if (error) {
+      return (
+        <div className="p-6 space-y-4 max-w-5xl mx-auto">
+          <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
+            {error}
+          </div>
+
+          <button
+            onClick={() => router.push("/events/discover")}
+            className="px-4 py-2 border rounded hover:bg-gray-100"
+          >
+            Back to Discover
+          </button>
         </div>
+      );
+    }
 
-        <button
-          onClick={() => router.push("/events/discover")}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
-        >
-          Back to Discover
-        </button>
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div className="p-6 text-center text-gray-500">Event not found.</div>
-    );
+    if (!event) {
+      return (
+        <div className="p-6 text-center text-gray-500">Event not found.</div>
+      );
+    }
   }
 
   return (
     <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
-      {showQrPrompt && (
+      {accountGateActive && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
             <h2 className="text-xl font-semibold">Do you have an account?</h2>
@@ -341,6 +340,8 @@ export default function DiscoverEventContent() {
         </div>
       )}
 
+      {event ? (
+        <>
       {showParticipantModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
@@ -511,21 +512,7 @@ export default function DiscoverEventContent() {
         </div>
       )}
 
-      <div>
-        {/* <h1>QR for Attendance</h1> */}
-        {/* {userId ? (
-          <div className="flex items-center gap-4 p-3 border rounded-lg bg-gray-50 mt-4">
-            <div>
-              <div className="font-semibold text-gray-800">Your QR for this event</div>
-              <div className="text-xs text-gray-500">User ID: {userId}</div>
-              <div className="text-xs text-gray-500">Event ID: {event._id}</div>
-            </div>
-            <QRCodeCanvas value={JSON.stringify({ eventId: event._id, participantId: userId })} size={128} />
-          </div>
-        ) : (
-          <div className="text-sm text-gray-600 mt-2">You must be logged in to get your QR code.</div>
-        )} */}
-      </div>
+
 
       <AttendanceModal
         eventId={event._id}
@@ -533,6 +520,18 @@ export default function DiscoverEventContent() {
         onClose={handleCloseAttendanceModal}
         onAttendanceRecorded={reloadEvent}
       />
+        </>
+      ) : (
+        <div className="py-16 text-center">
+          <p className="font-medium text-gray-600">
+            Sign in to view this event.
+          </p>
+          <p className="mt-1 text-sm text-gray-400">
+            Event details will appear here once you sign in or create an
+            account.
+          </p>
+        </div>
+      )}
 
       <PWAInstallPrompt />
     </div>

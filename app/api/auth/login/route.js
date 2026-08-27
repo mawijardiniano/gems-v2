@@ -9,9 +9,11 @@ import { rateLimiters } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
+
 export async function POST(req) {
   try {
-    // Rate limit: 5 login attempts per minute per IP
+
     const rateLimitResult = await rateLimiters.login(req);
     if (rateLimitResult.error) {
       return NextResponse.json(
@@ -256,7 +258,7 @@ export async function POST(req) {
 
     res.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: COOKIE_SECURE,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 day

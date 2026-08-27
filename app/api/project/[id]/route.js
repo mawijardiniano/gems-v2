@@ -5,6 +5,8 @@ import {
   normalizeRole,
 } from "@/lib/notifications";
 import Project from "@/models/projects";
+import "@/models/event";
+import "@/models/profile";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
@@ -125,7 +127,20 @@ export async function GET(req, { params }) {
     if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
-  const projects = await Project.findById(id).populate("events");
+  const projects = await Project.findById(id).populate({
+    path: "events",
+    model: "Event",
+    populate: {
+      path: "attended_users.user_id",
+      model: "UserAuth",
+      select: "username role personal_info_id",
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+        select: "gadData.sexAtBirth",
+      },
+    },
+  });
   if (!projects) return Response.json({ error: "Not found" }, { status: 404 });
   return Response.json({ data: projects });
 }

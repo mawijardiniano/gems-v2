@@ -9,6 +9,8 @@ import {
   FiTag,
   FiHome,
 } from "react-icons/fi";
+import { FaBullseye } from "react-icons/fa";
+import { indicatorTargets } from "@/lib/performanceTracking";
 
 export default function ProjectContent() {
   const params = useParams();
@@ -118,6 +120,22 @@ export default function ProjectContent() {
     0,
   );
 
+
+  const indicatorProgress = indicatorTargets(project, { key: "attended_users" });
+  const measurableCount = indicatorProgress.filter(
+    (i) => i.hasParticipantTarget,
+  ).length;
+
+  const measurable = indicatorProgress.filter((i) => i.hasParticipantTarget);
+  const aggregateTarget = measurable.reduce((s, i) => s + i.targetTotal, 0);
+  const aggregateActual = measurable.reduce((s, i) => s + i.actualTotal, 0);
+  const aggregateRemaining = aggregateTarget - aggregateActual;
+  const aggregatePercent =
+    aggregateTarget > 0
+      ? Math.round((aggregateActual / aggregateTarget) * 100)
+      : 0;
+  const aggregateExceeded = aggregateRemaining < 0;
+
   const projectType =
     project.project_type && typeof project.project_type === "object"
       ? project.project_type.value
@@ -212,7 +230,65 @@ export default function ProjectContent() {
           </div>
         </div>
 
-        {/* Events table */}
+        {indicatorProgress.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <FaBullseye className="h-4 w-4 text-blue-600" />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Performance Targets vs. Actual
+                </h2>
+              </div>
+
+            {measurableCount > 0 && (
+              <div className="px-6 py-4 bg-gradient-to-br from-blue-50/60 to-indigo-50/40">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Target
+                  </span>
+                  <span className="text-2xl font-bold text-gray-900">
+                    {aggregateTarget.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-gray-500">participants</span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 mt-2 mb-1">
+                  <span>
+                    Actual {aggregateActual.toLocaleString()} of{" "}
+                    {aggregateTarget.toLocaleString()}
+                  </span>
+                  <span className="font-medium">{aggregatePercent}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      aggregateExceeded ? "bg-emerald-500" : "bg-blue-500"
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(0, aggregatePercent),
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <p
+                  className={`mt-1.5 text-xs font-medium ${
+                    aggregateExceeded ? "text-emerald-600" : "text-amber-600"
+                  }`}
+                >
+                  {aggregateExceeded ? (
+                    <>Exceeded by {Math.abs(aggregateRemaining).toLocaleString()} ✓</>
+                  ) : aggregateRemaining > 0 ? (
+                    <>Remaining {aggregateRemaining.toLocaleString()} to hit target</>
+                  ) : (
+                    <>All targets reached ✓</>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Events</h2>

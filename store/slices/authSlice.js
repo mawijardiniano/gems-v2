@@ -21,14 +21,18 @@ const authSlice = createSlice({
     loginSuccess: (state, action) => {
       const { token, userId, role, college, hasProfile } = action.payload;
 
-      state.token = token;
+      state.token = token ?? null;
       state.userId = userId;
       state.role = role;
       state.college = college ?? null;
       state.hasProfile = hasProfile;
       state.isAuthenticated = true;
 
-      localStorage.setItem("token", token);
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        localStorage.removeItem("token");
+      }
       localStorage.setItem("userId", userId);
       localStorage.setItem("role", role);
       localStorage.setItem("college", college ?? "");
