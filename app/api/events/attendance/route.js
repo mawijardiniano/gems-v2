@@ -69,9 +69,6 @@ export async function POST(req) {
       );
     }
 
-    // Atomically mark the user as attended — only if they are NOT already in
-    // attended_users. This prevents duplicates when the modal POST and the
-    // background-sync replay fire at the same time.
     const attendedAt = hasCapturedAt ? new Date(captured_at) : new Date();
     const updated = await Event.findOneAndUpdate(
       {
@@ -86,7 +83,6 @@ export async function POST(req) {
     );
 
     if (!updated) {
-      // The user is already in attended_users — fetch the existing entry
       const existingEvent = await Event.findById(event_id);
       const existing = existingEvent?.attended_users?.find(
         (a) => a.user_id?.toString() === user_id.toString(),
@@ -98,7 +94,6 @@ export async function POST(req) {
       });
     }
 
-    // Attendance recorded - invalidate cached event lists.
     cacheDelPrefix("events:list:");
 
     await logActivity({

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { loginSuccess } from "@/store/slices/authSlice";
 
-export default function LoginForm({ redirect }) {
+export default function LoginForm({ redirect, compact = false }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -135,21 +135,30 @@ export default function LoginForm({ redirect }) {
   };
 
   return (
-    <div className=" px-4 sm:px-6 md:px-8">
-      <div className="flex justify-center items-center  py-16 px-6">
-        <div className="w-full max-w-md space-y-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-black">
-                Welcome back
-              </h1>
-              <p className="mt-2 text-sm text-gray-800">
-                Enter your credentials to access your account
-              </p>
+    <div className={compact ? "px-1" : " px-4 sm:px-6 md:px-8"}>
+      <div
+        className={`flex justify-center items-center ${
+          compact ? "py-5 px-4" : "py-16 px-6"
+        }`}
+      >
+        <div className={compact ? "w-full space-y-5" : "w-full max-w-md space-y-8"}>
+          {!compact && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                  Welcome back
+                </h1>
+                <p className="mt-2 text-sm text-gray-800">
+                  Enter your credentials to access your account
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          <form onSubmit={handleLogin} className="mt-8 space-y-6">
+          <form
+            onSubmit={handleLogin}
+            className={compact ? "space-y-5" : "mt-8 space-y-6"}
+          >
             <div className="space-y-4">
               <div>
                 <label

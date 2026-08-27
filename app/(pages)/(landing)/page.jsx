@@ -6,6 +6,7 @@ import PromotingFairness from "./components/PromotingFairness";
 import SimplifyGender from "./components/SimplifyGender";
 import TransformGenderData from "./components/TransformGenderData";
 import ProfileStats from "./components/ProfileStats";
+import UpcomingEvents from "./components/UpcomingEvents";
 
 const heroSlides = [
   <GenderEquality key="gender" />,
@@ -38,6 +39,7 @@ export default function LandingPage() {
         >
           {heroSlides[current]}
         </div>
+        <UpcomingEvents />
         <ProfileStats />
       </main>
     </div>
