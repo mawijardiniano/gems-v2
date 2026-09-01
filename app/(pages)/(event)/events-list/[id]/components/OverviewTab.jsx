@@ -12,6 +12,7 @@ import {
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaUsers,
+  FaUserCheck,
   FaLayerGroup,
   FaClipboardCheck,
 } from "react-icons/fa";
@@ -235,12 +236,41 @@ export default function OverviewTab({
       value: event.venue || "—",
     },
     {
-      label: "Participants",
+      label: "Registered",
       icon: FaUsers,
       gradient: "from-emerald-600 to-emerald-400",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
-      value: event.registered_users.length || "—",
+      value: (event.registered_users || []).length || "—",
+    },
+    {
+      label: "Attended",
+      icon: FaUserCheck,
+      gradient: "from-teal-500 to-teal-400",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+      value: (
+        <div className="flex flex-col">
+          <span>{(event.attended_users || []).length || "—"}</span>
+          {(event.start_dates || [])[0] &&
+            new Date(
+              Math.max(
+                ...(event.end_dates || []).map((d) => new Date(d).getTime()),
+                0,
+              ),
+            ).getTime() < Date.now() &&
+            (event.registered_users || []).length > 0 && (
+              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mt-0.5">
+                {Math.round(
+                  ((event.attended_users || []).length /
+                    (event.registered_users || []).length) *
+                    100,
+                )}
+                % of registered
+              </span>
+            )}
+        </div>
+      ),
     },
   ];
 

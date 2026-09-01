@@ -52,6 +52,20 @@ export default function GuestTab({
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const filteredGoingGuests = getFilteredGuests(event.registered_users);
+
+  // Attendance-aware helpers
+  const attendedUsers = Array.isArray(event.attended_users)
+    ? event.attended_users
+    : [];
+  const attendedIdSet = new Set(
+    attendedUsers.map((a) => String(a.user_id?._id || a.user_id)),
+  );
+  const attendedPeople = attendedUsers
+    .map((a) => a?.user_id)
+    .filter(Boolean);
+  const firstStart = (event.start_dates || [])[0];
+  const hasEventStarted =
+    !firstStart || new Date(firstStart).getTime() <= Date.now();
   const totalGoingPages = Math.ceil(filteredGoingGuests.length / pageSize) || 1;
   const paginatedGoingGuests = filteredGoingGuests.slice(
     (goingPage - 1) * pageSize,
@@ -389,6 +403,11 @@ export default function GuestTab({
               label: `Interested (${event.interested_users?.length || 0})`,
               icon: FiUserPlus,
             },
+            {
+              key: "attended",
+              label: `Attended (${attendedUsers.length})`,
+              icon: FiUserCheck,
+            },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -519,25 +538,11 @@ export default function GuestTab({
 
             <div className="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-gray-100">
               <button
-                onClick={() => handleDownloadGuestsPdf(filteredGoingGuests)}
-                className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
-              >
-                <FiDownload size={12} />
-                Download PDF
-              </button>
-              <button
                 onClick={() => handleDownloadBlankGuestsPdf()}
                 className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
               >
                 <FaFileAlt size={12} />
                 Blank Attendance Print
-              </button>
-              <button
-                onClick={() => handlePrintGuests(filteredGoingGuests)}
-                className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
-              >
-                <FiPrinter size={12} />
-                Print
               </button>
               <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-gray-500">
                 <FiUsers size={14} className="text-gray-400" />
@@ -577,7 +582,12 @@ export default function GuestTab({
                               {(goingPage - 1) * pageSize + idx + 1}
                             </td>
                             <td className="font-medium text-gray-900">
-                              {details.name}
+                              {details.name}{" "}
+                              {attendedIdSet.has(String(guest?._id)) && (
+                                <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                  <FaUserCheck size={9} /> Attended
+                                </span>
+                              )}
                             </td>
                             <td className="text-center">
                               {details.sex || "—"}
@@ -674,6 +684,101 @@ export default function GuestTab({
               </p>
               <p className="text-gray-400 text-sm mt-1">
                 Share the event QR code to invite guests.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {guestTab === "attended" && (
+        <div className="space-y-5">
+          {!hasEventStarted && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 flex items-start gap-3">
+              <FiUserCheck className="text-blue-500 shrink-0 mt-0.5" size={16} />
+              <p className="text-sm text-blue-800">
+                Check-ins will appear here once the event starts — guests scan
+                the venue QR code at the entrance.
+              </p>
+            </div>
+          )}
+          {attendedUsers.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+              <button
+                onClick={() => handleDownloadGuestsPdf(attendedPeople)}
+                className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
+              >
+                <FiDownload size={12} />
+                Download PDF
+              </button>
+              <button
+                onClick={() => handlePrintGuests(attendedPeople)}
+                className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
+              >
+                <FiPrinter size={12} />
+                Print
+              </button>
+              <span className="ml-auto inline-flex items-center gap-1.5 text-sm text-gray-500">
+                <FiUsers size={14} className="text-gray-400" />
+                {attendedUsers.length} attended
+              </span>
+            </div>
+          )}
+          {attendedUsers.length > 0 ? (
+            <div className="table-container">
+              <div className="overflow-x-auto">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Guest</th>
+                      <th>College / Office</th>
+                      <th>Checked-in At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendedUsers.map((a, idx) => {
+                      const details = extractGuestDetails(a?.user_id || {});
+                      const t = a?.attended_at
+                        ? new Date(a.attended_at)
+                        : null;
+                      const timeStr =
+                        t && !Number.isNaN(t.getTime())
+                          ? t.toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                          : "—";
+                      return (
+                        <tr key={a?.user_id?._id || idx}>
+                          <td className="text-gray-500">{idx + 1}</td>
+                          <td className="font-medium text-gray-900">
+                            {details.name}
+                          </td>
+                          <td className="text-center">
+                            {details.department || "—"}
+                          </td>
+                          <td className="text-center text-emerald-700 font-medium">
+                            ✓ {timeStr}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-100 bg-white p-12 text-center shadow-sm">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 mb-4">
+                <FaUserCheck className="text-emerald-500" size={24} />
+              </div>
+              <p className="text-gray-500 font-medium">
+                No attendance recorded yet.
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                Check-ins appear here as guests scan the QR or are marked manually.
               </p>
             </div>
           )}

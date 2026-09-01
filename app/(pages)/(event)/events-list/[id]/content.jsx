@@ -348,6 +348,14 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     [event],
   );
 
+  const attendedProfiles = useMemo(
+    () =>
+      (event?.attended_users || [])
+        .map((a) => a?.user_id?.personal_info_id)
+        .filter(Boolean),
+    [event],
+  );
+
   const ageGroupCounts = useMemo(() => {
     const counts = {};
     (event?.registered_users || []).forEach((u) => {
@@ -373,8 +381,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     if (insightsFilter === "going") return goingProfiles;
     if (insightsFilter === "interested") return interestedProfiles;
     if (insightsFilter === "not_interested") return notInterestedProfiles;
+    if (insightsFilter === "attended") return attendedProfiles;
     return [...goingProfiles, ...interestedProfiles, ...notInterestedProfiles];
-  }, [insightsFilter, goingProfiles, interestedProfiles, notInterestedProfiles]);
+  }, [insightsFilter, goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles]);
 
   const calculateAge = (birthday) => {
     if (!birthday) return null;
@@ -558,6 +567,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const interestedCount = event?.interested_users?.length || 0;
   const notInterestedCount = event?.not_interested_users?.length || 0;
   const goingCount = (event?.registered_users || []).length;
+  const attendedCount = (event?.attended_users || []).length;
+  const showRate =
+    goingCount > 0 ? Math.round((attendedCount / goingCount) * 100) : null;
 
   const eventData = useMemo(
     () => [
@@ -881,6 +893,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           notInterestedCount={notInterestedCount}
           ageGroupCounts={ageGroupCounts}
           goingCount={goingCount}
+          attendedCount={attendedCount}
+          showRate={showRate}
           genderDataChart={genderDataChart}
           affiliationData={affiliationData}
           eventData={eventData}

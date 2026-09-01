@@ -49,7 +49,7 @@ export async function GET(req, { params }) {
 
     if (!user) {
       query = query.select(
-        "-registered_users -interested_users -not_interested_users -participant_numbers",
+        "-registered_users -interested_users -not_interested_users -participant_numbers -attended_users",
       );
     }
 
@@ -68,6 +68,10 @@ export async function GET(req, { params }) {
       })
       .populate({
         path: "not_interested_users",
+        ...USER_POPULATE_BASE,
+      })
+      .populate({
+        path: "attended_users.user_id",
         ...USER_POPULATE_BASE,
       })
       .lean();

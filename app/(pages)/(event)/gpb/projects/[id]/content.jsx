@@ -114,9 +114,14 @@ export default function ProjectContent() {
   }
 
   const events = Array.isArray(project.events) ? project.events : [];
-  const totalParticipants = events.reduce(
+  const totalActualParticipants = events.reduce(
     (sum, e) =>
-      sum + (Array.isArray(e.registered_users) ? e.registered_users.length : 0),
+      sum + (Array.isArray(e.attended_users) ? e.attended_users.length : 0),
+    0,
+  );
+  const totalRegisteredParticipants = events.reduce(
+    (sum, e) =>
+      sum + (Array.isArray(e.attended_users) ? e.attended_users.length : 0),
     0,
   );
 
@@ -210,10 +215,10 @@ export default function ProjectContent() {
             </div>
             <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
               <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                <FiUsers className="h-3.5 w-3.5" /> Total Participants
+                <FiUsers className="h-3.5 w-3.5" /> Actual Participants
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {totalParticipants}
+                {totalActualParticipants}
               </p>
             </div>
             <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
@@ -351,9 +356,15 @@ export default function ProjectContent() {
                       <td className="py-3 px-6 text-right">
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                           <FiUsers className="h-3.5 w-3.5 text-gray-400" />
-                          {Array.isArray(event.registered_users)
-                            ? event.registered_users.length
+                          {Array.isArray(event.attended_users)
+                            ? event.attended_users.length
                             : 0}
+                        </span>
+                        <span className="ml-1 inline-flex items-center text-[11px] text-gray-400" title="Actually attended (check-ins)">
+                          attended ·{" "}
+                          {Array.isArray(event.registered_users)
+                            ? `${event.registered_users.length} registered`
+                            : ""}
                         </span>
                       </td>
                     </tr>

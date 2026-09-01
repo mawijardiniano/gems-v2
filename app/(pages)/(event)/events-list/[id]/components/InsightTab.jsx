@@ -8,7 +8,7 @@ import {
   CollegeChart,
   PerYearChart,
 } from "./Charts";
-import { FiUsers, FiUserX, FiUserCheck, FiFilter, FiBriefcase, FiLayers } from "react-icons/fi";
+import { FiUsers, FiUserX, FiUserCheck, FiFilter, FiBriefcase, FiLayers, FiActivity } from "react-icons/fi";
 import { FaVenusMars, FaUserTag } from "react-icons/fa";
 
 export default function InsightTab({
@@ -22,6 +22,8 @@ export default function InsightTab({
   notInterestedCount,
   ageGroupCounts,
   goingCount,
+  attendedCount,
+  showRate,
   genderDataChart,
   affiliationData,
   eventData,
@@ -55,6 +57,22 @@ export default function InsightTab({
       iconColor: "text-emerald-600",
     },
     {
+      label: "Attended",
+      value: attendedCount ?? 0,
+      icon: FiUserCheck,
+      gradient: "from-teal-500 to-teal-400",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+    },
+    {
+      label: "Show Rate",
+      value: showRate == null ? "—" : `${showRate}%`,
+      icon: FiActivity,
+      gradient: "from-fuchsia-600 to-pink-400",
+      iconBg: "bg-fuchsia-100",
+      iconColor: "text-fuchsia-600",
+    },
+    {
       label: "Total Registered",
       value: totalRegistered,
       icon: FiUsers,
@@ -80,6 +98,7 @@ export default function InsightTab({
           >
             <option value="all">All Participants</option>
             <option value="going">Going</option>
+            <option value="attended">Attended</option>
             <option value="interested">Interested</option>
             <option value="not_interested">Not Interested</option>
           </select>

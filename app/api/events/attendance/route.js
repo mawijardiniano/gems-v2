@@ -8,7 +8,7 @@ import { cacheDelPrefix } from "@/lib/cache";
 
 export async function POST(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -26,6 +26,25 @@ export async function POST(req) {
       return NextResponse.json(
         { message: "Valid user_id is required" },
         { status: 400 },
+      );
+    }
+
+    // Identity check: a requester may always record THEIR OWN attendance.
+    // Marking someone else is restricted to organizer roles.
+    const ORGANIZER_ROLES = [
+      "Admin",
+      "GAD Focal Person",
+      "GAD Coordinator",
+      "Dean",
+    ];
+    const markingSelf =
+      Array.isArray(user_id)
+        ? user_id.length === 1 && user_id[0] === user._id.toString()
+        : user_id === user._id.toString();
+    if (!markingSelf && !ORGANIZER_ROLES.includes(user.role)) {
+      return NextResponse.json(
+        { message: "You can only record your own attendance." },
+        { status: 403 },
       );
     }
 
@@ -77,7 +96,6 @@ export async function POST(req) {
       },
       {
         $push: { attended_users: { user_id, attended_at: attendedAt } },
-        $addToSet: { registered_users: user_id },
       },
       { new: true },
     );
