@@ -1,15 +1,44 @@
 import mongoose from "mongoose";
 
+const fileMetaSchema = new mongoose.Schema(
+  {
+    url: { type: String, default: null },
+    key: { type: String, default: null },
+    name: { type: String, default: null },
+  },
+  { _id: false },
+);
+
 const accomplishmentReportSchema = new mongoose.Schema(
   {
-    eventId: {
+    event_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
       required: true,
     },
-    data: {
-      type: mongoose.Schema.Types.Mixed,
-      required: true,
+    narrative: {
+      type: String,
+      default: "",
+    },
+    office_memorandum: {
+      type: fileMetaSchema,
+      default: null,
+    },
+    activity_design: {
+      type: fileMetaSchema,
+      default: null,
+    },
+    attendance_sheet: {
+      type: fileMetaSchema,
+      default: null,
+    },
+    photos: {
+      type: [fileMetaSchema],
+      default: [],
+    },
+    other_attachments: {
+      type: [fileMetaSchema],
+      default: [],
     },
     submitted_by: {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +60,7 @@ const accomplishmentReportSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-accomplishmentReportSchema.index({ eventId: 1 });
+accomplishmentReportSchema.index({ event_id: 1 });
 accomplishmentReportSchema.index({ submitted_by: 1 });
 
 export default mongoose.models.AccomplishmentReport ||

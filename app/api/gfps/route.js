@@ -29,6 +29,30 @@ const UNIVERSITY_OFFICIALS_POPULATE = [
 const getId = (o) =>
   typeof o === "object" ? o?._id?.toString() : o?.toString();
 
+// Locate an existing member entry for an incoming member. Matches the exact
+// position entry (official_ref) first so officials holding multiple positions
+// (e.g., VP and Dean) can coexist in one section; falls back to legacy
+// person-id-only entries so they get upgraded instead of duplicated.
+function findMemberIndex(members, newMember) {
+  const newRef = getId(newMember.official_ref);
+  const newId = getId(newMember.official);
+
+  if (newRef) {
+    const refIndex = members.findIndex(
+      (m) => getId(m.official_ref) === newRef
+    );
+    if (refIndex !== -1) return refIndex;
+
+    return members.findIndex(
+      (m) => !m.official_ref && getId(m.official) === newId
+    );
+  }
+
+  return members.findIndex(
+    (m) => !m.official_ref && getId(m.official) === newId
+  );
+}
+
 function removeSensitiveUserFields(userAuth) {
   if (!userAuth) return userAuth;
 
@@ -80,7 +104,7 @@ const normalizeSectionOfficials = (section) => {
 };
 
 function makeFilterHelpers(universityOfficials) {
-  function findOfficialById(id) {
+  function findOfficialById(id, refId) {
     if (!id || !universityOfficials) return null;
 
     const idStr = id.toString();
@@ -107,6 +131,18 @@ function makeFilterHelpers(universityOfficials) {
   { arr: universityOfficials.office_of_the_vice_president_research_extension, group: "office_of_the_vice_president_research_extension" },
 ];
 
+    // Prefer an exact match on the position entry (official_ref) so officials
+    // holding multiple positions resolve to the selected one instead of the
+    // first group that contains them.
+    if (refId) {
+      const refStr = refId.toString();
+      for (const { arr, group } of allGroups) {
+        if (!Array.isArray(arr)) continue;
+        const found = arr.find((item) => item._id?.toString() === refStr);
+        if (found) return { ...found, group };
+      }
+    }
+
     for (const { arr, group } of allGroups) {
       if (!Array.isArray(arr)) continue;
 
@@ -126,7 +162,7 @@ function makeFilterHelpers(universityOfficials) {
   function filterOfficialWithDetails(member) {
   if (!member?.official) return member;
 
-  const details = findOfficialById(member.official);
+  const details = findOfficialById(member.official, member.official_ref);
   if (!details) return { ...member, official: null };
 
   const personal = details?.name?.personal_info_id?.personal;
@@ -243,11 +279,7 @@ if (body.executiveCommittee?.members) {
   doc.executiveCommittee ||= { members: [] };
 
   body.executiveCommittee.members.forEach((newMember) => {
-    const newId = getId(newMember.official);
-
-    const index = doc.executiveCommittee.members.findIndex(
-      (m) => getId(m.official) === newId
-    );
+    const index = findMemberIndex(doc.executiveCommittee.members, newMember);
 
     if (index !== -1) {
       // 🔥 UPDATE existing instead of skipping
@@ -266,11 +298,7 @@ if (body.technicalWorkingGroup?.members) {
   doc.technicalWorkingGroup ||= { members: [] };
 
   body.technicalWorkingGroup.members.forEach((newMember) => {
-    const newId = getId(newMember.official);
-
-    const index = doc.technicalWorkingGroup.members.findIndex(
-      (m) => getId(m.official) === newId
-    );
+    const index = findMemberIndex(doc.technicalWorkingGroup.members, newMember);
 
     if (index !== -1) {
       doc.technicalWorkingGroup.members[index] = {
@@ -285,11 +313,7 @@ if (body.technicalWorkingGroup?.members) {
 
 if (body.secretariat) {
   body.secretariat.forEach((newMember) => {
-    const newId = getId(newMember.official);
-
-    const index = doc.secretariat.findIndex(
-      (m) => getId(m.official) === newId
-    );
+    const index = findMemberIndex(doc.secretariat, newMember);
 
     if (index !== -1) {
       doc.secretariat[index] = {

@@ -6,12 +6,22 @@ import { requireAuth } from "@/lib/auth";
 
 export async function POST(req) {
   try {
-     const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
     await connectDB();
     const body = await req.json();
 
-    const report = await AccomplishmentReport.create(body);
+    const report = await AccomplishmentReport.create({
+      event_id: body.event_id,
+      narrative: body.narrative,
+      office_memorandum: body.office_memorandum,
+      activity_design: body.activity_design,
+      attendance_sheet: body.attendance_sheet,
+      photos: body.photos,
+      other_attachments: body.other_attachments,
+      submitted_by: user._id,
+      status: "submitted",
+    });
 
     await logActivity({
       req,

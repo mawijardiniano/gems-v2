@@ -23,6 +23,7 @@ import {
   FaMinus,
   FaUpload,
   FaTag,
+  FaArrowLeft,
 } from "react-icons/fa";
 
 const inputClass =
@@ -530,6 +531,16 @@ export default function CreateEventsContent() {
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Back */}
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-blue-600 mb-4 transition-colors"
+      >
+        <FaArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+
       {/* Header */}
       <div className="flex items-start gap-4 mb-8">
         <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">

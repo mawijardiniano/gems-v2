@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(_, { params }) {
   await connectDB();
@@ -11,7 +12,7 @@ export async function GET(_, { params }) {
   try {
     const report = await AccomplishmentReport.findOne({
       event_id: id,
-    });
+    }).populate("event_id", "title venue start_dates end_dates");
 
     return NextResponse.json({ data: report });
   } catch (err) {
@@ -23,11 +24,12 @@ export async function GET(_, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  await connectDB();
-
-  const { id } = await params;
-
   try {
+    const { error, status, user } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+    await connectDB();
+
+    const { id } = await params;
     const body = await req.json();
 
     const updated = await AccomplishmentReport.findOneAndUpdate(
@@ -39,6 +41,7 @@ export async function PUT(req, { params }) {
         attendance_sheet: body.attendance_sheet,
         photos: body.photos,
         other_attachments: body.other_attachments,
+        updated_by: user._id,
       },
       { new: true }
     );

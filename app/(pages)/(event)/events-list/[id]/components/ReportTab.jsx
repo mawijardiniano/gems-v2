@@ -12,6 +12,7 @@ import {
   FiAlertCircle,
   FiLoader,
   FiEye,
+  FiDownload,
 } from "react-icons/fi";
 import { FaMagic } from "react-icons/fa";
 
@@ -71,6 +72,24 @@ export default function ReportTab({ event }) {
     } catch (err) {
       console.log("Failed to delete old file:", err);
     }
+  };
+
+  const handleDownload = (file) => {
+    if (!file?.key && !file?.url) return;
+    // Prefer the stored S3 key; fall back to parsing it from the URL
+    const key =
+      file.key ||
+      (file.url ? file.url.split(".com/")[1] : null);
+    if (!key) return;
+
+    const nameParam = file.name
+      ? `&name=${encodeURIComponent(file.name)}`
+      : "";
+    const link = document.createElement("a");
+    link.href = `/api/download?key=${encodeURIComponent(key)}${nameParam}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const handleEdit = () => {
@@ -377,13 +396,22 @@ export default function ReportTab({ event }) {
                         className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
-                        <button
-                          onClick={() => setPreviewImg(showReport[field.key].url)}
-                          className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
-                        >
-                          <FiEye size={12} />
-                          View
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPreviewImg(showReport[field.key].url)}
+                            className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
+                          >
+                            <FiEye size={12} />
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDownload(showReport[field.key])}
+                            className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
+                          >
+                            <FiDownload size={12} />
+                            Download
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -408,13 +436,22 @@ export default function ReportTab({ event }) {
                         className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
-                        <button
-                          onClick={() => setPreviewImg(p.url)}
-                          className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
-                        >
-                          <FiEye size={12} />
-                          View
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPreviewImg(p.url)}
+                            className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
+                          >
+                            <FiEye size={12} />
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDownload(p)}
+                            className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
+                          >
+                            <FiDownload size={12} />
+                            Download
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -433,18 +470,30 @@ export default function ReportTab({ event }) {
               {showReport.other_attachments?.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   {showReport.other_attachments.map((file, i) => (
-                    <a
+                    <div
                       key={i}
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white hover:bg-gray-50 text-blue-600 hover:underline transition-colors"
+                      className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white"
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                         <FiPaperclip size={14} />
                       </span>
-                      {file.name || `Attachment ${i + 1}`}
-                    </a>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline flex-1 truncate"
+                      >
+                        {file.name || `Attachment ${i + 1}`}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(file)}
+                        className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 text-xs font-medium px-2 shrink-0"
+                      >
+                        <FiDownload size={14} />
+                        Download
+                      </button>
+                    </div>
                   ))}
                 </div>
               ) : (

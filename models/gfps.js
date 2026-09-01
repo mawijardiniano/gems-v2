@@ -21,12 +21,34 @@ const MemberSchema = new mongoose.Schema({
     ref: "UniversityOfficial",
     required: false,
   },
+  // Id of the specific position entry (subdocument) inside the
+  // UniversityOfficial document. Needed to distinguish officials who hold
+  // multiple positions (e.g., a person who is both a VP and a Dean).
+  official_ref: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+  },
+  // Which official group the position entry belongs to
+  // (e.g., "vicePresidents", "collegeDeans").
+  official_group: {
+    type: String,
+    required: false,
+  },
 });
 
 const ExecutiveMemberSchema = new mongoose.Schema({
   official: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UniversityOfficial",
+    required: false,
+  },
+  // Same as MemberSchema.official_ref — see comment there.
+  official_ref: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+  },
+  official_group: {
+    type: String,
     required: false,
   },
   role: {

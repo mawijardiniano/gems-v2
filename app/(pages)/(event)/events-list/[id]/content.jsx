@@ -377,13 +377,28 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     return counts;
   }, [event]);
 
+  const allProfiles = useMemo(() => {
+    const seen = new Set();
+    return [
+      ...goingProfiles,
+      ...interestedProfiles,
+      ...notInterestedProfiles,
+      ...attendedProfiles,
+    ].filter((p) => {
+      const key = String(p?._id ?? p);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles]);
+
   const filteredProfiles = useMemo(() => {
     if (insightsFilter === "going") return goingProfiles;
     if (insightsFilter === "interested") return interestedProfiles;
     if (insightsFilter === "not_interested") return notInterestedProfiles;
     if (insightsFilter === "attended") return attendedProfiles;
-    return [...goingProfiles, ...interestedProfiles, ...notInterestedProfiles];
-  }, [insightsFilter, goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles]);
+    return allProfiles;
+  }, [insightsFilter, goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles, allProfiles]);
 
   const calculateAge = (birthday) => {
     if (!birthday) return null;
@@ -576,8 +591,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       { name: "Interested", value: interestedCount },
       { name: "Not Interested", value: notInterestedCount },
       { name: "Going", value: goingCount },
+      { name: "Attended", value: attendedCount },
     ],
-    [interestedCount, notInterestedCount, goingCount],
+    [interestedCount, notInterestedCount, goingCount, attendedCount],
   );
 
   const handleEditChange = (field, value) => {

@@ -28,6 +28,29 @@ export async function PUT(req, { params }) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
+    const touchesActuals =
+      body.actual_accomplishment !== undefined ||
+      body.actual_expenditures !== undefined;
+
+    if (touchesActuals) {
+      const actualsActor = body.userId
+        ? await UserAuth.findById(body.userId, "_id role username").lean()
+        : null;
+
+      if (!actualsActor) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const creatorId = project.createdBy ? String(project.createdBy) : "";
+
+      if (creatorId !== String(actualsActor._id)) {
+        return Response.json(
+          { error: "Only the project creator can edit actuals" },
+          { status: 403 },
+        );
+      }
+    }
+
     const mergeField = (key) => {
       if (body[key] === undefined) return;
 

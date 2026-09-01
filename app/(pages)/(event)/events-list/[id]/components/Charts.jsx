@@ -133,7 +133,7 @@ export function EventChart({ data }) {
   const total = safeData.reduce((s, d) => s + (d.value || 0), 0);
 
   return (
-    <ChartCard title="Event Breakdown" subtitle="Interested vs going vs not interested" total={total}>
+    <ChartCard title="Event Breakdown" subtitle="Interested vs going vs attended vs not interested" total={total}>
       {safeData.length === 0 ? (
         <p className="text-sm text-gray-400">No data available.</p>
       ) : (

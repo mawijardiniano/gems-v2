@@ -31,6 +31,22 @@ const OFFICIAL_GROUPS_ORDER = [
   "office_of_the_vice_president_research_extension",
 ];
 
+// Each checkbox is keyed by the position entry (subdocument _id) so a person
+// holding multiple positions (e.g., VP and Dean) can be selected once per
+// position. Falls back to the person id for entries without a subdocument id.
+const officialItemKey = (section, item) =>
+  `${section}:${item._id || item.name?._id || item.name}`;
+
+// Find the official entry matching a selection key id. Matches the position
+// entry (subdocument _id) first — which is what keys are built from — then
+// falls back to the person id for legacy keys.
+const findOfficialItem = (items, id) =>
+  (items || []).find((item) => {
+    const subId = item._id?.toString();
+    const nameId = item.name?._id?.toString() || item.name?.toString();
+    return subId === id || nameId === id;
+  });
+
 const SECTION_STYLES = {
   chairOrHeadOfAgency: {
     border: "border-purple-200",
@@ -109,9 +125,7 @@ function CheckboxTree({ officials, selected, onChange }) {
 
   const handleSectionCheck = (section, checked) => {
     const items = Array.isArray(officials[section]) ? officials[section] : [];
-    const allKeys = items.map(
-      (item) => `${section}:${item.name?._id || item._id || item.name}`,
-    );
+    const allKeys = items.map((item) => officialItemKey(section, item));
     if (checked) {
       onChange((prev) => [...new Set([...prev, ...allKeys])]);
       setExpanded((prev) => ({ ...prev, [section]: true }));
@@ -138,18 +152,10 @@ function CheckboxTree({ officials, selected, onChange }) {
         const sectionChecked =
           Array.isArray(items) &&
           items.length > 0 &&
-          items.every((item) =>
-            selectedSet.has(
-              `${section}:${item.name?._id || item._id || item.name}`,
-            ),
-          );
+          items.every((item) => selectedSet.has(officialItemKey(section, item)));
         const sectionSomeChecked =
           Array.isArray(items) &&
-          items.some((item) =>
-            selectedSet.has(
-              `${section}:${item.name?._id || item._id || item.name}`,
-            ),
-          );
+          items.some((item) => selectedSet.has(officialItemKey(section, item)));
         return (
           <div key={section} className="hover:bg-gray-50 transition-colors">
             <div className="flex items-center px-3 py-2.5">
@@ -197,7 +203,7 @@ function CheckboxTree({ officials, selected, onChange }) {
             {expanded[section] && Array.isArray(items) && (
               <div className="ml-7 pb-1.5 space-y-0.5 border-l-2 border-gray-100 ml-4 pl-4">
                 {items.map((item) => {
-                  const id = item.name?._id || item._id || item.name;
+                  const id = item._id || item.name?._id || item.name;
                   const key = `${section}:${id}`;
                   const label = (() => {
                     if (section === "campusDirectors")
@@ -407,15 +413,23 @@ export default function GFPSManager() {
       if (items && !Array.isArray(items)) items = [items];
       if (!items || items.length === 0) continue;
 
+      // Exact match on the position entry (official_ref) — distinguishes
+      // multiple positions held by the same person.
+      const subMatch = items.find((item) => item._id?.toString() === idStr);
+      if (subMatch) {
+        return `${group}:${subMatch._id.toString()}`;
+      }
+
+      // Fallback: match by person id (legacy members saved without
+      // official_ref resolve to the first matching position entry).
       const match = items.find((item) => {
         const nameId = item.name?._id?.toString();
         const nameStr = item.name?.toString();
-        const subId = item._id?.toString();
-        return nameId === idStr || nameStr === idStr || subId === idStr;
+        return nameId === idStr || nameStr === idStr;
       });
 
       if (match) {
-        const matchId = match.name?._id || match._id || match.name;
+        const matchId = match._id || match.name?._id || match.name;
         return `${group}:${matchId}`;
       }
     }
@@ -432,7 +446,8 @@ export default function GFPSManager() {
 
     if (sectionKey === "chairOrHeadOfAgency") {
       const chair = gfps[sectionKey];
-      const officialId = chair?.official?._id || chair?.official;
+      const officialId =
+        chair?.official_ref || chair?.official?._id || chair?.official;
       const key = findOfficialKey(officialId);
       setSelectedOfficials(key ? [key] : []);
       setExecRoles({});
@@ -442,14 +457,18 @@ export default function GFPSManager() {
     ) {
       const members = gfps?.[sectionKey]?.members || [];
       const keys = members
-        .map((m) => findOfficialKey(m.official?._id || m.official))
+        .map((m) =>
+          findOfficialKey(m.official_ref || m.official?._id || m.official),
+        )
         .filter(Boolean);
       setSelectedOfficials(keys);
 
       if (sectionKey === "executiveCommittee") {
         const roles = {};
         members.forEach((m) => {
-          const key = findOfficialKey(m.official?._id || m.official);
+          const key = findOfficialKey(
+            m.official_ref || m.official?._id || m.official,
+          );
           if (key) roles[key] = m.role || "member";
         });
         setExecRoles(roles);
@@ -459,7 +478,9 @@ export default function GFPSManager() {
     } else if (sectionKey === "secretariat") {
       const members = Array.isArray(gfps[sectionKey]) ? gfps[sectionKey] : [];
       const keys = members
-        .map((m) => findOfficialKey(m.official?._id || m.official))
+        .map((m) =>
+          findOfficialKey(m.official_ref || m.official?._id || m.official),
+        )
         .filter(Boolean);
       setSelectedOfficials(keys);
       setExecRoles({});
@@ -481,19 +502,12 @@ export default function GFPSManager() {
     let payload = {};
 
     const getOfficialNames = (key) => {
-      const [group, officialId] = key.split(":");
+      const [group, id] = key.split(":");
 
       let items = officials[group];
       if (items && !Array.isArray(items)) items = [items];
 
-      const found = (items || []).find((item) => {
-        const id =
-          item.name?._id?.toString() ||
-          item._id?.toString() ||
-          item.name?.toString();
-
-        return id === officialId;
-      });
+      const found = findOfficialItem(items, id);
 
       const o = found?.name || found;
 
@@ -510,7 +524,13 @@ export default function GFPSManager() {
         "";
 
       return {
-        officialId,
+        officialId:
+          found?.name?._id?.toString() ||
+          found?.name?.toString() ||
+          found?._id?.toString() ||
+          id,
+        officialRef: found?._id?.toString() || null,
+        officialGroup: group,
         first_name,
         last_name,
       };
@@ -528,6 +548,8 @@ export default function GFPSManager() {
             const d = debugResolved.find((x) => x.key === key);
             return {
               official: d?.officialId,
+              official_ref: d?.officialRef || undefined,
+              official_group: d?.officialGroup || undefined,
               role: execRoles[key] || "member",
               first_name: d?.first_name || "",
               last_name: d?.last_name || "",
@@ -540,6 +562,8 @@ export default function GFPSManager() {
             const d = debugResolved.find((x) => x.key === key);
             return {
               official: d?.officialId,
+              official_ref: d?.officialRef || undefined,
+              official_group: d?.officialGroup || undefined,
               first_name: d?.first_name || "",
               last_name: d?.last_name || "",
             };
@@ -549,6 +573,8 @@ export default function GFPSManager() {
         const d = debugResolved[0];
         payload[section] = {
           official: d?.officialId,
+          official_ref: d?.officialRef || undefined,
+          official_group: d?.officialGroup || undefined,
           first_name: d?.first_name || "",
           last_name: d?.last_name || "",
         };
@@ -557,6 +583,8 @@ export default function GFPSManager() {
           const d = debugResolved.find((x) => x.key === key);
           return {
             official: d?.officialId,
+            official_ref: d?.officialRef || undefined,
+            official_group: d?.officialGroup || undefined,
             first_name: d?.first_name || "",
             last_name: d?.last_name || "",
           };
@@ -736,10 +764,7 @@ export default function GFPSManager() {
                       if (groupItems && !Array.isArray(groupItems)) {
                         groupItems = [groupItems];
                       }
-                      const item = groupItems?.find(
-                        (o) =>
-                          (o.name?._id || o._id || o.name)?.toString() === id,
-                      );
+                      const item = findOfficialItem(groupItems, id);
                       const label = item?.position || item?.college || item?.branch;
                       const subLabel = item?.college || item?.branch;
                       const firstName =
@@ -908,7 +933,7 @@ export default function GFPSManager() {
                                 <div className="space-y-2.5">
                                   {chairs.map((m, i) => (
                                     <OfficialRow
-                                      key={m.official?._id || i}
+                                      key={m.official_ref || m.official?._id || i}
                                       official={m.official}
                                       avatarBg={style.avatarBg}
                                       avatarText={style.avatarText}
@@ -925,7 +950,7 @@ export default function GFPSManager() {
                                 <div className="space-y-2.5">
                                   {regulars.map((m, i) => (
                                     <OfficialRow
-                                      key={m.official?._id || i}
+                                      key={m.official_ref || m.official?._id || i}
                                       official={m.official}
                                       avatarBg="bg-white"
                                       avatarText="text-gray-600"
@@ -942,7 +967,7 @@ export default function GFPSManager() {
                     <div className="space-y-2.5">
                       {members.map((m, i) => (
                         <OfficialRow
-                          key={m.official?._id || i}
+                          key={m.official_ref || m.official?._id || i}
                           official={m.official}
                           avatarBg="bg-white"
                           avatarText="text-gray-600"

@@ -10,8 +10,10 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaFolderOpen,
+  FaLock,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
+import PrintGADARSingle from "../components/Print/PrintGADARSingle";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -39,7 +41,6 @@ const getProjectTypeLabel = (project) => {
 
 export default function GADARContent() {
   const userId = useSelector((state) => state.auth.userId);
-  const role = useSelector((state) => state.auth.role);
 
   const [gpbList, setGpbList] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
@@ -54,6 +55,25 @@ export default function GADARContent() {
   const [editActual, setEditActual] = useState("");
   const [editExpenditures, setEditExpenditures] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const canEditActuals = (project) => {
+    const creatorId = String(project.createdBy?._id || project.createdBy || "");
+    return creatorId === String(userId);
+  };
+
+  const getCreatorName = (project) => {
+    const creator = project.createdBy;
+    if (!creator) return "the project creator";
+    const profile = creator.personal_info_id;
+    if (profile?.personal) {
+      const name =
+        `${profile.personal.first_name || ""} ${
+          profile.personal.last_name || ""
+        }`.trim();
+      return name || creator.username || "the project creator";
+    }
+    return creator.username || "the project creator";
+  };
 
   useEffect(() => {
     if (error) {
@@ -495,7 +515,7 @@ export default function GADARContent() {
                       <td className="px-3 py-4 align-top text-xs text-gray-800">
                         {actual ? (
                           actual
-                        ) : actualEvents.length > 0 ? (
+                        ) : actualEvents.length > 0 && canEditActuals(project) ? (
                           <button
                             onClick={() => openEdit(project)}
                             className="text-blue-600 hover:underline text-xs"
@@ -520,13 +540,29 @@ export default function GADARContent() {
                         {getFieldValue(project.responsible_office) || "—"}
                       </td>
                       <td className="px-3 py-4 align-top text-center">
-                        <button
-                          onClick={() => openEdit(project)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
-                        >
-                          <FaEdit className="h-3 w-3" />
-                          Edit Actuals
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {canEditActuals(project) ? (
+                            <button
+                              onClick={() => openEdit(project)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
+                            >
+                              <FaEdit className="h-3 w-3" />
+                              Edit Actuals
+                            </button>
+                          ) : (
+                            <span
+                              title={`Only ${getCreatorName(project)} can edit actuals`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
+                            >
+                              <FaLock className="h-3 w-3" />
+                              Creator only
+                            </span>
+                          )}
+                          <PrintGADARSingle
+                            year={selectedYear}
+                            project={project}
+                          />
+                        </div>
                       </td>
                     </tr>
                     </React.Fragment>
