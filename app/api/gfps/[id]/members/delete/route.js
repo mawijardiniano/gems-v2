@@ -1,8 +1,14 @@
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { getGFPSMemberList } from "@/lib/gfpsServer";
 
 export async function DELETE(req, { params }) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   try {
     await connectDB();
 
@@ -10,11 +16,13 @@ export async function DELETE(req, { params }) {
 
     const gfps = await GFPS.findById(params.id);
 
-    if (!gfps?.sections?.[sectionKey]) {
+    const members = getGFPSMemberList(gfps, sectionKey);
+
+    if (!members) {
       return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
     }
 
-    gfps.sections[sectionKey].members.splice(memberIndex, 1);
+    members.splice(memberIndex, 1);
 
     await gfps.save();
 

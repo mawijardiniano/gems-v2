@@ -188,7 +188,6 @@ export default function EventsListContent() {
 
   const filteredEvents = useMemo(() => {
     return events.filter((evt) => {
-      // Only show events created by the currently logged-in user
       const creatorId =
         typeof evt.created_by === "object" && evt.created_by?._id
           ? evt.created_by._id.toString()

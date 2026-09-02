@@ -76,7 +76,6 @@ export default function ReportTab({ event }) {
 
   const handleDownload = (file) => {
     if (!file?.key && !file?.url) return;
-    // Prefer the stored S3 key; fall back to parsing it from the URL
     const key =
       file.key ||
       (file.url ? file.url.split(".com/")[1] : null);

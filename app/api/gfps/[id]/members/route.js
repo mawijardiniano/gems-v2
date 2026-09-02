@@ -1,13 +1,15 @@
 import GFPS from "@/models/gfps";
 import { connectDB } from "@/lib/db";
- import { requireAuth } from "@/lib/auth";
-import {NextResponse} from "next/server"
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { getGFPSMemberList } from "@/lib/gfpsServer";
 
 export async function PATCH(req, { params }) {
-   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
   try {
-     await connectDB();
+    await connectDB();
     const body = await req.json();
     const { sectionKey, memberIndex, data } = body;
 
@@ -17,21 +19,22 @@ export async function PATCH(req, { params }) {
       return Response.json({ success: false, message: "Not found" }, { status: 404 });
     }
 
-    const section = gfps.sections[sectionKey];
+    const members = getGFPSMemberList(gfps, sectionKey);
 
-    if (!section) {
+    if (!members) {
       return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
     }
 
-    const oldData = section.members[memberIndex];
+    const oldData = members[memberIndex];
 
-    section.members[memberIndex] = {
+    if (!oldData) {
+      return Response.json({ success: false, message: "Invalid member" }, { status: 400 });
+    }
+
+    members[memberIndex] = {
       ...oldData.toObject(),
       ...data,
     };
-
-    // update timestamp
-    section.updatedAt = new Date();
 
     await gfps.save();
 

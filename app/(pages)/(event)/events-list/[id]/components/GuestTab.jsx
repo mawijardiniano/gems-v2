@@ -53,7 +53,6 @@ export default function GuestTab({
   const [pageSizeInput, setPageSizeInput] = useState("10");
   const filteredGoingGuests = getFilteredGuests(event.registered_users);
 
-  // Attendance-aware helpers
   const attendedUsers = Array.isArray(event.attended_users)
     ? event.attended_users
     : [];
@@ -72,7 +71,6 @@ export default function GuestTab({
     goingPage * pageSize,
   );
 
-  // ─── Manual Add state ──────────────────────────────────────────
   const [showManualAdd, setShowManualAdd] = useState(false);
   const [manualSearch, setManualSearch] = useState("");
   const [manualResults, setManualResults] = useState([]);
@@ -100,7 +98,6 @@ export default function GuestTab({
     setPageSizeInput(String(pageSize));
   }, [pageSize]);
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (showManualAdd) {
       setManualSearch("");
@@ -111,7 +108,6 @@ export default function GuestTab({
     }
   }, [showManualAdd]);
 
-  // Manual add debounced search
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -134,7 +130,6 @@ export default function GuestTab({
         });
         const data = res.data?.data || [];
 
-        // Filter out users already registered (already going)
         const registeredIds = new Set(
           (event.registered_users || []).map((u) =>
             (u?._id || u)?.toString?.() || u?.toString?.() || u,

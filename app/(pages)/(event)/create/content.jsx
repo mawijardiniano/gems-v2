@@ -50,7 +50,6 @@ const ELIGIBILITY_OPTIONS = [
   { value: "None", label: "None" },
 ];
 
-// ─── Section Header ──────────────────────────────────────────────
 function SectionHeader({ icon: Icon, color = "blue", title, subtitle }) {
   const colorMap = {
     blue: "bg-blue-50 text-blue-600",
@@ -76,7 +75,6 @@ function SectionHeader({ icon: Icon, color = "blue", title, subtitle }) {
   );
 }
 
-// ─── Checkbox Dropdown ───────────────────────────────────────────
 function CheckboxDropdown({
   label,
   icon: Icon,
@@ -190,7 +188,6 @@ function CheckboxDropdown({
   );
 }
 
-// ─── Alert Banners ───────────────────────────────────────────────
 function AlertBanner({ type = "error", message }) {
   const isError = type === "error";
   return (
@@ -211,7 +208,6 @@ function AlertBanner({ type = "error", message }) {
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────
 export default function CreateEventsContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -314,7 +310,6 @@ export default function CreateEventsContent() {
       try {
         const res = await axios.get("/api/project");
         const allProjects = res.data?.data || [];
-        // Only show projects created by the current user
         const myProjects = allProjects.filter(
           (p) => p.createdBy?.toString() === userId?.toString(),
         );

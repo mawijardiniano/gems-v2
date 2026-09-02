@@ -56,7 +56,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       try {
         const res = await axios.get("/api/project");
         const allProjects = res.data?.data || [];
-        // Only show projects created by the current user
         const myProjects = allProjects.filter(
           (p) => p.createdBy?.toString() === userId?.toString(),
         );
