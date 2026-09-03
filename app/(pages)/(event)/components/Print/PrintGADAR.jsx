@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FaPrint } from "react-icons/fa";
+import { renderPdfPagesToImages } from "@/lib/print/pdfRenderer";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -35,12 +36,72 @@ const fmt = (n) =>
     maximumFractionDigits: 2,
   });
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const getFileExt = (file) => {
+  const source = file?.name || file?.url || "";
+  const match = /\.([a-z0-9]+)(\?|#|$)/i.exec(source);
+  return match ? match[1].toLowerCase() : "";
+};
+
+const isPdfFile = (file) => getFileExt(file) === "pdf";
+
+const isImageFile = (file) =>
+  ["jpg", "jpeg", "png", "gif", "webp", "bmp", "avif"].includes(
+    getFileExt(file),
+  );
+
+const renderList = (arr) =>
+  arr.length > 0 ? arr.map((item, i) => `${i + 1}. ${item}`).join("<br/>") : "";
+
+const collectAttachmentFiles = (report) => {
+  const files = [];
+  for (const key of ["office_memorandum", "activity_design"]) {
+    if (report?.[key]?.url) files.push(report[key]);
+  }
+  for (const file of report?.other_attachments || []) {
+    if (file?.url) files.push(file);
+  }
+  return files;
+};
+
+const collectUniquePdfFiles = (attachmentsMap) => {
+  const seen = new Set();
+  const files = [];
+  Object.values(attachmentsMap || {})
+    .flat()
+    .forEach(({ report }) => {
+      [
+        report?.office_memorandum,
+        report?.activity_design,
+        ...(report?.other_attachments || []),
+        report?.attendance_sheet,
+      ].forEach((file) => {
+        if (!isPdfFile(file)) return;
+        const key = file?.url || file?.key || "";
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          files.push(file);
+        }
+      });
+    });
+  return files;
+};
+
 export default function PrintGADAR({ year, projects, gaaBudget }) {
   const printRef = useRef(null);
   const [signatories, setSignatories] = useState({
     focalPointName: "____________________________",
     presidentName: "____________________________",
   });
+
+  const [eventAttachments, setEventAttachments] = useState(null);
+  const [renderingPdfs, setRenderingPdfs] = useState(false);
+  const [preRenderProgress, setPreRenderProgress] = useState(null);
 
   function toDisplayName(firstName, middleName, lastName, options = {}) {
     const includeMiddleInitial = options.includeMiddleInitial !== false;
@@ -102,6 +163,86 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     loadSignatories();
   }, []);
 
+  useEffect(() => {
+    async function loadEventAttachments() {
+      try {
+        const [eventsRes, reportsRes] = await Promise.all([
+          fetch("/api/events"),
+          fetch("/api/events/accomplishment-report"),
+        ]);
+        const eventsJson = await eventsRes.json();
+        const reportsJson = await reportsRes.json();
+        const events = eventsJson?.data || [];
+        const reports = reportsJson?.data || [];
+
+        const reportByEventId = new Map(
+          (Array.isArray(reports) ? reports : [])
+            .filter(Boolean)
+            .map((report) => [
+              String(report?.event_id?._id || report?.event_id || ""),
+              report,
+            ]),
+        );
+
+        const byProject = {};
+        for (const event of events) {
+          if (!event?.project) continue;
+          const report = reportByEventId.get(String(event._id));
+          if (!report) continue;
+          const projectKey = String(event.project?._id || event.project);
+          if (!byProject[projectKey]) byProject[projectKey] = [];
+          byProject[projectKey].push({ event, report });
+        }
+
+        setEventAttachments(byProject);
+      } catch {
+        setEventAttachments({});
+      }
+    }
+
+    loadEventAttachments();
+  }, []);
+
+  useEffect(() => {
+    if (!eventAttachments) return;
+    const pdfFiles = collectUniquePdfFiles(eventAttachments);
+    if (pdfFiles.length === 0) return;
+
+    let cancelled = false;
+    const run = async () => {
+      setPreRenderProgress({ done: 0, total: pdfFiles.length });
+      for (let i = 0; i < pdfFiles.length; i++) {
+        if (cancelled) return;
+        try {
+          await renderPdfPagesToImages(pdfFiles[i]);
+        } catch (err) {
+          console.error(
+            "PDF pre-render failed, placeholder will be used:",
+            pdfFiles[i].name || pdfFiles[i].url,
+            err,
+          );
+        }
+        if (!cancelled) {
+          setPreRenderProgress({ done: i + 1, total: pdfFiles.length });
+        }
+      }
+    };
+
+    const idleId =
+      typeof requestIdleCallback === "function"
+        ? requestIdleCallback(() => run())
+        : setTimeout(run, 300);
+
+    return () => {
+      cancelled = true;
+      if (typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
+    };
+  }, [eventAttachments]);
+
   const totalBudget = projects.reduce(
     (s, p) => s + (Number(getFieldValue(p.gad_budget)) || 0),
     0,
@@ -127,7 +268,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
   const gadPct =
     totalGAA > 0 ? ((totalExpenditures / totalGAA) * 100).toFixed(2) : "0.00";
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
 
     const now = new Date();
     const reportDate = `${now.getMonth() + 1}-${now.getDate()}-${String(
@@ -142,6 +283,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     };
 
     const orderedProjects = [...projects]
+      .filter(Boolean)
       .map((project, originalIndex) => ({ project, originalIndex }))
       .sort((a, b) => {
         const aType = getProjectTypeLabel(a.project);
@@ -152,40 +294,61 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       })
       .map((entry) => entry.project);
 
-    const rows = orderedProjects
-      .map((project, index) => {
-        const projectTypeLabel = getProjectTypeLabel(project);
-        const prevProject = orderedProjects[index - 1];
-        const prevTypeLabel = prevProject
-          ? getProjectTypeLabel(prevProject)
-          : null;
-        const shouldShowTypeHeader =
-          index === 0 || prevTypeLabel !== projectTypeLabel;
+    const renderedPdfPages = {};
+    const pdfFilesToRender = collectUniquePdfFiles(eventAttachments);
 
-        const causes = getArrayValue(project.cause_gender_issue);
-        const objectives = getArrayValue(project.gad_objective);
-        const activities = getArrayValue(project.gad_activity);
-        const indicators = getArrayValue(project.performance_indicator_target);
-        let actualText = "";
-        if (Array.isArray(project.actual_accomplishment)) {
-          actualText = project.actual_accomplishment[0] || "";
-        } else if (typeof project.actual_accomplishment === "string") {
-          actualText = project.actual_accomplishment;
-        }
+    if (pdfFilesToRender.length > 0) {
+      setRenderingPdfs(true);
+      try {
+        await Promise.all(
+          pdfFilesToRender.map(async (file) => {
+            const mapKey = file.url || file.key || "";
+            try {
+              renderedPdfPages[mapKey] = await renderPdfPagesToImages(file);
+            } catch (err) {
+              const reason = err?.message || String(err);
+              console.error(
+                "PDF attachment could not be rendered, using placeholder:",
+                file.name || file.url,
+                err,
+              );
+              renderedPdfPages[mapKey] = { error: reason };
+            }
+          }),
+        );
+      } finally {
+        setRenderingPdfs(false);
+      }
+    }
 
-        const isAttributedProgram = projectTypeLabel === "Attributed Program";
-        const actualCell = isAttributedProgram ? "" : actualText || "";
+    const buildRowHtml = (project, index) => {
+      const projectTypeLabel = getProjectTypeLabel(project);
+      const prevProject = orderedProjects[index - 1];
+      const prevTypeLabel = prevProject
+        ? getProjectTypeLabel(prevProject)
+        : null;
+      const shouldShowTypeHeader =
+        index === 0 || prevTypeLabel !== projectTypeLabel;
 
-        const renderList = (arr) =>
-          arr.length > 0
-            ? arr.map((item, i) => `${i + 1}. ${item}`).join("<br/>")
-            : "";
+      const causes = getArrayValue(project.cause_gender_issue);
+      const objectives = getArrayValue(project.gad_objective);
+      const activities = getArrayValue(project.gad_activity);
+      const indicators = getArrayValue(project.performance_indicator_target);
+      let actualText = "";
+      if (Array.isArray(project.actual_accomplishment)) {
+        actualText = project.actual_accomplishment[0] || "";
+      } else if (typeof project.actual_accomplishment === "string") {
+        actualText = project.actual_accomplishment;
+      }
 
-        const sectionHeader = shouldShowTypeHeader
-          ? `<tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>`
-          : "";
+      const isAttributedProgram = projectTypeLabel === "Attributed Program";
+      const actualCell = isAttributedProgram ? "" : actualText || "";
 
-        return `${sectionHeader}
+      const sectionHeader = shouldShowTypeHeader
+        ? `<tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>`
+        : "";
+
+      const rowHtml = `
           <tr>
             <td class="cell num">${index + 1}</td>
             <td class="cell">${getFieldValue(project.gender_issue) || ""}</td>
@@ -204,8 +367,141 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             <td class="cell">${getFieldValue(project.responsible_office) || ""}</td>
           </tr>
         `;
+
+      return { sectionHeader, rowHtml };
+    };
+
+    const rows = orderedProjects
+      .map((project, index) => {
+        const { sectionHeader, rowHtml } = buildRowHtml(project, index);
+        return `${sectionHeader}${rowHtml}`;
       })
       .join("");
+
+    const mainTableHead = `
+<thead>
+  <tr>
+    <th style="width:4%"></th>
+    <th style="width:4%">Gender Issue / GAD Mandate</th>
+    <th style="width:9%">Cause of Gender Issue</th>
+    <th style="width:10%">GAD Result Statement / GAD Objective</th>
+    <th style="width:8%">Relevant Organization MFO/PAP or PPA</th>
+    <th style="width:10%">GAD Activity</th>
+    <th style="width:10%">Performance Indicator / Target</th>
+    <th style="width:10%">Actual Result (Outputs/Outcomes)</th>
+    <th style="width:6%">Total Agency Approved Budget</th>
+    <th style="width:6%">Actual Cost Expenditure</th>
+    <th style="width:8%">Responsible Unit/Office</th>
+  </tr>
+  <tr>
+    <th></th>
+    <th>1</th>
+    <th>2</th>
+    <th>3</th>
+    <th>4</th>
+    <th>5</th>
+    <th>6</th>
+    <th>7</th>
+    <th>8</th>
+    <th>9</th>
+    <th>10</th>
+  </tr>
+</thead>`;
+
+    const pdfNoteHtml = (file, renderError) => `
+            <div class="pdf-note">
+              <div class="pdf-icon">PDF</div>
+              <div><strong>${escapeHtml(file.name || "PDF Document")}</strong></div>
+              <div class="muted">PDF attachment — open the file to view/print: <a href="${file.url}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
+              ${
+                renderError
+                  ? `<div class="render-error">⚠ Render failed: ${escapeHtml(renderError)}</div>`
+                  : ""
+              }
+            </div>
+          `;
+
+    const officeNoteHtml = (file) => `
+            <div class="pdf-note">
+              <div class="pdf-icon">${escapeHtml((getFileExt(file) || "doc").toUpperCase())}</div>
+              <div><strong>${escapeHtml(file.name || "Document")}</strong></div>
+              <div class="muted">Document attachment — open the file to view/print: <a href="${file.url}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
+            </div>
+          `;
+
+    const attachmentFileHtml = (file, pageBreakBefore) => {
+      const mapKey = file?.url || file?.key || "";
+      const breakClass = pageBreakBefore ? " page-break-before" : "";
+
+      const rendered = renderedPdfPages[mapKey];
+      if (rendered) {
+        if (rendered.error) {
+          return `<div class="attachment-block${breakClass}">${pdfNoteHtml(file, rendered.error)}</div>`;
+        }
+        return rendered
+          .map(
+            (src, i) =>
+              `<div class="attachment-block${
+                i > 0 || pageBreakBefore ? " page-break-before" : ""
+              }"><img class="attachment-img" src="${src}" alt="Page ${
+                i + 1
+              }" /></div>`,
+          )
+          .join("");
+      }
+      if (isImageFile(file)) {
+        return `<div class="attachment-block${breakClass}"><img class="attachment-img" src="${file.url}" alt="${escapeHtml(file.name || "attachment")}" /></div>`;
+      }
+      if (isPdfFile(file)) {
+        return `<div class="attachment-block${breakClass}">${pdfNoteHtml(file)}</div>`;
+      }
+      return `<div class="attachment-block${breakClass}">${officeNoteHtml(file)}</div>`;
+    };
+
+
+    let bodySections = "";
+    const attendanceFiles = [];
+
+    orderedProjects.forEach((project, index) => {
+      const { sectionHeader, rowHtml } = buildRowHtml(project, index);
+      const projectKey = String(project?._id || project?.id || "");
+      const eventEntries = (eventAttachments || {})[projectKey] || [];
+
+      bodySections += `
+        <div class="page-break"></div>
+        <table class="main-table">
+          ${mainTableHead}
+          <tbody>
+            ${sectionHeader}
+            ${rowHtml}
+          </tbody>
+        </table>
+      `;
+
+      const eventAttachmentFileGroups = eventEntries
+        .map((entry) => collectAttachmentFiles(entry.report))
+        .filter((files) => files.length > 0);
+
+      eventAttachmentFileGroups.forEach((files) => {
+        bodySections += `<div class="page-break"></div>`;
+        files.forEach((file) => {
+          bodySections += attachmentFileHtml(file, false);
+        });
+      });
+
+      eventEntries.forEach((entry) => {
+        if (entry.report?.attendance_sheet?.url) {
+          attendanceFiles.push(entry.report.attendance_sheet);
+        }
+      });
+    });
+
+    if (attendanceFiles.length > 0) {
+      bodySections += `<div class="page-break"></div>`;
+      attendanceFiles.forEach((file, i) => {
+        bodySections += attachmentFileHtml(file, i > 0);
+      });
+    }
 
     const html = `
       <!DOCTYPE html>
@@ -391,6 +687,47 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           .date-border-1 {border-bottom: none}
           .date-border-2 {border-top: none}
           .date {width:200px}
+
+          /* ── Blank separator + per-project/attachment pages ── */
+          .page-break {
+            height: 0;
+            page-break-after: always;
+            break-after: page;
+          }
+          .page-break-before {
+            page-break-before: always;
+            break-before: page;
+          }
+          .blank-page { min-height: 200px; }
+          .attachment-block {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          .attachment-img {
+            display: block;
+            max-width: 100%;
+            max-height: 9.5in;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+          }
+          .pdf-note {
+            border: 1px dashed #999;
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 12px;
+          }
+          .pdf-icon {
+            font-size: 26px;
+            font-weight: bold;
+            color: #b91c1c;
+            margin-bottom: 8px;
+          }
+          .render-error {
+            color: #b91c1c;
+            font-size: 10px;
+            margin-top: 8px;
+          }
         </style>
       </head>
       <body>
@@ -465,34 +802,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
 
 
         <table class="main-table">
-<thead>
-  <tr>
-    <th style="width:4%"></th>
-    <th style="width:4%">Gender Issue / GAD Mandate</th>
-    <th style="width:9%">Cause of Gender Issue</th>
-    <th style="width:10%">GAD Result Statement / GAD Objective</th>
-    <th style="width:8%">Relevant Organization MFO/PAP or PPA</th>
-    <th style="width:10%">GAD Activity</th>
-    <th style="width:10%">Performance Indicator / Target</th>
-    <th style="width:10%">Actual Result (Outputs/Outcomes)</th>
-    <th style="width:6%">Total Agency Approved Budget</th>
-    <th style="width:6%">Actual Cost Expenditure</th>
-    <th style="width:8%">Responsible Unit/Office</th>
-  </tr>
-  <tr>
-    <th></th>
-    <th>1</th>
-    <th>2</th>
-    <th>3</th>
-    <th>4</th>
-    <th>5</th>
-    <th>6</th>
-    <th>7</th>
-    <th>8</th>
-    <th>9</th>
-    <th>10</th>
-  </tr>
-</thead>
+          ${mainTableHead}
 
           <tbody>
             ${rows}
@@ -532,7 +842,12 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       </tbody>
       </table>
 
+        <!-- ── Blank separator page ────────────────────────── -->
+        <div class="page-break"></div>
+        <div class="blank-page">&nbsp;</div>
 
+        <!-- ── Per-project table pages + attachments + attendance sheets ── -->
+        ${bodySections}
 
       </body>
       </html>
@@ -554,20 +869,46 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     frameDoc.write(html);
     frameDoc.close();
     iframe.onload = () => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
+      const frameWindow = iframe.contentWindow;
+      const images = Array.from(frameDoc.images || []);
+      const waitForImages = Promise.all(
+        images.map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve;
+              }),
+        ),
+      );
+      const timeout = new Promise((resolve) => setTimeout(resolve, 10000));
+
+      Promise.race([waitForImages, timeout]).then(() => {
+        frameWindow?.focus();
+        frameWindow?.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      });
     };
   };
 
   return (
     <button
       onClick={handlePrint}
-      disabled={projects.length === 0}
+      disabled={
+        projects.length === 0 ||
+        eventAttachments === null ||
+        renderingPdfs
+      }
       className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <FaPrint className="h-3.5 w-3.5" />
-      Print Report
+      {eventAttachments === null
+        ? "Preparing Report..."
+        : preRenderProgress && preRenderProgress.done < preRenderProgress.total
+          ? `Rendering ${preRenderProgress.done} of ${preRenderProgress.total}...`
+          : renderingPdfs
+            ? "Rendering attachments..."
+            : "Print Report"}
     </button>
   );
 }
