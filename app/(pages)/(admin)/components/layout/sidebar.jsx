@@ -8,8 +8,6 @@ import {
   FaChevronDown,
   FaUserGraduate,
   FaBriefcase,
-  FaChartPie,
-  FaVenusMars,
   FaFolder,
   FaHistory,
   FaDatabase,
@@ -21,7 +19,6 @@ import { usePathname, useRouter } from "next/navigation";
 const SUB_ICONS = {
   "/user-lists/students": <FaUserGraduate size={14} />,
   "/user-lists/employees": <FaBriefcase size={14} />,
-  "/reports/sex-disaggregated-data": <FaVenusMars size={14} />,
 };
 
 const TooltipWrapper = ({ label, children, collapsed }) => {
@@ -54,7 +51,6 @@ export default function Sidebar({ open, setOpen, role }) {
       "user-list",
       "students",
       "employees",
-      "reports/sex-disaggregated-data",
       "manage-roles",
     ],
   };
@@ -99,19 +95,6 @@ export default function Sidebar({ open, setOpen, role }) {
           name: "Employees",
           href: "/user-lists/employees",
           key: "employees",
-        },
-      ],
-    },
-    {
-      name: "Reports",
-      href: "/reports",
-      icon: <FaChartPie size={16} />,
-      key: "reports/sex-disaggregated-data",
-      children: [
-        {
-          name: "Sex Disaggregated Data",
-          href: "/reports/sex-disaggregated-data",
-          key: "reports/sex-disaggregated-data",
         },
       ],
     },
@@ -171,12 +154,6 @@ export default function Sidebar({ open, setOpen, role }) {
   useEffect(() => {
     if (isAnyChildActive(links.find((l) => l.key === "user-list")?.children))
       setUserListOpen(true);
-    if (
-      isAnyChildActive(
-        links.find((l) => l.key === "reports/sex-disaggregated-data")?.children
-      )
-    )
-      setReportsOpen(true);
   }, [pathname, isAnyChildActive]);
 
   useEffect(() => {

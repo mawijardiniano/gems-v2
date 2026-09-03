@@ -2,26 +2,40 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { cacheOrSet } from "@/lib/cache";
 import { runAnalyticsAggregation } from "@/lib/analytics";
+import { requireAuth } from "@/lib/auth";
+import { SCOPED_ROLES } from "@/lib/colleges";
 
 const SUMMARY_CACHE_TTL = 60 * 1000; // 60 seconds
 
 export async function GET(req) {
   try {
+    const { error, status, user } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const url = new URL(req.url);
-    const collegeFilter = url.searchParams.get("college")?.trim();
+    const requestedCollege = url.searchParams.get("college")?.trim();
+    const courseFilter = url.searchParams.get("course")?.trim();
     const schoolYear = url.searchParams.get("school_year")?.trim();
     const semester = url.searchParams.get("semester")?.trim();
 
+    // Server-side scoping: scoped roles (GAD Coordinator, Dean) can only
+    // ever see data for their own assigned college, regardless of what the
+    // client requests.
+    const collegeFilter =
+      user?.role && SCOPED_ROLES.includes(user.role)
+        ? user.assignedCollege || "__no_college__"
+        : requestedCollege;
 
-    const cacheKey = `analytics:summary:${collegeFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
+    const cacheKey = `analytics:summary:${collegeFilter || "all"}:${courseFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
       async () => {
         const users = await runAnalyticsAggregation({
           collegeFilter,
+          courseFilter,
           schoolYear,
           semester,
         });

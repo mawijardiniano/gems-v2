@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { cacheOrSet } from "@/lib/cache";
 import { runAnalyticsAggregation } from "@/lib/analytics";
+import { requireAuth } from "@/lib/auth";
+import { SCOPED_ROLES } from "@/lib/colleges";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { readFile } from "fs/promises";
@@ -80,20 +82,33 @@ function rowsFromGroupMap(groupMap) {
 
 export async function GET(req) {
   try {
+    const { error, status, user } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
+
     await connectDB();
 
     const url = new URL(req.url);
-    const collegeFilter = url.searchParams.get("college")?.trim();
+    const requestedCollege = url.searchParams.get("college")?.trim();
+    const courseFilter = url.searchParams.get("course")?.trim();
     const schoolYear = url.searchParams.get("school_year")?.trim();
     const semester = url.searchParams.get("semester")?.trim();
 
-    const cacheKey = `analytics:report:${collegeFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
+    // Server-side scoping: scoped roles (GAD Coordinator, Dean) can only
+    // ever see data for their own assigned college, regardless of what the
+    // client requests.
+    const collegeFilter =
+      user?.role && SCOPED_ROLES.includes(user.role)
+        ? user.assignedCollege || "__no_college__"
+        : requestedCollege;
+
+    const cacheKey = `analytics:report:${collegeFilter || "all"}:${courseFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
       async () => {
         const filteredUsers = await runAnalyticsAggregation({
           collegeFilter,
+          courseFilter,
           schoolYear,
           semester,
         });

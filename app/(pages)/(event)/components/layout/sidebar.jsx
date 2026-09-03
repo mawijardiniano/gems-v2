@@ -11,6 +11,7 @@ import {
   FaClipboardList,
   FaCog,
   FaFileAlt,
+  FaVenusMars,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -46,6 +47,7 @@ export default function Sidebar({ open, setOpen, role }) {
       "gpb",
       "events-list",
       "gad-ars",
+      "sex-disaggregated-data",
       "gad-settings"
     ],
     "gad coordinator": [
@@ -56,6 +58,7 @@ export default function Sidebar({ open, setOpen, role }) {
       "gpb",
       "events-list",
       "gad-ars",
+      "sex-disaggregated-data",
       "gad-settings"
     ],
 
@@ -288,7 +291,9 @@ export default function Sidebar({ open, setOpen, role }) {
                   <button
                     onClick={() => setShowReports((prev) => !prev)}
                     className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full ${
-                      showReports || pathname?.startsWith("/gad-ars")
+                      showReports ||
+                      pathname?.startsWith("/gad-ars") ||
+                      pathname?.startsWith("/reports")
                         ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
@@ -323,6 +328,30 @@ export default function Sidebar({ open, setOpen, role }) {
                             GAD Accomplishment Report
                           </span>
                           {pathname?.startsWith("/gad-ars") && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                          )}
+                        </Link>
+                      </TooltipWrapper>
+
+                      <TooltipWrapper label="Sex-Disaggregated Data" collapsed={!open}>
+                        <Link
+                          href="/reports/sex-disaggregated-data"
+                          onClick={handleMobileClose}
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                            pathname?.startsWith(
+                              "/reports/sex-disaggregated-data",
+                            )
+                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                        >
+                          <FaVenusMars size={14} className="flex-shrink-0 opacity-60" />
+                          <span className="text-sm font-medium truncate">
+                            Sex-Disaggregated Data
+                          </span>
+                          {pathname?.startsWith(
+                            "/reports/sex-disaggregated-data",
+                          ) && (
                             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
                           )}
                         </Link>

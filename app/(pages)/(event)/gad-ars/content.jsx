@@ -13,7 +13,7 @@ import {
   FaLock,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
-import PrintGADARSingle from "../components/Print/PrintGADARSingle";
+
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -558,10 +558,7 @@ export default function GADARContent() {
                               Creator only
                             </span>
                           )}
-                          <PrintGADARSingle
-                            year={selectedYear}
-                            project={project}
-                          />
+
                         </div>
                       </td>
                     </tr>

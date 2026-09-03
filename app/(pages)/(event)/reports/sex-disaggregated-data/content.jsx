@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { COLLEGE_TO_PROGRAMS } from "@/lib/colleges";
 import {
   Bar,
   BarChart,
@@ -66,9 +68,17 @@ function CustomTooltip({ active, payload, label, formatter }) {
 }
 
 export default function SexDisaggregatedContent() {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [status, setStatus] = useState("");
-  const [college, setCollege] = useState("");
+  const userRole = useSelector((state) => state.auth.role);
+  const userCollege = useSelector((state) => state.auth.college);
+
+const [isGenerating, setIsGenerating] = useState(false);
+const [status, setStatus] = useState("");
+const [college, setCollege] = useState("");
+const [course, setCourse] = useState("");
+
+const isScoped = userRole === "gad coordinator";
+const effectiveCollege = isScoped ? userCollege || "" : college || "";
+
   const [terms, setTerms] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
@@ -129,9 +139,14 @@ export default function SexDisaggregatedContent() {
     [terms, selectedSchoolYear],
   );
 
+  const courseOptions = effectiveCollege
+    ? COLLEGE_TO_PROGRAMS[effectiveCollege] || []
+    : [];
+
   function buildQuery() {
     var params = new URLSearchParams();
-    if (college) params.set("college", college);
+    if (effectiveCollege) params.set("college", effectiveCollege);
+    if (course) params.set("course", course);
     if (selectedSchoolYear) params.set("school_year", selectedSchoolYear);
     if (selectedSchoolYear && selectedSemester) {
       params.set("semester", selectedSemester);
@@ -237,7 +252,7 @@ export default function SexDisaggregatedContent() {
     function () {
       fetchSummary();
     },
-    [college, selectedSchoolYear, selectedSemester],
+    [effectiveCollege, course, selectedSchoolYear, selectedSemester],
   );
 
   var employeeTotal =
@@ -410,20 +425,59 @@ export default function SexDisaggregatedContent() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_1fr_auto] md:items-end">
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
               College / Office
             </label>
             <select
-              value={college}
+              value={effectiveCollege}
               onChange={function (e) {
                 setCollege(e.target.value);
+                setCourse("");
               }}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isScoped}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             >
-              <option value="">All colleges and offices</option>
-              {colleges.map(function (c) {
+              {isScoped ? (
+                <option value={effectiveCollege}>
+                  {effectiveCollege || "No college assigned"}
+                </option>
+              ) : (
+                <>
+                  <option value="">All colleges and offices</option>
+                  {colleges.map(function (c) {
+                    return (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    );
+                  })}
+                </>
+              )}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Course
+            </label>
+            <select
+              value={course}
+              onChange={function (e) {
+                setCourse(e.target.value);
+              }}
+              disabled={!effectiveCollege || courseOptions.length === 0}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+            >
+              <option value="">
+                {courseOptions.length === 0
+                  ? effectiveCollege
+                    ? "No courses (office)"
+                    : "Select a college first"
+                  : "All courses"}
+              </option>
+              {courseOptions.map(function (c) {
                 return (
                   <option key={c} value={c}>
                     {c}
