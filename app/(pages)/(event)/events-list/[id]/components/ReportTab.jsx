@@ -15,6 +15,7 @@ import {
   FiDownload,
 } from "react-icons/fi";
 import { FaMagic } from "react-icons/fa";
+import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 
 export default function ReportTab({ event }) {
   const [form, setForm] = useState({ narrative: "" });
@@ -33,8 +34,17 @@ export default function ReportTab({ event }) {
   const [showReport, setShowReport] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [previewImg, setPreviewImg] = useState(null);
-  const [deletedPhotoKeys, setDeletedPhotoKeys] = useState([]);
-  const [deletedAttachmentKeys, setDeletedAttachmentKeys] = useState([]);
+
+  const fileLifecycle = useFileLifecycle();
+
+  const keysOf = (f) =>
+    [
+      f?.office_memorandum?.key,
+      f?.activity_design?.key,
+      f?.attendance_sheet?.key,
+      ...(f?.photos || []).map((p) => p?.key),
+      ...(f?.other_attachments || []).map((a) => a?.key),
+    ].filter(Boolean);
 
   const generateNarrative = async () => {
     setGenerating(true);
@@ -92,14 +102,16 @@ export default function ReportTab({ event }) {
   };
 
   const handleEdit = () => {
-    setForm({ narrative: showReport?.narrative || "" });
-    setFiles({
+    const editFiles = {
       office_memorandum: showReport?.office_memorandum || null,
       activity_design: showReport?.activity_design || null,
       attendance_sheet: showReport?.attendance_sheet || null,
       photos: showReport?.photos || [],
       other_attachments: showReport?.other_attachments || [],
-    });
+    };
+    setForm({ narrative: showReport?.narrative || "" });
+    setFiles(editFiles);
+    fileLifecycle.startSession(keysOf(editFiles));
     setIsEditing(true);
   };
 
@@ -113,11 +125,16 @@ export default function ReportTab({ event }) {
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setFiles((prev) => {
-        const oldFile = prev[field];
-        if (oldFile?.key) deleteFileByKey(oldFile.key);
-        return { ...prev, [field]: { url: res.data.url, key: res.data.key } };
-      });
+      const oldFile = files[field];
+      const next = {
+        ...files,
+        [field]: { url: res.data.url, key: res.data.key },
+      };
+      setFiles(next);
+      fileLifecycle.syncCurrent(keysOf(next));
+      if (oldFile?.key && !fileLifecycle.hasOriginal(oldFile.key)) {
+        deleteFileByKey(oldFile.key);
+      }
     } catch {
       setError(`Failed to upload ${field}`);
     } finally {
@@ -139,10 +156,12 @@ export default function ReportTab({ event }) {
           return { url: res.data.url, key: res.data.key };
         }),
       );
-      setFiles((prev) => ({
-        ...prev,
-        photos: isEditing ? [...prev.photos, ...uploaded] : uploaded,
-      }));
+      const next = {
+        ...files,
+        photos: isEditing ? [...files.photos, ...uploaded] : uploaded,
+      };
+      setFiles(next);
+      fileLifecycle.syncCurrent(keysOf(next));
     } catch {
       setError("Failed to upload photos");
     } finally {
@@ -164,10 +183,12 @@ export default function ReportTab({ event }) {
           return { url: res.data.url, key: res.data.key, name: file.name };
         }),
       );
-      setFiles((prev) => ({
-        ...prev,
-        other_attachments: [...prev.other_attachments, ...uploaded],
-      }));
+      const next = {
+        ...files,
+        other_attachments: [...files.other_attachments, ...uploaded],
+      };
+      setFiles(next);
+      fileLifecycle.syncCurrent(keysOf(next));
     } catch {
       setError("Failed to upload attachments");
     } finally {
@@ -176,27 +197,26 @@ export default function ReportTab({ event }) {
   };
 
   const removePhoto = (idx) => {
-    setDeletedPhotoKeys((prev) => {
-      const photo = files.photos[idx];
-      if (!photo?.key) return prev;
-      return [...prev, photo.key];
-    });
-    setFiles((prev) => ({
-      ...prev,
-      photos: prev.photos.filter((_, i) => i !== idx),
-    }));
+    const photo = files.photos[idx];
+    const next = { ...files, photos: files.photos.filter((_, i) => i !== idx) };
+    setFiles(next);
+    fileLifecycle.syncCurrent(keysOf(next));
+    if (photo?.key && !fileLifecycle.hasOriginal(photo.key)) {
+      deleteFileByKey(photo.key);
+    }
   };
 
   const removeOtherAttachment = (idx) => {
-    setDeletedAttachmentKeys((prev) => {
-      const file = files.other_attachments[idx];
-      if (!file?.key) return prev;
-      return [...prev, file.key];
-    });
-    setFiles((prev) => ({
-      ...prev,
-      other_attachments: prev.other_attachments.filter((_, i) => i !== idx),
-    }));
+    const attachment = files.other_attachments[idx];
+    const next = {
+      ...files,
+      other_attachments: files.other_attachments.filter((_, i) => i !== idx),
+    };
+    setFiles(next);
+    fileLifecycle.syncCurrent(keysOf(next));
+    if (attachment?.key && !fileLifecycle.hasOriginal(attachment.key)) {
+      deleteFileByKey(attachment.key);
+    }
   };
 
   const fetchReport = async () => {
@@ -246,33 +266,14 @@ export default function ReportTab({ event }) {
         : `/api/events/accomplishment-report`;
       const method = isEditing ? "PUT" : "POST";
 
-      const currentFiles = { ...files };
-      const currentDeletedPhotoKeys = [...deletedPhotoKeys];
-      const currentDeletedAttachmentKeys = [...deletedAttachmentKeys];
-
-      if (currentDeletedPhotoKeys.length > 0) {
-        await Promise.all(
-          currentDeletedPhotoKeys.map((key) => deleteFileByKey(key)),
-        );
-      }
-      if (currentDeletedAttachmentKeys.length > 0) {
-        await Promise.all(
-          currentDeletedAttachmentKeys.map((key) => deleteFileByKey(key)),
-        );
-      }
-
       const payload = {
         event_id: event._id,
         narrative: form.narrative,
-        office_memorandum: currentFiles.office_memorandum,
-        activity_design: currentFiles.activity_design,
-        attendance_sheet: currentFiles.attendance_sheet,
-        photos: currentFiles.photos.filter(
-          (p) => !currentDeletedPhotoKeys.includes(p.key),
-        ),
-        other_attachments: currentFiles.other_attachments.filter(
-          (p) => !currentDeletedAttachmentKeys.includes(p.key),
-        ),
+        office_memorandum: files.office_memorandum,
+        activity_design: files.activity_design,
+        attendance_sheet: files.attendance_sheet,
+        photos: files.photos,
+        other_attachments: files.other_attachments,
       };
 
       const res = await fetch(url, {
@@ -289,6 +290,8 @@ export default function ReportTab({ event }) {
       const responseData = await res.json();
       const savedReport = responseData.data || responseData;
 
+      await fileLifecycle.commit();
+
       setShowReport(savedReport);
 
       setSuccess(
@@ -304,8 +307,7 @@ export default function ReportTab({ event }) {
         photos: [],
         other_attachments: [],
       });
-      setDeletedPhotoKeys([]);
-      setDeletedAttachmentKeys([]);
+      fileLifecycle.resetSession();
       setIsEditing(false);
     } catch (err) {
       console.error("Submit error:", err);
@@ -513,7 +515,6 @@ export default function ReportTab({ event }) {
         onSubmit={handleSubmit}
         className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-8"
       >
-        {/* ── Section Header ──────────────────────────────────────── */}
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
             <FiFileText size={18} />
@@ -541,7 +542,6 @@ export default function ReportTab({ event }) {
           </div>
         )}
 
-        {/* ── Narrative ───────────────────────────────────────────── */}
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="label !mb-0">
@@ -566,7 +566,6 @@ export default function ReportTab({ event }) {
           />
         </div>
 
-        {/* ── Required Documents ──────────────────────────────────── */}
         <div>
           <p className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-500">
             Required Documents
@@ -620,7 +619,6 @@ export default function ReportTab({ event }) {
           </div>
         </div>
 
-        {/* ── Event Photos ────────────────────────────────────────── */}
         <div>
           <label className="label">
             Event Photos <span className="text-red-500">*</span>
@@ -659,8 +657,6 @@ export default function ReportTab({ event }) {
             </div>
           )}
         </div>
-
-        {/* ── Other Attachments ───────────────────────────────────── */}
         <div>
           <label className="label">
             Other Attachments <span className="text-red-500">*</span>
@@ -709,12 +705,13 @@ export default function ReportTab({ event }) {
           )}
         </div>
 
-        {/* ── Actions ─────────────────────────────────────────────── */}
         <div className="flex gap-3 justify-end pt-5 border-t border-gray-100">
           {isEditing && (
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
+                await fileLifecycle.rollback();
+                fileLifecycle.resetSession();
                 setIsEditing(false);
                 setForm({ narrative: "" });
                 setFiles({
@@ -724,9 +721,6 @@ export default function ReportTab({ event }) {
                   photos: [],
                   other_attachments: [],
                 });
-                setDeletedPhotoKeys([]);
-                setDeletedAttachmentKeys([]);
-                setShowReport(showReport);
               }}
               className="btn-secondary !rounded-lg"
             >

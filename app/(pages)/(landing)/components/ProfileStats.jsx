@@ -24,9 +24,6 @@ import PrintSummaryButton from "./PrintSummaryButton";
 
 const semesterOrder = { "1st": 1, "2nd": 2, Summer: 3 };
 
-// ─────────────────────────────────────────────────────────────
-// Reusable stat card
-// ─────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, total, male, female, unspecified, accent }) {
   const malePct = total ? ((male / total) * 100).toFixed(1) : 0;
   const femalePct = total ? ((female / total) * 100).toFixed(1) : 0;
@@ -52,7 +49,6 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         </div>
       </div>
 
-      {/* Gender bars */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
           <span className="h-2.5 w-2.5 rounded-full bg-[#6366f1]" />
@@ -95,9 +91,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Custom tooltip for bar charts
-// ─────────────────────────────────────────────────────────────
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -117,9 +111,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// Segmented toggle
-// ─────────────────────────────────────────────────────────────
 function SegmentedToggle({ active, onChange }) {
   return (
     <div className="inline-flex rounded-xl bg-gray-100 p-1">
@@ -149,9 +140,6 @@ function SegmentedToggle({ active, onChange }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Loading skeleton
-// ─────────────────────────────────────────────────────────────
 function LoadingSkeleton() {
   return (
     <section className="my-8 px-4 animate-pulse">
@@ -175,9 +163,6 @@ function LoadingSkeleton() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────────────────────
 export default function ProfileStats() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -231,6 +216,10 @@ export default function ProfileStats() {
 
     fetch(`/api/analytics/sex-disaggregated-data/summary?${params.toString()}`)
       .then((res) => {
+        if (res.status === 404) {
+          
+          return {};
+        }
         if (!res.ok) throw new Error("Failed to load");
         return res.json();
       })
@@ -282,12 +271,10 @@ export default function ProfileStats() {
     setData(null);
   };
 
-  // ── loading ──
   if (loading && !data) {
     return <LoadingSkeleton />;
   }
 
-  // ── error ──
   if (error && !data) {
     return (
       <section className="my-20 px-4 text-center">
@@ -307,7 +294,6 @@ export default function ProfileStats() {
     );
   }
 
-  // ── data extraction ──
   const empTotals = data?.employees?.totals || {};
   const stuTotals = data?.students?.totals || {};
 
@@ -329,7 +315,6 @@ export default function ProfileStats() {
   const totalStudent =
     totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
-  // Pie data for overall gender distribution
   const overallPieData = [
     { name: "Male", value: totalMale, color: "#6366f1" },
     { name: "Female", value: totalFemale, color: "#ec4899" },
@@ -338,7 +323,6 @@ export default function ProfileStats() {
     overallPieData.push({ name: "Unspecified", value: totalUnspecified, color: "#94a3b8" });
   }
 
-  // Office data
   const officeData = (data?.employees?.officeSex || [])
     .filter((row) => row.office && row.office !== "Unspecified")
     .reduce((acc, row) => {
@@ -352,7 +336,6 @@ export default function ProfileStats() {
       return acc;
     }, []);
 
-  // College data
   const collegeData = (data?.students?.collegeSex || [])
     .filter((row) => row.college && row.college !== "Unspecified")
     .reduce((acc, row) => {
@@ -366,7 +349,6 @@ export default function ProfileStats() {
       return acc;
     }, []);
 
-  // Year level data
   const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
   const yearLineData = (data?.students?.yearLevelSex || [])
     .filter((row) => row.yearLevel && row.yearLevel !== "Unspecified")
@@ -605,7 +587,6 @@ export default function ProfileStats() {
           </div>
         </div>
 
-        {/* ──── EMPLOYEE: OFFICE / DEPARTMENT ──── */}
         <div className="mb-12 animate-slide-up">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -724,7 +705,6 @@ export default function ProfileStats() {
           </div>
         </div>
 
-        {/* ──── STUDENT: PER COLLEGE ──── */}
         <div className="mb-12 animate-slide-up">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -843,7 +823,6 @@ export default function ProfileStats() {
           </div>
         </div>
 
-        {/* ──── STUDENT: BY YEAR LEVEL ──── */}
         <div className="mb-12 animate-slide-up">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">

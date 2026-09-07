@@ -166,7 +166,6 @@ const effectiveCollege = isScoped ? userCollege || "" : college || "";
         setTerms(termList);
         setSchoolYears(yearList);
 
-        // Auto-select the latest school year and its first semester
         if (yearList.length > 0) {
           var latestYear = yearList[0];
           setSelectedSchoolYear(latestYear);

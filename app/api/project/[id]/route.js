@@ -7,14 +7,13 @@ import {
 import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
-import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
 import {NextResponse} from "next/server"
 
 export async function PUT(req, { params }) {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
@@ -30,20 +29,14 @@ export async function PUT(req, { params }) {
 
     const touchesActuals =
       body.actual_accomplishment !== undefined ||
-      body.actual_expenditures !== undefined;
+      body.actual_expenditures !== undefined ||
+      body.expenditure_evidence !== undefined;
 
     if (touchesActuals) {
-      const actualsActor = body.userId
-        ? await UserAuth.findById(body.userId, "_id role username").lean()
-        : null;
-
-      if (!actualsActor) {
-        return Response.json({ error: "Unauthorized" }, { status: 401 });
-      }
 
       const creatorId = project.createdBy ? String(project.createdBy) : "";
 
-      if (creatorId !== String(actualsActor._id)) {
+      if (!user || creatorId !== String(user._id)) {
         return Response.json(
           { error: "Only the project creator can edit actuals" },
           { status: 403 },
@@ -71,7 +64,6 @@ mergeField("project_type");
     mergeField("source_budget");
     mergeField("responsible_office");
 
-    // GAD AR fields
     if (body.actual_accomplishment !== undefined) {
       project.actual_accomplishment = Array.isArray(body.actual_accomplishment)
         ? body.actual_accomplishment
@@ -80,15 +72,22 @@ mergeField("project_type");
     if (body.actual_expenditures !== undefined) {
       project.actual_expenditures = Number(body.actual_expenditures) || 0;
     }
+    if (body.expenditure_evidence !== undefined) {
+      project.expenditure_evidence = Array.isArray(body.expenditure_evidence)
+        ? body.expenditure_evidence
+            .filter((f) => f && (f.url || f.key))
+            .map((f) => ({
+              url: f.url || "",
+              key: f.key || "",
+              name: f.name || null,
+            }))
+        : [];
+    }
 
-    let actor = null;
+    const actor = user;
 
-    if (body.userId) {
-      actor = await UserAuth.findById(body.userId, "_id role username").lean();
-
-      if (actor) {
-        project.lastUpdatedBy = actor._id;
-      }
+    if (actor) {
+      project.lastUpdatedBy = actor._id;
     }
 
     await project.save();
@@ -123,7 +122,6 @@ mergeField("project_type");
       });
     }
 
-    // Check for duplicate Gender Issue / GAD Mandate in the same year (warn only, exclude self)
     let duplicateWarnings = [];
     try {
       const existingProjects = await Project.find({

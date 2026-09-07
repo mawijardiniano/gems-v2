@@ -93,9 +93,6 @@ export async function GET(req) {
     const schoolYear = url.searchParams.get("school_year")?.trim();
     const semester = url.searchParams.get("semester")?.trim();
 
-    // Server-side scoping: scoped roles (GAD Coordinator, Dean) can only
-    // ever see data for their own assigned college, regardless of what the
-    // client requests.
     const collegeFilter =
       user?.role && SCOPED_ROLES.includes(user.role)
         ? user.assignedCollege || "__no_college__"

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
+import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 import {
   FaFileAlt,
   FaCalendarAlt,
@@ -11,6 +12,11 @@ import {
   FaExclamationTriangle,
   FaFolderOpen,
   FaLock,
+  FaPaperclip,
+  FaTrash,
+  FaDownload,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
 
@@ -39,8 +45,42 @@ const getProjectTypeLabel = (project) => {
   return "Uncategorized";
 };
 
+const ACCEPTED_EVIDENCE_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+];
+const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024; 
+
+const getEvidenceFileType = (file) => {
+  const name = `${file?.name || ""} ${file?.url || ""}`.toLowerCase();
+  if (/\.(png|jpe?g)(\?|$)/.test(name)) return "image";
+  if (name.includes(".pdf")) return "pdf";
+  return "other";
+};
+
+const getEvidenceProxyUrl = (file) => {
+  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  if (!key) return null;
+  return `/api/files/proxy?key=${encodeURIComponent(key)}`;
+};
+
+const getEvidenceDownloadUrl = (file) => {
+  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  if (!key) return null;
+  const nameParam = file?.name ? `&name=${encodeURIComponent(file.name)}` : "";
+  return `/api/download?key=${encodeURIComponent(key)}${nameParam}`;
+};
+
+const getProjectContextLabel = (project) => {
+  const label = getFieldValue(project?.gender_issue) || "";
+  if (!label) return "Project";
+  return label.length > 60 ? `${label.slice(0, 60)}...` : label;
+};
+
 export default function GADARContent() {
   const userId = useSelector((state) => state.auth.userId);
+  const fileLifecycle = useFileLifecycle();
 
   const [gpbList, setGpbList] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
@@ -55,6 +95,11 @@ export default function GADARContent() {
   const [editActual, setEditActual] = useState("");
   const [editExpenditures, setEditExpenditures] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editEvidence, setEditEvidence] = useState([]);
+  const [evidenceUploading, setEvidenceUploading] = useState(false);
+  const [evidenceViewer, setEvidenceViewer] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(true);
+  const [previewError, setPreviewError] = useState("");
 
   const canEditActuals = (project) => {
     const creatorId = String(project.createdBy?._id || project.createdBy || "");
@@ -196,7 +241,126 @@ export default function GADARContent() {
     setEditProject(project);
     setEditActual(suggested);
     setEditExpenditures(project.actual_expenditures || "");
+    const evidence = Array.isArray(project.expenditure_evidence)
+      ? project.expenditure_evidence
+      : [];
+    setEditEvidence(evidence);
+    fileLifecycle.startSession(evidence.map((f) => f?.key));
   };
+
+  const handleEvidenceUpload = async (e) => {
+    const fileList = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (fileList.length === 0) return;
+
+    const invalid = fileList.filter(
+      (f) =>
+        !ACCEPTED_EVIDENCE_TYPES.includes(f.type) || f.size > MAX_EVIDENCE_SIZE,
+    );
+    if (invalid.length > 0) {
+      setError("Evidence files must be PDF, JPG, or PNG and under 10MB each.");
+      return;
+    }
+
+    setEvidenceUploading(true);
+    try {
+      const uploaded = [];
+      for (const file of fileList) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "expenditure-evidence");
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || data.message || "Upload failed");
+        }
+        uploaded.push({ url: data.url, key: data.key, name: file.name });
+      }
+      const next = [...editEvidence, ...uploaded];
+      setEditEvidence(next);
+      fileLifecycle.syncCurrent(next.map((f) => f?.key));
+    } catch (err) {
+      setError(err.message || "Failed to upload evidence files");
+    } finally {
+      setEvidenceUploading(false);
+    }
+  };
+
+  const removeEvidenceFile = (file) => {
+    if (!file?.key) {
+      setEditEvidence((prev) => prev.filter((f) => f !== file));
+      return;
+    }
+    const next = editEvidence.filter((f) => f.key !== file.key);
+    setEditEvidence(next);
+    fileLifecycle.syncCurrent(next.map((f) => f?.key));
+    if (!fileLifecycle.hasOriginal(file.key)) {
+      fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: file.key }),
+      }).catch(() => {});
+    }
+  };
+
+  const resetPreviewState = () => {
+    setPreviewLoading(true);
+    setPreviewError("");
+  };
+
+  const openEvidenceViewer = (files, index = 0, contextLabel = "") => {
+    const list = Array.isArray(files) ? files : [];
+    if (list.length === 0) return;
+    setEvidenceViewer({
+      files: list,
+      index: Math.min(Math.max(Number(index) || 0, 0), list.length - 1),
+      contextLabel,
+    });
+    resetPreviewState();
+  };
+
+  const downloadEvidenceFile = (file) => {
+    const url = getEvidenceDownloadUrl(file);
+    if (!url) return;
+    const link = document.createElement("a");
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const closeEdit = () => {
+    fileLifecycle.rollback();
+    fileLifecycle.resetSession();
+    setEditProject(null);
+    setEditActual("");
+    setEditExpenditures("");
+    setEditEvidence([]);
+  };
+
+  useEffect(() => {
+    if (!evidenceViewer) return;
+    const onKey = (e) => {
+      if (e.key === "ArrowLeft") {
+        setEvidenceViewer((v) =>
+          v ? { ...v, index: Math.max(0, v.index - 1) } : v,
+        );
+        resetPreviewState();
+      } else if (e.key === "ArrowRight") {
+        setEvidenceViewer((v) =>
+          v ? { ...v, index: Math.min(v.files.length - 1, v.index + 1) } : v,
+        );
+        resetPreviewState();
+      } else if (e.key === "Escape") {
+        setEvidenceViewer(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [evidenceViewer]);
 
   const saveActuals = async () => {
     if (!editProject) return;
@@ -210,6 +374,7 @@ export default function GADARContent() {
           userId,
           actual_accomplishment: editActual.trim() ? [editActual.trim()] : [],
           actual_expenditures: Number(editExpenditures) || 0,
+          expenditure_evidence: editEvidence,
         }),
       });
 
@@ -218,10 +383,9 @@ export default function GADARContent() {
         throw new Error(data.error || data.message || "Failed to save");
       }
 
+      await fileLifecycle.commit();
       setSuccess("GAD AR actuals saved successfully!");
-      setEditProject(null);
-      setEditActual("");
-      setEditExpenditures("");
+      closeEdit();
       fetchProjects();
     } catch (err) {
       setError(err.message || "Failed to save actuals");
@@ -272,6 +436,12 @@ export default function GADARContent() {
       return a.originalIndex - b.originalIndex;
     })
     .map((entry) => entry.project);
+
+  const viewerFiles = evidenceViewer?.files || [];
+  const viewerIndex = evidenceViewer?.index ?? 0;
+  const viewerFile = viewerFiles[viewerIndex] || null;
+  const viewerFileType = viewerFile ? getEvidenceFileType(viewerFile) : "other";
+  const viewerPreviewUrl = viewerFile ? getEvidenceProxyUrl(viewerFile) : null;
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -532,9 +702,28 @@ export default function GADARContent() {
                         ₱ {fmt(getFieldValue(project.gad_budget))}
                       </td>
                       <td className="px-3 py-4 align-top text-right text-xs font-semibold text-emerald-600">
-                        {project.actual_expenditures
-                          ? `₱ ${fmt(project.actual_expenditures)}`
-                          : "—"}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {project.actual_expenditures
+                            ? `₱ ${fmt(project.actual_expenditures)}`
+                            : "—"}
+                          {Array.isArray(project.expenditure_evidence) &&
+                            project.expenditure_evidence.length > 0 && (
+                              <button
+                                onClick={() =>
+                                  openEvidenceViewer(
+                                    project.expenditure_evidence,
+                                    0,
+                                    getProjectContextLabel(project),
+                                  )
+                                }
+                                title={`${project.expenditure_evidence.length} evidence file(s) attached`}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
+                              >
+                                <FaPaperclip className="h-2.5 w-2.5" />
+                                {project.expenditure_evidence.length}
+                              </button>
+                            )}
+                        </div>
                       </td>
                       <td className="px-3 py-4 align-top text-xs text-gray-800">
                         {getFieldValue(project.responsible_office) || "—"}
@@ -612,11 +801,7 @@ export default function GADARContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    setEditProject(null);
-                    setEditActual("");
-                    setEditExpenditures("");
-                  }}
+                  onClick={closeEdit}
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
@@ -681,16 +866,116 @@ export default function GADARContent() {
                   Total actual money spent on this project
                 </p>
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                  Evidence of Actual Expenditures
+                </label>
+                <p className="text-xs text-gray-400 mb-3">
+                  Attach supporting documents (receipts, official receipts,
+                  liquidation reports, invoices). PDF, JPG, or PNG — max 10MB
+                  each.
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <label
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition cursor-pointer ${
+                      evidenceUploading
+                        ? "text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed"
+                        : "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                    }`}
+                  >
+                    {evidenceUploading ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <FaPaperclip className="h-3.5 w-3.5" />
+                        Add Files
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={handleEvidenceUpload}
+                      disabled={evidenceUploading}
+                    />
+                  </label>
+                  {editEvidence.length > 0 && (
+                    <span className="text-xs text-gray-500">
+                      {editEvidence.length} file
+                      {editEvidence.length !== 1 ? "s" : ""} attached
+                    </span>
+                  )}
+                </div>
+
+                {editEvidence.length > 0 && (
+                  <ul className="mt-3 space-y-2">
+                    {editEvidence.map((file, i) => (
+                      <li
+                        key={file.key || i}
+                        className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FaFileAlt className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                          <span className="text-xs text-gray-700 truncate">
+                            {file.name || "Evidence file"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openEvidenceViewer(
+                                editEvidence,
+                                i,
+                                getProjectContextLabel(editProject),
+                              )
+                            }
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-blue-700 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition"
+                          >
+                            <FaDownload className="h-3 w-3" />
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeEvidenceFile(file)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <FaTrash className="h-3 w-3" />
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
 
             <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
               <button
-                onClick={() => {
-                  setEditProject(null);
-                  setEditActual("");
-                  setEditExpenditures("");
-                }}
+                onClick={closeEdit}
                 className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancel
@@ -725,6 +1010,190 @@ export default function GADARContent() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {evidenceViewer && viewerFile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div
+            className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in flex flex-col"
+            style={{ maxHeight: "90vh" }}
+          >
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm shrink-0">
+                  <FaPaperclip className="h-5 w-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-gray-900 truncate">
+                    {viewerFile.name || "Evidence file"}
+                  </h2>
+                  <p className="text-xs text-gray-500 truncate">
+                    Expenditure Evidence ·{" "}
+                    {evidenceViewer.contextLabel || "Project"} · File{" "}
+                    {viewerIndex + 1} of {viewerFiles.length}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => downloadEvidenceFile(viewerFile)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                >
+                  <FaDownload className="h-3.5 w-3.5" />
+                  Download
+                </button>
+                <button
+                  onClick={() => setEvidenceViewer(null)}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                >
+                  <FaTimes className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="relative flex-1 bg-gray-900 flex items-center justify-center overflow-hidden"
+              style={{ minHeight: "55vh" }}
+            >
+              {previewLoading && viewerFileType !== "other" && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/80">
+                  <svg
+                    className="animate-spin h-8 w-8 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                </div>
+              )}
+              {previewError ? (
+                <div className="text-center p-8">
+                  <FaFileAlt className="h-10 w-10 text-red-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-300">{previewError}</p>
+                  <button
+                    onClick={() => downloadEvidenceFile(viewerFile)}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <FaDownload className="h-3.5 w-3.5" />
+                    Download instead
+                  </button>
+                </div>
+              ) : viewerFileType === "image" ? (
+                <img
+                  key={viewerPreviewUrl || viewerIndex}
+                  src={viewerPreviewUrl}
+                  alt={viewerFile.name || "Evidence"}
+                  className="max-w-full max-h-[70vh] object-contain"
+                  onLoad={() => setPreviewLoading(false)}
+                  onError={() => {
+                    setPreviewLoading(false);
+                    setPreviewError(
+                      "Failed to load preview. Try downloading the file instead.",
+                    );
+                  }}
+                />
+              ) : viewerFileType === "pdf" ? (
+                <iframe
+                  key={viewerPreviewUrl || viewerIndex}
+                  src={viewerPreviewUrl}
+                  title={viewerFile.name || "Evidence preview"}
+                  className="w-full"
+                  style={{ height: "70vh", border: "none" }}
+                  onLoad={() => setPreviewLoading(false)}
+                  onError={() => {
+                    setPreviewLoading(false);
+                    setPreviewError(
+                      "Failed to load preview. Try downloading the file instead.",
+                    );
+                  }}
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <FaFileAlt className="h-10 w-10 text-gray-500 mx-auto mb-3" />
+                  <p className="text-sm text-gray-300">
+                    Preview not available for this file type.
+                  </p>
+                  <button
+                    onClick={() => downloadEvidenceFile(viewerFile)}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <FaDownload className="h-3.5 w-3.5" />
+                    Download to view
+                  </button>
+                </div>
+              )}
+
+              {viewerFiles.length > 1 && (
+                <>
+                  <button
+                    onClick={() => {
+                      setEvidenceViewer((v) => ({
+                        ...v,
+                        index: Math.max(0, v.index - 1),
+                      }));
+                      setPreviewLoading(true);
+                      setPreviewError("");
+                    }}
+                    disabled={viewerIndex === 0}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEvidenceViewer((v) => ({
+                        ...v,
+                        index: Math.min(v.files.length - 1, v.index + 1),
+                      }));
+                      setPreviewLoading(true);
+                      setPreviewError("");
+                    }}
+                    disabled={viewerIndex === viewerFiles.length - 1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronRight className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
+            {viewerFiles.length > 1 && (
+              <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex gap-2 overflow-x-auto shrink-0">
+                {viewerFiles.map((file, i) => (
+                  <button
+                    key={file.key || i}
+                    onClick={() => {
+                      setEvidenceViewer((v) => ({ ...v, index: i }));
+                      setPreviewLoading(true);
+                      setPreviewError("");
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap border transition ${
+                      i === viewerIndex
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 font-medium"
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <FaFileAlt className="h-3 w-3 shrink-0" />
+                    <span className="max-w-[160px] truncate">
+                      {file.name || `File ${i + 1}`}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

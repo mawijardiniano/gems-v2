@@ -1495,31 +1495,29 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         </div>
       )}
 
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
       
-        {role !== "gad coordinator" && (
-          <div className="flex items-center gap-2">
-            {role !== "planning director" &&
-              selectedGPBStatus?.status !== "approved" &&
-              selectedGPBStatus?.status !== "disapproved" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowWizard(true);
-                    setWizardStep(1);
-                  }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
-                >
-                  + Add Project
-                </button>
-              )}
+        {role !== "planning director" &&
+          selectedGPBStatus?.status !== "approved" &&
+          selectedGPBStatus?.status !== "disapproved" && (
             <button
-              onClick={handleUpdateStatusModal}
-              className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
+              type="button"
+              onClick={() => {
+                setShowWizard(true);
+                setWizardStep(1);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
             >
-              Update Status
+              + Add Project
             </button>
-          </div>
+          )}
+        {role !== "gad coordinator" && (
+          <button
+            onClick={handleUpdateStatusModal}
+            className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
+          >
+            Update Status
+          </button>
         )}
       </div>
 

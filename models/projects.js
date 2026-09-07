@@ -39,6 +39,15 @@ const FieldSchema = (type) => ({
   value: { type, default: "" },
 });
 
+const fileMetaSchema = new Schema(
+  {
+    url: { type: String, default: null },
+    key: { type: String, default: null },
+    name: { type: String, default: null },
+  },
+  { _id: false },
+);
+
 const ProjectSchema = new Schema({
   year: { type: Number, required: true },
   project_type: FieldSchema(String),
@@ -61,6 +70,10 @@ const ProjectSchema = new Schema({
   actual_expenditures: {
     type: Number,
     default: 0,
+  },
+  expenditure_evidence: {
+    type: [fileMetaSchema],
+    default: [],
   },
 
   createdBy: {

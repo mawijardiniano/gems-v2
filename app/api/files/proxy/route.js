@@ -41,7 +41,15 @@ export async function GET(req) {
 
     return new NextResponse(Readable.toWeb(response.Body), { headers });
   } catch (err) {
+
+    const isNotFound =
+      err?.name === "NoSuchKey" ||
+      err?.name === "NotFound" ||
+      err?.$metadata?.httpStatusCode === 404;
+    if (isNotFound) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
     console.error("FILE PROXY ERROR:", err);
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+    return NextResponse.json({ error: "Failed to load file" }, { status: 500 });
   }
 }
