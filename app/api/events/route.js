@@ -1,12 +1,12 @@
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
-import UserAuth from "@/models/user";
 import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+import { USER_POPULATE_BASE } from "@/lib/userPopulate";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -18,13 +18,31 @@ const ALLOWED_CREATOR_ROLES = [
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
 
     const { searchParams } = new URL(req.url);
     const created_by = searchParams.get("created_by");
+
+    if (created_by) {
+      const ORGANIZER_ROLES = [
+        "Admin",
+        "GAD Focal Person",
+        "GAD Coordinator",
+        "Dean",
+      ];
+      if (
+        created_by !== user._id.toString() &&
+        !ORGANIZER_ROLES.includes(user.role)
+      ) {
+        return NextResponse.json(
+          { status: "error", message: "You can only filter by your own events." },
+          { status: 403 },
+        );
+      }
+    }
 
     const filter = created_by ? { created_by } : {};
     const cacheKey = `events:list:${created_by || "all"}`;
@@ -35,39 +53,19 @@ export async function GET(req) {
         return Event.find(filter)
           .populate({
             path: "created_by",
-            model: "UserAuth",
-            select: "username role personal_info_id",
-            populate: {
-              path: "personal_info_id",
-              model: "GemsProfile",
-            },
+            ...USER_POPULATE_BASE,
           })
           .populate({
             path: "registered_users",
-            model: "UserAuth",
-            select: "username role personal_info_id",
-            populate: {
-              path: "personal_info_id",
-              model: "GemsProfile",
-            },
+            ...USER_POPULATE_BASE,
           })
           .populate({
             path: "interested_users",
-            model: "UserAuth",
-            select: "username role personal_info_id",
-            populate: {
-              path: "personal_info_id",
-              model: "GemsProfile",
-            },
+            ...USER_POPULATE_BASE,
           })
           .populate({
             path: "not_interested_users",
-            model: "UserAuth",
-            select: "username role personal_info_id",
-            populate: {
-              path: "personal_info_id",
-              model: "GemsProfile",
-            },
+            ...USER_POPULATE_BASE,
           })
           .lean();
       },
@@ -86,7 +84,8 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { error, status } = await requireAuth(req);
+
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -100,7 +99,6 @@ export async function POST(req) {
       start_dates,
       end_dates,
       venue,
-      created_by,
       type_of_activity,
       organizing_office_unit,
       co_organizing_office_unit,
@@ -111,6 +109,7 @@ export async function POST(req) {
       event_poster,
     } = body;
 
+
     if (
       !title ||
       !number_of_days ||
@@ -118,12 +117,10 @@ export async function POST(req) {
       !Array.isArray(end_dates) ||
       start_dates.length !== Number(number_of_days) ||
       end_dates.length !== Number(number_of_days) ||
-      !created_by ||
       !type_of_activity ||
-      !co_organizing_office_unit ||
-      !organizing_office_unit ||
-      !eligibility_criteria ||
-      !target_number_of_participants
+      !organizing_office_unit?.length ||
+      target_number_of_participants == null ||
+      Number(target_number_of_participants) < 0
     ) {
       return NextResponse.json(
         {
@@ -131,15 +128,6 @@ export async function POST(req) {
             "All fields are required. start_dates and end_dates must be arrays matching number_of_days.",
         },
         { status: 400 },
-      );
-    }
-
-    const user = await UserAuth.findById(created_by);
-    if (!user) {
-      console.error("POST /api/events: Creator user not found", { created_by });
-      return NextResponse.json(
-        { message: "Creator user not found." },
-        { status: 404 },
       );
     }
 
@@ -155,7 +143,6 @@ export async function POST(req) {
       return NextResponse.json(
         {
           message: `Only ${ALLOWED_CREATOR_ROLES.join(", ")} can create events.`,
-          debug: { userId: user._id, username: user.username, role: user.role },
         },
         { status: 403 },
       );
@@ -194,8 +181,8 @@ export async function POST(req) {
       co_organizing_office_unit,
       eligibility_criteria,
       target_number_of_participants,
-      created_by,
-      updated_by: created_by,
+      created_by: user._id,
+      updated_by: user._id,
       registered_users: [],
       ...(project ? { project } : {}),
       gad_activity,
@@ -236,31 +223,6 @@ export async function POST(req) {
     console.error(error);
     return NextResponse.json(
       { message: "Internal server error", error: error.message },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(req) {
-  try {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
-
-    await connectDB();
-
-    const result = await Event.deleteMany({});
-
-    // Events deleted - invalidate cached event lists.
-    cacheDelPrefix("events:list:");
-
-    return NextResponse.json({
-      status: "success",
-      message: `Deleted ${result.deletedCount} event.`,
-    });
-  } catch (error) {
-    console.error("Error deleting all events:", error);
-    return NextResponse.json(
-      { status: "error", message: error.message },
       { status: 500 },
     );
   }

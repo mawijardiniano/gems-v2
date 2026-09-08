@@ -164,7 +164,7 @@ const EventSchema = new Schema(
       },
     },
   },
-  { timestamps: true },
+  { timestamps: true, optimisticConcurrency: true },
 );
 
 

@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/auth";
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -21,20 +21,46 @@ export async function GET(req) {
       );
     }
 
-    const createdEvents = await Event.find({
-      created_by: user_id,
-    }).sort({ start_date: -1 });
+    const ORGANIZER_ROLES = [
+      "Admin",
+      "GAD Focal Person",
+      "GAD Coordinator",
+      "Dean",
+    ];
+    if (
+      user_id !== user._id.toString() &&
+      !ORGANIZER_ROLES.includes(user.role)
+    ) {
+      return NextResponse.json(
+        { message: "You can only view your own events." },
+        { status: 403 },
+      );
+    }
+
+    const limitParam = Number(url.searchParams.get("limit"));
+    const limit =
+      Number.isFinite(limitParam) && limitParam > 0
+        ? Math.min(Math.floor(limitParam), 500)
+        : 100;
+
+    const sort = { "start_dates.0": -1 };
+
+    const createdEvents = await Event.find({ created_by: user_id })
+      .sort(sort)
+      .limit(limit);
 
     const participatedEvents = await Event.find({
       registered_users: user_id,
-    }).sort({ start_date: -1 });
+    })
+      .sort(sort)
+      .limit(limit);
 
-    const allOtherEvents = await Event.find({
+    const invitedEvents = await Event.find({
       created_by: { $ne: user_id },
       registered_users: { $ne: user_id },
-    }).sort({ start_date: -1 });
-
-    const invitedEvents = allOtherEvents;
+    })
+      .sort(sort)
+      .limit(limit);
 
     return NextResponse.json(
       {

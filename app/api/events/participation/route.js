@@ -9,9 +9,16 @@ import { cacheDelPrefix } from "@/lib/cache";
 
 const VALID_STATUSES = ["interested", "not_interested", "going"];
 
+const ORGANIZER_ROLES = [
+  "Admin",
+  "GAD Focal Person",
+  "GAD Coordinator",
+  "Dean",
+];
+
 export async function POST(req) {
   try {
-    const { error, status: authStatus } = await requireAuth(req);
+    const { error, status: authStatus, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status: authStatus });
 
     await connectDB();
@@ -37,69 +44,94 @@ export async function POST(req) {
       );
     }
 
+    const actingOnSelf =
+      userIds.length === 1 && userIds[0] === user._id.toString();
+    if (!actingOnSelf && !ORGANIZER_ROLES.includes(user.role)) {
+      return NextResponse.json(
+        { message: "You can only update your own participation." },
+        { status: 403 },
+      );
+    }
+
     const event = await Event.findById(event_id);
     if (!event)
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
 
-    userIds.forEach((uid) => {
-      event.registered_users.pull(uid);
-      event.interested_users?.pull?.(uid);
-      event.not_interested_users?.pull?.(uid);
-    });
-
-    // Assign or remove participant numbers
-    event.participant_numbers = event.participant_numbers || [];
-    if (status === "going" || status === "interested") {
+    const applyParticipation = (doc) => {
       userIds.forEach((uid) => {
-        const alreadyAssigned = event.participant_numbers.some(
-          (p) => p.user_id.toString() === uid.toString(),
+        doc.registered_users.pull(uid);
+        doc.interested_users?.pull?.(uid);
+        doc.not_interested_users?.pull?.(uid);
+      });
+
+      doc.participant_numbers = doc.participant_numbers || [];
+      if (status === "going" || status === "interested") {
+        userIds.forEach((uid) => {
+          const alreadyAssigned = doc.participant_numbers.some(
+            (p) => p.user_id.toString() === uid.toString(),
+          );
+          if (!alreadyAssigned) {
+            const usedNumbers = doc.participant_numbers.map((p) => p.number);
+            let nextNumber = 1;
+            while (usedNumbers.includes(nextNumber)) nextNumber++;
+            doc.participant_numbers.push({ user_id: uid, number: nextNumber });
+          }
+        });
+      } else if (status === "not_interested") {
+        doc.participant_numbers = doc.participant_numbers.filter(
+          (p) => !userIds.some((uid) => p.user_id.toString() === uid.toString()),
         );
-        if (!alreadyAssigned) {
-          // Fill the lowest available gap (Option B)
-          const usedNumbers = event.participant_numbers.map((p) => p.number);
-          let nextNumber = 1;
-          while (usedNumbers.includes(nextNumber)) nextNumber++;
-          event.participant_numbers.push({ user_id: uid, number: nextNumber });
-        }
-      });
-    } else if (status === "not_interested") {
-      // Remove user's slot so it becomes available for the next person
-      event.participant_numbers = event.participant_numbers.filter(
-        (p) => !userIds.some((uid) => p.user_id.toString() === uid.toString()),
-      );
+      }
+
+      if (status === "going") {
+        userIds.forEach((uid) => doc.registered_users.addToSet(uid));
+      } else if (status === "interested") {
+        doc.interested_users = doc.interested_users || [];
+        userIds.forEach((uid) => {
+          if (typeof doc.interested_users.addToSet === "function") {
+            doc.interested_users.addToSet(uid);
+          } else if (
+            !doc.interested_users.find((id) => id.toString() === uid.toString())
+          ) {
+            doc.interested_users.push(uid);
+          }
+        });
+      } else if (status === "not_interested") {
+        doc.not_interested_users = doc.not_interested_users || [];
+        userIds.forEach((uid) => {
+          if (typeof doc.not_interested_users.addToSet === "function") {
+            doc.not_interested_users.addToSet(uid);
+          } else if (
+            !doc.not_interested_users.find(
+              (id) => id.toString() === uid.toString(),
+            )
+          ) {
+            doc.not_interested_users.push(uid);
+          }
+        });
+      }
+    };
+
+    let savedEvent = null;
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const doc = attempt === 1 ? event : await Event.findById(event_id);
+      if (!doc) {
+        return NextResponse.json(
+          { message: "Event not found" },
+          { status: 404 },
+        );
+      }
+      try {
+        applyParticipation(doc);
+        savedEvent = await doc.save();
+        break;
+      } catch (err) {
+        if (err?.name === "VersionError" && attempt < MAX_ATTEMPTS) continue;
+        throw err;
+      }
     }
 
-    if (status === "going") {
-      userIds.forEach((uid) => event.registered_users.addToSet(uid));
-    } else if (status === "interested") {
-      event.interested_users = event.interested_users || [];
-      userIds.forEach((uid) => {
-        if (typeof event.interested_users.addToSet === "function") {
-          event.interested_users.addToSet(uid);
-        } else if (
-          !event.interested_users.find((id) => id.toString() === uid.toString())
-        ) {
-          event.interested_users.push(uid);
-        }
-      });
-    } else if (status === "not_interested") {
-      event.not_interested_users = event.not_interested_users || [];
-      userIds.forEach((uid) => {
-        if (typeof event.not_interested_users.addToSet === "function") {
-          event.not_interested_users.addToSet(uid);
-        } else if (
-          !event.not_interested_users.find(
-            (id) => id.toString() === uid.toString(),
-          )
-        ) {
-          event.not_interested_users.push(uid);
-        }
-      });
-    }
-
-    await event.save();
-
-    // Participation changed - invalidate cached event lists.
     cacheDelPrefix("events:list:");
 
     await logActivity({
@@ -112,7 +144,7 @@ export async function POST(req) {
       metadata: { status, userIds },
     });
 
-    const populated = await event.populate([
+    const populated = await savedEvent.populate([
       {
         path: "created_by",
         model: "UserAuth",

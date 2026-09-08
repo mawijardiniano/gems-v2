@@ -3,7 +3,15 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useRef } from "react";
-import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiEdit2,
+  FiInfo,
+  FiEye,
+  FiX,
+  FiDownload,
+  FiFileText,
+} from "react-icons/fi";
 import {
   FaPiggyBank,
   FaClipboardList,
@@ -38,9 +46,13 @@ function describeBudgetWarning(data) {
     : base;
 }
 
-// ─── Budget Summary Stat Card ─────────────────────────────────────────
-// Matches the card pattern used across the app (gpb, gaa-budget, gad-ars)
-// so the GPB year page feels like part of the same design system.
+function getScannedFileType(url) {
+  const clean = String(url || "").split("?")[0].toLowerCase();
+  if (clean.endsWith(".pdf")) return "pdf";
+  if (/\.(jpe?g|png|webp|gif|bmp)$/.test(clean)) return "image";
+  return "other";
+}
+
 function StatCard({ icon: Icon, label, value, sub, color = "blue", badge, danger = false }) {
   const colorMap = {
     blue: "bg-blue-50 text-blue-600",
@@ -540,6 +552,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [selectedGPBId, setSelectedGPBId] = useState(null);
   const [selectedGPBKey, setSelectedGPBKey] = useState(null);
   const [selectedGPBStatus, setSelectedGPBStatus] = useState(null);
+
+  const [scannedViewerOpen, setScannedViewerOpen] = useState(false);
+  const [scannedPreviewLoading, setScannedPreviewLoading] = useState(true);
+  const [scannedPreviewError, setScannedPreviewError] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
@@ -1154,6 +1170,24 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
   };
 
+  const openScannedViewer = () => {
+    setScannedPreviewLoading(true);
+    setScannedPreviewError("");
+    setScannedViewerOpen(true);
+  };
+
+  const closeScannedViewer = () => setScannedViewerOpen(false);
+
+  const downloadScannedCopy = () => {
+    const url = selectedGPBStatus?.scanned_copy?.url;
+    if (!url) return;
+    const link = document.createElement("a");
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   const handleUpdateStatus = async () => {
     try {
       setSaving(true);
@@ -1165,6 +1199,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         url: "",
         key: "",
       };
+
+      let uploadedKey = null;
 
       if (selectedFile) {
         const formData = new FormData();
@@ -1178,10 +1214,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
         const uploadData = await uploadRes.json();
 
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || "Failed to upload scanned copy");
+        }
+
         scanned_copy = {
           url: uploadData.url,
           key: uploadData.key,
         };
+        uploadedKey = uploadData.key;
       }
 
       const res = await fetch(`/api/gpb/status/${selectedGPBId}`, {
@@ -1199,6 +1240,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       const data = await res.json();
 
       if (!res.ok) {
+        if (uploadedKey) {
+          await deleteFileByKey(uploadedKey);
+        }
         throw new Error(data.error || "Failed to update status");
       }
 
@@ -1242,9 +1286,17 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
   }, [addWarning]);
 
+  useEffect(() => {
+    if (!scannedViewerOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setScannedViewerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [scannedViewerOpen]);
+
   const TABLE_WIDTH = sidebarOpen ? 1400 : 1000;
 
-  // Late-budget support: total/remaining are null until a GAA budget exists.
   const overBudget = Boolean(
     budgetSummary?.hasBudget && budgetSummary.overBudget,
   );
@@ -1262,31 +1314,53 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         <FiArrowLeft className="h-4 w-4" /> Back to GPB List
       </button>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            GPB Year {year}
-          </h2>
-          <span
-            className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full capitalize ${
-              status === "approved"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : status === "disapproved"
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : "bg-amber-50 text-amber-700 border border-amber-200"
-            }`}
-          >
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              GPB Year {year}
+            </h2>
+            {selectedGPBStatus?.scanned_copy?.url && (
+              <button
+                onClick={openScannedViewer}
+                title="Preview the scanned copy attached to this status"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors"
+              >
+                <FiEye className="h-3 w-3" />
+                View scanned copy
+              </button>
+            )}
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full capitalize ${
                 status === "approved"
-                  ? "bg-emerald-500"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   : status === "disapproved"
-                    ? "bg-red-500"
-                    : "bg-amber-500"
+                    ? "bg-red-50 text-red-700 border border-red-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
               }`}
-            />
-            {status || "draft"}
-          </span>
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  status === "approved"
+                    ? "bg-emerald-500"
+                    : status === "disapproved"
+                      ? "bg-red-500"
+                      : "bg-amber-500"
+                }`}
+              />
+              {status || "draft"}
+            </span>
+          </div>
+
+          {selectedGPBStatus?.reason && (
+            <p className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
+              <FiInfo className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+              <span>
+                <span className="font-medium text-gray-600">Reason:</span>{" "}
+                {selectedGPBStatus.reason}
+              </span>
+            </p>
+          )}
         </div>
 
         <PrintGPB
@@ -1311,6 +1385,30 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                 ×
               </button>
             </div>
+
+            {(selectedGPBStatus?.status || selectedGPBStatus?.scanned_copy?.url) && (
+              <div className="mb-4 rounded-lg bg-gray-50 border border-gray-100 p-3 text-sm">
+                <p className="text-gray-600">
+                  Current status:{" "}
+                  <span className="font-semibold capitalize">
+                    {selectedGPBStatus?.status || "draft"}
+                  </span>
+                </p>
+                {selectedGPBStatus?.reason && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Reason: {selectedGPBStatus.reason}
+                  </p>
+                )}
+                {selectedGPBStatus?.scanned_copy?.url && (
+                  <button
+                    onClick={openScannedViewer}
+                    className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                  >
+                    View current scanned copy
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1352,6 +1450,21 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                 className="w-full border border-gray-300 rounded-lg p-2"
                 onChange={(e) => setSelectedFile(e.target.files[0])}
               />
+              {selectedFile ? (
+                <p className="mt-2 text-xs text-gray-500">
+                  New file: {selectedFile.name} — the current scanned copy will
+                  be replaced.
+                </p>
+              ) : selectedGPBStatus?.scanned_copy?.url ? (
+                <p className="mt-2 text-xs text-gray-500">
+                  A scanned copy is already attached (see link above). Selecting
+                  a new file will replace it.
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500">
+                  No scanned copy attached yet.
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3">
@@ -1379,6 +1492,141 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           </div>
         </div>
       )}
+
+      {scannedViewerOpen && selectedGPBStatus?.scanned_copy?.url && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={closeScannedViewer}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col"
+            style={{ maxHeight: "90vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm shrink-0">
+                  <FiFileText className="h-5 w-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-gray-900 truncate">
+                    Scanned Copy
+                  </h2>
+                  <p className="text-xs text-gray-500 truncate">
+                    GPB Year {year} · Status attachment
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={downloadScannedCopy}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                >
+                  <FiDownload className="h-3.5 w-3.5" />
+                  Download
+                </button>
+                <button
+                  onClick={closeScannedViewer}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                >
+                  <FiX className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="relative flex-1 bg-gray-900 flex items-center justify-center overflow-hidden"
+              style={{ minHeight: "55vh" }}
+            >
+              {scannedPreviewLoading &&
+                !scannedPreviewError &&
+                getScannedFileType(selectedGPBStatus.scanned_copy.url) !==
+                  "other" && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/80">
+                    <svg
+                      className="animate-spin h-8 w-8 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                  </div>
+                )}
+
+              {scannedPreviewError ? (
+                <div className="text-center p-8">
+                  <p className="text-sm text-gray-300">{scannedPreviewError}</p>
+                  <button
+                    onClick={downloadScannedCopy}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <FiDownload className="h-3.5 w-3.5" />
+                    Download instead
+                  </button>
+                </div>
+              ) : getScannedFileType(selectedGPBStatus.scanned_copy.url) ===
+                "image" ? (
+                <img
+                  key={selectedGPBStatus.scanned_copy.url}
+                  src={selectedGPBStatus.scanned_copy.url}
+                  alt="Scanned copy"
+                  className="max-w-full max-h-[70vh] object-contain"
+                  onLoad={() => setScannedPreviewLoading(false)}
+                  onError={() => {
+                    setScannedPreviewLoading(false);
+                    setScannedPreviewError(
+                      "Failed to load preview. Try downloading the file instead.",
+                    );
+                  }}
+                />
+              ) : getScannedFileType(selectedGPBStatus.scanned_copy.url) ===
+                "pdf" ? (
+                <iframe
+                  key={selectedGPBStatus.scanned_copy.url}
+                  src={selectedGPBStatus.scanned_copy.url}
+                  title="Scanned copy preview"
+                  className="w-full"
+                  style={{ height: "70vh", border: "none" }}
+                  onLoad={() => setScannedPreviewLoading(false)}
+                  onError={() => {
+                    setScannedPreviewLoading(false);
+                    setScannedPreviewError(
+                      "Failed to load preview. Try downloading the file instead.",
+                    );
+                  }}
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <FiFileText className="h-10 w-10 text-gray-500 mx-auto mb-3" />
+                  <p className="text-sm text-gray-300">
+                    Preview not available for this file type.
+                  </p>
+                  <button
+                    onClick={downloadScannedCopy}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <FiDownload className="h-3.5 w-3.5" />
+                    Download to view
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCommentForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -1496,6 +1744,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       )}
 
       <div className="flex justify-end mb-4 gap-2">
+
       
         {role !== "planning director" &&
           selectedGPBStatus?.status !== "approved" &&

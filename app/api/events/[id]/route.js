@@ -9,18 +9,24 @@ import AccomplishmentReport from "@/models/accomplishment_report";
 import mongoose from "mongoose";
 import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
+import { USER_POPULATE_BASE } from "@/lib/userPopulate";
 
-
-const USER_POPULATE_BASE = {
-  model: "UserAuth",
-  select: "username role personal_info_id",
-  populate: {
-    path: "personal_info_id",
-    model: "GemsProfile",
-    select:
-      "personal.first_name personal.last_name personal.birthday personal.currentStatus gadData.sexAtBirth affiliation.academic_information college course year_level affiliation.employment_information office", // Only needed fields
-  },
-};
+const EDITABLE_FIELDS = [
+  "title",
+  "description",
+  "number_of_days",
+  "start_dates",
+  "end_dates",
+  "venue",
+  "type_of_activity",
+  "organizing_office_unit",
+  "co_organizing_office_unit",
+  "eligibility_criteria",
+  "target_number_of_participants",
+  "project",
+  "gad_activity",
+  "event_poster",
+];
 
 export async function GET(req, { params }) {
 
@@ -35,7 +41,6 @@ export async function GET(req, { params }) {
       { status: 400 },
     );
 
-  // Guard against CastError crashes from malformed ids (e.g. mangled QR URLs)
   if (!mongoose.isValidObjectId(id))
     return NextResponse.json(
       { status: "error", message: "Event not found" },
@@ -93,7 +98,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -104,54 +109,58 @@ export async function PUT(req, { params }) {
     );
   }
 
-  await connectDB();
-  const body = await req.json();
-  console.log("body", body);
-
-  // Sanitize empty project/gad_activity values to avoid ObjectId cast errors
-  if (body.project === "" || body.project === null || body.project === undefined) {
-    body.project = null;
-  }
-  if (body.gad_activity === "" || body.gad_activity === null || body.gad_activity === undefined) {
-    body.gad_activity = "";
-  }
-
-  const event = await Event.findById(id);
-  if (!event) {
-    return NextResponse.json(
-      { status: "error", message: "Event not found" },
-      { status: 404 },
-    );
-  }
-
-  const oldProjectId = event.project ? event.project.toString() : null;
-  const newProjectId = body.project;
-
-  event.set(body);
-  console.log("event", event);
-  if (!event.updated_by) {
-    return NextResponse.json(
-      { status: "error", message: "updated_by is required" },
-      { status: 400 },
-    );
-  }
-  event.updated_by = event.updated_by;
-
-  if (oldProjectId && oldProjectId !== newProjectId) {
-    await Project.findByIdAndUpdate(oldProjectId, {
-      $pull: { events: event._id },
-    });
-  }
-  if (newProjectId && oldProjectId !== newProjectId) {
-    await Project.findByIdAndUpdate(newProjectId, {
-      $addToSet: { events: event._id },
-    });
-  }
-
   try {
+    await connectDB();
+    const body = await req.json();
+
+    if (body.project === "" || body.project === null || body.project === undefined) {
+      body.project = null;
+    }
+    if (body.gad_activity === "" || body.gad_activity === null || body.gad_activity === undefined) {
+      body.gad_activity = "";
+    }
+
+    const event = await Event.findById(id);
+    if (!event) {
+      return NextResponse.json(
+        { status: "error", message: "Event not found" },
+        { status: 404 },
+      );
+    }
+
+    if (
+      event.created_by.toString() !== user._id.toString() &&
+      user.role !== "Admin"
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "You are not allowed to edit this event" },
+        { status: 403 },
+      );
+    }
+
+    const oldProjectId = event.project ? event.project.toString() : null;
+    const newProjectId = body.project ?? null;
+
+    for (const field of EDITABLE_FIELDS) {
+      if (body[field] !== undefined) {
+        event.set(field, body[field]);
+      }
+    }
+    event.updated_by = user._id;
+
     await event.save();
 
-    // Event updated - invalidate cached event lists.
+    if (oldProjectId && oldProjectId !== newProjectId) {
+      await Project.findByIdAndUpdate(oldProjectId, {
+        $pull: { events: event._id },
+      });
+    }
+    if (newProjectId && oldProjectId !== newProjectId) {
+      await Project.findByIdAndUpdate(newProjectId, {
+        $addToSet: { events: event._id },
+      });
+    }
+
     cacheDelPrefix("events:list:");
 
     const populated = await Event.findById(id)
@@ -200,7 +209,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -265,7 +274,7 @@ export async function DELETE(req, { params }) {
     cacheDelPrefix("events:list:");
 
     await logActivity({
-      user_id: req.user?._id || null,
+      user_id: user._id,
       action: "EVENT_DELETE",
       description: `Deleted event: ${event.title}`,
       req,

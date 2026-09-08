@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
+import Event from "@/models/event";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 
@@ -10,6 +12,33 @@ export async function POST(req) {
   if (error) return NextResponse.json({ error }, { status });
     await connectDB();
     const body = await req.json();
+
+    const { event_id } = body;
+    if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
+      return NextResponse.json(
+        { message: "Valid event_id is required" },
+        { status: 400 },
+      );
+    }
+
+    const event = await Event.findById(event_id);
+    if (!event) {
+      return NextResponse.json(
+        { message: "Event not found" },
+        { status: 404 },
+      );
+    }
+
+    const existingReport = await AccomplishmentReport.findOne({ event_id });
+    if (existingReport) {
+      return NextResponse.json(
+        {
+          message:
+            "A report already exists for this event. Update the existing report instead.",
+        },
+        { status: 409 },
+      );
+    }
 
     const report = await AccomplishmentReport.create({
       event_id: body.event_id,

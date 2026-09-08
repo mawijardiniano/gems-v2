@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import { logActivity } from "@/lib/activityLog";
+import { requireAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
-
-const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function PATCH(req, context) {
   try {
+    const { error, status: authStatus, user } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status: authStatus });
+
     await connectDB();
 
     const params = await context.params;
@@ -22,23 +23,7 @@ export async function PATCH(req, context) {
       );
     }
 
-    // SECURITY: Get userId from JWT token, not from request body
-    const token = req.cookies.get("auth_token")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { message: "Authentication required" },
-        { status: 401 },
-      );
-    }
-
-    let decoded;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
-      return NextResponse.json({ message: "Invalid token" }, { status: 401 });
-    }
-
-    const userId = decoded.id;
+    const userId = user._id;
 
     const { status, cancelReason } = await req.json();
     const allowedStatus = ["active", "cancelled", "completed"];
@@ -55,10 +40,10 @@ export async function PATCH(req, context) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
-    // Allow creator or Admin to change status
+    // Allow creator or Admin to change status (role from the DB, not the token)
     if (
-      event.created_by.toString() !== userId &&
-      decoded.role !== "Admin"
+      event.created_by.toString() !== userId.toString() &&
+      user.role !== "Admin"
     ) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
@@ -76,8 +61,6 @@ export async function PATCH(req, context) {
     }
 
     await event.save();
-
-    // Status changed - invalidate cached event lists.
     cacheDelPrefix("events:list:");
 
     await logActivity({

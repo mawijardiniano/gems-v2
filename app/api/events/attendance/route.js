@@ -22,26 +22,29 @@ export async function POST(req) {
       );
     }
 
-    if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
+    const rawIds = Array.isArray(user_id) ? user_id : [user_id];
+    if (
+      rawIds.length === 0 ||
+      rawIds.some((uid) => !uid || !mongoose.Types.ObjectId.isValid(uid))
+    ) {
       return NextResponse.json(
         { message: "Valid user_id is required" },
         { status: 400 },
       );
     }
+    const targetIds = [...new Set(rawIds.map((uid) => uid.toString()))];
 
-    // Identity check: a requester may always record THEIR OWN attendance.
-    // Marking someone else is restricted to organizer roles.
     const ORGANIZER_ROLES = [
       "Admin",
       "GAD Focal Person",
       "GAD Coordinator",
       "Dean",
     ];
-    const markingSelf =
-      Array.isArray(user_id)
-        ? user_id.length === 1 && user_id[0] === user._id.toString()
-        : user_id === user._id.toString();
-    if (!markingSelf && !ORGANIZER_ROLES.includes(user.role)) {
+    const selfId = user._id.toString();
+    if (
+      targetIds.some((uid) => uid !== selfId) &&
+      !ORGANIZER_ROLES.includes(user.role)
+    ) {
       return NextResponse.json(
         { message: "You can only record your own attendance." },
         { status: 403 },
@@ -89,30 +92,41 @@ export async function POST(req) {
     }
 
     const attendedAt = hasCapturedAt ? new Date(captured_at) : new Date();
-    const updated = await Event.findOneAndUpdate(
-      {
-        _id: event_id,
-        "attended_users.user_id": { $ne: user_id },
-      },
-      {
-        $push: { attended_users: { user_id, attended_at: attendedAt } },
-      },
-      { new: true },
-    );
 
-    if (!updated) {
-      const existingEvent = await Event.findById(event_id);
-      const existing = existingEvent?.attended_users?.find(
-        (a) => a.user_id?.toString() === user_id.toString(),
+    const results = [];
+    let anyAdded = false;
+    for (const uid of targetIds) {
+      const updated = await Event.findOneAndUpdate(
+        {
+          _id: event_id,
+          "attended_users.user_id": { $ne: uid },
+        },
+        {
+          $push: { attended_users: { user_id: uid, attended_at: attendedAt } },
+        },
+        { new: true },
       );
-      return NextResponse.json({
-        message: "Already marked as attended",
-        already_attended: true,
-        attended_at: existing?.attended_at,
-      });
+
+      if (updated) {
+        anyAdded = true;
+        results.push({ user_id: uid, added: true });
+      } else {
+        const existingEvent = await Event.findById(event_id);
+        const existing = existingEvent?.attended_users?.find(
+          (a) => a.user_id?.toString() === uid,
+        );
+        results.push({
+          user_id: uid,
+          added: false,
+          already_attended: true,
+          attended_at: existing?.attended_at,
+        });
+      }
     }
 
-    cacheDelPrefix("events:list:");
+    if (anyAdded) {
+      cacheDelPrefix("events:list:");
+    }
 
     await logActivity({
       req,
@@ -121,12 +135,27 @@ export async function POST(req) {
       resource_type: "event",
       resource_id: event_id,
       severity: "info",
-      metadata: { user_id },
+      metadata: { user_id: targetIds },
     });
 
+    if (targetIds.length === 1) {
+      const result = results[0];
+      if (!result.added) {
+        return NextResponse.json({
+          message: "Already marked as attended",
+          already_attended: true,
+          attended_at: result.attended_at,
+        });
+      }
+      return NextResponse.json({
+        message: "Attendance recorded successfully",
+        attended_at: attendedAt.toISOString(),
+      });
+    }
+
     return NextResponse.json({
-      message: "Attendance recorded successfully",
-      attended_at: new Date().toISOString(),
+      message: "Attendance processed",
+      results,
     });
   } catch (err) {
     console.error(err);
