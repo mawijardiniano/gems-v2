@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
-import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 
 export async function POST(req, { params }) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },

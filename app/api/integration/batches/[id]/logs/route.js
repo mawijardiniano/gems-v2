@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import SyncLog from "@/models/syncLog";
-import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 
 export async function GET(req, { params }) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import SystemSetting from "@/models/systemSetting";
-import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 
 const CONFIG_KEY = "hrmis_integration";
 const SENSITIVE_HEADER_KEYS = [
@@ -33,7 +33,7 @@ export async function GET(req) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },
@@ -69,7 +69,7 @@ export async function PUT(req) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },

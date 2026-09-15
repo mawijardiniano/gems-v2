@@ -4,7 +4,7 @@ import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
-import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { validateMappedPayload, buildIdentityDedupeKey } from "@/app/api/integration/_utils/mapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 
@@ -12,7 +12,7 @@ export async function POST(req, { params }) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },

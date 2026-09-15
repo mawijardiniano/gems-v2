@@ -2,6 +2,23 @@ function normalizeString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+// Capitalizes the first letter of every word, even after separators like
+// commas, hyphens, periods, and apostrophes. Used to normalize names that
+// come in lowercase from source files (e.g. "bandejas, kathleen" ->
+// "Bandejas, Kathleen", "de guzman-santos" -> "De Guzman-Santos").
+export function toTitleCase(value) {
+  const str = normalizeString(value);
+  if (!str) return "";
+  return str.replace(/\s+/g, " ").replace(
+    /[A-Za-z\u00C0-\u024F][\w\u00C0-\u024F'’]*/g,
+    (word) =>
+      word.replace(
+        /[A-Za-z\u00C0-\u024F]+/g,
+        (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+      ),
+  );
+}
+
 function toSemester(value) {
   const v = normalizeString(value).toLowerCase();
   if (["1", "1st", "first", "first semester"].includes(v)) return "1st";
@@ -24,13 +41,13 @@ function toCurrentStatus(value, studentId, employeeId) {
 }
 
 export function mapToStagingPayload(raw, defaults = {}) {
-  const firstName = normalizeString(
+  const firstName = toTitleCase(
     raw.first_name || raw.FirstName || raw.firstname || raw.firstName,
   );
-  const lastName = normalizeString(
+  const lastName = toTitleCase(
     raw.last_name || raw.LastName || raw.lastname || raw.lastName,
   );
-  const middleName = normalizeString(
+  const middleName = toTitleCase(
     raw.middle_name ||
       raw.MiddleName ||
       raw.middlename ||

@@ -5,7 +5,7 @@ import StagingRecord from "@/models/stagingRecord";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
-import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import {
   findExistingProfileForRecord,
   mergeProfile,
@@ -76,7 +76,7 @@ export async function POST(req, { params }) {
   try {
     await connectDB();
 
-    const auth = await requireAdmin(req);
+    const auth = await requireIntegrationAccess(req);
     if (auth.error) {
       return NextResponse.json(
         { status: "error", message: auth.error },

@@ -7,11 +7,9 @@ import {
   FaCalendarDay,
   FaChevronLeft,
   FaChevronRight,
-  FaEye,
-  FaMapMarkerAlt,
-  FaRegClock,
   FaSpinner,
 } from "react-icons/fa";
+import DayDetailsPanel from "./components/DayDetailsPanel";
 
 const MONTH_LABELS = [
   "January", "February", "March", "April", "May", "June",
@@ -28,6 +26,18 @@ const getEventEnd = (e) =>
   (Array.isArray(e.end_dates) ? e.end_dates[e.end_dates.length - 1] : null) ||
   getEventStart(e);
 
+/* created_by can be a populated object or a raw ObjectId */
+const getCreatorId = (e) => {
+  const creator = e?.created_by;
+  if (!creator) return "";
+  if (typeof creator === "object") {
+    return creator._id ? creator._id.toString() : "";
+  }
+  return creator.toString();
+};
+
+const isAdminRole = (role) => (role || "").toLowerCase() === "admin";
+
 const dateKey = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate(),
@@ -38,9 +48,6 @@ const sameDay = (a, b) =>
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
-
-const fmtTime = (d) =>
-  d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
 
 function getEventStatus(e) {
   if (e.status === "cancelled")
@@ -73,7 +80,9 @@ export default function EventCalendarContent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedKey, setSelectedKey] = useState("");
+  const [selectedKey, setSelectedKey] = useState(() => dateKey(today));
+  const [currentUser, setCurrentUser] = useState(null);
+  const [expandedEventId, setExpandedEventId] = useState("");
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -93,6 +102,46 @@ export default function EventCalendarContent() {
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await axios.get("/api/profile/my-profile");
+        setCurrentUser({
+          id: res.data?.user?._id?.toString() || "",
+          role: res.data?.user?.role || "",
+        });
+      } catch (err) {
+        setCurrentUser(null);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  const canManageEvent = useCallback(
+    (event) =>
+      Boolean(currentUser?.id) &&
+      (getCreatorId(event) === currentUser.id ||
+        isAdminRole(currentUser.role)),
+    [currentUser],
+  );
+
+  /* Selecting a date always keeps a day in view (no toggle-off) */
+  const selectDate = (key) => {
+    if (!key) return;
+    setSelectedKey(key);
+    setExpandedEventId("");
+  };
+
+  const handleToggleExpand = (eventId) => {
+    setExpandedEventId((prev) => (prev === eventId ? "" : eventId));
+  };
+
+  /* Only owners/Admins have a manage destination in this route group */
+  const handleManageEvent = (event) => {
+    if (!event?._id || !canManageEvent(event)) return;
+    router.push(`/events-list/${event._id}`);
+  };
 
   const eventsByDay = useMemo(() => {
     const map = {};
@@ -150,12 +199,12 @@ export default function EventCalendarContent() {
   const goToday = () => {
     setViewYear(today.getFullYear());
     setViewMonth(today.getMonth());
-    setSelectedKey(dateKey(today));
+    selectDate(dateKey(today));
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-6 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0 lg:items-start animate-fade-in">
+      <div className="lg:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
@@ -198,7 +247,7 @@ export default function EventCalendarContent() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
+      <div className="lg:col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
         <span className="font-medium text-gray-400 uppercase tracking-wider">
           {loading ? "Loading…" : `${monthEventCount} event${monthEventCount === 1 ? "" : "s"} this month`}
         </span>
@@ -216,7 +265,7 @@ export default function EventCalendarContent() {
       </div>
 
       {error && (
-        <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+        <div className="lg:col-span-12 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <p className="text-sm text-red-700">{error}</p>
           <button
             type="button"
@@ -228,7 +277,7 @@ export default function EventCalendarContent() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+      <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50/70">
           {WEEKDAYS.map((d) => (
             <div
@@ -255,9 +304,7 @@ export default function EventCalendarContent() {
                 <button
                   type="button"
                   key={cell.key}
-                  onClick={() =>
-                    setSelectedKey((prev) => (prev === cell.key ? "" : cell.key))
-                  }
+                  onClick={() => selectDate(cell.key)}
                   className={`min-h-[92px] border-b border-r border-gray-100 p-1.5 text-left align-top transition-colors last:border-r-0 ${
                     cell.inMonth ? "bg-white" : "bg-gray-50/50"
                   } ${isSelected ? "ring-2 ring-inset ring-blue-500" : "hover:bg-blue-50/40"}`}
@@ -282,7 +329,8 @@ export default function EventCalendarContent() {
                         title={event.title}
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/events-list/${event._id}`);
+                          selectDate(cell.key);
+                          setExpandedEventId(event._id);
                         }}
                         className={`mt-0.5 flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-[10px] font-medium cursor-pointer ${st.chip}`}
                       >
@@ -303,78 +351,17 @@ export default function EventCalendarContent() {
         )}
       </div>
 
-      {selectedKey && !loading && (
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-            {new Date(`${selectedKey}T00:00`).toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </h3>
-
-          {selectedEvents.length === 0 ? (
-            <p className="text-xs text-gray-400 italic">
-              No events on this day.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {selectedEvents.map((event) => {
-                const st = getEventStatus(event);
-                const start = new Date(getEventStart(event));
-                const end = new Date(getEventEnd(event));
-                const validTimes =
-                  !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
-                const hasTime =
-                  validTimes &&
-                  (start.getHours() !== 0 ||
-                    start.getMinutes() !== 0 ||
-                    end.getHours() !== 0 ||
-                    end.getMinutes() !== 0);
-                return (
-                  <li
-                    key={event._id}
-                    className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3"
-                  >
-                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${st.dot}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {event.title}
-                      </p>
-                      <p className="text-xs text-gray-500 flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5">
-                        {validTimes && (
-                          <span className="flex items-center gap-1">
-                            <FaRegClock size={11} />
-                            {hasTime
-                              ? `${fmtTime(start)} – ${fmtTime(end)}`
-                              : "All day"}
-                          </span>
-                        )}
-                        {event.venue && (
-                          <span className="flex items-center gap-1">
-                            <FaMapMarkerAlt size={11} />
-                            {event.venue}
-                          </span>
-                        )}
-                        <span className="font-medium">{st.label}</span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/events-list/${event._id}`)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
-                    >
-                      <FaEye size={11} />
-                      View
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+      <aside className="lg:col-span-4 lg:sticky lg:top-20">
+        <DayDetailsPanel
+          selectedKey={selectedKey}
+          events={selectedEvents}
+          loading={loading}
+          expandedEventId={expandedEventId}
+          onToggleExpand={handleToggleExpand}
+          canManageEvent={canManageEvent}
+          onManage={handleManageEvent}
+        />
+      </aside>
     </div>
   );
 }

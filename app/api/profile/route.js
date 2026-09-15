@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { toTitleCase } from "@/app/api/integration/_utils/mapping";
 import { rateLimiters } from "@/lib/rateLimit";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
 
@@ -63,13 +64,6 @@ function generateTempPassword() {
   return `gems1234`;
 }
 
-function capitalizeWords(str) {
-  return str
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
-
 function capitalizeObjectStrings(value) {
   if (!value) return value;
   if (Array.isArray(value)) return value.map(capitalizeObjectStrings);
@@ -77,7 +71,7 @@ function capitalizeObjectStrings(value) {
   const newObj = { ...value };
   for (const key in newObj) {
     if (CAPITALIZE_KEYS.has(key) && typeof newObj[key] === "string") {
-      newObj[key] = capitalizeWords(newObj[key]);
+      newObj[key] = toTitleCase(newObj[key]);
     } else if (typeof newObj[key] === "object") {
       newObj[key] = capitalizeObjectStrings(newObj[key]);
     }

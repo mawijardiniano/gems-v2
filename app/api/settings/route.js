@@ -11,7 +11,8 @@ function getAdminId(req) {
   if (!token) return null;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded.role === "Admin" || decoded.role === "admin" ? decoded.id : null;
+    const role = String(decoded.role || "").toLowerCase();
+    return role === "admin" || role === "ictu director" ? decoded.id : null;
   } catch {
     return null;
   }

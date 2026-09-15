@@ -6,6 +6,7 @@ import {
   buildIdentityDedupeKey,
   validateMappedPayload,
   normalizeName,
+  toTitleCase,
 } from "../app/api/integration/_utils/mapping.js";
 
 function employeeRow(overrides = {}) {
@@ -229,4 +230,64 @@ test("normalized name variants compare equal despite case and spacing", () => {
   for (const variant of variants) {
     assert.strictEqual(normalizeName(variant), expected, `variant: ${variant}`);
   }
+});
+
+test("toTitleCase capitalizes lowercase, mixed-case, and separator names", () => {
+  const cases = {
+    "bandejas, kathleen": "Bandejas, Kathleen",
+    kathleen: "Kathleen",
+    "MARIA CLARA": "Maria Clara",
+    "dela cruz": "Dela Cruz",
+    "de guzman-santos": "De Guzman-Santos",
+    "maria-clara de la cruz": "Maria-Clara De La Cruz",
+    "o'brien": "O'Brien",
+    "sta. cruz": "Sta. Cruz",
+    "  juan   dela cruz  ": "Juan Dela Cruz",
+    "IAN KYLE": "Ian Kyle",
+    "JV Ann": "Jv Ann",
+    "ma. theresa SD cruz": "Ma. Theresa Sd Cruz",
+    "juan SANTOS III": "Juan Santos Iii",
+  };
+  for (const [input, expected] of Object.entries(cases)) {
+    assert.strictEqual(toTitleCase(input), expected, `input: ${input}`);
+  }
+  assert.strictEqual(toTitleCase(""), "");
+  assert.strictEqual(toTitleCase(null), "");
+  assert.strictEqual(toTitleCase(undefined), "");
+  assert.strictEqual(toTitleCase(123), "");
+});
+
+test("toTitleCase leaves already-titled names and IDs untouched in casing", () => {
+  assert.strictEqual(toTitleCase("Michelle"), "Michelle");
+  assert.strictEqual(toTitleCase("Jardeleza"), "Jardeleza");
+  assert.strictEqual(toTitleCase("E-2024-001"), "E-2024-001");
+});
+
+test("mapToStagingPayload title-cases names from lowercase source rows", () => {
+  const mapped = mapToStagingPayload({
+    first_name: "kathleen",
+    last_name: "bandejas",
+    middle_name: "santos",
+    employee_id: "2023001",
+    current_status: "Employee",
+    school_year: "2026-2027",
+    semester: "1st",
+  });
+  assert.strictEqual(mapped.personal.first_name, "Kathleen");
+  assert.strictEqual(mapped.personal.last_name, "Bandejas");
+  assert.strictEqual(mapped.personal.middle_name, "Santos");
+});
+
+test("mapToStagingPayload title-cases PascalCase source rows that are lowercase", () => {
+  const mapped = mapToStagingPayload({
+    FirstName: "juan",
+    LastName: "de guzman-reyes",
+    MiddleName: "santos",
+    StudentNo: "26B11907",
+    school_year: "2026-2027",
+    semester: "1",
+  });
+  assert.strictEqual(mapped.personal.first_name, "Juan");
+  assert.strictEqual(mapped.personal.last_name, "De Guzman-Reyes");
+  assert.strictEqual(mapped.personal.middle_name, "Santos");
 });
