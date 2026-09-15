@@ -6,97 +6,17 @@ import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import {
+  findExistingProfileForRecord,
+  mergeProfile,
+  mergeTermAffiliation,
+} from "@/app/api/integration/_utils/mapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 
 function asDate(value) {
   if (!value) return undefined;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? undefined : d;
-}
-
-async function findExistingProfile(mapped, identity) {
-  if (identity.student_id) {
-    const byStudent = await GemsProfile.findOne({
-      "affiliation.academic_information.student_id": identity.student_id,
-    });
-    if (byStudent) return byStudent;
-  }
-
-  if (identity.employee_id) {
-    const byEmployee = await GemsProfile.findOne({
-      "affiliation.employment_information.employee_id": identity.employee_id,
-    });
-    if (byEmployee) return byEmployee;
-  }
-
-  if (identity.email) {
-    const byEmail = await GemsProfile.findOne({
-      "contact.email": identity.email,
-    });
-    if (byEmail) return byEmail;
-  }
-
-  const first = mapped?.personal?.first_name;
-  const last = mapped?.personal?.last_name;
-  const birthday = asDate(mapped?.personal?.birthday);
-
-  if (first && last && birthday) {
-    const byNameDob = await GemsProfile.findOne({
-      "personal.first_name": first,
-      "personal.last_name": last,
-      "personal.birthday": birthday,
-    });
-    if (byNameDob) return byNameDob;
-  }
-
-  return null;
-}
-
-function mergeProfile(existing, mapped) {
-  const merged = {
-    personal: {
-      ...(existing.personal?.toObject?.() || existing.personal || {}),
-      ...(mapped.personal || {}),
-    },
-    gadData: {
-      ...(existing.gadData?.toObject?.() || existing.gadData || {}),
-      ...(mapped.gadData || {}),
-    },
-    affiliation: {
-      ...(existing.affiliation?.toObject?.() || existing.affiliation || {}),
-      ...(mapped.affiliation || {}),
-      academic_information: {
-        ...(existing.affiliation?.academic_information?.toObject?.() ||
-          existing.affiliation?.academic_information ||
-          {}),
-        ...(mapped.affiliation?.academic_information || {}),
-      },
-      employment_information: {
-        ...(existing.affiliation?.employment_information?.toObject?.() ||
-          existing.affiliation?.employment_information ||
-          {}),
-        ...(mapped.affiliation?.employment_information || {}),
-      },
-    },
-    contact: {
-      ...(existing.contact?.toObject?.() || existing.contact || {}),
-      ...(mapped.contact || {}),
-    },
-  };
-
-  if (!merged.affiliation.academic_information?.student_id) {
-    delete merged.affiliation.academic_information;
-  }
-  if (!merged.affiliation.employment_information?.employee_id) {
-    delete merged.affiliation.employment_information;
-  }
-
-  if (merged.personal?.birthday) {
-    const d = asDate(merged.personal.birthday);
-    if (d) merged.personal.birthday = d;
-  }
-
-  return merged;
 }
 
 function normalizeUsername(value) {
@@ -184,6 +104,7 @@ export async function POST(req, { params }) {
 
     let created = 0;
     let updated = 0;
+    let identical = 0;
     let skipped = 0;
     let failed = 0;
 
@@ -199,7 +120,7 @@ export async function POST(req, { params }) {
           record.status = "failed";
           record.migration_result = {
             action: "skipped",
-            message: "Missing identity key",
+            message: "No Student No., Employee No., or Email on this row.",
           };
           await record.save();
 
@@ -208,15 +129,17 @@ export async function POST(req, { params }) {
             stagingRecordId: record._id,
             level: "warn",
             action: "skip",
-            message: "Skipped migration: missing identity key",
+            message:
+              "Skipped — no Student No., Employee No., or Email on the row.",
             executedBy: auth.user._id,
             executedByUsername: auth.user.username,
           });
           continue;
         }
 
-        let profile = await findExistingProfile(mapped, identity);
+        let profile = await findExistingProfileForRecord(record, GemsProfile);
         let profileAction = "updated";
+        let profileChanges = [];
 
         if (!profile) {
           profile = await GemsProfile.create({
@@ -231,10 +154,12 @@ export async function POST(req, { params }) {
           profileAction = "created";
           created += 1;
         } else {
-          const merged = mergeProfile(profile, mapped);
+          const { merged, changes } = mergeProfile(profile, mapped);
           profile.set(merged);
           await profile.save();
           updated += 1;
+          profileChanges = changes;
+          if (changes.length === 0) identical += 1;
         }
 
         const account = await ensureUserAuthForProfile(
@@ -252,7 +177,7 @@ export async function POST(req, { params }) {
           record.migration_result = {
             action: "skipped",
             profile_id: profile._id,
-            message: `Missing school_year or semester (account ${account.action}: ${account.username})`,
+            message: `No school year or semester on this row — person saved but no term added (account: ${account.username}).`,
           };
           await record.save();
 
@@ -261,7 +186,8 @@ export async function POST(req, { params }) {
             stagingRecordId: record._id,
             level: "warn",
             action: "skip",
-            message: "Skipped term upsert: missing school_year or semester",
+            message:
+              "Skipped — row has no school year/semester, so no term was saved.",
             executedBy: auth.user._id,
             executedByUsername: auth.user.username,
             targetProfileId: profile._id,
@@ -273,6 +199,16 @@ export async function POST(req, { params }) {
           continue;
         }
 
+        const existingTerm = await ProfileTerm.findOne({
+          profile_id: profile._id,
+          school_year: schoolYear,
+          semester,
+        });
+        const termAffiliation = mergeTermAffiliation(
+          existingTerm?.affiliation,
+          mapped.affiliation || {},
+        );
+
         const term = await ProfileTerm.findOneAndUpdate(
           {
             profile_id: profile._id,
@@ -281,7 +217,7 @@ export async function POST(req, { params }) {
           },
           {
             $set: {
-              affiliation: mapped.affiliation || {},
+              affiliation: termAffiliation,
               import_meta: {
                 source_file: batch.source_file_key || batch.source_name || "",
                 imported_at: new Date(),
@@ -298,7 +234,13 @@ export async function POST(req, { params }) {
           action: profileAction,
           profile_id: profile._id,
           profile_term_id: term._id,
-          message: `Profile ${profileAction} and term upserted (account ${account.action}: ${account.username})`,
+          changes: profileChanges,
+          message:
+            profileAction === "created"
+              ? `New record created with the ${schoolYear} ${semester} term. Account: ${account.username}`
+              : profileChanges.length === 0
+                ? `Already up to date — nothing changed. Account: ${account.username}`
+                : `Record updated with the ${schoolYear} ${semester} term. Account: ${account.username}`,
         };
         await record.save();
 
@@ -306,7 +248,10 @@ export async function POST(req, { params }) {
           batchId: batch._id,
           stagingRecordId: record._id,
           action: profileAction === "created" ? "create" : "update",
-          message: `Migration success: profile ${profileAction}`,
+          message:
+            profileAction === "created"
+              ? "Imported: new record created."
+              : "Imported: existing record updated.",
           executedBy: auth.user._id,
           executedByUsername: auth.user.username,
           targetProfileId: profile._id,
@@ -344,6 +289,7 @@ export async function POST(req, { params }) {
     batch.finished_at = new Date();
     batch.totals.migrated_created = created;
     batch.totals.migrated_updated = updated;
+    batch.totals.identical = identical;
     batch.totals.skipped = skipped;
     batch.totals.failed = failed;
     await batch.save();
@@ -354,6 +300,7 @@ export async function POST(req, { params }) {
         batch_id: batch._id,
         created,
         updated,
+        identical,
         skipped,
         failed,
       },

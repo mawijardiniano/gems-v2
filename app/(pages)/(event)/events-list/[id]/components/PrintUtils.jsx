@@ -53,23 +53,30 @@ export function handlePrintGuests(guests, event, buildRows) {
     })
     .join("");
 
-  const dateLabel = (event.start_dates || [])
-    .map((d, i) => {
-      const start = new Date(d).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      const end = event.end_dates?.[i]
-        ? new Date(event.end_dates[i]).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : null;
-      return end && end !== start ? `Day ${i + 1}: ${start} - ${end}` : `Day ${i + 1}: ${start}`;
-    })
-    .join(", ");
+  const eventStartDate = event.start_date || (event.start_dates || [])[0];
+  const eventEndDate =
+    event.end_date ||
+    (event.end_dates || []).slice(-1).pop() ||
+    eventStartDate;
+
+  const dateLabel = (() => {
+    if (!eventStartDate) return "";
+    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const endStr = eventEndDate
+      ? new Date(eventEndDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+    return endStr && endStr !== startStr
+      ? `${startStr} - ${endStr}`
+      : startStr;
+  })();
 
   const ACTIVITY_TYPES = [
     "Academic",
@@ -200,25 +207,30 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
     return row.data.map((cell) => (cell === undefined ? "" : String(cell)));
   });
 
-  const dateLabel = (event.start_dates || [])
-    .map((d, i) => {
-      const start = new Date(d).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      const end = event.end_dates?.[i]
-        ? new Date(event.end_dates[i]).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : null;
-      return end && end !== start
-        ? `Day ${i + 1}: ${start} - ${end}`
-        : `Day ${i + 1}: ${start}`;
-    })
-    .join(", ");
+  const eventStartDate = event.start_date || (event.start_dates || [])[0];
+  const eventEndDate =
+    event.end_date ||
+    (event.end_dates || []).slice(-1).pop() ||
+    eventStartDate;
+
+  const dateLabel = (() => {
+    if (!eventStartDate) return "";
+    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const endStr = eventEndDate
+      ? new Date(eventEndDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+    return endStr && endStr !== startStr
+      ? `${startStr} - ${endStr}`
+      : startStr;
+  })();
 
   const ACTIVITY_TYPES = [
     "Academic",
@@ -435,25 +447,30 @@ export function handleDownloadBlankGuestsPdf(event) {
 </thead>
 `;
 
-  const dateLabel = (event.start_dates || [])
-    .map((d, i) => {
-      const start = new Date(d).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      const end = event.end_dates?.[i]
-        ? new Date(event.end_dates[i]).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : null;
-      return end && end !== start
-        ? `Day ${i + 1}: ${start} - ${end}`
-        : `Day ${i + 1}: ${start}`;
-    })
-    .join(", ");
+  const eventStartDate = event.start_date || (event.start_dates || [])[0];
+  const eventEndDate =
+    event.end_date ||
+    (event.end_dates || []).slice(-1).pop() ||
+    eventStartDate;
+
+  const dateLabel = (() => {
+    if (!eventStartDate) return "";
+    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const endStr = eventEndDate
+      ? new Date(eventEndDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+    return endStr && endStr !== startStr
+      ? `${startStr} - ${endStr}`
+      : startStr;
+  })();
 
   const ACTIVITY_TYPES = [
     "Academic",

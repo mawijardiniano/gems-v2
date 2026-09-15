@@ -16,7 +16,9 @@ const ROLE_ACCESS = {
     "events-list",
     "create",
     "gad-ars",
-    "gad-settings"
+    "gender-statistics",
+    "gad-settings",
+    "project-monitoring"
   ],
   "gad coordinator": [
     "events-dashboard",
@@ -28,7 +30,9 @@ const ROLE_ACCESS = {
     "events-list",
     "create",
     "gad-ars",
-    "gad-settings"
+    "gender-statistics",
+    "gad-settings",
+    "project-monitoring"
   ],
   "planning director": ["admin-dashboard", "gpb", "gad-settings"],
 };

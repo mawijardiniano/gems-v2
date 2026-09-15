@@ -92,13 +92,20 @@ export async function GET(req) {
     const courseFilter = url.searchParams.get("course")?.trim();
     const schoolYear = url.searchParams.get("school_year")?.trim();
     const semester = url.searchParams.get("semester")?.trim();
+    const typeParam = url.searchParams.get("type")?.trim();
+    const reportType =
+      typeParam === "students"
+        ? "students"
+        : typeParam === "employees"
+          ? "employees"
+          : "both";
 
     const collegeFilter =
       user?.role && SCOPED_ROLES.includes(user.role)
         ? user.assignedCollege || "__no_college__"
         : requestedCollege;
 
-    const cacheKey = `analytics:report:${collegeFilter || "all"}:${courseFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
+    const cacheKey = `analytics:report:${reportType}:${collegeFilter || "all"}:${courseFilter || "all"}:${schoolYear || "all"}:${semester || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -120,12 +127,15 @@ export async function GET(req) {
           };
         }
 
-        const employees = filteredUsers.filter(
+        let employees = filteredUsers.filter(
           (u) => u.personal_info_id?.personal?.currentStatus === "Employee",
         );
-        const students = filteredUsers.filter(
+        let students = filteredUsers.filter(
           (u) => u.personal_info_id?.personal?.currentStatus === "Student",
         );
+
+        if (reportType === "students") employees = [];
+        if (reportType === "employees") students = [];
 
         const getSex = (user) =>
           user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
@@ -271,7 +281,13 @@ export async function GET(req) {
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.text("Sex Disaggregated Data Report", titleX, y + 3);
+        const reportTitle =
+          reportType === "students"
+            ? "Student Gender Statistics Report"
+            : reportType === "employees"
+              ? "Employee Gender Statistics Report"
+              : "Sex Disaggregated Data Report";
+        doc.text(reportTitle, titleX, y + 3);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.text(generatedLabel, titleX, y + 9);
@@ -341,35 +357,46 @@ export async function GET(req) {
 
         const sectionLabel = collegeFilter || "All Colleges/Offices";
 
-        drawSectionHeading(`Faculty Composition in ${sectionLabel}`);
-        drawTable(
-          ["Appointment Status", "Male", "Female", "Total"],
-          rowsFromGroupMap(employeeStatusCounts),
-        );
+        const includeEmployees = reportType !== "students";
+        const includeStudents = reportType !== "employees";
 
-        drawSectionHeading(`Student Enrollment in ${sectionLabel}`);
-        drawTable(
-          ["Year Level", "Male", "Female", "Total"],
-          rowsFromYearMap(allYearMap),
-        );
+        if (includeEmployees) {
+          drawSectionHeading(`Faculty Composition in ${sectionLabel}`);
+          drawTable(
+            ["Appointment Status", "Male", "Female", "Total"],
+            rowsFromGroupMap(employeeStatusCounts),
+          );
+        }
+
+        if (includeStudents) {
+          drawSectionHeading(`Student Enrollment in ${sectionLabel}`);
+          drawTable(
+            ["Year Level", "Male", "Female", "Total"],
+            rowsFromYearMap(allYearMap),
+          );
+        }
 
         if (!collegeFilter) {
-          drawSectionHeading("Students by College/Office");
-          drawTable(
-            ["College/Office", "Male", "Female", "Total"],
-            rowsFromGroupMap(studentCollegeSexTotals),
-          );
+          if (includeStudents) {
+            drawSectionHeading("Students by College/Office");
+            drawTable(
+              ["College/Office", "Male", "Female", "Total"],
+              rowsFromGroupMap(studentCollegeSexTotals),
+            );
+          }
 
-          drawSectionHeading("Employees by College/Office");
-          drawTable(
-            ["College/Office", "Male", "Female", "Total"],
-            rowsFromGroupMap(employeeOfficeSexTotals),
-          );
+          if (includeEmployees) {
+            drawSectionHeading("Employees by College/Office");
+            drawTable(
+              ["College/Office", "Male", "Female", "Total"],
+              rowsFromGroupMap(employeeOfficeSexTotals),
+            );
+          }
 
           const orderedColleges = [
             ...new Set([
-              ...Object.keys(studentByCollege),
-              ...Object.keys(employeeByOffice),
+              ...(includeStudents ? Object.keys(studentByCollege) : []),
+              ...(includeEmployees ? Object.keys(employeeByOffice) : []),
             ]),
           ].sort((a, b) => String(a).localeCompare(String(b)));
 
@@ -377,34 +404,45 @@ export async function GET(req) {
             const studentTotal = sumCounts(studentCollegeSexTotals[college]);
             const employeeTotal = sumCounts(employeeOfficeSexTotals[college]);
 
-            drawSectionHeading(
-              `${college}  (Students: ${studentTotal.toLocaleString()} | Employees: ${employeeTotal.toLocaleString()})`,
-            );
+            const countLabel =
+              includeStudents && includeEmployees
+                ? `(Students: ${studentTotal.toLocaleString()} | Employees: ${employeeTotal.toLocaleString()})`
+                : includeStudents
+                  ? `(Students: ${studentTotal.toLocaleString()})`
+                  : `(Employees: ${employeeTotal.toLocaleString()})`;
 
-            drawSectionHeading(`Faculty Composition in ${college}`, 9);
-            drawTable(
-              ["Appointment Status", "Male", "Female", "Total"],
-              rowsFromGroupMap(employeeByOffice[college] || {}),
-            );
+            drawSectionHeading(`${college}  ${countLabel}`);
 
-            drawSectionHeading(`Student Enrollment in ${college}`, 9);
-            drawTable(
-              ["Year Level", "Male", "Female", "Total"],
-              rowsFromYearMap(studentByCollege[college] || {}),
-            );
+            if (includeEmployees) {
+              drawSectionHeading(`Faculty Composition in ${college}`, 9);
+              drawTable(
+                ["Appointment Status", "Male", "Female", "Total"],
+                rowsFromGroupMap(employeeByOffice[college] || {}),
+              );
+            }
+
+            if (includeStudents) {
+              drawSectionHeading(`Student Enrollment in ${college}`, 9);
+              drawTable(
+                ["Year Level", "Male", "Female", "Total"],
+                rowsFromYearMap(studentByCollege[college] || {}),
+              );
+            }
           });
         }
 
-        drawSectionHeading(`Student Enrollment by Course (${sectionLabel})`);
-        Object.keys(courseYearCounts)
-          .sort((a, b) => String(a).localeCompare(String(b)))
-          .forEach((course) => {
-            drawSectionHeading(`Course: ${course}`, 9);
-            drawTable(
-              ["Year Level", "Male", "Female", "Total"],
-              rowsFromYearMap(courseYearCounts[course] || {}),
-            );
-          });
+        if (includeStudents) {
+          drawSectionHeading(`Student Enrollment by Course (${sectionLabel})`);
+          Object.keys(courseYearCounts)
+            .sort((a, b) => String(a).localeCompare(String(b)))
+            .forEach((course) => {
+              drawSectionHeading(`Course: ${course}`, 9);
+              drawTable(
+                ["Year Level", "Male", "Female", "Total"],
+                rowsFromYearMap(courseYearCounts[course] || {}),
+              );
+            });
+        }
 
         const totalPages = doc.getNumberOfPages();
         for (let page = 1; page <= totalPages; page++) {
@@ -412,7 +450,7 @@ export async function GET(req) {
           if (page > 1) {
             doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
-            doc.text("Sex Disaggregated Data Report", 14, 9);
+            doc.text(reportTitle, 14, 9);
             doc.setFont("helvetica", "normal");
             const contextParts = [];
             if (collegeFilter) {

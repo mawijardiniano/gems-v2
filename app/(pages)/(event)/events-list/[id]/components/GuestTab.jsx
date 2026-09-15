@@ -62,7 +62,8 @@ export default function GuestTab({
   const attendedPeople = attendedUsers
     .map((a) => a?.user_id)
     .filter(Boolean);
-  const firstStart = (event.start_dates || [])[0];
+  const firstStart =
+    event.start_date || (event.start_dates || [])[0];
   const hasEventStarted =
     !firstStart || new Date(firstStart).getTime() <= Date.now();
   const totalGoingPages = Math.ceil(filteredGoingGuests.length / pageSize) || 1;

@@ -84,14 +84,14 @@ export default function ProjectContent() {
   }
 
   function formatDateRange(event) {
-    let start = event.start_date;
-    let end = event.end_date;
-    if (Array.isArray(event.start_dates) && event.start_dates.length > 0) {
-      start = event.start_dates[0];
-    }
-    if (Array.isArray(event.end_dates) && event.end_dates.length > 0) {
-      end = event.end_dates[event.end_dates.length - 1];
-    }
+    const start =
+      event.start_date ||
+      (Array.isArray(event.start_dates) ? event.start_dates[0] : null);
+    const end =
+      event.end_date ||
+      (Array.isArray(event.end_dates)
+        ? event.end_dates[event.end_dates.length - 1]
+        : null);
     if (!start) return "-";
     const opts = {
       year: "numeric",

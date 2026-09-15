@@ -24,11 +24,13 @@ const syncLogSchema = new Schema(
       enum: [
         "validate",
         "approve",
+        "reject",
         "migrate",
         "create",
         "update",
         "skip",
         "fail",
+        "sync",
       ],
       required: true,
       index: true,

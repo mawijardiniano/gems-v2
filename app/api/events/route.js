@@ -95,9 +95,8 @@ export async function POST(req) {
     const {
       title,
       description,
-      number_of_days,
-      start_dates,
-      end_dates,
+      start_date,
+      end_date,
       venue,
       type_of_activity,
       organizing_office_unit,
@@ -112,11 +111,8 @@ export async function POST(req) {
 
     if (
       !title ||
-      !number_of_days ||
-      !Array.isArray(start_dates) ||
-      !Array.isArray(end_dates) ||
-      start_dates.length !== Number(number_of_days) ||
-      end_dates.length !== Number(number_of_days) ||
+      !start_date ||
+      !end_date ||
       !type_of_activity ||
       !organizing_office_unit?.length ||
       target_number_of_participants == null ||
@@ -125,7 +121,24 @@ export async function POST(req) {
       return NextResponse.json(
         {
           message:
-            "All fields are required. start_dates and end_dates must be arrays matching number_of_days.",
+            "All fields are required, including start date/time and end date/time.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const parsedStartDate = new Date(start_date);
+    const parsedEndDate = new Date(end_date);
+
+    if (
+      Number.isNaN(parsedStartDate.getTime()) ||
+      Number.isNaN(parsedEndDate.getTime()) ||
+      parsedEndDate < parsedStartDate
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Invalid event dates: end date/time must be after start date/time.",
         },
         { status: 400 },
       );
@@ -172,9 +185,12 @@ export async function POST(req) {
     const newEvent = await Event.create({
       title,
       description,
-      number_of_days,
-      start_dates,
-      end_dates,
+      start_date: parsedStartDate,
+      end_date: parsedEndDate,
+      // Legacy multi-date fields kept in sync during the transition
+      number_of_days: 1,
+      start_dates: [parsedStartDate],
+      end_dates: [parsedEndDate],
       venue,
       type_of_activity,
       organizing_office_unit,

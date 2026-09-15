@@ -70,25 +70,22 @@ const ActivityTypeBadge = ({ type }) => {
 
 const EventStatusBadge = ({ event }) => {
   const getStatus = () => {
-    let end = event.end_date || event.start_date || event.date;
-    if (
-      Array.isArray(event.end_dates) &&
-      event.end_dates.length > 0
-    ) {
-      end = event.end_dates[event.end_dates.length - 1];
-    }
+    let end =
+      event.end_date ||
+      (Array.isArray(event.end_dates)
+        ? event.end_dates[event.end_dates.length - 1]
+        : null) ||
+      event.start_date ||
+      event.date;
     if (!end) return { label: "Unknown", classes: "bg-gray-100 text-gray-600" };
 
     const now = new Date();
     const endDate = new Date(end);
 
-    let start = event.start_date || event.date;
-    if (
-      Array.isArray(event.start_dates) &&
-      event.start_dates.length > 0
-    ) {
-      start = event.start_dates[0];
-    }
+    const start =
+      event.start_date ||
+      (Array.isArray(event.start_dates) ? event.start_dates[0] : null) ||
+      event.date;
     const startDate = new Date(start);
 
     if (endDate.getTime() < now.getTime()) {
@@ -213,55 +210,36 @@ export default function EventsListContent() {
   }, [events, projects, activityType, selectedYear, userId]);
 
   const formatRange = (evt) => {
-    let startDates = evt.start_dates || [];
-    let endDates = evt.end_dates || [];
+    const start = evt.start_date || (evt.start_dates || [])[0];
+    const end = evt.end_date || (evt.end_dates || []).slice(-1).pop() || start;
 
-    if (Array.isArray(startDates) && startDates.length > 0) {
-      return startDates.map((startDate, index) => {
-        const dayNumber = index + 1;
-        const endDate = endDates[index];
-        const startStr = new Date(startDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        });
-        const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+    if (!start) return null;
 
-        if (!endDate) {
-          return (
-            <div
-              key={index}
-              className="flex items-center gap-2 text-gray-600"
-            >
-              <FaCalendar className="text-gray-400 shrink-0" size={12} />
-              <span>
-                Day {dayNumber}: {startStr} at {timeStart}
-              </span>
-            </div>
-          );
-        }
+    const startStr = new Date(start).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const timeStart = new Date(start).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const timeEnd =
+      end && new Date(end).getTime() !== new Date(start).getTime()
+        ? new Date(end).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null;
 
-        const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        return (
-          <div
-            key={index}
-            className="flex items-center gap-2 text-gray-600"
-          >
-            <FaClock className="text-gray-400 shrink-0" size={12} />
-            <span>
-              Day {dayNumber}: {startStr}, {timeStart} – {timeEnd}
-            </span>
-          </div>
-        );
-      });
-    }
-    return null;
+    return (
+      <div className="flex items-center gap-2 text-gray-600">
+        <FaCalendar className="text-gray-400 shrink-0" size={12} />
+        <span>
+          {startStr} at {timeStart}
+          {timeEnd ? ` – ${timeEnd}` : ""}
+        </span>
+      </div>
+    );
   };
 
   if (loading) {

@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import ImportBatch from "@/models/importBatch";
-import StagingRecord from "@/models/stagingRecord";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import {
-  buildIdentity,
-  buildIdentityDedupeKey,
-  mapToStagingPayload,
-} from "@/app/api/integration/_utils/mapping";
+import { stageRows } from "@/app/api/integration/_utils/staging";
 
 export async function GET(req) {
   try {
@@ -61,57 +56,18 @@ export async function POST(req) {
       );
     }
 
-    const seenIdentities = new Set();
-    const docs = [];
-    let skippedDuplicates = 0;
-
-    for (let idx = 0; idx < rows.length; idx += 1) {
-      const raw = rows[idx];
-      const mapped = mapToStagingPayload(raw, {
+    const { batch, insertedCount, duplicateCount } = await stageRows({
+      rows,
+      sourceType,
+      sourceName,
+      sourceFileKey,
+      createdBy: auth.user._id,
+      createdByUsername: auth.user.username,
+      defaults: {
         school_year: defaultSchoolYear,
         semester: defaultSemester,
-      });
-      const identity = buildIdentity(mapped);
-      const dedupeKey = buildIdentityDedupeKey(identity);
-
-      if (dedupeKey && seenIdentities.has(dedupeKey)) {
-        skippedDuplicates += 1;
-        continue;
-      }
-
-      if (dedupeKey) {
-        seenIdentities.add(dedupeKey);
-      }
-
-      docs.push({
-        row_number: idx + 1,
-        raw_payload: raw,
-        mapped_payload: mapped,
-        identity,
-        school_year: mapped.school_year || "",
-        semester: mapped.semester || "",
-        status: "pending",
-      });
-    }
-
-    const batch = await ImportBatch.create({
-      source_type: sourceType,
-      source_name: sourceName,
-      source_file_key: sourceFileKey,
-      created_by: auth.user._id,
-      created_by_username: auth.user.username,
-      totals: {
-        fetched: rows.length,
-        skipped: skippedDuplicates,
       },
     });
-
-    if (docs.length > 0) {
-      await StagingRecord.insertMany(
-        docs.map((doc) => ({ ...doc, batch_id: batch._id })),
-        { ordered: false },
-      );
-    }
 
     return NextResponse.json(
       {
@@ -120,8 +76,8 @@ export async function POST(req) {
           batch_id: batch._id,
           source_type: batch.source_type,
           fetched: rows.length,
-          staged: docs.length,
-          skipped_duplicates: skippedDuplicates,
+          staged: insertedCount,
+          duplicates_flagged: duplicateCount,
         },
       },
       { status: 201 },

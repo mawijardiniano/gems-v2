@@ -43,7 +43,7 @@ export async function GET(req) {
         ? Math.min(Math.floor(limitParam), 500)
         : 100;
 
-    const sort = { "start_dates.0": -1 };
+    const sort = { start_date: -1, createdAt: -1 };
 
     const createdEvents = await Event.find({ created_by: user_id })
       .sort(sort)

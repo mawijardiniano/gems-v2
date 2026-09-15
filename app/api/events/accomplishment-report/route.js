@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { rollupEventActuals } from "@/lib/actualsRollup";
 
 export async function POST(req) {
   try {
@@ -52,6 +53,12 @@ export async function POST(req) {
       status: "submitted",
     });
 
+    try {
+      await rollupEventActuals(event._id);
+    } catch (rollupErr) {
+      console.error("Actuals rollup failed:", rollupErr);
+    }
+
     await logActivity({
       req,
       action: "ACCOMPLISHMENT_CREATE",
@@ -87,7 +94,7 @@ export async function GET(req) {
     }
 
     const reports = await AccomplishmentReport.find(query)
-      .populate("event_id", "title venue start_dates end_dates")
+      .populate("event_id", "title venue start_date end_date start_dates end_dates")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({

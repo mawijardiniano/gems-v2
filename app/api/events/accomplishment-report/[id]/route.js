@@ -32,7 +32,10 @@ export async function GET(req, { params }) {
   try {
     const report = await AccomplishmentReport.findOne({
       event_id: id,
-    }).populate("event_id", "title venue start_dates end_dates");
+    }).populate(
+      "event_id",
+      "title venue start_date end_date start_dates end_dates",
+    );
 
     return NextResponse.json({ data: report });
   } catch (err) {

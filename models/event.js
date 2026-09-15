@@ -4,9 +4,19 @@ const EventSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, default: "" },
-    number_of_days: { type: Number, required: true },
-    start_dates: [{ type: Date, required: true }],
-    end_dates: [{ type: Date, required: true }],
+    number_of_days: { type: Number },
+    start_dates: [{ type: Date }],
+    end_dates: [{ type: Date }],
+    start_date: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          return !value || !this.end_date || this.end_date >= value;
+        },
+        message: "End date/time must be after start date/time.",
+      },
+    },
+    end_date: { type: Date },
     venue: { type: String, default: "" },
     eligibility_criteria: [
       {
@@ -171,6 +181,6 @@ const EventSchema = new Schema(
 EventSchema.index({ status: 1, createdAt: -1 });
 EventSchema.index({ created_by: 1 });
 EventSchema.index({ project: 1 });
-EventSchema.index({ "start_dates.0": 1 });
+EventSchema.index({ start_date: 1 });
 
 export default models.Event || model("Event", EventSchema);

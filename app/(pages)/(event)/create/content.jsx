@@ -239,9 +239,9 @@ export default function CreateEventsContent() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    number_of_days: 1,
-    start_dates: [""],
-    end_dates: [""],
+    date: "",
+    start_time: "",
+    end_time: "",
     venue: "",
     type_of_activity: "Academic",
     organizing_office_unit: [],
@@ -272,10 +272,10 @@ export default function CreateEventsContent() {
     return ACTIVITY_TYPES;
   }, [userRole, isDeanRoute]);
 
-  const nowLocal = useMemo(() => {
+  const todayLocal = useMemo(() => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
+    return now.toISOString().slice(0, 10);
   }, []);
 
   const canGenerateDescription = useMemo(() => {
@@ -283,11 +283,9 @@ export default function CreateEventsContent() {
       formData.title.trim().length > 0 &&
       formData.venue.trim().length > 0 &&
       formData.type_of_activity &&
-      Number(formData.number_of_days) > 0 &&
-      formData.start_dates.length === Number(formData.number_of_days) &&
-      formData.start_dates.every((d) => d) &&
-      formData.end_dates.length === Number(formData.number_of_days) &&
-      formData.end_dates.every((d) => d);
+      formData.date &&
+      formData.start_time &&
+      formData.end_time;
 
     if (formData.type_of_activity === "GAD") {
       return baseValid && Boolean(formData.gad_activity);
@@ -349,25 +347,7 @@ export default function CreateEventsContent() {
   };
 
   const handleChange = (field, value) => {
-    setFormData((prev) => {
-      if (field === "number_of_days") {
-        if (value === "" || isNaN(Number(value)) || Number(value) < 1) {
-          return {
-            ...prev,
-            number_of_days: value,
-            start_dates: [],
-            end_dates: [],
-          };
-        }
-        const num = Number(value);
-        let start_dates = prev.start_dates.slice(0, num);
-        let end_dates = prev.end_dates.slice(0, num);
-        while (start_dates.length < num) start_dates.push("");
-        while (end_dates.length < num) end_dates.push("");
-        return { ...prev, number_of_days: num, start_dates, end_dates };
-      }
-      return { ...prev, [field]: value };
-    });
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTypeChange = (type) => {
@@ -375,20 +355,6 @@ export default function CreateEventsContent() {
     if (type !== "GAD") {
       setFormData((prev) => ({ ...prev, project: "", gad_activity: "" }));
     }
-  };
-
-  const adjustDays = (delta) => {
-    const current = Number(formData.number_of_days) || 1;
-    const next = Math.max(1, current + delta);
-    handleChange("number_of_days", next);
-  };
-
-  const handleDateChange = (type, idx, value) => {
-    setFormData((prev) => {
-      const arr = [...prev[type]];
-      arr[idx] = value;
-      return { ...prev, [type]: arr };
-    });
   };
 
   const handlePosterSelect = (e) => {
@@ -410,7 +376,8 @@ export default function CreateEventsContent() {
       const {
         title,
         venue,
-        number_of_days,
+        date,
+        start_time,
         type_of_activity,
         gad_activity,
         eligibility_criteria,
@@ -423,7 +390,8 @@ export default function CreateEventsContent() {
         body: JSON.stringify({
           title,
           venue,
-          number_of_days,
+          start_date:
+            date && start_time ? `${date}T${start_time}` : undefined,
           type_of_activity,
           gad_activity,
           eligibility_criteria,
@@ -462,24 +430,32 @@ export default function CreateEventsContent() {
       }
     }
 
-    for (let i = 0; i < formData.number_of_days; i++) {
-      if (!formData.start_dates[i]) {
-        setError(`Start date/time for day ${i + 1} is required`);
-        setLoading(false);
-        return;
-      }
-      if (!formData.end_dates[i]) {
-        setError(`End date/time for day ${i + 1} is required`);
-        setLoading(false);
-        return;
-      }
-      if (new Date(formData.end_dates[i]) < new Date(formData.start_dates[i])) {
-        setError(
-          `End date/time must be after start date/time for day ${i + 1}`,
-        );
-        setLoading(false);
-        return;
-      }
+    if (!formData.date) {
+      setError("Event date is required");
+      setLoading(false);
+      return;
+    }
+    if (!formData.start_time || !formData.end_time) {
+      setError("Start time and end time are required");
+      setLoading(false);
+      return;
+    }
+
+    const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
+    const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+
+    if (
+      Number.isNaN(startDateTime.getTime()) ||
+      Number.isNaN(endDateTime.getTime())
+    ) {
+      setError("Invalid date or time values");
+      setLoading(false);
+      return;
+    }
+    if (endDateTime < startDateTime) {
+      setError("End time must be after start time");
+      setLoading(false);
+      return;
     }
 
     try {
@@ -492,9 +468,8 @@ export default function CreateEventsContent() {
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        number_of_days: formData.number_of_days,
-        start_dates: formData.start_dates,
-        end_dates: formData.end_dates,
+        start_date: startDateTime.toISOString(),
+        end_date: endDateTime.toISOString(),
         venue: formData.venue.trim(),
         type_of_activity: formData.type_of_activity,
         organizing_office_unit: formData.organizing_office_unit,
@@ -733,95 +708,50 @@ export default function CreateEventsContent() {
           </div>
         </div>
 
-        {/* ── 2. Schedule ──────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
           <SectionHeader
             icon={FaCalendarAlt}
             color="amber"
             title="Schedule"
-            subtitle="Set the number of days and date range"
+            subtitle="Set the event date and time"
           />
 
-          {/* Number of Days */}
-          <div>
-            <label className={labelClass}>
-              Number of Days <span className="text-red-500">*</span>
-            </label>
-            <div className="inline-flex items-center">
-              <button
-                type="button"
-                onClick={() => adjustDays(-1)}
-                disabled={Number(formData.number_of_days) <= 1}
-                className="h-10 w-10 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <FaMinus className="h-3 w-3" />
-              </button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className={labelClass}>
+                Event Date <span className="text-red-500">*</span>
+              </label>
               <input
-                type="number"
-                min="1"
-                value={formData.number_of_days}
-                onChange={(e) => handleChange("number_of_days", e.target.value)}
-                className="h-10 w-16 border border-gray-200 text-center text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                type="date"
+                value={formData.date}
+                min={todayLocal}
+                onChange={(e) => handleChange("date", e.target.value)}
+                className={inputClass}
               />
-              <button
-                type="button"
-                onClick={() => adjustDays(1)}
-                className="h-10 w-10 rounded-r-lg border border-l-0 border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center transition-colors"
-              >
-                <FaPlus className="h-3 w-3" />
-              </button>
+            </div>
+            <div>
+              <label className={labelClass}>
+                Start Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.start_time}
+                onChange={(e) => handleChange("start_time", e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>
+                End Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={formData.end_time}
+                onChange={(e) => handleChange("end_time", e.target.value)}
+                className={inputClass}
+              />
             </div>
           </div>
-
-          {/* Date Rows */}
-          {Number(formData.number_of_days) > 0 &&
-            Array.from({ length: Number(formData.number_of_days) }).map(
-              (_, idx) => (
-                <div
-                  className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4"
-                  key={"day-row-" + idx}
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                    Day {idx + 1}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelClass}>
-                        Start Date & Time{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={formData.start_dates[idx] || ""}
-                        min={
-                          idx === 0
-                            ? nowLocal
-                            : formData.end_dates[idx - 1] || nowLocal
-                        }
-                        onChange={(e) =>
-                          handleDateChange("start_dates", idx, e.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>
-                        End Date & Time <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={formData.end_dates[idx] || ""}
-                        min={formData.start_dates[idx] || nowLocal}
-                        onChange={(e) =>
-                          handleDateChange("end_dates", idx, e.target.value)
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ),
-            )}
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">

@@ -5,6 +5,11 @@ const validationErrorSchema = new Schema(
     field: String,
     code: String,
     message: String,
+    level: {
+      type: String,
+      enum: ["error", "warning"],
+      default: "error",
+    },
   },
   { _id: false },
 );
@@ -57,6 +62,7 @@ const stagingRecordSchema = new Schema(
         "invalid",
         "approved",
         "rejected",
+        "duplicate",
         "migrated",
         "failed",
       ],
@@ -91,6 +97,17 @@ const stagingRecordSchema = new Schema(
       message: {
         type: String,
         default: "",
+      },
+      changes: {
+        type: [
+          {
+            field: String,
+            from: Schema.Types.Mixed,
+            to: Schema.Types.Mixed,
+            _id: false,
+          },
+        ],
+        default: [],
       },
     },
   },

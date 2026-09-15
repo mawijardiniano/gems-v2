@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import ImportBatch from "@/models/importBatch";
-import StagingRecord from "@/models/stagingRecord";
+import SystemSetting from "@/models/systemSetting";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import {
-  buildIdentity,
-  buildIdentityDedupeKey,
-  mapToStagingPayload,
-} from "@/app/api/integration/_utils/mapping";
+import { stageRows } from "@/app/api/integration/_utils/staging";
+import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+
+const CONFIG_KEY = "hrmis_integration";
+const FETCH_TIMEOUT_MS = 30000;
 
 export async function POST(req) {
   try {
@@ -21,21 +20,57 @@ export async function POST(req) {
       );
     }
 
-    const body = await req.json();
-    const endpoint = body.endpoint;
+    const body = await req.json().catch(() => ({}));
     const sourceName = body.source_name || "HRMIS API";
-    const headers = body.headers || {};
-    const defaultSchoolYear = body.school_year || "";
-    const defaultSemester = body.semester || "";
+
+    let endpoint = body.endpoint || "";
+    let headers = body.headers || {};
+    let storedConfig = null;
+    if (!endpoint || Object.keys(headers).length === 0) {
+      const setting = await SystemSetting.findOne({ key: CONFIG_KEY }).lean();
+      storedConfig = setting?.value || null;
+      if (!endpoint && storedConfig?.endpoint) endpoint = storedConfig.endpoint;
+      if (Object.keys(headers).length === 0 && storedConfig?.headers) {
+        headers = storedConfig.headers;
+      }
+    }
+    const defaultSchoolYear = body.school_year || storedConfig?.school_year || "";
+    const defaultSemester = body.semester || storedConfig?.semester || "";
 
     if (!endpoint) {
       return NextResponse.json(
-        { status: "error", message: "endpoint is required" },
+        { status: "error", message: "endpoint is required (no stored config found)" },
         { status: 400 },
       );
     }
 
-    const response = await fetch(endpoint, { headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    let response;
+    try {
+      response = await fetch(endpoint, {
+        headers,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err?.name === "AbortError") {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
+          },
+          { status: 504 },
+        );
+      }
+      return NextResponse.json(
+        { status: "error", message: `Failed to reach endpoint: ${err.message}` },
+        { status: 502 },
+      );
+    }
+    clearTimeout(timeout);
+
     if (!response.ok) {
       return NextResponse.json(
         {
@@ -53,54 +88,44 @@ export async function POST(req) {
         ? payload.data
         : [];
 
-    const seenIdentities = new Set();
-    const docs = [];
-    let skippedDuplicates = 0;
-
-    for (let idx = 0; idx < rows.length; idx += 1) {
-      const raw = rows[idx];
-      const mapped = mapToStagingPayload(raw, {
+    const { batch, insertedCount, duplicateCount } = await stageRows({
+      rows,
+      sourceType: "hrmis_api",
+      sourceName,
+      createdBy: auth.user._id,
+      createdByUsername: auth.user.username,
+      defaults: {
         school_year: defaultSchoolYear,
         semester: defaultSemester,
-      });
-      const identity = buildIdentity(mapped);
-      const dedupeKey = buildIdentityDedupeKey(identity);
-
-      if (dedupeKey && seenIdentities.has(dedupeKey)) {
-        skippedDuplicates += 1;
-        continue;
-      }
-
-      if (dedupeKey) {
-        seenIdentities.add(dedupeKey);
-      }
-
-      docs.push({
-        row_number: idx + 1,
-        raw_payload: raw,
-        mapped_payload: mapped,
-        identity,
-        school_year: mapped.school_year || "",
-        semester: mapped.semester || "",
-        status: "pending",
-      });
-    }
-
-    const batch = await ImportBatch.create({
-      source_type: "hrmis_api",
-      source_name: sourceName,
-      status: "pending",
-      created_by: auth.user._id,
-      created_by_username: auth.user.username,
-      totals: { fetched: rows.length, skipped: skippedDuplicates },
+      },
     });
 
-    if (docs.length > 0) {
-      await StagingRecord.insertMany(
-        docs.map((doc) => ({ ...doc, batch_id: batch._id })),
-        { ordered: false },
+    if (storedConfig) {
+      await SystemSetting.findOneAndUpdate(
+        { key: CONFIG_KEY },
+        {
+          $set: {
+            "value.last_sync_at": new Date(),
+            "value.last_sync_status": "success",
+            "value.last_sync_message": `Fetched ${rows.length} row(s)`,
+          },
+        },
       );
     }
+
+    await writeSyncLog({
+      batchId: batch._id,
+      action: "sync",
+      message: `Fetched ${rows.length} row(s) from HRMIS API (${insertedCount} staged, ${duplicateCount} duplicates flagged)`,
+      details: {
+        endpoint,
+        fetched: rows.length,
+        staged: insertedCount,
+        duplicates_flagged: duplicateCount,
+      },
+      executedBy: auth.user._id,
+      executedByUsername: auth.user.username,
+    });
 
     return NextResponse.json(
       {
@@ -108,8 +133,8 @@ export async function POST(req) {
         data: {
           batch_id: batch._id,
           fetched: rows.length,
-          staged: docs.length,
-          skipped_duplicates: skippedDuplicates,
+          staged: insertedCount,
+          duplicates_flagged: duplicateCount,
         },
       },
       { status: 201 },

@@ -61,12 +61,18 @@ export async function POST(req) {
     const referenceTime = hasCapturedAt
       ? new Date(captured_at).getTime()
       : now;
-    const startTimes = (event.start_dates || [])
-      .filter(Boolean)
-      .map((d) => new Date(d).getTime());
-    const endTimes = (event.end_dates || [])
-      .filter(Boolean)
-      .map((d) => new Date(d).getTime());
+    const startTimes = [
+      ...(event.start_date ? [new Date(event.start_date).getTime()] : []),
+      ...(event.start_dates || [])
+        .filter(Boolean)
+        .map((d) => new Date(d).getTime()),
+    ];
+    const endTimes = [
+      ...(event.end_date ? [new Date(event.end_date).getTime()] : []),
+      ...(event.end_dates || [])
+        .filter(Boolean)
+        .map((d) => new Date(d).getTime()),
+    ];
 
     const earliestStart = startTimes.length > 0 ? Math.min(...startTimes) : null;
     const latestEnd = endTimes.length > 0 ? Math.max(...endTimes) : null;

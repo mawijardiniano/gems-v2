@@ -55,14 +55,16 @@ export default function ReportTab({ event }) {
         body: JSON.stringify({
           title: event.title,
           venue: event.venue,
-          number_of_days: event.number_of_days ?? event.start_dates?.length ?? 1,
           type_of_activity: event.type_of_activity,
           gad_activity: event.gad_activity,
           eligibility_criteria: event.eligibility_criteria,
           target_number_of_participants: event.target_number_of_participants,
           registered_count: event.registered_users?.length,
           organizing_office_unit: event.organizing_office_unit,
-          start_dates: event.start_dates,
+          start_date:
+            event.start_date ||
+            (event.start_dates || [])[0] ||
+            undefined,
         }),
       });
 

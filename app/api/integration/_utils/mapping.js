@@ -25,20 +25,28 @@ function toCurrentStatus(value, studentId, employeeId) {
 
 export function mapToStagingPayload(raw, defaults = {}) {
   const firstName = normalizeString(
-    raw.first_name || raw.FirstName || raw.firstname,
+    raw.first_name || raw.FirstName || raw.firstname || raw.firstName,
   );
   const lastName = normalizeString(
-    raw.last_name || raw.LastName || raw.lastname,
+    raw.last_name || raw.LastName || raw.lastname || raw.lastName,
   );
   const middleName = normalizeString(
-    raw.middle_name || raw.MiddleName || raw.middlename || raw.mid_name,
+    raw.middle_name ||
+      raw.MiddleName ||
+      raw.middlename ||
+      raw.mid_name ||
+      raw.middleName,
   );
   const status = normalizeString(
     raw.currentStatus || raw.current_status || raw.status,
   );
 
   const studentId = normalizeString(
-    raw.student_id || raw.StudentID || raw.studentId || raw.StudentNo,
+    raw.student_id ||
+      raw.StudentID ||
+      raw.studentId ||
+      raw.StudentNo ||
+      raw.studentNo,
   );
   const employeeId = normalizeString(
     raw.employee_id || raw.EmployeeID || raw.employeeId,
@@ -152,6 +160,59 @@ export function buildIdentity(mappedPayload) {
   };
 }
 
+export function normalizeName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+export async function findExistingProfileForRecord(record, GemsProfile) {
+  const identity = record.identity || {};
+  const mapped = record.mapped_payload || {};
+
+  if (identity.student_id) {
+    const byStudent = await GemsProfile.findOne({
+      "affiliation.academic_information.student_id": identity.student_id,
+    });
+    if (byStudent) return { profile: byStudent, matchedOn: "student_id" };
+  }
+
+  if (identity.employee_id) {
+    const byEmployee = await GemsProfile.findOne({
+      "affiliation.employment_information.employee_id": identity.employee_id,
+    });
+    if (byEmployee) return { profile: byEmployee, matchedOn: "employee_id" };
+  }
+
+  if (identity.email) {
+    const byEmail = await GemsProfile.findOne({
+      "contact.email": identity.email,
+    });
+    if (byEmail) return { profile: byEmail, matchedOn: "email" };
+  }
+
+  const first = normalizeName(mapped?.personal?.first_name);
+  const last = normalizeName(mapped?.personal?.last_name);
+  const birthday = mapped?.personal?.birthday
+    ? new Date(mapped.personal.birthday)
+    : null;
+
+  if (first && last && birthday && !Number.isNaN(birthday.getTime())) {
+    const candidates = await GemsProfile.find({
+      "personal.birthday": birthday,
+    }).limit(50);
+    const match = candidates.find(
+      (p) =>
+        normalizeName(p.personal?.first_name) === first &&
+        normalizeName(p.personal?.last_name) === last,
+    );
+    if (match) return { profile: match, matchedOn: "name_birthday" };
+  }
+
+  return null;
+}
+
 export function buildIdentityDedupeKey(identity = {}) {
   return (identity.student_id || identity.employee_id || identity.email || "")
     .toString()
@@ -187,7 +248,7 @@ export function validateMappedPayload(mappedPayload) {
     errors.push({
       field: "personal.currentStatus",
       code: "invalid",
-      message: "currentStatus must be Student or Employee",
+      message: "Status must be Student or Employee.",
     });
   }
 
@@ -217,9 +278,160 @@ export function validateMappedPayload(mappedPayload) {
       field: "identity",
       code: "required",
       message:
-        "At least one identity key is required: student_id, employee_id, or email",
+        "Add at least one: Student No., Employee No., or Email — so the person can be identified.",
     });
   }
 
   return errors;
+}
+
+export function isEmptyValue(value) {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === "string" && value.trim() === "")
+  );
+}
+
+export function mergeValues(existing, incoming) {
+  return isEmptyValue(incoming) ? existing : incoming;
+}
+
+function plainSection(section) {
+  return section?.toObject?.() ?? section ?? {};
+}
+
+function normalizeComparable(value) {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? String(value) : value.toISOString();
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    if (/[-/:T]/.test(value)) {
+      const d = new Date(value);
+      if (!Number.isNaN(d.getTime())) return d.toISOString();
+    }
+  }
+  return String(value);
+}
+
+function equalValues(a, b) {
+  return normalizeComparable(a) === normalizeComparable(b);
+}
+
+function mergeSection(existingSection, incomingSection, changes, prefix) {
+  const existing = plainSection(existingSection);
+  const incoming = plainSection(incomingSection);
+  const merged = { ...existing };
+  for (const key of Object.keys(incoming)) {
+    const incomingValue = incoming[key];
+    if (isEmptyValue(incomingValue)) continue; // safe-merge: blank never wipes
+    const before = merged[key];
+    const after = mergeValues(before, incomingValue);
+    merged[key] = after;
+    if (!equalValues(before, after)) {
+      changes.push({
+        field: `${prefix}.${key}`,
+        from: before ?? "",
+        to: after,
+      });
+    }
+  }
+  return merged;
+}
+
+export function mergeProfile(existing, mapped) {
+  const changes = [];
+  const merged = {
+    personal: mergeSection(
+      existing?.personal,
+      mapped?.personal,
+      changes,
+      "personal",
+    ),
+    gadData: mergeSection(
+      existing?.gadData,
+      mapped?.gadData,
+      changes,
+      "gadData",
+    ),
+    contact: mergeSection(
+      existing?.contact,
+      mapped?.contact,
+      changes,
+      "contact",
+    ),
+    affiliation: {},
+  };
+
+  const existingAffiliation = plainSection(existing?.affiliation);
+  const incomingAffiliation = plainSection(mapped?.affiliation);
+  for (const key of Object.keys(incomingAffiliation)) {
+    if (
+      key === "academic_information" ||
+      key === "employment_information"
+    ) {
+      continue;
+    }
+    const before = existingAffiliation[key];
+    const after = mergeValues(before, incomingAffiliation[key]);
+    merged.affiliation[key] = after;
+    if (!equalValues(before, after)) {
+      changes.push({
+        field: `affiliation.${key}`,
+        from: before ?? "",
+        to: after,
+      });
+    }
+  }
+
+  merged.affiliation.academic_information = mergeSection(
+    existing?.affiliation?.academic_information,
+    mapped?.affiliation?.academic_information,
+    changes,
+    "affiliation.academic_information",
+  );
+  merged.affiliation.employment_information = mergeSection(
+    existing?.affiliation?.employment_information,
+    mapped?.affiliation?.employment_information,
+    changes,
+    "affiliation.employment_information",
+  );
+
+  if (!merged.affiliation.academic_information?.student_id) {
+    delete merged.affiliation.academic_information;
+  }
+  if (!merged.affiliation.employment_information?.employee_id) {
+    delete merged.affiliation.employment_information;
+  }
+
+  if (merged.personal?.birthday) {
+    const d = new Date(merged.personal.birthday);
+    if (!Number.isNaN(d.getTime())) merged.personal.birthday = d;
+  }
+
+  return { merged, changes };
+}
+
+export function mergeTermAffiliation(existingAffiliation, incomingAffiliation) {
+  const existing = plainSection(existingAffiliation);
+  const incoming = plainSection(incomingAffiliation);
+  const merged = { ...existing };
+
+  for (const key of Object.keys(incoming)) {
+    if (key === "academic_information" || key === "employment_information") {
+      merged[key] = mergeSection(merged[key], incoming[key], [], key);
+      continue;
+    }
+    merged[key] = mergeValues(merged[key], incoming[key]);
+  }
+
+  if (!merged.academic_information?.student_id) {
+    delete merged.academic_information;
+  }
+  if (!merged.employment_information?.employee_id) {
+    delete merged.employment_information;
+  }
+
+  return merged;
 }

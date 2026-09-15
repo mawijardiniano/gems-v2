@@ -6,7 +6,7 @@ import { cacheOrSet } from "@/lib/cache";
 const UPCOMING_LIST_CACHE_TTL = 60 * 1000; // 60 seconds
 
 const PUBLIC_FIELDS =
-  "_id title description number_of_days start_dates end_dates venue type_of_activity organizing_office_unit eligibility_criteria event_poster.url";
+  "_id title description number_of_days start_dates end_dates start_date end_date venue type_of_activity organizing_office_unit eligibility_criteria event_poster.url";
 
 export async function GET(req) {
   try {
@@ -26,13 +26,14 @@ export async function GET(req) {
       async () => {
         const docs = await Event.find({ status: "active" })
           .select(PUBLIC_FIELDS)
-          .sort({ "start_dates.0": 1 })
+          .sort({ start_date: 1 })
           .lean();
 
         const now = Date.now();
         const upcoming = docs.filter((event) => {
-          const endDates = event.end_dates || [];
-          const lastEnd = endDates[endDates.length - 1];
+          const legacyEnds = event.end_dates || [];
+          const lastEnd =
+            event.end_date || legacyEnds[legacyEnds.length - 1];
           return lastEnd ? new Date(lastEnd).getTime() >= now : false;
         });
 

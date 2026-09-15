@@ -5,7 +5,6 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { FiEdit2, FiTrash2, FiDownload, FiX } from "react-icons/fi";
 import {
-  FaPlus,
   FaSpinner,
   FaMagic,
   FaQrcode,
@@ -13,10 +12,10 @@ import {
   FaMapMarkerAlt,
   FaUsers,
   FaUserCheck,
-  FaLayerGroup,
   FaClipboardCheck,
 } from "react-icons/fa";
 import CheckboxDropdown from "./CheckboxDropdown";
+import AttendanceInsights from "./AttendanceInsights";
 
 const ELIGIBILITY_OPTIONS = [
   { value: "Scholarship Applicant", label: "Scholarship Applicant" },
@@ -78,6 +77,7 @@ export default function OverviewTab({
   deleting,
   handleDeleteEvent,
   projects,
+  allEvents,
   formatForInput,
   formatRangeLines,
 }) {
@@ -97,7 +97,8 @@ export default function OverviewTab({
         gad_activity,
         eligibility_criteria,
         target_number_of_participants,
-        start_dates,
+        date,
+        start_time,
       } = editData || {};
 
       const response = await fetch("/api/events/generate-description", {
@@ -106,7 +107,8 @@ export default function OverviewTab({
         body: JSON.stringify({
           title,
           venue,
-          number_of_days: start_dates?.length || 1,
+          start_date:
+            date && start_time ? `${date}T${start_time}` : undefined,
           type_of_activity,
           gad_activity,
           eligibility_criteria,
@@ -152,6 +154,18 @@ export default function OverviewTab({
   };
 
   const resetEditData = () => {
+    const startValue =
+      event.start_date ||
+      (Array.isArray(event.start_dates) ? event.start_dates[0] : null) ||
+      event.date;
+    const endValue =
+      event.end_date ||
+      (Array.isArray(event.end_dates)
+        ? event.end_dates[event.end_dates.length - 1]
+        : null) ||
+      startValue;
+    const startInput = formatForInput(startValue);
+    const endInput = formatForInput(endValue);
     setEditData({
       type_of_activity:
         isDeanRoute && event.type_of_activity === "GAD"
@@ -161,13 +175,9 @@ export default function OverviewTab({
       gad_activity: event.gad_activity,
       title: event.title || "",
       description: event.description || "",
-      number_of_days: event.number_of_days || "",
-      start_dates: Array.isArray(event.start_dates)
-        ? event.start_dates.map(formatForInput)
-        : [],
-      end_dates: Array.isArray(event.end_dates)
-        ? event.end_dates.map(formatForInput)
-        : [],
+      date: startInput ? startInput.slice(0, 10) : "",
+      start_time: startInput ? startInput.slice(11, 16) : "",
+      end_time: endInput ? endInput.slice(11, 16) : "",
       venue: event.venue || "",
       status: event.status || "active",
       organizing_office_unit: event.organizing_office_unit,
@@ -217,17 +227,6 @@ export default function OverviewTab({
       ),
     },
     {
-      label: "Number of Days",
-      icon: FaLayerGroup,
-      gradient: "from-purple-600 to-pink-400",
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      value:
-        (event.start_dates && event.start_dates.length) ||
-        event.number_of_days ||
-        1,
-    },
-    {
       label: "Venue",
       icon: FaMapMarkerAlt,
       gradient: "from-amber-500 to-orange-400",
@@ -242,35 +241,6 @@ export default function OverviewTab({
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
       value: (event.registered_users || []).length || "—",
-    },
-    {
-      label: "Attended",
-      icon: FaUserCheck,
-      gradient: "from-teal-500 to-teal-400",
-      iconBg: "bg-teal-100",
-      iconColor: "text-teal-600",
-      value: (
-        <div className="flex flex-col">
-          <span>{(event.attended_users || []).length || "—"}</span>
-          {(event.start_dates || [])[0] &&
-            new Date(
-              Math.max(
-                ...(event.end_dates || []).map((d) => new Date(d).getTime()),
-                0,
-              ),
-            ).getTime() < Date.now() &&
-            (event.registered_users || []).length > 0 && (
-              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mt-0.5">
-                {Math.round(
-                  ((event.attended_users || []).length /
-                    (event.registered_users || []).length) *
-                    100,
-                )}
-                % of registered
-              </span>
-            )}
-        </div>
-      ),
     },
   ];
 
@@ -292,7 +262,6 @@ export default function OverviewTab({
         </div>
       )}
 
-      {/* ── Event Details ─────────────────────────────────────────── */}
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm animate-slide-up">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -344,7 +313,7 @@ export default function OverviewTab({
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {metrics.map((m) => {
                 const Icon = m.icon;
                 return (
@@ -374,6 +343,8 @@ export default function OverviewTab({
                 );
               })}
             </div>
+
+            <AttendanceInsights event={event} allEvents={allEvents} />
           </div>
         ) : (
           <>
@@ -519,78 +490,47 @@ export default function OverviewTab({
               </div>
 
               <div className="md:col-span-2">
-                <label className="label">Event Days</label>
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-500">
-                    Number of Days: {editData?.start_dates?.length || 1}
-                  </p>
-                  {editData?.start_dates &&
-                    editData?.end_dates &&
-                    editData.start_dates.map((start, idx) => (
-                      <div
-                        key={idx}
-                        className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-100 bg-slate-50 p-3"
-                      >
-                        <span className="text-xs font-medium text-gray-500 w-14">
-                          Day {idx + 1}
-                        </span>
-                        <input
-                          type="datetime-local"
-                          className="input !w-auto !py-1.5"
-                          value={start}
-                          onChange={(e) => {
-                            const newStarts = [...editData.start_dates];
-                            newStarts[idx] = e.target.value;
-                            handleEditChange("start_dates", newStarts);
-                          }}
-                        />
-                        <span className="text-gray-400 text-sm">to</span>
-                        <input
-                          type="datetime-local"
-                          className="input !w-auto !py-1.5"
-                          value={editData.end_dates[idx]}
-                          onChange={(e) => {
-                            const newEnds = [...editData.end_dates];
-                            newEnds[idx] = e.target.value;
-                            handleEditChange("end_dates", newEnds);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn-ghost !py-1.5 !px-2 text-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => {
-                            const newStarts = editData.start_dates.filter(
-                              (_, i) => i !== idx,
-                            );
-                            const newEnds = editData.end_dates.filter(
-                              (_, i) => i !== idx,
-                            );
-                            handleEditChange("start_dates", newStarts);
-                            handleEditChange("end_dates", newEnds);
-                          }}
-                          disabled={editData.start_dates.length <= 1}
-                        >
-                          <FiX size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  <button
-                    type="button"
-                    className="btn-secondary !py-2"
-                    onClick={() => {
-                      handleEditChange("start_dates", [
-                        ...(editData.start_dates || []),
-                        "",
-                      ]);
-                      handleEditChange("end_dates", [
-                        ...(editData.end_dates || []),
-                        "",
-                      ]);
-                    }}
-                  >
-                    <FaPlus size={12} />
-                    Add Day
-                  </button>
+                <label className="label">Event Schedule</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      className="input"
+                      value={editData?.date || ""}
+                      onChange={(e) =>
+                        handleEditChange("date", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      className="input"
+                      value={editData?.start_time || ""}
+                      onChange={(e) =>
+                        handleEditChange("start_time", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      className="input"
+                      value={editData?.end_time || ""}
+                      onChange={(e) =>
+                        handleEditChange("end_time", e.target.value)
+                      }
+                    />
+                  </div>
                 </div>
               </div>
 

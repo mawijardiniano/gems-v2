@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 import {
@@ -80,6 +81,7 @@ const getProjectContextLabel = (project) => {
 
 export default function GADARContent() {
   const userId = useSelector((state) => state.auth.userId);
+  const searchParams = useSearchParams();
   const fileLifecycle = useFileLifecycle();
 
   const [gpbList, setGpbList] = useState([]);
@@ -143,7 +145,11 @@ export default function GADARContent() {
         setGpbList(data.data || []);
         if (data.data?.length > 0) {
           const sorted = [...data.data].sort((a, b) => b.year - a.year);
-          setSelectedYear(String(sorted[0].year));
+          const requested = searchParams?.get("year");
+          const match = requested
+            ? sorted.find((g) => String(g.year) === requested)
+            : null;
+          setSelectedYear(String((match || sorted[0]).year));
         }
       } else {
         setError(data.message || "Failed to load GPB records");
@@ -153,7 +159,7 @@ export default function GADARContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchGPBList();
@@ -685,16 +691,9 @@ export default function GADARContent() {
                       <td className="px-3 py-4 align-top text-xs text-gray-800">
                         {actual ? (
                           actual
-                        ) : actualEvents.length > 0 && canEditActuals(project) ? (
-                          <button
-                            onClick={() => openEdit(project)}
-                            className="text-blue-600 hover:underline text-xs"
-                          >
-                            Auto-fill from {actualEvents.length} event{actualEvents.length !== 1 ? "s" : ""}
-                          </button>
                         ) : (
                           <span className="text-gray-400 italic">
-                            
+                            Encode actuals in Project Monitoring → GAD Projects
                           </span>
                         )}
                       </td>
@@ -724,31 +723,25 @@ export default function GADARContent() {
                               </button>
                             )}
                         </div>
+                        <span className="block mt-1 text-[10px] font-normal text-gray-400">
+                          Variance: ₱{" "}
+                          {fmt(
+                            (Number(getFieldValue(project.gad_budget)) || 0) -
+                              (Number(project.actual_expenditures) || 0),
+                          )}
+                        </span>
                       </td>
                       <td className="px-3 py-4 align-top text-xs text-gray-800">
                         {getFieldValue(project.responsible_office) || "—"}
                       </td>
                       <td className="px-3 py-4 align-top text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {canEditActuals(project) ? (
-                            <button
-                              onClick={() => openEdit(project)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
-                            >
-                              <FaEdit className="h-3 w-3" />
-                              Edit Actuals
-                            </button>
-                          ) : (
-                            <span
-                              title={`Only ${getCreatorName(project)} can edit actuals`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
-                            >
-                              <FaLock className="h-3 w-3" />
-                              Creator only
-                            </span>
-                          )}
-
-                        </div>
+                        <span
+                          title="Actuals are now encoded in Project Monitoring → GAD Projects"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
+                        >
+                          <FaLock className="h-3 w-3" />
+                          View only
+                        </span>
                       </td>
                     </tr>
                     </React.Fragment>
@@ -773,243 +766,6 @@ export default function GADARContent() {
                 </tr>
               </tfoot>
             </table>
-          </div>
-        </div>
-      )}
-
-      {editProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
- 
-            <div className="px-6 py-5 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
-                    <FaFileAlt className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-semibold text-gray-900">
-                      Edit GAD AR Actuals
-                    </h2>
-                    <p className="text-xs text-gray-500">
-                      {getFieldValue(editProject.gender_issue)?.slice(0, 60) ||
-                        "Project"}{" "}
-                      {getFieldValue(editProject.gender_issue)?.length > 60
-                        ? "..."
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={closeEdit}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
-                >
-                  <FaTimes className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-    
-            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-  
-              {getProjectTypeLabel(editProject) !== "Attributed Program" && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
-                    G. Actual Accomplishment
-                  </label>
-                  <p className="text-xs text-gray-400 mb-3">
-                    What was actually accomplished for this project. Auto-suggested
-                    from event attendance if available — you can edit this text.
-                  </p>
-                  <textarea
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    placeholder="Enter the actual accomplishment for this project..."
-                    value={editActual}
-                    onChange={(e) => setEditActual(e.target.value)}
-                  />
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const suggested = generateSuggestedActual(editProject);
-                        if (suggested) setEditActual(suggested);
-                      }}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      ↻ Re-generate from event data
-                    </button>
-                  </div>
-                </div>
-              )}
-
-   
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
-                  I. Actual Expenditures (₱)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    ₱
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                    placeholder="0.00"
-                    value={editExpenditures}
-                    onChange={(e) => setEditExpenditures(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  Total actual money spent on this project
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
-                  Evidence of Actual Expenditures
-                </label>
-                <p className="text-xs text-gray-400 mb-3">
-                  Attach supporting documents (receipts, official receipts,
-                  liquidation reports, invoices). PDF, JPG, or PNG — max 10MB
-                  each.
-                </p>
-
-                <div className="flex items-center gap-3">
-                  <label
-                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition cursor-pointer ${
-                      evidenceUploading
-                        ? "text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed"
-                        : "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
-                    }`}
-                  >
-                    {evidenceUploading ? (
-                      <>
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          />
-                        </svg>
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <FaPaperclip className="h-3.5 w-3.5" />
-                        Add Files
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="hidden"
-                      onChange={handleEvidenceUpload}
-                      disabled={evidenceUploading}
-                    />
-                  </label>
-                  {editEvidence.length > 0 && (
-                    <span className="text-xs text-gray-500">
-                      {editEvidence.length} file
-                      {editEvidence.length !== 1 ? "s" : ""} attached
-                    </span>
-                  )}
-                </div>
-
-                {editEvidence.length > 0 && (
-                  <ul className="mt-3 space-y-2">
-                    {editEvidence.map((file, i) => (
-                      <li
-                        key={file.key || i}
-                        className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FaFileAlt className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                          <span className="text-xs text-gray-700 truncate">
-                            {file.name || "Evidence file"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openEvidenceViewer(
-                                editEvidence,
-                                i,
-                                getProjectContextLabel(editProject),
-                              )
-                            }
-                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-blue-700 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition"
-                          >
-                            <FaDownload className="h-3 w-3" />
-                            View
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeEvidenceFile(file)}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <FaTrash className="h-3 w-3" />
-                            Remove
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-
-            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
-              <button
-                onClick={closeEdit}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveActuals}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-emerald-200"
-              >
-                {saving ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Saving...
-                  </>
-                ) : (
-                  "Save Actuals"
-                )}
-              </button>
-            </div>
           </div>
         </div>
       )}

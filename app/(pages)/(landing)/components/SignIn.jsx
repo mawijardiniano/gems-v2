@@ -15,14 +15,11 @@ export default function LoginForm({ redirect, compact = false }) {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const handleLogin = async (e, creds) => {
+  const handleLogin = async (e) => {
     e?.preventDefault();
     setError("");
 
-    const loginUsername = creds?.username || username;
-    const loginPassword = creds?.password || password;
-
-    if (!loginUsername || !loginPassword) {
+    if (!username || !password) {
       setError("Please enter your username and password.");
       return;
     }
@@ -30,11 +27,11 @@ export default function LoginForm({ redirect, compact = false }) {
     setLoading(true);
 
     try {
-      console.log("Logging in with:", { username: loginUsername });
+      console.log("Logging in with:", { username });
 
       const res = await axios.post(
         "/api/auth/login",
-        { username: loginUsername, password: loginPassword },
+        { username, password },
         { withCredentials: true },
       );
 
@@ -73,6 +70,12 @@ export default function LoginForm({ redirect, compact = false }) {
       if (role === "planning director") {
         console.log("Focal detected, redirecting to /gpb");
         router.push("/planning-director/dashboard");
+        return;
+      }
+
+      if (role === "suc president") {
+        console.log("SUC President detected, redirecting to /president/dashboard");
+        router.push("/president/dashboard");
         return;
       }
 

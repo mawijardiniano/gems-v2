@@ -14,9 +14,8 @@ import { USER_POPULATE_BASE } from "@/lib/userPopulate";
 const EDITABLE_FIELDS = [
   "title",
   "description",
-  "number_of_days",
-  "start_dates",
-  "end_dates",
+  "start_date",
+  "end_date",
   "venue",
   "type_of_activity",
   "organizing_office_unit",
@@ -145,6 +144,14 @@ export async function PUT(req, { params }) {
       if (body[field] !== undefined) {
         event.set(field, body[field]);
       }
+    }
+
+    if (body.start_date || body.end_date) {
+      const legacyStart = event.start_date || body.start_date;
+      const legacyEnd = event.end_date || body.end_date;
+      if (legacyStart) event.set("start_dates", [legacyStart]);
+      if (legacyEnd) event.set("end_dates", [legacyEnd]);
+      if (!event.number_of_days) event.set("number_of_days", 1);
     }
     event.updated_by = user._id;
 

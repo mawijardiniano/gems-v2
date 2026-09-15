@@ -47,6 +47,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [guestYearFilter, setGuestYearFilter] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
   const [projects, setProjects] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
   const [interestedSearch, setInterestedSearch] = useState("");
   const [insightsFilter, setInsightsFilter] = useState("all");
@@ -66,6 +67,18 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     };
     fetchProjects();
   }, [userId]);
+
+  useEffect(() => {
+    const fetchAllEvents = async () => {
+      try {
+        const res = await axios.get("/api/events");
+        setAllEvents(res.data?.data || []);
+      } catch (err) {
+        setAllEvents([]);
+      }
+    };
+    fetchAllEvents();
+  }, []);
 
   const getFilteredGuests = (guests) => {
     return guests
@@ -141,26 +154,27 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         const evt = res.data?.data || null;
         setEvent(evt);
         if (evt) {
-          let startDates =
-            Array.isArray(evt.start_dates) && evt.start_dates.length > 0
-              ? evt.start_dates.map(formatForInput)
-              : [formatForInput(evt.start_date || evt.date)];
-          let endDates =
-            Array.isArray(evt.end_dates) && evt.end_dates.length > 0
-              ? evt.end_dates.map(formatForInput)
-              : [formatForInput(evt.end_date)];
-          if (!startDates[0])
-            startDates[0] = formatForInput(evt.start_date || evt.date);
-          if (!endDates[0]) endDates[0] = formatForInput(evt.end_date);
+          const startValue =
+            evt.start_date ||
+            (Array.isArray(evt.start_dates) ? evt.start_dates[0] : null) ||
+            evt.date;
+          const endValue =
+            evt.end_date ||
+            (Array.isArray(evt.end_dates)
+              ? evt.end_dates[evt.end_dates.length - 1]
+              : null) ||
+            startValue;
+          const startInput = formatForInput(startValue);
+          const endInput = formatForInput(endValue);
           setEditData({
             type_of_activity: evt.type_of_activity,
             project: evt.project,
             gad_activity: evt.gad_activity,
             title: evt.title || "",
             description: evt.description || "",
-            number_of_days: evt.number_of_days,
-            start_dates: startDates,
-            end_dates: endDates,
+            date: startInput ? startInput.slice(0, 10) : "",
+            start_time: startInput ? startInput.slice(11, 16) : "",
+            end_time: endInput ? endInput.slice(11, 16) : "",
             venue: evt.venue || "",
             status: evt.status || "active",
             organizing_office_unit: evt.organizing_office_unit,
@@ -268,28 +282,22 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   };
 
   const getDateRangeLines = (start, end, evt) => {
-    const startDates =
-      evt && Array.isArray(evt.start_dates) && evt.start_dates.length > 0
-        ? evt.start_dates
-        : start
-          ? [start]
-          : [];
-    const endDates =
-      evt && Array.isArray(evt.end_dates) && evt.end_dates.length > 0
-        ? evt.end_dates
-        : end
-          ? [end]
-          : [];
+    const startValue =
+      (evt && evt.start_date) ||
+      start ||
+      (evt && Array.isArray(evt.start_dates) ? evt.start_dates[0] : null);
+    const endValue =
+      (evt && evt.end_date) ||
+      end ||
+      (evt && Array.isArray(evt.end_dates)
+        ? evt.end_dates[evt.end_dates.length - 1]
+        : null);
 
-    if (startDates.length === 0) return ["No date"];
+    if (!startValue) return ["No date"];
 
-    return startDates.map((sd, idx) => {
-      const ed = endDates[idx];
-      const startStr = formatDate(sd);
-      if (!ed) return `Day ${idx + 1}: ${startStr}`;
-      const endStr = formatDate(ed);
-      return `Day ${idx + 1}: ${startStr} - ${endStr}`;
-    });
+    const startStr = formatDate(startValue);
+    if (!endValue) return [startStr];
+    return [`${startStr} - ${formatDate(endValue)}`];
   };
 
   const formatRangeLines = (start, end, evt) => {
@@ -609,10 +617,31 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       const oldPoster = event.event_poster;
       const newPoster = editData.event_poster;
 
+      const startDateTime = new Date(
+        `${editData.date}T${editData.start_time || "00:00"}`,
+      );
+      const endDateTime = new Date(
+        `${editData.date}T${editData.end_time || "23:59"}`,
+      );
+
+      if (
+        Number.isNaN(startDateTime.getTime()) ||
+        Number.isNaN(endDateTime.getTime())
+      ) {
+        setError("Invalid event date or time values.");
+        setSaving(false);
+        return;
+      }
+      if (endDateTime < startDateTime) {
+        setError("End time must be after start time.");
+        setSaving(false);
+        return;
+      }
+
       const payload = {
         ...editData,
-        start_dates: editData.start_dates.map((d) => new Date(d).toISOString()),
-        end_dates: editData.end_dates.map((d) => new Date(d).toISOString()),
+        start_date: startDateTime.toISOString(),
+        end_date: endDateTime.toISOString(),
         updated_by: userId,
       };
 
@@ -739,7 +768,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   }
 
   return (
-    <div className="page-container space-y-6 animate-fade-in">
+   <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
+
       {showQrPrompt && (
         <div className="modal-overlay">
           <div className="modal">
@@ -851,6 +881,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           deleting={deleting}
           handleDeleteEvent={handleDeleteEvent}
           projects={projects}
+          allEvents={allEvents}
           formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}
         />

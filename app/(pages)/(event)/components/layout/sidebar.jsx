@@ -8,10 +8,14 @@ import {
   FaMoneyBill,
   FaUsers,
   FaCalendarAlt,
+  FaCalendarDay,
   FaClipboardList,
   FaCog,
   FaFileAlt,
   FaVenusMars,
+  FaChartLine,
+  FaUserGraduate,
+  FaUserTie,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -34,7 +38,8 @@ export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [profile, setProfile] = useState(null);
   const [user, setUser] = useState(null);
-  const [showReports, setShowReports] = useState(false);
+  const [showProjectMonitoring, setShowProjectMonitoring] = useState(false);
+  const [showGenderStatistics, setShowGenderStatistics] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -47,8 +52,9 @@ export default function Sidebar({ open, setOpen, role }) {
       "gpb",
       "events-list",
       "gad-ars",
-      "sex-disaggregated-data",
-      "gad-settings"
+      "gender-statistics",
+      "gad-settings",
+      "gad-projects"
     ],
     "gad coordinator": [
       "events-dashboard",
@@ -58,9 +64,11 @@ export default function Sidebar({ open, setOpen, role }) {
       "gpb",
       "events-list",
       "gad-ars",
-      "sex-disaggregated-data",
-      "gad-settings"
+      "gender-statistics",
+      "gad-settings",
+      "gad-projects"
     ],
+    
 
   };
 
@@ -101,12 +109,6 @@ export default function Sidebar({ open, setOpen, role }) {
       icon: <FaFolder size={16} />,
       key: "gpb",
     },
-    {
-      name: "Events",
-      href: "/events-list",
-      icon: <FaCalendarAlt size={16} />,
-      key: "events-list",
-    },
   ];
 
   const filteredLinks = useMemo(() => {
@@ -115,10 +117,23 @@ export default function Sidebar({ open, setOpen, role }) {
     return links.filter((link) => allowed.includes(link.key));
   }, [role]);
 
+  const dashboardLinks = useMemo(
+    () => filteredLinks.filter((link) => link.key.endsWith("dashboard")),
+    [filteredLinks]
+  );
+
+  const mainLinks = useMemo(
+    () => filteredLinks.filter((link) => !link.key.endsWith("dashboard")),
+    [filteredLinks]
+  );
+
   const userAllowedPages = useMemo(() => {
     const normalizedRole = role?.toLowerCase();
     return ROLE_ACCESS[normalizedRole] || [];
   }, [role]);
+
+  const reportsActive =
+    pathname?.startsWith("/reports") || pathname?.startsWith("/gad-ars");
 
   const handleMobileClose = useCallback(() => {
     if (typeof window !== "undefined" && window.innerWidth < 640) {
@@ -148,6 +163,19 @@ export default function Sidebar({ open, setOpen, role }) {
     },
     [pathname]
   );
+
+ 
+  useEffect(() => {
+    if (
+      pathname?.startsWith("/project-monitoring") ||
+      pathname?.startsWith("/events-list")
+    ) {
+      setShowProjectMonitoring(true);
+    }
+    if (pathname?.startsWith("/gender-statistics")) {
+      setShowGenderStatistics(true);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -199,7 +227,7 @@ export default function Sidebar({ open, setOpen, role }) {
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
-        {/* ===== USER PROFILE HEADER ===== */}
+      
         <div
           className={`flex-shrink-0 border-b border-gray-100/80 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"
@@ -236,7 +264,7 @@ export default function Sidebar({ open, setOpen, role }) {
           )}
         </div>
 
-        {/* ===== NAVIGATION ===== */}
+   
         <nav
           className={`flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent ${
             open ? "px-3" : "px-0"
@@ -248,7 +276,7 @@ export default function Sidebar({ open, setOpen, role }) {
             </p>
           )}
 
-          {filteredLinks.map((link) => {
+          {dashboardLinks.map((link) => {
             const linkActive = isActive(link.href);
             return (
               <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
@@ -283,74 +311,118 @@ export default function Sidebar({ open, setOpen, role }) {
             );
           })}
 
-          {/* ===== REPORTS SECTION ===== */}
-          {userAllowedPages.includes("gad-ars") && (
+      
+          {userAllowedPages.includes("gad-projects") && (
             <>
               {open ? (
-                <div className="pt-2">
+                <div>
                   <button
-                    onClick={() => setShowReports((prev) => !prev)}
-                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full ${
-                      showReports ||
-                      pathname?.startsWith("/gad-ars") ||
-                      pathname?.startsWith("/reports")
+                    onClick={() =>
+                      setShowProjectMonitoring((prev) => !prev)
+                    }
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
+                      showProjectMonitoring ||
+                      pathname?.startsWith("/project-monitoring") ||
+                      pathname?.startsWith("/events-list")
                         ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                    }`}
                   >
-                    <FaFileAlt size={16} className="flex-shrink-0" />
+                    <FaChartLine size={16} className="flex-shrink-0" />
                     <span className="text-sm font-medium truncate flex-1 text-left">
-                      Reports
+                      Project Monitoring
                     </span>
                     <span
                       className={`text-xs transition-transform ${
-                        showReports ? "rotate-180" : ""
+                        showProjectMonitoring ? "rotate-180" : ""
                       }`}
                     >
                       ▼
                     </span>
                   </button>
 
-                  {showReports && (
+                  {showProjectMonitoring && (
                     <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-3">
-                      <TooltipWrapper label="GAD AR" collapsed={!open}>
+                      <TooltipWrapper
+                        label="GAD Projects/Activities"
+                        collapsed={!open}
+                      >
                         <Link
-                          href="/gad-ars"
+                          href="/project-monitoring/gad-projects"
                           onClick={handleMobileClose}
-                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
-                            pathname?.startsWith("/gad-ars")
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                            pathname?.startsWith(
+                              "/project-monitoring/gad-projects",
+                            )
                               ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                          }`}
                         >
-                          <FaFileAlt size={14} className="flex-shrink-0 opacity-60" />
+                          <FaClipboardList
+                            size={14}
+                            className="flex-shrink-0 opacity-60"
+                          />
                           <span className="text-sm font-medium truncate">
-                            GAD Accomplishment Report
+                            GAD Projects/Activities
                           </span>
-                          {pathname?.startsWith("/gad-ars") && (
+                          {pathname?.startsWith(
+                            "/project-monitoring/gad-projects",
+                          ) && (
                             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
                           )}
                         </Link>
                       </TooltipWrapper>
 
-                      <TooltipWrapper label="Sex-Disaggregated Data" collapsed={!open}>
+                      <TooltipWrapper
+                        label="Event Management"
+                        collapsed={!open}
+                      >
                         <Link
-                          href="/reports/sex-disaggregated-data"
+                          href="/events-list"
                           onClick={handleMobileClose}
-                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                            pathname?.startsWith("/events-list")
+                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <FaCalendarAlt
+                            size={14}
+                            className="flex-shrink-0 opacity-60"
+                          />
+                          <span className="text-sm font-medium truncate">
+                            Event Management
+                          </span>
+                          {pathname?.startsWith("/events-list") && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                          )}
+                        </Link>
+                      </TooltipWrapper>
+
+                      <TooltipWrapper
+                        label="Event Calendar"
+                        collapsed={!open}
+                      >
+                        <Link
+                          href="/project-monitoring/event-calendar"
+                          onClick={handleMobileClose}
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
                             pathname?.startsWith(
-                              "/reports/sex-disaggregated-data",
+                              "/project-monitoring/event-calendar",
                             )
                               ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                          }`}
                         >
-                          <FaVenusMars size={14} className="flex-shrink-0 opacity-60" />
+                          <FaCalendarDay
+                            size={14}
+                            className="flex-shrink-0 opacity-60"
+                          />
                           <span className="text-sm font-medium truncate">
-                            Sex-Disaggregated Data
+                            Event Calendar
                           </span>
                           {pathname?.startsWith(
-                            "/reports/sex-disaggregated-data",
+                            "/project-monitoring/event-calendar",
                           ) && (
                             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
                           )}
@@ -360,25 +432,194 @@ export default function Sidebar({ open, setOpen, role }) {
                   )}
                 </div>
               ) : (
-                <TooltipWrapper label="Reports" collapsed={!open}>
+                <TooltipWrapper label="Project Monitoring" collapsed={!open}>
                   <Link
-                    href="/gad-ars"
+                    href="/project-monitoring/gad-projects"
                     onClick={handleMobileClose}
-                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
-                      pathname?.startsWith("/gad-ars")
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-3 justify-center mx-1.5 ${
+                      pathname?.startsWith("/project-monitoring") ||
+                      pathname?.startsWith("/events-list")
                         ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    } ${open ? "p-2.5" : "p-3 justify-center mx-1.5"}`}
+                    }`}
                   >
-                    <FaFileAlt size={16} className="flex-shrink-0" />
+                    <FaChartLine size={16} className="flex-shrink-0" />
                   </Link>
                 </TooltipWrapper>
               )}
             </>
           )}
+
+          {userAllowedPages.includes("gender-statistics") && (
+            <>
+              {open ? (
+                <div>
+                  <button
+                    onClick={() =>
+                      setShowGenderStatistics((prev) => !prev)
+                    }
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
+                      showGenderStatistics ||
+                      pathname?.startsWith("/gender-statistics")
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <FaVenusMars size={16} className="flex-shrink-0" />
+                    <span className="text-sm font-medium truncate flex-1 text-left">
+                      Gender Statistics
+                    </span>
+                    <span
+                      className={`text-xs transition-transform ${
+                        showGenderStatistics ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+
+                  {showGenderStatistics && (
+                    <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-3">
+                      <TooltipWrapper label="Students" collapsed={!open}>
+                        <Link
+                          href="/gender-statistics/students"
+                          onClick={handleMobileClose}
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                            pathname?.startsWith(
+                              "/gender-statistics/students",
+                            )
+                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <FaUserGraduate
+                            size={14}
+                            className="flex-shrink-0 opacity-60"
+                          />
+                          <span className="text-sm font-medium truncate">
+                            Students
+                          </span>
+                          {pathname?.startsWith(
+                            "/gender-statistics/students",
+                          ) && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                          )}
+                        </Link>
+                      </TooltipWrapper>
+
+                      <TooltipWrapper label="Employees" collapsed={!open}>
+                        <Link
+                          href="/gender-statistics/employees"
+                          onClick={handleMobileClose}
+                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                            pathname?.startsWith(
+                              "/gender-statistics/employees",
+                            )
+                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <FaUserTie
+                            size={14}
+                            className="flex-shrink-0 opacity-60"
+                          />
+                          <span className="text-sm font-medium truncate">
+                            Employees
+                          </span>
+                          {pathname?.startsWith(
+                            "/gender-statistics/employees",
+                          ) && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                          )}
+                        </Link>
+                      </TooltipWrapper>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <TooltipWrapper label="Gender Statistics" collapsed={!open}>
+                  <Link
+                    href="/gender-statistics/students"
+                    onClick={handleMobileClose}
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-3 justify-center mx-1.5 ${
+                      pathname?.startsWith("/gender-statistics")
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <FaVenusMars size={16} className="flex-shrink-0" />
+                  </Link>
+                </TooltipWrapper>
+              )}
+            </>
+          )}
+
+          {mainLinks.map((link) => {
+            const linkActive = isActive(link.href);
+            return (
+              <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
+                <Link
+                  href={link.href}
+                  onClick={handleMobileClose}
+                  className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                    open ? "p-2.5" : "p-3 justify-center mx-1.5"
+                  } ${
+                    linkActive
+                      ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <span
+                    className={`flex-shrink-0 transition-transform duration-200 ${
+                      linkActive ? "scale-110" : "group-hover:scale-110"
+                    }`}
+                  >
+                    {link.icon}
+                  </span>
+                  {open && (
+                    <span className="text-sm font-medium truncate">
+                      {link.name}
+                    </span>
+                  )}
+                  {linkActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                  )}
+                </Link>
+              </TooltipWrapper>
+            );
+          })}
+
+          {userAllowedPages.includes("gad-ars") && (
+            <TooltipWrapper label="Reports" collapsed={!open}>
+              <Link
+                href="/reports"
+                onClick={handleMobileClose}
+                className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                  open ? "p-2.5" : "p-3 justify-center mx-1.5"
+                } ${
+                  reportsActive
+                    ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <span
+                  className={`flex-shrink-0 transition-transform duration-200 ${
+                    reportsActive ? "scale-110" : "group-hover:scale-110"
+                  }`}
+                >
+                  <FaFileAlt size={16} />
+                </span>
+                {open && (
+                  <span className="text-sm font-medium truncate">Reports</span>
+                )}
+                {reportsActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                )}
+              </Link>
+            </TooltipWrapper>
+          )}
         </nav>
 
-        {/* ===== BOTTOM ACTIONS ===== */}
         <div
           className={`flex-shrink-0 border-t border-gray-100/80 py-2 ${
             open ? "px-3" : "px-0"
@@ -422,7 +663,6 @@ export default function Sidebar({ open, setOpen, role }) {
         </div>
       </aside>
 
-      {/* ===== LOGOUT MODAL ===== */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 space-y-6 text-center animate-slide-up">

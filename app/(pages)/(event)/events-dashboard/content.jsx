@@ -208,14 +208,21 @@ export default function EventsDashboardContent() {
     const now = new Date();
     return events
       .filter((e) => {
-        if (e.status !== "active" || !e.start_dates?.length) return false;
-        // Check if the last end date is still in the future (or today)
-        const lastEndDate = e.end_dates?.length
-          ? new Date(e.end_dates[e.end_dates.length - 1])
-          : new Date(e.start_dates[e.start_dates.length - 1]);
+        if (e.status !== "active") return false;
+        const firstStart = e.start_date || (e.start_dates || [])[0];
+        if (!firstStart) return false;
+        const lastEndDate = e.end_date
+          ? new Date(e.end_date)
+          : e.end_dates?.length
+            ? new Date(e.end_dates[e.end_dates.length - 1])
+            : new Date(firstStart);
         return lastEndDate >= now;
       })
-      .sort((a, b) => new Date(a.start_dates[0]) - new Date(b.start_dates[0]))
+      .sort(
+        (a, b) =>
+          new Date(a.start_date || a.start_dates?.[0]) -
+          new Date(b.start_date || b.start_dates?.[0]),
+      )
       .slice(0, 5);
   }, [events]);
 
@@ -582,8 +589,10 @@ export default function EventsDashboardContent() {
             ) : (
               <div className="space-y-2">
                 {upcomingEvents.map((event, idx) => {
-                  const startDate = event.start_dates?.[0]
-                    ? new Date(event.start_dates[0]).toLocaleDateString(
+                  const eventStartDate =
+                    event.start_date || event.start_dates?.[0];
+                  const startDate = eventStartDate
+                    ? new Date(eventStartDate).toLocaleDateString(
                         "en-US",
                         {
                           month: "short",
@@ -608,20 +617,19 @@ export default function EventsDashboardContent() {
                       {/* Date badge */}
                       <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex flex-col items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-blue-700 leading-none">
-                          {event.start_dates?.[0]
-                            ? new Date(event.start_dates[0])
+                          {eventStartDate
+                            ? new Date(eventStartDate)
                                 .toLocaleDateString("en-US", { month: "short" })
                                 .charAt(0)
                             : "—"}
                         </span>
                         <span className="text-lg font-bold text-blue-700 leading-tight">
-                          {event.start_dates?.[0]
-                            ? new Date(event.start_dates[0]).getDate()
+                          {eventStartDate
+                            ? new Date(eventStartDate).getDate()
                             : "—"}
                         </span>
                       </div>
 
-                      {/* Event info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                           {event.title}

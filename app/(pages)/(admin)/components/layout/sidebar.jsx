@@ -11,6 +11,7 @@ import {
   FaFolder,
   FaHistory,
   FaDatabase,
+  FaCloudUploadAlt,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -46,8 +47,9 @@ export default function Sidebar({ open, setOpen, role }) {
   const ROLE_ACCESS = {
     admin: [
       "admin-dashboard",
+      "integration",
+      "manual-upload",
       "activity-logs",
-      "integration-staging",
       "user-list",
       "students",
       "employees",
@@ -63,16 +65,22 @@ export default function Sidebar({ open, setOpen, role }) {
       key: "admin-dashboard",
     },
     {
+      name: "Data Integration",
+      href: "/integration",
+      icon: <FaDatabase size={16} />,
+      key: "integration",
+    },
+    {
+      name: "Manual Upload",
+      href: "/manual-upload",
+      icon: <FaCloudUploadAlt size={16} />,
+      key: "manual-upload",
+    },
+    {
       name: "Activity Logs",
       href: "/activity-logs",
       icon: <FaHistory size={16} />,
       key: "activity-logs",
-    },
-    {
-      name: "Integration",
-      href: "/integration-staging",
-      icon: <FaDatabase size={16} />,
-      key: "integration-staging",
     },
     {
       name: "GPB",
