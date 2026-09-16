@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toOfficeArray } from "@/lib/colleges";
 
 export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
   const [signatories, setSignatories] = useState({
@@ -266,7 +267,7 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
 
     ${rowIdx === 0 ? `<td rowspan="${maxRows}">${gadBudgetFormatted}</td>` : ""}
     ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.source_budget || ""}</td>` : ""}
-    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${project.responsible_office || ""}</td>` : ""}
+    ${rowIdx === 0 ? `<td rowspan="${maxRows}">${toOfficeArray(project.responsible_office).join(", ")}</td>` : ""}
   </tr>`,
                 )
                 .join("");

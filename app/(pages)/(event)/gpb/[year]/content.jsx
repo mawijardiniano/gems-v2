@@ -20,6 +20,8 @@ import { FaScaleBalanced } from "react-icons/fa6";
 import axios from "axios";
 import PrintGPB from "../../components/Print/PrintGPB";
 import { findDuplicates } from "@/lib/duplicateDetection";
+import OfficeMultiSelect from "../../components/OfficeMultiSelect";
+import { toOfficeArray } from "@/lib/colleges";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -407,14 +409,14 @@ function isStep3Valid(p) {
       isNonEmptyArrayFilled(p.gad_activity) &&
       Number(p.gad_budget) > 0 &&
       p.source_budget.trim() !== "" &&
-      p.responsible_office.trim() !== ""
+      isNonEmptyArrayFilled(p.responsible_office)
     );
   }
   return (
     isNonEmptyArrayFilled(p.gad_activity) &&
     Number(p.gad_budget) > 0 &&
     p.source_budget.trim() !== "" &&
-    p.responsible_office.trim() !== "" &&
+    isNonEmptyArrayFilled(p.responsible_office) &&
     indicatorsValid(p.performance_indicator_target)
   );
 }
@@ -427,7 +429,7 @@ function isEditRowValid(row) {
       isNonEmptyArrayFilled(row.gad_activity) &&
       Number(row.gad_budget) > 0 &&
       row.source_budget?.trim() &&
-      row.responsible_office?.trim()
+      isNonEmptyArrayFilled(row.responsible_office)
     );
   }
   return (
@@ -439,7 +441,7 @@ function isEditRowValid(row) {
     isNonEmptyArrayFilled(row.gad_activity) &&
     Number(row.gad_budget) > 0 &&
     row.source_budget?.trim() &&
-    row.responsible_office?.trim() &&
+    isNonEmptyArrayFilled(row.responsible_office) &&
     indicatorsValid(row.performance_indicator_target)
   );
 }
@@ -582,7 +584,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     performance_indicator_target: [emptyIndicator()],
     gad_budget: "",
     source_budget: "",
-    responsible_office: "",
+    responsible_office: [],
   });
 
   const [newProject, setNewProject] = useState(emptyNewProject());
@@ -748,7 +750,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           [],
         gad_budget: p.gad_budget?.value ?? p.gad_budget,
         source_budget: p.source_budget?.value ?? p.source_budget,
-        responsible_office: p.responsible_office?.value ?? p.responsible_office,
+        responsible_office: toOfficeArray(
+          p.responsible_office?.value ?? p.responsible_office,
+        ),
         comments: Array.isArray(p.comments) ? p.comments : [],
       }));
 
@@ -861,6 +865,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const startEdit = (project) => {
     setEditRow({
       ...project,
+      responsible_office: toOfficeArray(project.responsible_office),
       performance_indicator_target: (
         project.performance_indicator_target || [""]
       ).map((p) => (typeof p === "string" ? parsePerformanceIndicator(p) : p)),
@@ -907,6 +912,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
   const handleAddProject = async (e) => {
     e.preventDefault();
+    if (!isNonEmptyArrayFilled(newProject.responsible_office)) {
+      setAddError("Please select at least one responsible unit/office.");
+      return;
+    }
     setAddLoading(true);
     setAddError("");
     setAddWarning("");
@@ -999,6 +1008,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
   const saveEdit = async () => {
     if (!editRow) return;
+
+    if (!isNonEmptyArrayFilled(editRow.responsible_office)) {
+      setEditError("Please select at least one responsible unit/office.");
+      return;
+    }
 
     setEditLoading(true);
     setEditError("");
@@ -1866,6 +1880,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
             </button>
             <h3 className="text-xl font-bold mb-4">Delete Project</h3>
             <p>Are you sure you want to delete this project?</p>
+            <p className="mt-2 text-sm text-red-600">
+              This also permanently deletes the events linked to this project
+              (including their posters and accomplishment reports) and the
+              uploaded evidence files. This cannot be undone.
+            </p>
             <div className="flex justify-end gap-2 mt-6">
               <button
                 className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
@@ -2322,15 +2341,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Responsible Unit/Office{" "}
                       <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                      rows={2}
-                      value={editRow.responsible_office || ""}
-                      onChange={(e) =>
-                        handleEditRowChange(
-                          "responsible_office",
-                          e.target.value,
-                        )
+                    <OfficeMultiSelect
+                      value={editRow.responsible_office}
+                      onChange={(next) =>
+                        handleEditRowChange("responsible_office", next)
                       }
                     />
                   </div>
@@ -2766,15 +2780,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     Responsible Unit/Office{" "}
                     <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={2}
+                  <OfficeMultiSelect
                     value={newProject.responsible_office}
-                    onChange={(e) =>
-                      handleNewProjectChange(
-                        "responsible_office",
-                        e.target.value,
-                      )
+                    onChange={(next) =>
+                      handleNewProjectChange("responsible_office", next)
                     }
                   />
                 </div>
@@ -2883,7 +2892,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Responsible Office:
                     </span>
                     <p className="mt-0.5 text-gray-800">
-                      {newProject.responsible_office || "—"}
+                      {toOfficeArray(newProject.responsible_office).join(", ") ||
+                        "—"}
                     </p>
                   </div>
                 </div>
@@ -3339,16 +3349,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                             />
                           </td>
                           <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-10 border rounded px-2 py-1"
+                            <OfficeMultiSelect
+                              variant="popover"
                               value={newProject.responsible_office}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "responsible_office",
-                                  e.target.value,
-                                )
+                              onChange={(next) =>
+                                handleNewProjectChange("responsible_office", next)
                               }
-                              required
                             />
                           </td>
                           <td className="py-2 px-4 border-b text-center">—</td>
@@ -4140,16 +4146,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={editMaxRows}
                                       >
-                                        <textarea
-                                          className="w-40 border rounded px-2 py-1"
+                                        <OfficeMultiSelect
+                                          variant="popover"
                                           value={editRow.responsible_office}
-                                          onChange={(e) =>
+                                          onChange={(next) =>
                                             handleEditRowChange(
                                               "responsible_office",
-                                              e.target.value,
+                                              next,
                                             )
                                           }
-                                          required
                                         />
                                       </td>
                                     ) : (
@@ -4157,7 +4162,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
                                       >
-                                        {project.responsible_office}
+                                        {toOfficeArray(
+                                          project.responsible_office,
+                                        ).join(", ")}
                                       </td>
                                     )}
                                     {rowIdx === 0 && (

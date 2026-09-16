@@ -4,11 +4,10 @@ import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
-import { deleteFileFromBucket } from "@/lib/delete";
-import AccomplishmentReport from "@/models/accomplishment_report";
 import mongoose from "mongoose";
 import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
+import { deleteEventCascade } from "@/lib/eventCascade";
 import { USER_POPULATE_BASE } from "@/lib/userPopulate";
 
 const EDITABLE_FIELDS = [
@@ -240,42 +239,7 @@ export async function DELETE(req, { params }) {
   }
 
   try {
-    if (event.event_poster?.key) {
-      await deleteFileFromBucket(event.event_poster.key);
-    }
-
-    const report = await AccomplishmentReport.findOne({ event_id: id });
-
-    if (report) {
-      const filesToDelete = [];
-
-      if (report.office_memorandum?.key)
-        filesToDelete.push(report.office_memorandum.key);
-      if (report.activity_design?.key)
-        filesToDelete.push(report.activity_design.key);
-      if (report.attendance_sheet?.key)
-        filesToDelete.push(report.attendance_sheet.key);
-
-      if (Array.isArray(report.photos)) {
-        report.photos.forEach((p) => p?.key && filesToDelete.push(p.key));
-      }
-
-      if (Array.isArray(report.other_attachments)) {
-        report.other_attachments.forEach(
-          (p) => p?.key && filesToDelete.push(p.key),
-        );
-      }
-
-      for (const key of filesToDelete) {
-        await deleteFileFromBucket(key);
-      }
-
-      await AccomplishmentReport.deleteOne({ event_id: id });
-    }
-
-    await Project.updateMany({ events: id }, { $pull: { events: id } });
-
-    await Event.deleteOne({ _id: id });
+    const { title } = await deleteEventCascade(event);
 
     // Event deleted - invalidate cached event lists.
     cacheDelPrefix("events:list:");
@@ -283,7 +247,7 @@ export async function DELETE(req, { params }) {
     await logActivity({
       user_id: user._id,
       action: "EVENT_DELETE",
-      description: `Deleted event: ${event.title}`,
+      description: `Deleted event: ${title || event.title}`,
       req,
       metadata: { event_id: event._id },
     });

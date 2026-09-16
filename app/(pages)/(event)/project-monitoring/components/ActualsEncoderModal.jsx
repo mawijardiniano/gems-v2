@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 import {
   FaPaperclip,
@@ -9,7 +9,13 @@ import {
   FaTrash,
   FaDownload,
   FaExclamationTriangle,
+  FaRedo,
 } from "react-icons/fa";
+import {
+  generateAccomplishmentSummary,
+  normalizeAccomplishmentLines,
+  shouldUseAccomplishmentOverride,
+} from "@/lib/accomplishmentSummary";
 
 const ACCEPTED_EVIDENCE_TYPES = [
   "application/pdf",
@@ -32,34 +38,13 @@ const fmtPeso = (n) =>
     maximumFractionDigits: 2,
   })}`;
 
+/**
+ * Suggested accomplishment text built from the events linked to the project.
+ * Kept as a named export for backwards compatibility — the logic itself lives in
+ * `@/lib/accomplishmentSummary` so every surface derives the same string.
+ */
 export function generateSuggestedActual(project) {
-  const events = Array.isArray(project?.events) ? project.events : [];
-  const linkedEvents = events.filter((ev) => ev && ev.status !== "cancelled");
-  if (linkedEvents.length === 0) return "";
-
-  let totalAttended = 0;
-  let femaleCount = 0;
-  let maleCount = 0;
-
-  linkedEvents.forEach((ev) => {
-    const attended = Array.isArray(ev.attended_users) ? ev.attended_users : [];
-    totalAttended += attended.length;
-    attended.forEach((att) => {
-      const userObj = att?.user_id || att;
-      if (!userObj || typeof userObj !== "object") return;
-      const sex = (userObj?.personal_info_id?.gadData?.sexAtBirth || "").toLowerCase();
-      if (sex === "female") femaleCount++;
-      else if (sex === "male") maleCount++;
-    });
-  });
-
-  if (totalAttended === 0) return "";
-
-  const eventTitles = linkedEvents.map((ev) => ev?.title).filter(Boolean);
-  const eventCount = linkedEvents.length;
-  const titlePart = eventTitles.length > 0 ? ` — '${eventTitles.join("', '")}'` : "";
-
-  return `${eventCount} event${eventCount !== 1 ? "s" : ""} conducted${titlePart} with ${totalAttended} participant${totalAttended !== 1 ? "s" : ""} (${femaleCount} Female, ${maleCount} Male)`;
+  return generateAccomplishmentSummary(project);
 }
 
 const getEvidenceDownloadUrl = (file) => {
@@ -73,6 +58,8 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
   const fileLifecycle = useFileLifecycle();
 
   const [actual, setActual] = useState("");
+  const [isOverride, setIsOverride] = useState(false);
+  const [suggested, setSuggested] = useState("");
   const [expenditures, setExpenditures] = useState("");
   const [evidence, setEvidence] = useState([]);
   const [evidenceUploading, setEvidenceUploading] = useState(false);
@@ -81,15 +68,22 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
 
   useEffect(() => {
     if (!project) return;
-    const existingActual = Array.isArray(project.actual_accomplishment)
-      ? project.actual_accomplishment.map((l) =>
-          String(l).replace(/\s*\[ref:[^\]]+\]\s*/g, " ").trim(),
-        )
-      : typeof project.actual_accomplishment === "string"
-        ? [project.actual_accomplishment]
-        : [];
-    const existing = existingActual.filter(Boolean).join("\n");
-    setActual(existing || generateSuggestedActual(project));
+    const storedLines = normalizeAccomplishmentLines(
+      project.actual_accomplishment,
+    );
+    const generated =
+      generateAccomplishmentSummary(project) ||
+      project.generated_accomplishment ||
+      "";
+    /* Legacy hand-written text on a project without linked events is kept as a
+       manual override so saving the modal never wipes it. */
+    const override = shouldUseAccomplishmentOverride(project, generated);
+
+    setSuggested(generated);
+    setIsOverride(override);
+    setActual(
+      override ? storedLines.join("\n") : generated || storedLines.join("\n"),
+    );
     setExpenditures(project.actual_expenditures || "");
     const evidenceList = Array.isArray(project.expenditure_evidence)
       ? project.expenditure_evidence
@@ -169,6 +163,12 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
     onClose();
   };
 
+  /** Drops the manual text and goes back to the value derived from linked events. */
+  const resetToGenerated = () => {
+    setActual(suggested);
+    setIsOverride(false);
+  };
+
   const saveActuals = async () => {
     if (!project) return;
     if (spent > 0 && evidence.length === 0) {
@@ -185,10 +185,15 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          actual_accomplishment: actual
-            .split("\n")
-            .map((l) => l.trim())
-            .filter(Boolean),
+          /* Only custom text is stored; auto mode clears the snapshot so the value
+             keeps deriving live from the project's linked events. */
+          actual_accomplishment: isOverride
+            ? actual
+                .split("\n")
+                .map((l) => l.trim())
+                .filter(Boolean)
+            : [],
+          actual_accomplishment_override: isOverride,
           actual_expenditures: spent,
           expenditure_evidence: evidence,
         }),
@@ -238,7 +243,11 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
             </div>
           )}
 
-          {/* Planned vs actual summary */}
+          {/* Budget Utilization — planned vs actual, expenditure and evidence */}
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            Budget Utilization
+          </p>
+
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
@@ -302,22 +311,6 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
               </div>
             </div>
           )}
-
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
-              Actual Accomplishment{" "}
-              <span className="text-gray-400 normal-case">
-                (pre-filled from conducted events — edit as needed)
-              </span>
-            </label>
-            <textarea
-              rows={5}
-              value={actual}
-              onChange={(e) => setActual(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
-              placeholder="Actual accomplishments for this project…"
-            />
-          </div>
 
           {/* Expenditures */}
           <div>
@@ -397,6 +390,59 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          {/* Actual Accomplishment — auto-generated from linked events unless overridden */}
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5 space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="text-xs font-medium text-gray-600">
+                Actual Accomplishment{" "}
+                <span className="text-gray-400 normal-case">
+                  (
+                  {isOverride
+                    ? "custom text saved"
+                    : "auto-generated from linked events"}
+                  )
+                </span>
+              </label>
+              {isOverride ? (
+                <button
+                  type="button"
+                  onClick={resetToGenerated}
+                  disabled={!suggested}
+                  title={
+                    suggested
+                      ? "Replace the custom text with the auto-generated summary"
+                      : "No linked events to generate from yet"
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaRedo size={9} />
+                  Reset to auto-generated
+                </button>
+              ) : (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                  Auto
+                </span>
+              )}
+            </div>
+            <textarea
+              rows={4}
+              value={actual}
+              onChange={(e) => {
+                setActual(e.target.value);
+                /* Any edit becomes the project owner's custom version. */
+                setIsOverride(true);
+              }}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+              placeholder="Actual accomplishments for this project…"
+            />
+            {!isOverride && (
+              <p className="text-[11px] text-gray-400">
+                Updates automatically whenever a linked event is added, edited or
+                cancelled. Type in the box to keep a custom version instead.
+              </p>
             )}
           </div>
         </div>

@@ -48,6 +48,30 @@ const fileMetaSchema = new Schema(
   { _id: false },
 );
 
+const MilestoneSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    target_date: {
+      type: Date,
+      default: null,
+    },
+    actual_date: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "ongoing", "completed"],
+      default: "pending",
+    },
+  },
+  { timestamps: true },
+);
+
 const ProjectSchema = new Schema({
   year: { type: Number, required: true },
   project_type: FieldSchema(String),
@@ -60,12 +84,35 @@ const ProjectSchema = new Schema({
   performance_indicator_target: FieldSchema([String]),
   gad_budget: FieldSchema(Number),
   source_budget: FieldSchema(String),
-  responsible_office: FieldSchema(String),
+  responsible_office: FieldSchema([String]),
 
+  start_date: {
+    type: Date,
+    default: null,
+  },
+  end_date: {
+    type: Date,
+    default: null,
+  },
+  project_status: {
+    type: String,
+    enum: ["for-review", "ongoing", "completed"],
+    default: "for-review",
+  },
+
+  milestones: {
+    type: [MilestoneSchema],
+    default: [],
+  },
 
   actual_accomplishment: {
     type: [String],
     default: [],
+  },
+  /* When true, `actual_accomplishment` is manual text; otherwise it is derived live from `events`. */
+  actual_accomplishment_override: {
+    type: Boolean,
+    default: false,
   },
   actual_expenditures: {
     type: Number,

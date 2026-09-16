@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
-import { rollupEventActuals } from "@/lib/actualsRollup";
 
 export async function POST(req) {
   try {
@@ -52,12 +51,6 @@ export async function POST(req) {
       submitted_by: user._id,
       status: "submitted",
     });
-
-    try {
-      await rollupEventActuals(event._id);
-    } catch (rollupErr) {
-      console.error("Actuals rollup failed:", rollupErr);
-    }
 
     await logActivity({
       req,

@@ -6,6 +6,10 @@ import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
+import {
+  normalizeAccomplishmentLines,
+  usesAccomplishmentOverride,
+} from "@/lib/accomplishmentSummary";
 
 const CACHE_TTL = 60 * 1000;
 
@@ -38,16 +42,34 @@ export async function GET(req) {
       `report-readiness:${year}`,
       async () => {
         const projects = await Project.find({ year }).lean();
+        const projectIds = projects.map((p) => p._id);
+
+        /* Active (non-cancelled) linked events make a project "accomplished" automatically,
+           since the accomplishment text is derived live from those events. */
+        const activeEventCounts = await Event.aggregate([
+          {
+            $match: {
+              project: { $in: projectIds },
+              status: { $ne: "cancelled" },
+            },
+          },
+          { $group: { _id: "$project", count: { $sum: 1 } } },
+        ]);
+        const activeEventMap = new Map(
+          activeEventCounts.map((row) => [String(row._id), row.count]),
+        );
 
         const missingAccomplishments = [];
         const missingEvidence = [];
 
         projects.forEach((p) => {
           const label = projectLabel(p);
-          const accomplishment = Array.isArray(p.actual_accomplishment)
-            ? p.actual_accomplishment.filter(Boolean)
-            : [];
-          if (accomplishment.length === 0) {
+          const hasEvents = (activeEventMap.get(String(p._id)) || 0) > 0;
+          const hasCustomText =
+            usesAccomplishmentOverride(p) &&
+            normalizeAccomplishmentLines(p.actual_accomplishment).length > 0;
+
+          if (!hasEvents && !hasCustomText) {
             missingAccomplishments.push({ id: p._id, label });
           }
           if (
@@ -59,7 +81,6 @@ export async function GET(req) {
           }
         });
 
-        const projectIds = projects.map((p) => p._id);
         const completedEvents = await Event.find(
           { project: { $in: projectIds }, status: "completed" },
           { title: 1, project: 1 },

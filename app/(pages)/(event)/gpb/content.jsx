@@ -413,7 +413,11 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                             <div className="absolute right-0 top-10 z-50 w-44 bg-white border border-gray-200 rounded-xl shadow-xl py-1">
                               {deleteConfirmId === item._id ? (
                                 <div className="px-3 py-2 space-y-2">
-                                  <p className="text-xs text-gray-600">Delete this GPB and all its projects?</p>
+                                  <p className="text-xs text-gray-600">
+                                    Delete this GPB? Projects and monitoring
+                                    data are kept and will re-link if you
+                                    recreate this GPB.
+                                  </p>
                                   <div className="flex gap-2">
                                     <button
                                       onClick={(e) => {

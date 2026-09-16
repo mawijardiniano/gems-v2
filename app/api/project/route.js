@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import Project from "@/models/projects";
 import "@/models/event";
+import "@/models/profile";
 import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
 import UserAuth from "@/models/user";
@@ -8,10 +9,16 @@ import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
 import {
+  PROJECT_EVENTS_POPULATE,
+  withGeneratedAccomplishment,
+} from "@/lib/accomplishmentSummary";
+import {
   NO_BUDGET_WARNING,
   OVER_BUDGET_WARNING,
   buildBudgetSummary,
 } from "@/lib/budgetLinking";
+import { deleteFileFromBucket } from "@/lib/delete";
+import { deleteEventCascade } from "@/lib/eventCascade";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -19,8 +26,10 @@ export async function GET(req) {
   if (error) return NextResponse.json({ error }, { status });
 
   await connectDB();
-  const projects = await Project.find().populate("events");
-  return Response.json({ data: projects });
+  /* Events are deep-populated so the actual accomplishment can be derived live
+     from linked events + attendance instead of a stale saved snapshot. */
+  const projects = await Project.find().populate(PROJECT_EVENTS_POPULATE);
+  return Response.json({ data: projects.map(withGeneratedAccomplishment) });
 }
 
 export async function POST(req) {
@@ -116,7 +125,9 @@ export async function POST(req) {
     },
 
     responsible_office: {
-      value: body.responsible_office || "",
+      value: Array.isArray(body.responsible_office)
+        ? body.responsible_office.filter(Boolean)
+        : [body.responsible_office || ""].filter(Boolean),
     },
 
     createdBy: actorId,
@@ -187,9 +198,38 @@ export async function DELETE(req) {
 
   await connectDB();
 
+  /* Capture the linked events and evidence keys before wiping the projects so
+     the bulk delete does not leave orphaned events in the calendar or orphaned
+     files in the bucket. */
+  const doomed = await Project.find({}).select("events expenditure_evidence");
+  const eventIds = doomed.flatMap((p) =>
+    Array.isArray(p.events) ? p.events : [],
+  );
+  const evidenceKeys = doomed.flatMap((p) =>
+    (Array.isArray(p.expenditure_evidence) ? p.expenditure_evidence : [])
+      .map((file) => file?.key)
+      .filter(Boolean),
+  );
+
   await GPB.updateMany({}, { $set: { projects: [] } });
 
   const result = await Project.deleteMany({});
+
+  let deletedEvents = 0;
+  for (const eventId of eventIds) {
+    const cascade = await deleteEventCascade(eventId);
+    if (cascade.deleted) deletedEvents += 1;
+  }
+
+  let deletedEvidenceFiles = 0;
+  for (const key of evidenceKeys) {
+    try {
+      await deleteFileFromBucket(key);
+      deletedEvidenceFiles += 1;
+    } catch (err) {
+      console.error(`Failed to delete evidence file ${key}:`, err);
+    }
+  }
 
   await logActivity({
     req,
@@ -197,11 +237,13 @@ export async function DELETE(req) {
     description: `All GPB projects deleted (${result.deletedCount})`,
     resource_type: "project",
     severity: "critical",
-    metadata: { deletedCount: result.deletedCount },
+    metadata: { deletedCount: result.deletedCount, deletedEvents, deletedEvidenceFiles },
   });
 
   return Response.json({
     message: "All projects deleted successfully",
     deletedCount: result.deletedCount,
+    deletedEvents,
+    deletedEvidenceFiles,
   });
 }

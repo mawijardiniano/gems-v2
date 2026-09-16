@@ -3,8 +3,14 @@ import { connectDB } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet } from "@/lib/cache";
 import Project from "@/models/projects";
+import "@/models/event";
+import "@/models/profile";
 import GPB from "@/models/gpb";
 import UniversityOfficial from "@/models/universityOfficials";
+import {
+  PROJECT_EVENTS_POPULATE,
+  resolveAccomplishmentText,
+} from "@/lib/accomplishmentSummary";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -102,7 +108,9 @@ export async function GET(req) {
     const result = await cacheOrSet(
       `gad-ar-report:${year}`,
       async () => {
-        const projects = await Project.find({ year }).lean();
+        const projects = await Project.find({ year })
+          .populate(PROJECT_EVENTS_POPULATE)
+          .lean();
         if (!projects || projects.length === 0) {
           return {
             __empty: true,
@@ -295,13 +303,8 @@ export async function GET(req) {
           }
 
           const isAttributedProgram = typeLabel === "Attributed Program";
-          const accomplishment = Array.isArray(project.actual_accomplishment)
-            ? project.actual_accomplishment.filter(Boolean)
-            : [];
-          const actualText =
-            typeof project.actual_accomplishment === "string"
-              ? project.actual_accomplishment
-              : accomplishment[0] || "";
+          /* Derived from linked events unless the owner saved a manual override. */
+          const actualText = resolveAccomplishmentText(project);
 
           body.push([
             String(index + 1),
@@ -316,7 +319,7 @@ export async function GET(req) {
             project.actual_expenditures
               ? peso(project.actual_expenditures)
               : "",
-            String(fieldValue(project.responsible_office) || ""),
+            fieldList(project.responsible_office).join("\n"),
           ]);
         });
 

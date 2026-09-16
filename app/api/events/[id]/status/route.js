@@ -4,7 +4,6 @@ import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
-import { rollupEventActuals } from "@/lib/actualsRollup";
 import { cacheDelPrefix } from "@/lib/cache";
 
 export async function PATCH(req, context) {
@@ -59,14 +58,6 @@ export async function PATCH(req, context) {
 
     await event.save();
     cacheDelPrefix("events:list:");
-
-    if (status === "completed" && event.project) {
-      try {
-        await rollupEventActuals(event._id);
-      } catch (rollupErr) {
-        console.error("Actuals rollup failed:", rollupErr);
-      }
-    }
 
     await logActivity({
       user_id: userId,

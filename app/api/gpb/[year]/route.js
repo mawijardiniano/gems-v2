@@ -9,6 +9,7 @@ import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
  import { requireAuth } from "@/lib/auth";
 import { validateBudgetLink } from "@/lib/budgetLinking";
+import { withGeneratedAccomplishment } from "@/lib/accomplishmentSummary";
 import {NextResponse} from "next/server"
 
 
@@ -80,7 +81,7 @@ export async function GET(req, { params }) {
       );
 
       const gpbObject = gpb.toObject();
-      gpbObject.projects = orphanProjects;
+      gpbObject.projects = orphanProjects.map(withGeneratedAccomplishment);
 
       return Response.json({
         data: gpbObject,
@@ -89,7 +90,14 @@ export async function GET(req, { params }) {
     }
   }
 
-  return Response.json({ data: gpb });
+  /* `generated_accomplishment` is derived live from linked events so every consumer
+     (monitoring page, GAD AR table, printouts) reads the same up-to-date value. */
+  const gpbData = gpb.toObject();
+  gpbData.projects = Array.isArray(gpbData.projects)
+    ? gpbData.projects.map(withGeneratedAccomplishment)
+    : [];
+
+  return Response.json({ data: gpbData });
 }
 
 export async function DELETE(req, { params }) {

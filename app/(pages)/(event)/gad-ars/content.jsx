@@ -20,6 +20,12 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
+import {
+  generateAccomplishmentSummary,
+  normalizeAccomplishmentLines,
+  resolveAccomplishmentText,
+  usesAccomplishmentOverride,
+} from "@/lib/accomplishmentSummary";
 
 
 const getFieldValue = (field) => {
@@ -95,6 +101,8 @@ export default function GADARContent() {
 
   const [editProject, setEditProject] = useState(null);
   const [editActual, setEditActual] = useState("");
+  const [editOverride, setEditOverride] = useState(false);
+  const [editSuggestion, setEditSuggestion] = useState("");
   const [editExpenditures, setEditExpenditures] = useState("");
   const [saving, setSaving] = useState(false);
   const [editEvidence, setEditEvidence] = useState([]);
@@ -190,62 +198,24 @@ export default function GADARContent() {
     fetchProjects();
   }, [fetchProjects, selectedYear]);
 
-  const generateSuggestedActual = (project) => {
-    const events = Array.isArray(project.events) ? project.events : [];
-    const linkedEvents = events.filter(
-      (ev) => ev && ev.status !== "cancelled",
-    );
-    if (linkedEvents.length === 0) return "";
-
-    let totalAttended = 0;
-    let femaleCount = 0;
-    let maleCount = 0;
-
-    linkedEvents.forEach((ev) => {
-      const attended = Array.isArray(ev.attended_users) ? ev.attended_users : [];
-      totalAttended += attended.length;
-      attended.forEach((att) => {
-
-        const userObj = att?.user_id || att;
-        if (!userObj || typeof userObj !== "object") return;
-
-        const profile = userObj?.personal_info_id;
-        const sex = profile?.gadData?.sexAtBirth;
-
-        if (typeof sex === "string") {
-          const normalized = sex.toLowerCase();
-          if (normalized === "female") femaleCount++;
-          else if (normalized === "male") maleCount++;
-        }
-      });
-    });
-
-    if (totalAttended === 0) return "";
-
-    const eventTitles = linkedEvents
-      .map((ev) => ev?.title)
-      .filter((t) => t && String(t).trim() !== "");
-
-    const eventCount = linkedEvents.length;
-    const titlePart =
-      eventTitles.length > 0
-        ? ` — '${eventTitles.join("', '")}'`
-        : "";
-
-    return `${eventCount} event${eventCount !== 1 ? "s" : ""} conducted${titlePart} with ${totalAttended} participant${totalAttended !== 1 ? "s" : ""} (${femaleCount} Female, ${maleCount} Male)`;
-  };
-
   const openEdit = (project) => {
-    const existingActual = Array.isArray(project.actual_accomplishment)
-      ? project.actual_accomplishment[0] || ""
-      : typeof project.actual_accomplishment === "string"
-        ? project.actual_accomplishment
-        : "";
+    const storedLines = normalizeAccomplishmentLines(
+      project.actual_accomplishment,
+    );
+    const suggestion =
+      generateAccomplishmentSummary(project) ||
+      project.generated_accomplishment ||
+      "";
+    /* Legacy hand-written text on a project without linked events is treated as a
+       manual override so saving never drops it. */
+    const isOverride = shouldUseAccomplishmentOverride(project, suggestion);
 
-    const suggested = existingActual || generateSuggestedActual(project);
-
+    setEditOverride(isOverride);
+    setEditSuggestion(suggestion);
     setEditProject(project);
-    setEditActual(suggested);
+    setEditActual(
+      isOverride ? storedLines.join("\n") : suggestion || storedLines.join("\n"),
+    );
     setEditExpenditures(project.actual_expenditures || "");
     const evidence = Array.isArray(project.expenditure_evidence)
       ? project.expenditure_evidence
@@ -343,6 +313,8 @@ export default function GADARContent() {
     fileLifecycle.resetSession();
     setEditProject(null);
     setEditActual("");
+    setEditOverride(false);
+    setEditSuggestion("");
     setEditExpenditures("");
     setEditEvidence([]);
   };
@@ -378,7 +350,15 @@ export default function GADARContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          actual_accomplishment: editActual.trim() ? [editActual.trim()] : [],
+          /* Custom text is stored only when the owner overrides the value derived
+             from the project's linked events. */
+          actual_accomplishment: editOverride
+            ? editActual
+                .split("\n")
+                .map((l) => l.trim())
+                .filter(Boolean)
+            : [],
+          actual_accomplishment_override: editOverride,
           actual_expenditures: Number(editExpenditures) || 0,
           expenditure_evidence: editEvidence,
         }),
@@ -415,15 +395,7 @@ export default function GADARContent() {
     0,
   );
 
-  const getActualForDisplay = (project) => {
-    if (Array.isArray(project.actual_accomplishment)) {
-      return project.actual_accomplishment[0] || "";
-    }
-    if (typeof project.actual_accomplishment === "string") {
-      return project.actual_accomplishment;
-    }
-    return "";
-  };
+  const getActualForDisplay = (project) => resolveAccomplishmentText(project);
 
   const projectTypeOrder = {
     "Client Focused": 0,
@@ -732,7 +704,8 @@ export default function GADARContent() {
                         </span>
                       </td>
                       <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {getFieldValue(project.responsible_office) || "—"}
+                        {getArrayValue(project.responsible_office).join(", ") ||
+                          "—"}
                       </td>
                       <td className="px-3 py-4 align-top text-center">
                         <span

@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { FaBullseye } from "react-icons/fa";
 import { indicatorTargets } from "@/lib/performanceTracking";
+import { toOfficeArray } from "@/lib/colleges";
 
 export default function ProjectContent() {
   const params = useParams();
@@ -208,9 +209,7 @@ export default function ProjectContent() {
                 <FiHome className="h-3.5 w-3.5" /> Responsible Office
               </div>
               <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                {project.responsible_office?.value ||
-                  project.responsible_office ||
-                  "-"}
+                {toOfficeArray(project.responsible_office).join(", ") || "-"}
               </p>
             </div>
             <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">

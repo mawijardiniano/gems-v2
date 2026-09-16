@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   FaSearch,
@@ -19,9 +19,18 @@ import {
   FaRegCalendarAlt,
   FaUsers,
   FaPen,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import ActualsEncoderModal from "../components/ActualsEncoderModal";
-
+import MilestonesModal from "../components/MilestonesModal";
+import ParticipantBreakdown from "../components/ParticipantBreakdown";
+import {
+  generateAccomplishmentSummary,
+  resolveAccomplishmentLines,
+  usesAccomplishmentOverride,
+} from "@/lib/accomplishmentSummary";
+import { OFFICE_OPTIONS, normalizeOffice } from "@/lib/colleges";
 const getFieldValue = (field) => {
   if (!field) return "";
   if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
@@ -78,26 +87,81 @@ const getSortedEvents = (project) =>
     (a, b) => (getEventStart(a)?.getTime() || 0) - (getEventStart(b)?.getTime() || 0),
   );
 
-const getAccomplishmentStatus = (project) => {
-  const events = getActiveEvents(project);
-  if (events.length === 0) return "no-events";
-  if (events.every((ev) => ev?.status === "completed")) return "completed";
-  return "in-progress";
-};
+const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
 
-const STATUS_META = {
+/* Number of projects listed per page for the selected academic year */
+const PROJECTS_PER_PAGE = 5;
+
+const getProjectStatus = (project) =>
+  PROJECT_STATUSES.includes(project?.project_status)
+    ? project.project_status
+    : "for-review";
+
+const PROJECT_STATUS_META = {
+  "for-review": {
+    label: "For Review",
+    classes: "bg-gray-50 text-gray-700 border-gray-200",
+  },
+  ongoing: {
+    label: "Ongoing",
+    classes: "bg-blue-50 text-blue-700 border-blue-200",
+  },
   completed: {
     label: "Completed",
     classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
-  "in-progress": {
-    label: "In Progress",
-    classes: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+/* Roles (besides the creator) allowed to manage schedule, status + milestones */
+const PROJECT_EDITOR_ROLES = ["gad focal person", "admin"];
+
+const canManageProject = (project, userId, userRole) => {
+  if (!userId) return false;
+  const creatorId = String(project?.createdBy?._id || project?.createdBy || "");
+  if (creatorId && creatorId === String(userId)) return true;
+  return PROJECT_EDITOR_ROLES.includes(
+    String(userRole || "").trim().toLowerCase(),
+  );
+};
+
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+const MILESTONE_STATUS_META = {
+  pending: {
+    label: "Pending",
+    classes: "bg-gray-50 text-gray-700 border-gray-200",
   },
-  "no-events": {
-    label: "No Events",
-    classes: "bg-gray-50 text-gray-600 border-gray-200",
+  ongoing: {
+    label: "Ongoing",
+    classes: "bg-blue-50 text-blue-700 border-blue-200",
   },
+  completed: {
+    label: "Completed",
+    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+};
+
+const getMilestones = (project) =>
+  (Array.isArray(project?.milestones) ? project.milestones : []).filter(
+    (m) => m && String(m.title || "").trim(),
+  );
+
+const getMilestoneProgress = (project) => {
+  const list = getMilestones(project);
+  const total = list.length;
+  const done = list.filter((m) => m.status === "completed").length;
+  return {
+    total,
+    done,
+    percent: total > 0 ? Math.round((done / total) * 100) : 0,
+  };
 };
 
 const EVENT_STATUS_META = {
@@ -176,9 +240,21 @@ export default function GADProjectsMonitoringContent() {
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState("");
   const [editingProject, setEditingProject] = useState(null);
+  const [scheduleEditingId, setScheduleEditingId] = useState(null);
+  const [scheduleDraft, setScheduleDraft] = useState({
+    start_date: "",
+    end_date: "",
+    project_status: "for-review",
+  });
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [scheduleError, setScheduleError] = useState("");
+  const [milestoneModalProject, setMilestoneModalProject] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
@@ -207,8 +283,12 @@ export default function GADProjectsMonitoringContent() {
         });
         if (!mounted) return;
         setUserId(res.data?.user?._id || null);
+        setUserRole(res.data?.user?.role || "");
       } catch {
-        if (mounted) setUserId(null);
+        if (mounted) {
+          setUserId(null);
+          setUserRole("");
+        }
       }
     })();
     return () => {
@@ -221,18 +301,6 @@ export default function GADProjectsMonitoringContent() {
       [...new Set(projects.map((p) => p.year).filter(Boolean))].sort(
         (a, b) => b - a,
       ),
-    [projects],
-  );
-
-  const offices = useMemo(
-    () =>
-      [
-        ...new Set(
-          projects
-            .map((p) => getFieldValue(p.responsible_office))
-            .filter(Boolean),
-        ),
-      ].sort(),
     [projects],
   );
 
@@ -260,7 +328,7 @@ export default function GADProjectsMonitoringContent() {
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 200);
     return () => clearTimeout(timer);
-  }, [loading, projects, focusParam]);
+  }, [loading, projects, focusParam, currentPage]);
 
   const filteredProjects = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -269,14 +337,20 @@ export default function GADProjectsMonitoringContent() {
       .filter(
         (p) =>
           officeFilter === "all" ||
-          getFieldValue(p.responsible_office) === officeFilter,
+          getArrayValue(p.responsible_office).some(
+            (office) =>
+              normalizeOffice(office) === normalizeOffice(officeFilter),
+          ),
+      )
+      .filter(
+        (p) => statusFilter === "all" || getProjectStatus(p) === statusFilter,
       )
       .filter((p) => {
         if (!q) return true;
         const haystack = [
           ...getArrayValue(p.gad_activity),
+          ...getArrayValue(p.responsible_office),
           getFieldValue(p.gender_issue),
-          getFieldValue(p.responsible_office),
           getFieldValue(p.project_type),
           String(p.year || ""),
         ]
@@ -285,7 +359,53 @@ export default function GADProjectsMonitoringContent() {
         return haystack.includes(q);
       })
       .sort((a, b) => (b.year || 0) - (a.year || 0));
-  }, [projects, search, yearFilter, officeFilter]);
+  }, [projects, search, yearFilter, officeFilter, statusFilter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE),
+  );
+
+  const paginatedProjects = useMemo(
+    () =>
+      filteredProjects.slice(
+        (currentPage - 1) * PROJECTS_PER_PAGE,
+        currentPage * PROJECTS_PER_PAGE,
+      ),
+    [filteredProjects, currentPage],
+  );
+
+  const pageStart =
+    filteredProjects.length === 0
+      ? 0
+      : (currentPage - 1) * PROJECTS_PER_PAGE + 1;
+  const pageEnd = Math.min(
+    currentPage * PROJECTS_PER_PAGE,
+    filteredProjects.length,
+  );
+
+  /* Filters narrow the list — always fall back to the first page */
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [yearFilter, officeFilter, statusFilter, search]);
+
+  /* Never leave the view on a page that no longer exists */
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  /* Keep the deep-linked (?focus=) project on the page that shows it */
+  const focusPageRef = useRef(null);
+  useEffect(() => {
+    if (!focusParam || filteredProjects.length === 0) return;
+    if (focusPageRef.current === focusParam) return;
+    const idx = filteredProjects.findIndex(
+      (p) => String(p._id) === String(focusParam),
+    );
+    if (idx < 0) return;
+    focusPageRef.current = focusParam;
+    setCurrentPage(Math.floor(idx / PROJECTS_PER_PAGE) + 1);
+  }, [focusParam, filteredProjects]);
 
   const totals = useMemo(() => {
     const totalBudget = filteredProjects.reduce(
@@ -297,10 +417,13 @@ export default function GADProjectsMonitoringContent() {
       0,
     );
     const completed = filteredProjects.filter(
-      (p) => getAccomplishmentStatus(p) === "completed",
+      (p) => getProjectStatus(p) === "completed",
     ).length;
-    const inProgress = filteredProjects.filter(
-      (p) => getAccomplishmentStatus(p) === "in-progress",
+    const ongoing = filteredProjects.filter(
+      (p) => getProjectStatus(p) === "ongoing",
+    ).length;
+    const forReview = filteredProjects.filter(
+      (p) => getProjectStatus(p) === "for-review",
     ).length;
     const utilization =
       totalBudget > 0 ? (totalExpenditures / totalBudget) * 100 : 0;
@@ -309,7 +432,8 @@ export default function GADProjectsMonitoringContent() {
       totalBudget,
       totalExpenditures,
       completed,
-      inProgress,
+      ongoing,
+      forReview,
       utilization,
       listed,
     };
@@ -319,11 +443,91 @@ export default function GADProjectsMonitoringContent() {
     setSearch("");
     setYearFilter(years.length > 0 ? String(years[0]) : "");
     setOfficeFilter("all");
+    setStatusFilter("all");
     setExpandedId(null);
+  };
+
+  const handleMilestonesSaved = (projectId, savedMilestones) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        String(p._id) === String(projectId)
+          ? { ...p, milestones: savedMilestones }
+          : p,
+      ),
+    );
   };
 
   const toggleExpand = (id) =>
     setExpandedId((prev) => (prev === id ? null : id));
+
+  /* Jump to a pagination page (clamped) and bring the list back into view */
+  const goToPage = (next) => {
+    const target = Math.min(Math.max(next, 1), totalPages);
+    setCurrentPage(target);
+    document
+      .getElementById("gad-projects-table")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const startScheduleEdit = (project) => {
+    setScheduleError("");
+    setScheduleDraft({
+      start_date: toDateInputValue(project?.start_date),
+      end_date: toDateInputValue(project?.end_date),
+      project_status: getProjectStatus(project),
+    });
+    setScheduleEditingId(project?._id || null);
+  };
+
+  const cancelScheduleEdit = () => {
+    setScheduleEditingId(null);
+    setScheduleError("");
+  };
+
+  const saveSchedule = async (project) => {
+    if (!project) return;
+    const { start_date, end_date, project_status } = scheduleDraft;
+
+    if (start_date && end_date && new Date(end_date) < new Date(start_date)) {
+      setScheduleError("End date must be on or after the start date.");
+      return;
+    }
+
+    setScheduleSaving(true);
+    setScheduleError("");
+    try {
+      await axios.put(
+        `/api/project/${project._id}`,
+        {
+          userId,
+          start_date: start_date || null,
+          end_date: end_date || null,
+          project_status,
+        },
+        { withCredentials: true },
+      );
+      setProjects((prev) =>
+        prev.map((p) =>
+          String(p._id) === String(project._id)
+            ? {
+                ...p,
+                start_date: start_date || null,
+                end_date: end_date || null,
+                project_status,
+              }
+            : p,
+        ),
+      );
+      setScheduleEditingId(null);
+    } catch (err) {
+      setScheduleError(
+        err?.response?.data?.error ||
+          "Failed to save schedule and status. Please try again.",
+      );
+    } finally {
+      setScheduleSaving(false);
+    }
+  };
 
   const overBudget = totals.utilization > 100;
 
@@ -361,6 +565,17 @@ export default function GADProjectsMonitoringContent() {
         />
       )}
 
+      {milestoneModalProject && (
+        <MilestonesModal
+          project={milestoneModalProject}
+          userId={userId}
+          onClose={() => setMilestoneModalProject(null)}
+          onSaved={(savedMilestones) =>
+            handleMilestonesSaved(milestoneModalProject._id, savedMilestones)
+          }
+        />
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           icon={FaClipboardList}
@@ -383,13 +598,13 @@ export default function GADProjectsMonitoringContent() {
         <StatCard
           icon={FaClock}
           iconClass="bg-amber-50 text-amber-600"
-          label="In Progress"
-          value={totals.inProgress}
+          label="Ongoing"
+          value={totals.ongoing}
           sub={`${
             totals.listed
-              ? Math.round((totals.inProgress / totals.listed) * 100)
+              ? Math.round((totals.ongoing / totals.listed) * 100)
               : 0
-          }% of listed projects`}
+          }% of listed projects · ${totals.forReview} for review`}
         />
         <StatCard
           icon={FaWallet}
@@ -439,12 +654,28 @@ export default function GADProjectsMonitoringContent() {
             setOfficeFilter(e.target.value);
             setExpandedId(null);
           }}
-          className="text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 lg:w-64"
+          className="text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 lg:w-72"
         >
           <option value="all">All Colleges/Offices</option>
-          {offices.map((o) => (
+          {OFFICE_OPTIONS.map((o) => (
             <option key={o} value={o}>
               {o}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setExpandedId(null);
+          }}
+          className="text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 lg:w-44"
+        >
+          <option value="all">All Statuses</option>
+          {PROJECT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {PROJECT_STATUS_META[s]?.label || s}
             </option>
           ))}
         </select>
@@ -491,11 +722,14 @@ export default function GADProjectsMonitoringContent() {
           <p className="text-xs text-gray-500 mt-1">
             {projects.length === 0
               ? "Create GPB projects first — they will appear here for monitoring."
-              : "Try adjusting the academic year, college/office, or search filters."}
+              : "Try adjusting the academic year, college/office, status, or search filters."}
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div
+          id="gad-projects-table"
+          className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -512,18 +746,43 @@ export default function GADProjectsMonitoringContent() {
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                     GAD Mandate
                   </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    Start
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    End
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    Budget
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    Progress
+                  </th>
                   <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-24">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredProjects.map((project, idx) => {
+                {paginatedProjects.map((project, idx) => {
                   const activities = getArrayValue(project.gad_activity);
-                  const office = getFieldValue(project.responsible_office);
+                  const office = getArrayValue(
+                    project.responsible_office,
+                  ).join(", ");
                   const mandate = getFieldValue(project.gender_issue);
-                  const status = getAccomplishmentStatus(project);
-                  const statusMeta = STATUS_META[status];
+                  const projectStatus = getProjectStatus(project);
+                  const statusMeta = PROJECT_STATUS_META[projectStatus];
+                  const gpbBudget = Number(
+                    getFieldValue(project.gad_budget) || 0,
+                  );
+                  const canManage = canManageProject(project, userId, userRole);
+                  const progress = getMilestoneProgress(project);
+                  const milestones = getMilestones(project);
+                  const isScheduleEditing =
+                    String(scheduleEditingId || "") === String(project._id);
                   const isExpanded = expandedId === project._id;
                   return (
                     <React.Fragment key={project._id || idx}>
@@ -537,7 +796,7 @@ export default function GADProjectsMonitoringContent() {
                         }`}
                       >
                         <td className="px-3 py-4 text-center text-xs font-medium text-gray-800 align-top">
-                          {idx + 1}
+                          {(currentPage - 1) * PROJECTS_PER_PAGE + idx + 1}
                         </td>
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {activities.length > 0 ? (
@@ -555,6 +814,44 @@ export default function GADProjectsMonitoringContent() {
                         </td>
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {mandate || "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800 whitespace-nowrap">
+                          {formatDate(project.start_date) || "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800 whitespace-nowrap">
+                          {formatDate(project.end_date) || "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs font-medium text-gray-800 whitespace-nowrap">
+                          {gpbBudget > 0 ? fmtPeso(gpbBudget) : "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border whitespace-nowrap ${statusMeta.classes}`}
+                          >
+                            {statusMeta.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-16 shrink-0 rounded-full bg-gray-200 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-rose-500 transition-all duration-300"
+                                style={{ width: `${progress.percent}%` }}
+                              />
+                            </div>
+                            <span
+                              className="text-[10px] font-medium text-gray-600 whitespace-nowrap"
+                              title={
+                                progress.total > 0
+                                  ? `${progress.done} of ${progress.total} milestones completed`
+                                  : "No milestones recorded yet"
+                              }
+                            >
+                              {progress.total > 0
+                                ? `${progress.done}/${progress.total} · ${progress.percent}%`
+                                : "0%"}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-3 py-4 text-center align-top">
                           <button
@@ -579,7 +876,7 @@ export default function GADProjectsMonitoringContent() {
 
                       {isExpanded && (
                         <tr>
-                          <td colSpan={5} className="p-0 bg-gray-50/60">
+                          <td colSpan={10} className="p-0 bg-gray-50/60">
                             <div className="p-4 sm:p-5 animate-fade-in space-y-4">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -638,12 +935,260 @@ export default function GADProjectsMonitoringContent() {
                                       project.performance_indicator_target,
                                     )}
                                   />
+
+                                  <div className="pt-3 border-t border-gray-100 space-y-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                        Schedule &amp; Status
+                                      </p>
+                                      {canManage && !isScheduleEditing && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            startScheduleEdit(project);
+                                          }}
+                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+                                        >
+                                          <FaPen size={10} />
+                                          {project.start_date || project.end_date
+                                            ? "Update"
+                                            : "Set Schedule"}
+                                        </button>
+                                      )}
+                                    </div>
+                                    {isScheduleEditing ? (
+                                      <div className="space-y-3">
+                                        {scheduleError && (
+                                          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] text-red-700">
+                                            <FaExclamationTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                                            <span>{scheduleError}</span>
+                                          </div>
+                                        )}
+
+                                        <div>
+                                          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                                            Start Date
+                                          </label>
+                                          <input
+                                            type="date"
+                                            value={scheduleDraft.start_date}
+                                            onChange={(e) =>
+                                              setScheduleDraft((d) => ({
+                                                ...d,
+                                                start_date: e.target.value,
+                                              }))
+                                            }
+                                            className="w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                                            End Date
+                                          </label>
+                                          <input
+                                            type="date"
+                                            value={scheduleDraft.end_date}
+                                            onChange={(e) =>
+                                              setScheduleDraft((d) => ({
+                                                ...d,
+                                                end_date: e.target.value,
+                                              }))
+                                            }
+                                            className="w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                                            Status
+                                          </label>
+                                          <select
+                                            value={scheduleDraft.project_status}
+                                            onChange={(e) =>
+                                              setScheduleDraft((d) => ({
+                                                ...d,
+                                                project_status: e.target.value,
+                                              }))
+                                            }
+                                            className="w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+                                          >
+                                            {PROJECT_STATUSES.map((s) => (
+                                              <option key={s} value={s}>
+                                                {PROJECT_STATUS_META[s].label}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={cancelScheduleEdit}
+                                            disabled={scheduleSaving}
+                                            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                          >
+                                            Cancel
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => saveSchedule(project)}
+                                            disabled={scheduleSaving}
+                                            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            {scheduleSaving ? "Saving…" : "Save"}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <DetailRow
+                                          label="Start Date"
+                                          value={formatDate(project.start_date)}
+                                        />
+                                        <DetailRow
+                                          label="End Date"
+                                          value={formatDate(project.end_date)}
+                                        />
+                                        <div>
+                                          <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                            Status
+                                          </p>
+                                          <span
+                                            className={`mt-0.5 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${statusMeta.classes}`}
+                                          >
+                                            {statusMeta.label}
+                                          </span>
+                                        </div>
+                                        {!canManage && (
+                                          <p className="text-[11px] text-gray-400 italic">
+                                            Only the project creator or a GAD
+                                            Focal Person can set the schedule and
+                                            status.
+                                          </p>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </section>
 
                                 <section className="rounded-xl bg-white border border-gray-100 p-4">
-                                  <div className="flex items-center justify-between gap-2 mb-4">
+                                  <div className="mb-4">
                                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                                       Milestones &amp; Accomplishments
+                                    </p>
+                                  </div>
+                                  {/* Milestones */}
+                                  <div className="mb-4 space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                        Milestones
+                                      </p>
+                                      {canManage && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMilestoneModalProject(project);
+                                          }}
+                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+                                        >
+                                          <FaPen size={10} />
+                                          {milestones.length > 0
+                                            ? "Update Milestones"
+                                            : "Add Milestones"}
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    
+
+
+
+
+
+                                        
+                                      <div className="space-y-2">
+                                        {milestones.length > 0 ? (
+                                          <>
+                                            <div className="overflow-x-auto rounded-lg border border-gray-100">
+                                              <table className="w-full text-left">
+                                                <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+                                                  <tr>
+                                                    <th className="px-2 py-1.5 font-semibold">
+                                                      Milestone / Activity
+                                                    </th>
+                                                    <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
+                                                      Target Date
+                                                    </th>
+                                                    <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
+                                                      Actual Date
+                                                    </th>
+                                                    <th className="px-2 py-1.5 font-semibold">
+                                                      Status
+                                                    </th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  {milestones.map((m, i) => {
+                                                    const meta =
+                                                      MILESTONE_STATUS_META[
+                                                        m.status
+                                                      ] ||
+                                                      MILESTONE_STATUS_META.pending;
+                                                    return (
+                                                      <tr
+                                                        key={m._id || i}
+                                                        className="border-t border-gray-100"
+                                                      >
+                                                        <td className="px-2 py-2 text-xs text-gray-700">
+                                                          {m.title}
+                                                        </td>
+                                                        <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                                                          {formatDate(
+                                                            m.target_date,
+                                                          ) || "—"}
+                                                        </td>
+                                                        <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                                                          {formatDate(
+                                                            m.actual_date,
+                                                          ) || "—"}
+                                                        </td>
+                                                        <td className="px-2 py-2">
+                                                          <span
+                                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border whitespace-nowrap ${meta.classes}`}
+                                                          >
+                                                            {meta.label}
+                                                          </span>
+                                                        </td>
+                                                      </tr>
+                                                    );
+                                                  })}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                            <p className="text-[11px] text-gray-500">
+                                              Progress:{" "}
+                                              <span className="font-medium text-gray-700">
+                                                {progress.done}/{progress.total} (
+                                                {progress.percent}%)
+                                              </span>
+                                            </p>
+                                          </>
+                                        ) : (
+                                          <p className="text-xs text-gray-400 italic">
+                                            No milestones recorded yet.
+                                            {!canManage &&
+                                              " Only the project creator or a GAD Focal Person can add milestones."}
+                                          </p>
+                                        )}
+                                      </div>
+                                  </div>
+
+                                  {/* Actual Accomplishments sub-section */}
+                                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                                      Actual Accomplishments
                                     </p>
                                     {String(
                                       project.createdBy?._id ||
@@ -663,20 +1208,19 @@ export default function GADProjectsMonitoringContent() {
                                       </button>
                                     )}
                                   </div>
+
                                   {(() => {
                                     const events = getSortedEvents(project);
-                                    const accomplishments = (
-                                      project.actual_accomplishment || []
-                                    )
-                                      .map((l) =>
-                                        String(l)
-                                          .replace(
-                                            /\s*\[ref:[^\]]+\]\s*/g,
-                                            " ",
-                                          )
-                                          .trim(),
-                                      )
-                                      .filter(Boolean);
+                                    /* Saved custom text wins; otherwise the accomplishment is
+                                       derived live from the linked events so it never goes stale. */
+                                    const isOverride =
+                                      usesAccomplishmentOverride(project);
+                                    const generated =
+                                      project.generated_accomplishment ||
+                                      generateAccomplishmentSummary(project);
+                                    const accomplishments = isOverride
+                                      ? resolveAccomplishmentLines(project)
+                                      : [generated].filter(Boolean);
                                     if (
                                       events.length === 0 &&
                                       accomplishments.length === 0
@@ -734,8 +1278,19 @@ export default function GADProjectsMonitoringContent() {
                                         )}
                                         {accomplishments.length > 0 && (
                                           <div>
-                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5 flex flex-wrap items-center gap-2">
                                               Actual Accomplishment
+                                              <span
+                                                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal ${
+                                                  isOverride
+                                                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                    : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                }`}
+                                              >
+                                                {isOverride
+                                                  ? "Custom (manual)"
+                                                  : "Auto from linked events"}
+                                              </span>
                                             </p>
                                             <ul className="space-y-1">
                                               {accomplishments.map((a, i) => (
@@ -757,9 +1312,28 @@ export default function GADProjectsMonitoringContent() {
 
                                 <div className="space-y-4">
                                   <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                      Budget Utilization
-                                    </p>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                        Budget Utilization
+                                      </p>
+                                      {String(
+                                        project.createdBy?._id ||
+                                          project.createdBy ||
+                                          "",
+                                      ) === String(userId) && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingProject(project);
+                                          }}
+                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+                                        >
+                                          <FaPen size={10} />
+                                          Update
+                                        </button>
+                                      )}
+                                    </div>
                                     {(() => {
                                       const budget = Number(
                                         getFieldValue(project.gad_budget) || 0,
@@ -866,6 +1440,9 @@ export default function GADProjectsMonitoringContent() {
                                     )}
                                   </section>
 
+                                  {/* Aggregated participation across every linked event */}
+                                  <ParticipantBreakdown project={project} />
+
                                   <section className="rounded-xl bg-white border border-gray-100 p-4">
                                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
                                       <FaUsers className="h-3 w-3" />
@@ -946,12 +1523,68 @@ export default function GADProjectsMonitoringContent() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/60">
+          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p className="text-xs text-gray-500">
-              Showing {filteredProjects.length} of {projects.length} project
-              {projects.length !== 1 ? "s" : ""} — click a row to view its
-              details
+              Showing{" "}
+              <span className="font-medium text-gray-700">
+                {pageStart}–{pageEnd}
+              </span>{" "}
+              of {filteredProjects.length} project
+              {filteredProjects.length !== 1 ? "s" : ""}
+              {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — click a row to
+              view its details
             </p>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  aria-label="Previous page"
+                  className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <FaChevronLeft className="text-[10px]" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (p) =>
+                      p === 1 ||
+                      p === totalPages ||
+                      Math.abs(p - currentPage) <= 1,
+                  )
+                  .map((p, i, arr) => (
+                    <React.Fragment key={p}>
+                      {i > 0 && arr[i - 1] !== p - 1 && (
+                        <span className="px-1 text-xs text-gray-400">…</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => goToPage(p)}
+                        aria-current={p === currentPage ? "page" : undefined}
+                        className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
+                          p === currentPage
+                            ? "bg-rose-600 text-white"
+                            : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))}
+
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  aria-label="Next page"
+                  className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <FaChevronRight className="text-[10px]" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

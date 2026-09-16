@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FaPrint } from "react-icons/fa";
 import { renderPdfPagesToImages } from "@/lib/print/pdfRenderer";
+import { resolveAccomplishmentText } from "@/lib/accomplishmentSummary";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -334,12 +335,8 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       const objectives = getArrayValue(project.gad_objective);
       const activities = getArrayValue(project.gad_activity);
       const indicators = getArrayValue(project.performance_indicator_target);
-      let actualText = "";
-      if (Array.isArray(project.actual_accomplishment)) {
-        actualText = project.actual_accomplishment[0] || "";
-      } else if (typeof project.actual_accomplishment === "string") {
-        actualText = project.actual_accomplishment;
-      }
+      /* Derived from linked events unless the owner saved a manual override. */
+      const actualText = resolveAccomplishmentText(project);
 
       const isAttributedProgram = projectTypeLabel === "Attributed Program";
       const actualCell = isAttributedProgram ? "" : actualText || "";
@@ -364,7 +361,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
                 ? `₱ ${fmt(project.actual_expenditures)}`
                 : ""
             }</td>
-            <td class="cell">${getFieldValue(project.responsible_office) || ""}</td>
+            <td class="cell">${getArrayValue(project.responsible_office).join(", ")}</td>
           </tr>
         `;
 
