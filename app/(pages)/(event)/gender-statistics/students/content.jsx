@@ -13,10 +13,44 @@ import {
   StackedSexBarVertical,
   DemographicTable,
 } from "../components/GenderStatsShared";
+import {
+  EMPTY_STUDENT_FILTERS,
+  STUDENT_TYPE_ORDER,
+  YEAR_LEVEL_ORDER,
+  activeFilterCount,
+  computeStudentStats,
+  filterStudentRecords,
+} from "../components/studentStats";
+import {
+  SAMPLE_STUDENT_COUNT,
+  SAMPLE_STUDENT_RECORDS,
+} from "../components/studentSampleRecords";
+import {
+  STUDENT_QUICK_REPORT_OPTIONS,
+  downloadStudentQuickReport,
+} from "../components/quickReportsStudents";
 
 const CAMPUSES = ["Boac", "Gasan", "Sta. Cruz"];
 
 const ALL_PROGRAMS = Object.values(COLLEGE_TO_PROGRAMS).flat();
+
+const FILTER_LABELS = {
+  campus: "Campus",
+  college: "College",
+  course: "Program",
+  yearLevel: "Year Level",
+  studentType: "Student Type",
+  schoolYear: "Academic Year",
+  semester: "Semester",
+};
+
+/** Human-readable one-liner of the active filters, printed on each PDF. */
+function buildFilterSummary(filters) {
+  return Object.entries(filters || {})
+    .filter(([, value]) => Boolean(value))
+    .map(([key, value]) => `${FILTER_LABELS[key] || key}: ${value}`)
+    .join("; ");
+}
 
 function buildInsights(data) {
   const t = data?.totals;
@@ -67,6 +101,9 @@ export default function StudentGenderStatsContent() {
   const [course, setCourse] = useState("");
   const [schoolYear, setSchoolYear] = useState("");
   const [semester, setSemester] = useState("");
+  const [yearLevel, setYearLevel] = useState("");
+  const [studentType, setStudentType] = useState("");
+  const [useSample, setUseSample] = useState(false);
 
   const params = useMemo(
     () => ({
@@ -75,22 +112,65 @@ export default function StudentGenderStatsContent() {
       ...(course ? { course } : {}),
       ...(schoolYear ? { school_year: schoolYear } : {}),
       ...(semester ? { semester } : {}),
+      ...(yearLevel ? { year_level: yearLevel } : {}),
+      ...(studentType ? { student_type: studentType } : {}),
     }),
-    [campus, college, course, schoolYear, semester],
+    [campus, college, course, schoolYear, semester, yearLevel, studentType],
   );
 
   const { data, loading, error, refetch } = useGenderStats("students", params);
+
+  const filters = useMemo(
+    () => ({
+      campus,
+      college,
+      course,
+      yearLevel,
+      studentType,
+      schoolYear,
+      semester,
+    }),
+    [campus, college, course, yearLevel, studentType, schoolYear, semester],
+  );
+
+  /* Demo dataset: individual records (../components/studentSampleRecords), so
+     every filter - including year level and student type - re-aggregates the
+     same way the API would. The JSON snapshot in ../data/sample-students.json
+     is only a fixture for tests/scripts; regenerate it with
+     `node scripts/generate-sample-students.mjs`. */
+  const filteredSampleRecords = useMemo(
+    () => filterStudentRecords(SAMPLE_STUDENT_RECORDS, filters),
+    [filters],
+  );
+  const sampleStats = useMemo(
+    () => computeStudentStats(filteredSampleRecords, SAMPLE_STUDENT_RECORDS),
+    [filteredSampleRecords],
+  );
+
+  const activeData = useSample ? sampleStats : data;
 
   const programOptions = useMemo(() => {
     if (college && COLLEGE_TO_PROGRAMS[college]) return COLLEGE_TO_PROGRAMS[college];
     return ALL_PROGRAMS;
   }, [college]);
 
-  const totals = data?.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
-  const insights = useMemo(() => buildInsights(data), [data]);
+  const yearLevelOptions = activeData?.yearLevels || YEAR_LEVEL_ORDER;
+
+  const studentTypeOptions = activeData?.studentTypes || STUDENT_TYPE_ORDER;
+
+  /* Academic-year and semester options follow the active dataset, so sample
+     mode lists the sample terms instead of the live ones (the sample dataset
+     covers 2021-2022 to 2024-2025, the live data starts 2025-2026). */
+  const schoolYearOptions = activeData?.schoolYears || [];
+  const semesterOptions = activeData?.semesters || [];
+
+  const totals = activeData?.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
+  const insights = useMemo(() => buildInsights(activeData), [activeData]);
+  const showContent = useSample || (!loading && !!data);
+  const filterCount = activeFilterCount(filters);
 
   const deltas = useMemo(() => {
-    const years = data?.byAcademicYear || [];
+    const years = activeData?.byAcademicYear || [];
     if (!schoolYear || years.length < 2) return null;
     const idx = years.findIndex((y) => y.school_year === schoolYear);
     if (idx <= 0) return null;
@@ -104,22 +184,33 @@ export default function StudentGenderStatsContent() {
       Other:
         cur.Other > 0 || prev.Other > 0 ? pct(cur.Other, prev.Other) : null,
     };
-  }, [data, schoolYear]);
+  }, [activeData, schoolYear]);
 
-  /* Always pin to a specific AY: default to the latest year */
+  /* Always pin to a specific AY: default to the latest year and drop a year the
+     current dataset does not contain (the sample dataset starts 2021-2022). */
   useEffect(() => {
-    if (!loading && data?.schoolYears?.length && !schoolYear) {
-      setSchoolYear(data.schoolYears[0]);
-    }
-  }, [data, loading, schoolYear]);
+    const years = activeData?.schoolYears || [];
+    if (!years.length) return;
+    if (!schoolYear || !years.includes(schoolYear)) setSchoolYear(years[0]);
+  }, [activeData, schoolYear]);
 
   /* Semester always resolves to the latest one available in the selected AY */
   useEffect(() => {
-    const list = data?.semesters || [];
+    const list = activeData?.semesters || [];
     if (schoolYear && list.length > 0 && !list.includes(semester)) {
       setSemester(list[list.length - 1]);
     }
-  }, [data?.semesters, schoolYear, semester]);
+  }, [activeData?.semesters, schoolYear, semester]);
+
+  const clearFilters = () => {
+    setCampus(EMPTY_STUDENT_FILTERS.campus);
+    setCollege(EMPTY_STUDENT_FILTERS.college);
+    setCourse(EMPTY_STUDENT_FILTERS.course);
+    setYearLevel(EMPTY_STUDENT_FILTERS.yearLevel);
+    setStudentType(EMPTY_STUDENT_FILTERS.studentType);
+    setSchoolYear(EMPTY_STUDENT_FILTERS.schoolYear);
+    setSemester(EMPTY_STUDENT_FILTERS.semester);
+  };
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
@@ -147,10 +238,10 @@ export default function StudentGenderStatsContent() {
             onChange={(e) => setSchoolYear(e.target.value)}
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
-            {(data?.schoolYears || []).length === 0 && (
+            {schoolYearOptions.length === 0 && (
               <option value="">No academic year data</option>
             )}
-            {(data?.schoolYears || []).map((y) => (
+            {schoolYearOptions.map((y) => (
               <option key={y} value={y}>
                 AY {y}
               </option>
@@ -166,10 +257,10 @@ export default function StudentGenderStatsContent() {
             onChange={(e) => setSemester(e.target.value)}
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
-            {(data?.semesters || []).length === 0 && (
+            {semesterOptions.length === 0 && (
               <option value="">No semester data</option>
             )}
-            {(data?.semesters || []).map((s) => (
+            {semesterOptions.map((s) => (
               <option key={s} value={s}>
                 {s === "1st"
                   ? "1st Semester"
@@ -237,18 +328,108 @@ export default function StudentGenderStatsContent() {
             ))}
           </select>
         </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Year Level
+          </label>
+          <select
+            value={yearLevel}
+            onChange={(e) => setYearLevel(e.target.value)}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          >
+            <option value="">All Year Levels</option>
+            {yearLevelOptions.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Student Type
+          </label>
+          <select
+            value={studentType}
+            onChange={(e) => setStudentType(e.target.value)}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[16rem]"
+          >
+            <option value="">All Student Types</option>
+            {studentTypeOptions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Data source
+          </label>
+          <button
+            type="button"
+            onClick={() => setUseSample((prev) => !prev)}
+            aria-pressed={useSample}
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              useSample
+                ? "border-amber-300 bg-amber-50 text-amber-700"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                useSample ? "bg-amber-500" : "bg-emerald-500"
+              }`}
+            />
+            {useSample ? "Sample data" : "Live data"}
+          </button>
+        </div>
+        {filterCount > 0 && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            Clear filters ({filterCount})
+          </button>
+        )}
       </div>
 
-      {error && <ErrorState message={error} onRetry={refetch} />}
+      {useSample && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          Showing synthetic <strong>sample data</strong> for{" "}
+          {SAMPLE_STUDENT_COUNT.toLocaleString()} students, expanded into
+          individual records from{" "}
+          <code className="mx-1">data/sample-students.json</code> so every
+          filter composes. Your database is not being read and nothing is
+          saved - turn the toggle off to return to live data.
+        </div>
+      )}
+
+      {!useSample && error && <ErrorState message={error} onRetry={refetch} />}
 
       <p className="text-xs text-gray-400 -mt-2">
         Students enrolled in both semesters of the same academic year are
         counted once per year.
       </p>
 
-      {loading && <LoadingState />}
+      {!useSample && loading && <LoadingState />}
 
-      {!loading && data && (
+      {useSample && filterCount > 0 && filteredSampleRecords.length === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          No sample students match the selected filters -{" "}
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="font-semibold underline underline-offset-2"
+          >
+            clear the filters
+          </button>{" "}
+          to see all {SAMPLE_STUDENT_COUNT.toLocaleString()} students.
+        </div>
+      )}
+
+      {showContent && (
         <>
           <SummaryCards totals={totals} what="Students" deltas={deltas} />
 
@@ -256,27 +437,52 @@ export default function StudentGenderStatsContent() {
             <SexDonut totals={totals} />
             <StackedSexBarVertical
               title="Students by Academic Level and Sex"
-              data={data.byLevel || []}
+              data={activeData.byLevel || []}
               nameKey="level"
             />
           </div>
 
+          {Array.isArray(activeData.byStudentType) &&
+            activeData.byStudentType.length > 0 && (
+              <StackedSexBarVertical
+                title="Students by Student Type and Sex"
+                data={activeData.byStudentType}
+                nameKey="type"
+              />
+            )}
+
+          {Array.isArray(activeData.byYearLevel) &&
+            activeData.byYearLevel.length > 0 && (
+              <StackedSexBarVertical
+                title="Students by Year Level and Sex"
+                data={activeData.byYearLevel}
+                nameKey="year_level"
+              />
+            )}
+
           <StackedSexBar
             title="Students by College / Unit and Sex"
-            data={data.byCollege || []}
+            data={activeData.byCollege || []}
             nameKey="college"
           />
 
           <StackedSexBarVertical
             title="Enrollment by Academic Year and Sex"
-            data={data.byAcademicYear || []}
+            data={activeData.byAcademicYear || []}
             nameKey="school_year"
           />
 
-          <TopProgramsTable rows={data.byProgram || []} />
-          <DemographicTable rows={data.demographics || []} total={totals.total} />
+          <TopProgramsTable rows={activeData.byProgram || []} />
+          <DemographicTable
+            rows={activeData.demographics || []}
+            total={totals.total}
+          />
           <KeyInsightsCard insights={insights} />
-          <QuickReportsCard />
+          <QuickReportsCard
+            data={activeData}
+            useSample={useSample}
+            filters={filters}
+          />
         </>
       )}
     </div>
@@ -366,10 +572,33 @@ function KeyInsightsCard({ insights }) {
   );
 }
 
-function QuickReportsCard() {
+function QuickReportsCard({ data, useSample = false, filters }) {
+  const [busy, setBusy] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [status, setStatus] = useState("");
 
+  const filterSummary = useMemo(() => buildFilterSummary(filters), [filters]);
+
+  /* One button per report kind - each renders its own separate PDF from the
+     breakdown currently on screen (works for live and sample data alike). */
+  const downloadQuick = async (kind) => {
+    setBusy(kind);
+    setStatus("");
+    try {
+      await downloadStudentQuickReport(kind, data, {
+        isSample: useSample,
+        filterSummary,
+      });
+      setStatus("Report ready - download started.");
+    } catch (err) {
+      setStatus("Could not generate the report. Please try again.");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  /* The server-side report stitches every section together from live records
+     only, so it is offered alongside - not instead of - the client reports. */
   const downloadStudentReport = async () => {
     setDownloading(true);
     setStatus("");
@@ -399,30 +628,51 @@ function QuickReportsCard() {
     }
   };
 
+  const buttonClass =
+    "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed";
+
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
         ⬇ Quick Reports
       </h3>
+      <p className="text-xs text-gray-500 mt-1 mb-4">
+        Each button generates its own separate PDF from the data currently
+        shown{useSample ? " (sample dataset)" : ""}.
+      </p>
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={downloadStudentReport}
-          disabled={downloading}
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {downloading ? "Generating…" : "Student Gender Report (PDF)"}
-        </button>
-        <a
-          href="/gad-ars"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
-        >
+        {STUDENT_QUICK_REPORT_OPTIONS.map((option) => (
+          <button
+            key={option.kind}
+            type="button"
+            onClick={() => downloadQuick(option.kind)}
+            disabled={Boolean(busy)}
+            title={option.title}
+            className={buttonClass}
+          >
+            {busy === option.kind ? "Generating…" : option.label}
+          </button>
+        ))}
+      </div>
+
+      <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mt-5 mb-2">
+        Other GAD report links
+      </h4>
+      <div className="flex flex-wrap gap-3">
+        {!useSample && (
+          <button
+            type="button"
+            onClick={downloadStudentReport}
+            disabled={downloading}
+            className={buttonClass}
+          >
+            {downloading ? "Generating…" : "Full Student Gender Report (PDF)"}
+          </button>
+        )}
+        <a href="/gad-ars" className={buttonClass}>
           GAD Accomplishment Report
         </a>
-        <a
-          href="/project-monitoring/gad-projects"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
-        >
+        <a href="/project-monitoring/gad-projects" className={buttonClass}>
           GAD Projects Summary
         </a>
       </div>

@@ -36,23 +36,56 @@ function toList(countsObj, nameKey) {
     .sort((a, b) => b.total - a.total);
 }
 
-function buildDemographics(profiles, sexOf) {
-  const rows = [
-    {
-      label: "Scholar",
-      test: (p) => {
-        const v = p?.affiliation?.academic_information?.isScholar;
-        return v && String(v).toLowerCase() !== "no";
-      },
+const STUDENT_TYPE_FILTERS = {
+  Scholar: {
+    "affiliation.academic_information.isScholar": {
+      $exists: true,
+      $nin: [null, "", "No", "no", false],
     },
-    { label: "Person with Disability (PWD)", test: (p) => p?.gadData?.isPWD === true },
-    { label: "Indigenous Peoples (IP)", test: (p) => p?.gadData?.isIndigenousPerson === true },
-    { label: "Low Income", test: (p) => p?.gadData?.socioEconomicStatus === "Low Income" },
-    { label: "Middle Income", test: (p) => p?.gadData?.socioEconomicStatus === "Middle Income" },
-    { label: "High Income", test: (p) => p?.gadData?.socioEconomicStatus === "High Income" },
-  ];
+  },
+  "Person with Disability (PWD)": { "gadData.isPWD": true },
+  "Indigenous Peoples (IP)": { "gadData.isIndigenousPerson": true },
+  "Low Income": { "gadData.socioEconomicStatus": "Low Income" },
+  "Middle Income": { "gadData.socioEconomicStatus": "Middle Income" },
+  "High Income": { "gadData.socioEconomicStatus": "High Income" },
+};
 
-  return rows.map((row) => {
+const STUDENT_TYPES = Object.keys(STUDENT_TYPE_FILTERS);
+
+const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+
+const DEMOGRAPHIC_ROWS = [
+  {
+    label: "Scholar",
+    test: (p) => {
+      const v = p?.affiliation?.academic_information?.isScholar;
+      return v && String(v).toLowerCase() !== "no";
+    },
+  },
+  {
+    label: "Person with Disability (PWD)",
+    test: (p) => p?.gadData?.isPWD === true,
+  },
+  {
+    label: "Indigenous Peoples (IP)",
+    test: (p) => p?.gadData?.isIndigenousPerson === true,
+  },
+  {
+    label: "Low Income",
+    test: (p) => p?.gadData?.socioEconomicStatus === "Low Income",
+  },
+  {
+    label: "Middle Income",
+    test: (p) => p?.gadData?.socioEconomicStatus === "Middle Income",
+  },
+  {
+    label: "High Income",
+    test: (p) => p?.gadData?.socioEconomicStatus === "High Income",
+  },
+];
+
+function buildDemographics(profiles, sexOf) {
+  return DEMOGRAPHIC_ROWS.map((row) => {
     const counts = emptyCounts();
     profiles.forEach((p) => {
       if (row.test(p)) addCounts(counts, sexOf(p));
@@ -63,6 +96,32 @@ function buildDemographics(profiles, sexOf) {
       Male: counts.Male,
       Other: counts.Other,
       total: counts.total,
+    };
+  });
+}
+
+function orderIndex(order, value) {
+  const idx = order.indexOf(value);
+  return idx === -1 ? order.length : idx;
+}
+
+/* The six student type categories as table rows - the same tests as the
+   demographics table, exposed as a filterable breakdown. */
+function buildStudentTypes(profiles, sexOf) {
+  return DEMOGRAPHIC_ROWS.map((row) => {
+    const counts = emptyCounts();
+    profiles.forEach((p) => {
+      if (row.test(p)) addCounts(counts, sexOf(p));
+    });
+    return {
+      type: row.label,
+      Female: counts.Female,
+      Male: counts.Male,
+      Other: counts.Other,
+      total: counts.total,
+      pctFemale: counts.total
+        ? Math.round((counts.Female / counts.total) * 1000) / 10
+        : 0,
     };
   });
 }
@@ -90,6 +149,8 @@ function buildStats(profiles, type) {
 
   let byProgram = [];
   let byLevel = [];
+  let byYearLevel = [];
+  let byStudentType = [];
   let byAppointment = [];
   let byEmploymentStatus = [];
 
@@ -106,16 +167,39 @@ function buildStats(profiles, type) {
 
     const levelCounts = {};
     profiles.forEach((p) => {
-      const college = p?.affiliation?.academic_information?.college;
+      const college = p?.affiliation?.academic_information?.college || "";
+      const course = p?.affiliation?.academic_information?.course || "";
       const yearLevel = p?.affiliation?.academic_information?.year_level || "";
-      const key =
-        college === "Graduate School" || /graduate|master|doctor/i.test(yearLevel)
-          ? "Graduate"
+      const isGraduate =
+        college === "Graduate School" || /graduate/i.test(college);
+      const isDoctoral = /doctor/i.test(course) || /doctor/i.test(yearLevel);
+      const isMasters =
+        !isDoctoral &&
+        (isGraduate || /master/i.test(course) || /master/i.test(yearLevel));
+      const key = isDoctoral
+        ? "Graduate (Doctoral)"
+        : isMasters
+          ? "Graduate (Masters)"
           : "Undergraduate";
       if (!levelCounts[key]) levelCounts[key] = emptyCounts();
       addCounts(levelCounts[key], sexOf(p));
     });
     byLevel = toList(levelCounts, "level");
+
+    const yearLevelCounts = {};
+    profiles.forEach((p) => {
+      const key = p?.affiliation?.academic_information?.year_level || "";
+      if (!key) return;
+      if (!yearLevelCounts[key]) yearLevelCounts[key] = emptyCounts();
+      addCounts(yearLevelCounts[key], sexOf(p));
+    });
+    byYearLevel = toList(yearLevelCounts, "year_level").sort(
+      (a, b) =>
+        orderIndex(YEAR_LEVELS, a.year_level) -
+          orderIndex(YEAR_LEVELS, b.year_level) || b.total - a.total,
+    );
+
+    byStudentType = buildStudentTypes(profiles, sexOf);
   } else {
     const appointmentCounts = {};
     profiles.forEach((p) => {
@@ -150,7 +234,7 @@ function buildStats(profiles, type) {
     },
     [isStudent ? "byCollege" : "byOffice"]: byGroup,
     ...(isStudent
-      ? { byProgram, byLevel }
+      ? { byProgram, byLevel, byYearLevel, byStudentType }
       : { byAppointment, byEmploymentStatus }),
     demographics: buildDemographics(profiles, sexOf),
   };
@@ -202,10 +286,14 @@ export async function GET(req) {
     const campus = url.searchParams.get("campus")?.trim();
     const college = url.searchParams.get("college")?.trim();
     const course = url.searchParams.get("course")?.trim();
+    const personnelType = url.searchParams.get("personnel_type")?.trim();
+    const appointmentStatus = url.searchParams.get("appointment_status")?.trim();
     const schoolYear = url.searchParams.get("school_year")?.trim();
     const semester = url.searchParams.get("semester")?.trim();
+    const yearLevel = url.searchParams.get("year_level")?.trim();
+    const studentType = url.searchParams.get("student_type")?.trim();
 
-    const cacheKey = `gender-statistics:${type}:${campus || "all"}:${college || "all"}:${course || "all"}:${schoolYear || "all"}:${semester || "all"}`;
+    const cacheKey = `gender-statistics:${type}:${campus || "all"}:${college || "all"}:${course || "all"}:${personnelType || "all"}:${appointmentStatus || "all"}:${schoolYear || "all"}:${semester || "all"}:${yearLevel || "all"}:${studentType || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -219,7 +307,20 @@ export async function GET(req) {
           match["affiliation.academic_information.college"] = college;
         if (type === "employees" && college)
           match["affiliation.employment_information.office"] = college;
+        if (type === "employees" && personnelType)
+          match["affiliation.employment_information.employment_status"] =
+            personnelType;
+        if (type === "employees" && appointmentStatus)
+          match[
+            "affiliation.employment_information.employment_appointment_status"
+          ] = appointmentStatus;
         if (course) match["affiliation.academic_information.course"] = course;
+        if (type === "students" && yearLevel) {
+          match["affiliation.academic_information.year_level"] = yearLevel;
+        }
+        if (type === "students" && studentType && STUDENT_TYPE_FILTERS[studentType]) {
+          Object.assign(match, STUDENT_TYPE_FILTERS[studentType]);
+        }
 
         const baseProfiles = await GemsProfile.find(match).lean();
 
@@ -253,7 +354,14 @@ export async function GET(req) {
             ? await buildByAcademicYear(baseProfiles, sexBucket)
             : [];
 
-        return { ...stats, schoolYears, semesters, byAcademicYear };
+        return {
+          ...stats,
+          schoolYears,
+          semesters,
+          byAcademicYear,
+          yearLevels: YEAR_LEVELS,
+          studentTypes: STUDENT_TYPES,
+        };
       },
       CACHE_TTL,
     );

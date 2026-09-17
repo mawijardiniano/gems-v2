@@ -1,0 +1,475 @@
+{
+  "type": "employees",
+  "sample": true,
+  "totals": {
+    "Female": 612,
+    "Male": 404,
+    "Other": 10,
+    "total": 1026,
+    "pctFemale": 59.6,
+    "pctMale": 39.4,
+    "pctOther": 1
+  },
+  "byOffice": [
+    {
+      "office": "College of Education",
+      "Female": 134,
+      "Male": 94,
+      "Other": 2,
+      "total": 230,
+      "pctFemale": 58.3
+    },
+    {
+      "office": "College of Arts and Social Sciences",
+      "Female": 85,
+      "Male": 59,
+      "Other": 2,
+      "total": 146,
+      "pctFemale": 58.2
+    },
+    {
+      "office": "College of Business and Accountancy",
+      "Female": 52,
+      "Male": 30,
+      "Other": 1,
+      "total": 83,
+      "pctFemale": 62.7
+    },
+    {
+      "office": "College of Engineering",
+      "Female": 18,
+      "Male": 35,
+      "Other": 0,
+      "total": 53,
+      "pctFemale": 34
+    },
+    {
+      "office": "College of Allied Health Sciences",
+      "Female": 39,
+      "Male": 11,
+      "Other": 1,
+      "total": 51,
+      "pctFemale": 76.5
+    },
+    {
+      "office": "College of Agriculture",
+      "Female": 27,
+      "Male": 20,
+      "Other": 0,
+      "total": 47,
+      "pctFemale": 57.4
+    },
+    {
+      "office": "College of Information and Computing Sciences",
+      "Female": 22,
+      "Male": 23,
+      "Other": 1,
+      "total": 46,
+      "pctFemale": 47.8
+    },
+    {
+      "office": "Office of the Vice President for Administration and Finance",
+      "Female": 31,
+      "Male": 12,
+      "Other": 0,
+      "total": 43,
+      "pctFemale": 72.1
+    },
+    {
+      "office": "College of Criminal Justice Education",
+      "Female": 22,
+      "Male": 16,
+      "Other": 0,
+      "total": 38,
+      "pctFemale": 57.9
+    },
+    {
+      "office": "Office of the Vice President for Student Affairs and Services",
+      "Female": 25,
+      "Male": 8,
+      "Other": 1,
+      "total": 34,
+      "pctFemale": 73.5
+    },
+    {
+      "office": "College of Governance",
+      "Female": 20,
+      "Male": 14,
+      "Other": 0,
+      "total": 34,
+      "pctFemale": 58.8
+    },
+    {
+      "office": "College of Fisheries and Aquatic Sciences",
+      "Female": 16,
+      "Male": 17,
+      "Other": 0,
+      "total": 33,
+      "pctFemale": 48.5
+    },
+    {
+      "office": "College of Industrial Technology",
+      "Female": 14,
+      "Male": 19,
+      "Other": 0,
+      "total": 33,
+      "pctFemale": 42.4
+    },
+    {
+      "office": "Office of the Vice President for Academic Affairs",
+      "Female": 22,
+      "Male": 8,
+      "Other": 1,
+      "total": 31,
+      "pctFemale": 71
+    },
+    {
+      "office": "Office of the University President",
+      "Female": 18,
+      "Male": 9,
+      "Other": 1,
+      "total": 28,
+      "pctFemale": 64.3
+    },
+    {
+      "office": "Office of the Vice President for Research and Extension",
+      "Female": 20,
+      "Male": 6,
+      "Other": 0,
+      "total": 26,
+      "pctFemale": 76.9
+    },
+    {
+      "office": "Graduate School",
+      "Female": 13,
+      "Male": 8,
+      "Other": 0,
+      "total": 21,
+      "pctFemale": 61.9
+    },
+    {
+      "office": "College of Environmental Studies",
+      "Female": 11,
+      "Male": 8,
+      "Other": 0,
+      "total": 19,
+      "pctFemale": 57.9
+    },
+    {
+      "office": "HRMU",
+      "Female": 12,
+      "Male": 5,
+      "Other": 0,
+      "total": 17,
+      "pctFemale": 70.6
+    },
+    {
+      "office": "GAD Unit",
+      "Female": 11,
+      "Male": 2,
+      "Other": 0,
+      "total": 13,
+      "pctFemale": 84.6
+    }
+  ],
+  "byCategory": [
+    {
+      "category": "Faculty",
+      "Female": 230,
+      "Male": 184,
+      "Other": 5,
+      "total": 419,
+      "pctFemale": 54.9
+    },
+    {
+      "category": "Administrative Staff",
+      "Female": 357,
+      "Male": 210,
+      "Other": 4,
+      "total": 571,
+      "pctFemale": 62.5
+    },
+    {
+      "category": "Job Order/Contractual",
+      "Female": 25,
+      "Male": 10,
+      "Other": 1,
+      "total": 36,
+      "pctFemale": 69.4
+    }
+  ],
+  "byPositionLevel": [
+    {
+      "level": "University President",
+      "Female": 0,
+      "Male": 1,
+      "Other": 0,
+      "total": 1,
+      "pctFemale": 0
+    },
+    {
+      "level": "Vice President",
+      "Female": 2,
+      "Male": 2,
+      "Other": 0,
+      "total": 4,
+      "pctFemale": 50
+    },
+    {
+      "level": "Directors",
+      "Female": 5,
+      "Male": 3,
+      "Other": 0,
+      "total": 8,
+      "pctFemale": 62.5
+    },
+    {
+      "level": "Deans",
+      "Female": 22,
+      "Male": 8,
+      "Other": 0,
+      "total": 30,
+      "pctFemale": 73.3
+    },
+    {
+      "level": "Department Chairs",
+      "Female": 35,
+      "Male": 15,
+      "Other": 0,
+      "total": 50,
+      "pctFemale": 70
+    },
+    {
+      "level": "Faculty",
+      "Female": 173,
+      "Male": 161,
+      "Other": 5,
+      "total": 339,
+      "pctFemale": 51
+    },
+    {
+      "level": "Administrative Personnel",
+      "Female": 350,
+      "Male": 204,
+      "Other": 4,
+      "total": 558,
+      "pctFemale": 62.7
+    },
+    {
+      "level": "Job Order/Contractual",
+      "Female": 25,
+      "Male": 10,
+      "Other": 1,
+      "total": 36,
+      "pctFemale": 69.4
+    }
+  ],
+  "byAcademicRank": [
+    {
+      "rank": "Instructor I",
+      "Female": 62,
+      "Male": 41,
+      "Other": 1,
+      "total": 104,
+      "pctFemale": 59.6
+    },
+    {
+      "rank": "Instructor II",
+      "Female": 44,
+      "Male": 30,
+      "Other": 1,
+      "total": 75,
+      "pctFemale": 58.7
+    },
+    {
+      "rank": "Instructor III",
+      "Female": 30,
+      "Male": 22,
+      "Other": 0,
+      "total": 52,
+      "pctFemale": 57.7
+    },
+    {
+      "rank": "Assistant Professor I",
+      "Female": 28,
+      "Male": 25,
+      "Other": 1,
+      "total": 54,
+      "pctFemale": 51.9
+    },
+    {
+      "rank": "Assistant Professor II",
+      "Female": 22,
+      "Male": 20,
+      "Other": 1,
+      "total": 43,
+      "pctFemale": 51.2
+    },
+    {
+      "rank": "Assistant Professor III",
+      "Female": 16,
+      "Male": 15,
+      "Other": 0,
+      "total": 31,
+      "pctFemale": 51.6
+    },
+    {
+      "rank": "Assistant Professor IV",
+      "Female": 10,
+      "Male": 11,
+      "Other": 0,
+      "total": 21,
+      "pctFemale": 47.6
+    },
+    {
+      "rank": "Associate Professor",
+      "Female": 12,
+      "Male": 12,
+      "Other": 1,
+      "total": 25,
+      "pctFemale": 48
+    },
+    {
+      "rank": "Professor",
+      "Female": 6,
+      "Male": 8,
+      "Other": 0,
+      "total": 14,
+      "pctFemale": 42.9
+    }
+  ],
+  "byAppointment": [
+    {
+      "status": "Regular",
+      "Female": 310,
+      "Male": 184,
+      "Other": 5,
+      "total": 499,
+      "pctFemale": 62.1
+    },
+    {
+      "status": "Temporary",
+      "Female": 80,
+      "Male": 60,
+      "Other": 0,
+      "total": 140,
+      "pctFemale": 57.1
+    },
+    {
+      "status": "Coterminous",
+      "Female": 35,
+      "Male": 30,
+      "Other": 0,
+      "total": 65,
+      "pctFemale": 53.8
+    },
+    {
+      "status": "Casual",
+      "Female": 42,
+      "Male": 65,
+      "Other": 1,
+      "total": 108,
+      "pctFemale": 38.9
+    },
+    {
+      "status": "Job Order",
+      "Female": 20,
+      "Male": 7,
+      "Other": 0,
+      "total": 27,
+      "pctFemale": 74.1
+    },
+    {
+      "status": "Contract of Service (Skilled)",
+      "Female": 60,
+      "Male": 25,
+      "Other": 2,
+      "total": 87,
+      "pctFemale": 69
+    },
+    {
+      "status": "Utility Worker",
+      "Female": 5,
+      "Male": 3,
+      "Other": 0,
+      "total": 8,
+      "pctFemale": 62.5
+    },
+    {
+      "status": "University Lecturer",
+      "Female": 25,
+      "Male": 12,
+      "Other": 1,
+      "total": 38,
+      "pctFemale": 65.8
+    },
+    {
+      "status": "Part-time Lecturer",
+      "Female": 20,
+      "Male": 10,
+      "Other": 1,
+      "total": 31,
+      "pctFemale": 64.5
+    },
+    {
+      "status": "Clinical Instructor",
+      "Female": 10,
+      "Male": 5,
+      "Other": 0,
+      "total": 15,
+      "pctFemale": 66.7
+    },
+    {
+      "status": "Adjunct",
+      "Female": 5,
+      "Male": 3,
+      "Other": 0,
+      "total": 8,
+      "pctFemale": 62.5
+    }
+  ],
+  "demographics": [
+    {
+      "label": "Scholar",
+      "Female": 40,
+      "Male": 25,
+      "Other": 0,
+      "total": 65
+    },
+    {
+      "label": "Person with Disability (PWD)",
+      "Female": 12,
+      "Male": 10,
+      "Other": 1,
+      "total": 23
+    },
+    {
+      "label": "Indigenous Peoples (IP)",
+      "Female": 30,
+      "Male": 22,
+      "Other": 2,
+      "total": 54
+    },
+    {
+      "label": "Low Income",
+      "Female": 210,
+      "Male": 160,
+      "Other": 3,
+      "total": 373
+    },
+    {
+      "label": "Middle Income",
+      "Female": 300,
+      "Male": 190,
+      "Other": 5,
+      "total": 495
+    },
+    {
+      "label": "High Income",
+      "Female": 62,
+      "Male": 44,
+      "Other": 2,
+      "total": 108
+    }
+  ]
+}

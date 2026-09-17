@@ -1,0 +1,422 @@
+{
+  "type": "students",
+  "sample": true,
+  "totals": {
+    "Female": 2097,
+    "Male": 1328,
+    "Other": 14,
+    "total": 3439,
+    "pctFemale": 61,
+    "pctMale": 38.6,
+    "pctOther": 0.4
+  },
+  "byCollege": [
+    {
+      "college": "College of Allied Health Sciences",
+      "Female": 385,
+      "Male": 88,
+      "Other": 3,
+      "total": 476,
+      "pctFemale": 80.9
+    },
+    {
+      "college": "College of Business and Accountancy",
+      "Female": 320,
+      "Male": 135,
+      "Other": 2,
+      "total": 457,
+      "pctFemale": 70
+    },
+    {
+      "college": "Graduate School",
+      "Female": 255,
+      "Male": 122,
+      "Other": 2,
+      "total": 379,
+      "pctFemale": 67.3
+    },
+    {
+      "college": "College of Agriculture",
+      "Female": 180,
+      "Male": 155,
+      "Other": 2,
+      "total": 337,
+      "pctFemale": 53.4
+    },
+    {
+      "college": "College of Education",
+      "Female": 245,
+      "Male": 62,
+      "Other": 1,
+      "total": 308,
+      "pctFemale": 79.5
+    },
+    {
+      "college": "College of Criminal Justice Education",
+      "Female": 105,
+      "Male": 189,
+      "Other": 1,
+      "total": 295,
+      "pctFemale": 35.6
+    },
+    {
+      "college": "College of Arts and Social Sciences",
+      "Female": 170,
+      "Male": 82,
+      "Other": 0,
+      "total": 252,
+      "pctFemale": 67.5
+    },
+    {
+      "college": "College of Engineering",
+      "Female": 80,
+      "Male": 145,
+      "Other": 1,
+      "total": 226,
+      "pctFemale": 35.4
+    },
+    {
+      "college": "College of Information and Computing Sciences",
+      "Female": 55,
+      "Male": 130,
+      "Other": 0,
+      "total": 185,
+      "pctFemale": 29.7
+    },
+    {
+      "college": "College of Governance",
+      "Female": 118,
+      "Male": 66,
+      "Other": 0,
+      "total": 184,
+      "pctFemale": 64.1
+    },
+    {
+      "college": "College of Fisheries and Aquatic Sciences",
+      "Female": 88,
+      "Male": 74,
+      "Other": 1,
+      "total": 163,
+      "pctFemale": 54
+    },
+    {
+      "college": "College of Industrial Technology",
+      "Female": 48,
+      "Male": 36,
+      "Other": 0,
+      "total": 84,
+      "pctFemale": 57.1
+    },
+    {
+      "college": "College of Environmental Studies",
+      "Female": 40,
+      "Male": 34,
+      "Other": 1,
+      "total": 75,
+      "pctFemale": 53.3
+    },
+    {
+      "college": "Laboratory School",
+      "Female": 8,
+      "Male": 10,
+      "Other": 0,
+      "total": 18,
+      "pctFemale": 44.4
+    }
+  ],
+  "byProgram": [
+    {
+      "program": "Bachelor of Science in Nursing",
+      "Female": 298,
+      "Male": 62,
+      "Other": 2,
+      "total": 362,
+      "pctFemale": 82.3
+    },
+    {
+      "program": "Bachelor of Science in Criminology",
+      "Female": 82,
+      "Male": 158,
+      "Other": 1,
+      "total": 241,
+      "pctFemale": 34
+    },
+    {
+      "program": "Bachelor of Science in Agriculture",
+      "Female": 118,
+      "Male": 94,
+      "Other": 2,
+      "total": 214,
+      "pctFemale": 55.1
+    },
+    {
+      "program": "Bachelor of Science in Accountancy",
+      "Female": 118,
+      "Male": 62,
+      "Other": 1,
+      "total": 181,
+      "pctFemale": 65.2
+    },
+    {
+      "program": "Master of Arts in Education",
+      "Female": 128,
+      "Male": 44,
+      "Other": 1,
+      "total": 173,
+      "pctFemale": 74
+    },
+    {
+      "program": "Bachelor of Science in Fisheries",
+      "Female": 88,
+      "Male": 74,
+      "Other": 1,
+      "total": 163,
+      "pctFemale": 54
+    },
+    {
+      "program": "Bachelor of Secondary Education",
+      "Female": 96,
+      "Male": 28,
+      "Other": 1,
+      "total": 125,
+      "pctFemale": 76.8
+    },
+    {
+      "program": "Bachelor in Agricultural Technology",
+      "Female": 62,
+      "Male": 61,
+      "Other": 0,
+      "total": 123,
+      "pctFemale": 50.4
+    },
+    {
+      "program": "Bachelor of Science in Information Technology",
+      "Female": 34,
+      "Male": 82,
+      "Other": 0,
+      "total": 116,
+      "pctFemale": 29.3
+    },
+    {
+      "program": "Bachelor of Science in Midwifery",
+      "Female": 87,
+      "Male": 26,
+      "Other": 1,
+      "total": 114,
+      "pctFemale": 76.3
+    }
+  ],
+  "byLevel": [
+    {
+      "level": "Undergraduate",
+      "Female": 1842,
+      "Male": 1206,
+      "Other": 12,
+      "total": 3060,
+      "pctFemale": 60.2
+    },
+    {
+      "level": "Graduate (Masters)",
+      "Female": 214,
+      "Male": 96,
+      "Other": 2,
+      "total": 312,
+      "pctFemale": 68.6
+    },
+    {
+      "level": "Graduate (Doctoral)",
+      "Female": 41,
+      "Male": 26,
+      "Other": 0,
+      "total": 67,
+      "pctFemale": 61.2
+    }
+  ],
+  "byYearLevel": [
+    {
+      "year_level": "1st Year",
+      "Female": 532,
+      "Male": 378,
+      "Other": 4,
+      "total": 914,
+      "pctFemale": 58.2
+    },
+    {
+      "year_level": "2nd Year",
+      "Female": 498,
+      "Male": 348,
+      "Other": 4,
+      "total": 850,
+      "pctFemale": 58.6
+    },
+    {
+      "year_level": "3rd Year",
+      "Female": 458,
+      "Male": 285,
+      "Other": 2,
+      "total": 745,
+      "pctFemale": 61.5
+    },
+    {
+      "year_level": "4th Year",
+      "Female": 354,
+      "Male": 195,
+      "Other": 2,
+      "total": 551,
+      "pctFemale": 64.2
+    }
+  ],
+  "byStudentType": [
+    {
+      "type": "Scholar",
+      "Female": 486,
+      "Male": 402,
+      "Other": 4,
+      "total": 892,
+      "pctFemale": 54.5
+    },
+    {
+      "type": "Person with Disability (PWD)",
+      "Female": 31,
+      "Male": 22,
+      "Other": 0,
+      "total": 53,
+      "pctFemale": 58.5
+    },
+    {
+      "type": "Indigenous Peoples (IP)",
+      "Female": 24,
+      "Male": 19,
+      "Other": 0,
+      "total": 43,
+      "pctFemale": 55.8
+    },
+    {
+      "type": "Low Income",
+      "Female": 689,
+      "Male": 512,
+      "Other": 3,
+      "total": 1204,
+      "pctFemale": 57.2
+    },
+    {
+      "type": "Middle Income",
+      "Female": 1102,
+      "Male": 687,
+      "Other": 9,
+      "total": 1798,
+      "pctFemale": 61.3
+    },
+    {
+      "type": "High Income",
+      "Female": 306,
+      "Male": 129,
+      "Other": 2,
+      "total": 437,
+      "pctFemale": 70
+    }
+  ],
+  "demographics": [
+    {
+      "label": "Scholar",
+      "Female": 486,
+      "Male": 402,
+      "Other": 4,
+      "total": 892
+    },
+    {
+      "label": "Person with Disability (PWD)",
+      "Female": 31,
+      "Male": 22,
+      "Other": 0,
+      "total": 53
+    },
+    {
+      "label": "Indigenous Peoples (IP)",
+      "Female": 24,
+      "Male": 19,
+      "Other": 0,
+      "total": 43
+    },
+    {
+      "label": "Low Income",
+      "Female": 689,
+      "Male": 512,
+      "Other": 3,
+      "total": 1204
+    },
+    {
+      "label": "Middle Income",
+      "Female": 1102,
+      "Male": 687,
+      "Other": 9,
+      "total": 1798
+    },
+    {
+      "label": "High Income",
+      "Female": 306,
+      "Male": 129,
+      "Other": 2,
+      "total": 437
+    }
+  ],
+  "byAcademicYear": [
+    {
+      "school_year": "2021-2022",
+      "Female": 378,
+      "Male": 211,
+      "Other": 2,
+      "total": 591
+    },
+    {
+      "school_year": "2022-2023",
+      "Female": 853,
+      "Male": 506,
+      "Other": 4,
+      "total": 1363
+    },
+    {
+      "school_year": "2023-2024",
+      "Female": 1462,
+      "Male": 892,
+      "Other": 9,
+      "total": 2363
+    },
+    {
+      "school_year": "2024-2025",
+      "Female": 2097,
+      "Male": 1328,
+      "Other": 14,
+      "total": 3439
+    }
+  ],
+  "schoolYears": [
+    "2024-2025",
+    "2023-2024",
+    "2022-2023",
+    "2021-2022"
+  ],
+  "semesters": [
+    "1st",
+    "2nd"
+  ],
+  "yearLevels": [
+    "1st Year",
+    "2nd Year",
+    "3rd Year",
+    "4th Year"
+  ],
+  "studentTypes": [
+    "Scholar",
+    "Person with Disability (PWD)",
+    "Indigenous Peoples (IP)",
+    "Low Income",
+    "Middle Income",
+    "High Income"
+  ],
+  "campuses": [
+    "Boac",
+    "Gasan",
+    "Sta. Cruz"
+  ]
+}

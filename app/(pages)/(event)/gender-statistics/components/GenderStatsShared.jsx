@@ -332,4 +332,106 @@ export function DemographicTable({ rows, total }) {
   );
 }
 
+/* Generic sex-disaggregated table used by the statistics pages. Renders the same
+   shape as the chart components (Female / Male / Other / total per row) but as a
+   readable table, with a totals footer row. Works with sample JSON and live API
+   data alike, since it only reads the sex counts and the row label. */
+export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Category" }) {
+  const safeData = Array.isArray(data) ? data : [];
+
+  const rowTotal = (r) =>
+    r.total ?? (r.Female || 0) + (r.Male || 0) + (r.Other || 0);
+
+  const totals = safeData.reduce(
+    (acc, r) => ({
+      Female: acc.Female + (r.Female || 0),
+      Male: acc.Male + (r.Male || 0),
+      Other: acc.Other + (r.Other || 0),
+      total: acc.total + rowTotal(r),
+    }),
+    { Female: 0, Male: 0, Other: 0, total: 0 },
+  );
+
+  const pct = (part, whole) =>
+    whole ? `${Math.round((part / whole) * 1000) / 10}%` : "—";
+
+  return (
+    <div className={CARD_CLS}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        {subtitle && (
+          <span className="text-xs text-gray-400">{subtitle}</span>
+        )}
+      </div>
+      {safeData.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">No data available.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+                <th className="py-2 pr-3 font-medium">{nameHeader}</th>
+                <th className="py-2 pr-3 font-medium text-right">Female</th>
+                <th className="py-2 pr-3 font-medium text-right">Male</th>
+                <th className="py-2 pr-3 font-medium text-right">Other</th>
+                <th className="py-2 pr-3 font-medium text-right">Total</th>
+                <th className="py-2 font-medium text-right">% Female</th>
+              </tr>
+            </thead>
+            <tbody>
+              {safeData.map((r, i) => (
+                <tr
+                  key={r[nameKey] ?? i}
+                  className="border-b border-gray-50 last:border-0"
+                >
+                  <td className="py-2.5 pr-3 text-gray-700">
+                    {r[nameKey] ?? "—"}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
+                    {(r.Female || 0).toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
+                    {(r.Male || 0).toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-gray-500">
+                    {(r.Other || 0).toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
+                    {rowTotal(r).toLocaleString()}
+                  </td>
+                  <td className="py-2.5 text-right text-xs text-gray-400">
+                    {r.pctFemale != null
+                      ? `${r.pctFemale}%`
+                      : pct(r.Female || 0, rowTotal(r))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-gray-200 font-semibold text-gray-900">
+                <td className="py-2.5 pr-3">Total</td>
+                <td className="py-2.5 pr-3 text-right text-pink-700">
+                  {totals.Female.toLocaleString()}
+                </td>
+                <td className="py-2.5 pr-3 text-right text-blue-700">
+                  {totals.Male.toLocaleString()}
+                </td>
+                <td className="py-2.5 pr-3 text-right text-gray-600">
+                  {totals.Other.toLocaleString()}
+                </td>
+                <td className="py-2.5 pr-3 text-right">
+                  {totals.total.toLocaleString()}
+                </td>
+                <td className="py-2.5 text-right text-xs text-gray-400">
+                  {pct(totals.Female, totals.total)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
