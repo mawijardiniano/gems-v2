@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import useMyProfile from "@/lib/useMyProfile";
 import {
   FaHome,
   FaCog,
@@ -39,8 +40,7 @@ export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [userListOpen, setUserListOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const [user, setUser] = useState(null);
+  const { profile, user } = useMyProfile();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -164,23 +164,6 @@ export default function Sidebar({ open, setOpen, role }) {
       setUserListOpen(true);
   }, [pathname, isAnyChildActive]);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/profile/my-profile", {
-          credentials: "include",
-        });
-        if (!mounted || !res.ok) return;
-        const body = await res.json();
-        const profileObj = body?.data || body?.profile || body || null;
-        setProfile(profileObj);
-        setUser(body?.user || null);
-      } catch (e) {}
-    })();
-    return () => (mounted = false);
-  }, []);
-
   const getInitials = useCallback(() => {
     if (profile?.personal) {
       const { first_name, last_name } = profile.personal;
@@ -210,7 +193,7 @@ export default function Sidebar({ open, setOpen, role }) {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >

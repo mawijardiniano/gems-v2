@@ -1,18 +1,4 @@
-/* Quick Reports for the Student Gender Statistics page.
 
-   The server-side endpoint (/api/analytics/sex-disaggregated-data/report) only
-   reads live MongoDB records, so it cannot report on the client-side sample
-   dataset (data/sample-students.json). Like the personnel quick reports
-   (./quickReports.js), these reports are rendered in the browser with the same
-   jsPDF/jspdf-autotable stack, from the breakdown the students page already
-   has on screen. One export per report kind, one button per report kind - each
-   button produces its own separate PDF.
-
-   Everything is derived from the `data` object the page already holds, so the
-   helpers work for both the sample dataset and the live API response (they
-   share the same shape: totals + byCollege / byProgram / byLevel /
-   byYearLevel / byStudentType / demographics / byAcademicYear). No network or
-   database access. */
 
 import {
   MIN_GROUP_FOR_FINDINGS,

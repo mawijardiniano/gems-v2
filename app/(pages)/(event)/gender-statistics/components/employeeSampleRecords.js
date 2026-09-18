@@ -1,22 +1,4 @@
-/* Sample employee records for the Gender Statistics demo dataset.
 
-   Why records instead of pre-built tables? Pre-aggregated tables (the original
-   data/sample-employees.json) cannot answer filter combinations such as
-   "Faculty + College of Education + Regular", because the cross-tabs were never
-   stored. This module expands the same curated totals into individual records,
-   so every filter — including the sample-only Department and Position Level
-   dimensions — can be applied and then re-aggregated by computeEmployeeStats().
-
-   Generation is fully deterministic (no randomness), so the sample dataset and
-   its snapshot in ../data/sample-employees.json are stable across builds.
-
-   The sex × office marginals and the 1,026 / 612 / 404 / 10 headline totals are
-   preserved exactly from the original curated tables. The position-level table
-   was rebuilt to nest under the personnel category (the old table had 656
-   "Faculty" positions against only 419 faculty personnel), which is the one
-   demo breakdown that intentionally changed. */
-
-/* Sex counts per office — identical to the original curated byOffice table. */
 const OFFICE_TARGETS = [
   { office: "College of Education", Female: 134, Male: 94, Other: 2 },
   { office: "College of Arts and Social Sciences", Female: 85, Male: 59, Other: 2 },
@@ -50,16 +32,13 @@ const OFFICE_TARGETS = [
   { office: "College of Environmental Studies", Female: 11, Male: 8, Other: 0 },
 ];
 
-/* Personnel categories (byCategory) — totals preserved exactly. */
 const CATEGORY_TARGETS = [
   { personnelType: "Faculty", Female: 230, Male: 184, Other: 5 },
   { personnelType: "Administrative Staff", Female: 357, Male: 210, Other: 4 },
   { personnelType: "Job Order/Contractual", Female: 25, Male: 10, Other: 1 },
 ];
 
-/* Position levels nest under the personnel category, so filtering by Personnel
-   Type never shows an impossible pairing (e.g. faculty at admin level).
-   Per-category sex counts add up to that category's totals. */
+
 const LEVEL_TARGETS = {
   Faculty: [
     { positionLevel: "Deans", Female: 22, Male: 8, Other: 0 },

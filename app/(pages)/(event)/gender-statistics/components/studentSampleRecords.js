@@ -1,19 +1,4 @@
-/* Sample student records for the Gender Statistics demo dataset.
 
-   Why records instead of pre-built tables? Pre-aggregated tables cannot answer
-   filter combinations such as "College of Engineering + 2nd Year + Scholar",
-   because the cross-tabs were never stored. This module expands the curated
-   student totals into individual records, so every filter - campus, college,
-   program, year level, student type and academic year - can be applied and then
-   re-aggregated by computeStudentStats().
-
-   Generation is fully deterministic (no randomness), so the sample dataset and
-   its snapshot in ../data/sample-students.json are stable across builds.
-
-   Curated headline totals are preserved exactly: 3,439 students
-   (2,097 female / 1,328 male / 14 other), the 14-college and 36-program tables,
-   3,060 undergraduates / 312 masters / 67 doctoral, year levels 1st-4th only
-   (5th/6th year are not offered), and the six student-type categories. */
 
 import { CAMPUS_ORDER } from "./studentStats.js";
 

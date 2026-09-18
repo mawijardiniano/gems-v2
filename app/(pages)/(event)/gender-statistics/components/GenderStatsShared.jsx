@@ -332,10 +332,6 @@ export function DemographicTable({ rows, total }) {
   );
 }
 
-/* Generic sex-disaggregated table used by the statistics pages. Renders the same
-   shape as the chart components (Female / Male / Other / total per row) but as a
-   readable table, with a totals footer row. Works with sample JSON and live API
-   data alike, since it only reads the sex counts and the row label. */
 export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Category" }) {
   const safeData = Array.isArray(data) ? data : [];
 

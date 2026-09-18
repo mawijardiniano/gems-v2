@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import useMyProfile from "@/lib/useMyProfile";
 import {
   FaHome,
   FaSignOutAlt,
@@ -16,6 +17,7 @@ import {
   FaChartLine,
   FaUserGraduate,
   FaUserTie,
+  FaSitemap,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -36,10 +38,10 @@ const TooltipWrapper = ({ label, children, collapsed }) => {
 
 export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const [user, setUser] = useState(null);
+  const { profile, user } = useMyProfile();
   const [showProjectMonitoring, setShowProjectMonitoring] = useState(false);
   const [showGenderStatistics, setShowGenderStatistics] = useState(false);
+  const [showStructure, setShowStructure] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -86,16 +88,23 @@ export default function Sidebar({ open, setOpen, role }) {
       key: "admin-dashboard",
     },
     {
-      name: "University Officials",
-      href: "/university-officials",
-      icon: <FaUsers size={16} />,
-      key: "university-officials",
-    },
-    {
-      name: "GFPS",
-      href: "/gfps",
-      icon: <FaClipboardList size={16} />,
-      key: "gfps",
+      name: "Organizational Structure",
+      icon: <FaSitemap size={16} />,
+      key: "organizational-structure",
+      children: [
+        {
+          name: "University Officials",
+          href: "/university-officials",
+          icon: <FaUsers size={14} />,
+          key: "university-officials",
+        },
+        {
+          name: "GFPS",
+          href: "/gfps",
+          icon: <FaClipboardList size={14} />,
+          key: "gfps",
+        },
+      ],
     },
     {
       name: "GAA Budget",
@@ -114,8 +123,29 @@ export default function Sidebar({ open, setOpen, role }) {
   const filteredLinks = useMemo(() => {
     const normalizedRole = role?.toLowerCase();
     const allowed = ROLE_ACCESS[normalizedRole] || [];
-    return links.filter((link) => allowed.includes(link.key));
+    return links
+      .map((link) => ({
+        ...link,
+        children: link.children?.filter((child) =>
+          allowed.includes(child.key)
+        ),
+      }))
+      .filter((link) => {
+        if (Array.isArray(link.children)) return link.children.length > 0;
+        return allowed.includes(link.key);
+      });
   }, [role]);
+
+  const structureLink = useMemo(
+    () => filteredLinks.find((link) => link.key === "organizational-structure"),
+    [filteredLinks]
+  );
+
+  const structureChildren = structureLink?.children || [];
+
+  const structureActive = structureChildren.some(
+    (child) => pathname?.startsWith(child.href)
+  );
 
   const dashboardLinks = useMemo(
     () => filteredLinks.filter((link) => link.key.endsWith("dashboard")),
@@ -123,7 +153,12 @@ export default function Sidebar({ open, setOpen, role }) {
   );
 
   const mainLinks = useMemo(
-    () => filteredLinks.filter((link) => !link.key.endsWith("dashboard")),
+    () =>
+      filteredLinks.filter(
+        (link) =>
+          !link.key.endsWith("dashboard") &&
+          !Array.isArray(link.children)
+      ),
     [filteredLinks]
   );
 
@@ -175,24 +210,13 @@ export default function Sidebar({ open, setOpen, role }) {
     if (pathname?.startsWith("/gender-statistics")) {
       setShowGenderStatistics(true);
     }
+    if (
+      pathname?.startsWith("/university-officials") ||
+      pathname?.startsWith("/gfps")
+    ) {
+      setShowStructure(true);
+    }
   }, [pathname]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/profile/my-profile", {
-          credentials: "include",
-        });
-        if (!mounted || !res.ok) return;
-        const body = await res.json();
-        const profileObj = body?.data || body?.profile || body || null;
-        setProfile(profileObj);
-        setUser(body?.user || null);
-      } catch (e) {}
-    })();
-    return () => (mounted = false);
-  }, []);
 
   const getInitials = useCallback(() => {
     if (profile?.personal) {
@@ -223,7 +247,7 @@ export default function Sidebar({ open, setOpen, role }) {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
@@ -312,6 +336,8 @@ export default function Sidebar({ open, setOpen, role }) {
           })}
 
       
+
+
           {userAllowedPages.includes("gad-projects") && (
             <>
               {open ? (
@@ -588,6 +614,84 @@ export default function Sidebar({ open, setOpen, role }) {
               </TooltipWrapper>
             );
           })}
+
+                    {structureChildren.length > 0 && (
+            <>
+              {open ? (
+                <div>
+                  <button
+                    onClick={() => setShowStructure((prev) => !prev)}
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
+                      showStructure || structureActive
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <FaSitemap size={16} className="flex-shrink-0" />
+                    <span className="text-sm font-medium truncate flex-1 text-left">
+                      Organizational Structure
+                    </span>
+                    <span
+                      className={`text-xs transition-transform ${
+                        showStructure ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+
+                  {showStructure && (
+                    <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-3">
+                      {structureChildren.map((child) => {
+                        const childActive = pathname?.startsWith(child.href);
+                        return (
+                          <TooltipWrapper
+                            key={child.key}
+                            label={child.name}
+                            collapsed={!open}
+                          >
+                            <Link
+                              href={child.href}
+                              onClick={handleMobileClose}
+                              className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                                childActive
+                                  ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                              }`}
+                            >
+                              <span className="flex-shrink-0 opacity-60">
+                                {child.icon}
+                              </span>
+                              <span className="text-sm font-medium truncate">
+                                {child.name}
+                              </span>
+                              {childActive && (
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                              )}
+                            </Link>
+                          </TooltipWrapper>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <TooltipWrapper label="Organizational Structure" collapsed={!open}>
+                  <Link
+                    href={structureChildren[0]?.href}
+                    onClick={handleMobileClose}
+                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-3 justify-center mx-1.5 ${
+                      structureActive
+                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                  >
+                    <FaSitemap size={16} className="flex-shrink-0" />
+                  </Link>
+                </TooltipWrapper>
+              )}
+            </>
+          )}
 
           {userAllowedPages.includes("gad-ars") && (
             <TooltipWrapper label="Reports" collapsed={!open}>

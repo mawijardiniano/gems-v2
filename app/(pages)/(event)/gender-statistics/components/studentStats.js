@@ -1,16 +1,4 @@
-/* Student gender-statistics helpers shared by the sample dataset and the
-   filter panel on the students page.
 
-   Two jobs:
-   1. Turn a list of sample student records into the exact response shape the
-      gender-statistics API returns, so the page renders identically whether the
-      data is live or sampled.
-   2. Filter/option helpers for the filter panel.
-
-   The sample records themselves live in ./studentSampleRecords.js. */
-
-/* Academic year levels offered by the university (5th/6th year are not offered)
-   - mirrors YEAR_LEVELS in app/api/analytics/gender-statistics/route.js. */
 export const YEAR_LEVEL_ORDER = [
   "1st Year",
   "2nd Year",

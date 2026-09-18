@@ -20,12 +20,7 @@ function useOutsideClose(onClose) {
   return ref;
 }
 
-/**
- * Multi-select for Responsible Unit/Office.
- *
- * variant="panel"   — always-visible checkbox grid (wizard / modal forms)
- * variant="popover" — compact button + dropdown (inline table cells)
- */
+
 export default function OfficeMultiSelect({
   value,
   onChange,
@@ -35,7 +30,6 @@ export default function OfficeMultiSelect({
   const selected = toOfficeArray(value);
   const options = useMemo(
     () => officeOptionList(selected),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [value],
   );
   const [open, setOpen] = useState(false);

@@ -75,7 +75,6 @@ export default function LoginForm({ redirect, compact = false }) {
     setLoading(true);
 
     try {
-      console.log("Logging in with:", { username: loginUsername });
 
       const res = await axios.post(
         "/api/auth/login",
@@ -84,7 +83,6 @@ export default function LoginForm({ redirect, compact = false }) {
       );
 
       const user = res.data.user;
-      console.log("Logged in user:", user);
 
       if (!user) {
         setError("No user returned from login.");
@@ -92,7 +90,6 @@ export default function LoginForm({ redirect, compact = false }) {
       }
 
       const role = user.role.toLowerCase();
-      console.log("User role:", role);
 
       dispatch(
         loginSuccess({
@@ -143,12 +140,10 @@ export default function LoginForm({ redirect, compact = false }) {
         withCredentials: true,
       });
 
-      console.log("Profile response:", profileRes.data);
 
       const profile = profileRes.data.data;
       const hasProfile = !!profile;
 
-      console.log("Has profile:", hasProfile);
 
       dispatch(
         loginSuccess({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import useMyProfile from "@/lib/useMyProfile";
 import {
   FaUser,
   FaChevronDown,
@@ -45,8 +46,7 @@ export default function Sidebar({ open, setOpen }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(true);
   const [isEventOpen, setIsEventOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const [user, setUser] = useState(null);
+  const { profile, user } = useMyProfile();
   const [personType, setPersonType] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -57,30 +57,16 @@ export default function Sidebar({ open, setOpen }) {
     }
   }, [setOpen]);
 
+  // Derive the person type from the shared profile once it resolves.
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/profile/my-profile", {
-          credentials: "include",
-        });
-        if (!mounted) return;
-        if (!res.ok) return;
-        const body = await res.json();
+    if (!profile) return;
 
-        const profileObj = body?.data || body?.profile || body || null;
-        setProfile(profileObj);
-        setUser(body?.user || null);
-
-        const pt =
-          profileObj?.personal?.currentStatus ||
-          profileObj?.personal_information?.person_type ||
-          null;
-        setPersonType(pt);
-      } catch (e) {}
-    })();
-    return () => (mounted = false);
-  }, []);
+    setPersonType(
+      profile?.personal?.currentStatus ||
+        profile?.personal_information?.person_type ||
+        null
+    );
+  }, [profile]);
 
   useEffect(() => {
     if (pathname.startsWith("/dashboard")) {
@@ -154,7 +140,7 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
