@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FaChevronDown, FaTimes } from "react-icons/fa";
+import { FaChevronDown, FaPlus, FaTimes } from "react-icons/fa";
 import {
   normalizeOffice,
   officeOptionList,
@@ -20,7 +20,6 @@ function useOutsideClose(onClose) {
   return ref;
 }
 
-
 export default function OfficeMultiSelect({
   value,
   onChange,
@@ -33,6 +32,7 @@ export default function OfficeMultiSelect({
     [value],
   );
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
   const boxRef = useOutsideClose(() => setOpen(false));
 
   const isChecked = (office) =>
@@ -49,6 +49,17 @@ export default function OfficeMultiSelect({
     onChange(
       selected.filter((s) => normalizeOffice(s) !== normalizeOffice(office)),
     );
+  };
+
+  /* Free-typed office: trimmed, skipped when it duplicates an existing
+     selection (compared through normalizeOffice), then kept as a chip. */
+  const addDraft = () => {
+    const office = draft.trim();
+    if (!office) return;
+    if (!isChecked(office)) {
+      onChange([...selected, office]);
+    }
+    setDraft("");
   };
 
   const Chip = ({ office, small }) => (
@@ -109,6 +120,33 @@ export default function OfficeMultiSelect({
                 <span>{office}</span>
               </label>
             ))}
+
+            {!disabled && (
+              <div className="mt-2 flex items-center gap-1 border-t border-gray-100 pt-2">
+                <input
+                  type="text"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addDraft();
+                    }
+                  }}
+                  placeholder="Type an office not listed..."
+                  className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-rose-400"
+                />
+                <button
+                  type="button"
+                  onClick={addDraft}
+                  disabled={!draft.trim()}
+                  className="flex shrink-0 items-center gap-1 rounded border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                >
+                  <FaPlus className="h-2.5 w-2.5" /> Add
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -153,6 +191,32 @@ export default function OfficeMultiSelect({
           </label>
         ))}
       </div>
+
+      {!disabled && (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addDraft();
+              }
+            }}
+            placeholder="Type an office not listed..."
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-rose-400"
+          />
+          <button
+            type="button"
+            onClick={addDraft}
+            disabled={!draft.trim()}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+          >
+            <FaPlus className="h-3 w-3" /> Add
+          </button>
+        </div>
+      )}
 
       <div className="mt-2">
         {selected.length > 0 ? (

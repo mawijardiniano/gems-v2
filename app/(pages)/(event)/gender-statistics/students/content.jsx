@@ -574,7 +574,6 @@ function KeyInsightsCard({ insights }) {
 
 function QuickReportsCard({ data, useSample = false, filters }) {
   const [busy, setBusy] = useState("");
-  const [downloading, setDownloading] = useState(false);
   const [status, setStatus] = useState("");
 
   const filterSummary = useMemo(() => buildFilterSummary(filters), [filters]);
@@ -594,37 +593,6 @@ function QuickReportsCard({ data, useSample = false, filters }) {
       setStatus("Could not generate the report. Please try again.");
     } finally {
       setBusy("");
-    }
-  };
-
-  /* The server-side report stitches every section together from live records
-     only, so it is offered alongside - not instead of - the client reports. */
-  const downloadStudentReport = async () => {
-    setDownloading(true);
-    setStatus("");
-    try {
-      const res = await fetch(
-        "/api/analytics/sex-disaggregated-data/report?type=students",
-        { method: "GET" },
-      );
-      if (!res.ok) throw new Error("Failed to generate report");
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const filename =
-        (res.headers.get("content-disposition") || "").split("filename=")[1] ||
-        "student-gender-statistics-report.pdf";
-      link.href = url;
-      link.download = filename.replace(/"/g, "");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      setStatus("Report ready — download started.");
-    } catch (err) {
-      setStatus("Could not generate the report. Please try again.");
-    } finally {
-      setDownloading(false);
     }
   };
 
@@ -653,28 +621,6 @@ function QuickReportsCard({ data, useSample = false, filters }) {
             {busy === option.kind ? "Generating…" : option.label}
           </button>
         ))}
-      </div>
-
-      <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mt-5 mb-2">
-        Other GAD report links
-      </h4>
-      <div className="flex flex-wrap gap-3">
-        {!useSample && (
-          <button
-            type="button"
-            onClick={downloadStudentReport}
-            disabled={downloading}
-            className={buttonClass}
-          >
-            {downloading ? "Generating…" : "Full Student Gender Report (PDF)"}
-          </button>
-        )}
-        <a href="/gad-ars" className={buttonClass}>
-          GAD Accomplishment Report
-        </a>
-        <a href="/project-monitoring/gad-projects" className={buttonClass}>
-          GAD Projects Summary
-        </a>
       </div>
       {status && <p className="text-xs text-gray-500 mt-2">{status}</p>}
     </div>

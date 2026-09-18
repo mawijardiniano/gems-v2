@@ -361,6 +361,20 @@ export default function GADProjectsMonitoringContent() {
       .sort((a, b) => (b.year || 0) - (a.year || 0));
   }, [projects, search, yearFilter, officeFilter, statusFilter]);
 
+  /* Canonical colleges/offices plus any custom office actually saved on a
+     record, so custom-typed entries stay filterable from this one dropdown */
+  const officeOptions = useMemo(() => {
+    const seen = new Map();
+    OFFICE_OPTIONS.forEach((o) => seen.set(normalizeOffice(o), o));
+    projects.forEach((p) =>
+      getArrayValue(p.responsible_office).forEach((o) => {
+        const key = normalizeOffice(o);
+        if (!seen.has(key)) seen.set(key, o);
+      }),
+    );
+    return [...seen.values()];
+  }, [projects]);
+
   const totalPages = Math.max(
     1,
     Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE),
@@ -657,7 +671,7 @@ export default function GADProjectsMonitoringContent() {
           className="text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 lg:w-72"
         >
           <option value="all">All Colleges/Offices</option>
-          {OFFICE_OPTIONS.map((o) => (
+          {officeOptions.map((o) => (
             <option key={o} value={o}>
               {o}
             </option>
