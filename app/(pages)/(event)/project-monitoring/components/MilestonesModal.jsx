@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FaExclamationTriangle,
+  FaPaperclip,
   FaPlus,
   FaSpinner,
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
+import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
 
@@ -28,11 +30,15 @@ const MILESTONE_STATUS_META = {
 
 const MAX_MILESTONES = 50;
 
+const ACCEPTED_PROOF_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+const MAX_PROOF_SIZE = 10 * 1024 * 1024;
+
 const emptyRow = () => ({
   title: "",
   target_date: "",
   actual_date: "",
   status: "pending",
+  proofs: [],
 });
 
 const toDateInputValue = (value) => {
@@ -45,6 +51,8 @@ const toDateInputValue = (value) => {
 };
 
 export default function MilestonesModal({ project, userId, onClose, onSaved }) {
+  const fileLifecycle = useFileLifecycle();
+
   const [rows, setRows] = useState(() => {
     const existing = Array.isArray(project?.milestones)
       ? project.milestones.filter((m) => m && String(m.title || "").trim())
@@ -57,10 +65,26 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
       target_date: toDateInputValue(m.target_date),
       actual_date: toDateInputValue(m.actual_date),
       status: MILESTONE_STATUSES.includes(m.status) ? m.status : "pending",
+      proofs: (Array.isArray(m.proofs) ? m.proofs : []).filter(
+        (file) => file && (file.url || file.key),
+      ),
     }));
   });
+  const [uploadingRow, setUploadingRow] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* Proofs already saved on the project are recorded so files dropped later in
+     the session are only released once they are truly no longer referenced. */
+  useEffect(() => {
+    if (!project) return;
+    const keys = (Array.isArray(project.milestones) ? project.milestones : [])
+      .flatMap((m) => (Array.isArray(m?.proofs) ? m.proofs : []))
+      .map((file) => file?.key)
+      .filter(Boolean);
+    fileLifecycle.startSession(keys);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
 
   const stats = useMemo(() => {
     const cleaned = rows.filter(
@@ -88,8 +112,96 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
       prev.map((row, i) => (i === index ? { ...row, ...patch } : row)),
     );
 
-  const removeRow = (index) =>
-    setRows((prev) => prev.filter((_, i) => i !== index));
+  /** Keeps the file lifecycle in sync with every proof key currently attached. */
+  const syncProofKeys = (nextRows) =>
+    fileLifecycle.syncCurrent(
+      nextRows
+        .flatMap((row) => (Array.isArray(row.proofs) ? row.proofs : []))
+        .map((file) => file?.key)
+        .filter(Boolean),
+    );
+
+  const removeRow = (index) => {
+    const nextRows = rows.filter((_, i) => i !== index);
+    setRows(nextRows);
+    syncProofKeys(nextRows);
+  };
+
+  const handleProofUpload = async (index, e) => {
+    const fileList = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (fileList.length === 0) return;
+
+    const invalid = fileList.filter(
+      (file) =>
+        !ACCEPTED_PROOF_TYPES.includes(file.type) || file.size > MAX_PROOF_SIZE,
+    );
+    if (invalid.length > 0) {
+      setError("Proof files must be PDF, JPG, or PNG and under 10MB each.");
+      return;
+    }
+
+    setUploadingRow(index);
+    setError("");
+    try {
+      const uploaded = [];
+      for (const file of fileList) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "milestone-proof");
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || data.message || "Upload failed");
+        }
+        uploaded.push({ url: data.url, key: data.key, name: file.name });
+      }
+
+      const nextRows = rows.map((row, i) =>
+        i === index
+          ? { ...row, proofs: [...(row.proofs || []), ...uploaded] }
+          : row,
+      );
+      setRows(nextRows);
+      syncProofKeys(nextRows);
+    } catch (err) {
+      setError(err.message || "Failed to upload proof files");
+    } finally {
+      setUploadingRow(null);
+    }
+  };
+
+  const removeProof = (index, file) => {
+    const nextRows = rows.map((row, i) =>
+      i === index
+        ? {
+            ...row,
+            proofs: (row.proofs || []).filter((proof) => proof !== file),
+          }
+        : row,
+    );
+    setRows(nextRows);
+    syncProofKeys(nextRows);
+
+    /* Files uploaded in this session are deleted right away; files that were
+       already saved are only released when the save is committed. */
+    if (file?.key && !fileLifecycle.hasOriginal(file.key)) {
+      fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: file.key }),
+      }).catch(() => {});
+    }
+  };
+
+  const closeAndCleanup = () => {
+    fileLifecycle.rollback();
+    fileLifecycle.resetSession();
+    onClose();
+  };
 
   const saveMilestones = async () => {
     if (!project) return;
@@ -102,6 +214,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
         status: MILESTONE_STATUSES.includes(row.status)
           ? row.status
           : "pending",
+        proofs: Array.isArray(row.proofs) ? row.proofs : [],
       }))
       .filter((row) => row.title || row.target_date || row.actual_date);
 
@@ -112,6 +225,17 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
 
     if (cleaned.length > MAX_MILESTONES) {
       setError(`You can add up to ${MAX_MILESTONES} milestones.`);
+      return;
+    }
+
+    /* Completed milestones can never be saved without proof of completion. */
+    const missingProof = cleaned.find(
+      (row) => row.status === "completed" && row.proofs.length === 0,
+    );
+    if (missingProof) {
+      setError(
+        `"${missingProof.title}" is marked completed — upload at least one proof file (PDF, JPG, or PNG) before saving.`,
+      );
       return;
     }
 
@@ -129,6 +253,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
         throw new Error(data.error || data.message || "Failed to save");
       }
 
+      await fileLifecycle.commit();
       onSaved?.(
         Array.isArray(data.data?.milestones) ? data.data.milestones : cleaned,
       );
@@ -144,23 +269,24 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50"
-        onClick={onClose}
+        onClick={closeAndCleanup}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in">
+      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
           <div>
             <h3 className="text-base font-bold text-gray-900">
               Update Milestones
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               Track each milestone&apos;s target date, actual date, and status.
+              Completed milestones require at least one proof file.
             </p>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeAndCleanup}
             className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
@@ -168,7 +294,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-5 space-y-4">
           {error && (
             <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
@@ -214,25 +340,26 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
               <table className="w-full text-left">
                 <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
                   <tr>
-                    <th className="px-3 py-2 font-semibold">
+                    <th className="px-2.5 py-1.5 font-semibold">
                       Milestone / Activity
                     </th>
-                    <th className="px-3 py-2 font-semibold w-36">
+                    <th className="px-2.5 py-1.5 font-semibold w-36">
                       Target Date
                     </th>
-                    <th className="px-3 py-2 font-semibold w-36">
+                    <th className="px-2.5 py-1.5 font-semibold w-36">
                       Actual Date
                     </th>
-                    <th className="px-3 py-2 font-semibold w-32">Status</th>
-                    <th className="px-3 py-2 w-10" />
+                    <th className="px-2.5 py-1.5 font-semibold w-32">Status</th>
+                    <th className="px-2.5 py-1.5 font-semibold w-48">Proof</th>
+                    <th className="px-2.5 py-1.5 w-10" />
                   </tr>
                 </thead>
                 <tbody>
                   {rows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
-                        className="px-3 py-6 text-center text-xs text-gray-400 italic"
+                        colSpan={6}
+                        className="px-2.5 py-5 text-center text-xs text-gray-400 italic"
                       >
                         No milestones yet — click “Add Milestone” to start.
                       </td>
@@ -243,7 +370,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
                         key={i}
                         className="border-t border-gray-100 align-top"
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-2.5 py-1.5">
                           <input
                             type="text"
                             value={row.title}
@@ -254,7 +381,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
                             className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2.5 py-1.5">
                           <input
                             type="date"
                             value={row.target_date}
@@ -264,7 +391,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
                             className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2.5 py-1.5">
                           <input
                             type="date"
                             value={row.actual_date}
@@ -274,7 +401,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
                             className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                           />
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2.5 py-1.5">
                           <select
                             value={row.status}
                             onChange={(e) =>
@@ -289,7 +416,76 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
                             ))}
                           </select>
                         </td>
-                        <td className="px-3 py-2 text-right">
+                        <td className="px-2.5 py-1.5">
+                          <div className="space-y-1.5">
+                            {(row.proofs || []).length > 0 && (
+                              <ul className="space-y-1">
+                                {(row.proofs || []).map((file, fileIndex) => (
+                                  <li
+                                    key={file.key || file.url || fileIndex}
+                                    className="flex items-center gap-1.5 text-[11px] text-gray-600"
+                                  >
+                                    <FaPaperclip
+                                      size={9}
+                                      className="shrink-0 text-gray-400"
+                                    />
+                                    <span
+                                      className="max-w-[120px] truncate"
+                                      title={file.name || file.key || ""}
+                                    >
+                                      {file.name || "Proof file"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeProof(i, file)}
+                                      className="text-gray-400 hover:text-red-500 transition-colors"
+                                      title="Remove proof"
+                                    >
+                                      <FaTimes size={9} />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {row.status === "completed" ? (
+                              <>
+                                <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
+                                  {uploadingRow === i ? (
+                                    <FaSpinner
+                                      size={10}
+                                      className="animate-spin"
+                                    />
+                                  ) : (
+                                    <FaPaperclip size={10} />
+                                  )}
+                                  {uploadingRow === i
+                                    ? "Uploading…"
+                                    : "Upload proof"}
+                                  <input
+                                    type="file"
+                                    multiple
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                    disabled={uploadingRow !== null}
+                                    onChange={(e) => handleProofUpload(i, e)}
+                                  />
+                                </label>
+                                {(row.proofs || []).length === 0 && (
+                                  <p className="text-[10px] font-medium text-amber-600">
+                                    Proof required
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              (row.proofs || []).length === 0 && (
+                                <span className="text-[11px] text-gray-300">
+                                  —
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-2.5 py-1.5 text-right">
                           <button
                             type="button"
                             onClick={() => removeRow(i)}
@@ -319,10 +515,10 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
 
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-3.5 flex items-center justify-end gap-3 rounded-b-2xl">
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeAndCleanup}
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
           >
             Cancel

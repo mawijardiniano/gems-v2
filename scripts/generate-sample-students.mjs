@@ -33,6 +33,6 @@ console.log(
   `Wrote ${path.relative(path.join(here, ".."), target)} - ${
     snapshot.totals.total
   } students (${snapshot.totals.Female}F / ${snapshot.totals.Male}M / ${
-    snapshot.totals.Other
-  } other)`,
+    snapshot.totals.lgbtqia
+  } LGBTQIA+)`,
 );

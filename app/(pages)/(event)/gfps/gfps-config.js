@@ -5,18 +5,8 @@ export const SECTIONS = [
   { key: "secretariat", label: "Secretariat" },
 ];
 
-export const OFFICIAL_GROUPS_ORDER = [
-  "president",
-  "vicePresidents",
-  "campusDirectors",
-  "collegeDeans",
-  "associateDeans",
-  "office_of_the_president",
-  "office_of_the_vice_president_academic_affairs",
-  "office_of_the_vice_president_admin_finance",
-  "office_of_the_vice_president_student_affairs",
-  "office_of_the_vice_president_research_extension",
-];
+// The officials picker groups seats by the MarSU chart headers.
+export { HEADERS as OFFICIAL_GROUPS_ORDER } from "@/lib/universityOfficialsConstants";
 
 export const SECTION_STYLES = {
   chairOrHeadOfAgency: {

@@ -6,7 +6,7 @@ import { cacheOrSet } from "@/lib/cache";
 const UPCOMING_LIST_CACHE_TTL = 60 * 1000; // 60 seconds
 
 const PUBLIC_FIELDS =
-  "_id title description number_of_days start_dates end_dates start_date end_date venue type_of_activity organizing_office_unit eligibility_criteria event_poster.url";
+  "_id title description reference_number number_of_days start_dates end_dates start_date end_date venue type_of_activity organizing_office_unit eligibility_criteria event_poster.url";
 
 export async function GET(req) {
   try {

@@ -9,6 +9,7 @@ import {
   FaChevronDown,
   FaUserGraduate,
   FaFolder,
+  FaBook,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -51,6 +52,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/dean/projects",
       icon: <FaFolder size={16} />,
       key: "projects",
+    },
+    {
+      name: "Knowledge Resources",
+      href: "/dean/knowledge-resources",
+      icon: <FaBook size={16} />,
+      key: "knowledge-resources",
     },
   ];
 

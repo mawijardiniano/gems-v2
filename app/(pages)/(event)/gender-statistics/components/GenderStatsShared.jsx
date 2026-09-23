@@ -57,7 +57,14 @@ const tooltipStyle = {
   padding: "8px 12px",
 };
 
-export const SEX_COLORS = { Female: "#ec4899", Male: "#3b82f6", Other: "#9ca3af" };
+export const SEX_COLORS = { Female: "#ec4899", Male: "#3b82f6" };
+
+export const GENDER_IDENTITY_COLORS = {
+  Male: "#3b82f6",
+  Female: "#ec4899",
+  "LGBTQIA+": "#8b5cf6",
+  "Not specified": "#9ca3af",
+};
 
 export function LoadingState({ label = "Loading statistics…" }) {
   return (
@@ -119,13 +126,13 @@ export function SummaryCards({ totals, what, deltas }) {
       sex: "Male",
     },
     {
-      label: "Non-binary / Other",
-      value: totals.Other,
-      pct: `${totals.pctOther ?? 0}%`,
+      label: "LGBTQIA+",
+      value: totals.lgbtqia,
+      pct: totals.pctLgbtqia != null ? `${totals.pctLgbtqia}%` : "—",
       accent: "from-purple-600 to-purple-400",
-      icon: "⚧",
+      icon: "🏳️‍🌈",
       iconBg: "bg-purple-100",
-      sex: "Other",
+      sex: null,
     },
   ];
 
@@ -146,10 +153,10 @@ export function SummaryCards({ totals, what, deltas }) {
                 {c.label}
               </p>
               <p className="mt-1 text-2xl font-bold text-gray-900 leading-tight">
-                {(c.value ?? 0).toLocaleString()}
+                {c.value == null ? "—" : c.value.toLocaleString()}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {c.pct} of total
+                {c.pct === "—" ? "not recorded" : `${c.pct} of total`}
                 {c.sex && deltas?.[c.sex] != null && (
                   <span
                     className={`ml-1 font-medium ${
@@ -173,7 +180,6 @@ export function SexDonut({ totals }) {
   const data = [
     { name: "Female", value: totals.Female },
     { name: "Male", value: totals.Male },
-    { name: "Other", value: totals.Other },
   ].filter((d) => d.value > 0);
 
   return (
@@ -257,10 +263,76 @@ export function StackedSexBar({ title, data, nameKey, height }) {
             <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(243,244,246,0.5)" }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="Female" stackId="sex" fill={SEX_COLORS.Female} />
-            <Bar dataKey="Male" stackId="sex" fill={SEX_COLORS.Male} />
-            <Bar dataKey="Other" stackId="sex" fill={SEX_COLORS.Other} radius={[0, 6, 6, 0]} />
+            <Bar dataKey="Male" stackId="sex" fill={SEX_COLORS.Male} radius={[0, 6, 6, 0]} />
           </BarChart>
         </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Gender identity (Male / Female / LGBTQIA+) beside sex distribution. The rows
+ * come from the stats payload (`byGenderIdentity`); "Not specified" is only
+ * present when the dataset has records with no identity recorded.
+ */
+export function GenderIdentityDonut({ rows }) {
+  const data = (Array.isArray(rows) ? rows : []).filter((d) => d.value > 0);
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const pctOf = (value) =>
+    total ? Math.round((value / total) * 1000) / 10 : 0;
+
+  return (
+    <div className={CARD_CLS}>
+      <SectionTitle>Gender Identity</SectionTitle>
+      {data.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">No data available.</p>
+      ) : (
+        <div className="relative">
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={2}
+                stroke="none"
+              >
+                {data.map((d) => (
+                  <Cell
+                    key={d.name}
+                    fill={GENDER_IDENTITY_COLORS[d.name] || "#cbd5e1"}
+                  />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-2xl font-bold text-gray-900">
+              {total.toLocaleString()}
+            </span>
+            <span className="text-[11px] text-gray-400">Total</span>
+          </div>
+          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            {data.map((d) => (
+              <span
+                key={d.name}
+                className="flex items-center gap-1.5 text-xs text-gray-600"
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: GENDER_IDENTITY_COLORS[d.name] || "#cbd5e1" }}
+                />
+                {d.name}: {d.value.toLocaleString()} ({pctOf(d.value)}%)
+              </span>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -282,8 +354,7 @@ export function StackedSexBarVertical({ title, data, nameKey, height = 260 }) {
             <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(243,244,246,0.5)" }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="Female" stackId="sex" fill={SEX_COLORS.Female} radius={[0, 0, 6, 6]} />
-            <Bar dataKey="Male" stackId="sex" fill={SEX_COLORS.Male} />
-            <Bar dataKey="Other" stackId="sex" fill={SEX_COLORS.Other} radius={[6, 6, 0, 0]} />
+            <Bar dataKey="Male" stackId="sex" fill={SEX_COLORS.Male} radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -306,7 +377,6 @@ export function DemographicTable({ rows, total }) {
                 <th className="py-2 pr-3 font-medium">Category</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
-                <th className="py-2 pr-3 font-medium text-right">Other</th>
                 <th className="py-2 pr-3 font-medium text-right">Total</th>
                 <th className="py-2 font-medium text-right">% of Total</th>
               </tr>
@@ -317,7 +387,6 @@ export function DemographicTable({ rows, total }) {
                   <td className="py-2.5 pr-3 text-gray-700">{r.label}</td>
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">{r.Female}</td>
                   <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">{r.Male}</td>
-                  <td className="py-2.5 pr-3 text-right text-gray-500">{r.Other}</td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">{r.total}</td>
                   <td className="py-2.5 text-right text-xs text-gray-400">
                     {total ? `${Math.round((r.total / total) * 1000) / 10}%` : "—"}
@@ -335,17 +404,15 @@ export function DemographicTable({ rows, total }) {
 export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Category" }) {
   const safeData = Array.isArray(data) ? data : [];
 
-  const rowTotal = (r) =>
-    r.total ?? (r.Female || 0) + (r.Male || 0) + (r.Other || 0);
+  const rowTotal = (r) => r.total ?? (r.Female || 0) + (r.Male || 0);
 
   const totals = safeData.reduce(
     (acc, r) => ({
       Female: acc.Female + (r.Female || 0),
       Male: acc.Male + (r.Male || 0),
-      Other: acc.Other + (r.Other || 0),
       total: acc.total + rowTotal(r),
     }),
-    { Female: 0, Male: 0, Other: 0, total: 0 },
+    { Female: 0, Male: 0, total: 0 },
   );
 
   const pct = (part, whole) =>
@@ -369,7 +436,6 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                 <th className="py-2 pr-3 font-medium">{nameHeader}</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
-                <th className="py-2 pr-3 font-medium text-right">Other</th>
                 <th className="py-2 pr-3 font-medium text-right">Total</th>
                 <th className="py-2 font-medium text-right">% Female</th>
               </tr>
@@ -388,9 +454,6 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                   </td>
                   <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
                     {(r.Male || 0).toLocaleString()}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right text-gray-500">
-                    {(r.Other || 0).toLocaleString()}
                   </td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
                     {rowTotal(r).toLocaleString()}
@@ -411,9 +474,6 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                 </td>
                 <td className="py-2.5 pr-3 text-right text-blue-700">
                   {totals.Male.toLocaleString()}
-                </td>
-                <td className="py-2.5 pr-3 text-right text-gray-600">
-                  {totals.Other.toLocaleString()}
                 </td>
                 <td className="py-2.5 pr-3 text-right">
                   {totals.total.toLocaleString()}

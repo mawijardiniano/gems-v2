@@ -19,8 +19,9 @@ import {
   FaEllipsisV,
   FaChevronLeft,
   FaChevronRight,
-  FaPrint,
   FaLink,
+  FaFileAlt,
+  FaFilePdf,
 } from "react-icons/fa";
 
 
@@ -91,6 +92,57 @@ function StatCard({ icon: Icon, label, value, color = "blue" }) {
   );
 }
 
+function QuickReportButton({
+  label,
+  icon: Icon,
+  loading,
+  disabled,
+  title,
+  onClick,
+  accent = "blue",
+}) {
+  const accentClass =
+    accent === "violet"
+      ? "hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700"
+      : "hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      title={title}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-600 ${accentClass} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+    >
+      {loading ? (
+        <>
+          <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          Generating...
+        </>
+      ) : (
+        <>
+          <Icon className="h-3 w-3" />
+          {label}
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function ProjectContent2({ basePath = "/gpb" }) {
   const role = useSelector((state) => state.auth.role);
   const [gpbList, setGpbList] = useState([]);
@@ -119,12 +171,18 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
 
+  const [generatingQuickReportId, setGeneratingQuickReportId] = useState(null);
+  const [quickReportError, setQuickReportError] = useState("");
+
   useEffect(() => {
     if (success) { const t = setTimeout(() => setSuccess(""), 3000); return () => clearTimeout(t); }
   }, [success]);
   useEffect(() => {
     if (error) { const t = setTimeout(() => setError(""), 4000); return () => clearTimeout(t); }
   }, [error]);
+  useEffect(() => {
+    if (quickReportError) { const t = setTimeout(() => setQuickReportError(""), 6000); return () => clearTimeout(t); }
+  }, [quickReportError]);
 
 
   useEffect(() => {
@@ -264,6 +322,58 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     }
   };
 
+  const downloadQuickReport = async (item, report) => {
+    const config = {
+      matrix: {
+        endpoint: `/api/reports/gpb-matrix?year=${encodeURIComponent(item.year)}`,
+        fallbackFilename: `gpb-matrix-${item.year}.pdf`,
+        successLabel: `GPB Plan and Budget matrix for ${item.year} downloaded.`,
+      },
+      gar: {
+        endpoint: `/api/reports/gad-ar?year=${encodeURIComponent(item.year)}`,
+        fallbackFilename: `gad-accomplishment-report-${item.year}.pdf`,
+        successLabel: `GAD Accomplishment Report for ${item.year} downloaded.`,
+      },
+    }[report];
+    if (!config) return;
+
+    setQuickReportError("");
+    setGeneratingQuickReportId(`${item._id}:${report}`);
+    try {
+      const res = await axios.get(config.endpoint, { responseType: "blob" });
+
+      const dispositionFilename =
+        (res.headers?.["content-disposition"] || "").split("filename=")[1] ||
+        "";
+      const url = window.URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        dispositionFilename.replace(/"/g, "") || config.fallbackFilename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setSuccess(config.successLabel);
+    } catch (err) {
+      let message = "Could not generate the report. Please try again.";
+      const data = err?.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const parsed = JSON.parse(await data.text());
+          message = parsed.message || parsed.error || message;
+        } catch {
+          /* keep the default message when the body is not JSON */
+        }
+      } else if (data?.message) {
+        message = data.message;
+      }
+      setQuickReportError(message);
+    } finally {
+      setGeneratingQuickReportId(null);
+    }
+  };
+
   const yearAlreadyExists = useMemo(
     () =>
       selectedYear !== "" &&
@@ -321,6 +431,12 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+      {quickReportError && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+          <FaExclamationTriangle className="h-5 w-5 shrink-0" />
+          <span>{quickReportError}</span>
         </div>
       )}
 
@@ -523,6 +639,41 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         <FaArrowRight className="h-3.5 w-3.5" />
                       </div>
                     </Link>
+
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        Quick Reports
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <QuickReportButton
+                          label="GPB Matrix PDF"
+                          icon={FaFileAlt}
+                          loading={
+                            generatingQuickReportId === `${item._id}:matrix`
+                          }
+                          disabled={!item.projects?.length}
+                          title={
+                            !item.projects?.length
+                              ? "No projects yet — nothing to print"
+                              : "Download the GPB Plan and Budget matrix (PDF)"
+                          }
+                          onClick={() => downloadQuickReport(item, "matrix")}
+                        />
+                        <QuickReportButton
+                          label="GAR PDF"
+                          icon={FaFilePdf}
+                          loading={generatingQuickReportId === `${item._id}:gar`}
+                          disabled={!item.projects?.length}
+                          title={
+                            !item.projects?.length
+                              ? "No projects yet — nothing to report"
+                              : "Download GAD Accomplishment Report (PDF)"
+                          }
+                          onClick={() => downloadQuickReport(item, "gar")}
+                          accent="violet"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

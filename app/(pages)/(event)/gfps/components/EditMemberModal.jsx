@@ -2,7 +2,7 @@
 
 import CheckboxTree from "./CheckboxTree";
 import { SECTIONS } from "../gfps-config";
-import { findOfficialItem, normalizeGroupItems } from "../officials";
+import { findOfficialItem, groupItems } from "../officials";
 
 function ModalHeader({ editingSection, onClose }) {
   return (
@@ -73,12 +73,9 @@ function AssignRoles({ officials, selectedOfficials, execRoles, onExecRolesChang
       <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-48 overflow-y-auto">
         {selectedOfficials.map((key) => {
           const [group, id] = key.split(":");
-          const item = findOfficialItem(
-            normalizeGroupItems(officials[group]),
-            id,
-          );
-          const label = item?.position || item?.college || item?.branch;
-          const subLabel = item?.college || item?.branch;
+          const item = findOfficialItem(groupItems(officials, group), id);
+          const label = item?.position || group;
+          const subLabel = item?.header;
           const firstName =
             item?.name?.personal_info_id?.personal?.first_name ||
             item?.first_name;

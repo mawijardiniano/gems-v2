@@ -1,16 +1,4 @@
-/* Employee gender-statistics helpers shared by the sample dataset and the
-   filter panel on the employees page.
 
-   Two jobs:
-   1. Turn a list of sample employee records into the exact response shape the
-      gender-statistics API returns, so the page (and the quick-report PDFs)
-      render identically whether the data is live or sampled.
-   2. Filter/option helpers for the filter panel.
-
-   The sample records themselves live in ./employeeSampleRecords.js. */
-
-/* Values the live database stores for employment_information.employment_status
-   and employment_appointment_status (see models/employment_information.js). */
 export const LIVE_PERSONNEL_TYPES = ["Faculty", "Non-teaching Personnel"];
 
 export const LIVE_APPOINTMENT_STATUSES = [
@@ -27,8 +15,6 @@ export const LIVE_APPOINTMENT_STATUSES = [
   "Adjunct",
 ];
 
-/* Display order for the sample breakdowns — keeps the tables in a familiar
-   order (leadership first, then rank-and-file) instead of by headcount. */
 export const CATEGORY_ORDER = [
   "Faculty",
   "Administrative Staff",
@@ -54,6 +40,7 @@ export const APPOINTMENT_ORDER = [
   "Job Order",
   "Contract of Service (Skilled)",
   "Utility Worker",
+  "Security Guard",
   "University Lecturer",
   "Part-time Lecturer",
   "Clinical Instructor",
@@ -72,14 +59,14 @@ export const ACADEMIC_RANK_ORDER = [
   "Professor",
 ];
 
-const SEXES = ["Female", "Male", "Other"];
+const SEXES = ["Female", "Male"];
 
 export function sexOf(record) {
-  return SEXES.includes(record?.sex) ? record.sex : "Other";
+  return SEXES.includes(record?.sex) ? record.sex : "Female";
 }
 
 function emptyCounts() {
-  return { Female: 0, Male: 0, Other: 0, total: 0 };
+  return { Female: 0, Male: 0, total: 0 };
 }
 
 function addCounts(bucket, sex) {
@@ -97,7 +84,6 @@ function toList(countsObj, nameKey, order) {
     [nameKey]: name,
     Female: c.Female || 0,
     Male: c.Male || 0,
-    Other: c.Other || 0,
     total: c.total || 0,
     pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
   }));
@@ -114,7 +100,6 @@ function toList(countsObj, nameKey, order) {
   return rows;
 }
 
-/* ── Filtering ─────────────────────────────────────────────────────────── */
 
 export const EMPTY_EMPLOYEE_FILTERS = {
   personnelType: "",
@@ -122,6 +107,7 @@ export const EMPTY_EMPLOYEE_FILTERS = {
   department: "",
   appointmentStatus: "",
   positionLevel: "",
+  schoolYear: "",
 };
 
 export function activeFilterCount(filters = {}) {
@@ -135,6 +121,7 @@ export function filterEmployeeRecords(records = [], filters = {}) {
     department,
     appointmentStatus,
     positionLevel,
+    schoolYear,
   } = filters;
 
   return records.filter((record) => {
@@ -145,11 +132,12 @@ export function filterEmployeeRecords(records = [], filters = {}) {
       return false;
     }
     if (positionLevel && record.positionLevel !== positionLevel) return false;
+    /* Academic year narrows through the appointment history. */
+    if (schoolYear && !(record.years || []).includes(schoolYear)) return false;
     return true;
   });
 }
 
-/** Distinct values of a record field, in the order they first appear. */
 export function uniqueFieldOptions(records = [], key) {
   const seen = new Set();
   const values = [];
@@ -162,7 +150,6 @@ export function uniqueFieldOptions(records = [], key) {
   return values;
 }
 
-/** Departments available for an office (all offices when none is selected). */
 export function departmentOptions(records = [], office = "") {
   const scoped = office
     ? records.filter((record) => record.office === office)
@@ -172,16 +159,35 @@ export function departmentOptions(records = [], office = "") {
   );
 }
 
-/* ── Aggregation ───────────────────────────────────────────────────────── */
+
 
 const DEMOGRAPHIC_ROWS = [
   { label: "Scholar", test: (r) => r?.scholar === true },
   { label: "Person with Disability (PWD)", test: (r) => r?.pwd === true },
   { label: "Indigenous Peoples (IP)", test: (r) => r?.indigenous === true },
+  { label: "Solo Parent", test: (r) => r?.soloParent === true },
   { label: "Low Income", test: (r) => r?.income === "Low Income" },
   { label: "Middle Income", test: (r) => r?.income === "Middle Income" },
   { label: "High Income", test: (r) => r?.income === "High Income" },
 ];
+
+export const GENDER_IDENTITY_ORDER = ["Male", "Female", "LGBTQIA+"];
+
+function genderIdentityRows(records = []) {
+  const counts = new Map(GENDER_IDENTITY_ORDER.map((name) => [name, 0]));
+  let unspecified = 0;
+  records.forEach((record) => {
+    const value = record?.genderIdentity;
+    if (counts.has(value)) counts.set(value, counts.get(value) + 1);
+    else unspecified += 1;
+  });
+  const rows = GENDER_IDENTITY_ORDER.map((name) => ({
+    name,
+    value: counts.get(name),
+  }));
+  if (unspecified > 0) rows.push({ name: "Not specified", value: unspecified });
+  return rows;
+}
 
 const pct = (part, whole) =>
   whole ? Math.round((part / whole) * 1000) / 10 : 0;
@@ -196,14 +202,48 @@ function groupBy(records, keyFn, nameKey, order) {
   return toList(counts, nameKey, order);
 }
 
+
 /**
  * Build the same response shape as
  * `/api/analytics/gender-statistics?type=employees` from sample employee
- * records, so the page and the quick-report PDFs work unchanged.
+ * records, so the page and its charts work unchanged.
+ *
+ * `allRecords` feeds the filter option lists (schoolYears), the way the live
+ * API reports every year it holds rather than only the years that survive the
+ * current filter.
  */
-export function computeEmployeeStats(records = []) {
+export function computeEmployeeStats(records = [], allRecords = records) {
   const totals = emptyCounts();
   records.forEach((record) => addCounts(totals, sexOf(record)));
+
+  const lgbtqia = records.filter(
+    (record) => record?.genderIdentity === "LGBTQIA+",
+  ).length;
+
+  /* Appointment history: an employee counts once per sample year they are on
+     board (`years` runs from the start year through the newest sample year). */
+  const perYear = new Map();
+  records.forEach((record) => {
+    (record.years || []).forEach((year) => {
+      if (!perYear.has(year)) perYear.set(year, emptyCounts());
+      addCounts(perYear.get(year), sexOf(record));
+    });
+  });
+
+  const byAcademicYear = [...perYear.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([school_year, counts]) => ({
+      school_year,
+      Female: counts.Female,
+      Male: counts.Male,
+      total: counts.total,
+    }));
+
+  const schoolYears = [
+    ...new Set(allRecords.flatMap((record) => record.years || [])),
+  ]
+    .sort()
+    .reverse();
 
   return {
     type: "employees",
@@ -211,11 +251,11 @@ export function computeEmployeeStats(records = []) {
     totals: {
       Female: totals.Female,
       Male: totals.Male,
-      Other: totals.Other,
       total: totals.total,
       pctFemale: pct(totals.Female, totals.total),
       pctMale: pct(totals.Male, totals.total),
-      pctOther: pct(totals.Other, totals.total),
+      lgbtqia,
+      pctLgbtqia: pct(lgbtqia, totals.total),
     },
     byOffice: groupBy(records, (r) => r.office, "office").filter(
       (row) => row.office !== "Unspecified",
@@ -244,6 +284,9 @@ export function computeEmployeeStats(records = []) {
       "status",
       APPOINTMENT_ORDER,
     ).filter((row) => row.status !== "Unspecified"),
+    byAcademicYear,
+    schoolYears,
+    byGenderIdentity: genderIdentityRows(records),
     demographics: DEMOGRAPHIC_ROWS.map((row) => {
       const counts = emptyCounts();
       records.forEach((record) => {
@@ -253,7 +296,6 @@ export function computeEmployeeStats(records = []) {
         label: row.label,
         Female: counts.Female,
         Male: counts.Male,
-        Other: counts.Other,
         total: counts.total,
       };
     }),

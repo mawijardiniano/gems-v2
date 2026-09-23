@@ -17,7 +17,7 @@ export async function GET(req) {
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
-  const universityOfficials = await UniversityOfficial.findOne({})
+  const universityOfficials = await UniversityOfficial.find({})
     .populate(UNIVERSITY_OFFICIALS_POPULATE)
     .lean();
 

@@ -2,26 +2,15 @@
 
 import React, { useMemo, useState } from "react";
 import { OFFICIAL_GROUPS_ORDER } from "../gfps-config";
-import { normalizeGroupItems, officialItemKey } from "../officials";
+import { groupItems, officialItemKey } from "../officials";
 
-const getItemLabel = (section, item, id) => {
-  const firstName = item?.name?.personal_info_id?.first_name;
+const getItemLabel = (item, id) => {
+  const firstName =
+    item?.name?.personal_info_id?.personal?.first_name ||
+    item?.name?.first_name;
   const email = item?.name?.email;
 
-  switch (section) {
-    case "campusDirectors":
-      return item?.branch || item?.position || firstName || email || id;
-    case "collegeDeans":
-      return item?.college || item?.position || firstName || email || id;
-    case "associateDeans":
-      return (
-        item?.college || item?.branch || item?.position || firstName || email || id
-      );
-    default:
-      return (
-        item?.position || firstName || email || item?.branch || item?.college || id
-      );
-  }
+  return item?.position || firstName || email || id;
 };
 
 const sectionTitle = (section) =>
@@ -39,7 +28,7 @@ export default function CheckboxTree({ officials, selected, onChange }) {
     setExpanded((prev) => ({ ...prev, [section]: !prev[section] }));
 
   const handleSectionCheck = (section, checked) => {
-    const allKeys = normalizeGroupItems(officials[section]).map((item) =>
+    const allKeys = groupItems(officials, section).map((item) =>
       officialItemKey(section, item),
     );
     if (checked) {
@@ -62,7 +51,7 @@ export default function CheckboxTree({ officials, selected, onChange }) {
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden bg-white divide-y divide-gray-100 max-h-64 overflow-y-auto">
       {OFFICIAL_GROUPS_ORDER.map((section) => {
-        const items = normalizeGroupItems(officials[section]);
+        const items = groupItems(officials, section);
         if (items.length === 0) return null;
 
         const sectionChecked = items.every((item) =>
@@ -132,7 +121,7 @@ export default function CheckboxTree({ officials, selected, onChange }) {
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                       />
                       <span className="ml-2.5 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                        {getItemLabel(section, item, id)}
+                        {getItemLabel(item, id)}
                       </span>
                     </label>
                   );

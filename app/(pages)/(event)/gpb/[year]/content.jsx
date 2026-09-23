@@ -22,6 +22,7 @@ import PrintGPB from "../../components/Print/PrintGPB";
 import { findDuplicates } from "@/lib/duplicateDetection";
 import OfficeMultiSelect from "../../components/OfficeMultiSelect";
 import { toOfficeArray } from "@/lib/colleges";
+import { nextRefNumber } from "@/lib/referenceNumber";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -675,6 +676,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       return a.originalIndex - b.originalIndex;
     })
     .map((entry) => entry.project);
+
+  /* The API assigns the real reference number on save; this is only the preview
+     shown while filling in the "add project" wizard. */
+  const nextRefPreview = nextRefNumber(
+    year,
+    safeProjects
+      .map((project) => project.reference_number)
+      .filter(Boolean),
+  );
 
   const totalPages = Math.max(1, Math.ceil(orderedProjects.length / pageSize));
   const paginatedProjects = orderedProjects.slice(
@@ -1911,6 +1921,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               <div>
                 <h2 className="text-xl font-bold text-gray-800">
                   Edit Project
+                  {editRow.reference_number && (
+                    <span className="ml-2 align-middle font-mono text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5">
+                      {editRow.reference_number}
+                    </span>
+                  )}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
                   All fields marked <span className="text-red-500">*</span> are
@@ -2482,6 +2497,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Attributed Program
                     </option>
                   </select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-500">
+                  <span>Project Reference No.</span>
+                  <span className="font-mono font-semibold text-gray-700">
+                    {nextRefPreview}
+                  </span>
                 </div>
                 {!isAttributedProgram(newProject) && (
                   <>
@@ -3459,7 +3480,17 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                       className="py-2 px-4 border"
                                       rowSpan={editMaxRows}
                                     >
-                                      {(page - 1) * pageSize + idx + 1}
+                                      <div>
+                                        {(page - 1) * pageSize + idx + 1}
+                                      </div>
+                                      {project.reference_number && (
+                                        <div
+                                          className="mt-1 font-mono text-[9px] leading-tight text-gray-500 whitespace-nowrap"
+                                          title="Project reference number"
+                                        >
+                                          {project.reference_number}
+                                        </div>
+                                      )}
                                     </td>
                                     {editingId === project._id ? (
                                       <td

@@ -4,6 +4,7 @@ import {
   MIN_GROUP_FOR_FINDINGS,
   buildGapEntries,
   buildGapFindings,
+  buildGenderIdentityTable,
   buildSexSummaryTable,
   buildSexTable,
   fmtGap,
@@ -89,7 +90,7 @@ function rows(items) {
 
 function rowTotal(row) {
   if (typeof row?.total === "number") return row.total;
-  return (row?.Female || 0) + (row?.Male || 0) + (row?.Other || 0);
+  return (row?.Female || 0) + (row?.Male || 0);
 }
 
 /** The equity-group breakdown, under whichever key the data source used. */
@@ -149,7 +150,6 @@ export function buildYearOverYearTable(years) {
     "Academic Year",
     "Female",
     "Male",
-    "Other",
     "Total",
     "% Female",
     "Change in Total",
@@ -167,7 +167,6 @@ export function buildYearOverYearTable(years) {
       row?.school_year ?? "Unspecified",
       female,
       row?.Male || 0,
-      row?.Other || 0,
       total,
       fmtPct(row?.pctFemale != null ? row.pctFemale : pctOf(female, total)),
       totalChange === null
@@ -197,7 +196,6 @@ export function buildYearOverYearTable(years) {
       "Average per academic year",
       avgFemale,
       avgOf("Male"),
-      avgOf("Other"),
       avg,
       fmtPct(pctOf(avgFemale, avg)),
       "-",
@@ -218,7 +216,7 @@ export async function generateStudentQuickReport(kind, data, options = {}) {
   const dataset = data || {};
   const isSample = Boolean(options.isSample);
   const meta = studentReportMeta(kind);
-  const totals = dataset.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
+  const totals = dataset.totals || { Female: 0, Male: 0, total: 0 };
 
   const [{ jsPDF }, autoTableModule] = await Promise.all([
     import("jspdf"),
@@ -398,6 +396,11 @@ export async function generateStudentQuickReport(kind, data, options = {}) {
     drawTable(buildSexSummaryTable(totals));
 
     drawSection(
+      "Gender Identity",
+      buildGenderIdentityTable(dataset.byGenderIdentity),
+    );
+
+    drawSection(
       "Students by Academic Level and Sex",
       buildSexTable(dataset.byLevel, "level", "Academic Level"),
     );
@@ -442,9 +445,9 @@ export async function generateStudentQuickReport(kind, data, options = {}) {
         `Largest program: ${biggest.program} with ${rowTotal(biggest).toLocaleString()} students (${fmtPct(biggest.pctFemale != null ? biggest.pctFemale : pctOf(biggest.Female || 0, rowTotal(biggest)))} female).`,
       );
     }
-    if ((totals.Other || 0) > 0) {
+    if ((totals.lgbtqia || 0) > 0) {
       observations.push(
-        `${(totals.Other || 0).toLocaleString()} student(s) (${fmtPct(totals.pctOther != null ? totals.pctOther : pctOf(totals.Other || 0, totals.total || 0))}) are recorded as non-binary / other gender identity.`,
+        `${(totals.lgbtqia || 0).toLocaleString()} student(s) (${fmtPct(totals.pctLgbtqia != null ? totals.pctLgbtqia : pctOf(totals.lgbtqia || 0, totals.total || 0))}) identify as LGBTQIA+.`,
       );
     }
     drawBullets(observations);

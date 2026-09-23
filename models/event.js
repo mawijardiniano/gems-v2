@@ -4,6 +4,14 @@ const EventSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, default: "" },
+    /* Human-readable code shown on event cards, e.g. "GAD-2025-001".
+       Assigned by the API on create (prefix comes from the type of activity)
+       and kept forever, even if other events are deleted. */
+    reference_number: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     number_of_days: { type: Number },
     start_dates: [{ type: Date }],
     end_dates: [{ type: Date }],
@@ -182,5 +190,16 @@ EventSchema.index({ status: 1, createdAt: -1 });
 EventSchema.index({ created_by: 1 });
 EventSchema.index({ project: 1 });
 EventSchema.index({ start_date: 1 });
+
+/* Reference numbers already embed the activity type and year, so a single
+   unique field is enough. Events created before the feature (null) are excluded
+   from the constraint. */
+EventSchema.index(
+  { reference_number: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { reference_number: { $type: "string" } },
+  },
+);
 
 export default models.Event || model("Event", EventSchema);

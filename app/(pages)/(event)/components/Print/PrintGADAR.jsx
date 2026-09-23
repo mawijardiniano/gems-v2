@@ -133,19 +133,17 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       try {
         const officialsRes = await fetch("/api/university-officials");
         const officialsJson = await officialsRes.json();
-        const officials = officialsJson?.data?.[0] || {};
+        const officials = Array.isArray(officialsJson?.data)
+          ? officialsJson.data
+          : [];
 
         const presidentName = extractNameFromUserAuth(
-          officials?.president?.name,
+          officials.find((o) => o?.title === "University President")?.name,
           { includeMiddleInitial: true },
         );
 
-        const focalEntry = (officials?.office_of_the_president || []).find(
-          (item) =>
-            item?.position
-              ?.toString()
-              .toLowerCase()
-              .includes("focal point/person, gender & development"),
+        const focalEntry = officials.find((o) =>
+          o?.position?.toString().toLowerCase().includes("focal"),
         );
         const focalName = extractNameFromUserAuth(focalEntry?.name);
 

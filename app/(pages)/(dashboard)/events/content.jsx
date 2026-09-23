@@ -163,9 +163,16 @@ function EventCard({ event, userId, onStatusClick, statusUpdatingId, onClick, is
       <div className="p-4 space-y-3">
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2 flex-1">
-            {event.title}
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+              {event.title}
+            </h3>
+            {event.reference_number && (
+              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-400">
+                {event.reference_number}
+              </span>
+            )}
+          </div>
           {event.type_of_activity && (
             <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ACTIVITY_COLORS[event.type_of_activity] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
               {event.type_of_activity}

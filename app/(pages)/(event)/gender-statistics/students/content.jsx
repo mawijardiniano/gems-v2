@@ -9,6 +9,7 @@ import {
   ErrorState,
   SummaryCards,
   SexDonut,
+  GenderIdentityDonut,
   StackedSexBar,
   StackedSexBarVertical,
   DemographicTable,
@@ -86,9 +87,9 @@ function buildInsights(data) {
     );
   }
 
-  if (t.Other > 0) {
+  if (t.lgbtqia > 0) {
     insights.push(
-      `${t.Other.toLocaleString()} student${t.Other === 1 ? "" : "s"} (${t.pctOther}%) are recorded as non-binary / other gender identity.`,
+      `${t.lgbtqia.toLocaleString()} student${t.lgbtqia === 1 ? "" : "s"} (${t.pctLgbtqia}%) identify as LGBTQIA+.`,
     );
   }
 
@@ -159,12 +160,12 @@ export default function StudentGenderStatsContent() {
   const studentTypeOptions = activeData?.studentTypes || STUDENT_TYPE_ORDER;
 
   /* Academic-year and semester options follow the active dataset, so sample
-     mode lists the sample terms instead of the live ones (the sample dataset
-     covers 2021-2022 to 2024-2025, the live data starts 2025-2026). */
+     mode lists the five sample terms instead of the live ones (the sample
+     dataset covers 2020-2021 to 2024-2025, the live data starts 2025-2026). */
   const schoolYearOptions = activeData?.schoolYears || [];
   const semesterOptions = activeData?.semesters || [];
 
-  const totals = activeData?.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
+  const totals = activeData?.totals || { Female: 0, Male: 0, total: 0 };
   const insights = useMemo(() => buildInsights(activeData), [activeData]);
   const showContent = useSample || (!loading && !!data);
   const filterCount = activeFilterCount(filters);
@@ -181,13 +182,11 @@ export default function StudentGenderStatsContent() {
     return {
       Female: pct(cur.Female, prev.Female),
       Male: pct(cur.Male, prev.Male),
-      Other:
-        cur.Other > 0 || prev.Other > 0 ? pct(cur.Other, prev.Other) : null,
     };
   }, [activeData, schoolYear]);
 
   /* Always pin to a specific AY: default to the latest year and drop a year the
-     current dataset does not contain (the sample dataset starts 2021-2022). */
+     current dataset does not contain (the sample dataset starts 2020-2021). */
   useEffect(() => {
     const years = activeData?.schoolYears || [];
     if (!years.length) return;
@@ -398,11 +397,12 @@ export default function StudentGenderStatsContent() {
       {useSample && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           Showing synthetic <strong>sample data</strong> for{" "}
-          {SAMPLE_STUDENT_COUNT.toLocaleString()} students, expanded into
-          individual records from{" "}
+          {SAMPLE_STUDENT_COUNT.toLocaleString()} students with a five-year
+          enrollment history (2020-2021 to 2024-2025), expanded into individual
+          records from{" "}
           <code className="mx-1">data/sample-students.json</code> so every
-          filter composes. Your database is not being read and nothing is
-          saved - turn the toggle off to return to live data.
+          filter composes. Your database is not being read and nothing is saved
+          - turn the toggle off to return to live data.
         </div>
       )}
 
@@ -435,11 +435,14 @@ export default function StudentGenderStatsContent() {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             <SexDonut totals={totals} />
-            <StackedSexBarVertical
-              title="Students by Academic Level and Sex"
-              data={activeData.byLevel || []}
-              nameKey="level"
-            />
+            <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
+            <div className="xl:col-span-2">
+              <StackedSexBarVertical
+                title="Students by Academic Level and Sex"
+                data={activeData.byLevel || []}
+                nameKey="level"
+              />
+            </div>
           </div>
 
           {Array.isArray(activeData.byStudentType) &&
@@ -507,7 +510,6 @@ function TopProgramsTable({ rows }) {
                 <th className="py-2 pr-3 font-medium">Program</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
-                <th className="py-2 pr-3 font-medium text-right">Other</th>
                 <th className="py-2 pr-3 font-medium text-right">Total</th>
                 <th className="py-2 font-medium text-right">% Female</th>
               </tr>
@@ -527,9 +529,6 @@ function TopProgramsTable({ rows }) {
                   </td>
                   <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
                     {r.Male}
-                  </td>
-                  <td className="py-2.5 pr-3 text-right text-gray-500">
-                    {r.Other}
                   </td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
                     {r.total}

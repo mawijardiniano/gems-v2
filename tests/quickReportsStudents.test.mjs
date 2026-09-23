@@ -73,7 +73,8 @@ test("studentReportFilename: slugs the kind and flags sample data", () => {
 test("equityRows: prefers demographics, falls back to byStudentType", () => {
   const withDemo = equityRows(sample);
   assert.strictEqual(withDemo.nameKey, "label");
-  assert.strictEqual(withDemo.items.length, 6);
+  /* Six equity categories plus the Solo Parent row. */
+  assert.strictEqual(withDemo.items.length, 7);
 
   const fallback = equityRows({ byStudentType: sample.byStudentType });
   assert.strictEqual(fallback.nameKey, "type");
@@ -101,39 +102,49 @@ test("buildIntersectionTable: within-group share plus share of all women", () =>
   ]);
 
   const scholars = body.find((row) => row[0] === "Scholar");
+  assert.strictEqual(scholars[1], 486);
+  assert.strictEqual(scholars[2], "54.7%");
+  assert.strictEqual(scholars[3], 402);
+  /* 486 of the 2,097 female students are scholars. */
+  assert.strictEqual(scholars[6], "23.2%");
+  assert.strictEqual(scholars[7], "Female-leaning");
+
+  const highs = body.find((row) => row[0] === "High Income");
+  assert.strictEqual(highs[6], "14.6%");
+});
 
 // ─── Multi-year table ───────────────────────────────────────────────
 
 test("buildYearOverYearTable: yearly rows, deltas and an average row", () => {
   const { head, body } = buildYearOverYearTable(sample.byAcademicYear);
 
-  assert.strictEqual(head.length, 8);
-  assert.strictEqual(head[6], "Change in Total");
-  /* Four academic years plus the average summary row. */
-  assert.strictEqual(body.length, 5);
+  assert.strictEqual(head.length, 7);
+  assert.strictEqual(head[5], "Change in Total");
+  /* Five academic years plus the average summary row. */
+  assert.strictEqual(body.length, 6);
 
-  assert.deepStrictEqual(body[0].slice(0, 3), ["2021-2022", 378, 211]);
+  assert.deepStrictEqual(body[0].slice(0, 3), ["2020-2021", 1775, 1125]);
   /* The first year has nothing to compare against. */
+  assert.strictEqual(body[0][5], "-");
   assert.strictEqual(body[0][6], "-");
-  assert.strictEqual(body[0][7], "-");
 
-  assert.deepStrictEqual(body[1].slice(0, 2), ["2022-2023", 853]);
-  assert.strictEqual(body[1][6], "+772");
-  assert.strictEqual(body[1][7], "+475");
-  assert.strictEqual(body[1][5], "62.6%");
+  assert.deepStrictEqual(body[1].slice(0, 2), ["2021-2022", 1865]);
+  assert.strictEqual(body[1][5], "+155");
+  assert.strictEqual(body[1][6], "+90");
+  assert.strictEqual(body[1][4], "61%");
 
   const average = body[body.length - 1];
   assert.strictEqual(average[0], "Average per academic year");
-  assert.strictEqual(average[1], 1198);
-  assert.strictEqual(average[4], 1939);
-  assert.strictEqual(average[5], "61.8%");
+  assert.strictEqual(average[1], 1942);
+  assert.strictEqual(average[3], 3176);
+  assert.strictEqual(average[4], "61.1%");
 });
 
 test("buildYearOverYearTable: sorts unsorted years and handles an empty list", () => {
   const shuffled = [...sample.byAcademicYear].reverse();
   const { body } = buildYearOverYearTable(shuffled);
-  assert.strictEqual(body[0][0], "2021-2022");
-  assert.strictEqual(body[3][0], "2024-2025");
+  assert.strictEqual(body[0][0], "2020-2021");
+  assert.strictEqual(body[4][0], "2024-2025");
 
   assert.deepStrictEqual(buildYearOverYearTable(undefined).body, []);
   assert.strictEqual(buildYearOverYearTable([{ total: 5 }]).body.length, 1);
@@ -179,16 +190,6 @@ test("generateStudentQuickReport: profile report survives an empty dataset", asy
     Buffer.from(doc.output("arraybuffer")).subarray(0, 4).toString(),
     "%PDF",
   );
-});
-  assert.strictEqual(scholars[1], 486);
-  assert.strictEqual(scholars[2], "54.5%");
-  assert.strictEqual(scholars[3], 402);
-  /* 486 of the 2,097 female students are scholars. */
-  assert.strictEqual(scholars[6], "23.2%");
-  assert.strictEqual(scholars[7], "Female-leaning");
-
-  const highs = body.find((row) => row[0] === "High Income");
-  assert.strictEqual(highs[6], "14.6%");
 });
 
 test("buildIntersectionTable: tolerates a missing group list", () => {

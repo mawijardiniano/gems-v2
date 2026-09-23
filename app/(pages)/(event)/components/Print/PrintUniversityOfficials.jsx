@@ -1,18 +1,80 @@
-"use client"
+"use client";
 
-export default function PrintUniversityOfficials({
-officials,
-SECTIONS,
-getUserFullName 
-}) {
-    const handlePrintOfficials = () => {
-    if (!officials) return;
+import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
+
+const VACANT = "—";
+
+/**
+ * Prints the full MarSU offices & administrative designations document.
+ * Vacant seats are printed as "—" so the paper output always mirrors the
+ * official chart, whether or not a person has been assigned yet.
+ */
+export default function PrintUniversityOfficials({ officials }) {
+  const handlePrintOfficials = () => {
+    const chart = buildOrgChart(officials);
+
+    const sectionsHtml = chart.byHeader
+      .map(({ header, seats }) => {
+        const rows = seats
+          .map((seat) => {
+            const name = seat.official
+              ? getOfficialPersonName(seat.official.name)
+              : VACANT;
+            return `
+              <tr>
+                <td>${seat.position}</td>
+                <td${seat.official ? "" : ' class="vacant"'}>${name}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        return `
+          <h4>${header}</h4>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 62%">Position / Designation</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      })
+      .join("");
+
+    const unlistedHtml = chart.unlisted.length
+      ? `
+        <h4>UNLISTED ASSIGNMENTS</h4>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 62%">Position / Designation</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${chart.unlisted
+              .map(
+                (o) => `
+              <tr>
+                <td>${o.position || ""}</td>
+                <td>${getOfficialPersonName(o.name)}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `
+      : "";
 
     const html = `
     <html>
       <head>
-        <title>University Officials Report</title>
-       <style>
+        <title>MarSU Offices and Administrative Designations</title>
+        <style>
   body {
     font-family: Arial, sans-serif;
     padding: 20px;
@@ -21,7 +83,14 @@ getUserFullName
 
   h2 {
     text-align: center;
-    margin: 0 0 20px 0;
+    margin: 0 0 4px 0;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #444;
+    margin: 0 0 18px 0;
   }
 
   h4 {
@@ -31,7 +100,7 @@ getUserFullName
   table {
     border-collapse: collapse;
     width: 100%;
-    margin: 10px; 
+    margin: 6px 0 12px 0;
   }
 
   th, td {
@@ -43,66 +112,19 @@ getUserFullName
   th {
     background: #f2f2f2;
   }
+
+  .vacant {
+    color: #999;
+    text-align: center;
+  }
 </style>
       </head>
       <body>
-        <h2>University Officials Report</h2>
+        <h2>MARINDUQUE STATE UNIVERSITY</h2>
+        <p class="subtitle">Offices &amp; Administrative Designations</p>
 
-        ${SECTIONS.map((sec) => {
-          const sectionData = Array.isArray(officials[sec.key])
-            ? officials[sec.key]
-            : officials[sec.key]
-              ? [officials[sec.key]]
-              : [];
-
-          if (!sectionData.length) return "";
-
-          return `
-            <h4>${sec.label}</h4>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Position</th>
-                  ${
-                    sec.key === "campusDirectors"
-                      ? "<th>Branch</th>"
-                      : sec.key === "collegeDeans" ||
-                          sec.key === "associateDeans"
-                        ? "<th>College</th>"
-                        : ""
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                ${sectionData
-                  .map((o) => {
-                    const name = getUserFullName(o.name);
-                    const position = o.position || "";
-                    const branch = o.branch || "";
-                    const college = o.college || "";
-
-                    return `
-                      <tr>
-                        <td>${name}</td>
-                        <td>${position}</td>
-                        ${
-                          sec.key === "campusDirectors"
-                            ? `<td>${branch}</td>`
-                            : sec.key === "collegeDeans" ||
-                                sec.key === "associateDeans"
-                              ? `<td>${college}</td>`
-                              : ""
-                        }
-                      </tr>
-                    `;
-                  })
-                  .join("")}
-              </tbody>
-            </table>
-         
-          `;
-        }).join("")}
+        ${sectionsHtml}
+        ${unlistedHtml}
       </body>
     </html>
   `;
@@ -132,12 +154,13 @@ getUserFullName
       setTimeout(() => document.body.removeChild(iframe), 1000);
     };
   };
- return (
-          <button
-            onClick={handlePrintOfficials}
-            className="px-5 py-2 rounded-xl bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
-          >
-            Print Officials
-          </button>
- )
+
+  return (
+    <button
+      onClick={handlePrintOfficials}
+      className="px-5 py-2 rounded-xl bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition font-semibold"
+    >
+      Print Officials
+    </button>
+  );
 }

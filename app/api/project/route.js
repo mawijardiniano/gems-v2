@@ -8,6 +8,7 @@ import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
+import { normalizeRefNumber, nextRefNumber } from "@/lib/referenceNumber";
 import {
   PROJECT_EVENTS_POPULATE,
   withGeneratedAccomplishment,
@@ -74,8 +75,25 @@ export async function POST(req) {
     }
   }
 
+  /* Callers may supply their own reference number (e.g. copied from a printed
+     GPB); otherwise the next free `GPB-<year>-<seq>` is assigned below. */
+  const providedRef = normalizeRefNumber(body.reference_number);
+
+  if (providedRef) {
+    const clash = await Project.exists({ year, reference_number: providedRef });
+    if (clash) {
+      return Response.json(
+        {
+          message: `Reference number ${providedRef} is already used by another ${year} project.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const projectData = {
     year,
+    reference_number: providedRef || null,
     project_type: {
       value: body.project_type || "",
     },
@@ -144,7 +162,46 @@ export async function POST(req) {
     }
   }
 
-  const project = await Project.create(projectData);
+  /* Auto-assigned numbers can collide when two projects are created at the same
+     moment; the unique index rejects the loser and we retry with the next one. */
+  const MAX_REF_ATTEMPTS = 3;
+  let project = null;
+  let lastRefError = null;
+
+  for (let attempt = 0; attempt < MAX_REF_ATTEMPTS; attempt += 1) {
+    if (!providedRef) {
+      const usedRefs = await Project.find({ year }).select("reference_number");
+      projectData.reference_number = nextRefNumber(
+        year,
+        usedRefs.map((doc) => doc.reference_number),
+      );
+    }
+
+    try {
+      project = await Project.create(projectData);
+      break;
+    } catch (err) {
+      lastRefError = err;
+
+      if (err?.code === 11000) {
+        /* A custom number lost the race — report it like the upfront check. */
+        if (providedRef) {
+          return Response.json(
+            {
+              message: `Reference number ${providedRef} is already used by another ${year} project.`,
+            },
+            { status: 409 },
+          );
+        }
+
+        continue;
+      }
+
+      throw err;
+    }
+  }
+
+  if (!project) throw lastRefError;
 
   await logActivity({
     req,
@@ -201,15 +258,21 @@ export async function DELETE(req) {
   /* Capture the linked events and evidence keys before wiping the projects so
      the bulk delete does not leave orphaned events in the calendar or orphaned
      files in the bucket. */
-  const doomed = await Project.find({}).select("events expenditure_evidence");
+  const doomed = await Project.find({}).select(
+    "events expenditure_evidence milestones",
+  );
   const eventIds = doomed.flatMap((p) =>
     Array.isArray(p.events) ? p.events : [],
   );
-  const evidenceKeys = doomed.flatMap((p) =>
-    (Array.isArray(p.expenditure_evidence) ? p.expenditure_evidence : [])
-      .map((file) => file?.key)
-      .filter(Boolean),
-  );
+  const evidenceKeys = doomed
+    .flatMap((p) => [
+      ...(Array.isArray(p.expenditure_evidence) ? p.expenditure_evidence : []),
+      ...(Array.isArray(p.milestones) ? p.milestones : []).flatMap((m) =>
+        Array.isArray(m?.proofs) ? m.proofs : [],
+      ),
+    ])
+    .map((file) => file?.key)
+    .filter(Boolean);
 
   await GPB.updateMany({}, { $set: { projects: [] } });
 

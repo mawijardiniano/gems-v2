@@ -12,6 +12,7 @@ import {
   resolveAccomplishmentLines,
   resolveAccomplishmentText,
   getParticipantBreakdown,
+  getTargetProgress,
   withGeneratedAccomplishment,
   PROJECT_EVENTS_POPULATE,
 } from "../lib/accomplishmentSummary.js";
@@ -361,4 +362,34 @@ test("getParticipantBreakdown reports an empty breakdown without attendance", ()
   assert.strictEqual(breakdown.totalAttended, 0);
   assert.deepStrictEqual(breakdown.bySex, []);
   assert.deepStrictEqual(breakdown.bySector, []);
+});
+
+// ─── Target vs Actual progress (participant progress bars) ──────────
+
+test("getTargetProgress rounds the percentage and caps the bar width", () => {
+  assert.deepStrictEqual(getTargetProgress(25, 50), {
+    actual: 25,
+    target: 50,
+    percent: 50,
+    cappedPercent: 50,
+    isOver: false,
+  });
+
+  // Target exceeded → the label keeps the overshoot, the bar stays full.
+  assert.deepStrictEqual(getTargetProgress(75, 50), {
+    actual: 75,
+    target: 50,
+    percent: 150,
+    cappedPercent: 100,
+    isOver: true,
+  });
+
+  // No target set → empty bar instead of NaN.
+  assert.deepStrictEqual(getTargetProgress(0, 0), {
+    actual: 0,
+    target: 0,
+    percent: 0,
+    cappedPercent: 0,
+    isOver: false,
+  });
 });

@@ -2,131 +2,163 @@
 
 import { CAMPUS_ORDER } from "./studentStats.js";
 
+import { assignStartYears } from "./sampleCohorts.js";
+
+
 /* Programs per college with exact sex counts (the byProgram table). */
 export const COLLEGE_PROGRAM_TARGETS = {
   "Graduate School": [
-    { program: "Master of Arts in Education", Female: 128, Male: 44, Other: 1 },
-    { program: "Doctor of Education", Female: 41, Male: 26, Other: 0 },
-    { program: "Master in Public Administration", Female: 52, Male: 38, Other: 1 },
-    { program: "Master in Information Technology", Female: 34, Male: 14, Other: 0 },
+    { program: "Master of Arts in Education", Female: 128, Male: 44 },
+    { program: "Doctor of Education", Female: 41, Male: 26 },
+    { program: "Master in Public Administration", Female: 52, Male: 38 },
+    { program: "Master in Information Technology", Female: 34, Male: 14 },
   ],
   "College of Agriculture": [
-    { program: "Bachelor of Science in Agriculture", Female: 118, Male: 94, Other: 2 },
-    { program: "Bachelor in Agricultural Technology", Female: 62, Male: 61, Other: 0 },
+    { program: "Bachelor of Science in Agriculture", Female: 118, Male: 94 },
+    { program: "Bachelor in Agricultural Technology", Female: 62, Male: 61 },
   ],
   "College of Allied Health Sciences": [
-    { program: "Bachelor of Science in Nursing", Female: 298, Male: 62, Other: 2 },
-    { program: "Bachelor of Science in Midwifery", Female: 87, Male: 26, Other: 1 },
+    { program: "Bachelor of Science in Nursing", Female: 298, Male: 62 },
+    { program: "Bachelor of Science in Midwifery", Female: 87, Male: 26 },
   ],
   "College of Arts and Social Sciences": [
-    { program: "Bachelor of Arts in Communication", Female: 68, Male: 30, Other: 0 },
-    { program: "Bachelor of Arts in English Language Studies", Female: 55, Male: 27, Other: 0 },
-    { program: "Bachelor of Science in Social Work", Female: 47, Male: 25, Other: 0 },
+    { program: "Bachelor of Arts in Communication", Female: 68, Male: 30 },
+    { program: "Bachelor of Arts in English Language Studies", Female: 55, Male: 27 },
+    { program: "Bachelor of Science in Social Work", Female: 47, Male: 25 },
   ],
   "College of Business and Accountancy": [
-    { program: "Bachelor of Science in Accountancy", Female: 118, Male: 62, Other: 1 },
-    { program: "Bachelor of Science in Accounting Information System", Female: 42, Male: 28, Other: 0 },
-    { program: "Bachelor of Science in Business Administration", Female: 78, Male: 24, Other: 1 },
-    { program: "Bachelor of Science in Entrepreneurship", Female: 46, Male: 12, Other: 0 },
-    { program: "Bachelor of Science in Tourism Management", Female: 36, Male: 9, Other: 0 },
+    { program: "Bachelor of Science in Accountancy", Female: 118, Male: 62 },
+    { program: "Bachelor of Science in Accounting Information System", Female: 42, Male: 28 },
+    { program: "Bachelor of Science in Business Administration", Female: 78, Male: 24 },
+    { program: "Bachelor of Science in Entrepreneurship", Female: 46, Male: 12 },
+    { program: "Bachelor of Science in Tourism Management", Female: 36, Male: 9 },
   ],
   "College of Criminal Justice Education": [
-    { program: "Bachelor of Science in Criminology", Female: 82, Male: 158, Other: 1 },
-    { program: "Bachelor of Science in Law Enforcement Administration", Female: 23, Male: 31, Other: 0 },
+    { program: "Bachelor of Science in Criminology", Female: 82, Male: 158 },
+    { program: "Bachelor of Science in Law Enforcement Administration", Female: 23, Male: 31 },
   ],
   "College of Education": [
-    { program: "Bachelor of Elementary Education", Female: 88, Male: 18, Other: 0 },
-    { program: "Bachelor of Secondary Education", Female: 96, Male: 28, Other: 1 },
-    { program: "Bachelor of Culture and Arts Education", Female: 24, Male: 6, Other: 0 },
-    { program: "Bachelor of Technology and Livelihood Education", Female: 27, Male: 9, Other: 0 },
-    { program: "Certificate in Teachers Professional Education", Female: 10, Male: 1, Other: 0 },
+    { program: "Bachelor of Elementary Education", Female: 88, Male: 18 },
+    { program: "Bachelor of Secondary Education", Female: 96, Male: 28 },
+    { program: "Bachelor of Culture and Arts Education", Female: 24, Male: 6 },
+    { program: "Bachelor of Technology and Livelihood Education", Female: 27, Male: 9 },
+    { program: "Certificate in Teachers Professional Education", Female: 10, Male: 1 },
   ],
   "College of Engineering": [
-    { program: "Bachelor of Science in Civil Engineering", Female: 22, Male: 48, Other: 0 },
-    { program: "Bachelor of Science in Computer Engineering", Female: 18, Male: 32, Other: 1 },
-    { program: "Bachelor of Science in Electrical Engineering", Female: 14, Male: 26, Other: 0 },
-    { program: "Bachelor of Science in Electronics Engineering", Female: 12, Male: 21, Other: 0 },
-    { program: "Bachelor of Science in Mechanical Engineering", Female: 14, Male: 18, Other: 0 },
+    { program: "Bachelor of Science in Civil Engineering", Female: 22, Male: 48 },
+    { program: "Bachelor of Science in Computer Engineering", Female: 18, Male: 32 },
+    { program: "Bachelor of Science in Electrical Engineering", Female: 14, Male: 26 },
+    { program: "Bachelor of Science in Electronics Engineering", Female: 12, Male: 21 },
+    { program: "Bachelor of Science in Mechanical Engineering", Female: 14, Male: 18 },
   ],
   "College of Environmental Studies": [
-    { program: "Bachelor of Science in Environmental Science", Female: 40, Male: 34, Other: 1 },
+    { program: "Bachelor of Science in Environmental Science", Female: 40, Male: 34 },
   ],
   "College of Fisheries and Aquatic Sciences": [
-    { program: "Bachelor of Science in Fisheries", Female: 88, Male: 74, Other: 1 },
+    { program: "Bachelor of Science in Fisheries", Female: 88, Male: 74 },
   ],
   "College of Governance": [
-    { program: "Bachelor in Public Administration", Female: 66, Male: 38, Other: 0 },
-    { program: "Bachelor of Arts in Political Science", Female: 52, Male: 28, Other: 0 },
+    { program: "Bachelor in Public Administration", Female: 66, Male: 38 },
+    { program: "Bachelor of Arts in Political Science", Female: 52, Male: 28 },
   ],
   "College of Industrial Technology": [
-    { program: "Bachelor of Science in Industrial Technology", Female: 48, Male: 36, Other: 0 },
+    { program: "Bachelor of Science in Industrial Technology", Female: 48, Male: 36 },
   ],
   "College of Information and Computing Sciences": [
-    { program: "Bachelor of Science in Information Technology", Female: 34, Male: 82, Other: 0 },
-    { program: "Bachelor of Science in Information Systems", Female: 21, Male: 48, Other: 0 },
+    { program: "Bachelor of Science in Information Technology", Female: 34, Male: 82 },
+    { program: "Bachelor of Science in Information Systems", Female: 21, Male: 48 },
   ],
   "Laboratory School": [
-    { program: "Senior-High School", Female: 8, Male: 10, Other: 0 },
+    { program: "Senior-High School", Female: 8, Male: 10 },
   ],
 };
 
-/* Year levels - undergraduates only (the Graduate School has no year level).
-   Per-sex counts add up to the 1,842 / 1,206 / 12 undergraduate totals. */
+
 const YEAR_LEVEL_TARGETS = [
-  { yearLevel: "1st Year", Female: 532, Male: 378, Other: 4 },
-  { yearLevel: "2nd Year", Female: 498, Male: 348, Other: 4 },
-  { yearLevel: "3rd Year", Female: 458, Male: 285, Other: 2 },
-  { yearLevel: "4th Year", Female: 354, Male: 195, Other: 2 },
+  { yearLevel: "1st Year", Female: 532, Male: 378 },
+  { yearLevel: "2nd Year", Female: 498, Male: 348 },
+  { yearLevel: "3rd Year", Female: 458, Male: 285 },
+  { yearLevel: "4th Year", Female: 354, Male: 195 },
 ];
 
-/* Overlapping demographic flags - the three income bands are exclusive per
-   record, the scholar/PWD/IP flags are not. */
-const SCHOLAR_TARGETS = [{ Female: 486, Male: 402, Other: 4 }];
-const PWD_TARGETS = [{ Female: 31, Male: 22, Other: 0 }];
-const IP_TARGETS = [{ Female: 24, Male: 19, Other: 0 }];
+
+const SCHOLAR_TARGETS = [{ Female: 486, Male: 402 }];
+const PWD_TARGETS = [{ Female: 31, Male: 22 }];
+const IP_TARGETS = [{ Female: 24, Male: 19 }];
+const SOLO_PARENT_TARGETS = [{ Female: 62, Male: 20 }];
 const INCOME_TARGETS = [
-  { income: "Low Income", Female: 689, Male: 512, Other: 3 },
-  { income: "Middle Income", Female: 1102, Male: 687, Other: 9 },
-  { income: "High Income", Female: 306, Male: 129, Other: 2 },
+  { income: "Low Income", Female: 689, Male: 512 },
+  { income: "Middle Income", Female: 1102, Male: 687 },
+  { income: "High Income", Female: 306, Male: 129 },
 ];
 
-/* Term history. Every student is enrolled in both regular semesters of every
-   academic year from their first year through 2024-2025, which reproduces the
-   byAcademicYear curve (591 / 1,363 / 2,363 / 3,439). Summer terms are not
-   part of the sample dataset. */
-export const SAMPLE_SCHOOL_YEARS = ["2021-2022", "2022-2023", "2023-2024", "2024-2025"];
+
+const LGBTQIA_TARGETS = [{ Female: 54, Male: 32 }];
+
+
+/* Five academic years of history. The employee sample reports the same window
+   (see employeeSampleRecords.js), so both pages cover 2020-2021 to 2024-2025. */
+export const SAMPLE_SCHOOL_YEARS = [
+  "2020-2021",
+  "2021-2022",
+  "2022-2023",
+  "2023-2024",
+  "2024-2025",
+];
 const SEMESTERS_PER_YEAR = ["1st", "2nd"];
 
-/* First academic year of each cohort (index into SAMPLE_SCHOOL_YEARS). */
-const START_YEAR_BY_YEAR_LEVEL = {
-  "4th Year": 0,
-  "3rd Year": 1,
-  "2nd Year": 2,
-  "1st Year": 3,
-};
-const DOCTORAL_START_SPLIT = 40; /* first 40 doctoral students began in 2021-2022 */
-const MASTERS_START_SPLIT = 150; /* first 150 masters students began in 2023-2024 */
-const SEX_KEYS = ["Female", "Male", "Other"];
+/* How many students of each sex were already enrolled when each sample year
+   started: 2,900 of the 3,425 students were on the rolls by 2020-2021, and the
+   remaining cohorts join one year at a time, so the newest year holds the whole
+   population. The start years are scattered across the population (not assigned
+   per year level), which keeps every academic year a complete snapshot - 1st to
+   4th year and graduate students all appear in 2020-2021 too. */
+const START_YEAR_TARGETS = [
+  { startYear: SAMPLE_SCHOOL_YEARS[0], Female: 1775, Male: 1125 },
+  { startYear: SAMPLE_SCHOOL_YEARS[1], Female: 90, Male: 65 },
+  { startYear: SAMPLE_SCHOOL_YEARS[2], Female: 80, Male: 50 },
+  { startYear: SAMPLE_SCHOOL_YEARS[3], Female: 82, Male: 48 },
+  { startYear: SAMPLE_SCHOOL_YEARS[4], Female: 70, Male: 40 },
+];
 
-/** Expand `{ Female, Male, Other }` targets into one value list per sex. */
+/* Growth profile per college: how much of the college's enrolment sits in the
+   newer years. Positive = the college grew over the window (computing, health
+   sciences and engineering take on students every year), negative = it ran
+   down, 0 = steady. The split weights each year by
+   `yearShare × (1 + growth × (yearIndex - 2))`, so the oldest and the newest
+   year swing the most and the colleges change places from year to year. */
+export const COLLEGE_GROWTH = {
+  "College of Information and Computing Sciences": 0.45,
+  "College of Engineering": 0.35,
+  "College of Allied Health Sciences": 0.3,
+  "College of Criminal Justice Education": 0.25,
+  "Laboratory School": 0.2,
+  "College of Business and Accountancy": 0.15,
+  "College of Governance": 0.15,
+  "Graduate School": 0.1,
+  "College of Industrial Technology": 0.05,
+  "College of Arts and Social Sciences": 0,
+  "College of Fisheries and Aquatic Sciences": -0.1,
+  "College of Environmental Studies": -0.15,
+  "College of Education": -0.2,
+  "College of Agriculture": -0.25,
+};
+const SEX_KEYS = ["Female", "Male"];
+
+/** Expand `{ Female, Male }` targets into one value list per sex. */
 function sexValues(targets, key, sex) {
   return targets.flatMap((target) => Array(target[sex] || 0).fill(target[key]));
 }
 
-/* Spread values across one sex records using a fixed-stride walk of the pool,
-   so a dimension is represented inside every college block instead of filling
-   one block at a time. The step (5) is coprime with every pool size used here
-   (1,842 / 1,206 / 12 / 2,097 / 1,328 / 14), so when values.length equals the
-   pool size the walk is a complete permutation and the curated totals stay
-   exact. Each dimension gets its own stride - a shared stride would make two
-   dimensions correlate (every scholar landing in the same income band, for
-   example). */
+
 const SPREAD_STEPS = {
   yearLevel: 5,
   scholar: 11,
   pwd: 13,
   indigenous: 17,
   income: 19,
+  soloParent: 23,
+  genderIdentity: 29,
 };
 
 function spreadAssign(records, sex, values, key, step) {
@@ -140,7 +172,7 @@ function spreadAssign(records, sex, values, key, step) {
 
 /**
  * Expand the curated sample totals into individual student records.
- * Deterministic: the same 3,439 records on every build.
+ * Deterministic: the same 3,425 records on every build.
  */
 export function buildSampleStudentRecords() {
   const records = [];
@@ -153,9 +185,8 @@ export function buildSampleStudentRecords() {
       const pools = {
         Female: program.Female || 0,
         Male: program.Male || 0,
-        Other: program.Other || 0,
       };
-      const total = pools.Female + pools.Male + pools.Other;
+      const total = pools.Female + pools.Male;
       const remaining = { ...pools };
       for (let i = 0; i < total; i += 1) {
         const sex = SEX_KEYS.filter((s) => remaining[s] > 0).sort(
@@ -166,6 +197,9 @@ export function buildSampleStudentRecords() {
           college,
           course: program.program,
           sex,
+          /* Gender identity starts from the record's own sex; the LGBTQIA+
+             overlay below replaces it for the targeted records. */
+          genderIdentity: sex,
           graduate: college === "Graduate School",
         });
       }
@@ -216,29 +250,40 @@ export function buildSampleStudentRecords() {
     spreadAssign(
       records,
       sex,
+      sexValues(SOLO_PARENT_TARGETS, "soloParent", sex).map(() => true),
+      "soloParent",
+      SPREAD_STEPS.soloParent,
+    );
+    spreadAssign(
+      records,
+      sex,
       sexValues(INCOME_TARGETS, "income", sex),
       "income",
       SPREAD_STEPS.income,
     );
+    spreadAssign(
+      records,
+      sex,
+      sexValues(LGBTQIA_TARGETS, "genderIdentity", sex).map(() => "LGBTQIA+"),
+      "genderIdentity",
+      SPREAD_STEPS.genderIdentity,
+    );
   });
 
-  /* 5. Term history - from the first year of the cohort through 2024-2025. */
-  let doctoralIndex = 0;
-  let mastersIndex = 0;
-  records.forEach((record) => {
-    let startIndex;
-    if (record.graduate) {
-      if (/doctor/i.test(record.course)) {
-        startIndex = doctoralIndex < DOCTORAL_START_SPLIT ? 0 : 1;
-        doctoralIndex += 1;
-      } else {
-        startIndex = mastersIndex < MASTERS_START_SPLIT ? 2 : 3;
-        mastersIndex += 1;
-      }
-    } else {
-      startIndex = START_YEAR_BY_YEAR_LEVEL[record.yearLevel];
-    }
+  /* 5. Start year - each year gets its curated cohort size and every college
+        grows at its own pace, so the per-college tables change from year to
+        year while every year stays a complete snapshot. */
+  assignStartYears(records, SEX_KEYS, {
+    years: SAMPLE_SCHOOL_YEARS,
+    targets: START_YEAR_TARGETS,
+    growthByGroup: COLLEGE_GROWTH,
+    groupKey: "college",
+  });
 
+  /* 6. Term history - from the record's start year through the newest sample
+        year (2024-2025). */
+  records.forEach((record) => {
+    const startIndex = SAMPLE_SCHOOL_YEARS.indexOf(record.startYear);
     record.startYear = SAMPLE_SCHOOL_YEARS[startIndex];
     record.terms = [];
     for (let year = startIndex; year < SAMPLE_SCHOOL_YEARS.length; year += 1) {
@@ -258,6 +303,8 @@ export function buildSampleStudentRecords() {
     scholar: record.scholar === true,
     pwd: record.pwd === true,
     indigenous: record.indigenous === true,
+    soloParent: record.soloParent === true,
+    genderIdentity: record.genderIdentity,
     income: record.income || null,
     startYear: record.startYear,
     terms: record.terms,

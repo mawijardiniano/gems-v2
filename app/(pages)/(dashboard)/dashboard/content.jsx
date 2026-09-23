@@ -101,6 +101,11 @@ function EventCard({ event, onClick, compact = false }) {
           <h4 className="font-semibold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
             {event.title}
           </h4>
+          {event.reference_number && (
+            <div className="mt-1 font-mono text-[10px] font-medium text-gray-400">
+              {event.reference_number}
+            </div>
+          )}
           <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
             <FaCalendarAlt className="shrink-0" />
             <span>{getEventDateSummary(event)}</span>

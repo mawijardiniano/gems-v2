@@ -271,6 +271,11 @@ export default function OverviewTab({
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
                 Event Details
+                {event.reference_number && (
+                  <span className="ml-2 align-middle rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
+                    {event.reference_number}
+                  </span>
+                )}
               </h2>
               <p className="mt-0.5 text-sm text-gray-500">
                 Core information about this event

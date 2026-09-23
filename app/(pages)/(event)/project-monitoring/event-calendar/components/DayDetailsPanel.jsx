@@ -202,6 +202,14 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
                 {event.type_of_activity}
               </span>
             )}
+            {event.reference_number && (
+              <span
+                className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-[11px] font-medium text-gray-500"
+                title="Event reference number"
+              >
+                {event.reference_number}
+              </span>
+            )}
           </div>
 
           <div className="space-y-2">

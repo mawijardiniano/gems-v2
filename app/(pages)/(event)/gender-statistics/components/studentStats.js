@@ -26,14 +26,15 @@ export const LEVEL_ORDER = [
   "Graduate (Doctoral)",
 ];
 
-const SEXES = ["Female", "Male", "Other"];
+
+const SEXES = ["Female", "Male"];
 
 export function sexOf(record) {
-  return SEXES.includes(record?.sex) ? record.sex : "Other";
+  return SEXES.includes(record?.sex) ? record.sex : "Female";
 }
 
 function emptyCounts() {
-  return { Female: 0, Male: 0, Other: 0, total: 0 };
+  return { Female: 0, Male: 0, total: 0 };
 }
 
 function addCounts(bucket, sex) {
@@ -51,7 +52,6 @@ function toList(countsObj, nameKey, order) {
     [nameKey]: name,
     Female: c.Female || 0,
     Male: c.Male || 0,
-    Other: c.Other || 0,
     total: c.total || 0,
     pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
   }));
@@ -68,7 +68,6 @@ function toList(countsObj, nameKey, order) {
   return rows;
 }
 
-/* == Filtering ========================================================= */
 
 export const EMPTY_STUDENT_FILTERS = {
   campus: "",
@@ -179,11 +178,45 @@ function studentTypeRows(records, nameKey) {
       [nameKey]: type,
       Female: counts.Female,
       Male: counts.Male,
-      Other: counts.Other,
       total: counts.total,
       pctFemale: pct(counts.Female, counts.total),
     };
   });
+}
+
+/** Solo parents are a demographic row only - the live API has no field for it
+    yet, so it is not offered as a filter. */
+function soloParentRow(records) {
+  const counts = emptyCounts();
+  records.forEach((record) => {
+    if (record?.soloParent === true) addCounts(counts, sexOf(record));
+  });
+  return {
+    label: "Solo Parent",
+    Female: counts.Female,
+    Male: counts.Male,
+    total: counts.total,
+  };
+}
+
+/* The gender-identity values the database stores in gadData.gender_preference.
+   "Not specified" is appended only when the dataset has such records. */
+export const GENDER_IDENTITY_ORDER = ["Male", "Female", "LGBTQIA+"];
+
+function genderIdentityRows(records = []) {
+  const counts = new Map(GENDER_IDENTITY_ORDER.map((name) => [name, 0]));
+  let unspecified = 0;
+  records.forEach((record) => {
+    const value = record?.genderIdentity;
+    if (counts.has(value)) counts.set(value, counts.get(value) + 1);
+    else unspecified += 1;
+  });
+  const rows = GENDER_IDENTITY_ORDER.map((name) => ({
+    name,
+    value: counts.get(name),
+  }));
+  if (unspecified > 0) rows.push({ name: "Not specified", value: unspecified });
+  return rows;
 }
 
 /** Every academic year in a dataset, newest first (filter option list). */
@@ -211,6 +244,12 @@ export function computeStudentStats(records = [], allRecords = records) {
   const totals = emptyCounts();
   records.forEach((record) => addCounts(totals, sexOf(record)));
 
+  /* LGBTQIA+ is a gender-identity count, not a sex bucket, so it is reported
+     beside the Female/Male totals instead of inside them. */
+  const lgbtqia = records.filter(
+    (record) => record?.genderIdentity === "LGBTQIA+",
+  ).length;
+
   /* Term history: a student counts once per academic year they enrolled in. */
   const perYear = new Map();
   records.forEach((record) => {
@@ -232,7 +271,6 @@ export function computeStudentStats(records = [], allRecords = records) {
       school_year,
       Female: bucket.counts.Female,
       Male: bucket.counts.Male,
-      Other: bucket.counts.Other,
       total: bucket.counts.total,
     }));
 
@@ -247,11 +285,11 @@ export function computeStudentStats(records = [], allRecords = records) {
     totals: {
       Female: totals.Female,
       Male: totals.Male,
-      Other: totals.Other,
       total: totals.total,
       pctFemale: pct(totals.Female, totals.total),
       pctMale: pct(totals.Male, totals.total),
-      pctOther: pct(totals.Other, totals.total),
+      lgbtqia,
+      pctLgbtqia: pct(lgbtqia, totals.total),
     },
     byCollege: groupBy(records, (r) => r.college, "college"),
     byProgram: groupBy(records, (r) => r.course, "program").slice(0, 10),
@@ -263,9 +301,16 @@ export function computeStudentStats(records = [], allRecords = records) {
       YEAR_LEVEL_ORDER,
     ).filter((row) => row.year_level !== "Unspecified"),
     byStudentType: studentTypeRows(records, "type"),
-    demographics: studentTypeRows(records, "label").map(
-      ({ label, Female, Male, Other, total }) => ({ label, Female, Male, Other, total }),
-    ),
+    demographics: [
+      ...studentTypeRows(records, "label").map(({ label, Female, Male, total }) => ({
+        label,
+        Female,
+        Male,
+        total,
+      })),
+      soloParentRow(records),
+    ],
+    byGenderIdentity: genderIdentityRows(records),
     byAcademicYear,
     schoolYears: sampleSchoolYears(allRecords),
     semesters: ["1st", "2nd", "Summer"].filter((s) => semesterSet.has(s)),

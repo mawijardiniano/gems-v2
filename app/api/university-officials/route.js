@@ -1,86 +1,96 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
- import { requireAuth } from "@/lib/auth";
-import {NextResponse} from "next/server"
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { findSeatByParts } from "@/lib/universityOfficialsConstants";
 
-const POPULATE_PATHS = [
-  "president.name",
-  "vicePresidents.name",
-  "campusDirectors.name",
-  "collegeDeans.name",
-  "associateDeans.name",
-  "office_of_the_president.name",
-  "office_of_the_vice_president_academic_affairs.name",
-  "office_of_the_vice_president_admin_finance.name",
-  "office_of_the_vice_president_student_affairs.name",
-  "office_of_the_vice_president_research_extension.name",
-].join(" ");
-
-const ARRAY_SECTIONS = [
-  "vicePresidents",
-  "campusDirectors",
-  "collegeDeans",
-  "associateDeans",
-  "office_of_the_president",
-  "office_of_the_vice_president_academic_affairs",
-  "office_of_the_vice_president_admin_finance",
-  "office_of_the_vice_president_student_affairs",
-  "office_of_the_vice_president_research_extension",
-];
+const POPULATE = {
+  path: "name",
+  model: "UserAuth",
+  populate: { path: "personal_info_id", populate: { path: "personal" } },
+};
 
 export async function GET(req) {
   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
-  const officials = await UniversityOfficial.find().populate({
-    path: POPULATE_PATHS,
-    populate: { path: "personal_info_id" },
-  });
+  const officials = await UniversityOfficial.find()
+    .populate(POPULATE)
+    .sort({ header: 1, title: 1, unit: 1 });
+
   return Response.json({ success: true, data: officials });
 }
 
 export async function POST(req) {
   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
+
   const body = await req.json();
-  const { section, data } = body;
-  if (!section || !data) {
+  const { header, title, unit = "", name } = body || {};
+
+  if (!header || !title || !name) {
     return Response.json(
-      { success: false, error: "Missing section or data" },
+      { success: false, error: "Missing header, title, or name" },
       { status: 400 },
     );
   }
+
+  const seat = findSeatByParts({ header, title, unit });
+  if (!seat) {
+    return Response.json(
+      {
+        success: false,
+        error:
+          "Unknown seat — it is not part of the MarSU offices and administrative designations",
+      },
+      { status: 400 },
+    );
+  }
+
+  const existing = await UniversityOfficial.findOne({
+    header: seat.header,
+    title: seat.title,
+    unit: seat.unit,
+  });
+
+  if (existing) {
+    return Response.json(
+      { success: false, error: "Seat is already filled" },
+      { status: 409 },
+    );
+  }
+
   try {
-    let update;
-    if (ARRAY_SECTIONS.includes(section)) {
-      update = { $push: { [section]: data } };
-    } else {
-      update = { $set: { [section]: data } };
-    }
-    const updated = await UniversityOfficial.findOneAndUpdate({}, update, {
-      new: true,
-      upsert: true,
-      runValidators: true,
-    }).populate({
-      path: POPULATE_PATHS,
-      populate: { path: "personal_info_id" },
+    const doc = await UniversityOfficial.create({
+      header: seat.header,
+      title: seat.title,
+      unit: seat.unit,
+      name,
     });
+
     await logActivity({
       req,
-      action: "OFFICIAL_CREATE",
-      description: `University official added to section "${section}"`,
+      action: "OFFICIAL_ASSIGN",
+      description: `Official assigned to "${seat.position}"`,
       resource_type: "university_official",
+      resource_id: doc._id,
       severity: "info",
-      metadata: { section },
+      metadata: { header: seat.header, title: seat.title, unit: seat.unit },
     });
-    return Response.json({ success: true, data: updated });
-  } catch (error) {
+
+    await doc.populate(POPULATE);
+    return Response.json({ success: true, data: doc }, { status: 201 });
+  } catch (err) {
+    const isDuplicate = err?.code === 11000;
     return Response.json(
-      { success: false, error: error.message },
-      { status: 400 },
+      {
+        success: false,
+        error: isDuplicate ? "Seat is already filled" : err.message,
+      },
+      { status: isDuplicate ? 409 : 400 },
     );
   }
 }

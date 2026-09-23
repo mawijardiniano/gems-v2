@@ -32,6 +32,8 @@ const FOLDER_RULES = {
   "reports/other-attachments": [...IMAGE_EXTS, ...PDF_EXTS, ...DOC_EXTS],
   "status/scanned": [...IMAGE_EXTS, ...PDF_EXTS],
   "expenditure-evidence": [".pdf", ".jpg", ".jpeg", ".png"],
+  /* Proof files attached to completed project milestones. */
+  "milestone-proof": [".pdf", ".jpg", ".jpeg", ".png"],
 };
 
 const BLOCKED_MIME_TYPES = ["text/html", "application/xhtml+xml", "image/svg+xml"];
@@ -79,7 +81,10 @@ async function canDeleteLegacyKey(key, userId, canManageGPB) {
   const [foreignProject, foreignEvent, foreignReport, gpbReference] =
     await Promise.all([
       Project.exists({
-        "expenditure_evidence.key": key,
+        $or: [
+          { "expenditure_evidence.key": key },
+          { "milestones.proofs.key": key },
+        ],
         createdBy: { $ne: userId },
       }),
       Event.exists({
@@ -114,6 +119,31 @@ function isKeyOwnedByCaller(key, user) {
   if (!FOLDER_RULES[folder]) return false;
   if (["Admin", "admin"].includes(user?.role)) return true;
   return segments[1] === String(user._id);
+}
+
+/* Milestone proofs are often uploaded by the project creator but reviewed and
+   corrected by a GAD Focal Person (or vice versa), so deleting one is
+   authorised by project ownership/role rather than upload ownership. */
+const MILESTONE_PROOF_EDITOR_ROLES = ["gad focal person", "admin"];
+
+async function canDeleteMilestoneProof(key, user) {
+  if (!key.startsWith("milestone-proof/")) return false;
+
+  await connectDB();
+
+  const owners = await Project.find({ "milestones.proofs.key": key })
+    .select("createdBy")
+    .lean();
+
+  if (owners.length === 0) return false;
+
+  if (MILESTONE_PROOF_EDITOR_ROLES.includes(normalizeRole(user?.role))) {
+    return true;
+  }
+
+  return owners.every(
+    (project) => String(project.createdBy) === String(user?._id),
+  );
 }
 
 function isSafeKey(key) {
@@ -206,6 +236,10 @@ export async function DELETE(req) {
 
 
     let allowed = isKeyOwnedByCaller(normalizedKey, user);
+
+    if (!allowed) {
+      allowed = await canDeleteMilestoneProof(normalizedKey, user);
+    }
 
     if (!allowed) {
       allowed = await canDeleteLegacyKey(

@@ -11,7 +11,29 @@ function sexBucket(profile) {
   const sex = profile?.gadData?.sexAtBirth;
   if (sex === "Male") return "Male";
   if (sex === "Female") return "Female";
+  /* sexAtBirth is only ever Male or Female in the schema, so this bucket means
+     "not recorded". The gender-statistics pages no longer show it, but the
+     endpoint keeps counting it so the totals stay complete. */
   return "Other";
+}
+
+/* The gender-identity values the schema allows in gadData.gender_preference. */
+const GENDER_IDENTITY_ORDER = ["Male", "Female", "LGBTQIA+"];
+
+function genderIdentityRows(profiles = []) {
+  const counts = new Map(GENDER_IDENTITY_ORDER.map((name) => [name, 0]));
+  let unspecified = 0;
+  profiles.forEach((p) => {
+    const value = p?.gadData?.gender_preference;
+    if (counts.has(value)) counts.set(value, counts.get(value) + 1);
+    else unspecified += 1;
+  });
+  const rows = GENDER_IDENTITY_ORDER.map((name) => ({
+    name,
+    value: counts.get(name),
+  }));
+  if (unspecified > 0) rows.push({ name: "Not specified", value: unspecified });
+  return rows;
 }
 
 function emptyCounts() {
@@ -69,6 +91,13 @@ const DEMOGRAPHIC_ROWS = [
   {
     label: "Indigenous Peoples (IP)",
     test: (p) => p?.gadData?.isIndigenousPerson === true,
+  },
+  {
+    /* Solo parent is not captured in the database yet, so this row reads 0 in
+       live mode. It is kept in the list so the demographic table has the same
+       rows in live and sample data (the sample dataset seeds it). */
+    label: "Solo Parent",
+    test: () => false,
   },
   {
     label: "Low Income",
@@ -132,6 +161,9 @@ function buildStats(profiles, type) {
   profiles.forEach((p) => addCounts(totals, sexOf(p)));
 
   const isStudent = type === "students";
+  const lgbtqia = profiles.filter(
+    (p) => p?.gadData?.gender_preference === "LGBTQIA+",
+  ).length;
 
   const groupKey = isStudent
     ? (p) => p?.affiliation?.academic_information?.college || "Unspecified"
@@ -231,11 +263,16 @@ function buildStats(profiles, type) {
       pctFemale: totals.total ? Math.round((totals.Female / totals.total) * 1000) / 10 : 0,
       pctMale: totals.total ? Math.round((totals.Male / totals.total) * 1000) / 10 : 0,
       pctOther: totals.total ? Math.round((totals.Other / totals.total) * 1000) / 10 : 0,
+      lgbtqia,
+      pctLgbtqia: totals.total
+        ? Math.round((lgbtqia / totals.total) * 1000) / 10
+        : 0,
     },
     [isStudent ? "byCollege" : "byOffice"]: byGroup,
     ...(isStudent
       ? { byProgram, byLevel, byYearLevel, byStudentType }
       : { byAppointment, byEmploymentStatus }),
+    byGenderIdentity: genderIdentityRows(profiles),
     demographics: buildDemographics(profiles, sexOf),
   };
 }

@@ -9,6 +9,7 @@ import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
 import { deleteEventCascade } from "@/lib/eventCascade";
 import { USER_POPULATE_BASE } from "@/lib/userPopulate";
+import { normalizeRefNumber } from "@/lib/referenceNumber";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -143,6 +144,31 @@ export async function PUT(req, { params }) {
       if (body[field] !== undefined) {
         event.set(field, body[field]);
       }
+    }
+
+    /* Reference numbers are normally assigned automatically from the type of
+       activity; this allows an explicit correction while keeping them unique. */
+    if (body.reference_number !== undefined) {
+      const nextRef = normalizeRefNumber(body.reference_number);
+
+      if (nextRef && nextRef !== event.reference_number) {
+        const clash = await Event.exists({
+          reference_number: nextRef,
+          _id: { $ne: event._id },
+        });
+
+        if (clash) {
+          return NextResponse.json(
+            {
+              status: "error",
+              message: `Reference number ${nextRef} is already used by another event.`,
+            },
+            { status: 409 },
+          );
+        }
+      }
+
+      event.set("reference_number", nextRef || null);
     }
 
     if (body.start_date || body.end_date) {

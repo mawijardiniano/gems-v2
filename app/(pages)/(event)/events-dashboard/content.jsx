@@ -1227,6 +1227,11 @@ export default function EventsDashboardContent() {
                         <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                           {event.title}
                         </p>
+                        {event.reference_number && (
+                          <span className="mt-0.5 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-400">
+                            {event.reference_number}
+                          </span>
+                        )}
                         <div className="flex items-center gap-3 mt-1">
                           <span className="text-xs text-gray-500 flex items-center gap-1">
                             <Building2 className="h-3 w-3" />

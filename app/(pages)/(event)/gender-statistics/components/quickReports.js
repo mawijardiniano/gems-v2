@@ -1,15 +1,4 @@
-/* Quick Reports for the Gender Statistics pages.
 
-   The server-side endpoint (/api/analytics/sex-disaggregated-data/report) only
-   reads live MongoDB records, so it cannot report on the client-side sample
-   datasets (data/sample-*.json). The reports here are therefore rendered in the
-   browser — from whatever breakdown is currently on screen — with the same
-   jsPDF/jspdf-autotable stack the existing client print helpers use.
-
-   Everything is derived from the data object that the page already has, so the
-   helpers work for both the sample dataset and the live API response (they share
-   the same shape: totals + byCategory / byPositionLevel / byAcademicRank /
-   byAppointment / byOffice / demographics). No network or database access. */
 
 export const REPORT_KINDS = {
   PROFILES: "personnel-profile",
@@ -57,7 +46,7 @@ const LEANING_BAND = 20;
 
 function rowTotal(row) {
   if (typeof row?.total === "number") return row.total;
-  return (row?.Female || 0) + (row?.Male || 0) + (row?.Other || 0);
+  return (row?.Female || 0) + (row?.Male || 0);
 }
 
 /** Percentage rounded to one decimal (0 when the group is empty). */
@@ -93,14 +82,13 @@ function hasItems(items) {
 /** Sex-disaggregated body rows (with a computed Total row) for a breakdown. */
 export function buildSexTable(items, nameKey, nameHeader = "Category") {
   const safe = hasItems(items) ? items : [];
-  const head = [nameHeader, "Female", "Male", "Other", "Total", "% Female"];
+  const head = [nameHeader, "Female", "Male", "Total", "% Female"];
   const body = safe.map((row) => {
     const total = rowTotal(row);
     return [
       row?.[nameKey] ?? "Unspecified",
       row?.Female || 0,
       row?.Male || 0,
-      row?.Other || 0,
       total,
       fmtPct(row?.pctFemale != null ? row.pctFemale : pctOf(row?.Female || 0, total)),
     ];
@@ -111,16 +99,14 @@ export function buildSexTable(items, nameKey, nameHeader = "Category") {
       (acc, row) => ({
         Female: acc.Female + (row?.Female || 0),
         Male: acc.Male + (row?.Male || 0),
-        Other: acc.Other + (row?.Other || 0),
         total: acc.total + rowTotal(row),
       }),
-      { Female: 0, Male: 0, Other: 0, total: 0 },
+      { Female: 0, Male: 0, total: 0 },
     );
     body.push([
       "Total",
       totals.Female,
       totals.Male,
-      totals.Other,
       totals.total,
       fmtPct(pctOf(totals.Female, totals.total)),
     ]);
@@ -129,12 +115,12 @@ export function buildSexTable(items, nameKey, nameHeader = "Category") {
   return { head, body };
 }
 
-/** Sex summary (Female / Male / Non-binary / Total) from a totals object. */
+/** Sex summary (Female / Male / LGBTQIA+ / Total) from a totals object. */
 export function buildSexSummaryTable(totals = {}) {
   const total = totals.total || 0;
   const female = totals.Female || 0;
   const male = totals.Male || 0;
-  const other = totals.Other || 0;
+  const lgbtqia = totals.lgbtqia || 0;
   return {
     head: ["Personnel Group", "Count", "% of Total"],
     body: [
@@ -149,10 +135,29 @@ export function buildSexSummaryTable(totals = {}) {
         fmtPct(totals.pctMale != null ? totals.pctMale : pctOf(male, total)),
       ],
       [
-        "Non-binary / Other",
-        other,
-        fmtPct(totals.pctOther != null ? totals.pctOther : pctOf(other, total)),
+        "LGBTQIA+ (gender identity)",
+        lgbtqia,
+        fmtPct(
+          totals.pctLgbtqia != null ? totals.pctLgbtqia : pctOf(lgbtqia, total),
+        ),
       ],
+      ["Total", total, "100%"],
+    ],
+  };
+}
+
+/** Gender identity breakdown (Male / Female / LGBTQIA+) from the stats rows. */
+export function buildGenderIdentityTable(rows, nameHeader = "Gender Identity") {
+  const safe = hasItems(rows) ? rows : [];
+  const total = safe.reduce((sum, row) => sum + (row?.value || 0), 0);
+  return {
+    head: [nameHeader, "Count", "% of Total"],
+    body: [
+      ...safe.map((row) => [
+        row?.name ?? "Unspecified",
+        row?.value || 0,
+        fmtPct(pctOf(row?.value || 0, total)),
+      ]),
       ["Total", total, "100%"],
     ],
   };
@@ -173,7 +178,6 @@ export function buildGapEntries(items, nameKey) {
       label: row?.[nameKey] ?? "Unspecified",
       Female: female,
       Male: male,
-      Other: row?.Other || 0,
       total,
       pctFemale,
       pctMale,
@@ -327,7 +331,7 @@ export async function generateQuickReport(kind, data, options = {}) {
   const dataset = data || {};
   const isSample = Boolean(options.isSample);
   const meta = quickReportMeta(kind);
-  const totals = dataset.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
+  const totals = dataset.totals || { Female: 0, Male: 0, total: 0 };
 
   const [{ jsPDF }, autoTableModule] = await Promise.all([
     import("jspdf"),
@@ -494,6 +498,11 @@ export async function generateQuickReport(kind, data, options = {}) {
   function drawProfilesReport() {
     drawSectionHeading("Personnel Summary");
     drawTable(buildSexSummaryTable(totals));
+
+    drawSection(
+      "Gender Identity",
+      buildGenderIdentityTable(dataset.byGenderIdentity),
+    );
 
     drawSection(
       "Personnel Category and Sex",

@@ -120,10 +120,11 @@ export async function GET(req) {
 
         const [gpb, officials] = await Promise.all([
           GPB.findOne({ year }).populate("gaaBudgetId").lean(),
-          UniversityOfficial.findOne()
+          UniversityOfficial.find()
             .populate({
-              path: ["president.name", "office_of_the_president.name"],
-              populate: { path: "personal_info_id" },
+              path: "name",
+              model: "UserAuth",
+              populate: { path: "personal_info_id", populate: { path: "personal" } },
             })
             .lean(),
         ]);
@@ -394,12 +395,14 @@ export async function GET(req) {
           margin: { left: M, right: M },
         });
 
-        const focalEntry = (officials?.office_of_the_president || []).find(
-          (item) =>
-            item?.position?.toString().toLowerCase().includes("focal"),
+        const focalEntry = (officials || []).find((item) =>
+          item?.position?.toString().toLowerCase().includes("focal"),
         );
         const focalPointName = extractName(focalEntry?.name);
-        const presidentName = extractName(officials?.president?.name);
+        const presidentName = extractName(
+          (officials || []).find((item) => item?.title === "University President")
+            ?.name,
+        );
 
         let signY = doc.lastAutoTable.finalY + 10;
         if (signY > pageHeight - 70) {

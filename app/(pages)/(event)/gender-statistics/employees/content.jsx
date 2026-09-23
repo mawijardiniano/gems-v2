@@ -9,6 +9,7 @@ import {
   ErrorState,
   SummaryCards,
   SexDonut,
+  GenderIdentityDonut,
   SexTable,
   DemographicTable,
 } from "../components/GenderStatsShared";
@@ -67,9 +68,9 @@ function buildInsights(data) {
     );
   }
 
-  if (t.Other > 0) {
+  if (t.lgbtqia > 0) {
     insights.push(
-      `${t.Other.toLocaleString()} employee${t.Other === 1 ? "" : "s"} (${t.pctOther}%) are recorded as non-binary / other gender identity.`,
+      `${t.lgbtqia.toLocaleString()} employee${t.lgbtqia === 1 ? "" : "s"} (${t.pctLgbtqia}%) identify as LGBTQIA+.`,
     );
   }
 
@@ -117,12 +118,12 @@ export default function EmployeeGenderStatsContent() {
     [filters],
   );
   const sampleStats = useMemo(
-    () => computeEmployeeStats(filteredSampleRecords),
+    () => computeEmployeeStats(filteredSampleRecords, SAMPLE_EMPLOYEE_RECORDS),
     [filteredSampleRecords],
   );
 
   const activeData = useSample ? sampleStats : data;
-  const totals = activeData?.totals || { Female: 0, Male: 0, Other: 0, total: 0 };
+  const totals = activeData?.totals || { Female: 0, Male: 0, total: 0 };
   const insights = useMemo(() => buildInsights(activeData), [activeData]);
   const showContent = useSample || (!loading && !!data);
   const filterCount = activeFilterCount(filters);
@@ -145,6 +146,11 @@ export default function EmployeeGenderStatsContent() {
     [filters.office],
   );
 
+  /* Academic-year options follow the active dataset, so sample mode lists the
+     five sample years (2020-2021 to 2024-2025) and live mode lists none, since
+     the employee API has no year dimension yet. */
+  const schoolYearOptions = activeData?.schoolYears || [];
+
   /* Printed on the quick-report PDFs so a filtered report is self-describing. */
   const filterSummary = useMemo(() => {
     const parts = [];
@@ -156,6 +162,9 @@ export default function EmployeeGenderStatsContent() {
     }
     if (filters.positionLevel) {
       parts.push(`Position Level: ${filters.positionLevel}`);
+    }
+    if (filters.schoolYear) {
+      parts.push(`Academic Year: ${filters.schoolYear}`);
     }
     return parts.join(" | ");
   }, [filters]);
@@ -217,6 +226,15 @@ export default function EmployeeGenderStatsContent() {
             disabled={!useSample}
             hint="sample data only"
           />
+          <FilterSelect
+            label="Academic Year"
+            value={filters.schoolYear}
+            allLabel="All academic years"
+            options={schoolYearOptions}
+            onChange={setFilter("schoolYear")}
+            disabled={!useSample}
+            hint="sample data only"
+          />
           <div className="flex flex-col">
             <label className="text-xs font-medium text-gray-500 mb-1 block">
               Data source
@@ -251,8 +269,8 @@ export default function EmployeeGenderStatsContent() {
         </div>
         <p className="text-[11px] text-gray-400">
           {useSample
-            ? `Filters re-aggregate the sample records in your browser — ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department and Position Level exist in the sample dataset only; the live database does not store them.`
-            : "Live data can be filtered by personnel type, college/office and employment status. Department and Position Level are available with sample data only."}
+            ? `Filters re-aggregate the sample records in your browser — ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
+            : "Live data can be filtered by personnel type, college/office and employment status. Department, Position Level and Academic Year are available with sample data only."}
         </p>
       </div>
 
@@ -260,9 +278,10 @@ export default function EmployeeGenderStatsContent() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           Showing synthetic <strong>sample data</strong> built from
           <code className="mx-1">data/sample-employees.json</code>
-          (1,026 employees · 612 female / 404 male / 10 non-binary), expanded into
-          individual records so the filters compose. Your database is not being
-          read and nothing is saved — turn the toggle off to return to live data.
+          (1,016 employees · 612 female / 404 male / 30 LGBTQIA+), expanded into
+          individual records with a five-year appointment history (2020-2021 to
+          2024-2025) so the filters compose. Your database is not being read and
+          nothing is saved — turn the toggle off to return to live data.
         </div>
       )}
 
@@ -295,7 +314,10 @@ export default function EmployeeGenderStatsContent() {
         <>
           <SummaryCards totals={totals} what="Employees" />
 
-          <SexDonut totals={totals} />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <SexDonut totals={totals} />
+            <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
+          </div>
 
           {Array.isArray(activeData.byCategory) &&
             activeData.byCategory.length > 0 && (
@@ -304,6 +326,17 @@ export default function EmployeeGenderStatsContent() {
                 data={activeData.byCategory}
                 nameKey="category"
                 nameHeader="Personnel Category"
+              />
+            )}
+
+          {Array.isArray(activeData.byAcademicYear) &&
+            activeData.byAcademicYear.length > 0 && (
+              <SexTable
+                title="Personnel by Academic Year and Sex"
+                subtitle="Headcount on board each sample year"
+                data={activeData.byAcademicYear}
+                nameKey="school_year"
+                nameHeader="Academic Year"
               />
             )}
 

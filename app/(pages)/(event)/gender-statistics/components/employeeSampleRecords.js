@@ -1,98 +1,147 @@
 
+import { assignStartYears } from "./sampleCohorts.js";
+import { SAMPLE_SCHOOL_YEARS } from "./studentSampleRecords.js";
+
 const OFFICE_TARGETS = [
-  { office: "College of Education", Female: 134, Male: 94, Other: 2 },
-  { office: "College of Arts and Social Sciences", Female: 85, Male: 59, Other: 2 },
-  { office: "College of Business and Accountancy", Female: 52, Male: 30, Other: 1 },
-  { office: "College of Allied Health Sciences", Female: 39, Male: 11, Other: 1 },
+  { office: "College of Education", Female: 134, Male: 94 },
+  { office: "College of Arts and Social Sciences", Female: 85, Male: 59 },
+  { office: "College of Business and Accountancy", Female: 52, Male: 30 },
+  { office: "College of Allied Health Sciences", Female: 39, Male: 11 },
   {
     office: "Office of the Vice President for Administration and Finance",
     Female: 31,
     Male: 12,
-    Other: 0,
   },
-  { office: "College of Agriculture", Female: 27, Male: 20, Other: 0 },
+  { office: "College of Agriculture", Female: 27, Male: 20 },
   {
     office: "Office of the Vice President for Student Affairs and Services",
     Female: 25,
     Male: 8,
-    Other: 1,
   },
-  { office: "College of Criminal Justice Education", Female: 22, Male: 16, Other: 0 },
-  { office: "College of Information and Computing Sciences", Female: 22, Male: 23, Other: 1 },
-  { office: "Office of the Vice President for Academic Affairs", Female: 22, Male: 8, Other: 1 },
-  { office: "Office of the Vice President for Research and Extension", Female: 20, Male: 6, Other: 0 },
-  { office: "College of Governance", Female: 20, Male: 14, Other: 0 },
-  { office: "College of Engineering", Female: 18, Male: 35, Other: 0 },
-  { office: "Office of the University President", Female: 18, Male: 9, Other: 1 },
-  { office: "College of Fisheries and Aquatic Sciences", Female: 16, Male: 17, Other: 0 },
-  { office: "College of Industrial Technology", Female: 14, Male: 19, Other: 0 },
-  { office: "Graduate School", Female: 13, Male: 8, Other: 0 },
-  { office: "HRMU", Female: 12, Male: 5, Other: 0 },
-  { office: "GAD Unit", Female: 11, Male: 2, Other: 0 },
-  { office: "College of Environmental Studies", Female: 11, Male: 8, Other: 0 },
+  { office: "College of Criminal Justice Education", Female: 22, Male: 16 },
+  { office: "College of Information and Computing Sciences", Female: 22, Male: 23 },
+  { office: "Office of the Vice President for Academic Affairs", Female: 22, Male: 8 },
+  { office: "Office of the Vice President for Research and Extension", Female: 20, Male: 6 },
+  { office: "College of Governance", Female: 20, Male: 14 },
+  { office: "College of Engineering", Female: 18, Male: 35 },
+  { office: "Office of the University President", Female: 18, Male: 9 },
+  { office: "College of Fisheries and Aquatic Sciences", Female: 16, Male: 17 },
+  { office: "College of Industrial Technology", Female: 14, Male: 19 },
+  { office: "Graduate School", Female: 13, Male: 8 },
+  { office: "HRMU", Female: 12, Male: 5 },
+  { office: "GAD Unit", Female: 11, Male: 2 },
+  { office: "College of Environmental Studies", Female: 11, Male: 8 },
 ];
 
 const CATEGORY_TARGETS = [
-  { personnelType: "Faculty", Female: 230, Male: 184, Other: 5 },
-  { personnelType: "Administrative Staff", Female: 357, Male: 210, Other: 4 },
-  { personnelType: "Job Order/Contractual", Female: 25, Male: 10, Other: 1 },
+  { personnelType: "Faculty", Female: 230, Male: 184 },
+  { personnelType: "Administrative Staff", Female: 357, Male: 210 },
+  { personnelType: "Job Order/Contractual", Female: 25, Male: 10 },
 ];
 
 
 const LEVEL_TARGETS = {
   Faculty: [
-    { positionLevel: "Deans", Female: 22, Male: 8, Other: 0 },
-    { positionLevel: "Department Chairs", Female: 35, Male: 15, Other: 0 },
-    { positionLevel: "Faculty", Female: 173, Male: 161, Other: 5 },
+    { positionLevel: "Deans", Female: 22, Male: 8 },
+    { positionLevel: "Department Chairs", Female: 35, Male: 15 },
+    { positionLevel: "Faculty", Female: 173, Male: 161 },
   ],
   "Administrative Staff": [
-    { positionLevel: "University President", Female: 0, Male: 1, Other: 0 },
-    { positionLevel: "Vice President", Female: 2, Male: 2, Other: 0 },
-    { positionLevel: "Directors", Female: 5, Male: 3, Other: 0 },
-    { positionLevel: "Administrative Personnel", Female: 350, Male: 204, Other: 4 },
+    { positionLevel: "University President", Female: 0, Male: 1 },
+    { positionLevel: "Vice President", Female: 2, Male: 2 },
+    { positionLevel: "Directors", Female: 5, Male: 3 },
+    { positionLevel: "Administrative Personnel", Female: 350, Male: 204 },
   ],
   "Job Order/Contractual": [
-    { positionLevel: "Job Order/Contractual", Female: 25, Male: 10, Other: 1 },
+    { positionLevel: "Job Order/Contractual", Female: 25, Male: 10 },
   ],
 };
 
 /* Academic ranks apply to Faculty personnel only (419 in total). */
 const RANK_TARGETS = [
-  { academicRank: "Instructor I", Female: 62, Male: 41, Other: 1 },
-  { academicRank: "Instructor II", Female: 44, Male: 30, Other: 1 },
-  { academicRank: "Instructor III", Female: 30, Male: 22, Other: 0 },
-  { academicRank: "Assistant Professor I", Female: 28, Male: 25, Other: 1 },
-  { academicRank: "Assistant Professor II", Female: 22, Male: 20, Other: 1 },
-  { academicRank: "Assistant Professor III", Female: 16, Male: 15, Other: 0 },
-  { academicRank: "Assistant Professor IV", Female: 10, Male: 11, Other: 0 },
-  { academicRank: "Associate Professor", Female: 12, Male: 12, Other: 1 },
-  { academicRank: "Professor", Female: 6, Male: 8, Other: 0 },
+  { academicRank: "Instructor I", Female: 62, Male: 41 },
+  { academicRank: "Instructor II", Female: 44, Male: 30 },
+  { academicRank: "Instructor III", Female: 30, Male: 22 },
+  { academicRank: "Assistant Professor I", Female: 28, Male: 25 },
+  { academicRank: "Assistant Professor II", Female: 22, Male: 20 },
+  { academicRank: "Assistant Professor III", Female: 16, Male: 15 },
+  { academicRank: "Assistant Professor IV", Female: 10, Male: 11 },
+  { academicRank: "Associate Professor", Female: 12, Male: 12 },
+  { academicRank: "Professor", Female: 6, Male: 8 },
 ];
 
-/* Appointment statuses — curated totals preserved exactly (1,026). */
+/* Appointment statuses — curated totals preserved exactly (1,016). The
+   Security Guard row is carved out of the civilian statuses (Casual, Contract
+   of Service, Utility Worker) so every sex total still matches the
+   byOffice / byCategory partitions. */
 const APPOINTMENT_TARGETS = [
-  { appointmentStatus: "Regular", Female: 310, Male: 184, Other: 5 },
-  { appointmentStatus: "Temporary", Female: 80, Male: 60, Other: 0 },
-  { appointmentStatus: "Coterminous", Female: 35, Male: 30, Other: 0 },
-  { appointmentStatus: "Casual", Female: 42, Male: 65, Other: 1 },
-  { appointmentStatus: "Job Order", Female: 20, Male: 7, Other: 0 },
-  { appointmentStatus: "Contract of Service (Skilled)", Female: 60, Male: 25, Other: 2 },
-  { appointmentStatus: "Utility Worker", Female: 5, Male: 3, Other: 0 },
-  { appointmentStatus: "University Lecturer", Female: 25, Male: 12, Other: 1 },
-  { appointmentStatus: "Part-time Lecturer", Female: 20, Male: 10, Other: 1 },
-  { appointmentStatus: "Clinical Instructor", Female: 10, Male: 5, Other: 0 },
-  { appointmentStatus: "Adjunct", Female: 5, Male: 3, Other: 0 },
+  { appointmentStatus: "Regular", Female: 310, Male: 184 },
+  { appointmentStatus: "Temporary", Female: 80, Male: 60 },
+  { appointmentStatus: "Coterminous", Female: 35, Male: 30 },
+  { appointmentStatus: "Casual", Female: 38, Male: 45 },
+  { appointmentStatus: "Job Order", Female: 20, Male: 7 },
+  { appointmentStatus: "Contract of Service (Skilled)", Female: 60, Male: 14 },
+  { appointmentStatus: "Utility Worker", Female: 3, Male: 2 },
+  { appointmentStatus: "Security Guard", Female: 6, Male: 32 },
+  { appointmentStatus: "University Lecturer", Female: 25, Male: 12 },
+  { appointmentStatus: "Part-time Lecturer", Female: 20, Male: 10 },
+  { appointmentStatus: "Clinical Instructor", Female: 10, Male: 5 },
+  { appointmentStatus: "Adjunct", Female: 5, Male: 3 },
 ];
 
 /* Overlapping demographic flags — the first three are exclusive per record. */
-const SCHOLAR_TARGETS = [{ Female: 40, Male: 25, Other: 0 }];
-const PWD_TARGETS = [{ Female: 12, Male: 10, Other: 1 }];
-const IP_TARGETS = [{ Female: 30, Male: 22, Other: 2 }];
+const SCHOLAR_TARGETS = [{ Female: 40, Male: 25 }];
+const PWD_TARGETS = [{ Female: 12, Male: 10 }];
+const IP_TARGETS = [{ Female: 30, Male: 22 }];
+const SOLO_PARENT_TARGETS = [{ Female: 20, Male: 7 }];
 const INCOME_TARGETS = [
-  { income: "Low Income", Female: 210, Male: 160, Other: 3 },
-  { income: "Middle Income", Female: 300, Male: 190, Other: 5 },
-  { income: "High Income", Female: 62, Male: 44, Other: 2 },
+  { income: "Low Income", Female: 210, Male: 160 },
+  { income: "Middle Income", Female: 300, Male: 190 },
+  { income: "High Income", Female: 62, Male: 44 },
 ];
+
+/* Gender identity — the Male / Female / LGBTQIA+ values the database stores in
+   gadData.gender_preference. Every record defaults to its own sex; these
+   targets overlay the LGBTQIA+ count on top of that. */
+const LGBTQIA_TARGETS = [{ Female: 18, Male: 12 }];
+
+/* Appointment history — how many employees of each sex were already on board
+   when each sample year started. An employee stays on board from `startYear`
+   through the newest sample year, so 905 of the 1,016 employees staffed the
+   university in 2020-2021 and the roster fills in one cohort at a time. The
+   start years are scattered across the whole roster, so every year keeps every
+   office, personnel type and appointment status. The window mirrors the
+   student sample. */
+const START_YEAR_TARGETS = [
+  { startYear: SAMPLE_SCHOOL_YEARS[0], Female: 520, Male: 385 },
+  { startYear: SAMPLE_SCHOOL_YEARS[1], Female: 30, Male: 5 },
+  { startYear: SAMPLE_SCHOOL_YEARS[2], Female: 20, Male: 5 },
+  { startYear: SAMPLE_SCHOOL_YEARS[3], Female: 22, Male: 5 },
+  { startYear: SAMPLE_SCHOOL_YEARS[4], Female: 20, Male: 4 },
+];
+
+/* Growth profile per office: how much of the office's staff arrived late in the
+   window. Positive = the office grew (the GAD Unit and HRMU only filled up in
+   the recent years), negative = it ran down, 0 = steady. Weights each year by
+   `yearShare × (1 + growth × (yearIndex - 2))`, so offices change places between
+   years instead of growing in lockstep. */
+export const OFFICE_GROWTH = {
+  "GAD Unit": 0.4,
+  HRMU: 0.3,
+  "College of Information and Computing Sciences": 0.35,
+  "College of Engineering": 0.3,
+  "College of Allied Health Sciences": 0.25,
+  "College of Criminal Justice Education": 0.2,
+  "Graduate School": 0.15,
+  "Office of the Vice President for Research and Extension": 0.1,
+  "College of Business and Accountancy": 0.05,
+  "College of Arts and Social Sciences": 0,
+  "College of Environmental Studies": -0.05,
+  "College of Industrial Technology": -0.1,
+  "College of Fisheries and Aquatic Sciences": -0.15,
+  "College of Education": -0.2,
+  "College of Agriculture": -0.25,
+};
 
 /* Sample-only dimension: departments inside each office. Nothing in the live
    database stores a department, so this exists purely for the demo. */
@@ -168,9 +217,9 @@ const DEPARTMENTS_BY_OFFICE = {
   "GAD Unit": ["GAD Office"],
 };
 
-const SEX_KEYS = ["Female", "Male", "Other"];
+const SEX_KEYS = ["Female", "Male"];
 
-/** Expand `{ Female, Male, Other }` targets into one value list per sex. */
+/** Expand `{ Female, Male }` targets into one value list per sex. */
 function sexValues(targets, key, sex) {
   return targets.flatMap((target) =>
     Array(target[sex] || 0).fill(target[key]),
@@ -206,7 +255,7 @@ function assignProportionalByCategory(records, targets, key) {
 
   /* matrix[statusIndex][categoryIndex] = how many records of one sex get that
      status in that category. */
-  const perSex = { Female: null, Male: null, Other: null };
+  const perSex = { Female: null, Male: null };
 
   SEX_KEYS.forEach((sex) => {
     const sizes = categories.map(
@@ -278,7 +327,7 @@ function assignProportionalByCategory(records, targets, key) {
   const queues = new Map(
     categories.map((category) => [
       category,
-      { Female: [], Male: [], Other: [] },
+      { Female: [], Male: [] },
     ]),
   );
 
@@ -304,8 +353,10 @@ function assignProportionalByCategory(records, targets, key) {
 }
 
 /**
- * Expand the curated sample totals into individual employee records.
- * Deterministic: the same 1,026 records on every build.
+ * Expand the curated sample totals into individual employee records, each with
+ * a five-year appointment history (2020-2021 through 2024-2025) that keeps
+ * every office, personnel type and appointment status in every year.
+ * Deterministic: the same 1,016 records on every build.
  */
 export function buildSampleEmployeeRecords() {
   const records = [];
@@ -315,9 +366,8 @@ export function buildSampleEmployeeRecords() {
     const pools = {
       Female: target.Female || 0,
       Male: target.Male || 0,
-      Other: target.Other || 0,
     };
-    const total = pools.Female + pools.Male + pools.Other;
+    const total = pools.Female + pools.Male;
     const remaining = { ...pools };
     /* Pick the sex whose remaining share is largest, so each office block is
        mixed rather than grouped by sex. */
@@ -326,7 +376,9 @@ export function buildSampleEmployeeRecords() {
         (a, b) => remaining[b] / pools[b] - remaining[a] / pools[a],
       )[0];
       remaining[sex] -= 1;
-      records.push({ office: target.office, sex });
+      /* Gender identity starts from the record's own sex; the LGBTQIA+ overlay
+         below replaces it for the targeted records. */
+      records.push({ office: target.office, sex, genderIdentity: sex });
     }
   });
 
@@ -409,8 +461,35 @@ export function buildSampleEmployeeRecords() {
     spreadAssign(
       records,
       sex,
+      sexValues(SOLO_PARENT_TARGETS, "soloParent", sex).map(() => true),
+      "soloParent",
+    );
+    spreadAssign(
+      records,
+      sex,
       sexValues(INCOME_TARGETS, "income", sex),
       "income",
+    );
+    spreadAssign(
+      records,
+      sex,
+      sexValues(LGBTQIA_TARGETS, "genderIdentity", sex).map(() => "LGBTQIA+"),
+      "genderIdentity",
+    );
+  });
+
+  /* 8. Appointment history - each year gets its curated cohort size and every
+     office grows at its own pace, then the years of service follow from the
+     start year. */
+  assignStartYears(records, SEX_KEYS, {
+    years: SAMPLE_SCHOOL_YEARS,
+    targets: START_YEAR_TARGETS,
+    growthByGroup: OFFICE_GROWTH,
+    groupKey: "office",
+  });
+  records.forEach((record) => {
+    record.years = SAMPLE_SCHOOL_YEARS.slice(
+      SAMPLE_SCHOOL_YEARS.indexOf(record.startYear),
     );
   });
 
@@ -423,9 +502,13 @@ export function buildSampleEmployeeRecords() {
     academicRank: record.academicRank || null,
     appointmentStatus: record.appointmentStatus,
     department: record.department,
+    startYear: record.startYear,
+    years: record.years,
     scholar: record.scholar === true,
     pwd: record.pwd === true,
     indigenous: record.indigenous === true,
+    soloParent: record.soloParent === true,
+    genderIdentity: record.genderIdentity,
     income: record.income || null,
   }));
 }

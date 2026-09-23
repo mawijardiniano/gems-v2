@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { FaChartPie } from "react-icons/fa";
 import { getParticipantBreakdown } from "@/lib/accomplishmentSummary";
+import { aggregateIndicatorProgress } from "@/lib/performanceTracking";
+import ParticipantTargetProgress from "./ParticipantTargetProgress";
 
 /* Fixed pixel size: ResponsiveContainer mis-measures inside flex rows and can both
    render nothing and spill out of the card, so the donut is drawn at a known size. */
@@ -50,6 +52,33 @@ export default function ParticipantBreakdown({ project }) {
     () => getParticipantBreakdown(project),
     [project],
   );
+
+  /* Target vs Actual comes from the project's Performance Indicator / Target. */
+  const indicatorProgress = useMemo(
+    () => aggregateIndicatorProgress(project),
+    [project],
+  );
+
+  /* When nothing is measurable, explain WHY so un-encoded rows are actionable. */
+  const targetEmptyMessage = useMemo(() => {
+    const c = indicatorProgress.classifications || {};
+    if (!indicatorProgress.hasIndicators) {
+      return "No Performance Indicator / Target encoded yet — add one in the GPB workspace.";
+    }
+    if (c.qualitative) {
+      return "Indicator is qualitative (no numeric participant target) — edit it in the GPB to track Target vs Actual.";
+    }
+    if (c.percent) {
+      return "Indicator declares a percentage target only — attendance cannot measure it.";
+    }
+    if (c.deliverables) {
+      return "Indicator counts deliverables, not participants — track it through milestones.";
+    }
+    if (c.activities) {
+      return "Indicator counts activities, not participants — track it through milestones.";
+    }
+    return "No participant target found in the Performance Indicator / Target.";
+  }, [indicatorProgress]);
 
   const data = tab === "sex" ? breakdown.bySex : breakdown.bySector;
   const colors = tab === "sex" ? SEX_COLORS : SECTOR_COLORS;
@@ -155,6 +184,17 @@ export default function ParticipantBreakdown({ project }) {
             ))}
           </ul>
         </div>
+      )}
+
+      {(indicatorProgress.hasTarget ||
+        breakdown.eventCount > 0 ||
+        indicatorProgress.needsEncoding) && (
+        <ParticipantTargetProgress
+          className="mt-4 border-t border-gray-100 pt-3"
+          actual={indicatorProgress.actualTotal}
+          target={indicatorProgress.targetTotal}
+          emptyMessage={targetEmptyMessage}
+        />
       )}
 
       {breakdown.totalAttended > 0 && (

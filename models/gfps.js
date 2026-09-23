@@ -2,34 +2,20 @@ import mongoose from "mongoose";
 import "./universityOfficials";
 import "./user";
 
-const OFFICIAL_GROUPS = [
-  "PRESIDENT",
-  "VICE_PRESIDENTS",
-  "CAMPUS_DIRECTORS",
-  "COLLEGE_DEANS",
-  "ASSOCIATE_DEANS",
-  "OFFICE_OF_THE_PRESIDENT",
-  "VP_ACADEMIC_AFFAIRS_OFFICE",
-  "VP_ADMIN_FINANCE_OFFICE",
-  "VP_STUDENT_AFFAIRS_OFFICE",
-  "VP_RESEARCH_EXTENSION_OFFICE",
-];
- 
 const MemberSchema = new mongoose.Schema({
   official: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UniversityOfficial",
     required: false,
   },
-  // Id of the specific position entry (subdocument) inside the
-  // UniversityOfficial document. Needed to distinguish officials who hold
-  // multiple positions (e.g., a person who is both a VP and a Dean).
+  // Legacy field from the old aggregate officials document. New records leave
+  // it empty — a seat is already a single UniversityOfficial document.
   official_ref: {
     type: mongoose.Schema.Types.ObjectId,
     required: false,
   },
-  // Which official group the position entry belongs to
-  // (e.g., "vicePresidents", "collegeDeans").
+  // Which chart header the seat belongs to
+  // (e.g., "OFFICE OF THE PRESIDENT", "MARSU TORRIJOS BRANCH").
   official_group: {
     type: String,
     required: false,
@@ -42,7 +28,7 @@ const ExecutiveMemberSchema = new mongoose.Schema({
     ref: "UniversityOfficial",
     required: false,
   },
-  // Same as MemberSchema.official_ref — see comment there.
+  // Same as MemberSchema.official_ref — legacy, unused for new records.
   official_ref: {
     type: mongoose.Schema.Types.ObjectId,
     required: false,

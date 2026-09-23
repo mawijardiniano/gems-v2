@@ -386,9 +386,16 @@ export default function EventsListContent() {
                   <div className="p-5 space-y-3">
                     {/* Title + Type Badge */}
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        {evt.title}
-                      </h3>
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          {evt.title}
+                        </h3>
+                        {evt.reference_number && (
+                          <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
+                            {evt.reference_number}
+                          </span>
+                        )}
+                      </div>
                       {evt.type_of_activity && (
                         <ActivityTypeBadge type={evt.type_of_activity} />
                       )}

@@ -1,13 +1,4 @@
-/**
- * Regenerates app/(pages)/(event)/gender-statistics/data/sample-employees.json
- * from the sample employee records, so the committed snapshot always matches
- * exactly what the employees page computes (and what the quick-report PDFs
- * print) when sample data is on.
- *
- *   node scripts/generate-sample-employees.mjs
- *
- * The JSON file is a fixture: tests read it, the page does not.
- */
+
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,5 +28,7 @@ await writeFile(target, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
 console.log(
   `Wrote ${path.relative(path.join(here, ".."), target)} — ${
     snapshot.totals.total
-  } employees (${snapshot.totals.Female}F / ${snapshot.totals.Male}M / ${snapshot.totals.Other} other)`,
+  } employees (${snapshot.totals.Female}F / ${snapshot.totals.Male}M / ${
+    snapshot.totals.lgbtqia
+  } LGBTQIA+)`,
 );

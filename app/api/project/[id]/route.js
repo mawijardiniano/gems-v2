@@ -11,6 +11,7 @@ import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
 import { withGeneratedAccomplishment } from "@/lib/accomplishmentSummary";
+import { normalizeRefNumber } from "@/lib/referenceNumber";
 import { deleteFileFromBucket } from "@/lib/delete";
 import { deleteEventCascade } from "@/lib/eventCascade";
 import GPB from "@/models/gpb";
@@ -25,11 +26,38 @@ const PROJECT_EDITOR_ROLES = ["gad focal person", "admin"];
 
 const MAX_MILESTONES = 50;
 
+const MAX_MILESTONE_PROOFS = 10;
+
+/* Optional free-text approval metadata (approved resolution # + other details) */
+const APPROVAL_TEXT_FIELDS = ["approved_resolution_no", "other_details"];
+
+const MAX_APPROVAL_TEXT_LENGTH = 500;
+
 /** Returns the Date for a valid input, null for empty input, or undefined when invalid. */
 const parseDateInput = (value) => {
   if (value === null || value === undefined || value === "") return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date;
+};
+
+/** Validates and normalizes the proof files attached to a milestone. */
+const parseMilestoneProofs = (input) => {
+  if (input === undefined || input === null) return { proofs: [] };
+  if (!Array.isArray(input)) return { error: "invalid proof files" };
+
+  const proofs = input
+    .filter((file) => file && typeof file === "object" && (file.url || file.key))
+    .map((file) => ({
+      url: file.url || "",
+      key: file.key || "",
+      name: file.name || null,
+    }));
+
+  if (proofs.length > MAX_MILESTONE_PROOFS) {
+    return { error: `too many proof files (max ${MAX_MILESTONE_PROOFS})` };
+  }
+
+  return { proofs };
 };
 
 /** Validates and normalizes an incoming milestones array. */
@@ -72,11 +100,24 @@ const parseMilestones = (input) => {
       return { error: `Invalid status for milestone "${title}"` };
     }
 
+    const parsedProofs = parseMilestoneProofs(raw.proofs);
+    if (parsedProofs.error) {
+      return { error: `Milestone "${title}": ${parsedProofs.error}` };
+    }
+
+    /* A milestone can only be completed when proof of completion is attached. */
+    if (status === "completed" && parsedProofs.proofs.length === 0) {
+      return {
+        error: `Milestone "${title}" is marked completed — upload at least one proof file`,
+      };
+    }
+
     milestones.push({
       title,
       target_date: targetDate,
       actual_date: actualDate,
       status,
+      proofs: parsedProofs.proofs,
     });
   }
 
@@ -121,8 +162,12 @@ export async function PUT(req, { params }) {
       body.end_date !== undefined ||
       body.project_status !== undefined;
     const milestonesTouched = body.milestones !== undefined;
+    /* Approval metadata is saved on its own — never part of the schedule form */
+    const approvalTouched =
+      body.approved_resolution_no !== undefined ||
+      body.other_details !== undefined;
 
-    if (scheduleTouched || milestonesTouched) {
+    if (scheduleTouched || milestonesTouched || approvalTouched) {
       const creatorId = project.createdBy ? String(project.createdBy) : "";
       const isCreator = !!user && creatorId === String(user._id);
       const isProjectEditorRole = PROJECT_EDITOR_ROLES.includes(
@@ -130,15 +175,18 @@ export async function PUT(req, { params }) {
       );
 
       if (!isCreator && !isProjectEditorRole) {
-        return Response.json(
-          {
-            error:
-              milestonesTouched && !scheduleTouched
-                ? "Only the project creator or a GAD Focal Person can manage milestones"
-                : "Only the project creator or a GAD Focal Person can set the schedule and status",
-          },
-          { status: 403 },
-        );
+        let message =
+          "Only the project creator or a GAD Focal Person can set the schedule and status";
+
+        if (approvalTouched && !scheduleTouched && !milestonesTouched) {
+          message =
+            "Only the project creator or a GAD Focal Person can update the approval details";
+        } else if (milestonesTouched && !scheduleTouched) {
+          message =
+            "Only the project creator or a GAD Focal Person can manage milestones";
+        }
+
+        return Response.json({ error: message }, { status: 403 });
       }
     }
 
@@ -165,6 +213,28 @@ mergeField("project_type");
       project.responsible_office = {
         value: Array.isArray(raw) ? raw.filter(Boolean) : [raw || ""].filter(Boolean),
       };
+    }
+
+    /* Approval metadata: optional free text — only the length is validated */
+    for (const key of APPROVAL_TEXT_FIELDS) {
+      if (body[key] === undefined) continue;
+
+      const text = String(body[key]?.value ?? body[key] ?? "").trim();
+
+      if (text.length > MAX_APPROVAL_TEXT_LENGTH) {
+        return Response.json(
+          {
+            error: `${
+              key === "approved_resolution_no"
+                ? "Approved resolution number"
+                : "Other details"
+            } is too long (max ${MAX_APPROVAL_TEXT_LENGTH} characters)`,
+          },
+          { status: 400 },
+        );
+      }
+
+      project[key] = { value: text };
     }
 
     if (body.project_status !== undefined) {
@@ -256,6 +326,31 @@ mergeField("project_type");
               name: f.name || null,
             }))
         : [];
+    }
+
+    /* Reference numbers are normally assigned automatically; this allows an
+       explicit correction while keeping them unique within the same year. */
+    if (body.reference_number !== undefined) {
+      const nextRef = normalizeRefNumber(body.reference_number);
+
+      if (nextRef) {
+        const clash = await Project.exists({
+          year: project.year,
+          reference_number: nextRef,
+          _id: { $ne: project._id },
+        });
+
+        if (clash) {
+          return Response.json(
+            {
+              message: `Reference number ${nextRef} is already used by another ${project.year} project.`,
+            },
+            { status: 409 },
+          );
+        }
+      }
+
+      project.reference_number = nextRef || null;
     }
 
     const actor = user;
@@ -350,7 +445,7 @@ export async function DELETE(req, { params }) {
 
   /* Deleting a project must not leave orphaned records behind — unlink it from
      every GPB, remove the events it owned (with their files + reports) and
-     delete the evidence files it stored in the bucket. */
+     delete the evidence + milestone proof files it stored in the bucket. */
   await GPB.updateMany({}, { $pull: { projects: projects._id } });
 
   const eventIds = Array.isArray(projects.events) ? projects.events : [];
@@ -360,17 +455,22 @@ export async function DELETE(req, { params }) {
     if (result.deleted) deletedEvents += 1;
   }
 
-  const evidence = Array.isArray(projects.expenditure_evidence)
-    ? projects.expenditure_evidence
-    : [];
+  const evidenceFiles = [
+    ...(Array.isArray(projects.expenditure_evidence)
+      ? projects.expenditure_evidence
+      : []),
+    ...(Array.isArray(projects.milestones) ? projects.milestones : []).flatMap(
+      (m) => (Array.isArray(m?.proofs) ? m.proofs : []),
+    ),
+  ];
   let deletedEvidenceFiles = 0;
-  for (const file of evidence) {
+  for (const file of evidenceFiles) {
     if (!file?.key) continue;
     try {
       await deleteFileFromBucket(file.key);
       deletedEvidenceFiles += 1;
     } catch (err) {
-      console.error(`Failed to delete evidence file ${file.key}:`, err);
+      console.error(`Failed to delete project file ${file.key}:`, err);
     }
   }
 

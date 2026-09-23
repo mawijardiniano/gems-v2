@@ -20,7 +20,7 @@ export default function GFPSManager() {
   const [selectedOfficials, setSelectedOfficials] = useState([]);
   const [gfps, setGfps] = useState({});
   const [loadingGfps, setLoadingGfps] = useState(true);
-  const [officials, setOfficials] = useState({});
+  const [officials, setOfficials] = useState([]);
   const [execRoles, setExecRoles] = useState({});
   const [editingSection, setEditingSection] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,7 +57,7 @@ export default function GFPSManager() {
     async function fetchOfficials() {
       const res = await fetch("/api/university-officials");
       const data = await res.json();
-      setOfficials((data.data && data.data[0]) || {});
+      setOfficials(Array.isArray(data.data) ? data.data : []);
     }
     fetchOfficials();
   }, []);
@@ -94,7 +94,7 @@ export default function GFPSManager() {
   };
 
   const handleEdit = (sectionKey) => {
-    if (Object.keys(officials).length === 0) return;
+    if (!officials.length) return;
 
     setEditingSection(sectionKey);
     setSection(sectionKey);

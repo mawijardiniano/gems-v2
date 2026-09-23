@@ -3,6 +3,9 @@ app/scripts/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 app/data/
 
+# One-off script backups (may contain personal data)
+scripts/backups/
+
 # dependencies
 /node_modules
 /.pnp

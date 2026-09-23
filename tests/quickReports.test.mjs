@@ -49,7 +49,6 @@ test("buildSexTable: one row per category plus a computed Total row", () => {
     "Personnel Category",
     "Female",
     "Male",
-    "Other",
     "Total",
     "% Female",
   ]);
@@ -61,7 +60,7 @@ test("buildSexTable: one row per category plus a computed Total row", () => {
   assert.strictEqual(total[0], "Total");
   assert.strictEqual(total[1], 230 + 357 + 25);
   assert.strictEqual(total[2], 184 + 210 + 10);
-  assert.strictEqual(total[4], 419 + 571 + 36);
+  assert.strictEqual(total[3], 414 + 567 + 35);
 });
 
 test("buildSexTable: tolerates missing breakdowns without throwing", () => {
@@ -71,22 +70,21 @@ test("buildSexTable: tolerates missing breakdowns without throwing", () => {
 
 test("buildSexSummaryTable: reads the pre-computed percentages off totals", () => {
   const { body } = buildSexSummaryTable(sample.totals);
-  assert.deepStrictEqual(body[0], ["Female", 612, "59.6%"]);
-  assert.deepStrictEqual(body[1], ["Male", 404, "39.4%"]);
-  assert.deepStrictEqual(body[2], ["Non-binary / Other", 10, "1%"]);
-  assert.deepStrictEqual(body[3], ["Total", 1026, "100%"]);
+  assert.deepStrictEqual(body[0], ["Female", 612, "60.2%"]);
+  assert.deepStrictEqual(body[1], ["Male", 404, "39.8%"]);
+  assert.deepStrictEqual(body[2], ["LGBTQIA+ (gender identity)", 30, "3%"]);
+  assert.deepStrictEqual(body[3], ["Total", 1016, "100%"]);
 });
 
 test("buildSexSummaryTable: recomputes percentages when totals omit them", () => {
   const { body } = buildSexSummaryTable({
     Female: 3,
     Male: 1,
-    Other: 0,
     total: 4,
   });
   assert.deepStrictEqual(body[0], ["Female", 3, "75%"]);
   assert.deepStrictEqual(body[1], ["Male", 1, "25%"]);
-  assert.deepStrictEqual(body[2], ["Non-binary / Other", 0, "0%"]);
+  assert.deepStrictEqual(body[2], ["LGBTQIA+ (gender identity)", 0, "0%"]);
 });
 
 // ─── Gender gap entries ──────────────────────────────────────────────
@@ -96,14 +94,14 @@ test("buildGapEntries: computes % female/male, gap in pp and interpretation", ()
   const faculty = entries.find((e) => e.label === "Faculty");
   const admin = entries.find((e) => e.label === "Administrative Staff");
 
-  assert.strictEqual(faculty.total, 419);
-  assert.strictEqual(faculty.pctFemale, 54.9);
-  assert.strictEqual(faculty.pctMale, 43.9);
-  assert.strictEqual(faculty.gapPp, 11);
+  assert.strictEqual(faculty.total, 414);
+  assert.strictEqual(faculty.pctFemale, 55.6);
+  assert.strictEqual(faculty.pctMale, 44.4);
+  assert.strictEqual(faculty.gapPp, 11.2);
   assert.strictEqual(faculty.interpretation, "Female-leaning");
 
-  assert.strictEqual(admin.pctFemale, 62.5);
-  assert.strictEqual(admin.gapPp, 25.7);
+  assert.strictEqual(admin.pctFemale, 63);
+  assert.strictEqual(admin.gapPp, 26);
   assert.strictEqual(admin.interpretation, "Female-dominated");
 });
 
@@ -132,7 +130,7 @@ test("gapTableFromEntries: produces a seven-column gap table", () => {
   assert.strictEqual(head.length, 7);
   assert.strictEqual(head[5], "Gap (pp)");
   assert.strictEqual(body.length, entries.length);
-  assert.strictEqual(body[0][5], "+11 pp");
+  assert.strictEqual(body[0][5], "+11.2 pp");
 });
 
 // ── Key findings ────────────────────────────────────────────────────
@@ -147,7 +145,7 @@ test("buildGapFindings: summarises overall share, widest gap and faculty vs admi
   });
 
   assert.ok(findings.length >= 5);
-  assert.match(findings[0], /59\.6% of the 1,026 personnel/);
+  assert.match(findings[0], /60\.2% of the 1,016 personnel/);
   assert.ok(findings.some((line) => /Widest gap/.test(line)));
   assert.ok(
     findings.some((line) =>

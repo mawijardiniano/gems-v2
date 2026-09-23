@@ -7,6 +7,10 @@ import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
 import { USER_POPULATE_BASE } from "@/lib/userPopulate";
+import {
+  eventYearFromDate,
+  nextEventRefNumber,
+} from "@/lib/referenceNumber";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -182,7 +186,7 @@ export async function POST(req) {
     // Event created - invalidate cached event lists.
     cacheDelPrefix("events:list:");
 
-    const newEvent = await Event.create({
+    const eventData = {
       title,
       description,
       start_date: parsedStartDate,
@@ -206,7 +210,40 @@ export async function POST(req) {
         url: "",
         key: "",
       },
-    });
+    };
+
+    /* The reference number is derived from the type of activity + start year,
+       e.g. GAD-2025-001. Auto-assigned numbers can collide when two events are
+       created at the same moment; the unique index rejects the loser and we
+       retry with the next one. */
+    const eventYear = eventYearFromDate(parsedStartDate);
+    const MAX_REF_ATTEMPTS = 3;
+    let newEvent = null;
+    let lastRefError = null;
+
+    for (let attempt = 0; attempt < MAX_REF_ATTEMPTS; attempt += 1) {
+      const usedRefs = await Event.find({
+        type_of_activity,
+        reference_number: { $ne: null },
+      }).select("reference_number");
+
+      eventData.reference_number = nextEventRefNumber(
+        type_of_activity,
+        eventYear,
+        usedRefs.map((doc) => doc.reference_number),
+      );
+
+      try {
+        newEvent = await Event.create(eventData);
+        break;
+      } catch (err) {
+        lastRefError = err;
+        if (err?.code === 11000) continue;
+        throw err;
+      }
+    }
+
+    if (!newEvent) throw lastRefError;
 
     if (project) {
       await Project.findByIdAndUpdate(

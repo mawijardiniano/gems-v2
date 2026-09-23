@@ -21,16 +21,19 @@ import {
   FaPen,
   FaChevronLeft,
   FaChevronRight,
+  FaSpinner,
 } from "react-icons/fa";
 import ActualsEncoderModal from "../components/ActualsEncoderModal";
 import MilestonesModal from "../components/MilestonesModal";
 import ParticipantBreakdown from "../components/ParticipantBreakdown";
+import ParticipantTargetProgress from "../components/ParticipantTargetProgress";
 import {
   generateAccomplishmentSummary,
   resolveAccomplishmentLines,
   usesAccomplishmentOverride,
 } from "@/lib/accomplishmentSummary";
 import { OFFICE_OPTIONS, normalizeOffice } from "@/lib/colleges";
+import { aggregateIndicatorProgress } from "@/lib/performanceTracking";
 const getFieldValue = (field) => {
   if (!field) return "";
   if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
@@ -237,6 +240,8 @@ export default function GADProjectsMonitoringContent() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reportError, setReportError] = useState("");
+  const [generatingReport, setGeneratingReport] = useState(null);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
@@ -253,6 +258,15 @@ export default function GADProjectsMonitoringContent() {
   });
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleError, setScheduleError] = useState("");
+  /* Approval details (approved resolution # + other details) have their own
+     draft — they are saved separately from the schedule and status */
+  const [approvalEditingId, setApprovalEditingId] = useState(null);
+  const [approvalDraft, setApprovalDraft] = useState({
+    approved_resolution_no: "",
+    other_details: "",
+  });
+  const [approvalSaving, setApprovalSaving] = useState(false);
+  const [approvalError, setApprovalError] = useState("");
   const [milestoneModalProject, setMilestoneModalProject] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -388,6 +402,16 @@ export default function GADProjectsMonitoringContent() {
       ),
     [filteredProjects, currentPage],
   );
+
+  /* While a project is open, the other projects are hidden — the opened one
+     shows on its own, and closing it (expandedId = null) brings the list back */
+  const visibleProjects = useMemo(() => {
+    if (!expandedId) return paginatedProjects;
+    const focused = filteredProjects.find(
+      (p) => String(p._id) === String(expandedId),
+    );
+    return focused ? [focused] : paginatedProjects;
+  }, [filteredProjects, paginatedProjects, expandedId]);
 
   const pageStart =
     filteredProjects.length === 0
@@ -543,6 +567,122 @@ export default function GADProjectsMonitoringContent() {
     }
   };
 
+  const startApprovalEdit = (project) => {
+    setApprovalError("");
+    setApprovalDraft({
+      approved_resolution_no: String(
+        getFieldValue(project?.approved_resolution_no) || "",
+      ),
+      other_details: String(getFieldValue(project?.other_details) || ""),
+    });
+    setApprovalEditingId(project?._id || null);
+  };
+
+  const cancelApprovalEdit = () => {
+    setApprovalEditingId(null);
+    setApprovalError("");
+  };
+
+  /* Optional fields — both may be left blank, so only the length is enforced */
+  const saveApproval = async (project) => {
+    if (!project) return;
+
+    const approvedResolution = approvalDraft.approved_resolution_no.trim();
+    const otherDetails = approvalDraft.other_details.trim();
+
+    if (approvedResolution.length > 500 || otherDetails.length > 500) {
+      setApprovalError("Approval details are too long (max 500 characters).");
+      return;
+    }
+
+    setApprovalSaving(true);
+    setApprovalError("");
+    try {
+      await axios.put(
+        `/api/project/${project._id}`,
+        {
+          userId,
+          approved_resolution_no: approvedResolution,
+          other_details: otherDetails,
+        },
+        { withCredentials: true },
+      );
+      setProjects((prev) =>
+        prev.map((p) =>
+          String(p._id) === String(project._id)
+            ? {
+                ...p,
+                approved_resolution_no: { value: approvedResolution },
+                other_details: { value: otherDetails },
+              }
+            : p,
+        ),
+      );
+      setApprovalEditingId(null);
+    } catch (err) {
+      setApprovalError(
+        err?.response?.data?.error ||
+          "Failed to save approval details. Please try again.",
+      );
+    } finally {
+      setApprovalSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (reportError) {
+      const timer = setTimeout(() => setReportError(""), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [reportError]);
+
+  /* Milestone progress PDFs are year-wide — the office/status/search filters
+     on this page narrow the on-screen list only. */
+  const downloadProgressReport = async (mode) => {
+    if (!yearFilter) return;
+    setReportError("");
+    setGeneratingReport(mode);
+    try {
+      const res = await axios.get(
+        `/api/reports/gpb-progress?year=${encodeURIComponent(yearFilter)}&mode=${mode}`,
+        { responseType: "blob" },
+      );
+
+      const dispositionFilename =
+        (res.headers?.["content-disposition"] || "").split("filename=")[1] ||
+        "";
+      const fallback =
+        mode === "project"
+          ? `gpb-progress-${yearFilter}-per-project.pdf`
+          : `gpb-progress-${yearFilter}.pdf`;
+
+      const url = window.URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = dispositionFilename.replace(/"/g, "") || fallback;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      let message = "Could not generate the milestone progress report.";
+      const data = err?.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const parsed = JSON.parse(await data.text());
+          message = parsed.message || parsed.error || message;
+        } catch {
+          /* keep the default message when the body is not JSON */
+        }
+      } else if (data?.message) {
+        message = data.message;
+      }
+      setReportError(message);
+    } finally {
+      setGeneratingReport(null);
+    }
+  };
+
   const overBudget = totals.utilization > 100;
 
   return (
@@ -567,6 +707,13 @@ export default function GADProjectsMonitoringContent() {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {reportError && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+          <FaExclamationTriangle className="h-5 w-5 shrink-0" />
+          <span>{reportError}</span>
         </div>
       )}
 
@@ -699,7 +846,10 @@ export default function GADProjectsMonitoringContent() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setExpandedId(null);
+            }}
             placeholder="Search GAD activity, mandate, office..."
             className="w-full text-sm rounded-lg border border-gray-200 bg-white pl-9 pr-8 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
           />
@@ -719,6 +869,53 @@ export default function GADProjectsMonitoringContent() {
         >
           Reset
         </button>
+      </div>
+
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-9 w-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <FaFileAlt className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">Quick Reports</p>
+            <p className="text-xs text-gray-500 truncate">
+              {yearFilter
+                ? `Milestone progress for ${ayLabel(Number(yearFilter))}`
+                : "Select an academic year first"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <button
+            type="button"
+            onClick={() => downloadProgressReport("overall")}
+            disabled={!yearFilter || generatingReport !== null}
+            title="Download the per-year milestone progress summary (PDF)"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generatingReport === "overall" ? (
+              <FaSpinner className="animate-spin h-3.5 w-3.5" />
+            ) : (
+              <FaChartLine className="h-3.5 w-3.5" />
+            )}
+            Progress (Year)
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadProgressReport("project")}
+            disabled={!yearFilter || generatingReport !== null}
+            title="Download the per-project milestone progress report (PDF)"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generatingReport === "project" ? (
+              <FaSpinner className="animate-spin h-3.5 w-3.5" />
+            ) : (
+              <FaClipboardList className="h-3.5 w-3.5" />
+            )}
+            Progress (Per Project)
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -781,7 +978,7 @@ export default function GADProjectsMonitoringContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {paginatedProjects.map((project, idx) => {
+                {visibleProjects.map((project, idx) => {
                   const activities = getArrayValue(project.gad_activity);
                   const office = getArrayValue(
                     project.responsible_office,
@@ -797,7 +994,13 @@ export default function GADProjectsMonitoringContent() {
                   const milestones = getMilestones(project);
                   const isScheduleEditing =
                     String(scheduleEditingId || "") === String(project._id);
+                  const isApprovalEditing =
+                    String(approvalEditingId || "") === String(project._id);
                   const isExpanded = expandedId === project._id;
+                  const displayIndex =
+                    filteredProjects.findIndex(
+                      (p) => String(p._id) === String(project._id),
+                    ) + 1;
                   return (
                     <React.Fragment key={project._id || idx}>
                       <tr
@@ -810,7 +1013,17 @@ export default function GADProjectsMonitoringContent() {
                         }`}
                       >
                         <td className="px-3 py-4 text-center text-xs font-medium text-gray-800 align-top">
-                          {(currentPage - 1) * PROJECTS_PER_PAGE + idx + 1}
+                          <div>
+                            {displayIndex > 0 ? displayIndex : idx + 1}
+                          </div>
+                          {project.reference_number && (
+                            <div
+                              className="mt-1 font-mono text-[10px] font-normal text-gray-500 whitespace-nowrap"
+                              title="Project reference number"
+                            >
+                              {project.reference_number}
+                            </div>
+                          )}
                         </td>
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {activities.length > 0 ? (
@@ -1084,6 +1297,127 @@ export default function GADProjectsMonitoringContent() {
                                       </>
                                     )}
                                   </div>
+
+                                  <div className="pt-3 border-t border-gray-100 space-y-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                                        Approval Details
+                                      </p>
+                                      {canManage && !isApprovalEditing && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            startApprovalEdit(project);
+                                          }}
+                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+                                        >
+                                          <FaPen size={10} />
+                                          {getFieldValue(
+                                            project.approved_resolution_no,
+                                          ) ||
+                                          getFieldValue(project.other_details)
+                                            ? "Update"
+                                            : "Add Details"}
+                                        </button>
+                                      )}
+                                    </div>
+                                    {isApprovalEditing ? (
+                                      <div className="space-y-3">
+                                        {approvalError && (
+                                          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] text-red-700">
+                                            <FaExclamationTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                                            <span>{approvalError}</span>
+                                          </div>
+                                        )}
+
+                                        <div>
+                                          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                                            Approved Resolution #
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={
+                                              approvalDraft.approved_resolution_no
+                                            }
+                                            onChange={(e) =>
+                                              setApprovalDraft((d) => ({
+                                                ...d,
+                                                approved_resolution_no:
+                                                  e.target.value,
+                                              }))
+                                            }
+                                            placeholder="e.g. SP Res. No. 2026-045"
+                                            maxLength={500}
+                                            className="w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
+                                            Others (Other Details /
+                                            Information)
+                                          </label>
+                                          <textarea
+                                            value={approvalDraft.other_details}
+                                            onChange={(e) =>
+                                              setApprovalDraft((d) => ({
+                                                ...d,
+                                                other_details: e.target.value,
+                                              }))
+                                            }
+                                            rows={3}
+                                            placeholder="Optional — any other approval details or information"
+                                            maxLength={500}
+                                            className="w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 resize-none"
+                                          />
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={cancelApprovalEdit}
+                                            disabled={approvalSaving}
+                                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            Cancel
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              saveApproval(project)
+                                            }
+                                            disabled={approvalSaving}
+                                            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                          >
+                                            {approvalSaving ? "Saving…" : "Save"}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <DetailRow
+                                          label="Approved Resolution #"
+                                          value={getFieldValue(
+                                            project.approved_resolution_no,
+                                          )}
+                                        />
+                                        <DetailRow
+                                          label="Others (Other Details / Information)"
+                                          value={getFieldValue(
+                                            project.other_details,
+                                          )}
+                                        />
+                                        {!canManage && (
+                                          <p className="text-[11px] text-gray-400 italic">
+                                            Only the project creator or a GAD
+                                            Focal Person can update the approval
+                                            details.
+                                          </p>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </section>
 
                                 <section className="rounded-xl bg-white border border-gray-100 p-4">
@@ -1141,6 +1475,9 @@ export default function GADProjectsMonitoringContent() {
                                                     <th className="px-2 py-1.5 font-semibold">
                                                       Status
                                                     </th>
+                                                    <th className="px-2 py-1.5 font-semibold">
+                                                      Proof
+                                                    </th>
                                                   </tr>
                                                 </thead>
                                                 <tbody>
@@ -1150,6 +1487,15 @@ export default function GADProjectsMonitoringContent() {
                                                         m.status
                                                       ] ||
                                                       MILESTONE_STATUS_META.pending;
+                                                    const proofs = (
+                                                      Array.isArray(m.proofs)
+                                                        ? m.proofs
+                                                        : []
+                                                    ).filter(
+                                                      (file) =>
+                                                        file &&
+                                                        (file.url || file.key),
+                                                    );
                                                     return (
                                                       <tr
                                                         key={m._id || i}
@@ -1174,6 +1520,63 @@ export default function GADProjectsMonitoringContent() {
                                                           >
                                                             {meta.label}
                                                           </span>
+                                                        </td>
+                                                        <td className="px-2 py-2">
+                                                          {proofs.length > 0 ? (
+                                                            <ul className="flex flex-wrap gap-1">
+                                                              {proofs.map(
+                                                                (file, fi) => {
+                                                                  const url =
+                                                                    getEvidenceProxyUrl(
+                                                                      file,
+                                                                    );
+                                                                  return (
+                                                                    <li
+                                                                      key={
+                                                                        file.key ||
+                                                                        file.url ||
+                                                                        fi
+                                                                      }
+                                                                    >
+                                                                      {url ? (
+                                                                        <a
+                                                                          href={url}
+                                                                          target="_blank"
+                                                                          rel="noopener noreferrer"
+                                                                          title={
+                                                                            file.name ||
+                                                                            "View proof"
+                                                                          }
+                                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition"
+                                                                        >
+                                                                          <FaPaperclip className="h-2.5 w-2.5" />
+                                                                          <span className="max-w-[120px] truncate">
+                                                                            {file.name ||
+                                                                              "Proof file"}
+                                                                          </span>
+                                                                        </a>
+                                                                      ) : (
+                                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+                                                                          <FaPaperclip className="h-2.5 w-2.5" />
+                                                                          {file.name ||
+                                                                            "Proof file"}
+                                                                        </span>
+                                                                      )}
+                                                                    </li>
+                                                                  );
+                                                                },
+                                                              )}
+                                                            </ul>
+                                                          ) : m.status ===
+                                                            "completed" ? (
+                                                            <span className="text-[10px] font-medium text-amber-600">
+                                                              Missing proof
+                                                            </span>
+                                                          ) : (
+                                                            <span className="text-[10px] text-gray-400">
+                                                              —
+                                                            </span>
+                                                          )}
                                                         </td>
                                                       </tr>
                                                     );
@@ -1471,6 +1874,9 @@ export default function GADProjectsMonitoringContent() {
                                           </p>
                                         );
                                       }
+                                      /* Target vs Actual is based on the project's Performance Indicator / Target. */
+                                      const indicatorProgress =
+                                        aggregateIndicatorProgress(project);
                                       return (
                                         <div className="overflow-x-auto">
                                           <table className="w-full text-xs">
@@ -1481,9 +1887,6 @@ export default function GADProjectsMonitoringContent() {
                                                 </th>
                                                 <th className="text-center py-1.5 font-semibold w-16">
                                                   Target
-                                                </th>
-                                                <th className="text-center py-1.5 font-semibold w-20">
-                                                  Registered
                                                 </th>
                                                 <th className="text-center py-1.5 font-semibold w-16">
                                                   Attended
@@ -1505,13 +1908,6 @@ export default function GADProjectsMonitoringContent() {
                                                   </td>
                                                   <td className="py-2 text-center text-gray-800">
                                                     {Array.isArray(
-                                                      ev?.registered_users,
-                                                    )
-                                                      ? ev.registered_users.length
-                                                      : "—"}
-                                                  </td>
-                                                  <td className="py-2 text-center text-gray-800">
-                                                    {Array.isArray(
                                                       ev?.attended_users,
                                                     )
                                                       ? ev.attended_users.length
@@ -1521,6 +1917,14 @@ export default function GADProjectsMonitoringContent() {
                                               ))}
                                             </tbody>
                                           </table>
+
+                                          {/* Overall target indicator — actual attendance vs the Performance Indicator target */}
+                                          <ParticipantTargetProgress
+                                            className="mt-4 border-t border-gray-100 pt-3"
+                                            actual={indicatorProgress.actualTotal}
+                                            target={indicatorProgress.targetTotal}
+                                            emptyMessage="No participant target found in the Performance Indicator / Target."
+                                          />
                                         </div>
                                       );
                                     })()}
@@ -1539,17 +1943,30 @@ export default function GADProjectsMonitoringContent() {
           </div>
           <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p className="text-xs text-gray-500">
-              Showing{" "}
-              <span className="font-medium text-gray-700">
-                {pageStart}–{pageEnd}
-              </span>{" "}
-              of {filteredProjects.length} project
-              {filteredProjects.length !== 1 ? "s" : ""}
-              {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — click a row to
-              view its details
+              {expandedId ? (
+                <>
+                  Viewing{" "}
+                  <span className="font-medium text-gray-700">1</span> of{" "}
+                  {filteredProjects.length} project
+                  {filteredProjects.length !== 1 ? "s" : ""}
+                  {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — close the
+                  details to show the rest
+                </>
+              ) : (
+                <>
+                  Showing{" "}
+                  <span className="font-medium text-gray-700">
+                    {pageStart}–{pageEnd}
+                  </span>{" "}
+                  of {filteredProjects.length} project
+                  {filteredProjects.length !== 1 ? "s" : ""}
+                  {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — click a row
+                  to view its details
+                </>
+              )}
             </p>
 
-            {totalPages > 1 && (
+            {!expandedId && totalPages > 1 && (
               <div className="flex items-center gap-1 self-start sm:self-auto">
                 <button
                   type="button"

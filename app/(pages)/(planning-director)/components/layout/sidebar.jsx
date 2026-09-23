@@ -7,6 +7,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaFolder,
+  FaBook,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -43,6 +44,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/planning-director/gpb",
       icon: <FaFolder size={16} />,
       key: "planning-director-gpb",
+    },
+    {
+      name: "Knowledge Resources",
+      href: "/planning-director/knowledge-resources",
+      icon: <FaBook size={16} />,
+      key: "planning-director-knowledge-resources",
     },
   ];
 

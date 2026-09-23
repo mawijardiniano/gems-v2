@@ -3,7 +3,33 @@
 import { useEffect, useState } from "react";
 import { toOfficeArray } from "@/lib/colleges";
 
-export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
+/* Plan fields are stored wrapped as `{ value }` in MongoDB; some callers pass
+   the raw API documents while others pass pre-normalized projects. Unwrap both
+   shapes so template interpolation never prints `[object Object]`. */
+const getFieldValue = (field) => {
+  if (!field) return "";
+  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
+    return field.value ?? "";
+  }
+  return field;
+};
+
+const getArrayValue = (field) => {
+  const value = getFieldValue(field);
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value) return [value];
+  return [];
+};
+
+export default function PrintGPB({
+  totalGAA,
+  budgetYear,
+  projects,
+  year,
+  label = "Print Projects",
+  Icon,
+  className = "bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2",
+}) {
   const [signatories, setSignatories] = useState({
     focalPointName: "____________________________",
     presidentName: "____________________________",
@@ -30,15 +56,7 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
       userAuth?.middle_name;
     const lastName =
       userAuth?.personal_info_id?.personal?.last_name || userAuth?.last_name;
-    const displayName = toDisplayName(firstName, middleName, lastName, options);
-    console.log("[PrintGPB] extractNameFromUserAuth", {
-      firstName,
-      middleName,
-      lastName,
-      options,
-      displayName,
-    });
-    return displayName;
+    return toDisplayName(firstName, middleName, lastName, options);
   }
 
   useEffect(() => {
@@ -46,28 +64,19 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
       try {
         const officialsRes = await fetch("/api/university-officials");
         const officialsJson = await officialsRes.json();
-        const officials = officialsJson?.data?.[0] || {};
+        const officials = Array.isArray(officialsJson?.data)
+          ? officialsJson.data
+          : [];
 
         const presidentName = extractNameFromUserAuth(
-          officials?.president?.name,
+          officials.find((o) => o?.title === "University President")?.name,
           { includeMiddleInitial: true },
         );
 
-        const focalEntry = (officials?.office_of_the_president || []).find(
-          (item) =>
-            item?.position
-              ?.toString()
-              .toLowerCase()
-              .includes("focal point/person, gender & development"),
+        const focalEntry = officials.find((o) =>
+          o?.position?.toString().toLowerCase().includes("focal"),
         );
         const focalName = extractNameFromUserAuth(focalEntry?.name);
-
-        console.log("[PrintGPB] signatory sources", {
-          presidentName,
-          focalName,
-          presidentOfficial: officials?.president,
-          focalEntry,
-        });
 
         setSignatories({
           focalPointName: focalName || "____________________________",
@@ -85,7 +94,6 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
   }, []);
 
   const handlePrintProjects = () => {
-    console.log("Year", budgetYear);
     let totalGAAFormatted = "";
     if (typeof totalGAA === "number" && !isNaN(totalGAA)) {
       totalGAAFormatted = totalGAA.toLocaleString(undefined, {
@@ -99,7 +107,26 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
       totalGAAFormatted = "To follow";
     }
 
-    const safeProjects = Array.isArray(projects) ? projects : [];
+    const safeProjects = (Array.isArray(projects) ? projects : []).map(
+      (project) => ({
+        ...project,
+        project_type: getFieldValue(project?.project_type),
+        gender_issue: getFieldValue(project?.gender_issue),
+        cause_gender_issue: getArrayValue(project?.cause_gender_issue),
+        gad_objective: getArrayValue(project?.gad_objective),
+        gad_activity: getArrayValue(project?.gad_activity),
+        performance_indicator_target: getArrayValue(
+          project?.performance_indicator_target,
+        ),
+        supporting_statistics_data: getFieldValue(
+          project?.supporting_statistics_data,
+        ),
+        relevant_agency: getFieldValue(project?.relevant_agency),
+        gad_budget: getFieldValue(project?.gad_budget),
+        source_budget: getFieldValue(project?.source_budget),
+        responsible_office: getFieldValue(project?.responsible_office),
+      }),
+    );
 
     const getProjectTypeLabel = (project) => {
       const rawType = project?.project_type;
@@ -205,6 +232,7 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
                 objArr.length,
                 actArr.length,
                 perfArr.length,
+                1,
               );
               let gadBudgetFormatted = "";
               if (
@@ -329,11 +357,9 @@ export default function PrintGPB({ totalGAA, budgetYear, projects, year }) {
     };
   };
   return (
-    <button
-      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition mb-2"
-      onClick={handlePrintProjects}
-    >
-      Print Projects
+    <button type="button" className={className} onClick={handlePrintProjects}>
+      {Icon && <Icon className="h-3 w-3" />}
+      {label}
     </button>
   );
 }

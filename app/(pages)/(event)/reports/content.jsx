@@ -28,7 +28,36 @@ const REPORT_TYPES = [
     label: "Gender Profile (Employees)",
     mode: "download",
   },
+  {
+    value: "milestones",
+    label: "GAD Projects Milestone Progress",
+    mode: "download",
+  },
+  {
+    value: "projects-events",
+    label: "Projects & Events Status (Quarterly)",
+    mode: "download",
+  },
 ];
+
+/* Quarter filter for the milestone progress report. A milestone is grouped by
+   its target date; the actual date is the fallback when no target is set. */
+const QUARTERS = [
+  { value: "", label: "All quarters (full year)" },
+  { value: "breakdown", label: "Per-quarter breakdown (all quarters)" },
+  { value: "1", label: "Q1 — January to March" },
+  { value: "2", label: "Q2 — April to June" },
+  { value: "3", label: "Q3 — July to September" },
+  { value: "4", label: "Q4 — October to December" },
+];
+
+/* The per-quarter breakdown is a milestone-report variant only. */
+const quarterOptionsFor = (reportType) =>
+  reportType === "milestones"
+    ? QUARTERS
+    : QUARTERS.filter((option) => option.value !== "breakdown");
+
+const QUARTER_REPORT_TYPES = ["milestones", "projects-events"];
 
 const COLLEGES = [
   "Graduate School",
@@ -53,6 +82,7 @@ export default function ReportsContent() {
   const [year, setYear] = useState("");
   const [reportType, setReportType] = useState("gar");
   const [scope, setScope] = useState("");
+  const [quarter, setQuarter] = useState("");
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -113,6 +143,21 @@ export default function ReportsContent() {
       let endpoint;
       if (type === "gar") {
         endpoint = `/api/reports/gad-ar?year=${encodeURIComponent(year)}`;
+      } else if (type === "milestones") {
+        if (quarter === "breakdown") {
+          params.set("mode", "breakdown");
+        } else if (quarter) {
+          params.set("mode", "quarter");
+          params.set("quarter", quarter);
+        } else {
+          params.set("mode", "overall");
+        }
+        endpoint = `/api/reports/gpb-progress?year=${encodeURIComponent(year)}&${params.toString()}`;
+      } else if (type === "projects-events") {
+        /* The API treats a missing quarter as the whole academic year. */
+        const quarterParam =
+          quarter && quarter !== "breakdown" ? `&quarter=${quarter}` : "";
+        endpoint = `/api/reports/projects-events?year=${encodeURIComponent(year)}${quarterParam}`;
       } else {
         if (type === "students" || type === "employees")
           params.set("type", type);
@@ -128,6 +173,16 @@ export default function ReportsContent() {
         gar: `gad-accomplishment-report-${year}.pdf`,
         students: "gender-profile-students.pdf",
         employees: "gender-profile-employees.pdf",
+        milestones: `gpb-progress-${year}${
+          quarter === "breakdown"
+            ? "-by-quarter"
+            : quarter
+              ? `-q${quarter}`
+              : ""
+        }.pdf`,
+        "projects-events": `projects-events-status-${year}${
+          quarter && quarter !== "breakdown" ? `-q${quarter}` : ""
+        }.pdf`,
       };
       const filename =
         (res.headers?.["content-disposition"] || "").split("filename=")[1] ||
@@ -151,7 +206,12 @@ export default function ReportsContent() {
     const type = REPORT_TYPES.find((t) => t.value === reportType);
     if (!type) return;
 
-    if (type.value === "gar" && !year) {
+    if (
+      (type.value === "gar" ||
+        type.value === "milestones" ||
+        type.value === "projects-events") &&
+      !year
+    ) {
       setError("Select an academic year first.");
       return;
     }
@@ -240,7 +300,11 @@ export default function ReportsContent() {
             </label>
             <select
               value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
+              onChange={(e) => {
+                setReportType(e.target.value);
+                /* Some quarters only exist for one report type. */
+                setQuarter("");
+              }}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
             >
               {REPORT_TYPES.map((t) => (
@@ -268,6 +332,30 @@ export default function ReportsContent() {
               ))}
             </select>
           </div>
+
+          {QUARTER_REPORT_TYPES.includes(reportType) && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Quarter
+              </label>
+              <select
+                value={quarter}
+                onChange={(e) => setQuarter(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+              >
+                {quarterOptionsFor(reportType).map((q) => (
+                  <option key={q.value || "all"} value={q.value}>
+                    {q.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1">
+                {reportType === "milestones"
+                  ? "Calendar quarters (Q1 = Jan–Mar … Q4 = Oct–Dec) covering the whole academic year. Each milestone follows its target date (actual date when no target is set); undated ones are listed at the end of the report."
+                  : "Calendar quarters (Q1 = Jan–Mar … Q4 = Oct–Dec) covering the whole academic year. Projects follow their start date, events their start date; undated ones are listed at the end of the report."}
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">

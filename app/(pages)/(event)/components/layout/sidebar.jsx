@@ -18,6 +18,7 @@ import {
   FaUserGraduate,
   FaUserTie,
   FaSitemap,
+  FaBook,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -56,7 +57,8 @@ export default function Sidebar({ open, setOpen, role }) {
       "gad-ars",
       "gender-statistics",
       "gad-settings",
-      "gad-projects"
+      "gad-projects",
+      "knowledge-resources"
     ],
     "gad coordinator": [
       "events-dashboard",
@@ -68,7 +70,8 @@ export default function Sidebar({ open, setOpen, role }) {
       "gad-ars",
       "gender-statistics",
       "gad-settings",
-      "gad-projects"
+      "gad-projects",
+      "knowledge-resources"
     ],
     
 
@@ -117,6 +120,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/gpb",
       icon: <FaFolder size={16} />,
       key: "gpb",
+    },
+    {
+      name: "Knowledge Resources",
+      href: "/knowledge-resources",
+      icon: <FaBook size={16} />,
+      key: "knowledge-resources",
     },
   ];
 
