@@ -54,7 +54,17 @@ const getEvidenceDownloadUrl = (file) => {
   return `/api/download?key=${encodeURIComponent(key)}${nameParam}`;
 };
 
-export default function ActualsEncoderModal({ project, userId, onClose, onSaved }) {
+export default function ActualsEncoderModal({
+  project,
+  userId,
+  /* API base of the project module — defaults to the GAD project routes. */
+  endpoint = "/api/project",
+  /* Field holding the planned budget + its display label. */
+  budgetField = "gad_budget",
+  budgetLabel = "GAD Budget (Planned)",
+  onClose,
+  onSaved,
+}) {
   const fileLifecycle = useFileLifecycle();
 
   const [actual, setActual] = useState("");
@@ -93,7 +103,7 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project]);
 
-  const plannedBudget = Number(getFieldValue(project?.gad_budget)) || 0;
+  const plannedBudget = Number(getFieldValue(project?.[budgetField])) || 0;
   const spent = Number(expenditures) || 0;
   const variance = plannedBudget - spent;
   const utilization =
@@ -180,7 +190,7 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(`/api/project/${project._id}`, {
+      const res = await fetch(`${endpoint}/${project._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -251,7 +261,7 @@ export default function ActualsEncoderModal({ project, userId, onClose, onSaved 
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                GAD Budget (Planned)
+                {budgetLabel}
               </p>
               <p className="text-sm font-bold text-gray-900 mt-0.5">
                 {fmtPeso(plannedBudget)}

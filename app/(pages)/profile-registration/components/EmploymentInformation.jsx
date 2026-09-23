@@ -157,11 +157,36 @@ export default function EmploymentInformation() {
                   <option>College of Governance</option>
                   <option>College of Industrial Technology</option>
                   <option>College of Information & Computing Sciences</option>
-                  <option>Offices under the Office of the University President</option>
-                  <option>Offices under the Office of the Vice President for Academic Affairs</option>
-                  <option>Offices under the Office of the Vice President for Administration and Finance</option>
-                  <option>Offices under the Office of the Vice President for Research and Extension</option>
-                  <option>Offices under the Office of the Vice President for Student Affairs and Services</option>
+                  <option>Office of the President</option>
+                  <option>University and Board Secretary</option>
+                  <option>Office of the Vice President for Administration and Finance</option>
+                  <option>Office of the Vice President for Academic Affairs</option>
+                  <option>Office of the Chief Administrative Officer</option>
+                  <option>Quality Assurance Office</option>
+                  <option>Planning Unit</option>
+                  <option>Human Resource and Management Unit</option>
+                  <option>Legal Unit</option>
+                  <option>Records Office</option>
+                  <option>Budget Office</option>
+                  <option>Internal Audit Unit</option>
+                  <option>Information Unit</option>
+                  <option>Procurement Unit</option>
+                  <option>Supply and Property Management Unit</option>
+                  <option>Accounting Office</option>
+                  <option>Cash Unit</option>
+                  <option>Registrar&apos;s Office</option>
+                  <option>Health Services Unit</option>
+                  <option>Research &amp; Extension Office</option>
+                  <option>Learning Resource Center</option>
+                  <option>General Services Unit</option>
+                  <option>Project Management Unit</option>
+                  <option>Business Affairs Office</option>
+                  <option>Motorpool</option>
+                  <option>Information and Communication Technology Unit</option>
+                  <option>Security Services</option>
+                  <option>Gasan Campus</option>
+                  <option>Torrijos Campus</option>
+                  <option>Santa Cruz Campus</option>
                 </select>
               </div>
             </div>

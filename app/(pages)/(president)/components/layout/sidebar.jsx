@@ -14,6 +14,7 @@ import {
   FaUserTie,
   FaFileAlt,
   FaBook,
+  FaFlask,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -252,6 +253,56 @@ export default function Sidebar({ open, setOpen, role }) {
                       />
                       <span className="text-sm font-medium truncate">
                         GAD Projects/Activities
+                      </span>
+                    </Link>
+                  </TooltipWrapper>
+
+                  <TooltipWrapper
+                    label="Research & Extension Projects"
+                    collapsed={!open}
+                  >
+                    <Link
+                      href="/president/project-monitoring/re-extension-projects"
+                      onClick={handleMobileClose}
+                      className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                        pathname?.startsWith(
+                          "/president/project-monitoring/re-extension-projects",
+                        )
+                          ? "bg-gradient-to-r from-amber-50 to-yellow-50/50 text-amber-700"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      }`}
+                    >
+                      <FaFlask
+                        size={14}
+                        className="flex-shrink-0 opacity-60"
+                      />
+                      <span className="text-sm font-medium truncate">
+                        Research &amp; Extension
+                      </span>
+                    </Link>
+                  </TooltipWrapper>
+
+                  <TooltipWrapper
+                    label="Academic Projects"
+                    collapsed={!open}
+                  >
+                    <Link
+                      href="/president/project-monitoring/academic-projects"
+                      onClick={handleMobileClose}
+                      className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                        pathname?.startsWith(
+                          "/president/project-monitoring/academic-projects",
+                        )
+                          ? "bg-gradient-to-r from-amber-50 to-yellow-50/50 text-amber-700"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      }`}
+                    >
+                      <FaUserGraduate
+                        size={14}
+                        className="flex-shrink-0 opacity-60"
+                      />
+                      <span className="text-sm font-medium truncate">
+                        Academic Projects
                       </span>
                     </Link>
                   </TooltipWrapper>

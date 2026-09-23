@@ -2,35 +2,74 @@
 import { assignStartYears } from "./sampleCohorts.js";
 import { SAMPLE_SCHOOL_YEARS } from "./studentSampleRecords.js";
 
+/* Curated office marginals — one row for every entry in OFFICE_OPTIONS (13
+   colleges + 31 offices). The totals still add up to 612 female / 404 male, and
+   every office is staffed enough to appear in all five sample years. */
 const OFFICE_TARGETS = [
-  { office: "College of Education", Female: 134, Male: 94 },
-  { office: "College of Arts and Social Sciences", Female: 85, Male: 59 },
-  { office: "College of Business and Accountancy", Female: 52, Male: 30 },
-  { office: "College of Allied Health Sciences", Female: 39, Male: 11 },
+  { office: "College of Education", Female: 115, Male: 75 },
+  { office: "College of Arts and Social Sciences", Female: 73, Male: 45 },
+  { office: "College of Business and Accountancy", Female: 47, Male: 24 },
+  { office: "College of Engineering", Female: 14, Male: 30 },
+  { office: "College of Allied Health Sciences", Female: 34, Male: 9 },
+  { office: "College of Agriculture", Female: 23, Male: 15 },
+  {
+    office: "College of Information and Computing Sciences",
+    Female: 19,
+    Male: 18,
+  },
+  { office: "College of Criminal Justice Education", Female: 19, Male: 12 },
+  { office: "College of Industrial Technology", Female: 13, Male: 15 },
+  { office: "College of Governance", Female: 17, Male: 10 },
+  {
+    office: "College of Fisheries and Aquatic Sciences",
+    Female: 14,
+    Male: 13,
+  },
+  { office: "Graduate School", Female: 12, Male: 6 },
+  { office: "College of Environmental Studies", Female: 10, Male: 6 },
   {
     office: "Office of the Vice President for Administration and Finance",
-    Female: 31,
-    Male: 12,
+    Female: 14,
+    Male: 7,
   },
-  { office: "College of Agriculture", Female: 27, Male: 20 },
+  { office: "Office of the President", Female: 12, Male: 8 },
   {
-    office: "Office of the Vice President for Student Affairs and Services",
-    Female: 25,
-    Male: 8,
+    office: "Office of the Vice President for Academic Affairs",
+    Female: 12,
+    Male: 6,
   },
-  { office: "College of Criminal Justice Education", Female: 22, Male: 16 },
-  { office: "College of Information and Computing Sciences", Female: 22, Male: 23 },
-  { office: "Office of the Vice President for Academic Affairs", Female: 22, Male: 8 },
-  { office: "Office of the Vice President for Research and Extension", Female: 20, Male: 6 },
-  { office: "College of Governance", Female: 20, Male: 14 },
-  { office: "College of Engineering", Female: 18, Male: 35 },
-  { office: "Office of the University President", Female: 18, Male: 9 },
-  { office: "College of Fisheries and Aquatic Sciences", Female: 16, Male: 17 },
-  { office: "College of Industrial Technology", Female: 14, Male: 19 },
-  { office: "Graduate School", Female: 13, Male: 8 },
-  { office: "HRMU", Female: 12, Male: 5 },
-  { office: "GAD Unit", Female: 11, Male: 2 },
-  { office: "College of Environmental Studies", Female: 11, Male: 8 },
+  { office: "Human Resource and Management Unit", Female: 9, Male: 4 },
+  { office: "Registrar's Office", Female: 9, Male: 4 },
+  { office: "Security Services", Female: 3, Male: 10 },
+  {
+    office: "Information and Communication Technology Unit",
+    Female: 6,
+    Male: 6,
+  },
+  { office: "Accounting Office", Female: 8, Male: 4 },
+  { office: "GAD Unit", Female: 9, Male: 2 },
+  { office: "Research & Extension Office", Female: 7, Male: 4 },
+  { office: "Learning Resource Center", Female: 8, Male: 3 },
+  { office: "General Services Unit", Female: 5, Male: 6 },
+  { office: "Supply and Property Management Unit", Female: 6, Male: 4 },
+  { office: "Business Affairs Office", Female: 6, Male: 4 },
+  { office: "Cash Unit", Female: 6, Male: 3 },
+  { office: "Quality Assurance Office", Female: 6, Male: 3 },
+  { office: "Records Office", Female: 6, Male: 3 },
+  { office: "Health Services Unit", Female: 7, Male: 2 },
+  { office: "Project Management Unit", Female: 5, Male: 4 },
+  { office: "Motorpool", Female: 2, Male: 7 },
+  { office: "Gasan Campus", Female: 6, Male: 3 },
+  { office: "Office of the Chief Administrative Officer", Female: 5, Male: 3 },
+  { office: "Planning Unit", Female: 5, Male: 3 },
+  { office: "Legal Unit", Female: 5, Male: 3 },
+  { office: "Budget Office", Female: 5, Male: 3 },
+  { office: "Internal Audit Unit", Female: 5, Male: 3 },
+  { office: "Information Unit", Female: 5, Male: 3 },
+  { office: "Procurement Unit", Female: 5, Male: 3 },
+  { office: "Torrijos Campus", Female: 5, Male: 3 },
+  { office: "Santa Cruz Campus", Female: 5, Male: 3 },
+  { office: "University and Board Secretary", Female: 5, Male: 2 },
 ];
 
 const CATEGORY_TARGETS = [
@@ -57,7 +96,6 @@ const LEVEL_TARGETS = {
   ],
 };
 
-/* Academic ranks apply to Faculty personnel only (419 in total). */
 const RANK_TARGETS = [
   { academicRank: "Instructor I", Female: 62, Male: 41 },
   { academicRank: "Instructor II", Female: 44, Male: 30 },
@@ -107,11 +145,12 @@ const LGBTQIA_TARGETS = [{ Female: 18, Male: 12 }];
 
 /* Appointment history — how many employees of each sex were already on board
    when each sample year started. An employee stays on board from `startYear`
-   through the newest sample year, so 905 of the 1,016 employees staffed the
-   university in 2020-2021 and the roster fills in one cohort at a time. The
-   start years are scattered across the whole roster, so every year keeps every
-   office, personnel type and appointment status. The window mirrors the
-   student sample. */
+   through the newest sample year, so 757 of the 1,016 employees staffed the
+   university in 2020-2021 and the roster fills in one cohort at a time. (Every
+   one of the 44 offices keeps a toehold in every year, which caps how many
+   records can start in the oldest year.) The start years are scattered across
+   the whole roster, so every year keeps every office, personnel type and
+   appointment status. The window mirrors the student sample. */
 const START_YEAR_TARGETS = [
   { startYear: SAMPLE_SCHOOL_YEARS[0], Female: 520, Male: 385 },
   { startYear: SAMPLE_SCHOOL_YEARS[1], Female: 30, Male: 5 },
@@ -121,19 +160,20 @@ const START_YEAR_TARGETS = [
 ];
 
 /* Growth profile per office: how much of the office's staff arrived late in the
-   window. Positive = the office grew (the GAD Unit and HRMU only filled up in
-   the recent years), negative = it ran down, 0 = steady. Weights each year by
+   window. Positive = the office grew (the GAD Unit and the Human Resource and
+   Management Unit only filled up in the recent years), negative = it ran down,
+   0 = steady. Weights each year by
    `yearShare × (1 + growth × (yearIndex - 2))`, so offices change places between
    years instead of growing in lockstep. */
 export const OFFICE_GROWTH = {
   "GAD Unit": 0.4,
-  HRMU: 0.3,
   "College of Information and Computing Sciences": 0.35,
+  "Human Resource and Management Unit": 0.3,
   "College of Engineering": 0.3,
   "College of Allied Health Sciences": 0.25,
   "College of Criminal Justice Education": 0.2,
   "Graduate School": 0.15,
-  "Office of the Vice President for Research and Extension": 0.1,
+  "Research & Extension Office": 0.1,
   "College of Business and Accountancy": 0.05,
   "College of Arts and Social Sciences": 0,
   "College of Environmental Studies": -0.05,
@@ -190,31 +230,46 @@ const DEPARTMENTS_BY_OFFICE = {
   "College of Industrial Technology": ["Department of Industrial Technology"],
   "College of Environmental Studies": ["Department of Environmental Science"],
   "Graduate School": ["Graduate Studies Office"],
-  "Office of the University President": [
-    "Office of the President",
-    "Internal Audit Office",
+  "Office of the President": ["Presidential Management Staff"],
+  "University and Board Secretary": ["Board Secretariat"],
+  "Office of the Vice President for Administration and Finance": [
+    "Administrative Services",
+    "Financial Services",
   ],
   "Office of the Vice President for Academic Affairs": [
     "Academic Affairs Office",
-    "Registrar's Office",
-    "Library Services",
+    "Curriculum and Instruction",
   ],
-  "Office of the Vice President for Administration and Finance": [
-    "Accounting Office",
-    "Cashiering Office",
-    "Human Resource Management Office",
-  ],
-  "Office of the Vice President for Research and Extension": [
-    "Research Office",
-    "Extension Office",
-  ],
-  "Office of the Vice President for Student Affairs and Services": [
-    "Student Affairs Office",
-    "Guidance Office",
-    "Sports Development Office",
-  ],
-  "HRMU": ["Human Resource Management Unit"],
+  "Office of the Chief Administrative Officer": ["Administrative Office"],
+  "Quality Assurance Office": ["Quality Assurance"],
+  "Planning Unit": ["Planning and Development"],
   "GAD Unit": ["GAD Office"],
+  "Human Resource and Management Unit": ["Human Resource Management Unit"],
+  "Legal Unit": ["Legal Services"],
+  "Records Office": ["Records Management Unit"],
+  "Budget Office": ["Budget and Planning"],
+  "Internal Audit Unit": ["Internal Audit Services"],
+  "Information Unit": ["Information Services"],
+  "Procurement Unit": ["Procurement Services"],
+  "Supply and Property Management Unit": ["Supply and Property Management"],
+  "Accounting Office": ["Financial Reports", "Payroll"],
+  "Cash Unit": ["Cashiering"],
+  "Registrar's Office": ["Admissions and Records", "Registration"],
+  "Health Services Unit": ["Clinic Services"],
+  "Research & Extension Office": ["Research Office", "Extension Office"],
+  "Learning Resource Center": ["Library Services", "Audio-Visual Services"],
+  "General Services Unit": ["Maintenance Services", "Janitorial Services"],
+  "Project Management Unit": ["Infrastructure Projects"],
+  "Business Affairs Office": ["Business Development", "Production Services"],
+  "Motorpool": ["Transport Services"],
+  "Information and Communication Technology Unit": [
+    "Network and Systems",
+    "Web Development",
+  ],
+  "Security Services": ["Security Guards", "Safety Services"],
+  "Gasan Campus": ["Campus Administration"],
+  "Torrijos Campus": ["Campus Administration"],
+  "Santa Cruz Campus": ["Campus Administration"],
 };
 
 const SEX_KEYS = ["Female", "Male"];

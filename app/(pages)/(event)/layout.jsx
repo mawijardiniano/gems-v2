@@ -4,40 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
-
-const ROLE_ACCESS = {
-  "gad focal person": [
-    "events-dashboard",
-    "university-officials",
-    "gfps",
-    "gaa-budget",
-    "gpb",
-    "reports",
-    "events-list",
-    "create",
-    "gad-ars",
-    "gender-statistics",
-    "gad-settings",
-    "project-monitoring",
-    "knowledge-resources"
-  ],
-  "gad coordinator": [
-    "events-dashboard",
-    "university-officials",
-    "gfps",
-    "gaa-budget",
-    "gpb",
-    "reports",
-    "events-list",
-    "create",
-    "gad-ars",
-    "gender-statistics",
-    "gad-settings",
-    "project-monitoring",
-    "knowledge-resources"
-  ],
-  "planning director": ["admin-dashboard", "gpb", "gad-settings"],
-};
+import { EVENT_ROLE_PAGE_ACCESS } from "@/lib/roleAccess";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -72,7 +39,7 @@ export default function DashboardLayout({ children }) {
         const segments = pathname.split("/").filter(Boolean);
         const basePage = segments[0];
 
-        const allowedPages = ROLE_ACCESS[role] || [];
+        const allowedPages = EVENT_ROLE_PAGE_ACCESS[role] || [];
 
         if (!allowedPages.includes(basePage)) {
           router.replace("/not-authorized");

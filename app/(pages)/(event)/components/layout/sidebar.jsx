@@ -19,10 +19,12 @@ import {
   FaUserTie,
   FaSitemap,
   FaBook,
+  FaFlask,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { EVENT_ROLE_MENU_ACCESS } from "@/lib/roleAccess";
 
 const TooltipWrapper = ({ label, children, collapsed }) => {
   if (!collapsed) return children;
@@ -45,37 +47,6 @@ export default function Sidebar({ open, setOpen, role }) {
   const [showStructure, setShowStructure] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
-  const ROLE_ACCESS = {
-    "gad focal person": [
-      "events-dashboard",
-      "university-officials",
-      "gfps",
-      "gaa-budget",
-      "gpb",
-      "events-list",
-      "gad-ars",
-      "gender-statistics",
-      "gad-settings",
-      "gad-projects",
-      "knowledge-resources"
-    ],
-    "gad coordinator": [
-      "events-dashboard",
-      "university-officials",
-      "gfps",
-      "gaa-budget",
-      "gpb",
-      "events-list",
-      "gad-ars",
-      "gender-statistics",
-      "gad-settings",
-      "gad-projects",
-      "knowledge-resources"
-    ],
-    
-
-  };
 
   const links = [
     {
@@ -131,7 +102,7 @@ export default function Sidebar({ open, setOpen, role }) {
 
   const filteredLinks = useMemo(() => {
     const normalizedRole = role?.toLowerCase();
-    const allowed = ROLE_ACCESS[normalizedRole] || [];
+    const allowed = EVENT_ROLE_MENU_ACCESS[normalizedRole] || [];
     return links
       .map((link) => ({
         ...link,
@@ -173,8 +144,20 @@ export default function Sidebar({ open, setOpen, role }) {
 
   const userAllowedPages = useMemo(() => {
     const normalizedRole = role?.toLowerCase();
-    return ROLE_ACCESS[normalizedRole] || [];
+    return EVENT_ROLE_MENU_ACCESS[normalizedRole] || [];
   }, [role]);
+
+  /* The Project Monitoring group shows when any of its sub-menus is allowed —
+     each sub-menu is then gated on its own key below. */
+  const projectMonitoringKeys = useMemo(
+    () => ["gad-projects", "re-extension-projects", "academic-projects"],
+    [],
+  );
+
+  const canSeeProjectMonitoring = useMemo(
+    () => projectMonitoringKeys.some((key) => userAllowedPages.includes(key)),
+    [projectMonitoringKeys, userAllowedPages],
+  );
 
   const reportsActive =
     pathname?.startsWith("/reports") || pathname?.startsWith("/gad-ars");
@@ -347,7 +330,7 @@ export default function Sidebar({ open, setOpen, role }) {
       
 
 
-          {userAllowedPages.includes("gad-projects") && (
+          {canSeeProjectMonitoring && (
             <>
               {open ? (
                 <div>
@@ -378,10 +361,11 @@ export default function Sidebar({ open, setOpen, role }) {
 
                   {showProjectMonitoring && (
                     <div className="ml-6 mt-1 space-y-1 border-l border-gray-200 pl-3">
-                      <TooltipWrapper
-                        label="GAD Projects/Activities"
-                        collapsed={!open}
-                      >
+                      {userAllowedPages.includes("gad-projects") && (
+                        <TooltipWrapper
+                          label="GAD Projects/Activities"
+                          collapsed={!open}
+                        >
                         <Link
                           href="/project-monitoring/gad-projects"
                           onClick={handleMobileClose}
@@ -406,7 +390,72 @@ export default function Sidebar({ open, setOpen, role }) {
                             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
                           )}
                         </Link>
-                      </TooltipWrapper>
+                        </TooltipWrapper>
+                      )}
+
+                      {userAllowedPages.includes("re-extension-projects") && (
+                        <TooltipWrapper
+                          label="Research & Extension Projects"
+                          collapsed={!open}
+                        >
+                          <Link
+                            href="/project-monitoring/re-extension-projects"
+                            onClick={handleMobileClose}
+                            className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                              pathname?.startsWith(
+                                "/project-monitoring/re-extension-projects",
+                              )
+                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                            }`}
+                          >
+                            <FaFlask
+                              size={14}
+                              className="flex-shrink-0 opacity-60"
+                            />
+                            <span className="text-sm font-medium truncate">
+                              Research &amp; Extension
+                            </span>
+                            {pathname?.startsWith(
+                              "/project-monitoring/re-extension-projects",
+                            ) && (
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            )}
+                          </Link>
+                        </TooltipWrapper>
+                      )}
+
+                      {userAllowedPages.includes("academic-projects") && (
+                        <TooltipWrapper
+                          label="Academic Projects"
+                          collapsed={!open}
+                        >
+                          <Link
+                            href="/project-monitoring/academic-projects"
+                            onClick={handleMobileClose}
+                            className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                              pathname?.startsWith(
+                                "/project-monitoring/academic-projects",
+                              )
+                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                            }`}
+                          >
+                            <FaUserGraduate
+                              size={14}
+                              className="flex-shrink-0 opacity-60"
+                            />
+                            <span className="text-sm font-medium truncate">
+                              Academic Projects
+                            </span>
+                            {pathname?.startsWith(
+                              "/project-monitoring/academic-projects",
+                            ) && (
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            )}
+                          </Link>
+                        </TooltipWrapper>
+                      )}
 
                       <TooltipWrapper
                         label="Event Management"

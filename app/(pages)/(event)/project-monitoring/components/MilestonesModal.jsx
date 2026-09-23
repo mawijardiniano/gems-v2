@@ -50,7 +50,14 @@ const toDateInputValue = (value) => {
   return `${date.getFullYear()}-${month}-${day}`;
 };
 
-export default function MilestonesModal({ project, userId, onClose, onSaved }) {
+export default function MilestonesModal({
+  project,
+  userId,
+  /* API base of the project module — defaults to the GAD project routes. */
+  endpoint = "/api/project",
+  onClose,
+  onSaved,
+}) {
   const fileLifecycle = useFileLifecycle();
 
   const [rows, setRows] = useState(() => {
@@ -242,7 +249,7 @@ export default function MilestonesModal({ project, userId, onClose, onSaved }) {
     setSaving(true);
     setError("");
     try {
-      const res = await fetch(`/api/project/${project._id}`, {
+      const res = await fetch(`${endpoint}/${project._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, milestones: cleaned }),

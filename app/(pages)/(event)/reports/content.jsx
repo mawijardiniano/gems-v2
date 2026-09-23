@@ -11,6 +11,10 @@ import {
   FaFileAlt,
   FaInfoCircle,
 } from "react-icons/fa";
+import {
+  downloadSampleGenderProfile,
+  isSampleGenderProfile,
+} from "./sampleGenderProfiles";
 
 const REPORT_TYPES = [
   {
@@ -20,12 +24,12 @@ const REPORT_TYPES = [
   },
   {
     value: "students",
-    label: "Gender Profile (Students)",
+    label: "Gender Profile (Students) — Sample",
     mode: "download",
   },
   {
     value: "employees",
-    label: "Gender Profile (Employees)",
+    label: "Gender Profile (Employees) — Sample",
     mode: "download",
   },
   {
@@ -59,29 +63,12 @@ const quarterOptionsFor = (reportType) =>
 
 const QUARTER_REPORT_TYPES = ["milestones", "projects-events"];
 
-const COLLEGES = [
-  "Graduate School",
-  "College of Agriculture",
-  "College of Allied Health Sciences",
-  "College of Arts and Social Sciences",
-  "College of Business and Accountancy",
-  "College of Criminal Justice Education",
-  "College of Education",
-  "College of Engineering",
-  "College of Environmental Studies",
-  "College of Fisheries and Aquatic Sciences",
-  "College of Governance",
-  "College of Industrial Technology",
-  "College of Information and Computing Sciences",
-];
-
 export default function ReportsContent() {
   const router = useRouter();
 
   const [years, setYears] = useState([]);
   const [year, setYear] = useState("");
   const [reportType, setReportType] = useState("gar");
-  const [scope, setScope] = useState("");
   const [quarter, setQuarter] = useState("");
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState("");
@@ -139,6 +126,19 @@ export default function ReportsContent() {
     setStatus("");
     setError("");
     try {
+      /* Gender profiles reuse the Quick Reports from Gender Statistics, built
+         in the browser from the sample datasets, so every figure is complete
+         and the PDF is stamped "Sample data". */
+      if (isSampleGenderProfile(type)) {
+        await downloadSampleGenderProfile(type);
+        setStatus(
+          type === "employees"
+            ? "Gender Profile (Employees) generated from sample data — download started."
+            : "Gender Profile (Students) generated from sample data — download started.",
+        );
+        return;
+      }
+
       const params = new URLSearchParams();
       let endpoint;
       if (type === "gar") {
@@ -158,11 +158,6 @@ export default function ReportsContent() {
         const quarterParam =
           quarter && quarter !== "breakdown" ? `&quarter=${quarter}` : "";
         endpoint = `/api/reports/projects-events?year=${encodeURIComponent(year)}${quarterParam}`;
-      } else {
-        if (type === "students" || type === "employees")
-          params.set("type", type);
-        if (scope) params.set("college", scope);
-        endpoint = `/api/analytics/sex-disaggregated-data/report?${params.toString()}`;
       }
 
       const res = await axios.get(endpoint, { responseType: "blob" });
@@ -171,8 +166,6 @@ export default function ReportsContent() {
       const link = document.createElement("a");
       const names = {
         gar: `gad-accomplishment-report-${year}.pdf`,
-        students: "gender-profile-students.pdf",
-        employees: "gender-profile-employees.pdf",
         milestones: `gpb-progress-${year}${
           quarter === "breakdown"
             ? "-by-quarter"
@@ -206,12 +199,9 @@ export default function ReportsContent() {
     const type = REPORT_TYPES.find((t) => t.value === reportType);
     if (!type) return;
 
-    if (
-      (type.value === "gar" ||
-        type.value === "milestones" ||
-        type.value === "projects-events") &&
-      !year
-    ) {
+    /* Sample-based gender profiles are generated in the browser and need no
+       academic year; the database-backed reports do. */
+    if (!isSampleGenderProfile(type.value) && !year) {
       setError("Select an academic year first.");
       return;
     }
@@ -357,28 +347,18 @@ export default function ReportsContent() {
             </div>
           )}
 
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
-              Scope
-            </label>
-            <select
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-            >
-              <option value="">University-wide</option>
-              {COLLEGES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          {isSampleGenderProfile(reportType) && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-800">
+              Built in your browser from the sample dataset (same source as
+              Gender Statistics → Quick Reports), so every figure is complete.
+              No database reads — the PDF is marked “Sample data”.
+            </div>
+          )}
 
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={generating || !year}
+            disabled={generating || (!isSampleGenderProfile(reportType) && !year)}
             className="w-full rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {generating && (
@@ -473,7 +453,8 @@ export default function ReportsContent() {
             Available Reports
           </h3>
           <p className="text-xs text-gray-400 mb-4">
-            One-click downloads; the GAR opens the print preview workspace.
+            One-click downloads; the GAR opens the print preview workspace and
+            the gender profiles are built from the sample dataset.
           </p>
           <ul className="divide-y divide-gray-100">
             {REPORT_TYPES.map((t) => (

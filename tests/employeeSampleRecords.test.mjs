@@ -92,14 +92,14 @@ test("every academic year keeps a near-complete roster", () => {
       record.years.includes(schoolYear),
     );
 
-    /* 2020-2021 already staffs 848 of the 1,016 employees. */
+    /* 2020-2021 already staffs 757 of the 1,016 employees. */
     assert.ok(
-      onboard.length >= 848,
+      onboard.length >= 757,
       `${schoolYear} holds a near-complete roster`,
     );
     assert.strictEqual(
       new Set(onboard.map((record) => record.office)).size,
-      20,
+      44,
       `${schoolYear} covers every office`,
     );
     assert.strictEqual(
@@ -151,10 +151,10 @@ test("computeEmployeeStats: the academic years grow to the full roster", () => {
   assert.deepStrictEqual(
     stats.byAcademicYear.map((row) => [row.school_year, row.total]),
     [
-      ["2020-2021", 848],
-      ["2021-2022", 897],
-      ["2022-2023", 936],
-      ["2023-2024", 977],
+      ["2020-2021", 757],
+      ["2021-2022", 828],
+      ["2022-2023", 890],
+      ["2023-2024", 954],
       ["2024-2025", 1016],
     ],
   );
@@ -248,18 +248,27 @@ test("offices grow at their own pace across the sample years", () => {
       (record) => record.office === office && record.years.includes(schoolYear),
     ).length;
 
-  /* Pinned counts: the GAD Unit and HRMU are the young offices, education and
-     agriculture barely move. */
-  assert.strictEqual(headcount("GAD Unit", "2020-2021"), 9);
-  assert.strictEqual(headcount("GAD Unit", "2024-2025"), 13);
-  assert.strictEqual(headcount("HRMU", "2020-2021"), 9);
-  assert.strictEqual(headcount("HRMU", "2024-2025"), 17);
-  assert.strictEqual(headcount("College of Education", "2020-2021"), 216);
-  assert.strictEqual(headcount("College of Education", "2024-2025"), 228);
+  /* Pinned counts: the GAD Unit and the Human Resource and Management Unit are
+     the young offices, education and agriculture barely move. */
+  assert.strictEqual(headcount("GAD Unit", "2020-2021"), 7);
+  assert.strictEqual(headcount("GAD Unit", "2024-2025"), 11);
+  assert.strictEqual(
+    headcount("Human Resource and Management Unit", "2020-2021"),
+    9,
+  );
+  assert.strictEqual(
+    headcount("Human Resource and Management Unit", "2024-2025"),
+    13,
+  );
+  assert.strictEqual(headcount("College of Education", "2020-2021"), 179);
+  assert.strictEqual(headcount("College of Education", "2024-2025"), 190);
 
   const growth = (office) =>
     headcount(office, "2024-2025") / headcount(office, "2020-2021");
-  assert.ok(growth("HRMU") > growth("College of Education"));
+  assert.ok(
+    growth("Human Resource and Management Unit") >
+      growth("College of Education"),
+  );
   assert.ok(growth("College of Engineering") > growth("College of Education"));
 
   /* Every growth profile belongs to an office that exists - a typo would
@@ -284,7 +293,7 @@ test("filterEmployeeRecords: every dimension narrows the dataset", () => {
   const engineering = filterEmployeeRecords(records, {
     office: "College of Engineering",
   });
-  assert.strictEqual(engineering.length, 53);
+  assert.strictEqual(engineering.length, 44);
 
   const deans = filterEmployeeRecords(records, { positionLevel: "Deans" });
   assert.strictEqual(deans.length, 30);
@@ -293,7 +302,7 @@ test("filterEmployeeRecords: every dimension narrows the dataset", () => {
   const oldestYear = filterEmployeeRecords(records, {
     schoolYear: "2020-2021",
   });
-  assert.strictEqual(oldestYear.length, 848);
+  assert.strictEqual(oldestYear.length, 757);
   assert.ok(oldestYear.every((record) => record.years.includes("2020-2021")));
 
   const currentYear = filterEmployeeRecords(records, {
