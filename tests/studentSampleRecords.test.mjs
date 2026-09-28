@@ -53,7 +53,25 @@ test("buildSampleStudentRecords: deterministic and complete", () => {
       `genderIdentity missing on ${record.id}`,
     );
     assert.strictEqual(typeof record.soloParent, "boolean");
-    assert.ok(Array.isArray(record.terms) && record.terms.length >= 2);
+    assert.ok(Array.isArray(record.terms) && record.terms.length >= 1);
+
+    /* A student holds at least one term in every year from their start year to
+       the newest sample year - the term mix varies, the enrolment does not. */
+    const years = new Set(record.terms.map((term) => term.school_year));
+    const startIndex = SAMPLE_SCHOOL_YEARS.indexOf(record.startYear);
+    SAMPLE_SCHOOL_YEARS.slice(startIndex).forEach((year) =>
+      assert.ok(years.has(year), `${record.id} is missing ${year}`),
+    );
+    record.terms.forEach((term) => {
+      assert.ok(
+        SAMPLE_SCHOOL_YEARS.includes(term.school_year),
+        `${record.id} has an unknown school year`,
+      );
+      assert.ok(
+        ["1st", "2nd", "Summer"].includes(term.semester),
+        `${record.id} has an unknown semester`,
+      );
+    });
   });
 });
 
@@ -377,14 +395,40 @@ test("filterStudentRecords: academic year narrows through the term history", () 
   });
   assert.strictEqual(currentYear.length, 3425);
 
-  /* Every enrolled student carries both semesters, so a semester filter alone
-     never narrows the academic year it belongs to. */
-  const secondSemester = filterStudentRecords(records, {
-    ...EMPTY_STUDENT_FILTERS,
-    schoolYear: "2022-2023",
-    semester: "1st",
-  });
-  assert.strictEqual(secondSemester.length, 3185);
+  /* Every semester narrows the year it is pinned to: the 1st semester misses
+     the late-entry cohort, the 2nd semester misses the students sitting the
+     term out, and only a small group attends Summer. */
+  const semesterCount = (schoolYear, semester) =>
+    filterStudentRecords(records, {
+      ...EMPTY_STUDENT_FILTERS,
+      schoolYear,
+      semester,
+    }).length;
+
+  assert.strictEqual(semesterCount("2022-2023", "1st"), 3179);
+  assert.strictEqual(semesterCount("2022-2023", "2nd"), 2878);
+  assert.strictEqual(semesterCount("2022-2023", "Summer"), 182);
+  assert.ok(semesterCount("2022-2023", "1st") < 3185);
+  assert.ok(semesterCount("2022-2023", "2nd") < 3185);
+  assert.ok(semesterCount("2022-2023", "Summer") < 3185);
+
+  /* The newest year behaves the same way - its 1st semester drops the three
+     students who joined in the 2nd semester of 2024-2025. */
+  assert.strictEqual(semesterCount("2024-2025", "1st"), 3422);
+  assert.strictEqual(semesterCount("2024-2025", "2nd"), 3089);
+  assert.strictEqual(semesterCount("2024-2025", "Summer"), 202);
+
+  /* The three terms together cover the whole year - no student is enrolled in
+     a year without a semester. */
+  const perTerm = ["1st", "2nd", "Summer"].map((semester) =>
+    filterStudentRecords(records, {
+      ...EMPTY_STUDENT_FILTERS,
+      schoolYear: "2022-2023",
+      semester,
+    }),
+  );
+  const union = new Set(perTerm.flat().map((record) => record.id));
+  assert.strictEqual(union.size, 3185);
 });
 
 test("filterStudentRecords: impossible combinations return an empty dataset", () => {
@@ -427,7 +471,7 @@ test("option lists survive a filter that matches no records", () => {
     "2021-2022",
     "2020-2021",
   ]);
-  assert.deepStrictEqual(stats.semesters, ["1st", "2nd"]);
+  assert.deepStrictEqual(stats.semesters, ["1st", "2nd", "Summer"]);
   assert.deepStrictEqual(stats.yearLevels, [
     "1st Year",
     "2nd Year",
@@ -437,15 +481,16 @@ test("option lists survive a filter that matches no records", () => {
   assert.strictEqual(stats.studentTypes.length, 6);
   assert.strictEqual(stats.byAcademicYear.length, 0);
 
-  /* Re-pinning the newest year the dataset actually has restores the data. */
+  /* Re-pinning the newest year the dataset actually has restores the data: the
+     1st semester of 2024-2025 holds all but the late-entry cohort. */
   const recovered = filterStudentRecords(SAMPLE_STUDENT_RECORDS, {
     ...EMPTY_STUDENT_FILTERS,
     schoolYear: stats.schoolYears[0],
     semester: "1st",
   });
-  assert.strictEqual(recovered.length, SAMPLE_STUDENT_RECORDS.length);
+  assert.strictEqual(recovered.length, 3422);
   assert.strictEqual(
     computeStudentStats(recovered, SAMPLE_STUDENT_RECORDS).totals.total,
-    3425,
+    3422,
   );
 });

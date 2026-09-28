@@ -12,8 +12,12 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import {
-  downloadSampleGenderProfile,
-  isSampleGenderProfile,
+  SAMPLE_QUICK_REPORTS,
+  SAMPLE_REPORT_SCHOOL_YEARS,
+  SAMPLE_REPORT_SEMESTERS,
+  downloadSampleQuickReport,
+  isSampleAllYearsReport,
+  isSampleQuickReport,
 } from "./sampleGenderProfiles";
 
 const REPORT_TYPES = [
@@ -30,6 +34,41 @@ const REPORT_TYPES = [
   {
     value: "employees",
     label: "Gender Profile (Employees) — Sample",
+    mode: "download",
+  },
+  {
+    value: "employees-position-level",
+    label: "Personnel by Position Level — Sample",
+    mode: "download",
+  },
+  {
+    value: "employees-gender-gap",
+    label: "Gender Gap Analysis (Faculty & Personnel) — Sample",
+    mode: "download",
+  },
+  {
+    value: "students-enrollment",
+    label: "Enrollment by Program — Sample",
+    mode: "download",
+  },
+  {
+    value: "students-gender-gap",
+    label: "Gender Gap Analysis (Students) — Sample",
+    mode: "download",
+  },
+  {
+    value: "students-intersectional",
+    label: "Intersectional Analysis — Sample",
+    mode: "download",
+  },
+  {
+    value: "students-multi-year",
+    label: "Comparative Multi-Year Enrollment — Sample",
+    mode: "download",
+  },
+  {
+    value: "gpb-matrix",
+    label: "GPB Plan and Budget Matrix",
     mode: "download",
   },
   {
@@ -63,11 +102,24 @@ const quarterOptionsFor = (reportType) =>
 
 const QUARTER_REPORT_TYPES = ["milestones", "projects-events"];
 
+/* Display labels for the sample term values (1st / 2nd / Summer). */
+const SEMESTER_LABEL = {
+  "1st": "1st Semester",
+  "2nd": "2nd Semester",
+  Summer: "Summer",
+};
+
 export default function ReportsContent() {
   const router = useRouter();
 
   const [years, setYears] = useState([]);
   const [year, setYear] = useState("");
+  /* Academic year for the sample-based reports; "" keeps the whole five-year
+     sample window, exactly like "All academic years" on Gender Statistics. */
+  const [sampleYear, setSampleYear] = useState("");
+  /* Semester for the student sample reports; "" keeps every term, matching the
+     "All semesters" default. Employee reports have no semester history. */
+  const [sampleSemester, setSampleSemester] = useState("");
   const [reportType, setReportType] = useState("gar");
   const [quarter, setQuarter] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -101,7 +153,7 @@ export default function ReportsContent() {
     };
   }, []);
 
-  /* Readiness check whenever the year changes */
+
   const loadReadiness = useCallback(async (y) => {
     if (!y) return;
     setReadinessLoading(true);
@@ -126,15 +178,32 @@ export default function ReportsContent() {
     setStatus("");
     setError("");
     try {
-      /* Gender profiles reuse the Quick Reports from Gender Statistics, built
-         in the browser from the sample datasets, so every figure is complete
-         and the PDF is stamped "Sample data". */
-      if (isSampleGenderProfile(type)) {
-        await downloadSampleGenderProfile(type);
+
+      if (isSampleQuickReport(type)) {
+        /* The comparative multi-year report always spans the whole sample
+           window, so a year left selected for another report type is ignored. */
+        const reportAllYears = isSampleAllYearsReport(type);
+        const reportSampleYear = reportAllYears ? "" : sampleYear;
+        /* Only student reports carry a semester term history, and the
+           comparative multi-year report keeps the whole window. */
+        const reportSemester =
+          reportAllYears || SAMPLE_QUICK_REPORTS[type].source !== "students"
+            ? ""
+            : sampleSemester;
+        await downloadSampleQuickReport(type, {
+          schoolYear: reportSampleYear,
+          semester: reportSemester,
+        });
+        const scope = [
+          reportSampleYear ? `AY ${reportSampleYear}` : "",
+          reportSemester ? SEMESTER_LABEL[reportSemester] || reportSemester : "",
+        ]
+          .filter(Boolean)
+          .join(", ");
         setStatus(
-          type === "employees"
-            ? "Gender Profile (Employees) generated from sample data — download started."
-            : "Gender Profile (Students) generated from sample data — download started.",
+          `${SAMPLE_QUICK_REPORTS[type].label}${
+            scope ? ` (${scope})` : " (all sample years)"
+          } generated from sample data — download started.`,
         );
         return;
       }
@@ -153,6 +222,8 @@ export default function ReportsContent() {
           params.set("mode", "overall");
         }
         endpoint = `/api/reports/gpb-progress?year=${encodeURIComponent(year)}&${params.toString()}`;
+      } else if (type === "gpb-matrix") {
+        endpoint = `/api/reports/gpb-matrix?year=${encodeURIComponent(year)}`;
       } else if (type === "projects-events") {
         /* The API treats a missing quarter as the whole academic year. */
         const quarterParam =
@@ -166,6 +237,7 @@ export default function ReportsContent() {
       const link = document.createElement("a");
       const names = {
         gar: `gad-accomplishment-report-${year}.pdf`,
+        "gpb-matrix": `gpb-matrix-${year}.pdf`,
         milestones: `gpb-progress-${year}${
           quarter === "breakdown"
             ? "-by-quarter"
@@ -201,7 +273,7 @@ export default function ReportsContent() {
 
     /* Sample-based gender profiles are generated in the browser and need no
        academic year; the database-backed reports do. */
-    if (!isSampleGenderProfile(type.value) && !year) {
+    if (!isSampleQuickReport(type.value) && !year) {
       setError("Select an academic year first.");
       return;
     }
@@ -294,6 +366,9 @@ export default function ReportsContent() {
                 setReportType(e.target.value);
                 /* Some quarters only exist for one report type. */
                 setQuarter("");
+                /* The semester filter only applies to the student sample
+                   reports, so it resets whenever the type changes. */
+                setSampleSemester("");
               }}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
             >
@@ -305,23 +380,95 @@ export default function ReportsContent() {
             </select>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
-              Academic Year
-            </label>
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-            >
-              {years.length === 0 && <option value="">No years available</option>}
-              {years.map((y) => (
-                <option key={y} value={String(y)}>
-                  AY {y}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Every report except the comparative multi-year one accepts an
+              academic year: the database-backed reports use the GPB years, the
+              sample-based reports the five-year sample window, where "All
+              academic years" keeps the whole sample population exactly as
+              before. */}
+          {isSampleAllYearsReport(reportType) ? (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Academic Year
+              </label>
+              <div className="w-full rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                All sample years (AY {SAMPLE_REPORT_SCHOOL_YEARS[0]} to{" "}
+                {SAMPLE_REPORT_SCHOOL_YEARS[SAMPLE_REPORT_SCHOOL_YEARS.length - 1]})
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">
+                A comparative multi-year report always covers every sample year,
+                so it has no academic-year filter.
+              </p>
+            </div>
+          ) : isSampleQuickReport(reportType) ? (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Academic Year
+              </label>
+              <select
+                value={sampleYear}
+                onChange={(e) => setSampleYear(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+              >
+                <option value="">All academic years</option>
+                {[...SAMPLE_REPORT_SCHOOL_YEARS].reverse().map((y) => (
+                  <option key={y} value={y}>
+                    AY {y}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1">
+                Sample window: AY {SAMPLE_REPORT_SCHOOL_YEARS[0]} to{" "}
+                {SAMPLE_REPORT_SCHOOL_YEARS[SAMPLE_REPORT_SCHOOL_YEARS.length - 1]}{" "}
+                — every sample year is a complete snapshot.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Academic Year
+              </label>
+              <select
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+              >
+                {years.length === 0 && <option value="">No years available</option>}
+                {years.map((y) => (
+                  <option key={y} value={String(y)}>
+                    AY {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Student sample reports can also pin a semester; the sample term
+              history is the only dataset that carries one. */}
+          {isSampleQuickReport(reportType) &&
+            !isSampleAllYearsReport(reportType) &&
+            SAMPLE_QUICK_REPORTS[reportType]?.source === "students" && (
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Semester
+                </label>
+                <select
+                  value={sampleSemester}
+                  onChange={(e) => setSampleSemester(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                >
+                  <option value="">All semesters</option>
+                  {SAMPLE_REPORT_SEMESTERS.map((s) => (
+                    <option key={s} value={s}>
+                      {SEMESTER_LABEL[s] || s}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Narrows the sample term history; every sample student holds at
+                  least one term in each enrolled year.
+                </p>
+              </div>
+            )}
 
           {QUARTER_REPORT_TYPES.includes(reportType) && (
             <div>
@@ -347,18 +494,21 @@ export default function ReportsContent() {
             </div>
           )}
 
-          {isSampleGenderProfile(reportType) && (
+          {isSampleQuickReport(reportType) && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-800">
               Built in your browser from the sample dataset (same source as
               Gender Statistics → Quick Reports), so every figure is complete.
-              No database reads — the PDF is marked “Sample data”.
+              No database reads — the PDF is marked “Sample data”.{" "}
+              {isSampleAllYearsReport(reportType)
+                ? "This report always spans the whole five-year sample window; every sample year is a complete snapshot, so the figures stay comparable year to year."
+                : "The Academic Year filter narrows the sample window and student reports also accept a Semester; every sample year is a complete snapshot, so the figures stay comparable year to year."}
             </div>
           )}
 
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={generating || (!isSampleGenderProfile(reportType) && !year)}
+            disabled={generating || (!isSampleQuickReport(reportType) && !year)}
             className="w-full rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {generating && (
@@ -381,6 +531,9 @@ export default function ReportsContent() {
           )}
         </div>
 
+        {/* The readiness check reads the live database for a specific academic
+            year — it does not apply to the sample-based reports. */}
+        {!isSampleQuickReport(reportType) && (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Data Readiness
@@ -447,6 +600,7 @@ export default function ReportsContent() {
             </ul>
           )}
         </div>
+        )}
 
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
@@ -454,7 +608,8 @@ export default function ReportsContent() {
           </h3>
           <p className="text-xs text-gray-400 mb-4">
             One-click downloads; the GAR opens the print preview workspace and
-            the gender profiles are built from the sample dataset.
+            the sample-based reports are built in the browser from the sample
+            datasets.
           </p>
           <ul className="divide-y divide-gray-100">
             {REPORT_TYPES.map((t) => (

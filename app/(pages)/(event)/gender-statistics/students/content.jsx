@@ -193,11 +193,15 @@ export default function StudentGenderStatsContent() {
     if (!schoolYear || !years.includes(schoolYear)) setSchoolYear(years[0]);
   }, [activeData, schoolYear]);
 
-  /* Semester always resolves to the latest one available in the selected AY */
+  /* Semester always resolves to a term that exists in the selected AY. The 2nd
+     semester is the busiest term, so it is the default; a Summer-only option
+     list must not open the page on the smallest slice of the year. */
   useEffect(() => {
     const list = activeData?.semesters || [];
     if (schoolYear && list.length > 0 && !list.includes(semester)) {
-      setSemester(list[list.length - 1]);
+      const preferred =
+        ["2nd", "1st"].find((s) => list.includes(s)) || list[list.length - 1];
+      setSemester(preferred);
     }
   }, [activeData?.semesters, schoolYear, semester]);
 

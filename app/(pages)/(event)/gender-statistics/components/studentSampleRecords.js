@@ -105,7 +105,16 @@ export const SAMPLE_SCHOOL_YEARS = [
   "2023-2024",
   "2024-2025",
 ];
-const SEMESTERS_PER_YEAR = ["1st", "2nd"];
+/* Deterministic semester mix for the term history: every student is on the
+   rolls for the 1st semester of each year, about one in ten sits out the 2nd
+   semester of a given year, a smaller group attends the Summer term, and a
+   tiny late-entry cohort joins in the 2nd semester of its start year. The
+   rules are index-based like the demographic spread, so the dataset stays
+   deterministic and the curated per-year totals are untouched - every student
+   still holds at least one term in each year from their start year on. */
+const SEMESTER_SKIP_STEP = 10; /* (index + year offset) % 10 === 3 -> no 2nd */
+const SUMMER_STEP = 17; /* (index + year offset) % 17 === 5 -> Summer term */
+const LATE_ENTRY_STEP = 41; /* index % 41 === 7 -> 2nd-semester entry */
 
 /* How many students of each sex were already enrolled when each sample year
    started: 2,900 of the 3,425 students were on the rolls by 2020-2021, and the
@@ -281,15 +290,40 @@ export function buildSampleStudentRecords() {
   });
 
   /* 6. Term history - from the record's start year through the newest sample
-        year (2024-2025). */
-  records.forEach((record) => {
+        year (2024-2025), with a deterministic per-year semester mix. Every
+        record keeps at least one term: a late entrant's first term is the 2nd
+        semester of the year they joined. */
+  records.forEach((record, index) => {
     const startIndex = SAMPLE_SCHOOL_YEARS.indexOf(record.startYear);
     record.startYear = SAMPLE_SCHOOL_YEARS[startIndex];
+    const lastYearIndex = SAMPLE_SCHOOL_YEARS.length - 1;
+    const lateEntry = index % LATE_ENTRY_STEP === 7;
     record.terms = [];
-    for (let year = startIndex; year < SAMPLE_SCHOOL_YEARS.length; year += 1) {
-      SEMESTERS_PER_YEAR.forEach((semester) => {
-        record.terms.push({ school_year: SAMPLE_SCHOOL_YEARS[year], semester });
-      });
+    for (let year = startIndex; year <= lastYearIndex; year += 1) {
+      const offset = year - startIndex;
+      const isStartYear = offset === 0;
+      const joinedLate = isStartYear && lateEntry;
+      /* A late entrant misses the 1st semester of the year they joined. */
+      if (!joinedLate) {
+        record.terms.push({
+          school_year: SAMPLE_SCHOOL_YEARS[year],
+          semester: "1st",
+        });
+      }
+      const sitsOutSecond =
+        !joinedLate && (index + offset) % SEMESTER_SKIP_STEP === 3;
+      if (!sitsOutSecond) {
+        record.terms.push({
+          school_year: SAMPLE_SCHOOL_YEARS[year],
+          semester: "2nd",
+        });
+      }
+      if ((index + offset) % SUMMER_STEP === 5) {
+        record.terms.push({
+          school_year: SAMPLE_SCHOOL_YEARS[year],
+          semester: "Summer",
+        });
+      }
     }
   });
 
