@@ -2,7 +2,7 @@
 
 import { CAMPUS_ORDER } from "./studentStats.js";
 
-import { assignStartYears } from "./sampleCohorts.js";
+import { assignStartYears, birthdayValues } from "./sampleCohorts.js";
 
 
 /* Programs per college with exact sex counts (the byProgram table). */
@@ -95,6 +95,65 @@ const INCOME_TARGETS = [
 
 const LGBTQIA_TARGETS = [{ Female: 54, Male: 32 }];
 
+/* Civil status - every value the profile enum accepts, with exact per-sex
+   totals (2,097 Female / 1,328 Male). */
+const CIVIL_STATUS_TARGETS = [
+  { civilStatus: "Single", Female: 1700, Male: 1150 },
+  { civilStatus: "Married", Female: 300, Male: 130 },
+  { civilStatus: "Widow", Female: 20, Male: 8 },
+  { civilStatus: "Legally Separated Marriage", Female: 12, Male: 6 },
+  { civilStatus: "Separated", Female: 25, Male: 12 },
+  { civilStatus: "Living In/Common Law", Female: 30, Male: 18 },
+  { civilStatus: "Annulled", Female: 10, Male: 4 },
+];
+
+/* Religion - the largest affiliations from the profile enum, with exact
+   per-sex totals. */
+const RELIGION_TARGETS = [
+  { religion: "Roman Catholic", Female: 1400, Male: 900 },
+  { religion: "Iglesia ni Cristo (Church of Christ)", Female: 150, Male: 100 },
+  {
+    religion:
+      "Iglesia Evangelica Metodista en las Islas Filipinas (IEMELIF)",
+    Female: 40,
+    Male: 25,
+  },
+  {
+    religion: "United Church of Christ in the Philippines (UCCP)",
+    Female: 60,
+    Male: 35,
+  },
+  { religion: "Baptist Church", Female: 70, Male: 40 },
+  { religion: "Assemblies of God", Female: 55, Male: 35 },
+  { religion: "Seventh-day Adventist Church", Female: 45, Male: 30 },
+  {
+    religion: "Aglipayan Church (Philippine Independent Church)",
+    Female: 80,
+    Male: 45,
+  },
+  { religion: "Victory Christian Fellowship", Female: 30, Male: 20 },
+  { religion: "Jesus Is Lord Church (JIL)", Female: 35, Male: 22 },
+  { religion: "El Shaddai", Female: 20, Male: 10 },
+  {
+    religion: "The Church of Jesus Christ of Latter-day Saints",
+    Female: 15,
+    Male: 8,
+  },
+  { religion: "Jehovah’s Witnesses", Female: 12, Male: 6 },
+  { religion: "Other", Female: 85, Male: 52 },
+];
+
+/* Age - one row per dashboard decade bucket (`ages` cycle the records through
+   the bucket, the counts are exact per sex). Students skew young; the older
+   rows cover graduate students. See birthdayValues() in sampleCohorts.js for
+   how an age becomes a birthday. */
+const AGE_TARGETS = [
+  { ages: [16, 17, 18, 19], Female: 700, Male: 480 },
+  { ages: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29], Female: 1150, Male: 730 },
+  { ages: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39], Female: 180, Male: 90 },
+  { ages: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49], Female: 67, Male: 28 },
+];
+
 
 /* Five academic years of history. The employee sample reports the same window
    (see employeeSampleRecords.js), so both pages cover 2020-2021 to 2024-2025. */
@@ -168,6 +227,9 @@ const SPREAD_STEPS = {
   income: 19,
   soloParent: 23,
   genderIdentity: 29,
+  civilStatus: 31,
+  religion: 37,
+  age: 41,
 };
 
 function spreadAssign(records, sex, values, key, step) {
@@ -279,7 +341,34 @@ export function buildSampleStudentRecords() {
     );
   });
 
-  /* 5. Start year - each year gets its curated cohort size and every college
+  /* 5. Profile demographics - civil status, religion and birthday (exact
+        per-sex totals), so the dashboards' demographics panels render from the
+        sample the same way they render from the live profiles. */
+  SEX_KEYS.forEach((sex) => {
+    spreadAssign(
+      records,
+      sex,
+      sexValues(CIVIL_STATUS_TARGETS, "civilStatus", sex),
+      "civilStatus",
+      SPREAD_STEPS.civilStatus,
+    );
+    spreadAssign(
+      records,
+      sex,
+      sexValues(RELIGION_TARGETS, "religion", sex),
+      "religion",
+      SPREAD_STEPS.religion,
+    );
+    spreadAssign(
+      records,
+      sex,
+      birthdayValues(AGE_TARGETS, sex),
+      "birthday",
+      SPREAD_STEPS.age,
+    );
+  });
+
+  /* 6. Start year - each year gets its curated cohort size and every college
         grows at its own pace, so the per-college tables change from year to
         year while every year stays a complete snapshot. */
   assignStartYears(records, SEX_KEYS, {
@@ -289,7 +378,7 @@ export function buildSampleStudentRecords() {
     groupKey: "college",
   });
 
-  /* 6. Term history - from the record's start year through the newest sample
+  /* 7. Term history - from the record's start year through the newest sample
         year (2024-2025), with a deterministic per-year semester mix. Every
         record keeps at least one term: a late entrant's first term is the 2nd
         semester of the year they joined. */
@@ -340,6 +429,9 @@ export function buildSampleStudentRecords() {
     soloParent: record.soloParent === true,
     genderIdentity: record.genderIdentity,
     income: record.income || null,
+    civilStatus: record.civilStatus,
+    religion: record.religion,
+    birthday: record.birthday,
     startYear: record.startYear,
     terms: record.terms,
   }));

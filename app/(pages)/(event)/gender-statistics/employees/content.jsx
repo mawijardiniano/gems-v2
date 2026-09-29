@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { FaUserTie } from "react-icons/fa";
@@ -79,7 +79,7 @@ function buildInsights(data) {
 
 export default function EmployeeGenderStatsContent() {
   const [filters, setFilters] = useState(EMPTY_EMPLOYEE_FILTERS);
-  const [useSample, setUseSample] = useState(false);
+  const [useSample, setUseSample] = useState(true);
 
   const setFilter = (key) => (value) =>
     setFilters((prev) => {
@@ -108,8 +108,8 @@ export default function EmployeeGenderStatsContent() {
   const { data, loading, error, refetch } = useGenderStats("employees", params);
 
   /* Demo dataset: individual records (../components/employeeSampleRecords)
-     expanded from the curated totals, so every filter — including the
-     sample-only Department and Position Level dimensions — re-aggregates the
+     expanded from the curated totals, so every filter â€” including the
+     sample-only Department and Position Level dimensions â€” re-aggregates the
      same way the API would. The JSON snapshot in ../data/sample-employees.json
      is only a fixture for tests/scripts; regenerate it with
      `node scripts/generate-sample-employees.mjs`. */
@@ -129,7 +129,7 @@ export default function EmployeeGenderStatsContent() {
   const filterCount = activeFilterCount(filters);
 
   /* Live profiles mostly have employment_information blank, so the API reports
-     them under "Unspecified" — counted here for the coverage warning below. */
+     them under "Unspecified" â€” counted here for the coverage warning below. */
   const liveUnspecifiedEmployment = useMemo(() => {
     const row = (data?.byEmploymentStatus || []).find(
       (entry) => entry.status === "Unspecified",
@@ -269,7 +269,7 @@ export default function EmployeeGenderStatsContent() {
         </div>
         <p className="text-[11px] text-gray-400">
           {useSample
-            ? `Filters re-aggregate the sample records in your browser — ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
+            ? `Filters re-aggregate the sample records in your browser â€” ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
             : "Live data can be filtered by personnel type, college/office and employment status. Department, Position Level and Academic Year are available with sample data only."}
         </p>
       </div>
@@ -278,10 +278,10 @@ export default function EmployeeGenderStatsContent() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           Showing synthetic <strong>sample data</strong> built from
           <code className="mx-1">data/sample-employees.json</code>
-          (1,016 employees · 612 female / 404 male / 30 LGBTQIA+), expanded into
+          (1,016 employees Â· 612 female / 404 male / 30 LGBTQIA+), expanded into
           individual records with a five-year appointment history (2020-2021 to
           2024-2025) so the filters compose. Your database is not being read and
-          nothing is saved — turn the toggle off to return to live data.
+          nothing is saved â€” turn the toggle off to return to live data.
         </div>
       )}
 
@@ -477,7 +477,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      setStatus("Report ready — download started.");
+      setStatus("Report ready â€” download started.");
     } catch (err) {
       setStatus("Could not generate the report. Please try again.");
     } finally {
@@ -495,7 +495,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
         isSample: useSample,
         filterSummary,
       });
-      setStatus(`${label.replace(" (PDF)", "")} ready — download started.`);
+      setStatus(`${label.replace(" (PDF)", "")} ready â€” download started.`);
     } catch (err) {
       console.error("Quick report generation failed:", err);
       setStatus("Could not generate the report. Please try again.");
@@ -507,7 +507,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        ⬇ Quick Reports
+        â¬‡ Quick Reports
       </h3>
       <div className="flex flex-wrap gap-3">
         {useSample ? (
@@ -519,7 +519,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
               disabled={Boolean(busy)}
               className={QUICK_REPORT_BTN_CLS}
             >
-              {busy === report.kind ? "Generating…" : report.label}
+              {busy === report.kind ? "Generatingâ€¦" : report.label}
             </button>
           ))
         ) : (
@@ -529,7 +529,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
             disabled={downloading}
             className={QUICK_REPORT_BTN_CLS}
           >
-            {downloading ? "Generating…" : "Employee Gender Report (PDF)"}
+            {downloading ? "Generatingâ€¦" : "Employee Gender Report (PDF)"}
           </button>
         )}
         <a href="/gad-ars" className={QUICK_REPORT_BTN_CLS}>
@@ -538,7 +538,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
       </div>
       {useSample && (
         <p className="text-[11px] text-gray-400 mt-2">
-          Generated in your browser from the sample dataset — no database reads
+          Generated in your browser from the sample dataset â€” no database reads
           or writes.
         </p>
       )}
@@ -552,7 +552,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        📌 Key Insights
+        ðŸ“Œ Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">

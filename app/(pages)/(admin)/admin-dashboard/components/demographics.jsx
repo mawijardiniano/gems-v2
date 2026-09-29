@@ -320,23 +320,39 @@ const GenderBarCard = memo(function GenderBarCard({ title, data, height = 260 })
   );
 });
 
+const OFFICE_LABEL_MAX = 26;
+
+const shortenLabel = (name, max = OFFICE_LABEL_MAX) => {
+  const text = `${name ?? ""}`;
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+};
+
 const GenderHorzBarCard = memo(function GenderHorzBarCard({
   title,
   data,
-  height = 300,
+  height,
+  rowHeight = 36,
 }) {
   const total = data.reduce(
     (s, d) => s + (d.Male || 0) + (d.Female || 0),
     0,
   );
+  // One row per office: the chart grows with the list so every label and bar
+  // stays readable instead of collapsing into a fixed 300px block.
+  const chartHeight = height ?? Math.max(260, data.length * rowHeight + 70);
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
       <p className="mb-3 text-xs text-gray-400">
-        {total.toLocaleString()} total
+        {total.toLocaleString()} total · {data.length} offices
       </p>
-      <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0 }}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ left: 0, right: 12 }}
+          barCategoryGap="18%"
+        >
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="#f3f4f6"
@@ -351,8 +367,10 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
           <YAxis
             dataKey="name"
             type="category"
-            width={160}
+            width={190}
+            interval={0}
             tick={{ fontSize: 11, fill: "#6B7280" }}
+            tickFormatter={shortenLabel}
             axisLine={false}
             tickLine={false}
           />
@@ -383,6 +401,13 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
 
 const UNKNOWN = "Unknown";
 
+// The year-level chart only reads as a demographic when every bar is a real
+// year level, so rows that fell back to UNKNOWN are dropped from it.
+const withoutUnknown = (rows) =>
+  (rows || []).filter(
+    (row) => `${row?.name ?? ""}`.trim().toLowerCase() !== "unknown",
+  );
+
 function Demographics({ data, personTypeFilter = "", demographics }) {
   const statusFilter = `${personTypeFilter || ""}`.trim().toLowerCase();
   const isEmployeeFilter = statusFilter === "employee";
@@ -406,7 +431,7 @@ function Demographics({ data, personTypeFilter = "", demographics }) {
         religionData: demographics.religionData || [],
         studentCollegeData: demographics.studentCollegeData || [],
         studentCampusData: demographics.studentCampusData || [],
-        studentYearLevelData: demographics.studentYearLevelData || [],
+        studentYearLevelData: withoutUnknown(demographics.studentYearLevelData),
         employmentData: demographics.employmentData || [],
         appointmentData: demographics.appointmentData || [],
         employeeOfficeData: demographics.employeeOfficeData || [],
@@ -521,8 +546,8 @@ function Demographics({ data, personTypeFilter = "", demographics }) {
       religionData: countToRows(religionCounts),
       studentCollegeData: countToRows(studentCollegeCounts),
       studentCampusData: countToRows(studentCampusCounts),
-      studentYearLevelData: sortStudentYearLevels(
-        countToRows(studentYearLevelCounts),
+      studentYearLevelData: withoutUnknown(
+        sortStudentYearLevels(countToRows(studentYearLevelCounts)),
       ),
       employmentData: Object.values(employmentGroups),
       appointmentData: Object.values(appointmentGroups),

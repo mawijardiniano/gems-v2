@@ -1,5 +1,5 @@
 
-import { assignStartYears } from "./sampleCohorts.js";
+import { assignStartYears, birthdayValues } from "./sampleCohorts.js";
 import { SAMPLE_SCHOOL_YEARS } from "./studentSampleRecords.js";
 
 /* Curated office marginals — one row for every entry in OFFICE_OPTIONS (13
@@ -142,6 +142,53 @@ const INCOME_TARGETS = [
    gadData.gender_preference. Every record defaults to its own sex; these
    targets overlay the LGBTQIA+ count on top of that. */
 const LGBTQIA_TARGETS = [{ Female: 18, Male: 12 }];
+
+/* Civil status — every value the profile enum accepts, with exact per-sex
+   totals (612 Female / 404 Male). Employees skew married compared with the
+   student sample. */
+const CIVIL_STATUS_TARGETS = [
+  { civilStatus: "Single", Female: 220, Male: 140 },
+  { civilStatus: "Married", Female: 330, Male: 230 },
+  { civilStatus: "Widow", Female: 20, Male: 8 },
+  { civilStatus: "Legally Separated Marriage", Female: 12, Male: 6 },
+  { civilStatus: "Separated", Female: 10, Male: 8 },
+  { civilStatus: "Living In/Common Law", Female: 15, Male: 8 },
+  { civilStatus: "Annulled", Female: 5, Male: 4 },
+];
+
+/* Religion — the largest affiliations from the profile enum, with exact
+   per-sex totals. */
+const RELIGION_TARGETS = [
+  { religion: "Roman Catholic", Female: 420, Male: 270 },
+  { religion: "Iglesia ni Cristo (Church of Christ)", Female: 45, Male: 32 },
+  {
+    religion: "United Church of Christ in the Philippines (UCCP)",
+    Female: 20,
+    Male: 14,
+  },
+  { religion: "Baptist Church", Female: 18, Male: 12 },
+  { religion: "Assemblies of God", Female: 15, Male: 10 },
+  { religion: "Seventh-day Adventist Church", Female: 12, Male: 9 },
+  {
+    religion: "Aglipayan Church (Philippine Independent Church)",
+    Female: 22,
+    Male: 15,
+  },
+  { religion: "Jesus Is Lord Church (JIL)", Female: 10, Male: 7 },
+  { religion: "El Shaddai", Female: 6, Male: 4 },
+  { religion: "Other", Female: 44, Male: 31 },
+];
+
+/* Age — one row per dashboard decade bucket (`ages` cycle the records through
+   the bucket, the counts are exact per sex). See birthdayValues() in
+   sampleCohorts.js for how an age becomes a birthday. */
+const AGE_TARGETS = [
+  { ages: [22, 23, 24, 25, 26, 27, 28, 29], Female: 60, Male: 45 },
+  { ages: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39], Female: 160, Male: 105 },
+  { ages: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49], Female: 190, Male: 125 },
+  { ages: [50, 51, 52, 53, 54, 55, 56, 57, 58, 59], Female: 160, Male: 105 },
+  { ages: [60, 61, 62, 63, 64, 65], Female: 42, Male: 24 },
+];
 
 /* Appointment history — how many employees of each sex were already on board
    when each sample year started. An employee stays on board from `startYear`
@@ -293,6 +340,24 @@ function spreadAssign(records, sex, values, key) {
     target[key] = value;
   });
 }
+
+/* Modulo spread (like the student sample): walks the pool with a stride that
+   is coprime with its size, so the profile fields below are interleaved across
+   the whole roster instead of clustering in the first offices. */
+function spreadAssignStrided(records, sex, values, key, step) {
+  if (!values.length) return;
+  const pool = records.filter((record) => record.sex === sex);
+  values.forEach((value, index) => {
+    const target = pool[(index * step) % pool.length];
+    target[key] = value;
+  });
+}
+
+const PROFILE_SPREAD_STEPS = {
+  civilStatus: 31,
+  religion: 37,
+  age: 41,
+};
 
 /* Split every target's per-sex count across the personnel categories in
    proportion to each category's size, so each status appears in every category
@@ -533,7 +598,34 @@ export function buildSampleEmployeeRecords() {
     );
   });
 
-  /* 8. Appointment history - each year gets its curated cohort size and every
+  /* 8. Profile demographics — civil status, religion and birthday (exact
+        per-sex totals), so the dashboards' demographics panels render from the
+        sample the same way they render from the live profiles. */
+  SEX_KEYS.forEach((sex) => {
+    spreadAssignStrided(
+      records,
+      sex,
+      sexValues(CIVIL_STATUS_TARGETS, "civilStatus", sex),
+      "civilStatus",
+      PROFILE_SPREAD_STEPS.civilStatus,
+    );
+    spreadAssignStrided(
+      records,
+      sex,
+      sexValues(RELIGION_TARGETS, "religion", sex),
+      "religion",
+      PROFILE_SPREAD_STEPS.religion,
+    );
+    spreadAssignStrided(
+      records,
+      sex,
+      birthdayValues(AGE_TARGETS, sex),
+      "birthday",
+      PROFILE_SPREAD_STEPS.age,
+    );
+  });
+
+  /* 9. Appointment history - each year gets its curated cohort size and every
      office grows at its own pace, then the years of service follow from the
      start year. */
   assignStartYears(records, SEX_KEYS, {
@@ -565,6 +657,9 @@ export function buildSampleEmployeeRecords() {
     soloParent: record.soloParent === true,
     genderIdentity: record.genderIdentity,
     income: record.income || null,
+    civilStatus: record.civilStatus,
+    religion: record.religion,
+    birthday: record.birthday,
   }));
 }
 

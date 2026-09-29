@@ -79,6 +79,13 @@ const countByGender = (data, accessor, fb = "Unknown") => {
   return Object.values(groups);
 };
 
+// The year-level chart only reads as a demographic when every bar is a real
+// year level, so rows that fell back to UNKNOWN are dropped from it.
+const withoutUnknown = (rows) =>
+  (rows || []).filter(
+    (row) => `${row?.name ?? ""}`.trim().toLowerCase() !== "unknown",
+  );
+
 const calcAge = (birthday) => {
   if (!birthday) return null;
   const birth = new Date(birthday);
@@ -407,7 +414,7 @@ export default function Demographics({
             <VertBarCard title="Students by Program" data={serverStudentProgramData} />
             <VertBarCard
               title="Students by Year Level"
-              data={demographics.studentYearLevelData || []}
+              data={withoutUnknown(demographics.studentYearLevelData)}
             />
           </div>
         )}
@@ -545,14 +552,16 @@ export default function Demographics({
     );
   };
 
-  const studentYearLevelData = sortStudentYearLevels(
-    countBy(
-      collegeFilteredStudents,
-      (d) =>
-        safeGet(
-          () =>
-            d.personal_info_id?.affiliation?.academic_information?.year_level,
-        ),
+  const studentYearLevelData = withoutUnknown(
+    sortStudentYearLevels(
+      countBy(
+        collegeFilteredStudents,
+        (d) =>
+          safeGet(
+            () =>
+              d.personal_info_id?.affiliation?.academic_information?.year_level,
+          ),
+      ),
     ),
   );
 

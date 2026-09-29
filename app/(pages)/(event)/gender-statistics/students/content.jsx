@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { FaUserGraduate } from "react-icons/fa";
@@ -104,7 +104,7 @@ export default function StudentGenderStatsContent() {
   const [semester, setSemester] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   const [studentType, setStudentType] = useState("");
-  const [useSample, setUseSample] = useState(false);
+  const [useSample, setUseSample] = useState(true);
 
   const params = useMemo(
     () => ({
@@ -555,7 +555,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        📌 Key Insights
+        ðŸ“Œ Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -605,7 +605,7 @@ function QuickReportsCard({ data, useSample = false, filters }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        ⬇ Quick Reports
+        â¬‡ Quick Reports
       </h3>
       <p className="text-xs text-gray-500 mt-1 mb-4">
         Each button generates its own separate PDF from the data currently
@@ -621,7 +621,7 @@ function QuickReportsCard({ data, useSample = false, filters }) {
             title={option.title}
             className={buttonClass}
           >
-            {busy === option.kind ? "Generating…" : option.label}
+            {busy === option.kind ? "Generatingâ€¦" : option.label}
           </button>
         ))}
       </div>

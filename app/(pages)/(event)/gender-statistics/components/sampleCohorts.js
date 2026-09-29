@@ -13,6 +13,12 @@
    employees). */
 const START_YEAR_STEP = 7;
 
+/* The sample window ends with the 2024-2025 school year; birthdays are pinned
+   to January 1 of this year minus the record's age, so the dashboard's age
+   buckets reproduce the curated ages and the dataset never depends on the
+   clock. */
+export const SAMPLE_AGE_ANCHOR_YEAR = 2025;
+
 /* Every group keeps a toehold in every year: growth never zeroes a year out. */
 const MIN_WEIGHT = 0.05;
 
@@ -202,4 +208,23 @@ export function assignStartYears(
       record.startYear = years[pick];
     }
   });
+}
+
+/**
+ * Expand `{ ages, Female, Male }` age rows into one `YYYY-01-01` birthday per
+ * record for `sex`.
+ *
+ * The ages cycle through each row's `ages` list, and the birthday is pinned to
+ * January 1 of `SAMPLE_AGE_ANCHOR_YEAR - age`. The dashboard derives its age
+ * buckets from the birthday (like the live API does from `personal.birthday`),
+ * so the sample needs a date - not just an age - to mirror that computation.
+ */
+export function birthdayValues(targets, sex) {
+  return targets
+    .flatMap((target) =>
+      Array(target[sex] || 0)
+        .fill(0)
+        .map((_, index) => target.ages[index % target.ages.length]),
+    )
+    .map((age) => `${SAMPLE_AGE_ANCHOR_YEAR - age}-01-01`);
 }
