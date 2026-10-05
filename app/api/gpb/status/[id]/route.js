@@ -3,6 +3,7 @@ import GPB from "@/models/gpb";
 import { logActivity } from "@/lib/activityLog";
  import { requireAuth } from "@/lib/auth";
 import { normalizeRole } from "@/lib/notifications";
+import { canSetGpbStatus } from "@/lib/gpbStatus";
 import {NextResponse} from "next/server"
 
 const GPB_STATUS_ROLES = [
@@ -61,8 +62,20 @@ export async function POST(req, { params }) {
       return Response.json({ error: "GPB not found" }, { status: 404 });
     }
 
+    /* An approved plan is final: it may be disapproved, but never sent back to
+       draft, however stale the client that posts the update. */
+    const currentStatus = gpb.status_of_gpb?.status || "draft";
+    const nextStatus = status || currentStatus;
+
+    if (!canSetGpbStatus(currentStatus, nextStatus)) {
+      return Response.json(
+        { error: "An approved GPB cannot be set back to draft." },
+        { status: 400 },
+      );
+    }
+
     gpb.status_of_gpb = {
-      status: status || gpb.status_of_gpb?.status || "draft",
+      status: nextStatus,
       reason: reason || gpb.status_of_gpb?.reason || "",
       scanned_copy: {
         // Fall back to the existing scanned copy so an update without a new

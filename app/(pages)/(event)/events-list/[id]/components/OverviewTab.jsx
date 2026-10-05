@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 import CheckboxDropdown from "./CheckboxDropdown";
 import AttendanceInsights from "./AttendanceInsights";
+import { officeOptionList } from "@/lib/colleges";
 
 const ELIGIBILITY_OPTIONS = [
   { value: "Scholarship Applicant", label: "Scholarship Applicant" },
@@ -25,52 +26,6 @@ const ELIGIBILITY_OPTIONS = [
   { value: "LGBTQIA+", label: "LGBTQIA+" },
   { value: "Low Income Student", label: "Low-income Student" },
   { value: "None", label: "None" },
-];
-
-const OFFICE_OPTIONS = [
-  "Graduate School",
-  "College of Agriculture",
-  "College of Allied Health Sciences",
-  "College of Arts & Social Sciences",
-  "College of Business & Accountancy",
-  "College of Criminal Justice Education",
-  "College of Education",
-  "College of Engineering",
-  "College of Environmental Studies",
-  "College of Fisheries & Aquatic Sciences",
-  "College of Governance",
-  "College of Industrial Technology",
-  "College of Information & Computing Sciences",
-  "Office of the President",
-  "University and Board Secretary",
-  "Office of the Vice President for Administration and Finance",
-  "Office of the Vice President for Academic Affairs",
-  "Office of the Chief Administrative Officer",
-  "Quality Assurance Office",
-  "Planning Unit",
-  "Human Resource and Management Unit",
-  "Legal Unit",
-  "Records Office",
-  "Budget Office",
-  "Internal Audit Unit",
-  "Information Unit",
-  "Procurement Unit",
-  "Supply and Property Management Unit",
-  "Accounting Office",
-  "Cash Unit",
-  "Registrar's Office",
-  "Health Services Unit",
-  "Research & Extension Office",
-  "Learning Resource Center",
-  "General Services Unit",
-  "Project Management Unit",
-  "Business Affairs Office",
-  "Motorpool",
-  "Information and Communication Technology Unit",
-  "Security Services",
-  "Gasan Campus",
-  "Torrijos Campus",
-  "Santa Cruz Campus",
 ];
 
 export default function OverviewTab({
@@ -588,9 +543,12 @@ export default function OverviewTab({
               </div>
 
               <div className="md:col-span-2">
+                {/* Saved offices that are not on the canonical list — a freely
+                    typed one, or a legacy "&" college — are offered too, so
+                    they stay visible and can be unticked. */}
                 <CheckboxDropdown
                   label="Organizing Office/Unit"
-                  options={OFFICE_OPTIONS}
+                  options={officeOptionList(editData?.organizing_office_unit)}
                   selected={editData?.organizing_office_unit || []}
                   onChange={(vals) =>
                     handleEditChange("organizing_office_unit", vals)
@@ -601,12 +559,13 @@ export default function OverviewTab({
               <div className="md:col-span-2">
                 <CheckboxDropdown
                   label="Co Organizing Office/Unit"
-                  options={OFFICE_OPTIONS}
+                  options={officeOptionList(editData?.co_organizing_office_unit)}
                   selected={editData?.co_organizing_office_unit || []}
                   onChange={(vals) =>
                     handleEditChange("co_organizing_office_unit", vals)
                   }
                   required
+                  allowCustom
                 />
               </div>
               <div className="md:col-span-2">

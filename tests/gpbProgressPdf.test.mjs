@@ -21,6 +21,14 @@ const womenMonthProject = {
       "Organize University-wide activities in line with the National Women's Month Celebration such as forums, exhibits, cultural presentations, and recognition programs that highlight women's contributions in history and society",
     ],
   },
+  /* Index-paired with the titles above: each description prints on the line
+     under its own activity, inside the single GAD ACTIVITY column. */
+  gad_activity_description: {
+    value: [
+      "University-wide kick-off ceremony joined by the GAD Focal Point System",
+      "Forums, exhibits, cultural presentations and a recognition program for women achievers",
+    ],
+  },
   project_type: { value: "Client Focused" },
   project_status: "ongoing",
   milestones: [

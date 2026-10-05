@@ -24,6 +24,7 @@ import {
   FaSpinner,
 } from "react-icons/fa";
 import ActualsEncoderModal from "../components/ActualsEncoderModal";
+import DetailTabs from "../components/DetailTabs";
 import MilestonesModal from "../components/MilestonesModal";
 import ParticipantBreakdown from "../components/ParticipantBreakdown";
 import ParticipantTargetProgress from "../components/ParticipantTargetProgress";
@@ -33,6 +34,13 @@ import {
   usesAccomplishmentOverride,
 } from "@/lib/accomplishmentSummary";
 import { OFFICE_OPTIONS, normalizeOffice } from "@/lib/colleges";
+import {
+  BUDGET_VIEW,
+  budgetProjectsFor,
+  budgetViewFor,
+  canViewProjectBudget,
+  summarizeBudget,
+} from "@/lib/budgetVisibility";
 import { aggregateIndicatorProgress } from "@/lib/performanceTracking";
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -216,8 +224,11 @@ function DetailRow({ label, value }) {
   );
 }
 
-function DetailList({ label, items }) {
+function DetailList({ label, items, descriptions }) {
   const list = (items || []).filter(Boolean);
+  /* Optional, index-paired notes shown under each item (GAD activity
+     descriptions). Missing entries simply render nothing. */
+  const notes = Array.isArray(descriptions) ? descriptions : [];
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
@@ -226,7 +237,14 @@ function DetailList({ label, items }) {
       {list.length > 0 ? (
         <ol className="list-decimal list-inside space-y-0.5 text-sm text-gray-800">
           {list.map((it, i) => (
-            <li key={i}>{it}</li>
+            <li key={i}>
+              {it}
+              {notes[i] ? (
+                <span className="mt-0.5 block">
+                  {notes[i]}
+                </span>
+              ) : null}
+            </li>
           ))}
         </ol>
       ) : (
@@ -247,8 +265,12 @@ export default function GADProjectsMonitoringContent() {
   const [officeFilter, setOfficeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
+  /* Which tab of an expanded row is open — always reset when a project opens. */
+  const [detailTab, setDetailTab] = useState("details");
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState("");
+  /* College a GAD coordinator is assigned to — the only budget they may see. */
+  const [assignedCollege, setAssignedCollege] = useState("");
   const [editingProject, setEditingProject] = useState(null);
   const [scheduleEditingId, setScheduleEditingId] = useState(null);
   const [scheduleDraft, setScheduleDraft] = useState({
@@ -298,10 +320,12 @@ export default function GADProjectsMonitoringContent() {
         if (!mounted) return;
         setUserId(res.data?.user?._id || null);
         setUserRole(res.data?.user?.role || "");
+        setAssignedCollege(res.data?.user?.assignedCollege || "");
       } catch {
         if (mounted) {
           setUserId(null);
           setUserRole("");
+          setAssignedCollege("");
         }
       }
     })();
@@ -335,6 +359,7 @@ export default function GADProjectsMonitoringContent() {
     );
     if (!focusProject) return;
     if (focusProject.year) setYearFilter(String(focusProject.year));
+    setDetailTab("details");
     setExpandedId(focusProject._id);
     const timer = setTimeout(() => {
       document
@@ -363,6 +388,7 @@ export default function GADProjectsMonitoringContent() {
         if (!q) return true;
         const haystack = [
           ...getArrayValue(p.gad_activity),
+          ...getArrayValue(p.gad_activity_description),
           ...getArrayValue(p.responsible_office),
           getFieldValue(p.gender_issue),
           getFieldValue(p.project_type),
@@ -446,14 +472,6 @@ export default function GADProjectsMonitoringContent() {
   }, [focusParam, filteredProjects]);
 
   const totals = useMemo(() => {
-    const totalBudget = filteredProjects.reduce(
-      (sum, p) => sum + Number(getFieldValue(p.gad_budget) || 0),
-      0,
-    );
-    const totalExpenditures = filteredProjects.reduce(
-      (sum, p) => sum + Number(p.actual_expenditures || 0),
-      0,
-    );
     const completed = filteredProjects.filter(
       (p) => getProjectStatus(p) === "completed",
     ).length;
@@ -463,19 +481,26 @@ export default function GADProjectsMonitoringContent() {
     const forReview = filteredProjects.filter(
       (p) => getProjectStatus(p) === "for-review",
     ).length;
-    const utilization =
-      totalBudget > 0 ? (totalExpenditures / totalBudget) * 100 : 0;
     const listed = filteredProjects.length;
     return {
-      totalBudget,
-      totalExpenditures,
       completed,
       ongoing,
       forReview,
-      utilization,
       listed,
     };
   }, [filteredProjects]);
+
+  /* Budget figures are scoped by role: the focal person sees every office, a
+     coordinator only the college they are assigned to, everyone else none. */
+  const budgetView = useMemo(() => budgetViewFor(userRole), [userRole]);
+
+  const budgetSummary = useMemo(
+    () =>
+      summarizeBudget(
+        budgetProjectsFor(budgetView, filteredProjects, assignedCollege),
+      ),
+    [budgetView, filteredProjects, assignedCollege],
+  );
 
   const handleReset = () => {
     setSearch("");
@@ -495,8 +520,11 @@ export default function GADProjectsMonitoringContent() {
     );
   };
 
-  const toggleExpand = (id) =>
+  /* Opening a row starts on the first tab, so the details always read the same. */
+  const toggleExpand = (id) => {
+    setDetailTab("details");
     setExpandedId((prev) => (prev === id ? null : id));
+  };
 
   /* Jump to a pagination page (clamped) and bring the list back into view */
   const goToPage = (next) => {
@@ -683,7 +711,7 @@ export default function GADProjectsMonitoringContent() {
     }
   };
 
-  const overBudget = totals.utilization > 100;
+  const overBudget = budgetSummary.utilization > 100;
 
   return (
     <div className="space-y-5 mx-auto py-10">
@@ -737,7 +765,11 @@ export default function GADProjectsMonitoringContent() {
         />
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+          budgetView === BUDGET_VIEW.NONE ? "xl:grid-cols-3" : "xl:grid-cols-4"
+        }`}
+      >
         <StatCard
           icon={FaClipboardList}
           iconClass="bg-purple-50 text-purple-600"
@@ -767,26 +799,31 @@ export default function GADProjectsMonitoringContent() {
               : 0
           }% of listed projects · ${totals.forReview} for review`}
         />
-        <StatCard
-          icon={FaWallet}
-          iconClass="bg-rose-50 text-rose-600"
-          label="Budget Utilization"
-          value={`${Math.round(totals.utilization)}%`}
-          sub={`${fmtPeso(totals.totalExpenditures)} of ${fmtPeso(
-            totals.totalBudget,
-          )}`}
-        >
-          <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                overBudget ? "bg-red-500" : "bg-emerald-500"
-              }`}
-              style={{
-                width: `${Math.min(Math.max(totals.utilization, 0), 100)}%`,
-              }}
-            />
-          </div>
-        </StatCard>
+        {budgetView !== BUDGET_VIEW.NONE && (
+          <StatCard
+            icon={FaWallet}
+            iconClass="bg-rose-50 text-rose-600"
+            label="Budget Utilization"
+            value={`${Math.round(budgetSummary.utilization)}%`}
+            sub={`${fmtPeso(budgetSummary.totalExpenditures)} of ${fmtPeso(
+              budgetSummary.totalBudget,
+            )}`}
+          >
+            <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  overBudget ? "bg-red-500" : "bg-emerald-500"
+                }`}
+                style={{
+                  width: `${Math.min(
+                    Math.max(budgetSummary.utilization, 0),
+                    100,
+                  )}%`,
+                }}
+              />
+            </div>
+          </StatCard>
+        )}
       </div>
 
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-3">
@@ -963,9 +1000,11 @@ export default function GADProjectsMonitoringContent() {
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                     End
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                    Budget
-                  </th>
+                  {budgetView !== BUDGET_VIEW.NONE && (
+                    <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                      Budget
+                    </th>
+                  )}
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                     Status
                   </th>
@@ -980,6 +1019,10 @@ export default function GADProjectsMonitoringContent() {
               <tbody className="divide-y divide-gray-100">
                 {visibleProjects.map((project, idx) => {
                   const activities = getArrayValue(project.gad_activity);
+                  /* Index-paired with the titles; shorter on legacy projects. */
+                  const activityDescriptions = getArrayValue(
+                    project.gad_activity_description,
+                  );
                   const office = getArrayValue(
                     project.responsible_office,
                   ).join(", ");
@@ -990,6 +1033,16 @@ export default function GADProjectsMonitoringContent() {
                     getFieldValue(project.gad_budget) || 0,
                   );
                   const canManage = canManageProject(project, userId, userRole);
+                  /* The creator keeps sight of his own project's budget — and
+                     with it the update shortcut — even when the project falls
+                     outside his budget scope (e.g. his own office list names
+                     another college). */
+                  const isOwnProject =
+                    String(project.createdBy?._id || project.createdBy || "") ===
+                    String(userId);
+                  const canSeeThisBudget =
+                    canViewProjectBudget(budgetView, project, assignedCollege) ||
+                    isOwnProject;
                   const progress = getMilestoneProgress(project);
                   const milestones = getMilestones(project);
                   const isScheduleEditing =
@@ -997,6 +1050,21 @@ export default function GADProjectsMonitoringContent() {
                   const isApprovalEditing =
                     String(approvalEditingId || "") === String(project._id);
                   const isExpanded = expandedId === project._id;
+                  /* Tabs for this expanded row; the counts come from its records. */
+                  const detailTabs = [
+                    { key: "details", label: "Project Details" },
+                    { key: "approval", label: "Approval" },
+                    {
+                      key: "milestones",
+                      label: "Milestones & Accomplishments",
+                      count: milestones.length,
+                    },
+                    {
+                      key: "events",
+                      label: "Events / Actuals",
+                      count: getActiveEvents(project).length,
+                    },
+                  ];
                   const displayIndex =
                     filteredProjects.findIndex(
                       (p) => String(p._id) === String(project._id),
@@ -1029,7 +1097,14 @@ export default function GADProjectsMonitoringContent() {
                           {activities.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
                               {activities.map((a, i) => (
-                                <li key={i}>{a}</li>
+                                <li key={i}>
+                                  {a}
+                                  {activityDescriptions[i] ? (
+                                    <span className="mt-0.5 block">
+                                      {activityDescriptions[i]}
+                                    </span>
+                                  ) : null}
+                                </li>
                               ))}
                             </ol>
                           ) : (
@@ -1048,9 +1123,14 @@ export default function GADProjectsMonitoringContent() {
                         <td className="px-3 py-4 align-top text-xs text-gray-800 whitespace-nowrap">
                           {formatDate(project.end_date) || "—"}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs font-medium text-gray-800 whitespace-nowrap">
-                          {gpbBudget > 0 ? fmtPeso(gpbBudget) : "—"}
-                        </td>
+                        {budgetView !== BUDGET_VIEW.NONE && (
+                          <td className="px-3 py-4 align-top text-xs font-medium text-gray-800 whitespace-nowrap">
+                            {/* A coordinator only reads his own college's budget. */}
+                            {canSeeThisBudget && gpbBudget > 0
+                              ? fmtPeso(gpbBudget)
+                              : "—"}
+                          </td>
+                        )}
                         <td className="px-3 py-4 align-top text-xs">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border whitespace-nowrap ${statusMeta.classes}`}
@@ -1103,7 +1183,7 @@ export default function GADProjectsMonitoringContent() {
 
                       {isExpanded && (
                         <tr>
-                          <td colSpan={10} className="p-0 bg-gray-50/60">
+                          <td colSpan={budgetView === BUDGET_VIEW.NONE ? 9 : 10} className="p-0 bg-gray-50/60">
                             <div className="p-4 sm:p-5 animate-fade-in space-y-4">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -1125,11 +1205,21 @@ export default function GADProjectsMonitoringContent() {
                                 </button>
                               </div>
 
-                              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                                <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-                                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                    Project Information
-                                  </p>
+                              <DetailTabs
+                                tabs={detailTabs}
+                                active={detailTab}
+                                onChange={setDetailTab}
+                              />
+
+                              {detailTab === "details" && (
+                                <div
+                                  className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in"
+                                  role="tabpanel"
+                                >
+                                  <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                      Project Information
+                                    </p>
                                   <DetailRow
                                     label="Academic Year"
                                     value={
@@ -1151,6 +1241,7 @@ export default function GADProjectsMonitoringContent() {
                                   <DetailList
                                     label="GAD Activity"
                                     items={activities}
+                                    descriptions={activityDescriptions}
                                   />
                                   <DetailRow
                                     label="Responsible Office/Unit"
@@ -1163,7 +1254,9 @@ export default function GADProjectsMonitoringContent() {
                                     )}
                                   />
 
-                                  <div className="pt-3 border-t border-gray-100 space-y-3">
+                                  </section>
+
+                                  <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
                                     <div className="flex items-center justify-between gap-2">
                                       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                                         Schedule &amp; Status
@@ -1296,9 +1389,16 @@ export default function GADProjectsMonitoringContent() {
                                         )}
                                       </>
                                     )}
-                                  </div>
+                                  </section>
+                                </div>
+                              )}
 
-                                  <div className="pt-3 border-t border-gray-100 space-y-3">
+                              {detailTab === "approval" && (
+                                <div
+                                  className="max-w-3xl animate-fade-in"
+                                  role="tabpanel"
+                                >
+                                  <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
                                     <div className="flex items-center justify-between gap-2">
                                       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                                         Approval Details
@@ -1417,10 +1517,15 @@ export default function GADProjectsMonitoringContent() {
                                         )}
                                       </>
                                     )}
-                                  </div>
-                                </section>
+                                  </section>
+                                </div>
+                              )}
 
-                                <section className="rounded-xl bg-white border border-gray-100 p-4">
+                              {detailTab === "milestones" && (
+                                <section
+                                  className="rounded-xl bg-white border border-gray-100 p-4 animate-fade-in"
+                                  role="tabpanel"
+                                >
                                   <div className="mb-4">
                                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                                       Milestones &amp; Accomplishments
@@ -1726,9 +1831,20 @@ export default function GADProjectsMonitoringContent() {
                                     );
                                   })()}
                                 </section>
+                              )}
 
-                                <div className="space-y-4">
-                                  <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+                              {detailTab === "events" && (
+                                <div
+                                  className="space-y-4 animate-fade-in"
+                                  role="tabpanel"
+                                >
+                                  {/* The utilization figures and their expenditure
+                                      evidence follow the viewer's budget scope: a
+                                      coordinator sees them only on his own
+                                      college's projects, other roles not at all. */}
+                                  {canSeeThisBudget && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                      <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                       <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                                         Budget Utilization
@@ -1855,9 +1971,12 @@ export default function GADProjectsMonitoringContent() {
                                         No expenditure evidence uploaded.
                                       </p>
                                     )}
-                                  </section>
+                                      </section>
+                                    </div>
+                                  )}
 
                                   {/* Aggregated participation across every linked event */}
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                   <ParticipantBreakdown project={project} />
 
                                   <section className="rounded-xl bg-white border border-gray-100 p-4">
@@ -1929,8 +2048,10 @@ export default function GADProjectsMonitoringContent() {
                                       );
                                     })()}
                                   </section>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
+
                             </div>
                           </td>
                         </tr>

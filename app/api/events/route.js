@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { canonicalOfficeList } from "@/lib/colleges";
 import Event from "@/models/event";
 import Project from "@/models/projects";
 import "@/models/profile";
@@ -112,13 +113,18 @@ export async function POST(req) {
       event_poster,
     } = body;
 
+    /* Office names are stored in their canonical spelling (colleges always use
+       "and"), so a client still sending the legacy "&" form cannot put it back
+       on a record. */
+    const officeUnits = canonicalOfficeList(organizing_office_unit);
+    const coOfficeUnits = canonicalOfficeList(co_organizing_office_unit);
 
     if (
       !title ||
       !start_date ||
       !end_date ||
       !type_of_activity ||
-      !organizing_office_unit?.length ||
+      !officeUnits.length ||
       target_number_of_participants == null ||
       Number(target_number_of_participants) < 0
     ) {
@@ -197,8 +203,8 @@ export async function POST(req) {
       end_dates: [parsedEndDate],
       venue,
       type_of_activity,
-      organizing_office_unit,
-      co_organizing_office_unit,
+      organizing_office_unit: officeUnits,
+      co_organizing_office_unit: coOfficeUnits,
       eligibility_criteria,
       target_number_of_participants,
       created_by: user._id,

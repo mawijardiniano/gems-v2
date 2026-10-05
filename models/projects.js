@@ -23,6 +23,7 @@ const CommentSchema = new Schema(
           "supporting_statistics_data",
           "relevant_agency",
           "gad_activity",
+          "gad_activity_description",
           "performance_indicator_target",
           "gad_budget",
           "source_budget",
@@ -95,6 +96,10 @@ const ProjectSchema = new Schema({
   supporting_statistics_data: FieldSchema(String),
   relevant_agency: FieldSchema(String),
   gad_activity: FieldSchema([String]),
+  /* Free-text details for each activity, index-paired with `gad_activity`:
+     descriptions[idx] belongs to gad_activity.value[idx]. Projects saved before
+     the field existed keep their titles and an empty description list. */
+  gad_activity_description: FieldSchema([String]),
   performance_indicator_target: FieldSchema([String]),
   gad_budget: FieldSchema(Number),
   source_budget: FieldSchema(String),

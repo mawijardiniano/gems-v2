@@ -25,6 +25,20 @@ function fieldList(field) {
   return [];
 }
 
+/* The GAD Activity column stays a single column: each activity prints its
+   title with the description on the following line. */
+function activityCellText(project) {
+  const titles = fieldList(project.gad_activity);
+  const descriptions = fieldList(project.gad_activity_description);
+
+  return titles
+    .map((title, idx) => {
+      const description = descriptions[idx];
+      return description ? `${title}\n${description}` : title;
+    })
+    .join("\n");
+}
+
 function peso(n) {
   return `Php ${Number(n || 0).toLocaleString("en-PH")}`;
 }
@@ -227,7 +241,7 @@ export async function GET(req) {
             fieldList(project.gad_objective).join("\n"),
             String(fieldValue(project.supporting_statistics_data) || ""),
             String(fieldValue(project.relevant_agency) || ""),
-            fieldList(project.gad_activity).join("\n"),
+            activityCellText(project),
             fieldList(project.performance_indicator_target).join("\n"),
             peso(fieldValue(project.gad_budget)),
             String(fieldValue(project.source_budget) || ""),

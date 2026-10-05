@@ -23,6 +23,7 @@ import { findDuplicates } from "@/lib/duplicateDetection";
 import OfficeMultiSelect from "../../components/OfficeMultiSelect";
 import { toOfficeArray } from "@/lib/colleges";
 import { nextRefNumber } from "@/lib/referenceNumber";
+import { gpbStatusOptions } from "@/lib/gpbStatus";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -195,6 +196,34 @@ function serializeIndicators(arr) {
       return formatPerformanceIndicator(p);
     })
     .filter(Boolean);
+}
+
+/* GAD activity titles and their descriptions are stored as two index-paired
+   arrays (`gad_activity` / `gad_activity_description`) because the API, the
+   reports and the printed form already treat the title list as the source of
+   rows. Every editing surface funnels through this helper so the pair can
+   never drift: legacy projects that only have titles simply get an empty
+   description for each row. */
+function alignActivityDescriptions(titles, descriptions) {
+  const list = Array.isArray(descriptions) ? [...descriptions] : [];
+  const count = Array.isArray(titles) ? titles.length : 0;
+  while (list.length < count) list.push("");
+  return list.slice(0, count);
+}
+
+/* Read-only GAD activity cell: the title with its description underneath, so
+   the table, the print view and the reports all keep the single "GAD Activity"
+   column the official GPB form uses. */
+function GADActivityCell({ title, description }) {
+  if (!title && !description) return null;
+  return (
+    <div>
+      <div className="text-xs text-gray-900">{title}</div>
+      {description ? (
+        <div className="mt-1 text-xs text-gray-900">{description}</div>
+      ) : null}
+    </div>
+  );
 }
 
 function PerformanceIndicatorInput({ value, onChange }) {
@@ -582,6 +611,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     supporting_statistics_data: "",
     relevant_agency: "",
     gad_activity: [""],
+  gad_activity_description: [""],
     performance_indicator_target: [emptyIndicator()],
     gad_budget: "",
     source_budget: "",
@@ -739,6 +769,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           supporting_statistics_data: p.supporting_statistics_data,
           relevant_agency: p.relevant_agency,
           gad_activity: p.gad_activity,
+          gad_activity_description: p.gad_activity_description,
           performance_indicator_target: p.performance_indicator_target,
           gad_budget: p.gad_budget,
           source_budget: p.source_budget,
@@ -754,6 +785,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           p.supporting_statistics_data?.value ?? p.supporting_statistics_data,
         relevant_agency: p.relevant_agency?.value ?? p.relevant_agency,
         gad_activity: p.gad_activity?.value ?? p.gad_activity ?? [],
+        /* Always index-paired with the titles, so legacy projects (titles only)
+           get an empty description per row instead of shifting descriptions. */
+        gad_activity_description: alignActivityDescriptions(
+          p.gad_activity?.value ?? p.gad_activity ?? [],
+          p.gad_activity_description?.value ?? p.gad_activity_description ?? [],
+        ),
         performance_indicator_target:
           p.performance_indicator_target?.value ??
           p.performance_indicator_target ??
@@ -872,6 +909,121 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       return { ...prev, [field]: arr };
     });
 
+  /* ── GAD activity rows (title + description) ─────────────────────────────
+     Each row in the wizard, the edit modal and the inline table editor is a
+     title with an optional description underneath. Adding or removing a row
+     has to move both arrays together, otherwise description 2 would show up
+     under title 3. */
+  const handleActivityTitleChange = (idx, value) =>
+    setNewProject((prev) => {
+      const titles = [...(prev.gad_activity || [""])];
+      titles[idx] = value;
+      return {
+        ...prev,
+        gad_activity: titles,
+        gad_activity_description: alignActivityDescriptions(
+          titles,
+          prev.gad_activity_description,
+        ),
+      };
+    });
+
+  const handleActivityDescriptionChange = (idx, value) =>
+    setNewProject((prev) => {
+      const descriptions = alignActivityDescriptions(
+        prev.gad_activity,
+        prev.gad_activity_description,
+      );
+      descriptions[idx] = value;
+      return { ...prev, gad_activity_description: descriptions };
+    });
+
+  const handleAddActivityRow = () =>
+    setNewProject((prev) => ({
+      ...prev,
+      gad_activity: [...(prev.gad_activity || [""]), ""],
+      gad_activity_description: [
+        ...alignActivityDescriptions(
+          prev.gad_activity,
+          prev.gad_activity_description,
+        ),
+        "",
+      ],
+    }));
+
+  const handleRemoveActivityRow = (idx) =>
+    setNewProject((prev) => {
+      const titles = [...(prev.gad_activity || [""])];
+      if (titles.length <= 1) return prev;
+      const descriptions = alignActivityDescriptions(
+        prev.gad_activity,
+        prev.gad_activity_description,
+      );
+      titles.splice(idx, 1);
+      descriptions.splice(idx, 1);
+      return {
+        ...prev,
+        gad_activity: titles,
+        gad_activity_description: descriptions,
+      };
+    });
+
+  /* Same pairing rules for `editRow`, shared by the edit modal and the inline
+     table editor. Omitting `descriptions` re-aligns them with the titles. */
+  const updateEditActivities = (titles, descriptions) =>
+    setEditRow((prev) => {
+      if (!prev) return prev;
+      const nextTitles =
+        Array.isArray(titles) && titles.length ? titles : [""];
+      return {
+        ...prev,
+        gad_activity: nextTitles,
+        gad_activity_description:
+          descriptions === undefined
+            ? alignActivityDescriptions(
+                nextTitles,
+                prev.gad_activity_description,
+              )
+            : descriptions,
+      };
+    });
+
+  const handleEditActivityTitleChange = (idx, value) => {
+    const titles = [...(editRow?.gad_activity || [""])];
+    titles[idx] = value;
+    updateEditActivities(titles);
+  };
+
+  const handleEditActivityDescriptionChange = (idx, value) => {
+    const descriptions = alignActivityDescriptions(
+      editRow?.gad_activity,
+      editRow?.gad_activity_description,
+    );
+    descriptions[idx] = value;
+    updateEditActivities(editRow?.gad_activity || [""], descriptions);
+  };
+
+  const handleAddEditActivityRow = () =>
+    updateEditActivities([...(editRow?.gad_activity || [""]), ""], [
+      ...alignActivityDescriptions(
+        editRow?.gad_activity,
+        editRow?.gad_activity_description,
+      ),
+      "",
+    ]);
+
+  const handleRemoveEditActivityRow = (idx) => {
+    const titles = [...(editRow?.gad_activity || [""])];
+    if (titles.length <= 1) return;
+    const descriptions = alignActivityDescriptions(
+      editRow?.gad_activity,
+      editRow?.gad_activity_description,
+    );
+    titles.splice(idx, 1);
+    descriptions.splice(idx, 1);
+    updateEditActivities(titles, descriptions);
+  };
+
   const startEdit = (project) => {
     setEditRow({
       ...project,
@@ -879,6 +1031,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       performance_indicator_target: (
         project.performance_indicator_target || [""]
       ).map((p) => (typeof p === "string" ? parsePerformanceIndicator(p) : p)),
+      gad_activity_description: alignActivityDescriptions(
+        project.gad_activity,
+        project.gad_activity_description,
+      ),
     });
     setEditError("");
     setShowEditModal(true);
@@ -1035,6 +1191,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         cause_gender_issue: editRow.cause_gender_issue,
         gad_objective: editRow.gad_objective,
         gad_activity: editRow.gad_activity,
+        gad_activity_description: alignActivityDescriptions(
+          editRow.gad_activity,
+          editRow.gad_activity_description,
+        ),
         supporting_statistics_data: editRow.supporting_statistics_data,
         relevant_agency: editRow.relevant_agency,
         performance_indicator_target: serializeIndicators(
@@ -1444,9 +1604,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                 value={statusType}
                 onChange={(e) => setStatusType(e.target.value)}
               >
-                <option value="draft">Draft</option>
-                <option value="approved">Approved</option>
-                <option value="disapproved">Disapproved</option>
+                {/* An approved plan is final — Draft is not offered again. */}
+                {gpbStatusOptions(selectedGPBStatus?.status).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -1678,6 +1841,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   },
                   { value: "relevant_agency", label: "Relevant Agency" },
                   { value: "gad_activity", label: "GAD Activity" },
+                  {
+                    value: "gad_activity_description",
+                    label: "GAD Activity Description",
+                  },
                   {
                     value: "performance_indicator_target",
                     label: "Performance Indicator Target",
@@ -2188,46 +2355,64 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       GAD Activity <span className="text-red-500">*</span>
                     </label>
-                    <div className="space-y-2">
+                    <p className="text-xs text-gray-400 mb-2">
+                      Type the activity title, then its description underneath.
+                      Both print inside the single GAD Activity column.
+                    </p>
+                    <div className="space-y-3">
                       {(editRow.gad_activity || [""]).map((val, idx) => (
-                        <div key={idx} className="flex gap-2 items-start">
+                        <div
+                          key={idx}
+                          className="flex gap-2 items-start rounded-xl border border-gray-200 bg-gray-50 p-2"
+                        >
                           <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
                             {idx + 1}.
                           </span>
-                          <textarea
-                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                            rows={2}
-                            value={val}
-                            onChange={(e) => {
-                              const arr = [...(editRow.gad_activity || [""])];
-                              arr[idx] = e.target.value;
-                              handleEditRowChange("gad_activity", arr);
-                            }}
-                          />
+                          <div className="flex-1 space-y-2">
+                            <textarea
+                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              rows={2}
+                              placeholder="GAD activity title"
+                              value={val}
+                              onChange={(e) =>
+                                handleEditActivityTitleChange(
+                                  idx,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                            <textarea
+                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              rows={2}
+                              placeholder="Description (optional)"
+                              value={
+                                alignActivityDescriptions(
+                                  editRow.gad_activity,
+                                  editRow.gad_activity_description,
+                                )[idx] || ""
+                              }
+                              onChange={(e) =>
+                                handleEditActivityDescriptionChange(
+                                  idx,
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
                           <div className="flex flex-col gap-1 mt-1 shrink-0">
                             {(editRow.gad_activity || []).length > 1 && (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const arr = [...editRow.gad_activity];
-                                  arr.splice(idx, 1);
-                                  handleEditRowChange("gad_activity", arr);
-                                }}
+                                onClick={() => handleRemoveEditActivityRow(idx)}
                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                               >
                                 −
                               </button>
                             )}
-                            {idx ===
-                              (editRow.gad_activity || []).length - 1 && (
+                            {idx === (editRow.gad_activity || []).length - 1 && (
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleEditRowChange("gad_activity", [
-                                    ...(editRow.gad_activity || []),
-                                    "",
-                                  ])
-                                }
+                                onClick={handleAddEditActivityRow}
                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
                               >
                                 +
@@ -2668,27 +2853,45 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     GAD Activity <span className="text-red-500">*</span>
                   </label>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Type the activity title, then its description underneath.
+                    Both print inside the single GAD Activity column.
+                  </p>
                   {newProject.gad_activity.map((val, idx) => (
-                    <div key={idx} className="flex gap-2 mb-2">
-                      <textarea
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                        value={val}
-                        onChange={(e) =>
-                          handleArrayFieldChange(
-                            "gad_activity",
-                            idx,
-                            e.target.value,
-                          )
-                        }
-                      />
+                    <div
+                      key={idx}
+                      className="flex gap-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <textarea
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                          placeholder="GAD activity title"
+                          value={val}
+                          onChange={(e) =>
+                            handleActivityTitleChange(idx, e.target.value)
+                          }
+                        />
+                        <textarea
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                          placeholder="Description (optional)"
+                          value={
+                            alignActivityDescriptions(
+                              newProject.gad_activity,
+                              newProject.gad_activity_description,
+                            )[idx] || ""
+                          }
+                          onChange={(e) =>
+                            handleActivityDescriptionChange(idx, e.target.value)
+                          }
+                        />
+                      </div>
                       <div className="flex flex-col gap-1">
                         {newProject.gad_activity.length > 1 && (
                           <button
                             type="button"
-                            onClick={() =>
-                              handleRemoveArrayField("gad_activity", idx)
-                            }
+                            onClick={() => handleRemoveActivityRow(idx)}
                             className="px-2 py-1 bg-red-500 text-white rounded text-xs"
                           >
                             -
@@ -2697,7 +2900,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         {idx === newProject.gad_activity.length - 1 && (
                           <button
                             type="button"
-                            onClick={() => handleAddArrayField("gad_activity")}
+                            onClick={handleAddActivityRow}
                             className="px-2 py-1 bg-green-500 text-white rounded text-xs"
                           >
                             +
@@ -2873,9 +3076,22 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       GAD Activity:
                     </span>
                     <ul className="mt-0.5 list-disc list-inside text-gray-800">
-                      {newProject.gad_activity.filter(Boolean).map((v, i) => (
-                        <li key={i}>{v}</li>
-                      ))}
+                      {newProject.gad_activity.filter(Boolean).map((v, i) => {
+                        const description = alignActivityDescriptions(
+                          newProject.gad_activity,
+                          newProject.gad_activity_description,
+                        )[i];
+                        return (
+                          <li key={i}>
+                            {v}
+                            {description ? (
+                              <span className="block pl-4">
+                                {description}
+                              </span>
+                            ) : null}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                   <div>
@@ -3243,29 +3459,46 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           </td>
                           <td className="py-2 px-4 border-b">
                             {newProject.gad_activity.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-10 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
-                                      "gad_activity",
-                                      idx,
-                                      e.target.value,
-                                    )
-                                  }
-                                  required
-                                />
+                              <div
+                                key={idx}
+                                className="flex items-start gap-1 mb-1"
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <textarea
+                                    className="w-10 border rounded px-2 py-1"
+                                    placeholder="Title"
+                                    value={val}
+                                    onChange={(e) =>
+                                      handleActivityTitleChange(
+                                        idx,
+                                        e.target.value,
+                                      )
+                                    }
+                                    required
+                                  />
+                                  <textarea
+                                    className="w-10 border rounded px-2 py-1 text-[11px] text-gray-600"
+                                    rows={2}
+                                    placeholder="Description"
+                                    value={
+                                      alignActivityDescriptions(
+                                        newProject.gad_activity,
+                                        newProject.gad_activity_description,
+                                      )[idx] || ""
+                                    }
+                                    onChange={(e) =>
+                                      handleActivityDescriptionChange(
+                                        idx,
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </div>
                                 {newProject.gad_activity.length > 1 && (
                                   <button
                                     type="button"
                                     className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "gad_activity",
-                                        idx,
-                                      )
-                                    }
+                                    onClick={() => handleRemoveActivityRow(idx)}
                                   >
                                     -
                                   </button>
@@ -3274,9 +3507,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                   <button
                                     type="button"
                                     className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("gad_activity")
-                                    }
+                                    onClick={handleAddActivityRow}
                                   >
                                     +
                                   </button>
@@ -3414,6 +3645,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         ? project.gad_activity
                         : [project.gad_activity || ""];
 
+                      /* Index-paired with actArr — never shorter or longer. */
+                      const descArr = alignActivityDescriptions(
+                        actArr,
+                        project.gad_activity_description,
+                      );
+
                       const perfArr = Array.isArray(
                         project.performance_indicator_target,
                       )
@@ -3441,6 +3678,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         Array.isArray(editRow?.gad_activity)
                           ? editRow.gad_activity
                           : actArr;
+                      const editDescArr = alignActivityDescriptions(
+                        editActArr,
+                        editingId === project._id
+                          ? editRow?.gad_activity_description
+                          : project.gad_activity_description,
+                      );
                       const editPerfArr =
                         editingId === project._id &&
                         Array.isArray(editRow?.performance_indicator_target)
@@ -3866,25 +4109,40 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                             className="py-2 px-4 border text-xs"
                                             rowSpan={editMaxRows}
                                           >
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={editActArr[0] || ""}
-                                                onChange={(e) =>
-                                                  handleEditRowChange(
-                                                    "gad_activity",
-                                                    [e.target.value],
-                                                  )
-                                                }
-                                              />
+                                            <div className="flex items-start gap-1">
+                                              <div className="flex flex-col gap-1">
+                                                <textarea
+                                                  className="w-40 border rounded px-2 py-1"
+                                                  placeholder="Activity title"
+                                                  value={editActArr[0] || ""}
+                                                  onChange={(e) =>
+                                                    handleEditActivityTitleChange(
+                                                      0,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                                <textarea
+                                                  className="w-40 border rounded px-2 py-1 text-[11px] text-gray-600"
+                                                  rows={2}
+                                                  placeholder="Description (optional)"
+                                                  value={editDescArr[0] || ""}
+                                                  onChange={(e) =>
+                                                    handleEditActivityDescriptionChange(
+                                                      0,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
                                               <div className="flex flex-col gap-1">
                                                 {editActArr.length > 1 && (
                                                   <button
                                                     type="button"
+                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
                                                     onClick={() =>
-                                                      handleEditRowChange(
-                                                        "gad_activity",
-                                                        [""],
+                                                      handleRemoveEditActivityRow(
+                                                        0,
                                                       )
                                                     }
                                                   >
@@ -3894,12 +4152,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                 <button
                                                   type="button"
                                                   className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={() =>
-                                                    handleEditRowChange(
-                                                      "gad_activity",
-                                                      [...editActArr, ""],
-                                                    )
-                                                  }
+                                                  onClick={handleAddEditActivityRow}
                                                 >
                                                   +
                                                 </button>
@@ -3909,34 +4162,44 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         )
                                       : rowIdx < editActArr.length && (
                                           <td className="py-2 px-4 border">
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={editActArr[rowIdx] || ""}
-                                                onChange={(e) => {
-                                                  const arr = [...editActArr];
-                                                  arr[rowIdx] = e.target.value;
-                                                  handleEditRowChange(
-                                                    "gad_activity",
-                                                    arr,
-                                                  );
-                                                }}
-                                              />
+                                            <div className="flex items-start gap-1">
+                                              <div className="flex flex-col gap-1">
+                                                <textarea
+                                                  className="w-40 border rounded px-2 py-1"
+                                                  placeholder="Activity title"
+                                                  value={editActArr[rowIdx] || ""}
+                                                  onChange={(e) =>
+                                                    handleEditActivityTitleChange(
+                                                      rowIdx,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                                <textarea
+                                                  className="w-40 border rounded px-2 py-1 text-[11px] text-gray-600"
+                                                  rows={2}
+                                                  placeholder="Description (optional)"
+                                                  value={
+                                                    editDescArr[rowIdx] || ""
+                                                  }
+                                                  onChange={(e) =>
+                                                    handleEditActivityDescriptionChange(
+                                                      rowIdx,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
                                               <div className="flex flex-col gap-1">
                                                 {editActArr.length > 1 && (
                                                   <button
                                                     type="button"
                                                     className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() => {
-                                                      const arr = [
-                                                        ...editActArr,
-                                                      ];
-                                                      arr.splice(rowIdx, 1);
-                                                      handleEditRowChange(
-                                                        "gad_activity",
-                                                        arr,
-                                                      );
-                                                    }}
+                                                    onClick={() =>
+                                                      handleRemoveEditActivityRow(
+                                                        rowIdx,
+                                                      )
+                                                    }
                                                   >
                                                     -
                                                   </button>
@@ -3946,12 +4209,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                   <button
                                                     type="button"
                                                     className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleEditRowChange(
-                                                        "gad_activity",
-                                                        [...editActArr, ""],
-                                                      )
-                                                    }
+                                                    onClick={handleAddEditActivityRow}
                                                   >
                                                     +
                                                   </button>
@@ -4088,12 +4346,18 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                           className="py-2 px-4 border text-xs"
                                           rowSpan={maxRows}
                                         >
-                                          {actArr[0]}
+                                          <GADActivityCell
+                                            title={actArr[0]}
+                                            description={descArr[0]}
+                                          />
                                         </td>
                                       )
                                     ) : (
                                       <td className="py-2 px-4 border text-xs">
-                                        {actArr[rowIdx] || ""}
+                                        <GADActivityCell
+                                          title={actArr[rowIdx]}
+                                          description={descArr[rowIdx]}
+                                        />
                                       </td>
                                     )}
 

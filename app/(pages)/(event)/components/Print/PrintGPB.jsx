@@ -21,6 +21,27 @@ const getArrayValue = (field) => {
   return [];
 };
 
+/* Activity descriptions are index-paired with the activity titles, so the list
+   is padded to the title count before it is printed. */
+const alignActivityDescriptions = (titles, descriptions) => {
+  const list = Array.isArray(descriptions) ? [...descriptions] : [];
+  const count = Array.isArray(titles) ? titles.length : 0;
+  while (list.length < count) list.push("");
+  return list.slice(0, count);
+};
+
+/* The GAD Activity column stays a single column: the title sits on top and the
+   description follows underneath in smaller, muted text. */
+const activityCellHtml = (title, description) =>
+  [
+    title ? `<span class="gad-activity-title">${title}</span>` : "",
+    description
+      ? `<span class="gad-activity-description">${description}</span>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
 export default function PrintGPB({
   totalGAA,
   budgetYear,
@@ -115,6 +136,9 @@ export default function PrintGPB({
         cause_gender_issue: getArrayValue(project?.cause_gender_issue),
         gad_objective: getArrayValue(project?.gad_objective),
         gad_activity: getArrayValue(project?.gad_activity),
+        gad_activity_description: getArrayValue(
+          project?.gad_activity_description,
+        ),
         performance_indicator_target: getArrayValue(
           project?.performance_indicator_target,
         ),
@@ -185,6 +209,8 @@ export default function PrintGPB({
         .date-border-1 {border-bottom: none}
         .date-border-2 {border-top: none}
         .date {width:200px}
+        .gad-activity-title { display: block; }
+        .gad-activity-description { display: block; margin-top: 3px; }
       </style></head><body>
       <div class="gad-report-header">
         <h4>ANNUAL GENDER AND DEVELOPMENT (GAD) PLAN AND BUDGET</h4>
@@ -222,6 +248,10 @@ export default function PrintGPB({
               const actArr = Array.isArray(project.gad_activity)
                 ? project.gad_activity
                 : [project.gad_activity || ""];
+              const descArr = alignActivityDescriptions(
+                actArr,
+                project.gad_activity_description,
+              );
               const perfArr = Array.isArray(
                 project.performance_indicator_target,
               )
@@ -279,9 +309,9 @@ export default function PrintGPB({
     ${
       actArr.length === 1
         ? rowIdx === 0
-          ? `<td rowspan="${maxRows}">${actArr[0]}</td>`
+          ? `<td rowspan="${maxRows}">${activityCellHtml(actArr[0], descArr[0])}</td>`
           : ""
-        : `<td>${actArr[rowIdx] || ""}</td>`
+        : `<td>${activityCellHtml(actArr[rowIdx], descArr[rowIdx])}</td>`
     }
 
 

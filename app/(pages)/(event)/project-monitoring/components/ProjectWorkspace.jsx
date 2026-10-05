@@ -17,7 +17,15 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import ProjectCreateModal from "./ProjectCreateModal";
+import DetailTabs from "./DetailTabs";
 import ActualsEncoderModal from "./ActualsEncoderModal";
+import {
+  BUDGET_VIEW,
+  budgetProjectsFor,
+  budgetViewFor,
+  canViewProjectBudget,
+  summarizeBudget,
+} from "@/lib/budgetVisibility";
 import MilestonesModal from "./MilestonesModal";
 import EditProjectModal from "./EditProjectModal";
 import ProjectDeleteModal from "./ProjectDeleteModal";
@@ -32,6 +40,10 @@ import { resolveAccomplishmentText } from "@/lib/accomplishmentSummary";
 
 /* Roles (besides the creator) allowed to manage schedule, status + milestones */
 const PROJECT_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
+
+/* Detail fields that hold budget amounts — hidden with the rest of the budget
+   figures when the project falls outside the viewer's budget scope. */
+const BUDGET_DETAIL_KEYS = ["source_budget", "gad_budget"];
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -207,11 +219,15 @@ export default function ProjectWorkspace({ config }) {
   const [error, setError] = useState("");
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState("");
+  /* College a GAD coordinator is assigned to — the only budget they may see. */
+  const [assignedCollege, setAssignedCollege] = useState("");
   const [year, setYear] = useState("");
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
   const [filterState, setFilterState] = useState({});
   const [expandedId, setExpandedId] = useState(null);
+  /* Which tab of an expanded card is open — always reset when a card opens. */
+  const [detailTab, setDetailTab] = useState("details");
   const [editProject, setEditProject] = useState(null);
   const [deletingProject, setDeletingProject] = useState(null);
   const [milestoneProject, setMilestoneProject] = useState(null);
@@ -247,6 +263,7 @@ export default function ProjectWorkspace({ config }) {
 
         setUserId(profileData?.user?._id || null);
         setUserRole(profileData?.user?.role || "");
+        setAssignedCollege(profileData?.user?.assignedCollege || "");
         setProjects(Array.isArray(projectsData.data) ? projectsData.data : []);
         setError("");
       } catch (err) {
@@ -314,17 +331,22 @@ export default function ProjectWorkspace({ config }) {
     const completed = filtered.filter(
       (project) => getProjectStatus(project, statuses) === "completed",
     ).length;
-    const budget = filtered.reduce(
-      (sum, project) => sum + (Number(getFieldValue(project[budgetField])) || 0),
-      0,
-    );
-    const spent = filtered.reduce(
-      (sum, project) => sum + (Number(project.actual_expenditures) || 0),
-      0,
-    );
 
-    return { total: filtered.length, ongoing, completed, budget, spent };
-  }, [filtered, statuses, budgetField]);
+    return { total: filtered.length, ongoing, completed };
+  }, [filtered, statuses]);
+
+  /* Budget figures are scoped by role: the focal person sees every office, a
+     coordinator only the college they are assigned to, everyone else none. */
+  const budgetView = useMemo(() => budgetViewFor(userRole), [userRole]);
+
+  const budgetSummary = useMemo(
+    () =>
+      summarizeBudget(
+        budgetProjectsFor(budgetView, filtered, assignedCollege),
+        budgetField,
+      ),
+    [budgetView, filtered, assignedCollege, budgetField],
+  );
 
   const canCreate = PROJECT_EDITOR_ROLES.includes(
     String(userRole || "").trim().toLowerCase(),
@@ -362,6 +384,13 @@ export default function ProjectWorkspace({ config }) {
     const managementAllowed = canManageProject(project, userId, userRole);
     const creatorAllowed = isProjectCreator(project, userId);
     const accomplishment = resolveAccomplishmentText(project);
+    /* Budget figures follow the viewer's budget scope — a coordinator sees them
+       only on his own college's projects. */
+    const canSeeBudget = canViewProjectBudget(
+      budgetView,
+      project,
+      assignedCollege,
+    );
 
     /* Renders a configured detail field's saved value for the spec sheet. */
     const renderDetailValue = (field) => {
@@ -385,7 +414,11 @@ export default function ProjectWorkspace({ config }) {
       >
         <button
           type="button"
-          onClick={() => setExpandedId(isExpanded ? null : project._id)}
+          onClick={() => {
+            /* Opening a card always starts on the first tab. */
+            setDetailTab("details");
+            setExpandedId(isExpanded ? null : project._id);
+          }}
           className="w-full text-left px-4 sm:px-5 py-4 flex items-start gap-3 hover:bg-gray-50/60 transition-colors"
         >
           <div className="min-w-0 flex-1">
@@ -410,7 +443,7 @@ export default function ProjectWorkspace({ config }) {
                 {formatDate(project.start_date) || "No start date"} →{" "}
                 {formatDate(project.end_date) || "No end date"}
               </span>
-              <span>Budget {fmtPeso(budget)}</span>
+              {canSeeBudget && <span>Budget {fmtPeso(budget)}</span>}
               <span>
                 {milestones.length} milestone
                 {milestones.length === 1 ? "" : "s"} ({milestoneDone} done)
@@ -430,16 +463,44 @@ export default function ProjectWorkspace({ config }) {
 
         {isExpanded && (
           <div className="border-t border-gray-100 px-4 sm:px-5 py-4 space-y-5">
-            {detailSections.map((section) => (
-              <DetailSection key={section.title} title={section.title}>
-                {section.fields.map((field) => (
-                  <DetailRow
-                    key={field.key}
-                    label={field.label}
-                    value={renderDetailValue(field)}
-                  />
-                ))}
-                {section.fields.some((field) => field.key === budgetField) && (
+            <DetailTabs
+              tabs={[
+                { key: "details", label: "Project Details" },
+                {
+                  key: "milestones",
+                  label: "Milestones",
+                  count: milestones.length,
+                },
+                { key: "events", label: "Linked Events", count: events.length },
+                {
+                  key: "accomplishment",
+                  label: "Actuals & Accomplishment",
+                },
+              ]}
+              active={detailTab}
+              onChange={setDetailTab}
+            />
+
+            {detailTab === "details" && (
+              <div className="animate-fade-in space-y-5" role="tabpanel">
+                {detailSections.map((section) => (
+                  <DetailSection key={section.title} title={section.title}>
+                {section.fields
+                  .filter(
+                    (field) =>
+                      canSeeBudget ||
+                      (!BUDGET_DETAIL_KEYS.includes(field.key) &&
+                        field.key !== budgetField),
+                  )
+                  .map((field) => (
+                    <DetailRow
+                      key={field.key}
+                      label={field.label}
+                      value={renderDetailValue(field)}
+                    />
+                  ))}
+                {section.fields.some((field) => field.key === budgetField) &&
+                  canSeeBudget && (
                   <DetailBarRow
                     label="Budget Utilization"
                     percent={budget > 0 ? utilization : 0}
@@ -453,9 +514,11 @@ export default function ProjectWorkspace({ config }) {
                 )}
               </DetailSection>
             ))}
+              </div>
+            )}
 
-            {milestones.length > 0 && (
-              <div>
+            {detailTab === "milestones" && (
+              <div className="animate-fade-in" role="tabpanel">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
                   Milestones
                 </p>
@@ -495,14 +558,24 @@ export default function ProjectWorkspace({ config }) {
                     </li>
                   ))}
                 </ul>
+                {milestones.length === 0 && (
+                  <p className="text-xs text-gray-400 italic">
+                    No milestones recorded yet.
+                  </p>
+                )}
               </div>
             )}
 
-            {events.length > 0 && (
-              <div>
+            {detailTab === "events" && (
+              <div className="animate-fade-in" role="tabpanel">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
                   Linked Events
                 </p>
+                {events.length === 0 && (
+                  <p className="text-xs text-gray-400 italic">
+                    No linked events yet.
+                  </p>
+                )}
                 <ul className="space-y-1.5">
                   {events.map((event) => (
                     <li
@@ -532,14 +605,17 @@ export default function ProjectWorkspace({ config }) {
               </div>
             )}
 
-            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
+            {detailTab === "accomplishment" && (
+              <div className="animate-fade-in" role="tabpanel">
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                 Actual Accomplishment
               </p>
               <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
                 {accomplishment || "—"}
               </p>
-              {Array.isArray(project.expenditure_evidence) &&
+              {canSeeBudget &&
+                Array.isArray(project.expenditure_evidence) &&
                 project.expenditure_evidence.length > 0 && (
                   <p className="text-[11px] text-gray-400 mt-2 inline-flex items-center gap-1">
                     <FaPaperclip size={9} />{" "}
@@ -547,7 +623,9 @@ export default function ProjectWorkspace({ config }) {
                     {project.expenditure_evidence.length === 1 ? "" : "s"}
                   </p>
                 )}
-            </div>
+                </div>
+              </div>
+            )}
 
             {(managementAllowed || creatorAllowed) && (
               <div className="flex flex-wrap items-center gap-2">
@@ -618,7 +696,11 @@ export default function ProjectWorkspace({ config }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div
+        className={`grid grid-cols-2 gap-3 ${
+          budgetView === BUDGET_VIEW.NONE ? "lg:grid-cols-3" : "lg:grid-cols-4"
+        }`}
+      >
         <StatCard
           icon={<FaFolderOpen size={14} />}
           iconClass="bg-rose-50 text-rose-600"
@@ -638,13 +720,15 @@ export default function ProjectWorkspace({ config }) {
           label="Completed"
           value={stats.completed}
         />
-        <StatCard
-          icon={<FaWallet size={14} />}
-          iconClass="bg-amber-50 text-amber-600"
-          label="Budget"
-          value={fmtPeso(stats.budget)}
-          sub={`Spent ${fmtPeso(stats.spent)}`}
-        />
+        {budgetView !== BUDGET_VIEW.NONE && (
+          <StatCard
+            icon={<FaWallet size={14} />}
+            iconClass="bg-amber-50 text-amber-600"
+            label="Budget"
+            value={fmtPeso(budgetSummary.totalBudget)}
+            sub={`Spent ${fmtPeso(budgetSummary.totalExpenditures)}`}
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

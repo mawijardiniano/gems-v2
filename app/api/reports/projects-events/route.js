@@ -69,8 +69,20 @@ function fieldList(field) {
   return [];
 }
 
+/* GAD activity titles with their description on the line below, so the report
+   keeps the single GAD ACTIVITY column. Descriptions are index-paired with the
+   titles and are skipped when a project has none. */
 function projectActivity(project) {
-  return fieldList(project?.gad_activity).join("; ") || "Untitled activity";
+  const titles = fieldList(project?.gad_activity);
+  const descriptions = fieldList(project?.gad_activity_description);
+
+  return (
+    titles
+      .map((title, idx) =>
+        descriptions[idx] ? `${title}\n${descriptions[idx]}` : title,
+      )
+      .join("\n") || "Untitled activity"
+  );
 }
 
 function projectTypeLabel(project) {

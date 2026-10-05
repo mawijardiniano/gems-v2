@@ -24,6 +24,12 @@ const projects = [
     gad_activity: {
       value: [
         "Conduct the Annual National Women's Month Celebration through Gender Equality and Women Empowerment Activities",
+      ],
+    },
+    /* The description prints on the line under its activity title, inside the
+       same GAD ACTIVITY column. */
+    gad_activity_description: {
+      value: [
         "Organize University-wide activities in line with the National Women's Month Celebration such as forums, exhibits, cultural presentations, and recognition programs that highlight women's contributions in history and society. The celebration will promote gender equality, raise awareness on women's rights, and strengthen advocacy for women's empowerment in accordance with national proclamations and RA 6949.",
       ],
     },

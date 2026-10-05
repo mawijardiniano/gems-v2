@@ -25,6 +25,7 @@ import {
   FaTag,
   FaArrowLeft,
 } from "react-icons/fa";
+import { OFFICE_OPTIONS, addTypedOffice, defaultOrganizingUnit } from "@/lib/colleges";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500";
@@ -83,8 +84,12 @@ function CheckboxDropdown({
   onChange,
   required,
   description,
+  /* Offices may also be typed by hand, exactly like the GPB responsible-office
+     picker, so the panel gets an "add an office" row under the option list. */
+  allowCustom = false,
 }) {
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
   const ref = useRef();
 
   useEffect(() => {
@@ -112,6 +117,13 @@ function CheckboxDropdown({
     }
 
     onChange(newSelected);
+  };
+
+  /* A hand-typed office/unit joins the selection as a chip and can be removed
+     with the same × as the options picked from the list. */
+  const addDraft = () => {
+    onChange(addTypedOffice(selected, draft));
+    setDraft("");
   };
 
   return (
@@ -182,6 +194,32 @@ function CheckboxDropdown({
               </button>
             ))}
           </div>
+
+          {allowCustom && (
+            <div className="flex items-center gap-2 border-t border-gray-100 bg-gray-50/60 p-2">
+              <input
+                type="text"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addDraft();
+                  }
+                }}
+                placeholder="Type an office not listed..."
+                className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={addDraft}
+                disabled={!draft.trim()}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FaPlus className="h-3 w-3" /> Add
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -213,54 +251,11 @@ export default function CreateEventsContent() {
   const pathname = usePathname();
   const isDeanRoute = pathname?.startsWith("/dean");
 
-  const OFFICE_OPTIONS = [
-    "Graduate School",
-    "College of Agriculture",
-    "College of Allied Health Sciences",
-    "College of Arts & Social Sciences",
-    "College of Business & Accountancy",
-    "College of Criminal Justice Education",
-    "College of Education",
-    "College of Engineering",
-    "College of Environmental Studies",
-    "College of Fisheries & Aquatic Sciences",
-    "College of Governance",
-    "College of Industrial Technology",
-    "College of Information & Computing Sciences",
-    "Office of the President",
-    "University and Board Secretary",
-    "Office of the Vice President for Administration and Finance",
-    "Office of the Vice President for Academic Affairs",
-    "Office of the Chief Administrative Officer",
-    "Quality Assurance Office",
-    "Planning Unit",
-    "Human Resource and Management Unit",
-    "Legal Unit",
-    "Records Office",
-    "Budget Office",
-    "Internal Audit Unit",
-    "Information Unit",
-    "Procurement Unit",
-    "Supply and Property Management Unit",
-    "Accounting Office",
-    "Cash Unit",
-    "Registrar's Office",
-    "Health Services Unit",
-    "Research & Extension Office",
-    "Learning Resource Center",
-    "General Services Unit",
-    "Project Management Unit",
-    "Business Affairs Office",
-    "Motorpool",
-    "Information and Communication Technology Unit",
-    "Security Services",
-    "Gasan Campus",
-    "Torrijos Campus",
-    "Santa Cruz Campus",
-  ];
-
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  /* College the signed-in GAD coordinator is assigned to (see manage-role),
+     used to prefill the organising office of the events they create. */
+  const [userCollege, setUserCollege] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -287,6 +282,9 @@ export default function CreateEventsContent() {
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const posterInputRef = useRef(null);
+  /* The unit the GAD activity prefill added last, so switching activity swaps
+     it out without touching offices the user picked by hand. */
+  const autoOrganizingUnitRef = useRef(null);
 
   const isGAD = formData.type_of_activity === "GAD";
 
@@ -324,6 +322,7 @@ export default function CreateEventsContent() {
         const res = await axios.get("/api/profile/my-profile");
         setUserId(res.data?.user?._id || null);
         setUserRole(res.data?.user?.role?.toLowerCase() || null);
+        setUserCollege(res.data?.user?.assignedCollege || "");
       } catch (err) {
         console.error("Error loading profile", err);
       }
@@ -616,7 +615,33 @@ export default function CreateEventsContent() {
                       return;
                     }
                     const [project, gad_activity] = val.split("||||");
-                    setFormData((prev) => ({ ...prev, project, gad_activity }));
+                    /* Picking an activity names the event after it and scopes
+                       the event to the unit its creator belongs to: the GAD
+                       Unit for a focal person, the college a coordinator is
+                       assigned to. Switching activity swaps out the unit this
+                       prefill added before and keeps every office picked by
+                       hand. */
+                    const unit = defaultOrganizingUnit(userRole, userCollege);
+                    /* Snapshot the unit the last prefill added before updating
+                       state so the updater below stays a pure function. */
+                    const previousAutoUnit = autoOrganizingUnitRef.current;
+                    autoOrganizingUnitRef.current = unit;
+
+                    setFormData((prev) => {
+                      const kept = (prev.organizing_office_unit || []).filter(
+                        (office) => office !== previousAutoUnit,
+                      );
+                      const nextUnits =
+                        unit && !kept.includes(unit) ? [...kept, unit] : kept;
+
+                      return {
+                        ...prev,
+                        project,
+                        gad_activity,
+                        title: gad_activity,
+                        organizing_office_unit: nextUnits,
+                      };
+                    });
                   }}
                   className={`${inputClass} bg-white`}
                 >
@@ -643,6 +668,9 @@ export default function CreateEventsContent() {
                         key={proj._id}
                         label={`${projectLabel || "Project"} (${proj.year})`}
                       >
+                        {/* Only the activity title is offered here — the
+                            GPB description would turn every option into a
+                            paragraph and the event stores the title only. */}
                         {activities.map((activity, idx) => (
                           <option
                             key={`${proj._id}-${idx}`}
@@ -658,6 +686,7 @@ export default function CreateEventsContent() {
               )}
               <p className="text-xs text-emerald-600/70 mt-2">
                 This activity is required because the event type is GAD.
+                Selecting one fills in the event title and your office/unit.
               </p>
             </div>
           )}
@@ -866,7 +895,8 @@ export default function CreateEventsContent() {
               }))
             }
             required
-            description="Select supporting offices for this event."
+            allowCustom
+            description="Select supporting offices, or type an office/unit that is not listed."
           />
         </div>
 

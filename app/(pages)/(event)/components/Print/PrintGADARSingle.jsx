@@ -52,6 +52,9 @@ export default function PrintGADARSingle({ year, project }) {
     const causes = getArrayValue(project.cause_gender_issue);
     const objectives = getArrayValue(project.gad_objective);
     const activities = getArrayValue(project.gad_activity);
+    const activityDescriptions = getArrayValue(
+      project.gad_activity_description,
+    );
     const indicators = getArrayValue(project.performance_indicator_target);
 
     /* Derived from linked events unless the owner saved a manual override. */
@@ -66,6 +69,20 @@ export default function PrintGADARSingle({ year, project }) {
         ? arr.map((item, i) => `${i + 1}. ${item}`).join("<br/>")
         : "";
 
+    /* Activities keep the single GAD Activity column: each title is followed by
+       its description, which is index-paired with `gad_activity_description`. */
+    const renderActivityList = (titles, descriptions) =>
+      titles.length > 0
+        ? titles
+            .map((item, i) => {
+              const description = descriptions[i];
+              return description
+                ? `${i + 1}. ${item}<br/>${description}`
+                : `${i + 1}. ${item}`;
+            })
+            .join("<br/>")
+        : "";
+
     const rows = `
           <tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>
           <tr>
@@ -74,7 +91,7 @@ export default function PrintGADARSingle({ year, project }) {
             <td class="cell">${renderList(causes)}</td>
             <td class="cell">${renderList(objectives)}</td>
             <td class="cell">${getFieldValue(project.relevant_agency) || ""}</td>
-            <td class="cell">${renderList(activities)}</td>
+            <td class="cell">${renderActivityList(activities, activityDescriptions)}</td>
             <td class="cell">${renderList(indicators)}</td>
             <td class="cell">${actualCell}</td>
             <td class="cell num">₱ ${fmt(getFieldValue(project.gad_budget))}</td>

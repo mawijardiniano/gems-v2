@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaChevronDown, FaPlus, FaTimes } from "react-icons/fa";
 import {
+  addTypedOffice,
   normalizeOffice,
   officeOptionList,
   toOfficeArray,
@@ -54,11 +55,7 @@ export default function OfficeMultiSelect({
   /* Free-typed office: trimmed, skipped when it duplicates an existing
      selection (compared through normalizeOffice), then kept as a chip. */
   const addDraft = () => {
-    const office = draft.trim();
-    if (!office) return;
-    if (!isChecked(office)) {
-      onChange([...selected, office]);
-    }
+    onChange(addTypedOffice(selected, draft));
     setDraft("");
   };
 

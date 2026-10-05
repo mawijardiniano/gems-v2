@@ -18,6 +18,7 @@ const ALLOWED_FIELDS = [
   "supporting_statistics_data",
   "relevant_agency",
   "gad_activity",
+  "gad_activity_description",
   "performance_indicator_target",
   "gad_budget",
   "source_budget",

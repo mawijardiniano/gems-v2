@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activityLog";
 import mongoose from "mongoose";
 import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
+import { canonicalOfficeList } from "@/lib/colleges";
 import { deleteEventCascade } from "@/lib/eventCascade";
 import { USER_POPULATE_BASE } from "@/lib/userPopulate";
 import { normalizeRefNumber } from "@/lib/referenceNumber";
@@ -26,6 +27,10 @@ const EDITABLE_FIELDS = [
   "gad_activity",
   "event_poster",
 ];
+
+/* Office arrays this route stores in their canonical spelling — colleges always
+   use "and", so a stale client cannot put the legacy "&" form back on a record. */
+const OFFICE_FIELDS = ["organizing_office_unit", "co_organizing_office_unit"];
 
 export async function GET(req, { params }) {
 
@@ -141,9 +146,14 @@ export async function PUT(req, { params }) {
     const newProjectId = body.project ?? null;
 
     for (const field of EDITABLE_FIELDS) {
-      if (body[field] !== undefined) {
-        event.set(field, body[field]);
-      }
+      if (body[field] === undefined) continue;
+
+      event.set(
+        field,
+        OFFICE_FIELDS.includes(field)
+          ? canonicalOfficeList(body[field])
+          : body[field],
+      );
     }
 
     /* Reference numbers are normally assigned automatically from the type of

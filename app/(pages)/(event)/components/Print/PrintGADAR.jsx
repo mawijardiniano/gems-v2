@@ -59,6 +59,20 @@ const isImageFile = (file) =>
 const renderList = (arr) =>
   arr.length > 0 ? arr.map((item, i) => `${i + 1}. ${item}`).join("<br/>") : "";
 
+/* Activities keep the single GAD Activity column: each title is followed by
+   its description, which is index-paired with `gad_activity_description`. */
+const renderActivityList = (titles, descriptions) =>
+  titles.length > 0
+    ? titles
+        .map((item, i) => {
+          const description = descriptions[i];
+          return description
+            ? `${i + 1}. ${item}<br/>${description}`
+            : `${i + 1}. ${item}`;
+        })
+        .join("<br/>")
+    : "";
+
 const collectAttachmentFiles = (report) => {
   const files = [];
   for (const key of ["office_memorandum", "activity_design"]) {
@@ -332,6 +346,9 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       const causes = getArrayValue(project.cause_gender_issue);
       const objectives = getArrayValue(project.gad_objective);
       const activities = getArrayValue(project.gad_activity);
+      const activityDescriptions = getArrayValue(
+        project.gad_activity_description,
+      );
       const indicators = getArrayValue(project.performance_indicator_target);
       /* Derived from linked events unless the owner saved a manual override. */
       const actualText = resolveAccomplishmentText(project);
@@ -350,7 +367,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             <td class="cell">${renderList(causes)}</td>
             <td class="cell">${renderList(objectives)}</td>
             <td class="cell">${getFieldValue(project.relevant_agency) || ""}</td>
-            <td class="cell">${renderList(activities)}</td>
+            <td class="cell">${renderActivityList(activities, activityDescriptions)}</td>
             <td class="cell">${renderList(indicators)}</td>
             <td class="cell">${actualCell}</td>
             <td class="cell num">₱ ${fmt(getFieldValue(project.gad_budget))}</td>

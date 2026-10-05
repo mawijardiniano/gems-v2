@@ -5,6 +5,7 @@ import assert from "node:assert";
 // and its monitoring filter — no DB or network required.
 import {
   OFFICE_OPTIONS,
+  addTypedOffice,
   normalizeOffice,
   officeOptionList,
   toOfficeArray,
@@ -49,7 +50,7 @@ test("officeOptionList does not duplicate a canonical office typed in another ca
 });
 
 test("a typed office equivalent to a selected one counts as a duplicate", () => {
-  // Mirrors the guard in OfficeMultiSelect.addDraft()
+  // Mirrors the guard inside addTypedOffice(), used by both office pickers
   const selected = ["GAD Unit"];
   const isChecked = (office) =>
     selected.some((s) => normalizeOffice(s) === normalizeOffice(office));
@@ -59,4 +60,46 @@ test("a typed office equivalent to a selected one counts as a duplicate", () => 
 
   const appended = isChecked("gad unit") ? selected : [...selected, "gad unit"];
   assert.deepStrictEqual(appended, ["GAD Unit"]);
+});
+
+test("addTypedOffice trims and appends a hand-typed office", () => {
+  assert.deepStrictEqual(
+    addTypedOffice(["GAD Unit"], "  Municipal Health Office  "),
+    ["GAD Unit", "Municipal Health Office"],
+  );
+  assert.deepStrictEqual(addTypedOffice([], "Office of the Barangay"), [
+    "Office of the Barangay",
+  ]);
+});
+
+test("addTypedOffice ignores blanks and offices already selected", () => {
+  const selected = ["GAD Unit", "College of Engineering"];
+
+  assert.deepStrictEqual(addTypedOffice(selected, ""), selected);
+  assert.deepStrictEqual(addTypedOffice(selected, "   "), selected);
+  assert.deepStrictEqual(addTypedOffice(selected, undefined), selected);
+
+  /* Same office, different casing or spacing — and the canonical twin of a
+     legacy ampersand value still counts as already selected. */
+  assert.deepStrictEqual(addTypedOffice(selected, "  gad   unit "), selected);
+  assert.deepStrictEqual(
+    addTypedOffice(selected, "college of engineering"),
+    selected,
+  );
+  assert.deepStrictEqual(
+    addTypedOffice(
+      ["College of Arts & Social Sciences"],
+      "College of Arts and Social Sciences",
+    ),
+    ["College of Arts & Social Sciences"],
+  );
+});
+
+test("addTypedOffice returns the same array when nothing is added", () => {
+  /* Identity matters: both pickers hand the result straight to onChange, and a
+     no-op must not look like a change. */
+  const selected = ["GAD Unit"];
+  assert.strictEqual(addTypedOffice(selected, "gad unit"), selected);
+  assert.strictEqual(addTypedOffice(selected, "  "), selected);
+  assert.notStrictEqual(addTypedOffice(selected, "New Office"), selected);
 });

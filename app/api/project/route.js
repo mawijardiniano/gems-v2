@@ -128,6 +128,14 @@ export async function POST(req) {
         : [body.gad_activity || ""],
     },
 
+    /* Index-paired with `gad_activity`; always stored as an array so the
+       pair stays aligned when a project is edited. */
+    gad_activity_description: {
+      value: Array.isArray(body.gad_activity_description)
+        ? body.gad_activity_description
+        : [body.gad_activity_description || ""],
+    },
+
     performance_indicator_target: {
       value: Array.isArray(body.performance_indicator_target)
         ? body.performance_indicator_target

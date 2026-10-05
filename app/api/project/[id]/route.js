@@ -205,6 +205,7 @@ mergeField("project_type");
     mergeField("supporting_statistics_data");
     mergeField("relevant_agency");
     mergeField("gad_activity");
+    mergeField("gad_activity_description");
     mergeField("performance_indicator_target");
     mergeField("gad_budget");
     mergeField("source_budget");

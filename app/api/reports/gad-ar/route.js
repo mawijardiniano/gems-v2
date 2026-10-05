@@ -31,6 +31,21 @@ function fieldList(field) {
   return [];
 }
 
+/* GAD activity titles with their description on the line below, inside the
+   single GAD Activity column of the report. Descriptions are index-paired with
+   the titles and are simply skipped when a project has none. */
+function activityCellText(project) {
+  const titles = fieldList(project.gad_activity);
+  const descriptions = fieldList(project.gad_activity_description);
+
+  return titles
+    .map((title, idx) => {
+      const description = descriptions[idx];
+      return description ? `${title}\n${description}` : title;
+    })
+    .join("\n");
+}
+
 function peso(n) {
   return `Php ${Number(n || 0).toLocaleString("en-PH")}`;
 }
@@ -313,7 +328,7 @@ export async function GET(req) {
             fieldList(project.cause_gender_issue).join("\n"),
             fieldList(project.gad_objective).join("\n"),
             String(fieldValue(project.relevant_agency) || ""),
-            fieldList(project.gad_activity).join("\n"),
+            activityCellText(project),
             fieldList(project.performance_indicator_target).join("\n"),
             isAttributedProgram ? "" : String(actualText || ""),
             peso(fieldValue(project.gad_budget)),
