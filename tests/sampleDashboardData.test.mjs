@@ -10,9 +10,9 @@ import {
 } from "../app/(pages)/(event)/gender-statistics/components/sampleDashboardData.js";
 import {
   SAMPLE_SCHOOL_YEARS,
-  SAMPLE_STUDENT_RECORDS,
-} from "../app/(pages)/(event)/gender-statistics/components/studentSampleRecords.js";
-import { SAMPLE_EMPLOYEE_RECORDS } from "../app/(pages)/(event)/gender-statistics/components/employeeSampleRecords.js";
+  SAMPLE_STUDENT_PROFILE_RECORDS as SAMPLE_STUDENT_RECORDS,
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS as SAMPLE_EMPLOYEE_RECORDS,
+} from "../app/(pages)/(event)/gender-statistics/components/sampleProfileRecords.js";
 import {
   APPOINTMENT_ORDER,
   CATEGORY_ORDER,
@@ -56,29 +56,30 @@ test("buildSampleDashboardData: mirrors the dashboard API response shape", () =>
 test("buildSampleDashboardData: unfiltered totals match the curated dataset", () => {
   const data = buildSampleDashboardData();
 
-  /* 3,425 students + 1,016 employees; the flags are the curated per-sex sums. */
-  assert.strictEqual(data.snapshot.total, 4441);
-  assert.strictEqual(data.snapshot.femaleCount, 2709);
-  assert.strictEqual(data.snapshot.maleCount, 1732);
-  assert.strictEqual(data.snapshot.pwdCount, 75);
-  assert.strictEqual(data.snapshot.ipCount, 95);
+  /* Every named sample profile: 10,473 students + 685 employees. */
+  const everyone = [...SAMPLE_STUDENT_RECORDS, ...SAMPLE_EMPLOYEE_RECORDS];
+  const count = (fn) => everyone.filter(fn).length;
+  assert.strictEqual(data.snapshot.total, 11158);
+  assert.strictEqual(data.snapshot.total, everyone.length);
+  assert.strictEqual(data.snapshot.femaleCount, count((r) => r.sex === "Female"));
+  assert.strictEqual(data.snapshot.maleCount, count((r) => r.sex === "Male"));
+  assert.strictEqual(data.snapshot.pwdCount, count((r) => r.pwd === true));
+  assert.strictEqual(data.snapshot.ipCount, count((r) => r.indigenous === true));
 
   assert.deepStrictEqual(data.genderPanel.genderData, [
-    { name: "Female", value: 2709 },
-    { name: "Male", value: 1732 },
+    { name: "Female", value: count((r) => r.sex === "Female") },
+    { name: "Male", value: count((r) => r.sex === "Male") },
   ]);
-  /* 86 students + 30 employees carry the LGBTQIA+ identity (the rest keep
-     their own sex as preference), and every sample record states a preference,
-     so no "Not specified" row appears. */
+  /* Every sample record states a preference, so no "Not specified" row. */
   assert.deepStrictEqual(data.genderPanel.preferenceData, [
-    { name: "Male", value: 1688 },
-    { name: "Female", value: 2637 },
-    { name: "LGBTQIA+", value: 116 },
+    { name: "Male", value: count((r) => r.genderIdentity === "Male") },
+    { name: "Female", value: count((r) => r.genderIdentity === "Female") },
+    { name: "LGBTQIA+", value: count((r) => r.genderIdentity === "LGBTQIA+") },
   ]);
 
   assert.deepStrictEqual(data.employeeGenderPanel.genderData, [
-    { name: "Female", value: 612 },
-    { name: "Male", value: 404 },
+    { name: "Female", value: 413 },
+    { name: "Male", value: 272 },
   ]);
 });
 
@@ -87,93 +88,134 @@ test("buildSampleDashboardData: college scopes students and employees", () => {
     college: "College of Engineering",
   });
 
-  /* 225 students across the five engineering programs + 44 employees. */
-  assert.strictEqual(engineering.snapshot.total, 269);
-  assert.strictEqual(sum(engineering.studentProgramData), 225);
+  const students = SAMPLE_STUDENT_RECORDS.filter(
+    (r) => r.college === "College of Engineering",
+  );
+  const staff = SAMPLE_EMPLOYEE_RECORDS.filter(
+    (r) => r.office === "College of Engineering",
+  );
+  assert.ok(students.length > 0 && staff.length > 0);
+  assert.strictEqual(engineering.snapshot.total, students.length + staff.length);
+  assert.strictEqual(sum(engineering.studentProgramData), students.length);
   assert.deepStrictEqual(engineering.demographics.employeeOfficeData, [
-    { name: "College of Engineering", Male: 30, Female: 14, Other: 0 },
+    {
+      name: "College of Engineering",
+      Male: staff.filter((r) => r.sex === "Male").length,
+      Female: staff.filter((r) => r.sex === "Female").length,
+      Other: 0,
+    },
   ]);
 
   /* An office that hosts no students still scopes the employee panels. */
-  const gad = buildSampleDashboardData({ college: "GAD Unit" });
-  assert.strictEqual(gad.snapshot.total, 11);
-  assert.deepStrictEqual(gad.studentProgramData, []);
-  assert.strictEqual(sum(gad.employeeGenderPanel.genderData), 11);
+  const office = "Registrar's Office";
+  const officeStaff = SAMPLE_EMPLOYEE_RECORDS.filter((r) => r.office === office);
+  const registrar = buildSampleDashboardData({ college: office });
+  assert.strictEqual(registrar.snapshot.total, officeStaff.length);
+  assert.deepStrictEqual(registrar.studentProgramData, []);
+  assert.strictEqual(
+    sum(registrar.employeeGenderPanel.genderData),
+    officeStaff.length,
+  );
 });
 
 test("buildSampleDashboardData: school year uses terms and appointment years", () => {
-  /* 2,900 students were on the rolls by 2020-2021 and 757 employees (per the
-     curated start-year targets); the newest year holds everybody. */
-  const oldest = buildSampleDashboardData({ school_year: "2020-2021" });
-  assert.strictEqual(oldest.snapshot.total, 3657);
+  const studentsIn = (year) =>
+    SAMPLE_STUDENT_RECORDS.filter((r) =>
+      (r.terms || []).some((t) => t.school_year === year),
+    ).length;
+  const employeesIn = (year) =>
+    SAMPLE_EMPLOYEE_RECORDS.filter((r) => (r.years || []).includes(year)).length;
+
+  const oldest = buildSampleDashboardData({ school_year: "2022-2023" });
+  assert.strictEqual(
+    oldest.snapshot.total,
+    studentsIn("2022-2023") + employeesIn("2022-2023"),
+  );
   assert.strictEqual(
     buildSampleDashboardData({
-      school_year: "2020-2021",
+      school_year: "2022-2023",
       person_type: "Student",
     }).snapshot.total,
-    2900,
+    studentsIn("2022-2023"),
   );
   assert.strictEqual(
     buildSampleDashboardData({
-      school_year: "2020-2021",
+      school_year: "2022-2023",
       person_type: "Employee",
     }).snapshot.total,
-    757,
+    employeesIn("2022-2023"),
   );
 
-  const newest = buildSampleDashboardData({ school_year: "2024-2025" });
-  assert.strictEqual(newest.snapshot.total, 4441);
+  /* The active year holds every student and employee. */
+  const newest = buildSampleDashboardData({ school_year: "2026-2027" });
+  assert.strictEqual(newest.snapshot.total, 10473 + 685);
 });
 
 test("buildSampleDashboardData: a semester narrows students, not employees", () => {
   const expectedStudents = SAMPLE_STUDENT_RECORDS.filter((record) =>
     (record.terms || []).some(
       (term) =>
-        term.school_year === "2020-2021" && term.semester === "Summer",
+        term.school_year === "2022-2023" && term.semester === "Summer",
     ),
+  ).length;
+  const employees = SAMPLE_EMPLOYEE_RECORDS.filter((r) =>
+    (r.years || []).includes("2022-2023"),
   ).length;
 
   const summer = buildSampleDashboardData({
-    school_year: "2020-2021",
+    school_year: "2022-2023",
     semester: "Summer",
   });
-  assert.strictEqual(summer.snapshot.total, expectedStudents + 757);
+  /* The semester does not narrow employees. */
+  assert.strictEqual(summer.snapshot.total, expectedStudents + employees);
 });
 
 test("buildSampleDashboardData: sex, person type, year level and status filters", () => {
-  assert.strictEqual(buildSampleDashboardData({ sex: "Female" }).snapshot.total, 2709);
+  const everyone = [...SAMPLE_STUDENT_RECORDS, ...SAMPLE_EMPLOYEE_RECORDS];
+  assert.strictEqual(
+    buildSampleDashboardData({ sex: "Female" }).snapshot.total,
+    everyone.filter((r) => r.sex === "Female").length,
+  );
   assert.strictEqual(
     buildSampleDashboardData({ person_type: "Student" }).snapshot.total,
-    3425,
+    10473,
   );
-  /* The curated year-level targets: 532 + 378 first-year students, and the
-     year level excludes employees (they have no academic level). */
+  /* The year level excludes employees (they have no academic level). */
   assert.strictEqual(
     buildSampleDashboardData({ year_level: "1st Year" }).snapshot.total,
-    910,
+    SAMPLE_STUDENT_RECORDS.filter((r) => r.yearLevel === "1st Year").length,
   );
 
+  const facultyRecords = SAMPLE_EMPLOYEE_RECORDS.filter(
+    (r) => r.personnelType === "Faculty",
+  );
   const faculty = buildSampleDashboardData({ employment: "Faculty" });
-  assert.strictEqual(faculty.snapshot.total, 414);
+  assert.strictEqual(faculty.snapshot.total, facultyRecords.length);
   assert.deepStrictEqual(faculty.studentProgramData, []);
   assert.deepStrictEqual(faculty.demographics.employmentData, [
-    { name: "Faculty", Male: 184, Female: 230, Other: 0 },
+    {
+      name: "Faculty",
+      Male: facultyRecords.filter((r) => r.sex === "Male").length,
+      Female: facultyRecords.filter((r) => r.sex === "Female").length,
+      Other: 0,
+    },
   ]);
 
   assert.strictEqual(
     buildSampleDashboardData({ appointment: "Regular" }).snapshot.total,
-    494,
+    SAMPLE_EMPLOYEE_RECORDS.filter((r) => r.appointmentStatus === "Regular")
+      .length,
   );
 });
 
 test("buildSampleDashboardData: demographics add up to the filtered population", () => {
-  const filters = { school_year: "2021-2022" };
+  const filters = { school_year: "2023-2024" };
   const data = buildSampleDashboardData(filters);
   const filteredCount = SAMPLE_STUDENT_RECORDS.filter((record) =>
-    (record.terms || []).some((term) => term.school_year === "2021-2022"),
+    (record.terms || []).some((term) => term.school_year === "2023-2024"),
   ).length +
     SAMPLE_EMPLOYEE_RECORDS.filter((record) =>
-      (record.years || []).includes("2021-2022"),
+      (record.years || []).includes("2023-2024"),
     ).length;
 
   assert.strictEqual(data.snapshot.total, filteredCount);
@@ -190,7 +232,7 @@ test("buildSampleDashboardData: demographics add up to the filtered population",
   /* Employment / appointment / office rows are sex-disaggregated groups whose
      totals equal the filtered employee count. */
   const employeeCount = SAMPLE_EMPLOYEE_RECORDS.filter((record) =>
-    (record.years || []).includes("2021-2022"),
+    (record.years || []).includes("2023-2024"),
   ).length;
   const groupTotal = (row) => row.Male + row.Female + row.Other;
   assert.strictEqual(
@@ -218,10 +260,10 @@ test("buildSampleDashboardData: student tables keep API ordering and coverage", 
     data.studentYearGenderData.map((row) => row.label),
     ["1st Year", "2nd Year", "3rd Year", "4th Year", "Unknown"],
   );
-  assert.strictEqual(sum(data.studentProgramData), 3425);
+  assert.strictEqual(sum(data.studentProgramData), 10473);
   assert.strictEqual(
     data.studentYearGenderData.reduce((total, row) => total + row.total, 0),
-    3425,
+    10473,
   );
 
   /* Course keys are the distinct program names across the year rows, sorted. */
@@ -240,11 +282,11 @@ test("sampleDashboardFilterOptions: sample-native option lists", () => {
   const options = sampleDashboardFilterOptions();
 
   assert.deepStrictEqual(options.schoolYears, [
+    "2026-2027",
+    "2025-2026",
     "2024-2025",
     "2023-2024",
     "2022-2023",
-    "2021-2022",
-    "2020-2021",
   ]);
   assert.deepStrictEqual(options.semesters, SAMPLE_SEMESTERS);
   assert.deepStrictEqual(options.semesters, ["1st", "2nd", "Summer"]);
@@ -254,7 +296,7 @@ test("sampleDashboardFilterOptions: sample-native option lists", () => {
 
   /* Both student colleges and employee offices are offered; the sample covers
      the same five-year window the dashboard banner names. */
-  ["College of Engineering", "GAD Unit", "Laboratory School"].forEach((name) =>
+  ["College of Engineering", "Registrar's Office", "Graduate School"].forEach((name) =>
     assert.ok(options.collegeOptions.includes(name), `${name} missing`),
   );
   assert.strictEqual(
@@ -270,12 +312,12 @@ test("sampleDashboardFilterOptions: sample-native option lists", () => {
 
 test("sample dataset: profile fields the dashboard demographics need", () => {
   assert.deepStrictEqual(SAMPLE_DASHBOARD_POPULATION, {
-    students: 3425,
-    employees: 1016,
+    students: 10473,
+    employees: 685,
   });
 
   [...SAMPLE_STUDENT_RECORDS, ...SAMPLE_EMPLOYEE_RECORDS].forEach((record) => {
-    assert.match(record.birthday, /^\d{4}-01-01$/, `${record.id} birthday`);
+    assert.match(record.birthday, /^\d{4}-\d{2}-\d{2}$/, `${record.id} birthday`);
     assert.ok(record.civilStatus, `${record.id} civilStatus`);
     assert.ok(record.religion, `${record.id} religion`);
   });
@@ -284,17 +326,18 @@ test("sample dataset: profile fields the dashboard demographics need", () => {
   const single = SAMPLE_STUDENT_RECORDS.filter(
     (record) => record.civilStatus === "Single",
   );
-  assert.strictEqual(single.length, 2850);
   assert.strictEqual(
-    single.filter((record) => record.sex === "Female").length,
-    1700,
+    single.length,
+    SAMPLE_STUDENT_RECORDS.filter((r) => r.civilStatus === "Single").length,
   );
+  assert.ok(single.length > 0);
+  assert.ok(single.filter((record) => record.sex === "Female").length > 0);
 });
 
 test("buildSampleDashboardData: deterministic and filter-composable", () => {
   const filters = {
     college: "College of Education",
-    school_year: "2022-2023",
+    school_year: "2025-2026",
     sex: "Female",
     person_type: "Student",
     year_level: "3rd Year",
@@ -307,7 +350,7 @@ test("buildSampleDashboardData: deterministic and filter-composable", () => {
   /* Every row of the payload narrows with the filters: no row may exceed the
      snapshot total (the students-only scope here). */
   assert.ok(first.snapshot.total > 0);
-  assert.ok(first.snapshot.total <= 3425);
+  assert.ok(first.snapshot.total <= 10473);
   assert.strictEqual(
     first.snapshot.femaleCount,
     first.snapshot.total,

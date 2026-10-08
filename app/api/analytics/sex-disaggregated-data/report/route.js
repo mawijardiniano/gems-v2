@@ -339,6 +339,11 @@ export async function GET(req) {
             alternateRowStyles: { fillColor: [244, 246, 250] },
             margin: { top: 20, bottom: 20, left: 14, right: 14 },
             didParseCell: (data) => {
+              if (data.section === "head") {
+                data.cell.styles.halign = "center";
+                data.cell.styles.valign = "middle";
+                return;
+              }
               if (data.section !== "body") return;
               const rowLabel = Array.isArray(data.row.raw)
                 ? String(data.row.raw[0])
@@ -347,9 +352,10 @@ export async function GET(req) {
                 data.cell.styles.fontStyle = "bold";
                 data.cell.styles.fillColor = [228, 232, 238];
               }
-              if (data.column.index > 0) {
-                data.cell.styles.halign = "center";
-              }
+              const isTextColumn =
+                data.column.index === 0 ||
+                /interpretation/i.test(String(head[data.column.index] ?? ""));
+              data.cell.styles.halign = isTextColumn ? "left" : "right";
             },
           });
           y = (doc.lastAutoTable?.finalY || y) + 7;
@@ -474,6 +480,9 @@ export async function GET(req) {
           doc.setTextColor(110);
           doc.text(generatedLabel, 14, pageH - 8);
           doc.text(`Page ${page} of ${totalPages}`, pageW - 14, pageH - 8, {
+            align: "right",
+          });
+          doc.text("System-generated via GEMS", pageW - 14, pageH - 4.5, {
             align: "right",
           });
           doc.setTextColor(0);

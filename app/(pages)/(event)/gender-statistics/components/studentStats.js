@@ -1,3 +1,4 @@
+import { ageGroupOf, ageGroupOptions, AGE_GROUP_ORDER } from "./ageGroups.js";
 
 export const YEAR_LEVEL_ORDER = [
   "1st Year",
@@ -7,7 +8,7 @@ export const YEAR_LEVEL_ORDER = [
 ];
 
 /* Campuses that host classes (the live page hardcodes the same three). */
-export const CAMPUS_ORDER = ["Boac", "Gasan", "Sta. Cruz"];
+export const CAMPUS_ORDER = ["Boac", "Gasan", "Sta. Cruz", "Torrijos"];
 
 /* Student type categories - the same demographic rows the API reports. */
 export const STUDENT_TYPE_ORDER = [
@@ -75,12 +76,24 @@ export const EMPTY_STUDENT_FILTERS = {
   course: "",
   yearLevel: "",
   studentType: "",
+  demographics: [],
   schoolYear: "",
   semester: "",
+  ageGroups: [],
+  sexes: [],
 };
 
 export function activeFilterCount(filters = {}) {
-  return Object.values(filters).filter(Boolean).length;
+  return Object.values(filters).filter((value) =>
+    Array.isArray(value) ? value.length > 0 : Boolean(value),
+  ).length;
+}
+
+/** Demographic Profile category match - the six student types plus Solo Parent
+    (sample data only; the live database has no solo parent field). */
+export function matchesDemographic(record, category) {
+  if (category === "Solo Parent") return record?.soloParent === true;
+  return matchesStudentType(record, category);
 }
 
 /** Does a record belong to one of the six student type categories? */
@@ -106,13 +119,26 @@ export function matchesStudentType(record, studentType) {
 export function filterStudentRecords(records = [], filters = {}) {
   const { campus, college, course, yearLevel, studentType, schoolYear, semester } =
     filters;
+  const ageGroups = Array.isArray(filters.ageGroups) ? filters.ageGroups : [];
+  const sexes = Array.isArray(filters.sexes) ? filters.sexes : [];
 
   return records.filter((record) => {
+    if (sexes.length && !sexes.includes(sexOf(record))) return false;
+    if (ageGroups.length && !ageGroups.includes(ageGroupOf(record))) {
+      return false;
+    }
     if (campus && record.campus !== campus) return false;
     if (college && record.college !== college) return false;
     if (course && record.course !== course) return false;
     if (yearLevel && record.yearLevel !== yearLevel) return false;
     if (studentType && !matchesStudentType(record, studentType)) return false;
+    if (
+      Array.isArray(filters.demographics) &&
+      filters.demographics.length &&
+      !filters.demographics.some((d) => matchesDemographic(record, d))
+    ) {
+      return false;
+    }
     if (schoolYear || semester) {
       const terms = record.terms || [];
       const enrolled = terms.some(
@@ -300,6 +326,14 @@ export function computeStudentStats(records = [], allRecords = records) {
       "year_level",
       YEAR_LEVEL_ORDER,
     ).filter((row) => row.year_level !== "Unspecified"),
+    byAgeGroup: groupBy(
+      records,
+      (r) => ageGroupOf(r),
+      "age_group",
+      AGE_GROUP_ORDER,
+    ).filter((row) => row.age_group !== "Unspecified"),
+    ageGroups: ageGroupOptions(allRecords),
+    sexes: SEXES,
     byStudentType: studentTypeRows(records, "type"),
     demographics: [
       ...studentTypeRows(records, "label").map(({ label, Female, Male, total }) => ({
@@ -316,6 +350,7 @@ export function computeStudentStats(records = [], allRecords = records) {
     semesters: ["1st", "2nd", "Summer"].filter((s) => semesterSet.has(s)),
     yearLevels: YEAR_LEVEL_ORDER,
     studentTypes: STUDENT_TYPE_ORDER,
+    demographicOptions: [...STUDENT_TYPE_ORDER, "Solo Parent"],
     campuses: CAMPUS_ORDER,
   };
 }

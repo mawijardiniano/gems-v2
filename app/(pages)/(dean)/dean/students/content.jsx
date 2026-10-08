@@ -12,6 +12,11 @@ import {
   TableRow,
 } from "flowbite-react";
 import useFetchData from "@/hooks/useSample";
+import { SAMPLE_STUDENT_LIST_ROWS } from "@/app/(pages)/(event)/gender-statistics/components/sampleProfileRecords";
+import {
+  SampleToggle,
+  SampleDataNotice,
+} from "@/app/(pages)/(event)/gender-statistics/components/SampleToggle";
 import StudentFilterTable from "./components/StudentFilterTable";
 import { useSelector } from "react-redux";
 import {
@@ -24,7 +29,10 @@ import {
 } from "react-icons/fa";
 
 export default function StudentsUserListContent({ college }) {
-  const { data: rawData, loading } = useFetchData();
+  /* Sample mode is the default view; live fetching stays parked while on. */
+  const [useSample, setUseSample] = useState(true);
+  const { data: liveData, loading } = useFetchData(!useSample);
+  const rawData = useSample ? SAMPLE_STUDENT_LIST_ROWS : liveData;
   const [filterSex, setFilterSex] = useState("");
   const [filterYearLevel, setFilterYearLevel] = useState("");
   const [filterSchoolYear, setFilterSchoolYear] = useState("");
@@ -838,6 +846,17 @@ export default function StudentsUserListContent({ college }) {
 
   return (
     <div className="p-6">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <SampleToggle
+          useSample={useSample}
+          onToggle={() => setUseSample((prev) => !prev)}
+        />
+      </div>
+      {useSample && (
+        <div className="mb-3">
+          <SampleDataNotice />
+        </div>
+      )}
       <div className="flex justify-end">
         <div className="flex">
           <StudentFilterTable

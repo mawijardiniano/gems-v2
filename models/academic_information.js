@@ -7,7 +7,7 @@ const academicInformationSchema = new Schema(
     },
     campus: {
       type: String,
-      enum: ["Boac", "Gasan", "Sta. Cruz"],
+      enum: ["Boac", "Gasan", "Sta. Cruz", "Torrijos"],
     },
 
     college: {
@@ -26,6 +26,7 @@ const academicInformationSchema = new Schema(
         "College of Governance",
         "College of Industrial Technology",
         "College of Information and Computing Sciences",
+        "Laboratory School",
       ],
     },
     course: {

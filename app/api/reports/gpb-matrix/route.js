@@ -392,6 +392,12 @@ export async function GET(req) {
             pageHeight - 2,
             { align: "right" },
           );
+          doc.text(
+            "System-generated via GEMS",
+            M,
+            pageHeight - 2,
+            { align: "left" },
+          );
         }
 
         const pdfArrayBuffer = doc.output("arraybuffer");

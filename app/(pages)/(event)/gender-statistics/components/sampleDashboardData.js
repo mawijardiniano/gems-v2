@@ -4,7 +4,7 @@
  * The role dashboards (president, planning director, admin and dean) all render
  * the same snapshot / gender panel / demographics payload the API returns. When
  * their "Sample data" toggle is on, this module rebuilds that payload from the
- * synthetic records in studentSampleRecords.js and employeeSampleRecords.js,
+ * named sample profiles in sampleProfileRecords.js,
  * applying the same filters the API accepts so every card and chart keeps its
  * shape without touching the database.
  *
@@ -19,9 +19,9 @@
 
 import {
   SAMPLE_SCHOOL_YEARS,
-  SAMPLE_STUDENT_RECORDS,
-} from "./studentSampleRecords.js";
-import { SAMPLE_EMPLOYEE_RECORDS } from "./employeeSampleRecords.js";
+  SAMPLE_STUDENT_PROFILE_RECORDS as SAMPLE_STUDENT_RECORDS,
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS as SAMPLE_EMPLOYEE_RECORDS,
+} from "./sampleProfileRecords.js";
 import { APPOINTMENT_ORDER, CATEGORY_ORDER } from "./employeeStats.js";
 
 const UNKNOWN = "Unknown";

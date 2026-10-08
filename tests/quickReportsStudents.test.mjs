@@ -1,8 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { computeStudentStats } from "../app/(pages)/(event)/gender-statistics/components/studentStats.js";
+import { SAMPLE_STUDENT_PROFILE_RECORDS } from "../app/(pages)/(event)/gender-statistics/components/sampleProfileRecords.js";
 
 import {
   STUDENT_QUICK_REPORT_OPTIONS,
@@ -15,22 +14,7 @@ import {
   studentReportMeta,
 } from "../app/(pages)/(event)/gender-statistics/components/quickReportsStudents.js";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const sample = JSON.parse(
-  readFileSync(
-    path.join(
-      here,
-      "..",
-      "app",
-      "(pages)",
-      "(event)",
-      "gender-statistics",
-      "data",
-      "sample-students.json",
-    ),
-    "utf8",
-  ),
-);
+const sample = computeStudentStats(SAMPLE_STUDENT_PROFILE_RECORDS);
 
 // ─── Report registry ────────────────────────────────────────────────
 
@@ -102,15 +86,15 @@ test("buildIntersectionTable: within-group share plus share of all women", () =>
   ]);
 
   const scholars = body.find((row) => row[0] === "Scholar");
-  assert.strictEqual(scholars[1], 486);
-  assert.strictEqual(scholars[2], "54.7%");
-  assert.strictEqual(scholars[3], 402);
-  /* 486 of the 2,097 female students are scholars. */
-  assert.strictEqual(scholars[6], "23.2%");
-  assert.strictEqual(scholars[7], "Female-leaning");
+  assert.strictEqual(scholars[1], 364);
+  assert.strictEqual(scholars[2], "60.5%");
+  assert.strictEqual(scholars[3], 238);
+  /* 364 of the 1,414 female students are scholars. */
+  assert.strictEqual(scholars[6], "25.7%");
+  assert.strictEqual(scholars[7], "Female-dominated");
 
   const highs = body.find((row) => row[0] === "High Income");
-  assert.strictEqual(highs[6], "14.6%");
+  assert.strictEqual(highs[6], "7.3%");
 });
 
 // ─── Multi-year table ───────────────────────────────────────────────
@@ -123,21 +107,21 @@ test("buildYearOverYearTable: yearly rows, deltas and an average row", () => {
   /* Five academic years plus the average summary row. */
   assert.strictEqual(body.length, 6);
 
-  assert.deepStrictEqual(body[0].slice(0, 3), ["2020-2021", 1775, 1125]);
+  assert.deepStrictEqual(body[0].slice(0, 3), ["2020-2021", 1197, 758]);
   /* The first year has nothing to compare against. */
   assert.strictEqual(body[0][5], "-");
   assert.strictEqual(body[0][6], "-");
 
-  assert.deepStrictEqual(body[1].slice(0, 2), ["2021-2022", 1865]);
-  assert.strictEqual(body[1][5], "+155");
-  assert.strictEqual(body[1][6], "+90");
-  assert.strictEqual(body[1][4], "61%");
+  assert.deepStrictEqual(body[1].slice(0, 2), ["2021-2022", 1258]);
+  assert.strictEqual(body[1][5], "+105");
+  assert.strictEqual(body[1][6], "+61");
+  assert.strictEqual(body[1][4], "61.1%");
 
   const average = body[body.length - 1];
   assert.strictEqual(average[0], "Average per academic year");
-  assert.strictEqual(average[1], 1942);
-  assert.strictEqual(average[3], 3176);
-  assert.strictEqual(average[4], "61.1%");
+  assert.strictEqual(average[1], 1310);
+  assert.strictEqual(average[3], 2141);
+  assert.strictEqual(average[4], "61.2%");
 });
 
 test("buildYearOverYearTable: sorts unsorted years and handles an empty list", () => {

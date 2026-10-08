@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { getSocket } from "@/utils/socket";
 
-export default function useFetchData() {
+export default function useFetchData(enabled = true) {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   const normalizeProfile = (d) => ({
     ...d,
@@ -30,10 +30,16 @@ export default function useFetchData() {
       }
     };
 
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     fetchData();
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     const socket = getSocket();
     if (!socket) return;
 
@@ -63,7 +69,7 @@ export default function useFetchData() {
       socket.off("profile:updated", handleUpdate);
       socket.off("profile:deleted", handleDelete);
     };
-  }, []);
+  }, [enabled]);
 
   return { data, loading };
 }

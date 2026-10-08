@@ -1,3 +1,4 @@
+import { ageGroupOf, ageGroupOptions, AGE_GROUP_ORDER } from "./ageGroups.js";
 
 export const LIVE_PERSONNEL_TYPES = ["Faculty", "Non-teaching Personnel"];
 
@@ -107,11 +108,16 @@ export const EMPTY_EMPLOYEE_FILTERS = {
   department: "",
   appointmentStatus: "",
   positionLevel: "",
+  demographics: [],
   schoolYear: "",
+  ageGroups: [],
+  sexes: [],
 };
 
 export function activeFilterCount(filters = {}) {
-  return Object.values(filters).filter(Boolean).length;
+  return Object.values(filters).filter((value) =>
+    Array.isArray(value) ? value.length > 0 : Boolean(value),
+  ).length;
 }
 
 export function filterEmployeeRecords(records = [], filters = {}) {
@@ -123,8 +129,14 @@ export function filterEmployeeRecords(records = [], filters = {}) {
     positionLevel,
     schoolYear,
   } = filters;
+  const ageGroups = Array.isArray(filters.ageGroups) ? filters.ageGroups : [];
+  const sexes = Array.isArray(filters.sexes) ? filters.sexes : [];
 
   return records.filter((record) => {
+    if (sexes.length && !sexes.includes(sexOf(record))) return false;
+    if (ageGroups.length && !ageGroups.includes(ageGroupOf(record))) {
+      return false;
+    }
     if (personnelType && record.personnelType !== personnelType) return false;
     if (office && record.office !== office) return false;
     if (department && record.department !== department) return false;
@@ -132,6 +144,12 @@ export function filterEmployeeRecords(records = [], filters = {}) {
       return false;
     }
     if (positionLevel && record.positionLevel !== positionLevel) return false;
+    if (Array.isArray(filters.demographics) && filters.demographics.length) {
+      const matched = filters.demographics.some((label) =>
+        DEMOGRAPHIC_ROWS.some((row) => row.label === label && row.test(record)),
+      );
+      if (!matched) return false;
+    }
     /* Academic year narrows through the appointment history. */
     if (schoolYear && !(record.years || []).includes(schoolYear)) return false;
     return true;
@@ -284,6 +302,15 @@ export function computeEmployeeStats(records = [], allRecords = records) {
       "status",
       APPOINTMENT_ORDER,
     ).filter((row) => row.status !== "Unspecified"),
+    byAgeGroup: groupBy(
+      records,
+      (r) => ageGroupOf(r),
+      "age_group",
+      AGE_GROUP_ORDER,
+    ).filter((row) => row.age_group !== "Unspecified"),
+    ageGroups: ageGroupOptions(allRecords),
+    demographicOptions: DEMOGRAPHIC_ROWS.map((row) => row.label),
+    sexes: SEXES,
     byAcademicYear,
     schoolYears,
     byGenderIdentity: genderIdentityRows(records),

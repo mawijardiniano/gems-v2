@@ -152,7 +152,7 @@ export default function DeanDashboardContent() {
               snapshot={activeData?.snapshot}
               serverYearGenderData={activeData?.studentYearGenderData}
             />
-            <GenderPanel genderPanel={activeData?.employeeGenderPanel} />
+            <GenderPanel genderPanel={activeData?.genderPanel} />
             <Demographics
               demographics={activeData?.demographics}
               serverStudentProgramData={activeData?.studentProgramData}

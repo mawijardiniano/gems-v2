@@ -1,7 +1,10 @@
 import {
-  SAMPLE_EMPLOYEE_COUNT,
-  SAMPLE_EMPLOYEE_RECORDS,
-} from "../gender-statistics/components/employeeSampleRecords.js";
+  SAMPLE_EMPLOYEE_PROFILE_COUNT as SAMPLE_EMPLOYEE_COUNT,
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS as SAMPLE_EMPLOYEE_RECORDS,
+  SAMPLE_SCHOOL_YEARS,
+  SAMPLE_STUDENT_PROFILE_COUNT as SAMPLE_STUDENT_COUNT,
+  SAMPLE_STUDENT_PROFILE_RECORDS as SAMPLE_STUDENT_RECORDS,
+} from "../gender-statistics/components/sampleProfileRecords.js";
 import {
   computeEmployeeStats,
   filterEmployeeRecords,
@@ -11,11 +14,6 @@ import {
   generateQuickReport,
   quickReportFilename,
 } from "../gender-statistics/components/quickReports.js";
-import {
-  SAMPLE_SCHOOL_YEARS,
-  SAMPLE_STUDENT_COUNT,
-  SAMPLE_STUDENT_RECORDS,
-} from "../gender-statistics/components/studentSampleRecords.js";
 import {
   computeStudentStats,
   filterStudentRecords,

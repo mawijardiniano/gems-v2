@@ -10,6 +10,23 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import {
+  MAX_GANTT_ACTIVITIES,
+  emptyActivity,
+  generateMilestonesFromGantt,
+  isMilestonesOutdated,
+  mergeMilestones,
+  toInputDate,
+} from "@/lib/gantt";
+import GanttEncodeTab from "./GanttEncodeTab";
+import GanttUploadTab from "./GanttUploadTab";
+import GanttTimeline from "./GanttTimeline";
+
+const CARD = "rounded-xl border border-gray-200 bg-white p-4 min-w-0";
+const CARD_TITLE =
+  "mb-3 text-sm font-semibold text-gray-800";
+const CARD_HEADER = "mb-3 flex flex-wrap items-center justify-between gap-2";
+const CARD_TITLE_INLINE = "text-sm font-semibold text-gray-800";
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
 
@@ -39,6 +56,7 @@ const emptyRow = () => ({
   actual_date: "",
   status: "pending",
   proofs: [],
+  source_activity: "",
 });
 
 const toDateInputValue = (value) => {
@@ -55,6 +73,8 @@ export default function MilestonesModal({
   userId,
   /* API base of the project module — defaults to the GAD project routes. */
   endpoint = "/api/project",
+  /* inline: render in-page (no overlay/header/cancel) instead of as a modal. */
+  inline = false,
   onClose,
   onSaved,
 }) {
@@ -75,8 +95,71 @@ export default function MilestonesModal({
       proofs: (Array.isArray(m.proofs) ? m.proofs : []).filter(
         (file) => file && (file.url || file.key),
       ),
+      source_activity: m.source_activity || "",
     }));
   });
+  const [activities, setActivities] = useState(() =>
+    (Array.isArray(project?.gantt_activities) ? project.gantt_activities : [])
+      .filter((a) => a && a.activity)
+      .map((a) => ({
+        activity: a.activity,
+        start_date: toInputDate(a.start_date),
+        end_date: toInputDate(a.end_date),
+        person_responsible: a.person_responsible || "",
+      })),
+  );
+
+  const timelineYear = useMemo(() => {
+    const source = project?.start_date || activities.find((a) => a.start_date)?.start_date;
+    const date = source ? new Date(source) : null;
+    if (date && !Number.isNaN(date.getTime())) return date.getFullYear();
+    return Number(project?.year) || new Date().getFullYear();
+  }, [project, activities]);
+
+  const milestonesOutdated = useMemo(
+    () => isMilestonesOutdated(activities, rows),
+    [activities, rows],
+  );
+
+  /* Replaces the milestone list with ones generated from the Gantt chart.
+     Proofs/status of milestones with the same title are kept. */
+  const regenerateMilestones = () => {
+    const generated = generateMilestonesFromGantt(activities);
+    if (generated.length === 0) {
+      setError(
+        "Add at least one activity with a name, start date, and end date first.",
+      );
+      return;
+    }
+    setError("");
+    const { milestones: next, removed } = mergeMilestones(
+      generated,
+      rows.filter((r) => r.title || r.target_date),
+    );
+    const lostProgress = removed.filter(
+      (r) => r.status === "completed" || (r.proofs || []).length > 0,
+    );
+    if (
+      lostProgress.length > 0 &&
+      !window.confirm(
+        `${lostProgress.length} milestone(s) with completed status or proofs no longer exist in the Gantt chart and will be removed:\n- ${lostProgress
+          .map((r) => r.title)
+          .join("\n- ")}\n\nContinue?`,
+      )
+    ) {
+      return;
+    }
+    setRows(next);
+    syncProofKeys(next);
+  };
+  const [editingActivity, setEditingActivity] = useState(null);
+
+  /* Appends a blank activity and opens it for editing. */
+  const addActivity = () => {
+    if (activities.length >= MAX_GANTT_ACTIVITIES) return;
+    setActivities([...activities, emptyActivity()]);
+    setEditingActivity(activities.length);
+  };
   const [uploadingRow, setUploadingRow] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -222,6 +305,7 @@ export default function MilestonesModal({
           ? row.status
           : "pending",
         proofs: Array.isArray(row.proofs) ? row.proofs : [],
+        source_activity: row.source_activity || "",
       }))
       .filter((row) => row.title || row.target_date || row.actual_date);
 
@@ -252,7 +336,11 @@ export default function MilestonesModal({
       const res = await fetch(`${endpoint}/${project._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, milestones: cleaned }),
+        body: JSON.stringify({
+          userId,
+          milestones: cleaned,
+          gantt_activities: activities.filter((a) => a.activity.trim()),
+        }),
       });
 
       const data = await res.json();
@@ -263,8 +351,11 @@ export default function MilestonesModal({
       await fileLifecycle.commit();
       onSaved?.(
         Array.isArray(data.data?.milestones) ? data.data.milestones : cleaned,
+        Array.isArray(data.data?.gantt_activities)
+          ? data.data.gantt_activities
+          : activities.filter((a) => a.activity.trim()),
       );
-      onClose();
+      if (!inline) onClose?.();
     } catch (err) {
       setError(err.message || "Failed to save milestones");
     } finally {
@@ -273,22 +364,36 @@ export default function MilestonesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className={
+        inline ? "" : "fixed inset-0 z-50 flex items-center justify-center p-4"
+      }
+    >
+      {!inline && (
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={closeAndCleanup}
+          aria-hidden="true"
+        />
+      )}
       <div
-        className="absolute inset-0 bg-black/50"
-        onClick={closeAndCleanup}
-        aria-hidden="true"
-      />
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in">
+        className={
+          inline
+            ? "w-full bg-white"
+            : "relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in"
+        }
+      >
         {/* Header */}
+        {!inline && (
         <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
           <div>
             <h3 className="text-base font-bold text-gray-900">
-              Update Milestones
+              Project Gantt Chart &amp; Milestones
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Track each milestone&apos;s target date, actual date, and status.
-              Completed milestones require at least one proof file.
+              Encode or upload the Gantt chart; activities and timelines
+              generate the milestones. Completed milestones require at least
+              one proof file.
             </p>
           </div>
           <button
@@ -300,8 +405,9 @@ export default function MilestonesModal({
             <FaTimes size={14} />
           </button>
         </div>
+        )}
 
-        <div className="p-5 space-y-4">
+        <div className={inline ? "space-y-4" : "p-5 space-y-4"}>
           {error && (
             <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
@@ -333,7 +439,95 @@ export default function MilestonesModal({
             </div>
           )}
 
+          {milestonesOutdated && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <span>
+                The Gantt chart changed. Milestones are out of date.
+              </span>
+              <button
+                type="button"
+                onClick={regenerateMilestones}
+                className="rounded-md border border-amber-300 bg-white px-2.5 py-1 font-medium text-amber-800 hover:bg-amber-100"
+              >
+                Apply to Milestones
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+          <section className={CARD}>
+            <div className={CARD_HEADER}>
+              <h4 className={CARD_TITLE_INLINE}>Encode Gantt Chart</h4>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={addActivity}
+                  disabled={activities.length >= MAX_GANTT_ACTIVITIES}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaPlus size={10} />
+                  Add Activity
+                </button>
+                <button
+                  type="button"
+                  onClick={regenerateMilestones}
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                >
+                  Generate Milestones
+                </button>
+              </div>
+            </div>
+            <GanttEncodeTab
+              activities={activities}
+              onChange={setActivities}
+              editingIndex={editingActivity}
+              onEditingChange={setEditingActivity}
+            />
+          </section>
+
+          <section className={CARD}>
+            <h4 className={CARD_TITLE}>Gantt Chart</h4>
+            <GanttTimeline activities={activities} year={timelineYear} />
+          </section>
+
+          <section className={CARD}>
+            <h4 className={CARD_TITLE}>Upload Gantt Chart</h4>
+            <GanttUploadTab
+              onApply={(parsed) => {
+                setActivities(parsed);
+              }}
+            />
+          </section>
+
+          <section className={CARD}>
+          <div className={CARD_HEADER}>
+            <h4 className={CARD_TITLE_INLINE}>
+              Generated Milestones ({rows.filter((r) => r.title).length})
+            </h4>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={regenerateMilestones}
+                className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+              >
+                Regenerate
+              </button>
+              <button
+                type="button"
+                onClick={addRow}
+                disabled={rows.length >= MAX_MILESTONES}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaPlus size={10} />
+                Add Milestone
+              </button>
+            </div>
+          </div>
           <div>
+            <p className="mb-2 text-xs text-gray-500">
+              Milestones are generated from the Gantt activities. You may edit
+              them as needed.
+            </p>
             <div className="flex items-center justify-between gap-2 mb-2">
               <label className="text-xs font-medium text-gray-500">
                 Milestones &amp; Activities
@@ -350,6 +544,9 @@ export default function MilestonesModal({
                     <th className="px-2.5 py-1.5 font-semibold">
                       Milestone / Activity
                     </th>
+                    <th className="px-2.5 py-1.5 font-semibold w-40">
+                      Source Activity
+                    </th>
                     <th className="px-2.5 py-1.5 font-semibold w-36">
                       Target Date
                     </th>
@@ -365,7 +562,7 @@ export default function MilestonesModal({
                   {rows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-2.5 py-5 text-center text-xs text-gray-400 italic"
                       >
                         No milestones yet — click “Add Milestone” to start.
@@ -387,6 +584,20 @@ export default function MilestonesModal({
                             }
                             className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                           />
+                        </td>
+                        <td className="px-2.5 py-2">
+                          {row.source_activity ? (
+                            <span
+                              className="block max-w-40 truncate text-xs text-gray-600"
+                              title={row.source_activity}
+                            >
+                              {row.source_activity}
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+                              Manual
+                            </span>
+                          )}
                         </td>
                         <td className="px-2.5 py-1.5">
                           <input
@@ -508,28 +719,27 @@ export default function MilestonesModal({
                 </tbody>
               </table>
             </div>
-
-            <button
-              type="button"
-              onClick={addRow}
-              disabled={rows.length >= MAX_MILESTONES}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FaPlus size={10} />
-              Add Milestone
-            </button>
           </div>
-
+          </section>
+          </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-3.5 flex items-center justify-end gap-3 rounded-b-2xl">
-          <button
-            type="button"
-            onClick={closeAndCleanup}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
+        <div
+          className={
+            inline
+              ? "mt-4 border-t border-gray-100 pt-3.5 flex items-center justify-end gap-3"
+              : "sticky bottom-0 bg-white border-t border-gray-100 px-5 py-3.5 flex items-center justify-end gap-3 rounded-b-2xl"
+          }
+        >
+          {!inline && (
+            <button
+              type="button"
+              onClick={closeAndCleanup}
+              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
           <button
             type="button"
             onClick={saveMilestones}

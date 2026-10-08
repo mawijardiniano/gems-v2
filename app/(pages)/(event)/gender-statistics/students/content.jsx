@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { FaUserGraduate } from "react-icons/fa";
+import { FaUserGraduate, FaLightbulb, FaFileDownload } from "react-icons/fa";
+import { AGE_GROUP_ORDER } from "../components/ageGroups";
 import { COLLEGES, COLLEGE_TO_PROGRAMS } from "@/lib/colleges";
 import {
   useGenderStats,
@@ -13,6 +14,13 @@ import {
   StackedSexBar,
   StackedSexBarVertical,
   DemographicTable,
+  useGenderStatsByYears,
+  YearMultiSelect,
+  MultiSelect,
+  YearTotalsTable,
+  YearSexDonuts,
+  YearGroupedBars,
+  YearComparisonTable,
 } from "../components/GenderStatsShared";
 import {
   EMPTY_STUDENT_FILTERS,
@@ -23,9 +31,9 @@ import {
   filterStudentRecords,
 } from "../components/studentStats";
 import {
-  SAMPLE_STUDENT_COUNT,
-  SAMPLE_STUDENT_RECORDS,
-} from "../components/studentSampleRecords";
+  SAMPLE_STUDENT_PROFILE_COUNT as SAMPLE_STUDENT_COUNT,
+  SAMPLE_STUDENT_PROFILE_RECORDS as SAMPLE_STUDENT_RECORDS,
+} from "../components/sampleProfileRecords";
 import {
   STUDENT_QUICK_REPORT_OPTIONS,
   downloadStudentQuickReport,
@@ -41,15 +49,23 @@ const FILTER_LABELS = {
   course: "Program",
   yearLevel: "Year Level",
   studentType: "Student Type",
+  demographics: "Demographic Profile",
   schoolYear: "Academic Year",
   semester: "Semester",
+  ageGroups: "Age Group",
+  sexes: "Sex",
 };
 
 /** Human-readable one-liner of the active filters, printed on each PDF. */
 function buildFilterSummary(filters) {
   return Object.entries(filters || {})
-    .filter(([, value]) => Boolean(value))
-    .map(([key, value]) => `${FILTER_LABELS[key] || key}: ${value}`)
+    .filter(([, value]) =>
+      Array.isArray(value) ? value.length > 0 : Boolean(value),
+    )
+    .map(
+      ([key, value]) =>
+        `${FILTER_LABELS[key] || key}: ${Array.isArray(value) ? value.join(", ") : value}`,
+    )
     .join("; ");
 }
 
@@ -100,23 +116,47 @@ export default function StudentGenderStatsContent() {
   const [campus, setCampus] = useState("");
   const [college, setCollege] = useState("");
   const [course, setCourse] = useState("");
-  const [schoolYear, setSchoolYear] = useState("");
+  /* Selected academic years, ascending. The latest one drives the single-year
+     panels; two or more switch the page into comparison mode. */
+  const [schoolYears, setSchoolYears] = useState([]);
+  const schoolYear = schoolYears.length
+    ? schoolYears[schoolYears.length - 1]
+    : "";
   const [semester, setSemester] = useState("");
   const [yearLevel, setYearLevel] = useState("");
   const [studentType, setStudentType] = useState("");
+  const [demographics, setDemographics] = useState([]);
+  const [ageGroups, setAgeGroups] = useState([]);
+  const [sexes, setSexes] = useState([]);
   const [useSample, setUseSample] = useState(true);
 
   const params = useMemo(
     () => ({
+      ...(ageGroups.length ? { age_group: ageGroups.join(",") } : {}),
+      ...(sexes.length ? { sex: sexes.join(",") } : {}),
       ...(campus ? { campus } : {}),
       ...(college ? { college } : {}),
       ...(course ? { course } : {}),
       ...(schoolYear ? { school_year: schoolYear } : {}),
       ...(semester ? { semester } : {}),
       ...(yearLevel ? { year_level: yearLevel } : {}),
-      ...(studentType ? { student_type: studentType } : {}),
+      ...(studentType ? { student_type: studentType } : {}),
+      ...(demographics.length
+        ? { demographic: demographics.join(",") }
+        : {}),
     }),
-    [campus, college, course, schoolYear, semester, yearLevel, studentType],
+    [
+      campus,
+      college,
+      course,
+      schoolYear,
+      semester,
+      yearLevel,
+      studentType,
+      demographics,
+      ageGroups,
+      sexes,
+    ],
   );
 
   const { data, loading, error, refetch } = useGenderStats("students", params);
@@ -128,17 +168,31 @@ export default function StudentGenderStatsContent() {
       course,
       yearLevel,
       studentType,
+      demographics,
       schoolYear,
       semester,
+      ageGroups,
+      sexes,
     }),
-    [campus, college, course, yearLevel, studentType, schoolYear, semester],
+    [
+      campus,
+      college,
+      course,
+      yearLevel,
+      studentType,
+      demographics,
+      schoolYear,
+      semester,
+      ageGroups,
+      sexes,
+    ],
   );
 
-  /* Demo dataset: individual records (../components/studentSampleRecords), so
+  /* Demo dataset: individual records (../components/sampleProfileRecords), so
      every filter - including year level and student type - re-aggregates the
-     same way the API would. The JSON snapshot in ../data/sample-students.json
+     same way the API would. The JSON snapshot in data/sample-profiles.json
      is only a fixture for tests/scripts; regenerate it with
-     `node scripts/generate-sample-students.mjs`. */
+     `node scripts/generate-sample-profiles.mjs`. */
   const filteredSampleRecords = useMemo(
     () => filterStudentRecords(SAMPLE_STUDENT_RECORDS, filters),
     [filters],
@@ -149,6 +203,36 @@ export default function StudentGenderStatsContent() {
   );
 
   const activeData = useSample ? sampleStats : data;
+
+  /* Comparison mode: one stats payload per selected year. Sample mode
+     re-aggregates the records; live mode fires one request per year. */
+  const comparing = schoolYears.length >= 2;
+  const sampleYearStats = useMemo(() => {
+    if (!useSample || !comparing) return [];
+    return schoolYears.map((year) => ({
+      year,
+      stats: computeStudentStats(
+        filterStudentRecords(SAMPLE_STUDENT_RECORDS, {
+          ...filters,
+          schoolYear: year,
+        }),
+        SAMPLE_STUDENT_RECORDS,
+      ),
+    }));
+  }, [useSample, comparing, schoolYears, filters]);
+
+  const liveBaseParams = useMemo(() => {
+    const { school_year, ...rest } = params;
+    return rest;
+  }, [params]);
+  const live = useGenderStatsByYears(
+    "students",
+    liveBaseParams,
+    schoolYears,
+    !useSample && comparing,
+  );
+  const perYear = useSample ? sampleYearStats : live.results;
+  const showComparison = comparing && perYear.length >= 2;
 
   const programOptions = useMemo(() => {
     if (college && COLLEGE_TO_PROGRAMS[college]) return COLLEGE_TO_PROGRAMS[college];
@@ -190,20 +274,10 @@ export default function StudentGenderStatsContent() {
   useEffect(() => {
     const years = activeData?.schoolYears || [];
     if (!years.length) return;
-    if (!schoolYear || !years.includes(schoolYear)) setSchoolYear(years[0]);
-  }, [activeData, schoolYear]);
-
-  /* Semester always resolves to a term that exists in the selected AY. The 2nd
-     semester is the busiest term, so it is the default; a Summer-only option
-     list must not open the page on the smallest slice of the year. */
-  useEffect(() => {
-    const list = activeData?.semesters || [];
-    if (schoolYear && list.length > 0 && !list.includes(semester)) {
-      const preferred =
-        ["2nd", "1st"].find((s) => list.includes(s)) || list[list.length - 1];
-      setSemester(preferred);
-    }
-  }, [activeData?.semesters, schoolYear, semester]);
+    const valid = schoolYears.filter((y) => years.includes(y));
+    if (valid.length === 0) setSchoolYears([years[0]]);
+    else if (valid.length !== schoolYears.length) setSchoolYears(valid);
+  }, [activeData, schoolYears]);
 
   const clearFilters = () => {
     setCampus(EMPTY_STUDENT_FILTERS.campus);
@@ -211,8 +285,11 @@ export default function StudentGenderStatsContent() {
     setCourse(EMPTY_STUDENT_FILTERS.course);
     setYearLevel(EMPTY_STUDENT_FILTERS.yearLevel);
     setStudentType(EMPTY_STUDENT_FILTERS.studentType);
-    setSchoolYear(EMPTY_STUDENT_FILTERS.schoolYear);
+    setDemographics([]);
+    setSchoolYears([]);
     setSemester(EMPTY_STUDENT_FILTERS.semester);
+    setAgeGroups([]);
+    setSexes([]);
   };
 
   return (
@@ -236,20 +313,11 @@ export default function StudentGenderStatsContent() {
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             Academic Year
           </label>
-          <select
-            value={schoolYear}
-            onChange={(e) => setSchoolYear(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          >
-            {schoolYearOptions.length === 0 && (
-              <option value="">No academic year data</option>
-            )}
-            {schoolYearOptions.map((y) => (
-              <option key={y} value={y}>
-                AY {y}
-              </option>
-            ))}
-          </select>
+          <YearMultiSelect
+            options={schoolYearOptions}
+            value={schoolYears}
+            onChange={setSchoolYears}
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
@@ -260,9 +328,7 @@ export default function StudentGenderStatsContent() {
             onChange={(e) => setSemester(e.target.value)}
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
-            {semesterOptions.length === 0 && (
-              <option value="">No semester data</option>
-            )}
+            <option value="">All Semesters</option>
             {semesterOptions.map((s) => (
               <option key={s} value={s}>
                 {s === "1st"
@@ -350,20 +416,39 @@ export default function StudentGenderStatsContent() {
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
-            Student Type
+            Demographic Profile
           </label>
-          <select
-            value={studentType}
-            onChange={(e) => setStudentType(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[16rem]"
-          >
-            <option value="">All Student Types</option>
-            {studentTypeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="Demographic Profile"
+            allLabel="All demographics"
+            options={activeData?.demographicOptions || []}
+            value={demographics}
+            onChange={setDemographics}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Age Group
+          </label>
+          <MultiSelect
+            label="Age Group"
+            allLabel="All Age Groups"
+            options={activeData?.ageGroups?.length ? activeData.ageGroups : AGE_GROUP_ORDER}
+            value={ageGroups}
+            onChange={setAgeGroups}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Sex
+          </label>
+          <MultiSelect
+            label="Sex"
+            allLabel="All Sexes"
+            options={activeData?.sexes || ["Female", "Male"]}
+            value={sexes}
+            onChange={setSexes}
+          />
         </div>
         <div className="flex flex-col">
           <label className="text-xs font-medium text-gray-500 mb-1 block">
@@ -404,7 +489,7 @@ export default function StudentGenderStatsContent() {
           {SAMPLE_STUDENT_COUNT.toLocaleString()} students with a five-year
           enrollment history (2020-2021 to 2024-2025), expanded into individual
           records from{" "}
-          <code className="mx-1">data/sample-students.json</code> so every
+          <code className="mx-1">data/sample-profiles.json</code> so every
           filter composes. Your database is not being read and nothing is saved
           - turn the toggle off to return to live data.
         </div>
@@ -435,6 +520,72 @@ export default function StudentGenderStatsContent() {
 
       {showContent && (
         <>
+          {comparing && !useSample && live.loading && (
+            <LoadingState label="Loading selected academic years…" />
+          )}
+          {comparing && !useSample && live.error && (
+            <ErrorState message={live.error} onRetry={refetch} />
+          )}
+          {showComparison ? (
+            <>
+              <YearTotalsTable perYear={perYear} what="Students" />
+              <YearSexDonuts perYear={perYear} />
+              <YearGroupedBars
+                title="Students by Academic Level"
+                perYear={perYear}
+                rowsOf={(s) => s.byLevel}
+                nameKey="level"
+              />
+              <YearGroupedBars
+                title="Students by Student Type"
+                perYear={perYear}
+                rowsOf={(s) => s.byStudentType}
+                nameKey="type"
+              />
+              <YearGroupedBars
+                title="Students by Year Level"
+                perYear={perYear}
+                rowsOf={(s) => s.byYearLevel}
+                nameKey="year_level"
+              />
+              <YearGroupedBars
+                title="Students by Age Group"
+                perYear={perYear}
+                rowsOf={(s) => s.byAgeGroup}
+                nameKey="age_group"
+              />
+              <YearGroupedBars
+                title="Students by College / Unit"
+                perYear={perYear}
+                rowsOf={(s) => s.byCollege}
+                nameKey="college"
+                height={320}
+              />
+              <StackedSexBarVertical
+                title="Enrollment by Academic Year and Sex"
+                data={activeData.byAcademicYear || []}
+                nameKey="school_year"
+              />
+              <YearComparisonTable
+                title="Top Programs by Gender Population"
+                perYear={perYear}
+                rowsOf={(s) => s.byProgram}
+                nameKey="program"
+                nameHeader="Program"
+              />
+              <YearComparisonTable
+                title="Demographic Profile (Institutional Data)"
+                perYear={perYear}
+                rowsOf={(s) => s.demographics}
+                nameKey="label"
+              />
+              <p className="text-xs text-gray-400">
+                Insights and quick reports below describe the latest selected
+                year (AY {schoolYear}).
+              </p>
+            </>
+          ) : (
+            <>
           <SummaryCards totals={totals} what="Students" deltas={deltas} />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -467,6 +618,12 @@ export default function StudentGenderStatsContent() {
               />
             )}
 
+          <StackedSexBarVertical
+                title="Students by Age Group and Sex"
+                data={activeData.byAgeGroup || []}
+                nameKey="age_group"
+              />
+
           <StackedSexBar
             title="Students by College / Unit and Sex"
             data={activeData.byCollege || []}
@@ -484,6 +641,8 @@ export default function StudentGenderStatsContent() {
             rows={activeData.demographics || []}
             total={totals.total}
           />
+            </>
+          )}
           <KeyInsightsCard insights={insights} />
           <QuickReportsCard
             data={activeData}
@@ -555,7 +714,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        ðŸ“Œ Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-amber-500" /> Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -605,7 +764,7 @@ function QuickReportsCard({ data, useSample = false, filters }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        â¬‡ Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-blue-600" /> Quick Reports
       </h3>
       <p className="text-xs text-gray-500 mt-1 mb-4">
         Each button generates its own separate PDF from the data currently

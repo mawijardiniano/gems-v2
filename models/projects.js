@@ -49,8 +49,19 @@ const fileMetaSchema = new Schema(
   { _id: false },
 );
 
+const GanttActivitySchema = new Schema(
+  {
+    activity: { type: String, required: true, trim: true },
+    start_date: { type: Date, default: null },
+    end_date: { type: Date, default: null },
+    person_responsible: { type: String, default: "", trim: true },
+  },
+  { _id: false },
+);
+
 const MilestoneSchema = new Schema(
   {
+    source_activity: { type: String, default: "", trim: true },
     title: {
       type: String,
       required: true,
@@ -127,6 +138,10 @@ const ProjectSchema = new Schema({
 
   milestones: {
     type: [MilestoneSchema],
+    default: [],
+  },
+  gantt_activities: {
+    type: [GanttActivitySchema],
     default: [],
   },
 

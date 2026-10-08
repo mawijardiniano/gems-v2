@@ -4,6 +4,12 @@ import { cacheOrSet } from "@/lib/cache";
 import { optionalAuth } from "@/lib/auth";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
+import {
+  AGE_GROUP_ORDER,
+  ageGroupOf,
+  ageGroupBirthdayRange,
+  parseListParam,
+} from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
 
 const CACHE_TTL = 60 * 1000;
 
@@ -253,8 +259,22 @@ function buildStats(profiles, type) {
     byEmploymentStatus = toList(statusCounts, "status");
   }
 
+  const ageCounts = {};
+  profiles.forEach((p) => {
+    const key = ageGroupOf({ birthday: p?.personal?.birthday });
+    if (!key) return;
+    if (!ageCounts[key]) ageCounts[key] = emptyCounts();
+    addCounts(ageCounts[key], sexOf(p));
+  });
+  const byAgeGroup = toList(ageCounts, "age_group").sort(
+    (a, b) =>
+      orderIndex(AGE_GROUP_ORDER, a.age_group) -
+      orderIndex(AGE_GROUP_ORDER, b.age_group),
+  );
+
   return {
     type,
+    byAgeGroup,
     totals: {
       Female: totals.Female,
       Male: totals.Male,
@@ -329,8 +349,26 @@ export async function GET(req) {
     const semester = url.searchParams.get("semester")?.trim();
     const yearLevel = url.searchParams.get("year_level")?.trim();
     const studentType = url.searchParams.get("student_type")?.trim();
+    /* Scholar is an academic field, so it only applies to students. Solo Parent
+       has no database field and is never offered live. */
+    const demographicOptions =
+      type === "students"
+        ? STUDENT_TYPES
+        : STUDENT_TYPES.filter((t) => t !== "Scholar");
+    const demographics = parseListParam(
+      url.searchParams.get("demographic"),
+    ).filter((d) => demographicOptions.includes(d));
 
-    const cacheKey = `gender-statistics:${type}:${campus || "all"}:${college || "all"}:${course || "all"}:${personnelType || "all"}:${appointmentStatus || "all"}:${schoolYear || "all"}:${semester || "all"}:${yearLevel || "all"}:${studentType || "all"}`;
+    const sexes = parseListParam(url.searchParams.get("sex")).filter((s) =>
+      ["Female", "Male"].includes(s),
+    );
+    const ageGroups = parseListParam(url.searchParams.get("age_group")).filter(
+      (g) => AGE_GROUP_ORDER.includes(g),
+    );
+    /* Bands are relative to today, so the day belongs in the cache key. */
+    const today = new Date().toISOString().slice(0, 10);
+
+    const cacheKey = `gender-statistics:${type}:${campus || "all"}:${college || "all"}:${course || "all"}:${personnelType || "all"}:${appointmentStatus || "all"}:${schoolYear || "all"}:${semester || "all"}:${yearLevel || "all"}:${studentType || "all"}:${[...sexes].sort().join("+") || "all"}:${[...ageGroups].sort().join("+") || "all"}:${ageGroups.length ? today : "-"}:${[...demographics].sort().join("+") || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -357,6 +395,25 @@ export async function GET(req) {
         }
         if (type === "students" && studentType && STUDENT_TYPE_FILTERS[studentType]) {
           Object.assign(match, STUDENT_TYPE_FILTERS[studentType]);
+        }
+
+        if (demographics.length) {
+          /* Any selected category matches; $and keeps it apart from the age $or. */
+          match.$and = [
+            {
+              $or: demographics.map((d) => STUDENT_TYPE_FILTERS[d]),
+            },
+          ];
+        }
+        if (sexes.length) match["gadData.sexAtBirth"] = { $in: sexes };
+        if (ageGroups.length) {
+          const now = new Date();
+          match.$or = ageGroups
+            .map((group) => ageGroupBirthdayRange(group, now))
+            .filter(Boolean)
+            .map((range) => ({
+              "personal.birthday": { $gt: range.gt, $lte: range.lte },
+            }));
         }
 
         const baseProfiles = await GemsProfile.find(match).lean();
@@ -397,7 +454,10 @@ export async function GET(req) {
           semesters,
           byAcademicYear,
           yearLevels: YEAR_LEVELS,
+          ageGroups: AGE_GROUP_ORDER,
+          sexes: ["Female", "Male"],
           studentTypes: STUDENT_TYPES,
+          demographicOptions,
         };
       },
       CACHE_TTL,

@@ -26,8 +26,10 @@ import {
   sampleReportSchoolYear,
   sampleReportSemester,
 } from "../app/(pages)/(event)/reports/sampleGenderProfiles.js";
-import { SAMPLE_EMPLOYEE_COUNT } from "../app/(pages)/(event)/gender-statistics/components/employeeSampleRecords.js";
-import { SAMPLE_STUDENT_COUNT } from "../app/(pages)/(event)/gender-statistics/components/studentSampleRecords.js";
+import {
+  SAMPLE_EMPLOYEE_PROFILE_COUNT as SAMPLE_EMPLOYEE_COUNT,
+  SAMPLE_STUDENT_PROFILE_COUNT as SAMPLE_STUDENT_COUNT,
+} from "../app/(pages)/(event)/gender-statistics/components/sampleProfileRecords.js";
 
 /* The Reports module (…/reports/content.jsx) renders its sample-based reports
    in the browser with these helpers instead of the live APIs, so the PDFs stay
@@ -113,11 +115,11 @@ test("isSampleQuickReport: true for every registry entry and nothing else", () =
 test("sampleGenderProfileSummary: names the sample dataset and its size", () => {
   assert.strictEqual(
     sampleGenderProfileSummary("employees"),
-    "Sample dataset - 1,016 employees (university-wide)",
+    "Sample dataset - 685 employees (university-wide)",
   );
   assert.strictEqual(
     sampleGenderProfileSummary("students"),
-    "Sample dataset - 3,425 students (university-wide)",
+    "Sample dataset - 2,309 students (university-wide)",
   );
 });
 
@@ -211,10 +213,10 @@ test("resolvedSampleSemester: the multi-year report ignores the selected semeste
 
   /* The same selection applied to a single-year student report does narrow. */
   const narrowed = sampleReportData("students", {
-    schoolYear: "2024-2025",
+    schoolYear: "2023-2024",
     semester: "Summer",
   });
-  assert.strictEqual(narrowed.totals.total, 202);
+  assert.strictEqual(narrowed.totals.total, 132);
   assert.notDeepStrictEqual(narrowed.byAcademicYear, full.byAcademicYear);
 });
 
@@ -244,7 +246,7 @@ test("sampleReportRecords: a year narrows each dataset to that snapshot", () => 
 test("sampleReportRecords: a semester narrows the student term history", () => {
   const year = "2022-2023";
   const yearOnly = sampleReportRecords("students", { schoolYear: year });
-  assert.strictEqual(yearOnly.length, 3185);
+  assert.strictEqual(yearOnly.length, 2148);
 
   const subsets = {
     "1st": sampleReportRecords("students", { schoolYear: year, semester: "1st" }),
@@ -252,9 +254,9 @@ test("sampleReportRecords: a semester narrows the student term history", () => {
     Summer: sampleReportRecords("students", { schoolYear: year, semester: "Summer" }),
   };
 
-  assert.strictEqual(subsets["1st"].length, 3179);
-  assert.strictEqual(subsets["2nd"].length, 2878);
-  assert.strictEqual(subsets.Summer.length, 182);
+  assert.strictEqual(subsets["1st"].length, 2146);
+  assert.strictEqual(subsets["2nd"].length, 1933);
+  assert.strictEqual(subsets.Summer.length, 127);
 
   for (const [semester, records] of Object.entries(subsets)) {
     records.forEach((record) => {
@@ -273,7 +275,7 @@ test("sampleReportRecords: a semester narrows the student term history", () => {
       .flat()
       .map((record) => record.id),
   );
-  assert.strictEqual(union.size, 3185);
+  assert.strictEqual(union.size, 2148);
 
   /* Employees have no semester dimension: passing one changes nothing. */
   assert.deepStrictEqual(
@@ -307,11 +309,11 @@ test("sampleReportData: the year narrows the figures and keeps every option", ()
 test("sampleReportData: a semester narrows the figures and keeps every option", () => {
   const allStudents = sampleReportData("students");
   const summer = sampleReportData("students", {
-    schoolYear: "2024-2025",
+    schoolYear: "2023-2024",
     semester: "Summer",
   });
 
-  assert.strictEqual(summer.totals.total, 202);
+  assert.strictEqual(summer.totals.total, 132);
   assert.ok(summer.totals.total < allStudents.totals.total);
 
   /* The option lists must survive the semester filter, exactly like the year
@@ -323,35 +325,35 @@ test("sampleReportData: a semester narrows the figures and keeps every option", 
 test("sampleGenderProfileSummary: appends the selected academic year", () => {
   assert.strictEqual(
     sampleGenderProfileSummary("employees", "2022-2023"),
-    "Sample dataset - 1,016 employees (university-wide) | Academic Year: 2022-2023",
+    "Sample dataset - 685 employees (university-wide) | Academic Year: 2022-2023",
   );
   assert.strictEqual(
     sampleGenderProfileSummary("students", "2022-2023"),
-    "Sample dataset - 3,425 students (university-wide); Academic Year: 2022-2023",
+    "Sample dataset - 2,309 students (university-wide); Academic Year: 2022-2023",
   );
   assert.strictEqual(
     sampleGenderProfileSummary("students", "2026-2027"),
-    "Sample dataset - 3,425 students (university-wide)",
+    "Sample dataset - 2,309 students (university-wide)",
   );
 });
 
 test("sampleGenderProfileSummary: appends the selected semester for students", () => {
   assert.strictEqual(
     sampleGenderProfileSummary("students", "2022-2023", "2nd"),
-    "Sample dataset - 3,425 students (university-wide); Academic Year: 2022-2023; Semester: 2nd",
+    "Sample dataset - 2,309 students (university-wide); Academic Year: 2022-2023; Semester: 2nd",
   );
   assert.strictEqual(
     sampleGenderProfileSummary("students", "", "Summer"),
-    "Sample dataset - 3,425 students (university-wide); Semester: Summer",
+    "Sample dataset - 2,309 students (university-wide); Semester: Summer",
   );
   /* An unknown semester is not named, and employees never carry one. */
   assert.strictEqual(
     sampleGenderProfileSummary("students", "2022-2023", "3rd"),
-    "Sample dataset - 3,425 students (university-wide); Academic Year: 2022-2023",
+    "Sample dataset - 2,309 students (university-wide); Academic Year: 2022-2023",
   );
   assert.strictEqual(
     sampleGenderProfileSummary("employees", "2022-2023", "2nd"),
-    "Sample dataset - 1,016 employees (university-wide) | Academic Year: 2022-2023",
+    "Sample dataset - 685 employees (university-wide) | Academic Year: 2022-2023",
   );
 });
 

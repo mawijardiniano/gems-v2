@@ -10,7 +10,7 @@
  */
 
 import { SAMPLE_DASHBOARD_POPULATION } from "./sampleDashboardData";
-import { SAMPLE_SCHOOL_YEARS } from "./studentSampleRecords";
+import { SAMPLE_SCHOOL_YEARS } from "./sampleProfileRecords";
 
 export function SampleToggle({ useSample, onToggle, className = "" }) {
   return (

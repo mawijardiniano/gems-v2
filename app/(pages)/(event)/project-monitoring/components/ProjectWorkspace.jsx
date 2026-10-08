@@ -27,6 +27,8 @@ import {
   summarizeBudget,
 } from "@/lib/budgetVisibility";
 import MilestonesModal from "./MilestonesModal";
+import GanttReadOnly from "./GanttReadOnly";
+
 import EditProjectModal from "./EditProjectModal";
 import ProjectDeleteModal from "./ProjectDeleteModal";
 import { getProjectModuleStatusMeta } from "@/lib/projectModules";
@@ -519,10 +521,31 @@ export default function ProjectWorkspace({ config }) {
 
             {detailTab === "milestones" && (
               <div className="animate-fade-in" role="tabpanel">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                {managementAllowed ? (
+                  <MilestonesModal
+                    inline
+                    key={`${project._id}-${(project.gantt_activities || []).length}-${milestones.length}`}
+                    project={project}
+                    userId={userId}
+                    endpoint={apiBase}
+                    onSaved={() => reload()}
+                  />
+                ) : (
+                  <div className="mb-4">
+                    <GanttReadOnly project={project} compact />
+                  </div>
+                )}
+
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2 ${
+                    managementAllowed ? "hidden" : ""
+                  }`}
+                >
                   Milestones
                 </p>
-                <ul className="space-y-1.5">
+                <ul
+                  className={`space-y-1.5 ${managementAllowed ? "hidden" : ""}`}
+                >
                   {milestones.map((milestone, index) => (
                     <li
                       key={`${project._id}-ms-${index}`}
@@ -555,10 +578,16 @@ export default function ProjectWorkspace({ config }) {
                             <FaPaperclip size={9} /> {milestone.proofs.length}
                           </span>
                         )}
+                      {milestone.source_activity && (
+                        <span className="basis-full pl-3.5 text-[11px] text-gray-400">
+                          from: {milestone.source_activity}
+                        </span>
+                      )}
+
                     </li>
                   ))}
                 </ul>
-                {milestones.length === 0 && (
+                {milestones.length === 0 && !managementAllowed && (
                   <p className="text-xs text-gray-400 italic">
                     No milestones recorded yet.
                   </p>
@@ -608,6 +637,17 @@ export default function ProjectWorkspace({ config }) {
             {detailTab === "accomplishment" && (
               <div className="animate-fade-in" role="tabpanel">
                 <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
+                  {milestones.length > 0 && (
+                    <p className="text-[11px] text-gray-500 mb-2">
+                      Milestone progress:{" "}
+                      <span className="font-medium text-gray-700">
+                        {milestoneDone}/{milestones.length} completed (
+                        {Math.round((milestoneDone / milestones.length) * 100)}
+                        %)
+                      </span>
+                    </p>
+                  )}
+
               <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                 Actual Accomplishment
               </p>
@@ -637,16 +677,6 @@ export default function ProjectWorkspace({ config }) {
                   >
                     <FaPen size={11} />
                     Edit Project
-                  </button>
-                )}
-                {managementAllowed && (
-                  <button
-                    type="button"
-                    onClick={() => setMilestoneProject(project)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <FaPen size={11} />
-                    Manage Milestones
                   </button>
                 )}
                 {creatorAllowed && (

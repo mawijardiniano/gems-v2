@@ -19,11 +19,36 @@ import {
   isSampleAllYearsReport,
   isSampleQuickReport,
 } from "./sampleGenderProfiles";
+import FieldMultiSelect from "./FieldMultiSelect";
+import {
+  PROFILE_POPULATIONS,
+  defaultProfileFields,
+  normalizeProfileFields,
+  profileFieldsFor,
+  profileMode,
+} from "./profileReportFields";
+import { downloadProfileReport, baseProfileRecords } from "./profileReport";
+import {
+  PROFILE_FILTER_KINDS,
+  normalizeProfileFilters,
+  profileFilterOptions,
+  profileFilterSummary,
+} from "./profileFilters";
+
+const PROFILE_REPORT = "gender-profile";
+const FLAG_FILTER_FIELDS = Object.keys(PROFILE_FILTER_KINDS).filter(
+  (key) => PROFILE_FILTER_KINDS[key] === "flag",
+);
 
 const REPORT_TYPES = [
   {
     value: "gar",
     label: "GAD Accomplishment Report (GAR)",
+    mode: "download",
+  },
+  {
+    value: PROFILE_REPORT,
+    label: "Gender Profile Report (Masterlist / Breakdown) — Sample",
     mode: "download",
   },
   {
@@ -120,7 +145,30 @@ export default function ReportsContent() {
   /* Semester for the student sample reports; "" keeps every term, matching the
      "All semesters" default. Employee reports have no semester history. */
   const [sampleSemester, setSampleSemester] = useState("");
-  const [reportType, setReportType] = useState("gar");
+  const [reportType, setReportType] = useState(PROFILE_REPORT);
+  /* Gender Profile Report: who is covered, which fields it lists/groups by,
+     and which values to include (filters). */
+  const [population, setPopulation] = useState("both");
+  const [profileFields, setProfileFields] = useState(
+    defaultProfileFields("both"),
+  );
+  const [profileFilters, setProfileFilters] = useState({});
+  const isProfile = reportType === PROFILE_REPORT;
+  const usesSample = isProfile || isSampleQuickReport(reportType);
+  /* Option lists and counts follow the population, year and semester. */
+  const profileFilterOptionsMemo = useMemo(
+    () =>
+      isProfile
+        ? profileFilterOptions(
+            population,
+            baseProfileRecords(population, {
+              schoolYear: sampleYear,
+              semester: population === "employees" ? "" : sampleSemester,
+            }),
+          )
+        : {},
+    [isProfile, population, sampleYear, sampleSemester],
+  );
   const [quarter, setQuarter] = useState("");
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState("");
@@ -178,6 +226,36 @@ export default function ReportsContent() {
     setStatus("");
     setError("");
     try {
+      if (type === PROFILE_REPORT) {
+        const fields = normalizeProfileFields(population, profileFields);
+        if (!fields.length) {
+          setError("Select at least one report field.");
+          return;
+        }
+        const filters = {
+          schoolYear: sampleYear,
+          semester: population === "employees" ? "" : sampleSemester,
+        };
+        await downloadProfileReport(
+          population,
+          filters,
+          fields,
+          normalizeProfileFilters(population, profileFilters),
+        );
+        const popLabel = PROFILE_POPULATIONS.find(
+          (p) => p.value === population,
+        )?.label;
+        setStatus(
+          `Gender Profile ${
+            profileMode(fields) === "masterlist" ? "Masterlist" : "Breakdown"
+          } (${popLabel}${sampleYear ? `, AY ${sampleYear}` : ", all sample years"}${
+            profileFilterSummary(population, profileFilters)
+              ? `; ${profileFilterSummary(population, profileFilters)}`
+              : ""
+          }) generated from sample data — download started.`,
+        );
+        return;
+      }
 
       if (isSampleQuickReport(type)) {
         /* The comparative multi-year report always spans the whole sample
@@ -273,7 +351,7 @@ export default function ReportsContent() {
 
     /* Sample-based gender profiles are generated in the browser and need no
        academic year; the database-backed reports do. */
-    if (!isSampleQuickReport(type.value) && !year) {
+    if (type.value !== PROFILE_REPORT && !isSampleQuickReport(type.value) && !year) {
       setError("Select an academic year first.");
       return;
     }
@@ -380,6 +458,54 @@ export default function ReportsContent() {
             </select>
           </div>
 
+          {isProfile && (
+            <>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Population
+                </label>
+                <select
+                  value={population}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setPopulation(next);
+                    setProfileFields(defaultProfileFields(next));
+                    setProfileFilters({});
+                    /* Employees carry no semester history. */
+                    if (next === "employees") setSampleSemester("");
+                  }}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                >
+                  {PROFILE_POPULATIONS.map((p) => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Report Fields
+                </label>
+                <FieldMultiSelect
+                  fields={profileFieldsFor(population)}
+                  value={profileFields}
+                  onChange={setProfileFields}
+                  filterOptions={profileFilterOptionsMemo}
+                  filters={profileFilters}
+                  flagFields={FLAG_FILTER_FIELDS}
+                  onFiltersChange={setProfileFilters}
+                />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Name selected → one row per person (masterlist). Name not
+                  selected → counts grouped by the selected fields, split by
+                  sex when Sex is selected.
+                </p>
+              </div>
+            </>
+          )}
+
           {/* Every report except the comparative multi-year one accepts an
               academic year: the database-backed reports use the GPB years, the
               sample-based reports the five-year sample window, where "All
@@ -399,7 +525,7 @@ export default function ReportsContent() {
                 so it has no academic-year filter.
               </p>
             </div>
-          ) : isSampleQuickReport(reportType) ? (
+          ) : usesSample ? (
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
                 Academic Year
@@ -444,9 +570,10 @@ export default function ReportsContent() {
 
           {/* Student sample reports can also pin a semester; the sample term
               history is the only dataset that carries one. */}
-          {isSampleQuickReport(reportType) &&
-            !isSampleAllYearsReport(reportType) &&
-            SAMPLE_QUICK_REPORTS[reportType]?.source === "students" && (
+          {((isProfile && population !== "employees") ||
+            (isSampleQuickReport(reportType) &&
+              !isSampleAllYearsReport(reportType) &&
+              SAMPLE_QUICK_REPORTS[reportType]?.source === "students")) && (
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-1 block">
                   Semester
@@ -494,7 +621,7 @@ export default function ReportsContent() {
             </div>
           )}
 
-          {isSampleQuickReport(reportType) && (
+          {usesSample && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-800">
               Built in your browser from the sample dataset (same source as
               Gender Statistics → Quick Reports), so every figure is complete.
@@ -508,7 +635,7 @@ export default function ReportsContent() {
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={generating || (!isSampleQuickReport(reportType) && !year)}
+            disabled={generating || (!usesSample && !year)}
             className="w-full rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {generating && (
@@ -533,7 +660,7 @@ export default function ReportsContent() {
 
         {/* The readiness check reads the live database for a specific academic
             year — it does not apply to the sample-based reports. */}
-        {!isSampleQuickReport(reportType) && (
+        {!usesSample && (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Data Readiness

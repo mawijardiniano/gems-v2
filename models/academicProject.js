@@ -9,6 +9,7 @@ import {
 import {
   FieldSchema,
   MilestoneSchema,
+  GanttActivitySchema,
   buildCommentSchema,
   applyReferenceNumberIndex,
   fileMetaSchema,
@@ -82,6 +83,10 @@ const AcademicProjectSchema = new Schema({
 
   milestones: {
     type: [MilestoneSchema],
+    default: [],
+  },
+  gantt_activities: {
+    type: [GanttActivitySchema],
     default: [],
   },
 

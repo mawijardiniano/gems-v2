@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -490,4 +490,497 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
   );
 }
 
+
+/* == Multi-year comparison ============================================= */
+
+export const YEAR_COLORS = [
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#8b5cf6",
+];
+
+const yearColor = (index) => YEAR_COLORS[index % YEAR_COLORS.length];
+
+/** One stats request per selected academic year (live data). `params` must not
+    contain `school_year`; it is set per request. */
+export function useGenderStatsByYears(type, params, years, enabled = true) {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const key = JSON.stringify([type, params || {}, years, enabled]);
+
+  useEffect(() => {
+    if (!enabled || years.length < 2) {
+      setResults([]);
+      setLoading(false);
+      setError("");
+      return undefined;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    Promise.all(
+      years.map((year) => {
+        const query = new URLSearchParams({
+          type,
+          ...(params || {}),
+          school_year: year,
+        });
+        return axios
+          .get(`/api/analytics/gender-statistics?${query.toString()}`)
+          .then((res) => ({ year, stats: res.data || null }));
+      }),
+    )
+      .then((rows) => {
+        if (!cancelled) setResults(rows.filter((row) => row.stats));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setResults([]);
+        setError(
+          err?.response?.data?.message ||
+            "Failed to load gender statistics. Please try again.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  return { results, loading, error };
+}
+
+/** Checkbox dropdown for choosing one or more academic years. At least one
+    year always stays selected; `onChange` receives the years sorted ascending. */
+export function YearMultiSelect({ options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+
+  const toggle = (year) => {
+    const next = value.includes(year)
+      ? value.filter((y) => y !== year)
+      : [...value, year];
+    if (next.length === 0) return;
+    onChange([...next].sort());
+  };
+
+  const summary =
+    value.length === 0
+      ? "No academic year data"
+      : value.length === 1
+        ? `AY ${value[0]}`
+        : `${value.length} academic years`;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={options.length === 0}
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+      >
+        <span>{summary}</span>
+        <span className="text-xs text-gray-400">▾</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+            {options.map((year) => (
+              <label
+                key={year}
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(year)}
+                  onChange={() => toggle(year)}
+                />
+                AY {year}
+              </label>
+            ))}
+            <p className="px-2 pt-1 text-[11px] text-gray-400">
+              Select two or more years to compare them.
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+/** Generic checkbox dropdown. An empty `value` means "no restriction"
+    (all options), shown as `allLabel`. */
+export function MultiSelect({ label, options, value, onChange, allLabel }) {
+  const [open, setOpen] = useState(false);
+
+  const toggle = (option) => {
+    const next = value.includes(option)
+      ? value.filter((v) => v !== option)
+      : [...value, option];
+    onChange(options.filter((o) => next.includes(o)));
+  };
+
+  const summary =
+    value.length === 0
+      ? allLabel || `All ${label}`
+      : value.length <= 2
+        ? value.join(", ")
+        : `${value.length} selected`;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label}
+        disabled={options.length === 0}
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+      >
+        <span>{summary}</span>
+        <span className="text-xs text-gray-400">v</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+            {options.map((option) => (
+              <label
+                key={option}
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(option)}
+                  onChange={() => toggle(option)}
+                />
+                {option}
+              </label>
+            ))}
+            {value.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="px-2 pt-1 text-[11px] text-blue-600 hover:underline"
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+
+
+const rowTotalOf = (r) => r?.total ?? (r?.Female || 0) + (r?.Male || 0);
+
+/** Category names across all years, latest year first. */
+function unionNames(perYear, rowsOf, nameKey) {
+  const names = [];
+  const seen = new Set();
+  [...perYear].reverse().forEach(({ stats }) => {
+    (rowsOf(stats) || []).forEach((row) => {
+      const name = row?.[nameKey];
+      if (name == null || seen.has(name)) return;
+      seen.add(name);
+      names.push(name);
+    });
+  });
+  return names;
+}
+
+const findRow = (stats, rowsOf, nameKey, name) =>
+  (rowsOf(stats) || []).find((row) => row?.[nameKey] === name) || null;
+
+const signed = (n) => `${n > 0 ? "+" : ""}${n.toLocaleString()}`;
+
+/** Totals per selected year with the change against the previous selected year. */
+export function YearTotalsTable({ perYear, what = "Students" }) {
+  return (
+    <div className={CARD_CLS}>
+      <SectionTitle>{`${what} by Selected Academic Year`}</SectionTitle>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <th className="py-2 pr-3 font-medium">Academic Year</th>
+              <th className="py-2 pr-3 font-medium text-right">Female</th>
+              <th className="py-2 pr-3 font-medium text-right">Male</th>
+              <th className="py-2 pr-3 font-medium text-right">Total</th>
+              <th className="py-2 pr-3 font-medium text-right">% Female</th>
+              <th className="py-2 font-medium text-right">vs previous</th>
+            </tr>
+          </thead>
+          <tbody>
+            {perYear.map(({ year, stats }, i) => {
+              const t = stats?.totals || { Female: 0, Male: 0, total: 0 };
+              const prev = i > 0 ? perYear[i - 1].stats?.totals : null;
+              const change =
+                prev && prev.total > 0
+                  ? Math.round(((t.total - prev.total) / prev.total) * 1000) / 10
+                  : null;
+              return (
+                <tr key={year} className="border-b border-gray-50 last:border-0">
+                  <td className="py-2.5 pr-3 text-gray-700">
+                    <span
+                      className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: yearColor(i) }}
+                    />
+                    AY {year}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
+                    {t.Female.toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
+                    {t.Male.toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
+                    {t.total.toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-right text-xs text-gray-400">
+                    {t.pctFemale != null ? `${t.pctFemale}%` : "—"}
+                  </td>
+                  <td
+                    className={`py-2.5 text-right text-xs font-medium ${
+                      change == null
+                        ? "text-gray-300"
+                        : change < 0
+                          ? "text-red-500"
+                          : "text-emerald-600"
+                    }`}
+                  >
+                    {change == null ? "—" : `${change > 0 ? "+" : ""}${change}%`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** One small sex donut per selected year. */
+export function YearSexDonuts({ perYear }) {
+  return (
+    <div
+      className={`grid grid-cols-1 gap-5 ${
+        perYear.length >= 3 ? "xl:grid-cols-3" : "md:grid-cols-2"
+      }`}
+    >
+      {perYear.map(({ year, stats }) => (
+        <div key={year}>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            AY {year}
+          </p>
+          <SexDonut totals={stats?.totals || { Female: 0, Male: 0, total: 0 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+function YearBarTooltip({ active, payload, years }) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  return (
+    <div style={tooltipStyle} className="bg-white">
+      <p className="mb-1 font-semibold text-gray-900">{row.name}</p>
+      {years.map((year, i) => (
+        <p key={year} className="text-gray-600">
+          <span
+            className="mr-1.5 inline-block h-2 w-2 rounded-full"
+            style={{ backgroundColor: yearColor(i) }}
+          />
+          AY {year}: <strong>{(row[`total_${year}`] ?? 0).toLocaleString()}</strong>{" "}
+          (F {(row[`female_${year}`] ?? 0).toLocaleString()} · M{" "}
+          {(row[`male_${year}`] ?? 0).toLocaleString()})
+        </p>
+      ))}
+    </div>
+  );
+}
+
+/** Totals per category, one bar per selected year. The tooltip shows the
+    Female/Male split for every year. */
+export function YearGroupedBars({
+  title,
+  perYear,
+  rowsOf,
+  nameKey,
+  height = 280,
+}) {
+  const years = perYear.map((p) => p.year);
+  const names = unionNames(perYear, rowsOf, nameKey);
+  const data = names.map((name) => {
+    const row = { name };
+    perYear.forEach(({ year, stats }) => {
+      const found = findRow(stats, rowsOf, nameKey, name);
+      row[`total_${year}`] = found ? rowTotalOf(found) : 0;
+      row[`female_${year}`] = found?.Female || 0;
+      row[`male_${year}`] = found?.Male || 0;
+    });
+    return row;
+  });
+
+  return (
+    <div className={CARD_CLS}>
+      <SectionTitle>{title}</SectionTitle>
+      {data.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">No data available.</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart data={data} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 11, fill: "#6B7280" }}
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+              tickFormatter={(v) =>
+                String(v).length > 14 ? `${String(v).slice(0, 13)}…` : v
+              }
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: "#9CA3AF" }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <Tooltip
+              cursor={{ fill: "rgba(243,244,246,0.5)" }}
+              content={<YearBarTooltip years={years} />}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {years.map((year, i) => (
+              <Bar
+                key={year}
+                dataKey={`total_${year}`}
+                name={`AY ${year}`}
+                fill={yearColor(i)}
+                radius={[4, 4, 0, 0]}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+
+/** Table with a Female / Male / Total column group per selected year and the
+    total change between the first and last selected year. */
+export function YearComparisonTable({
+  title,
+  perYear,
+  rowsOf,
+  nameKey,
+  nameHeader = "Category",
+}) {
+  const names = unionNames(perYear, rowsOf, nameKey);
+  const first = perYear[0];
+  const last = perYear[perYear.length - 1];
+
+  return (
+    <div className={CARD_CLS}>
+      <SectionTitle>{title}</SectionTitle>
+      {names.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">No data available.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs uppercase tracking-wider text-gray-400">
+                <th rowSpan={2} className="py-2 pr-3 font-medium align-bottom">
+                  {nameHeader}
+                </th>
+                {perYear.map(({ year }, i) => (
+                  <th
+                    key={year}
+                    colSpan={3}
+                    className="px-2 pt-2 text-center font-semibold"
+                    style={{ color: yearColor(i) }}
+                  >
+                    AY {year}
+                  </th>
+                ))}
+                <th rowSpan={2} className="py-2 pl-3 font-medium text-right align-bottom">
+                  Change
+                </th>
+              </tr>
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+                {perYear.map(({ year }) => (
+                  <Fragment key={year}>
+                    <th className="px-2 pb-2 font-medium text-right">F</th>
+                    <th className="px-2 pb-2 font-medium text-right">M</th>
+                    <th className="px-2 pb-2 font-medium text-right">Total</th>
+                  </Fragment>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {names.map((name) => {
+                const firstTotal = rowTotalOf(
+                  findRow(first.stats, rowsOf, nameKey, name),
+                );
+                const lastTotal = rowTotalOf(
+                  findRow(last.stats, rowsOf, nameKey, name),
+                );
+                const diff = lastTotal - firstTotal;
+                return (
+                  <tr key={name} className="border-b border-gray-50 last:border-0">
+                    <td className="py-2.5 pr-3 text-gray-700">{name}</td>
+                    {perYear.map(({ year, stats }) => {
+                      const row = findRow(stats, rowsOf, nameKey, name);
+                      return (
+                        <Fragment key={year}>
+                          <td className="px-2 py-2.5 text-right text-pink-600 font-medium">
+                            {(row?.Female || 0).toLocaleString()}
+                          </td>
+                          <td className="px-2 py-2.5 text-right text-blue-600 font-medium">
+                            {(row?.Male || 0).toLocaleString()}
+                          </td>
+                          <td className="px-2 py-2.5 text-right font-semibold text-gray-900">
+                            {rowTotalOf(row).toLocaleString()}
+                          </td>
+                        </Fragment>
+                      );
+                    })}
+                    <td
+                      className={`py-2.5 pl-3 text-right text-xs font-medium ${
+                        diff < 0
+                          ? "text-red-500"
+                          : diff > 0
+                            ? "text-emerald-600"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      {signed(diff)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 

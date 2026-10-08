@@ -25,6 +25,8 @@ import {
 } from "react-icons/fa";
 import ActualsEncoderModal from "../components/ActualsEncoderModal";
 import DetailTabs from "../components/DetailTabs";
+import GanttReadOnly from "../components/GanttReadOnly";
+
 import MilestonesModal from "../components/MilestonesModal";
 import ParticipantBreakdown from "../components/ParticipantBreakdown";
 import ParticipantTargetProgress from "../components/ParticipantTargetProgress";
@@ -510,11 +512,17 @@ export default function GADProjectsMonitoringContent() {
     setExpandedId(null);
   };
 
-  const handleMilestonesSaved = (projectId, savedMilestones) => {
+  const handleMilestonesSaved = (projectId, savedMilestones, savedActivities) => {
     setProjects((prev) =>
       prev.map((p) =>
         String(p._id) === String(projectId)
-          ? { ...p, milestones: savedMilestones }
+          ? {
+              ...p,
+              milestones: savedMilestones,
+              ...(Array.isArray(savedActivities)
+                ? { gantt_activities: savedActivities }
+                : {}),
+            }
           : p,
       ),
     );
@@ -759,8 +767,12 @@ export default function GADProjectsMonitoringContent() {
           project={milestoneModalProject}
           userId={userId}
           onClose={() => setMilestoneModalProject(null)}
-          onSaved={(savedMilestones) =>
-            handleMilestonesSaved(milestoneModalProject._id, savedMilestones)
+          onSaved={(savedMilestones, savedActivities) =>
+            handleMilestonesSaved(
+              milestoneModalProject._id,
+              savedMilestones,
+              savedActivities,
+            )
           }
         />
       )}
@@ -1537,22 +1549,25 @@ export default function GADProjectsMonitoringContent() {
                                       <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                                         Milestones
                                       </p>
-                                      {canManage && (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setMilestoneModalProject(project);
-                                          }}
-                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
-                                        >
-                                          <FaPen size={10} />
-                                          {milestones.length > 0
-                                            ? "Update Milestones"
-                                            : "Add Milestones"}
-                                        </button>
-                                      )}
                                     </div>
+
+                                    {canManage ? (
+                                      <MilestonesModal
+                                        inline
+                                        key={`${project._id}-${(project.gantt_activities || []).length}-${milestones.length}`}
+                                        project={project}
+                                        userId={userId}
+                                        onSaved={(savedMilestones, savedActivities) =>
+                                          handleMilestonesSaved(
+                                            project._id,
+                                            savedMilestones,
+                                            savedActivities,
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      <GanttReadOnly project={project} />
+                                    )}
 
                                     
 
@@ -1561,7 +1576,11 @@ export default function GADProjectsMonitoringContent() {
 
 
                                         
-                                      <div className="space-y-2">
+                                      <div
+                                        className={
+                                          canManage ? "hidden" : "space-y-2"
+                                        }
+                                      >
                                         {milestones.length > 0 ? (
                                           <>
                                             <div className="overflow-x-auto rounded-lg border border-gray-100">
@@ -1583,6 +1602,10 @@ export default function GADProjectsMonitoringContent() {
                                                     <th className="px-2 py-1.5 font-semibold">
                                                       Proof
                                                     </th>
+                                                    <th className="px-2 py-1.5 font-semibold">
+                                                      Source Activity
+                                                    </th>
+
                                                   </tr>
                                                 </thead>
                                                 <tbody>
@@ -1683,6 +1706,10 @@ export default function GADProjectsMonitoringContent() {
                                                             </span>
                                                           )}
                                                         </td>
+                                                        <td className="px-2 py-2 text-xs text-gray-600">
+                                                          {m.source_activity || "—"}
+                                                        </td>
+
                                                       </tr>
                                                     );
                                                   })}

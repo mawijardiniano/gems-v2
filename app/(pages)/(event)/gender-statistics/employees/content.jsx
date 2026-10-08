@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
-import { FaUserTie } from "react-icons/fa";
+import { FaUserTie, FaLightbulb, FaFileDownload } from "react-icons/fa";
+import { AGE_GROUP_ORDER } from "../components/ageGroups";
 import { OFFICE_OPTIONS } from "@/lib/colleges";
 import {
   useGenderStats,
@@ -12,6 +13,7 @@ import {
   GenderIdentityDonut,
   SexTable,
   DemographicTable,
+  MultiSelect,
 } from "../components/GenderStatsShared";
 import {
   APPOINTMENT_ORDER,
@@ -26,9 +28,9 @@ import {
   filterEmployeeRecords,
 } from "../components/employeeStats";
 import {
-  SAMPLE_EMPLOYEE_COUNT,
-  SAMPLE_EMPLOYEE_RECORDS,
-} from "../components/employeeSampleRecords";
+  SAMPLE_EMPLOYEE_PROFILE_COUNT as SAMPLE_EMPLOYEE_COUNT,
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS as SAMPLE_EMPLOYEE_RECORDS,
+} from "../components/sampleProfileRecords";
 import {
   QUICK_REPORT_OPTIONS,
   downloadQuickReport,
@@ -101,18 +103,32 @@ export default function EmployeeGenderStatsContent() {
       ...(filters.appointmentStatus
         ? { appointment_status: filters.appointmentStatus }
         : {}),
+      ...(filters.ageGroups.length
+        ? { age_group: filters.ageGroups.join(",") }
+        : {}),
+      ...(filters.sexes.length ? { sex: filters.sexes.join(",") } : {}),
+      ...(filters.demographics.length
+        ? { demographic: filters.demographics.join(",") }
+        : {}),
     }),
-    [filters.office, filters.personnelType, filters.appointmentStatus],
+    [
+      filters.office,
+      filters.personnelType,
+      filters.appointmentStatus,
+      filters.ageGroups,
+      filters.demographics,
+      filters.sexes,
+    ],
   );
 
   const { data, loading, error, refetch } = useGenderStats("employees", params);
 
-  /* Demo dataset: individual records (../components/employeeSampleRecords)
+  /* Demo dataset: individual records (../components/sampleProfileRecords)
      expanded from the curated totals, so every filter â€” including the
      sample-only Department and Position Level dimensions â€” re-aggregates the
-     same way the API would. The JSON snapshot in ../data/sample-employees.json
+     same way the API would. The JSON snapshot in data/sample-profiles.json
      is only a fixture for tests/scripts; regenerate it with
-     `node scripts/generate-sample-employees.mjs`. */
+     `node scripts/generate-sample-profiles.mjs`. */
   const filteredSampleRecords = useMemo(
     () => filterEmployeeRecords(SAMPLE_EMPLOYEE_RECORDS, filters),
     [filters],
@@ -165,6 +181,15 @@ export default function EmployeeGenderStatsContent() {
     }
     if (filters.schoolYear) {
       parts.push(`Academic Year: ${filters.schoolYear}`);
+    }
+    if (filters.demographics.length) {
+      parts.push(`Demographic Profile: ${filters.demographics.join(", ")}`);
+    }
+    if (filters.ageGroups.length) {
+      parts.push(`Age Group: ${filters.ageGroups.join(", ")}`);
+    }
+    if (filters.sexes.length) {
+      parts.push(`Sex: ${filters.sexes.join(", ")}`);
     }
     return parts.join(" | ");
   }, [filters]);
@@ -237,6 +262,42 @@ export default function EmployeeGenderStatsContent() {
           />
           <div className="flex flex-col">
             <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Demographic Profile
+            </label>
+            <MultiSelect
+              label="Demographic Profile"
+              allLabel="All demographics"
+              options={activeData?.demographicOptions || []}
+              value={filters.demographics}
+              onChange={setFilter("demographics")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Age Group
+            </label>
+            <MultiSelect
+              label="Age Group"
+              allLabel="All age groups"
+              options={activeData?.ageGroups?.length ? activeData.ageGroups : AGE_GROUP_ORDER}
+              value={filters.ageGroups}
+              onChange={setFilter("ageGroups")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Sex
+            </label>
+            <MultiSelect
+              label="Sex"
+              allLabel="All sexes"
+              options={activeData?.sexes || ["Female", "Male"]}
+              value={filters.sexes}
+              onChange={setFilter("sexes")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
               Data source
             </label>
             <button
@@ -277,8 +338,8 @@ export default function EmployeeGenderStatsContent() {
       {useSample && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
           Showing synthetic <strong>sample data</strong> built from
-          <code className="mx-1">data/sample-employees.json</code>
-          (1,016 employees Â· 612 female / 404 male / 30 LGBTQIA+), expanded into
+          <code className="mx-1">data/sample-profiles.json</code>
+          ({SAMPLE_EMPLOYEE_COUNT.toLocaleString()} named employees · 413 female / 272 male / 26 LGBTQIA+), expanded into
           individual records with a five-year appointment history (2020-2021 to
           2024-2025) so the filters compose. Your database is not being read and
           nothing is saved â€” turn the toggle off to return to live data.
@@ -371,6 +432,13 @@ export default function EmployeeGenderStatsContent() {
                 nameHeader="Academic Rank"
               />
             )}
+
+          <SexTable
+                title="Personnel by Age Group and Sex"
+                data={activeData.byAgeGroup || []}
+                nameKey="age_group"
+                nameHeader="Age Group"
+              />
 
           <SexTable
             title="Personnel by Appointment Status and Sex"
@@ -507,7 +575,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        â¬‡ Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-blue-600" /> Quick Reports
       </h3>
       <div className="flex flex-wrap gap-3">
         {useSample ? (
@@ -552,7 +620,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        ðŸ“Œ Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-amber-500" /> Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">

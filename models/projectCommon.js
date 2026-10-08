@@ -27,8 +27,21 @@ export const fileMetaSchema = new Schema(
   { _id: false },
 );
 
+/* One row of the project Gantt chart (encoded or uploaded). */
+export const GanttActivitySchema = new Schema(
+  {
+    activity: { type: String, required: true, trim: true },
+    start_date: { type: Date, default: null },
+    end_date: { type: Date, default: null },
+    person_responsible: { type: String, default: "", trim: true },
+  },
+  { _id: false },
+);
+
 export const MilestoneSchema = new Schema(
   {
+    /* Gantt activity this milestone was generated from (empty if manual). */
+    source_activity: { type: String, default: "", trim: true },
     title: {
       type: String,
       required: true,

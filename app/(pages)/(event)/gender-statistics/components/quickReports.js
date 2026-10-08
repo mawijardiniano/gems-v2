@@ -475,6 +475,11 @@ export async function generateQuickReport(kind, data, options = {}) {
       alternateRowStyles: { fillColor: [244, 246, 250] },
       margin: { top: continuationStartY, bottom: 18, left: margin, right: margin },
       didParseCell: (cellData) => {
+        if (cellData.section === "head") {
+          cellData.cell.styles.halign = "center";
+          cellData.cell.styles.valign = "middle";
+          return;
+        }
         if (cellData.section !== "body") return;
         const rowLabel = Array.isArray(cellData.row.raw)
           ? String(cellData.row.raw[0])
@@ -483,7 +488,10 @@ export async function generateQuickReport(kind, data, options = {}) {
           cellData.cell.styles.fontStyle = "bold";
           cellData.cell.styles.fillColor = [228, 232, 238];
         }
-        if (cellData.column.index > 0) cellData.cell.styles.halign = "center";
+        const isTextColumn =
+          cellData.column.index === 0 ||
+          /interpretation/i.test(String(head[cellData.column.index] ?? ""));
+        cellData.cell.styles.halign = isTextColumn ? "left" : "right";
       },
     });
     y = (doc.lastAutoTable?.finalY || y) + 7;
@@ -654,6 +662,12 @@ export async function generateQuickReport(kind, data, options = {}) {
     doc.text(`Page ${page} of ${totalPages}`, pageW - margin, pageH - 8, {
       align: "right",
     });
+    doc.text(
+      "System-generated via GEMS",
+      pageW - margin,
+      pageH - 4.5,
+      { align: "right" },
+    );
     doc.setTextColor(0);
     doc.setDrawColor(0);
   }

@@ -1,8 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { computeEmployeeStats } from "../app/(pages)/(event)/gender-statistics/components/employeeStats.js";
+import { SAMPLE_EMPLOYEE_PROFILE_RECORDS } from "../app/(pages)/(event)/gender-statistics/components/sampleProfileRecords.js";
 
 import {
   MIN_GROUP_FOR_FINDINGS,
@@ -19,22 +18,7 @@ import {
   quickReportMeta,
 } from "../app/(pages)/(event)/gender-statistics/components/quickReports.js";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const sample = JSON.parse(
-  readFileSync(
-    path.join(
-      here,
-      "..",
-      "app",
-      "(pages)",
-      "(event)",
-      "gender-statistics",
-      "data",
-      "sample-employees.json",
-    ),
-    "utf8",
-  ),
-);
+const sample = computeEmployeeStats(SAMPLE_EMPLOYEE_PROFILE_RECORDS);
 
 // ─── buildSexTable / buildSexSummaryTable ────────────────────────────
 
@@ -54,13 +38,13 @@ test("buildSexTable: one row per category plus a computed Total row", () => {
   ]);
   assert.strictEqual(body.length, sample.byCategory.length + 1);
   assert.strictEqual(body[0][0], "Faculty");
-  assert.strictEqual(body[0][1], 230);
+  assert.strictEqual(body[0][1], 207);
 
   const total = body[body.length - 1];
   assert.strictEqual(total[0], "Total");
-  assert.strictEqual(total[1], 230 + 357 + 25);
-  assert.strictEqual(total[2], 184 + 210 + 10);
-  assert.strictEqual(total[3], 414 + 567 + 35);
+  assert.strictEqual(total[1], 207 + 132 + 74);
+  assert.strictEqual(total[2], 142 + 82 + 48);
+  assert.strictEqual(total[3], 349 + 214 + 122);
 });
 
 test("buildSexTable: tolerates missing breakdowns without throwing", () => {
@@ -70,10 +54,10 @@ test("buildSexTable: tolerates missing breakdowns without throwing", () => {
 
 test("buildSexSummaryTable: reads the pre-computed percentages off totals", () => {
   const { body } = buildSexSummaryTable(sample.totals);
-  assert.deepStrictEqual(body[0], ["Female", 612, "60.2%"]);
-  assert.deepStrictEqual(body[1], ["Male", 404, "39.8%"]);
-  assert.deepStrictEqual(body[2], ["LGBTQIA+ (gender identity)", 30, "3%"]);
-  assert.deepStrictEqual(body[3], ["Total", 1016, "100%"]);
+  assert.deepStrictEqual(body[0], ["Female", 413, "60.3%"]);
+  assert.deepStrictEqual(body[1], ["Male", 272, "39.7%"]);
+  assert.deepStrictEqual(body[2], ["LGBTQIA+ (gender identity)", 26, "3.8%"]);
+  assert.deepStrictEqual(body[3], ["Total", 685, "100%"]);
 });
 
 test("buildSexSummaryTable: recomputes percentages when totals omit them", () => {
@@ -94,14 +78,14 @@ test("buildGapEntries: computes % female/male, gap in pp and interpretation", ()
   const faculty = entries.find((e) => e.label === "Faculty");
   const admin = entries.find((e) => e.label === "Administrative Staff");
 
-  assert.strictEqual(faculty.total, 414);
-  assert.strictEqual(faculty.pctFemale, 55.6);
-  assert.strictEqual(faculty.pctMale, 44.4);
-  assert.strictEqual(faculty.gapPp, 11.2);
+  assert.strictEqual(faculty.total, 349);
+  assert.strictEqual(faculty.pctFemale, 59.3);
+  assert.strictEqual(faculty.pctMale, 40.7);
+  assert.strictEqual(faculty.gapPp, 18.6);
   assert.strictEqual(faculty.interpretation, "Female-leaning");
 
-  assert.strictEqual(admin.pctFemale, 63);
-  assert.strictEqual(admin.gapPp, 26);
+  assert.strictEqual(admin.pctFemale, 61.7);
+  assert.strictEqual(admin.gapPp, 23.4);
   assert.strictEqual(admin.interpretation, "Female-dominated");
 });
 
@@ -130,7 +114,7 @@ test("gapTableFromEntries: produces a seven-column gap table", () => {
   assert.strictEqual(head.length, 7);
   assert.strictEqual(head[5], "Gap (pp)");
   assert.strictEqual(body.length, entries.length);
-  assert.strictEqual(body[0][5], "+11.2 pp");
+  assert.strictEqual(body[0][5], "+18.6 pp");
 });
 
 // ── Key findings ────────────────────────────────────────────────────
@@ -145,7 +129,7 @@ test("buildGapFindings: summarises overall share, widest gap and faculty vs admi
   });
 
   assert.ok(findings.length >= 5);
-  assert.match(findings[0], /60\.2% of the 1,016 personnel/);
+  assert.match(findings[0], /60\.3% of the 685 personnel/);
   assert.ok(findings.some((line) => /Widest gap/.test(line)));
   assert.ok(
     findings.some((line) =>

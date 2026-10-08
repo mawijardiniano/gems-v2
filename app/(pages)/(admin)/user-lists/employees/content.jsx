@@ -12,6 +12,13 @@ import {
   TableRow,
 } from "flowbite-react";
 import useProfileList from "@/hooks/useProfileList";
+import useSampleProfileList, {
+  sampleListFilterOptions,
+} from "@/hooks/useSampleProfileList";
+import {
+  SampleToggle,
+  SampleDataNotice,
+} from "@/app/(pages)/(event)/gender-statistics/components/SampleToggle";
 import EmployeeFilterTable from "../components/EmployeeFilterTable";
 import {
   FaTimes,
@@ -77,14 +84,9 @@ export default function EmployeeListPageContent({
     searchName,
   ]);
 
-  const {
-    data: rawData,
-    loading,
-    page: serverPage,
-    total: serverTotal,
-    totalPages: serverTotalPages,
-    goToPage: goToServerPage,
-  } = useProfileList({
+  const [useSample, setUseSample] = useState(true);
+
+  const liveList = useProfileList({
     initialData: users,
     initialTotal: propTotal,
     initialTotalPages: propTotalPages,
@@ -92,6 +94,19 @@ export default function EmployeeListPageContent({
     limit: pageSize,
     filters: serverFilters,
   });
+  const sampleList = useSampleProfileList({
+    type: "Employee",
+    limit: pageSize,
+    filters: serverFilters,
+  });
+  const {
+    data: rawData,
+    loading,
+    page: serverPage,
+    total: serverTotal,
+    totalPages: serverTotalPages,
+    goToPage: goToServerPage,
+  } = useSample ? sampleList : liveList;
 
   const [filterOptions, setFilterOptions] = useState({
     sexOptions: [],
@@ -124,13 +139,15 @@ export default function EmployeeListPageContent({
     };
   }, []);
 
-  const sexOption = filterOptions.sexOptions;
-  const collegeOptions = filterOptions.officeOptions;
-  const employmentOptions = filterOptions.employmentStatuses;
-  const appointmentOptions = filterOptions.appointmentStatuses;
-  const yearLevelOptions = filterOptions.yearLevelOptions;
-  const schoolYearOptions = filterOptions.schoolYears;
-  const semesterOptions = filterOptions.semesters;
+  const sampleOptions = useMemo(() => sampleListFilterOptions(), []);
+  const activeOptions = useSample ? sampleOptions : filterOptions;
+  const sexOption = activeOptions.sexOptions;
+  const collegeOptions = activeOptions.officeOptions;
+  const employmentOptions = activeOptions.employmentStatuses;
+  const appointmentOptions = activeOptions.appointmentStatuses;
+  const yearLevelOptions = activeOptions.yearLevelOptions;
+  const schoolYearOptions = activeOptions.schoolYears;
+  const semesterOptions = activeOptions.semesters;
 
   const personTypeOptions = useMemo(() => {
     const list = [
@@ -532,6 +549,17 @@ export default function EmployeeListPageContent({
 
   return (
     <div className="p-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <SampleToggle
+          useSample={useSample}
+          onToggle={() => setUseSample((prev) => !prev)}
+        />
+      </div>
+      {useSample && (
+        <div className="mb-3">
+          <SampleDataNotice />
+        </div>
+      )}
       <div className="flex justify-end">
         <div className="flex">
           <EmployeeFilterTable

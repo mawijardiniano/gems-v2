@@ -1,3 +1,5 @@
+import { parseGanttActivities } from "@/lib/ganttParse.js";
+
 import { connectDB } from "@/lib/db";
 import {
   createNotifications,
@@ -118,6 +120,9 @@ const parseMilestones = (input) => {
       actual_date: actualDate,
       status,
       proofs: parsedProofs.proofs,
+      source_activity: String(raw.source_activity ?? "")
+        .trim()
+        .slice(0, 300),
     });
   }
 
@@ -258,6 +263,17 @@ mergeField("project_type");
         );
       }
       project.milestones = parsedMilestones.milestones;
+    }
+
+    if (body.gantt_activities !== undefined) {
+      const parsedGantt = parseGanttActivities(
+        body.gantt_activities,
+        parseDateInput,
+      );
+      if (parsedGantt.error) {
+        return Response.json({ error: parsedGantt.error }, { status: 400 });
+      }
+      project.gantt_activities = parsedGantt.activities;
     }
 
     if (body.start_date !== undefined) {

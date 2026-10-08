@@ -13,6 +13,13 @@ import {
   TableRow,
 } from "flowbite-react";
 import useProfileList from "@/hooks/useProfileList";
+import useSampleProfileList, {
+  sampleListFilterOptions,
+} from "@/hooks/useSampleProfileList";
+import {
+  SampleToggle,
+  SampleDataNotice,
+} from "@/app/(pages)/(event)/gender-statistics/components/SampleToggle";
 import StudentFilterTable from "../components/StudentFilterTable";
 import {
   FaEye,
@@ -73,14 +80,9 @@ export default function StudentsUserListContent({
     searchName,
   ]);
 
-  const {
-    data: rawData,
-    loading,
-    page: serverPage,
-    total: serverTotal,
-    totalPages: serverTotalPages,
-    goToPage: goToServerPage,
-  } = useProfileList({
+  const [useSample, setUseSample] = useState(true);
+
+  const liveList = useProfileList({
     initialData: users,
     initialTotal: propTotal,
     initialTotalPages: propTotalPages,
@@ -88,6 +90,19 @@ export default function StudentsUserListContent({
     limit: pageSize,
     filters: serverFilters,
   });
+  const sampleList = useSampleProfileList({
+    type: "Student",
+    limit: pageSize,
+    filters: serverFilters,
+  });
+  const {
+    data: rawData,
+    loading,
+    page: serverPage,
+    total: serverTotal,
+    totalPages: serverTotalPages,
+    goToPage: goToServerPage,
+  } = useSample ? sampleList : liveList;
 
   const studentsData = useMemo(
     () =>
@@ -125,11 +140,13 @@ export default function StudentsUserListContent({
     };
   }, []);
 
-  const sexOption = filterOptions.sexOptions;
-  const collegeOptions = filterOptions.academicCollegeOptions;
-  const yearLevelOptions = filterOptions.yearLevelOptions;
-  const schoolYearOptions = filterOptions.schoolYears;
-  const semesterOptions = filterOptions.semesters;
+  const sampleOptions = useMemo(() => sampleListFilterOptions(), []);
+  const activeOptions = useSample ? sampleOptions : filterOptions;
+  const sexOption = activeOptions.sexOptions;
+  const collegeOptions = activeOptions.academicCollegeOptions;
+  const yearLevelOptions = activeOptions.yearLevelOptions;
+  const schoolYearOptions = activeOptions.schoolYears;
+  const semesterOptions = activeOptions.semesters;
 
   const filteredData = useMemo(() => {
     let data = [...studentsData];
@@ -529,6 +546,17 @@ export default function StudentsUserListContent({
 
   return (
     <div className="p-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <SampleToggle
+          useSample={useSample}
+          onToggle={() => setUseSample((prev) => !prev)}
+        />
+      </div>
+      {useSample && (
+        <div className="mb-3">
+          <SampleDataNotice />
+        </div>
+      )}
       <div className="flex justify-end">
         <div className="flex">
           <StudentFilterTable
