@@ -16,6 +16,9 @@ export default function PrintSummaryButton({
   yearLineData,
   collegeData,
   officeData,
+  isSample = false,
+  schoolYear = "",
+  semester = "",
 }) {
   const handlePrintSummary = () => {
     const yearRows = yearLineData
@@ -23,9 +26,9 @@ export default function PrintSummaryButton({
         (row) => `
           <tr>
             <td>${row.year}</td>
-            <td>${row.male}</td>
-            <td>${row.female}</td>
-            <td>${row.male + row.female}</td>
+            <td>${row.Male}</td>
+            <td>${row.Female}</td>
+            <td>${row.Male + row.Female}</td>
           </tr>
         `,
       )
@@ -36,9 +39,9 @@ export default function PrintSummaryButton({
         (row) => `
           <tr>
             <td>${row.college}</td>
-            <td>${row.male}</td>
-            <td>${row.female}</td>
-            <td>${row.male + row.female}</td>
+            <td>${row.Male}</td>
+            <td>${row.Female}</td>
+            <td>${row.Male + row.Female}</td>
           </tr>
         `,
       )
@@ -49,18 +52,24 @@ export default function PrintSummaryButton({
         (row) => `
           <tr>
             <td>${row.office}</td>
-            <td>${row.male}</td>
-            <td>${row.female}</td>
-            <td>${row.male + row.female}</td>
+            <td>${row.Male}</td>
+            <td>${row.Female}</td>
+            <td>${row.Male + row.Female}</td>
           </tr>
         `,
       )
       .join("");
 
+    const semesterLabel =
+      semester === "1st"
+        ? "1st Semester"
+        : semester === "2nd"
+          ? "2nd Semester"
+          : semester || "";
     const html = `
       <html>
         <head>
-          <title>Campus Gender Summary</title>
+          <title>Campus Gender Summary${isSample ? " (Sample data)" : ""}</title>
 
           <style>
             body {
@@ -93,7 +102,8 @@ export default function PrintSummaryButton({
 
         <body>
 
-          <h2>Campus Gender Equality Summary</h2>
+          <h2>Campus Gender Equality Summary${isSample ? " (Sample data - demonstration only)" : " (Live data)"}</h2>
+          ${schoolYear || semesterLabel ? `<p style="text-align:center;">${[schoolYear, semesterLabel].filter(Boolean).join(" — ")}</p>` : ""}
 
           <table>
             <thead>

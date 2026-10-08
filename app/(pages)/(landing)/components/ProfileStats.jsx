@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -21,6 +21,19 @@ import {
 } from "react-icons/hi";
 import { FiDownload, FiUsers, FiPieChart } from "react-icons/fi";
 import PrintSummaryButton from "./PrintSummaryButton";
+import {
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS,
+  SAMPLE_SCHOOL_YEARS,
+  SAMPLE_STUDENT_PROFILE_RECORDS,
+} from "../../(event)/gender-statistics/components/sampleProfileRecords";
+import {
+  computeStudentStats,
+  filterStudentRecords,
+} from "../../(event)/gender-statistics/components/studentStats";
+import {
+  computeEmployeeStats,
+  filterEmployeeRecords,
+} from "../../(event)/gender-statistics/components/employeeStats";
 
 const semesterOrder = { "1st": 1, "2nd": 2, Summer: 3 };
 
@@ -164,6 +177,7 @@ function LoadingSkeleton() {
 }
 
 export default function ProfileStats() {
+  const [useSample, setUseSample] = useState(true);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -175,7 +189,46 @@ export default function ProfileStats() {
 
   const [viewMode, setViewMode] = useState({ office: "chart", college: "chart", year: "chart" });
 
+  /* Sample term options: newest school year first, like the live filters API.
+     Employees only carry a 1st-semester term per year, so every sample year
+     still offers 1st/2nd/Summer for students. */
+  const sampleSchoolYears = useMemo(
+    () => [...SAMPLE_SCHOOL_YEARS].reverse(),
+    []
+  );
+  const sampleTerms = useMemo(
+    () =>
+      sampleSchoolYears.flatMap((school_year) =>
+        ["1st", "2nd", "Summer"].map((semester) => ({
+          school_year,
+          semester,
+        }))
+      ),
+    [sampleSchoolYears]
+  );
+
+  const activeTerms = useSample ? sampleTerms : terms;
+  const activeSchoolYears = useSample ? sampleSchoolYears : schoolYears;
+
   useEffect(() => {
+    if (useSample) {
+      /* Sample mode never reads the database: default to the active
+         2026-2027 1st-semester term the sample profiles are built around. */
+      const firstYear = sampleSchoolYears[0];
+      setSelectedSchoolYear(firstYear);
+      const semestersForYear = sampleTerms
+        .filter((t) => t.school_year === firstYear)
+        .sort(
+          (a, b) =>
+            (semesterOrder[a.semester] || 0) -
+            (semesterOrder[b.semester] || 0),
+        );
+      if (semestersForYear.length > 0) {
+        setSelectedSemester(semestersForYear[0].semester);
+      }
+      setLoading(false);
+      return;
+    }
     fetch("/api/analytics/terms")
       .then((res) => res.json())
       .then((json) => {
@@ -204,7 +257,7 @@ export default function ProfileStats() {
         setTerms([]);
         setSchoolYears([]);
       });
-  }, []);
+  }, [useSample, sampleSchoolYears, sampleTerms]);
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -234,13 +287,69 @@ export default function ProfileStats() {
   }, [selectedSchoolYear, selectedSemester]);
 
   useEffect(() => {
+    if (useSample) return;
     if (selectedSchoolYear && selectedSemester) {
       fetchData();
     }
-  }, [selectedSchoolYear, selectedSemester, fetchData]);
+  }, [selectedSchoolYear, selectedSemester, fetchData, useSample]);
+
+  /* Sample profiles aggregated into the same shape as
+     /api/analytics/sex-disaggregated-data/summary so every card, chart,
+     table and the print summary render unchanged. Students narrow by term
+     (a student enrolled in both semesters counts once per selected term
+     filter); employees narrow by school year only since their history is
+     one 1st-semester term per year. */
+  const sampleData = useMemo(() => {
+    if (!selectedSchoolYear || !selectedSemester) return null;
+    const students = filterStudentRecords(SAMPLE_STUDENT_PROFILE_RECORDS, {
+      schoolYear: selectedSchoolYear,
+      semester: selectedSemester,
+    });
+    const employees = filterEmployeeRecords(
+      SAMPLE_EMPLOYEE_PROFILE_RECORDS,
+      { schoolYear: selectedSchoolYear }
+    );
+    const studentStats = computeStudentStats(
+      students,
+      SAMPLE_STUDENT_PROFILE_RECORDS
+    );
+    const employeeStats = computeEmployeeStats(
+      employees,
+      SAMPLE_EMPLOYEE_PROFILE_RECORDS
+    );
+    const toSexRows = (rows, key) =>
+      rows.flatMap((row) =>
+        ["Male", "Female"]
+          .filter((sex) => (row[sex] || 0) > 0)
+          .map((sex) => ({ [key]: row[key], sex, total: row[sex] }))
+      );
+    return {
+      employees: {
+        totals: {
+          Male: employeeStats.totals.Male,
+          Female: employeeStats.totals.Female,
+          Unspecified: 0,
+        },
+        officeSex: toSexRows(employeeStats.byOffice, "office"),
+      },
+      students: {
+        totals: {
+          Male: studentStats.totals.Male,
+          Female: studentStats.totals.Female,
+          Unspecified: 0,
+        },
+        collegeSex: toSexRows(studentStats.byCollege, "college"),
+        yearLevelSex: toSexRows(studentStats.byYearLevel, "year_level").map(
+          (row) => ({ yearLevel: row.year_level, sex: row.sex, total: row.total })
+        ),
+      },
+    };
+  }, [selectedSchoolYear, selectedSemester]);
+
+  const activeData = useSample ? sampleData : data;
 
   const availableSemesters = selectedSchoolYear
-    ? terms
+    ? activeTerms
         .filter((t) => t.school_year === selectedSchoolYear)
         .sort(
           (a, b) =>
@@ -251,9 +360,9 @@ export default function ProfileStats() {
   const handleSchoolYearChange = (e) => {
     const newYear = e.target.value;
     setSelectedSchoolYear(newYear);
-    setData(null);
+    if (!useSample) setData(null);
 
-    const semestersForYear = terms
+    const semestersForYear = activeTerms
       .filter((t) => t.school_year === newYear)
       .sort(
         (a, b) =>
@@ -268,14 +377,46 @@ export default function ProfileStats() {
 
   const handleSemesterChange = (e) => {
     setSelectedSemester(e.target.value);
-    setData(null);
+    if (!useSample) setData(null);
   };
 
-  if (loading && !data) {
+  const handleSourceToggle = () => {
+    setUseSample((prev) => {
+      const next = !prev;
+      if (next) {
+        /* Entering sample mode: park live state and pin the active sample
+           term so charts never render a stale live year. */
+        setData(null);
+        setError("");
+        const firstYear = sampleSchoolYears[0];
+        setSelectedSchoolYear(firstYear);
+        const semestersForYear = sampleTerms
+          .filter((t) => t.school_year === firstYear)
+          .sort(
+            (a, b) =>
+              (semesterOrder[a.semester] || 0) -
+              (semesterOrder[b.semester] || 0),
+          );
+        setSelectedSemester(
+          semestersForYear.length > 0 ? semestersForYear[0].semester : ""
+        );
+        setLoading(false);
+      } else {
+        /* Entering live mode: clear any sample selection so the live term
+           fetch picks the authoritative first year/semester. */
+        setData(null);
+        setSelectedSchoolYear("");
+        setSelectedSemester("");
+      }
+      return next;
+    });
+  };
+
+  if (loading && !activeData) {
     return <LoadingSkeleton />;
   }
 
-  if (error && !data) {
+  if (error && !activeData) {
     return (
       <section className="my-20 px-4 text-center">
         <div className="mx-auto max-w-md rounded-2xl border border-red-100 bg-red-50 p-8">
@@ -294,8 +435,8 @@ export default function ProfileStats() {
     );
   }
 
-  const empTotals = data?.employees?.totals || {};
-  const stuTotals = data?.students?.totals || {};
+  const empTotals = activeData?.employees?.totals || {};
+  const stuTotals = activeData?.students?.totals || {};
 
   const totalMale = (empTotals.Male || 0) + (stuTotals.Male || 0);
   const totalFemale = (empTotals.Female || 0) + (stuTotals.Female || 0);
@@ -323,7 +464,7 @@ export default function ProfileStats() {
     overallPieData.push({ name: "Unspecified", value: totalUnspecified, color: "#94a3b8" });
   }
 
-  const officeData = (data?.employees?.officeSex || [])
+  const officeData = (activeData?.employees?.officeSex || [])
     .filter((row) => row.office && row.office !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.office === row.office);
@@ -336,7 +477,7 @@ export default function ProfileStats() {
       return acc;
     }, []);
 
-  const collegeData = (data?.students?.collegeSex || [])
+  const collegeData = (activeData?.students?.collegeSex || [])
     .filter((row) => row.college && row.college !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.college === row.college);
@@ -350,7 +491,7 @@ export default function ProfileStats() {
     }, []);
 
   const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
-  const yearLineData = (data?.students?.yearLevelSex || [])
+  const yearLineData = (activeData?.students?.yearLevelSex || [])
     .filter((row) => row.yearLevel && row.yearLevel !== "Unspecified")
     .reduce((acc, row) => {
       let found = acc.find((x) => x.year === row.yearLevel);
@@ -380,11 +521,13 @@ export default function ProfileStats() {
             Campus Gender Equality Overview
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
-            Real-time sex-disaggregated data across the university
+            {useSample
+              ? "Sample sex-disaggregated data across the university"
+              : "Real-time sex-disaggregated data across the university"}
           </p>
 
           
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="flex flex-wrap justify-center items-end gap-4 mt-6">
             <div>
               <label
                 htmlFor="school-year-select"
@@ -398,10 +541,10 @@ export default function ProfileStats() {
                 onChange={handleSchoolYearChange}
                 className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/20 hover:border-gray-300"
               >
-                {schoolYears.length === 0 && (
+                {activeSchoolYears.length === 0 && (
                   <option value="">No terms available</option>
                 )}
-                {schoolYears.map((year) => (
+                {activeSchoolYears.map((year) => (
                   <option key={year} value={year}>
                     {year}
                   </option>
@@ -436,11 +579,34 @@ export default function ProfileStats() {
                 ))}
               </select>
             </div>
+
+            <div>
+              <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                Data source
+              </span>
+              <button
+                type="button"
+                onClick={handleSourceToggle}
+                aria-pressed={useSample}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+                  useSample
+                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    useSample ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+                {useSample ? "Sample data" : "Live data"}
+              </button>
+            </div>
           </div>
 
           {selectedSchoolYear && selectedSemester && (
             <p className="text-sm text-gray-400 mt-3">
-              Showing data for{" "}
+              Showing {useSample ? "sample data" : "data"} for{" "}
               <span className="font-semibold text-gray-600">
                 {selectedSchoolYear}
               </span>{" "}
@@ -453,6 +619,15 @@ export default function ProfileStats() {
                     : "Summer"}
               </span>
             </p>
+          )}
+
+          {useSample && (
+            <div className="mx-auto mt-3 max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+              Showing synthetic <strong>sample data</strong> from the
+              sample-profile dataset (2022-2023 to 2026-2027). Your database
+              is not being read and nothing is saved — turn the toggle off to
+              return to live data.
+            </div>
           )}
 
           <PrintSummaryButton
@@ -471,6 +646,9 @@ export default function ProfileStats() {
             yearLineData={yearLineData}
             collegeData={collegeData}
             officeData={officeData}
+            isSample={useSample}
+            schoolYear={selectedSchoolYear}
+            semester={selectedSemester}
           />
         </div>
 

@@ -9,7 +9,16 @@ import { loginSuccess } from "@/store/slices/authSlice";
 
 const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || "";
 
-const QUICK_ACCOUNTS = [
+/* Quick Sign In is a dev convenience — hidden in production builds so demo
+   accounts never render on prod. Override with
+   NEXT_PUBLIC_SHOW_QUICK_SIGNIN=true to force it on (e.g. staging). */
+const SHOW_QUICK_SIGNIN =
+  process.env.NEXT_PUBLIC_SHOW_QUICK_SIGNIN === "true" ||
+  (process.env.NEXT_PUBLIC_SHOW_QUICK_SIGNIN !== "false" &&
+    process.env.NODE_ENV !== "production");
+
+const QUICK_ACCOUNTS = SHOW_QUICK_SIGNIN
+  ? [
   {
     label: "Admin",
     username: process.env.NEXT_PUBLIC_ADMIN_USERNAME,
@@ -50,7 +59,8 @@ const QUICK_ACCOUNTS = [
     username: process.env.NEXT_PUBLIC_STUDENT_USERNAME,
     password: DEFAULT_PASSWORD,
   },
-];
+  ]
+  : [];
 
 export default function LoginForm({ redirect, compact = false }) {
   const [username, setUsername] = useState("");
@@ -288,30 +298,34 @@ export default function LoginForm({ redirect, compact = false }) {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Quick Sign In
-                </span>
-              </div>
-            </div>
+            {SHOW_QUICK_SIGNIN && QUICK_ACCOUNTS.length > 0 && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      Quick Sign In
+                    </span>
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {QUICK_ACCOUNTS.filter((acc) => acc.username).map((acc) => (
-                <button
-                  key={acc.label}
-                  type="button"
-                  disabled={loading}
-                  onClick={(e) => handleQuickLogin(e, acc)}
-                  className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-purple-50 hover:border-purple-300 hover:text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {acc.label}
-                </button>
-              ))}
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {QUICK_ACCOUNTS.filter((acc) => acc.username).map((acc) => (
+                    <button
+                      key={acc.label}
+                      type="button"
+                      disabled={loading}
+                      onClick={(e) => handleQuickLogin(e, acc)}
+                      className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-purple-50 hover:border-purple-300 hover:text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {acc.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
 
             {/* <div className="flex justify-center">
