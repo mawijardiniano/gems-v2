@@ -19,7 +19,7 @@ const sectionTitle = (section) =>
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (str) => str.toUpperCase());
 
-export default function CheckboxTree({ officials, selected, onChange }) {
+export default function CheckboxTree({ officials, selected, onChange, academicYear }) {
   const [expanded, setExpanded] = useState({});
 
   const selectedSet = useMemo(() => new Set(selected || []), [selected]);
@@ -48,11 +48,27 @@ export default function CheckboxTree({ officials, selected, onChange }) {
     );
   };
 
+  const visibleGroups = OFFICIAL_GROUPS_ORDER.filter(
+    (section) => groupItems(officials, section).length > 0,
+  );
+
+  if (visibleGroups.length === 0) {
+    return (
+      <div className="border border-dashed border-gray-200 rounded-xl bg-gray-50 px-4 py-6 text-center">
+        <p className="text-sm font-medium text-gray-700">
+          No officials found{academicYear ? ` for AY ${academicYear}` : ""}
+        </p>
+        <p className="text-xs text-gray-500 mt-1">
+          Copy the roster from the previous year on the University Officials page, or switch academic year.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden bg-white divide-y divide-gray-100 max-h-64 overflow-y-auto">
-      {OFFICIAL_GROUPS_ORDER.map((section) => {
+      {visibleGroups.map((section) => {
         const items = groupItems(officials, section);
-        if (items.length === 0) return null;
 
         const sectionChecked = items.every((item) =>
           selectedSet.has(officialItemKey(section, item)),

@@ -85,7 +85,9 @@ const buildSectionRow = (sec, gfps) => {
   `;
 };
 
-const buildPrintHtml = (sections, gfps) => `
+const buildPrintHtml = (sections, gfps) => {
+  const yearLabel = gfps?.academic_year ? ` — AY ${gfps.academic_year}` : "";
+  return `
   <html>
     <head>
       <title>GFPS Report</title>
@@ -94,7 +96,7 @@ const buildPrintHtml = (sections, gfps) => `
 
     <body>
       <div class="header">
-        <h2>Gender and Development Focal Point System (GFPS)</h2>
+        <h2>Gender and Development Focal Point System (GFPS)${yearLabel}</h2>
       </div>
 
       <table>
@@ -112,6 +114,7 @@ const buildPrintHtml = (sections, gfps) => `
     </body>
   </html>
 `;
+};
 
 const printHtml = (html) => {
   const iframe = document.createElement("iframe");

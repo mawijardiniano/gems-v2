@@ -690,14 +690,29 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       return { success: false, message: "No users selected." };
     }
     try {
-      await axios.post("/api/events/participation", {
+      // Manual Add = mark directly as Attended (attended_users),
+      // not Going/Interested. `manual_add` lets organizers bypass the
+      // QR time-window checks on the attendance API.
+      const res = await axios.post("/api/events/attendance", {
         event_id: eventId,
         user_id: userIds,
-        status: "going",
+        manual_add: true,
       });
-      const res = await axios.get(`/api/events/${eventId}`);
-      setEvent(res.data?.data || event);
-      return { success: true };
+      const refreshed = await axios.get(`/api/events/${eventId}`);
+      setEvent(refreshed.data?.data || event);
+      const data = res.data || {};
+      const results = Array.isArray(data.results) ? data.results : null;
+      const addedCount = results
+        ? results.filter((r) => r?.added).length
+        : data?.already_attended
+          ? 0
+          : userIds.length;
+      const alreadyCount = results
+        ? results.filter((r) => !r?.added).length
+        : data?.already_attended
+          ? 1
+          : 0;
+      return { success: true, addedCount, alreadyCount };
     } catch (err) {
       return {
         success: false,

@@ -15,6 +15,12 @@ import {
  */
 const universityOfficialSchema = new mongoose.Schema(
   {
+    academic_year: {
+      type: String,
+      required: true,
+      trim: true,
+      match: [/^\d{4}-\d{4}$/, "academic_year must look like 2025-2026"],
+    },
     header: {
       type: String,
       enum: HEADERS,
@@ -47,11 +53,13 @@ universityOfficialSchema.pre("validate", function () {
   this.position = composePosition(this.title, this.unit);
 });
 
-// One person per seat — mirrors the API's 409 duplicate check.
+// One person per seat per academic year — mirrors the API's 409 duplicate check.
 universityOfficialSchema.index(
-  { header: 1, title: 1, unit: 1 },
+  { academic_year: 1, header: 1, title: 1, unit: 1 },
   { unique: true },
 );
+
+universityOfficialSchema.index({ academic_year: 1 });
 
 export default mongoose.models.UniversityOfficial ||
   mongoose.model("UniversityOfficial", universityOfficialSchema);

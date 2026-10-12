@@ -5,6 +5,7 @@ import { cacheOrSet } from "@/lib/cache";
 import Project from "@/models/projects";
 import GPB from "@/models/gpb";
 import UniversityOfficial from "@/models/universityOfficials";
+import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -313,9 +314,7 @@ export async function GET(req) {
           margin: { left: M, right: M },
         });
 
-        const focalEntry = (officials || []).find((item) =>
-          item?.position?.toString().toLowerCase().includes("focal"),
-        );
+        const focalEntry = findGadFocalOfficial(officials);
         const focalPointName = extractName(focalEntry?.name);
         const presidentName = extractName(
           (officials || []).find((item) => item?.title === "University President")

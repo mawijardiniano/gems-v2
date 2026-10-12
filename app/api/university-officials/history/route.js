@@ -1,0 +1,82 @@
+import { connectDB } from "@/lib/db";
+import UniversityOfficial from "@/models/universityOfficials";
+import ActivityLog from "@/models/activity_log";
+import { requireAuth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { findSeatByParts } from "@/lib/universityOfficialsConstants";
+import { normalizeAcademicYear } from "@/lib/academicYear";
+
+const POPULATE = {
+  path: "name",
+  model: "UserAuth",
+  populate: { path: "personal_info_id", populate: { path: "personal" } },
+};
+
+/**
+ * GET /api/university-officials/history?header=&title=&unit=
+ * Timeline of who held one seat across academic years (roster docs),
+ * plus mid-year reassigns sourced from the activity log.
+ */
+export async function GET(req) {
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+  await connectDB();
+
+  const { searchParams } = new URL(req.url);
+  const header = searchParams.get("header") || "";
+  const title = searchParams.get("title") || "";
+  const unit = searchParams.get("unit") || "";
+  const onlyYear = normalizeAcademicYear(searchParams.get("academic_year"));
+
+  const seat = findSeatByParts({ header, title, unit });
+  if (!seat) {
+    return Response.json(
+      { success: false, error: "Unknown seat" },
+      { status: 400 },
+    );
+  }
+
+  const rosterFilter = {
+    header: seat.header,
+    title: seat.title,
+    unit: seat.unit,
+    ...(onlyYear ? { academic_year: onlyYear } : {}),
+  };
+  const roster = await UniversityOfficial.find(rosterFilter)
+    .populate(POPULATE)
+    .sort({ academic_year: -1 })
+    .lean();
+
+  // Mid-year turnover trail from OFFICIAL_UPDATE logs on these roster docs.
+  const rosterIds = roster.map((d) => d._id);
+  const logFilter = {
+    resource_type: "university_official",
+    action: { $in: ["OFFICIAL_ASSIGN", "OFFICIAL_UPDATE", "OFFICIAL_VACATE"] },
+    ...(rosterIds.length ? { resource_id: { $in: rosterIds } } : { resource_id: null }),
+  };
+  const logs = rosterIds.length
+    ? await ActivityLog.find(logFilter).sort({ createdAt: 1 }).lean()
+    : [];
+
+  return Response.json({
+    success: true,
+    data: {
+      seat: {
+        header: seat.header,
+        title: seat.title,
+        unit: seat.unit,
+        position: seat.position,
+      },
+      roster,
+      turnover: logs.map((l) => ({
+        _id: l._id,
+        action: l.action,
+        description: l.description,
+        createdAt: l.createdAt,
+        academic_year: l.metadata?.academic_year || null,
+        prev_name: l.metadata?.prev_name || null,
+        new_name: l.metadata?.new_name || null,
+      })),
+    },
+  });
+}

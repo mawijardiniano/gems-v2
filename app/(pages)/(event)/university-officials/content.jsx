@@ -543,13 +543,59 @@ export default function UniversityOfficialsContent() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
+  // Academic-year snapshot state. Every roster is year-scoped; past years
+  // stay viewable + printable, only the active year is editable.
+  const [academicYear, setAcademicYear] = useState("");
+  const [yearOptions, setYearOptions] = useState([]);
+  const [activeYear, setActiveYear] = useState("");
+  const [copying, setCopying] = useState(false);
+
+  // Org-chart filters (applied on top of the selected year).
+  const [search, setSearch] = useState("");
+  const [headerFilter, setHeaderFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all"); // all | filled | vacant
+
+  const isArchived = Boolean(activeYear && academicYear && academicYear !== activeYear);
+  const canEdit = !isCoordinator && !isArchived;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("assign");
   const [modalForm, setModalForm] = useState({});
   const [modalError, setModalError] = useState("");
   const [modalLoading, setModalLoading] = useState(false);
 
-  const chart = useMemo(() => buildOrgChart(assignments), [assignments]);
+  const filteredChart = useMemo(() => {
+    const base = buildOrgChart(assignments);
+    const q = search.trim().toLowerCase();
+    const matchesSeat = (row) => {
+      if (headerFilter !== "all" && row.header !== headerFilter) return false;
+      if (statusFilter === "filled" && !row.official) return false;
+      if (statusFilter === "vacant" && row.official) return false;
+      if (!q) return true;
+      const name = getOfficialPersonName(row.official?.name).toLowerCase();
+      return (
+        name.includes(q) ||
+        row.position.toLowerCase().includes(q) ||
+        row.title.toLowerCase().includes(q) ||
+        (row.unit || "").toLowerCase().includes(q)
+      );
+    };
+    const rows = base.rows.filter(matchesSeat);
+    const byHeader = base.byHeader
+      .map((group) => {
+        const seats = group.seats.filter(matchesSeat);
+        return {
+          ...group,
+          seats,
+          filled: seats.filter((s) => s.official).length,
+          total: seats.length,
+        };
+      })
+      .filter((group) => group.seats.length > 0);
+    return { ...base, rows, byHeader };
+  }, [assignments, search, headerFilter, statusFilter]);
+
+  const chart = filteredChart;
 
   const filledKeys = useMemo(
     () =>
@@ -573,18 +619,68 @@ export default function UniversityOfficialsContent() {
     }
   }, [error]);
 
-  const fetchOfficials = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/university-officials");
-      const data = await res.json();
-      setAssignments(Array.isArray(data.data) ? data.data : []);
-    } catch {
-      setError("Failed to load officials");
-    } finally {
-      setLoading(false);
+  const fetchOfficials = useCallback(
+    async (year) => {
+      const target = year || academicYear;
+      if (!target) return;
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/university-officials?academic_year=${encodeURIComponent(target)}`,
+        );
+        const data = await res.json();
+        setAssignments(Array.isArray(data.data) ? data.data : []);
+        if (Array.isArray(data.years) && data.years.length) {
+          setYearOptions(data.years);
+        }
+        if (data.active_year) setActiveYear(data.active_year);
+        if (data.academic_year && data.academic_year !== target) {
+          setAcademicYear(data.academic_year);
+        }
+      } catch {
+        setError("Failed to load officials");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [academicYear],
+  );
+
+  const handleCopyForward = useCallback(async () => {
+    if (!academicYear || copying) return;
+    const sorted = [...yearOptions].sort((a, b) => b.localeCompare(a));
+    const source = sorted.find((y) => y < academicYear) || sorted[0];
+    if (!source || source === academicYear) {
+      setError("No previous year to copy from");
+      return;
     }
-  }, []);
+    if (
+      !window.confirm(
+        `Copy ${assignments.length || "the"} assignment(s) from AY ${source} to AY ${academicYear}? Past years stay unchanged.`,
+      )
+    ) {
+      return;
+    }
+    setCopying(true);
+    try {
+      const res = await fetch("/api/university-officials/copy-forward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: source, to: academicYear }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || "Failed to copy roster");
+        return;
+      }
+      setSuccess(`Copied ${data.data.copied} assignment(s) from AY ${source}!`);
+      fetchOfficials(academicYear);
+    } catch {
+      setError("Network error");
+    } finally {
+      setCopying(false);
+    }
+  }, [academicYear, copying, yearOptions, assignments.length, fetchOfficials]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -597,9 +693,32 @@ export default function UniversityOfficialsContent() {
   }, []);
 
   useEffect(() => {
-    fetchOfficials();
+    (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get("ay");
+        const res = await fetch("/api/university-officials/years");
+        const data = await res.json();
+        const years = Array.isArray(data.data) ? data.data : [];
+        if (data.active_year) setActiveYear(data.active_year);
+        const initial =
+          (requested && years.includes(requested) && requested) ||
+          data.active_year ||
+          years[0] ||
+          "";
+        setYearOptions(years.length ? years : initial ? [initial] : []);
+        if (initial) setAcademicYear(initial);
+        else setLoading(false);
+      } catch {
+        setLoading(false);
+      }
+    })();
     fetchUsers();
-  }, [fetchOfficials, fetchUsers]);
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    if (academicYear) fetchOfficials(academicYear);
+  }, [academicYear]);
 
   // Expand the first header on first load so the page does not look empty.
   useEffect(() => {
@@ -670,7 +789,7 @@ export default function UniversityOfficialsContent() {
         const res = await fetch(`/api/university-officials/${modalForm.editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: modalForm.name }),
+          body: JSON.stringify({ name: modalForm.name, academic_year: academicYear }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -694,6 +813,7 @@ export default function UniversityOfficialsContent() {
             title: seat.title,
             unit: seat.unit,
             name: modalForm.name,
+            academic_year: academicYear,
           }),
         });
         const data = await res.json();
@@ -706,7 +826,7 @@ export default function UniversityOfficialsContent() {
       }
 
       closeModal();
-      fetchOfficials();
+      fetchOfficials(academicYear);
     } catch {
       setModalError("Network error");
     } finally {
@@ -732,14 +852,14 @@ export default function UniversityOfficialsContent() {
         return;
       }
       setSuccess("Seat vacated — it now shows as vacant.");
-      fetchOfficials();
+      fetchOfficials(academicYear);
     } catch {
       setError("Network error");
     }
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-8xl mx-auto space-y-6">
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -751,13 +871,54 @@ export default function UniversityOfficialsContent() {
               University Officials
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Manage the MarSU offices and administrative designations
+              Manage the MarSU offices and administrative designations per academic year
             </p>
+            {academicYear && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <label
+                  htmlFor="officials-year"
+                  className="text-xs font-medium text-gray-500"
+                >
+                  Academic Year
+                </label>
+                <select
+                  id="officials-year"
+                  value={academicYear}
+                  onChange={(e) => setAcademicYear(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y}>
+                      AY {y}
+                      {y === activeYear ? " (Active)" : ""}
+                    </option>
+                  ))}
+                </select>
+                {isArchived ? (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    Archived
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Active
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <PrintUniversityOfficials officials={assignments} />
-          {!isCoordinator && (
+          <PrintUniversityOfficials officials={assignments} academicYear={academicYear} />
+          {canEdit && assignments.length === 0 && !loading && (
+            <button
+              onClick={handleCopyForward}
+              disabled={copying}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all duration-200 disabled:opacity-50"
+            >
+              {copying ? "Copying..." : "Copy from previous year"}
+            </button>
+          )}
+          {canEdit && (
             <button
               onClick={() => openAssign(null)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200"
@@ -768,6 +929,30 @@ export default function UniversityOfficialsContent() {
           )}
         </div>
       </div>
+
+      {isArchived && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+          <FaExclamationTriangle className="h-5 w-5 shrink-0" />
+          <span>
+            Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
+          </span>
+        </div>
+      )}
+
+      {!loading && canEdit && assignments.length === 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 text-sm">
+          <span>
+            No roster for AY {academicYear} yet. Copy last year&apos;s assignments or assign seats manually.
+          </span>
+          <button
+            onClick={handleCopyForward}
+            disabled={copying}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shrink-0"
+          >
+            {copying ? "Copying..." : "Copy from previous year"}
+          </button>
+        </div>
+      )}
 
       {/* ── Success / Error Banners ─────────────────────────────── */}
       {success && (
@@ -780,6 +965,43 @@ export default function UniversityOfficialsContent() {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* ── Filters ─────────────────────────────────────────────── */}
+      {!loading && assignments.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or position..."
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+            />
+          </div>
+          <select
+            value={headerFilter}
+            onChange={(e) => setHeaderFilter(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+          >
+            <option value="all">All offices</option>
+            {HEADERS.map((h) => (
+              <option key={h} value={h}>
+                {h}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+          >
+            <option value="all">All seats</option>
+            <option value="filled">Filled</option>
+            <option value="vacant">Vacant</option>
+          </select>
         </div>
       )}
 
@@ -850,7 +1072,7 @@ export default function UniversityOfficialsContent() {
               onAssign={openAssign}
               onEdit={openEdit}
               onVacate={handleVacate}
-              isCoordinator={isCoordinator}
+              isCoordinator={isCoordinator || isArchived}
             />
           ))}
 
@@ -858,7 +1080,7 @@ export default function UniversityOfficialsContent() {
             unlisted={chart.unlisted}
             onEdit={openEdit}
             onVacate={handleVacate}
-            isCoordinator={isCoordinator}
+            isCoordinator={isCoordinator || isArchived}
           />
         </>
       )}

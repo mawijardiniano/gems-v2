@@ -130,6 +130,7 @@ export default function EditMemberModal({
   selectedOfficials,
   execRoles,
   submitting,
+  academicYear,
   onClose,
   onSectionChange,
   onSelectedChange,
@@ -160,6 +161,7 @@ export default function EditMemberModal({
               officials={officials}
               selected={selectedOfficials}
               onChange={onSelectedChange}
+              academicYear={academicYear}
             />
           </div>
 

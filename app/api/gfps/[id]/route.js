@@ -77,10 +77,11 @@ export async function PUT(req, { params }) {
     await logActivity({
       req,
       action: "GFP_UPDATE",
-      description: "GFPS structure updated",
+      description: `GFPS structure updated (AY ${existing.academic_year})`,
       resource_type: "gfps",
       resource_id: id,
       severity: "info",
+      metadata: { academic_year: existing.academic_year },
     });
 
     return Response.json({ success: true, data: existing });

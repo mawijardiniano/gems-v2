@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toOfficeArray } from "@/lib/colleges";
+import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 
 /* Plan fields are stored wrapped as `{ value }` in MongoDB; some callers pass
    the raw API documents while others pass pre-normalized projects. Unwrap both
@@ -83,7 +84,14 @@ export default function PrintGPB({
   useEffect(() => {
     async function loadSignatories() {
       try {
-        const officialsRes = await fetch("/api/university-officials");
+        // GPB fiscal year (Number) -> AY string so old GPBs keep old signatories.
+        const y = Number(year);
+        const ay = Number.isInteger(y) ? `${y}-${y + 1}` : "";
+        const officialsRes = await fetch(
+          ay
+            ? `/api/university-officials?academic_year=${encodeURIComponent(ay)}`
+            : "/api/university-officials",
+        );
         const officialsJson = await officialsRes.json();
         const officials = Array.isArray(officialsJson?.data)
           ? officialsJson.data
@@ -94,9 +102,7 @@ export default function PrintGPB({
           { includeMiddleInitial: true },
         );
 
-        const focalEntry = officials.find((o) =>
-          o?.position?.toString().toLowerCase().includes("focal"),
-        );
+        const focalEntry = findGadFocalOfficial(officials);
         const focalName = extractNameFromUserAuth(focalEntry?.name);
 
         setSignatories({
@@ -112,7 +118,7 @@ export default function PrintGPB({
     }
 
     loadSignatories();
-  }, []);
+  }, [year]);
 
   const handlePrintProjects = () => {
     let totalGAAFormatted = "";

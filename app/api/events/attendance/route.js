@@ -13,7 +13,7 @@ export async function POST(req) {
 
     await connectDB();
 
-    const { event_id, user_id, captured_at } = await req.json();
+    const { event_id, user_id, captured_at, manual_add } = await req.json();
 
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
       return NextResponse.json(
@@ -77,7 +77,12 @@ export async function POST(req) {
     const earliestStart = startTimes.length > 0 ? Math.min(...startTimes) : null;
     const latestEnd = endTimes.length > 0 ? Math.max(...endTimes) : null;
 
-    if (earliestStart !== null && referenceTime < earliestStart) {
+    const isOrganizer = ORGANIZER_ROLES.includes(user.role);
+    // Organizer manual adds (Manual Add Attendee button) bypass the QR
+    // time-window checks so staff can mark attendance before/after the event.
+    const bypassTimeWindow = manual_add === true && isOrganizer;
+
+    if (earliestStart !== null && referenceTime < earliestStart && !bypassTimeWindow) {
       return NextResponse.json(
         {
           message: "Attendance is not yet open. The event has not started yet.",
@@ -87,7 +92,7 @@ export async function POST(req) {
       );
     }
 
-    if (latestEnd !== null && referenceTime > latestEnd) {
+    if (latestEnd !== null && referenceTime > latestEnd && !bypassTimeWindow) {
       return NextResponse.json(
         {
           message: "The QR code has expired. This event has already ended.",
@@ -137,11 +142,13 @@ export async function POST(req) {
     await logActivity({
       req,
       action: "EVENT_ATTENDANCE",
-      description: `User marked as attended for event`,
+      description: bypassTimeWindow
+        ? `Organizer manually marked users as attended for event`
+        : `User marked as attended for event`,
       resource_type: "event",
       resource_id: event_id,
       severity: "info",
-      metadata: { user_id: targetIds },
+      metadata: { user_id: targetIds, manual_add: bypassTimeWindow || false },
     });
 
     if (targetIds.length === 1) {

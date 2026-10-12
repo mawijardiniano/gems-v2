@@ -131,15 +131,18 @@ export default function GuestTab({
         });
         const data = res.data?.data || [];
 
-        const registeredIds = new Set(
-          (event.registered_users || []).map((u) =>
-            (u?._id || u)?.toString?.() || u?.toString?.() || u,
+        const attendedIds = new Set(
+          (event.attended_users || []).map(
+            (a) =>
+              (a?.user_id?._id || a?.user_id)?.toString?.() ||
+              a?.user_id?.toString?.() ||
+              a?.user_id,
           ),
         );
 
         const filtered = data.filter((user) => {
           const uid = (user?._id || user)?.toString?.();
-          return !registeredIds.has(uid);
+          return !attendedIds.has(uid);
         });
 
         setManualResults(filtered);
@@ -156,7 +159,7 @@ export default function GuestTab({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [manualSearch, showManualAdd, event.registered_users]);
+  }, [manualSearch, showManualAdd, event.attended_users]);
 
   const handleToggleManualSelect = (userId) => {
     setManualSelected((prev) => {
@@ -185,8 +188,13 @@ export default function GuestTab({
     try {
       const result = await handleManualAddUsers(manualSelected);
       if (result?.success) {
+        const count = manualSelected.length;
+        const already = result?.alreadyCount || 0;
+        const added = result?.addedCount ?? count;
         setManualSuccess(
-          `Successfully added ${manualSelected.length} user${manualSelected.length !== 1 ? "s" : ""} to the Going list.`,
+          already > 0 && added === 0
+            ? `Already marked as attended (${already}).`
+            : `Marked ${added} user${added !== 1 ? "s" : ""} as attended${already > 0 ? ` (${already} already attended)` : ""}.`,
         );
         setManualSelected([]);
         setManualResults([]);
@@ -207,16 +215,16 @@ export default function GuestTab({
     }
   };
 
-  const isUserAlreadyGoing = (userId) => {
+  const isUserAlreadyAttended = (userId) => {
     const idStr = userId?.toString?.();
-    return (event.registered_users || []).some((u) => {
-      const uid = (u?._id || u)?.toString?.();
+    return (event.attended_users || []).some((a) => {
+      const uid = (a?.user_id?._id || a?.user_id)?.toString?.();
       return uid === idStr;
     });
   };
 
   const manualResultsFiltered = manualResults.filter(
-    (u) => !isUserAlreadyGoing(u._id),
+    (u) => !isUserAlreadyAttended(u._id),
   );
 
   const allManualVisibleSelected =
@@ -267,7 +275,7 @@ export default function GuestTab({
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-gray-900">Manual Add Attendee</h2>
-                  <p className="text-xs text-gray-500">Search and select users to add to the Going list</p>
+                  <p className="text-xs text-gray-500">Search and select users to mark as Attended</p>
                 </div>
               </div>
               <button onClick={() => setShowManualAdd(false)} className="btn-ghost !p-2 !rounded-lg" aria-label="Close">

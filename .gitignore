@@ -6,6 +6,12 @@ app/data/
 # One-off script backups (may contain personal data)
 scripts/backups/
 
+# One-off OCR / import scratch (may contain personal data + generates 50+ images)
+scripts/_gad2023-src/
+scripts/*preview.html
+scripts/*-import.json
+scripts/_*.mjs
+
 # dependencies
 /node_modules
 /.pnp

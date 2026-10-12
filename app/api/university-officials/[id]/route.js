@@ -26,14 +26,14 @@ export async function GET(req, { params }) {
   return Response.json({ success: true, data: official });
 }
 
-/** Reassigns an existing seat to a different person. */
+/** Reassigns an existing seat to a different person (same academic year). */
 export async function PATCH(req, { params }) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const body = await req.json();
-  const { name } = body || {};
+  const { name, academic_year } = body || {};
 
   if (!name) {
     return Response.json(
@@ -43,6 +43,30 @@ export async function PATCH(req, { params }) {
   }
 
   try {
+    const current = await UniversityOfficial.findById(id).populate(POPULATE);
+    if (!current) {
+      return Response.json(
+        { success: false, error: "Not found" },
+        { status: 404 },
+      );
+    }
+
+    // Guard: never silently move a person across academic years.
+    if (academic_year && academic_year !== current.academic_year) {
+      return Response.json(
+        {
+          success: false,
+          error: `Seat belongs to AY ${current.academic_year}; switch to that year to edit it`,
+        },
+        { status: 409 },
+      );
+    }
+
+    const prevName =
+      current.name?.personal_info_id?.personal
+        ? `${current.name.personal_info_id.personal.first_name || ""} ${current.name.personal_info_id.personal.last_name || ""}`.trim()
+        : current.name?.username || "";
+
     const updated = await UniversityOfficial.findByIdAndUpdate(
       id,
       { $set: { name } },
@@ -56,17 +80,25 @@ export async function PATCH(req, { params }) {
       );
     }
 
+    const newName =
+      updated.name?.personal_info_id?.personal
+        ? `${updated.name.personal_info_id.personal.first_name || ""} ${updated.name.personal_info_id.personal.last_name || ""}`.trim()
+        : updated.name?.username || "";
+
     await logActivity({
       req,
       action: "OFFICIAL_UPDATE",
-      description: `Official reassigned for "${updated.position}"`,
+      description: `Official reassigned for "${updated.position}" (AY ${updated.academic_year})`,
       resource_type: "university_official",
       resource_id: id,
       severity: "info",
       metadata: {
+        academic_year: updated.academic_year,
         header: updated.header,
         title: updated.title,
         unit: updated.unit,
+        prev_name: prevName,
+        new_name: newName,
       },
     });
 
@@ -97,11 +129,12 @@ export async function DELETE(req, { params }) {
   await logActivity({
     req,
     action: "OFFICIAL_VACATE",
-    description: `Official vacated "${deleted.position}"`,
+    description: `Official vacated "${deleted.position}" (AY ${deleted.academic_year})`,
     resource_type: "university_official",
     resource_id: id,
     severity: "warning",
     metadata: {
+      academic_year: deleted.academic_year,
       header: deleted.header,
       title: deleted.title,
       unit: deleted.unit,

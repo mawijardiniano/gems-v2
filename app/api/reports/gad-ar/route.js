@@ -7,6 +7,7 @@ import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
 import UniversityOfficial from "@/models/universityOfficials";
+import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 import {
   PROJECT_EVENTS_POPULATE,
   resolveAccomplishmentText,
@@ -410,9 +411,7 @@ export async function GET(req) {
           margin: { left: M, right: M },
         });
 
-        const focalEntry = (officials || []).find((item) =>
-          item?.position?.toString().toLowerCase().includes("focal"),
-        );
+        const focalEntry = findGadFocalOfficial(officials);
         const focalPointName = extractName(focalEntry?.name);
         const presidentName = extractName(
           (officials || []).find((item) => item?.title === "University President")

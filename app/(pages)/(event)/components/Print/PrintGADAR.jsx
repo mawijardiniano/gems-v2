@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 import { FaPrint } from "react-icons/fa";
 import { renderPdfPagesToImages } from "@/lib/print/pdfRenderer";
 import { resolveAccomplishmentText } from "@/lib/accomplishmentSummary";
@@ -145,7 +146,14 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
   useEffect(() => {
     async function loadSignatories() {
       try {
-        const officialsRes = await fetch("/api/university-officials");
+        // GPB fiscal year (Number) -> AY string so old reports keep old signatories.
+        const y = Number(year);
+        const ay = Number.isInteger(y) ? `${y}-${y + 1}` : "";
+        const officialsRes = await fetch(
+          ay
+            ? `/api/university-officials?academic_year=${encodeURIComponent(ay)}`
+            : "/api/university-officials",
+        );
         const officialsJson = await officialsRes.json();
         const officials = Array.isArray(officialsJson?.data)
           ? officialsJson.data
@@ -156,9 +164,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           { includeMiddleInitial: true },
         );
 
-        const focalEntry = officials.find((o) =>
-          o?.position?.toString().toLowerCase().includes("focal"),
-        );
+        const focalEntry = findGadFocalOfficial(officials);
         const focalName = extractNameFromUserAuth(focalEntry?.name);
 
         setSignatories({
@@ -174,7 +180,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     }
 
     loadSignatories();
-  }, []);
+  }, [year]);
 
   useEffect(() => {
     async function loadEventAttachments() {

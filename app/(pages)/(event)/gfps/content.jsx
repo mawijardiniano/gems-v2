@@ -24,7 +24,16 @@ export default function GFPSManager() {
   const [execRoles, setExecRoles] = useState({});
   const [editingSection, setEditingSection] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [academicYear, setAcademicYear] = useState("");
+  const [yearOptions, setYearOptions] = useState([]);
+  const [activeYear, setActiveYear] = useState("");
+  const [copying, setCopying] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [isLegacy, setIsLegacy] = useState(false);
   const role = useSelector((state) => state.auth.role);
+
+  const isArchived = Boolean(activeYear && academicYear && academicYear !== activeYear);
+  const canEdit = role !== "gad coordinator" && !isArchived;
 
   useEffect(() => {
     setExecRoles((prev) => {
@@ -40,43 +49,166 @@ export default function GFPSManager() {
   }, [selectedOfficials]);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/university-officials/years");
+        const data = await res.json();
+        const years = Array.isArray(data.data) ? data.data : [];
+        if (data.active_year) setActiveYear(data.active_year);
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get("ay");
+        const initial =
+          (requested && years.includes(requested) && requested) ||
+          data.active_year ||
+          years[0] ||
+          "";
+        setYearOptions(years.length ? years : initial ? [initial] : []);
+        if (initial) setAcademicYear(initial);
+        else setLoadingGfps(false);
+      } catch {
+        setLoadingGfps(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!academicYear) return;
     async function fetchGfps() {
       setLoadingGfps(true);
       try {
-        const res = await fetch("/api/gfps");
+        const res = await fetch(
+          `/api/gfps?academic_year=${encodeURIComponent(academicYear)}`,
+        );
         const data = await res.json();
         setGfps(data.data && data.data[0] ? data.data[0] : {});
+        setIsLegacy(Boolean(data.legacy));
+        if (Array.isArray(data.years) && data.years.length) {
+          setYearOptions((prev) => [...new Set([...prev, ...data.years])].sort((a, b) => b.localeCompare(a)));
+        }
+        if (data.active_year) setActiveYear(data.active_year);
       } finally {
         setLoadingGfps(false);
       }
     }
     fetchGfps();
-  }, []);
+  }, [academicYear]);
 
   useEffect(() => {
+    if (!academicYear) return;
     async function fetchOfficials() {
-      const res = await fetch("/api/university-officials");
+      const res = await fetch(
+        `/api/university-officials?academic_year=${encodeURIComponent(academicYear)}`,
+      );
       const data = await res.json();
       setOfficials(Array.isArray(data.data) ? data.data : []);
     }
     fetchOfficials();
-  }, []);
+  }, [academicYear]);
 
   const resolveOfficialKey = useCallback(
     (officialId) => findOfficialKey(officials, officialId),
     [officials],
   );
 
-  async function fetchGfps() {
+  async function fetchGfps(year) {
+    const target = year || academicYear;
+    if (!target) return;
     setLoadingGfps(true);
     try {
-      const res = await fetch("/api/gfps");
+      const res = await fetch(
+        `/api/gfps?academic_year=${encodeURIComponent(target)}`,
+      );
       const data = await res.json();
       setGfps(data.data && data.data[0] ? data.data[0] : {});
+      setIsLegacy(Boolean(data.legacy));
     } finally {
       setLoadingGfps(false);
     }
   }
+
+  // One-click rescue for pre-migration records: tag the legacy roster + GFPS
+  // to the selected year in place; nothing is deleted.
+  const handleAssignLegacy = async () => {
+    if (!academicYear || copying) return;
+    if (
+      !window.confirm(
+        `Assign the untagged legacy records to AY ${academicYear}? This tags them in place; nothing is deleted.`,
+      )
+    ) {
+      return;
+    }
+    setCopying(true);
+    setNotice("");
+    try {
+      const res = await fetch("/api/university-officials/assign-legacy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: academicYear }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setNotice(data.error || "Failed to assign legacy records");
+        return;
+      }
+      setNotice(
+        `Assigned legacy records to AY ${academicYear} (${data.data?.officials ?? 0} official(s), ${data.data?.gfps ?? 0} GFPS).`,
+      );
+      setIsLegacy(false);
+      await fetchGfps(academicYear);
+      const off = await fetch(
+        `/api/university-officials?academic_year=${encodeURIComponent(academicYear)}`,
+      )
+        .then((r) => r.json())
+        .catch(() => ({}));
+      if (Array.isArray(off?.data)) setOfficials(off.data);
+    } catch {
+      setNotice("Network error");
+    } finally {
+      setCopying(false);
+    }
+  };
+
+  const handleCopyForward = async () => {
+    if (!academicYear || copying) return;
+    const sorted = [...yearOptions].sort((a, b) => b.localeCompare(a));
+    const source = sorted.find((y) => y < academicYear) || sorted[0];
+    if (!source || source === academicYear) {
+      setNotice("No previous year to copy from");
+      return;
+    }
+    if (
+      !window.confirm(
+        `Copy the GFPS committee from AY ${source} to AY ${academicYear}? Copy the officials roster first if you have not.`,
+      )
+    ) {
+      return;
+    }
+    setCopying(true);
+    setNotice("");
+    try {
+      const res = await fetch("/api/gfps/copy-forward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from: source, to: academicYear }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setNotice(data.error || "Failed to copy GFPS");
+        return;
+      }
+      const unmapped = Array.isArray(data.data?.unmapped) ? data.data.unmapped : [];
+      setNotice(
+        unmapped.length
+          ? `Copied from AY ${source}. ${unmapped.length} member(s) need re-picking (seat changed).`
+          : `Copied GFPS from AY ${source}!`,
+      );
+      await fetchGfps(academicYear);
+    } catch {
+      setNotice("Network error");
+    } finally {
+      setCopying(false);
+    }
+  };
 
   const openAddModal = () => {
     setEditingSection(null);
@@ -131,7 +263,10 @@ export default function GFPSManager() {
       }));
 
       const behavior = SECTION_BEHAVIOR[section];
-      const payload = behavior.buildPayload(resolvedOfficials, execRoles);
+      const payload = {
+        ...behavior.buildPayload(resolvedOfficials, execRoles),
+        academic_year: academicYear,
+      };
 
       const isEditing = !!editingSection;
       const method = isEditing ? "PUT" : "POST";
@@ -149,7 +284,7 @@ export default function GFPSManager() {
         alert(data?.message || "Failed to save GFPS");
       } else {
         handleCloseModal();
-        await fetchGfps();
+        await fetchGfps(academicYear);
       }
     } catch (err) {
       console.error("SUBMIT ERROR:", err);
@@ -164,7 +299,7 @@ export default function GFPSManager() {
     SECTIONS.some((sec) => sectionHasData(gfps, sec.key));
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
+    <div className="p-6 max-w-8xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
@@ -178,14 +313,55 @@ export default function GFPSManager() {
                 GFPS
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                Gender and Development Focal Point System — manage committee members and their roles
+                Gender and Development Focal Point System — manage committee members and their roles per academic year
               </p>
+              {academicYear && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <label
+                    htmlFor="gfps-year"
+                    className="text-xs font-medium text-gray-500"
+                  >
+                    Academic Year
+                  </label>
+                  <select
+                    id="gfps-year"
+                    value={academicYear}
+                    onChange={(e) => setAcademicYear(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  >
+                    {yearOptions.map((y) => (
+                      <option key={y} value={y}>
+                        AY {y}
+                        {y === activeYear ? " (Active)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {isArchived ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                      Archived
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Active
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <PrintGFPS className="justify-center items-center flex" SECTIONS={SECTIONS} gfps={gfps} />
-          {role !== "gad coordinator" && (
+          {canEdit && !hasData && !loadingGfps && (
+            <button
+              onClick={handleCopyForward}
+              disabled={copying}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all font-medium text-sm disabled:opacity-50"
+            >
+              {copying ? "Copying..." : "Copy from previous year"}
+            </button>
+          )}
+          {canEdit && (
             <button
               onClick={openAddModal}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300"
@@ -199,6 +375,50 @@ export default function GFPSManager() {
         </div>
       </div>
 
+      {isArchived && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+          <span>
+            Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
+          </span>
+        </div>
+      )}
+
+      {notice && (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
+          <span>{notice}</span>
+        </div>
+      )}
+
+      {isLegacy && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+          <span>
+            Showing untagged records from before the academic-year migration. Assign them to AY {academicYear} to keep them.
+          </span>
+          <button
+            onClick={handleAssignLegacy}
+            disabled={copying}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-all disabled:opacity-50 shrink-0"
+          >
+            {copying ? "Assigning..." : `Assign to AY ${academicYear}`}
+          </button>
+        </div>
+      )}
+
+      {!loadingGfps && canEdit && !hasData && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 text-sm">
+          <span>
+            No GFPS for AY {academicYear} yet. Copy last year&apos;s committee or add members manually.
+          </span>
+          <button
+            onClick={handleCopyForward}
+            disabled={copying}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shrink-0"
+          >
+            {copying ? "Copying..." : "Copy from previous year"}
+          </button>
+        </div>
+      )}
+
       {showModal && (
         <EditMemberModal
           section={section}
@@ -207,6 +427,7 @@ export default function GFPSManager() {
           selectedOfficials={selectedOfficials}
           execRoles={execRoles}
           submitting={submitting}
+          academicYear={academicYear}
           onClose={handleCloseModal}
           onSectionChange={setSection}
           onSelectedChange={setSelectedOfficials}
@@ -218,7 +439,7 @@ export default function GFPSManager() {
       {loadingGfps ? (
         <LoadingSkeleton />
       ) : !hasData ? (
-        <EmptyState onAdd={role !== "gad coordinator" ? openAddModal : null} />
+        <EmptyState onAdd={canEdit ? openAddModal : null} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-5 items-start">
           {SECTIONS.map((sec) => (
@@ -227,7 +448,7 @@ export default function GFPSManager() {
               sectionKey={sec.key}
               label={sec.label}
               gfps={gfps}
-              canEdit={role !== "gad coordinator"}
+              canEdit={canEdit}
               onEdit={handleEdit}
             />
           ))}

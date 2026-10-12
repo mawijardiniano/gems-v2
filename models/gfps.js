@@ -53,6 +53,14 @@ const TechnicalWorkingGroupSchema = new mongoose.Schema({
 });
 
 const GFPSchema = new mongoose.Schema({
+  // One GFPS committee snapshot per academic year (e.g. "2025-2026").
+  academic_year: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    match: [/^\d{4}-\d{4}$/, "academic_year must look like 2025-2026"],
+  },
   chairOrHeadOfAgency: MemberSchema,
   executiveCommittee: ExecutiveCommitteeSchema,
   technicalWorkingGroup: TechnicalWorkingGroupSchema,

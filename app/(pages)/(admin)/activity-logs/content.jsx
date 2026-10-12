@@ -59,6 +59,7 @@ const ACTION_COLORS = {
   GFP_UPDATE: "text-cyan-600 bg-cyan-50",
   GFP_MEMBER_ADD: "text-cyan-600 bg-cyan-50",
   GFP_MEMBER_REMOVE: "text-cyan-600 bg-cyan-50",
+  GFP_COPY_FORWARD: "text-cyan-600 bg-cyan-50",
   GPB_CREATE: "text-green-600 bg-green-50",
   GPB_UPDATE: "text-green-600 bg-green-50",
   GPB_DELETE: "text-red-700 bg-red-100",
@@ -71,6 +72,10 @@ const ACTION_COLORS = {
   OFFICIAL_CREATE: "text-orange-600 bg-orange-50",
   OFFICIAL_UPDATE: "text-orange-600 bg-orange-50",
   OFFICIAL_DELETE: "text-red-700 bg-red-100",
+  OFFICIAL_ASSIGN: "text-orange-600 bg-orange-50",
+  OFFICIAL_VACATE: "text-red-700 bg-red-100",
+  OFFICIAL_COPY_FORWARD: "text-orange-600 bg-orange-50",
+  OFFICIAL_ASSIGN_LEGACY: "text-orange-600 bg-orange-50",
   PROJECT_CREATE: "text-teal-600 bg-teal-50",
   PROJECT_UPDATE: "text-yellow-600 bg-yellow-50",
   PROJECT_DELETE: "text-red-700 bg-red-100",
@@ -310,6 +315,7 @@ export default function ActivityLogsContent() {
               <option value="GFP_UPDATE">GFP_UPDATE</option>
               <option value="GFP_MEMBER_ADD">GFP_MEMBER_ADD</option>
               <option value="GFP_MEMBER_REMOVE">GFP_MEMBER_REMOVE</option>
+              <option value="GFP_COPY_FORWARD">GFP_COPY_FORWARD</option>
               <option value="GPB_CREATE">GPB_CREATE</option>
               <option value="GPB_UPDATE">GPB_UPDATE</option>
               <option value="GPB_DELETE">GPB_DELETE</option>

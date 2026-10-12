@@ -9,9 +9,10 @@ const VACANT = "—";
  * Vacant seats are printed as "—" so the paper output always mirrors the
  * official chart, whether or not a person has been assigned yet.
  */
-export default function PrintUniversityOfficials({ officials }) {
+export default function PrintUniversityOfficials({ officials, academicYear }) {
   const handlePrintOfficials = () => {
     const chart = buildOrgChart(officials);
+    const yearLabel = academicYear ? ` — AY ${academicYear}` : "";
 
     const sectionsHtml = chart.byHeader
       .map(({ header, seats }) => {
@@ -121,7 +122,7 @@ export default function PrintUniversityOfficials({ officials }) {
       </head>
       <body>
         <h2>MARINDUQUE STATE UNIVERSITY</h2>
-        <p class="subtitle">Offices &amp; Administrative Designations</p>
+        <p class="subtitle">Offices &amp; Administrative Designations${yearLabel}</p>
 
         ${sectionsHtml}
         ${unlistedHtml}
