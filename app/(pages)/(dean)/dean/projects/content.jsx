@@ -334,8 +334,8 @@ export default function DeanProjectsContent() {
                       <div className="flex items-center gap-1.5 text-xs text-gray-400">
                         <FaUsers size={12} />
                         <span>
-                          {evt.registered_users?.length || 0} participant
-                          {(evt.registered_users?.length || 0) !== 1 ? "s" : ""}
+                          {evt.attended_users?.length || 0} participant
+                          {(evt.attended_users?.length || 0) !== 1 ? "s" : ""}
                         </span>
                       </div>
                       <button

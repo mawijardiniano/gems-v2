@@ -367,7 +367,7 @@ export default function EventsDashboardContent() {
     const completed = yearEvents.filter((e) => e.status === "completed").length;
     const cancelled = yearEvents.filter((e) => e.status === "cancelled").length;
     const totalParticipants = yearEvents.reduce(
-      (sum, e) => sum + (e.registered_users?.length || 0),
+      (sum, e) => sum + (e.attended_users?.length || 0),
       0,
     );
     return {
@@ -590,7 +590,7 @@ export default function EventsDashboardContent() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Events Dashboard
+            Dashboard
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Overview of events, report readiness, projects, and budget
@@ -1195,7 +1195,7 @@ export default function EventsDashboardContent() {
                       )
                     : "TBD";
 
-                  const registrations = event.registered_users?.length || 0;
+                  const registrations = event.attended_users?.length || 0;
 
                   return (
                     <div

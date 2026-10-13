@@ -33,11 +33,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showQrPrompt, setShowQrPrompt] = useState(false);
   const [baseUrl, setBaseUrl] = useState("");
-  const [qrDataUrl, setQrDataUrl] = useState("");
   const [profileChecked, setProfileChecked] = useState(false);
-  const [interestedSelected, setInterestedSelected] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -49,8 +46,25 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [projects, setProjects] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
-  const [interestedSearch, setInterestedSearch] = useState("");
   const [insightsFilter, setInsightsFilter] = useState("all");
+  const [guests, setGuests] = useState([]);
+  const [guestsLoading, setGuestsLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== "guests" || !eventId) return;
+    const loadGuests = async () => {
+      setGuestsLoading(true);
+      try {
+        const res = await axios.get(`/api/events/guests?event_id=${eventId}`);
+        setGuests(res.data?.data || []);
+      } catch (err) {
+        setGuests([]);
+      } finally {
+        setGuestsLoading(false);
+      }
+    };
+    loadGuests();
+  }, [activeTab, eventId, event]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -173,9 +187,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
             gad_activity: evt.gad_activity,
             title: evt.title || "",
             description: evt.description || "",
-            date: startInput ? startInput.slice(0, 10) : "",
-            start_time: startInput ? startInput.slice(11, 16) : "",
-            end_time: endInput ? endInput.slice(11, 16) : "",
+            date: startInput || "",
+            start_time: "",
+            end_time: "",
             venue: evt.venue || "",
             status: evt.status || "active",
             organizing_office_unit: evt.organizing_office_unit,
@@ -195,14 +209,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   }, [eventId]);
 
   useEffect(() => {
-    if (searchParams?.get("qr") === "1" && profileChecked && !userId) {
-      setShowQrPrompt(true);
-    } else {
-      setShowQrPrompt(false);
-    }
-  }, [searchParams, profileChecked, userId]);
-
-  useEffect(() => {
     const envQrPublic = process.env.NEXT_PUBLIC_QR_BASE_URL;
     const envQr = process.env.NEXT_QR_BASE_URL;
     const envPublic = process.env.NEXT_PUBLIC_BASE_URL;
@@ -215,21 +221,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       setBaseUrl(window.location.origin);
     }
   }, []);
-
-  useEffect(() => {
-    const buildQr = async () => {
-      if (!baseUrl || !eventId) return;
-      try {
-        // Single attendance QR: scan → no-login form at /attend/[id].
-        const deepLink = `${baseUrl}/attend/${eventId}`;
-        const dataUrl = await QRCode.toDataURL(deepLink, { width: 220 });
-        setQrDataUrl(dataUrl);
-      } catch (e) {
-        setQrDataUrl("");
-      }
-    };
-    buildQr();
-  }, [baseUrl, eventId]);
 
   useEffect(() => {
     const buildAttendanceQr = async () => {
@@ -309,7 +300,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return "";
     const pad = (n) => `${n}`.padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    // Date-only events: edit with YYYY-MM-DD, no time.
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
   const toAcronym = (value) => {
@@ -331,29 +323,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       .join(" ");
   };
 
-  const goingProfiles = useMemo(
-    () =>
-      (event?.registered_users || [])
-        .map((u) => u?.personal_info_id)
-        .filter(Boolean),
-    [event],
-  );
-
-  const interestedProfiles = useMemo(
-    () =>
-      (event?.interested_users || [])
-        .map((u) => u?.personal_info_id)
-        .filter(Boolean),
-    [event],
-  );
-
-  const notInterestedProfiles = useMemo(
-    () =>
-      (event?.not_interested_users || [])
-        .map((u) => u?.personal_info_id)
-        .filter(Boolean),
-    [event],
-  );
+  const goingProfiles = [];
+  const interestedProfiles = [];
+  const notInterestedProfiles = [];
 
   const attendedProfiles = useMemo(
     () =>
@@ -365,7 +337,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   const ageGroupCounts = useMemo(() => {
     const counts = {};
-    (event?.registered_users || []).forEach((u) => {
+    (event?.attended_users || []).forEach((a) => {
+      const u = a?.user_id || {};
       const info = u?.personal_info_id || u?.personal_info || {};
       const personal = info.personal || u?.personal || {};
       const birthday = personal.birthday;
@@ -386,26 +359,18 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   const allProfiles = useMemo(() => {
     const seen = new Set();
-    return [
-      ...goingProfiles,
-      ...interestedProfiles,
-      ...notInterestedProfiles,
-      ...attendedProfiles,
-    ].filter((p) => {
+    return [...attendedProfiles].filter((p) => {
       const key = String(p?._id ?? p);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles]);
+  }, [attendedProfiles]);
 
   const filteredProfiles = useMemo(() => {
-    if (insightsFilter === "going") return goingProfiles;
-    if (insightsFilter === "interested") return interestedProfiles;
-    if (insightsFilter === "not_interested") return notInterestedProfiles;
     if (insightsFilter === "attended") return attendedProfiles;
     return allProfiles;
-  }, [insightsFilter, goingProfiles, interestedProfiles, notInterestedProfiles, attendedProfiles, allProfiles]);
+  }, [insightsFilter, attendedProfiles, allProfiles]);
 
   const calculateAge = (birthday) => {
     if (!birthday) return null;
@@ -470,32 +435,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     };
   };
 
-  const interestedFiltered = useMemo(() => {
-    if (!event?.interested_users) return [];
-    return event.interested_users.filter((guest) => {
-      const details = extractGuestDetails(guest);
-      if (!interestedSearch) return true;
-      return details.name
-        ?.toLowerCase()
-        .includes(interestedSearch.toLowerCase());
-    });
-  }, [event, interestedSearch]);
-
-  const interestedSelectAll =
-    interestedFiltered.length > 0 &&
-    interestedFiltered.every((guest) => interestedSelected.includes(guest._id));
-
-  const handleInterestedSelectAll = (e) => {
-    const checked = e.target.checked;
-    if (checked) {
-      setInterestedSelected(interestedFiltered.map((guest) => guest._id));
-    } else {
-      setInterestedSelected([]);
-    }
-  };
-
-  const buildRows = (guests) =>
-    buildGuestRows(guests, extractGuestDetails, capitalizeName);
+  const buildRows = (list) =>
+    buildGuestRows(list, extractGuestDetails, capitalizeName);
 
   const genderData = useMemo(() => {
     const counts = { Male: 0, Female: 0 };
@@ -583,24 +524,14 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   const affiliationData = statusCounts;
 
-  const totalRegistered = goingProfiles.length;
+  const totalRegistered = attendedProfiles.length;
   const maleCount = genderData.find((d) => d.name === "Male")?.value || 0;
   const femaleCount = genderData.find((d) => d.name === "Female")?.value || 0;
-  const interestedCount = event?.interested_users?.length || 0;
-  const notInterestedCount = event?.not_interested_users?.length || 0;
-  const goingCount = (event?.registered_users || []).length;
-  const attendedCount = (event?.attended_users || []).length;
-  const showRate =
-    goingCount > 0 ? Math.round((attendedCount / goingCount) * 100) : null;
+  const attendedCount = (event?.attended_users || []).length + guests.length;
 
   const eventData = useMemo(
-    () => [
-      { name: "Interested", value: interestedCount },
-      { name: "Not Interested", value: notInterestedCount },
-      { name: "Going", value: goingCount },
-      { name: "Attended", value: attendedCount },
-    ],
-    [interestedCount, notInterestedCount, goingCount, attendedCount],
+    () => [{ name: "Attended", value: attendedCount }],
+    [attendedCount],
   );
 
   const handleEditChange = (field, value) => {
@@ -617,23 +548,16 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       const oldPoster = event.event_poster;
       const newPoster = editData.event_poster;
 
-      const startDateTime = new Date(
-        `${editData.date}T${editData.start_time || "00:00"}`,
-      );
-      const endDateTime = new Date(
-        `${editData.date}T${editData.end_time || "23:59"}`,
-      );
+      const startDateTime = editData.date ? new Date(`${editData.date}T00:00`) : null;
+      const endDateTime = editData.date ? new Date(`${editData.date}T23:59`) : null;
 
       if (
+        !startDateTime ||
+        !endDateTime ||
         Number.isNaN(startDateTime.getTime()) ||
         Number.isNaN(endDateTime.getTime())
       ) {
-        setError("Invalid event date or time values.");
-        setSaving(false);
-        return;
-      }
-      if (endDateTime < startDateTime) {
-        setError("End time must be after start time.");
+        setError("Invalid event date value.");
         setSaving(false);
         return;
       }
@@ -676,87 +600,12 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     }
   };
 
-  const handleAssignGoing = async () => {
-    if (!eventId || interestedSelected.length === 0) return;
-    try {
-      await axios.post("/api/events/participation", {
-        event_id: eventId,
-        user_id: interestedSelected,
-        status: "going",
-      });
-      const res = await axios.get(`/api/events/${eventId}`);
-      setEvent(res.data?.data || event);
-      setInterestedSelected([]);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to assign going.");
-    }
-  };
-
-  const handleManualAddUsers = async (userIds) => {
-    if (!eventId || !Array.isArray(userIds) || userIds.length === 0) {
-      return { success: false, message: "No users selected." };
-    }
-    try {
-      // Manual Add = mark directly as Attended (attended_users),
-      // not Going/Interested. `manual_add` lets organizers bypass the
-      // QR time-window checks on the attendance API.
-      const res = await axios.post("/api/events/attendance", {
-        event_id: eventId,
-        user_id: userIds,
-        manual_add: true,
-      });
-      const refreshed = await axios.get(`/api/events/${eventId}`);
-      setEvent(refreshed.data?.data || event);
-      const data = res.data || {};
-      const results = Array.isArray(data.results) ? data.results : null;
-      const addedCount = results
-        ? results.filter((r) => r?.added).length
-        : data?.already_attended
-          ? 0
-          : userIds.length;
-      const alreadyCount = results
-        ? results.filter((r) => !r?.added).length
-        : data?.already_attended
-          ? 1
-          : 0;
-      return { success: true, addedCount, alreadyCount };
-    } catch (err) {
-      return {
-        success: false,
-        message: err.response?.data?.message || "Failed to add users.",
-      };
-    }
-  };
-
-  const handleDownloadQr = () => {
-    if (!qrDataUrl) return;
-    const link = document.createElement("a");
-    link.href = qrDataUrl;
-    link.download = `${event?.title || "event"}-qr.png`;
-    link.click();
-  };
-
   const handleDownloadAttendanceQr = () => {
     if (!attendanceQrDataUrl) return;
     const link = document.createElement("a");
     link.href = attendanceQrDataUrl;
     link.download = `${event?.title || "event"}-attendance-qr.png`;
     link.click();
-  };
-
-  const handleQrYesAccount = () => {
-    setShowQrPrompt(false);
-    if (userId) {
-      return;
-    }
-    router.push(
-      `/authentication/signin?redirect=/events/discover/${eventId}?qr=1`,
-    );
-  };
-
-  const handleQrNoAccount = () => {
-    setShowQrPrompt(false);
-    router.push("/profile-registration");
   };
 
   if (loading) {
@@ -791,39 +640,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   return (
    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
-
-      {showQrPrompt && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2 className="text-lg font-bold text-gray-900">
-                Do you have a GEMS account?
-              </h2>
-              <button
-                onClick={handleQrNoAccount}
-                className="btn-ghost !p-2"
-                aria-label="Close"
-              >
-                <FiX />
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                If yes, sign in so we can link your participation. If not, we will
-                take you to a quick survey instead.
-              </p>
-            </div>
-            <div className="modal-footer">
-              <button onClick={handleQrNoAccount} className="btn-secondary">
-                No, take survey
-              </button>
-              <button onClick={handleQrYesAccount} className="btn-primary">
-                Yes, I have an account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <button
         onClick={() => router.push(backPath)}
@@ -893,14 +709,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           error={error}
           baseUrl={baseUrl}
           eventId={eventId}
-          qrDataUrl={qrDataUrl}
-          handleDownloadQr={handleDownloadQr}
           attendanceQrDataUrl={attendanceQrDataUrl}
           handleDownloadAttendanceQr={handleDownloadAttendanceQr}
-          showQrPrompt={showQrPrompt}
-          setShowQrPrompt={setShowQrPrompt}
-          handleQrYesAccount={handleQrYesAccount}
-          handleQrNoAccount={handleQrNoAccount}
           userId={userId}
           showDeleteModal={showDeleteModal}
           setShowDeleteModal={setShowDeleteModal}
@@ -916,41 +726,22 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
       {activeTab === "guests" && (
         <GuestTab
-          guestTab={guestTab}
-          setGuestTab={setGuestTab}
           event={event}
-          interestedSearch={interestedSearch}
-          setInterestedSearch={setInterestedSearch}
-          interestedSelectAll={interestedSelectAll}
-          handleInterestedSelectAll={handleInterestedSelectAll}
-          interestedSelected={interestedSelected}
-          setInterestedSelected={setInterestedSelected}
-          handleAssignGoing={handleAssignGoing}
-          handleManualAddUsers={handleManualAddUsers}
-          extractGuestDetails={extractGuestDetails}
-          buildGuestRows={buildRows}
-          handleDownloadGuestsPdf={(guests) =>
-            handleDownloadGuestsPdf(guests, event, buildRows)
+          guests={guests}
+          guestsLoading={guestsLoading}
+          handleDownloadGuestsPdf={(list) =>
+            handleDownloadGuestsPdf(list, event, buildRows)
           }
           handleDownloadBlankGuestsPdf={() =>
             handleDownloadBlankGuestsPdf(event)
           }
-          handlePrintGuests={(guests) =>
-            handlePrintGuests(guests, event, buildRows)
+          handlePrintGuests={(list) =>
+            handlePrintGuests(list, event, buildRows)
           }
           guestTypeFilter={guestTypeFilter}
           setGuestTypeFilter={setGuestTypeFilter}
-          guestCollegeFilter={guestCollegeFilter}
-          setGuestCollegeFilter={setGuestCollegeFilter}
-          guestCourseFilter={guestCourseFilter}
-          setGuestCourseFilter={setGuestCourseFilter}
-          guestYearFilter={guestYearFilter}
-          setGuestYearFilter={setGuestYearFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
-          COLLEGE_TO_PROGRAMS={COLLEGE_TO_PROGRAMS}
-          YEAR_LEVELS={YEAR_LEVELS}
-          getFilteredGuests={getFilteredGuests}
         />
       )}
 
@@ -962,12 +753,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           maleCount={maleCount}
           femaleCount={femaleCount}
           statusCounts={statusCounts}
-          interestedCount={interestedCount}
-          notInterestedCount={notInterestedCount}
           ageGroupCounts={ageGroupCounts}
-          goingCount={goingCount}
           attendedCount={attendedCount}
-          showRate={showRate}
           genderDataChart={genderDataChart}
           affiliationData={affiliationData}
           eventData={eventData}

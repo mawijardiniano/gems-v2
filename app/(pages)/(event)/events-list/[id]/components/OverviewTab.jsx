@@ -44,14 +44,8 @@ export default function OverviewTab({
   error,
   baseUrl,
   eventId,
-  qrDataUrl,
-  handleDownloadQr,
   attendanceQrDataUrl,
   handleDownloadAttendanceQr,
-  showQrPrompt,
-  setShowQrPrompt,
-  handleQrYesAccount,
-  handleQrNoAccount,
   formatRange,
   userId,
   showDeleteModal,
@@ -213,12 +207,12 @@ export default function OverviewTab({
       value: event.venue || "—",
     },
     {
-      label: "Registered",
+      label: "Attended",
       icon: FaUsers,
       gradient: "from-emerald-600 to-emerald-400",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
-      value: (event.registered_users || []).length || "—",
+      value: (event.attended_users || []).length || "—",
     },
   ];
 
@@ -650,61 +644,9 @@ export default function OverviewTab({
         )}
       </div>
 
-      {/* ── QR Codes ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Event QR */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                <FaQrcode size={18} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Event QR</h3>
-                <p className="mt-0.5 text-sm text-gray-500">
-                  Guests scan to open this event page
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleDownloadQr}
-              disabled={!qrDataUrl}
-              className="btn-secondary !py-2 !px-4 !rounded-lg !text-xs shrink-0"
-            >
-              <FiDownload size={13} />
-              Download
-            </button>
-          </div>
-          {qrDataUrl ? (
-            <div className="flex items-center gap-6 flex-wrap">
-              <div className="border border-gray-100 rounded-xl p-3 bg-white shadow-sm shrink-0">
-                <img
-                  src={qrDataUrl}
-                  alt="Event QR code"
-                  className="w-36 h-36"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">
-                  Scan Destination
-                </p>
-                <p className="break-all text-xs text-gray-500 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
-                  {`${baseUrl}/events/discover/${eventId}?qr=1`}
-                </p>
-                <p className="text-xs text-indigo-600 font-medium mt-2">
-                  Guests get prompted based on their account status
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 text-sm text-gray-500">
-              <FaSpinner className="animate-spin text-indigo-500" />
-              Generating QR...
-            </div>
-          )}
-        </div>
-
-        {/* Attendance QR */}
+      {/* ── QR Code ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Attendance QR — single QR: scan → no-login form → recorded */}
         <div className="rounded-xl border border-emerald-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -716,7 +658,7 @@ export default function OverviewTab({
                   Attendance QR
                 </h3>
                 <p className="mt-0.5 text-sm text-gray-500">
-                  Guests scan on the day of the event
+                  Guests scan, fill the form, recorded as attended — no login
                 </p>
               </div>
             </div>
@@ -743,10 +685,10 @@ export default function OverviewTab({
                   Scan Destination
                 </p>
                 <p className="break-all text-xs text-gray-500 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
-                  {`${baseUrl}/events/attendance/${eventId}`}
+                  {`${baseUrl}/attend/${eventId}`}
                 </p>
                 <p className="text-xs text-emerald-600 font-medium mt-2">
-                  → Marks user as "attended" immediately
+                  → Opens the attendance form — no login needed
                 </p>
               </div>
             </div>

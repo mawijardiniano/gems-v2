@@ -359,11 +359,8 @@ export default function ProjectContent() {
                             ? event.attended_users.length
                             : 0}
                         </span>
-                        <span className="ml-1 inline-flex items-center text-[11px] text-gray-400" title="Actually attended (check-ins)">
-                          attended ·{" "}
-                          {Array.isArray(event.registered_users)
-                            ? `${event.registered_users.length} registered`
-                            : ""}
+                        <span className="ml-1 inline-flex items-center text-[11px] text-gray-400" title="Check-ins">
+                          attended
                         </span>
                       </td>
                     </tr>

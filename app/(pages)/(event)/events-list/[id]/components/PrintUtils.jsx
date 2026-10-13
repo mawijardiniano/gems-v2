@@ -1,9 +1,27 @@
 "use client";
 
 export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
+  const toDetails = (g) => {
+    // New no-login QR guests are already sheet-shaped EventGuest docs.
+    if (g && typeof g.full_name === "string") {
+      return {
+        name: g.full_name,
+        sex: g.sex,
+        genderPreference: "",
+        age: g.age,
+        status: g.participant_type,
+        department: g.department_office_org,
+        positionDesignation: g.position_designation,
+        programYearSection: g.program_year_section,
+        contact: "",
+        email: "",
+      };
+    }
+    return extractGuestDetails(g);
+  };
   const sorted = [...guests].sort((a, b) => {
-    const detailsA = extractGuestDetails(a);
-    const detailsB = extractGuestDetails(b);
+    const detailsA = toDetails(a);
+    const detailsB = toDetails(b);
     const nameA = (detailsA.name || "").toLowerCase();
     const nameB = (detailsB.name || "").toLowerCase();
     if (nameA < nameB) return -1;
@@ -13,7 +31,7 @@ export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
   let rowIdx = 1;
   const rows = [];
   sorted.forEach((g) => {
-    const details = extractGuestDetails(g);
+    const details = toDetails(g);
     rows.push({
       isDepartmentHeader: false,
       data: [

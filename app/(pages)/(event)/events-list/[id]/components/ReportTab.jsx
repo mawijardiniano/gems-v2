@@ -57,7 +57,7 @@ export default function ReportTab({ event }) {
           venue: event.venue,
           type_of_activity: event.type_of_activity,
           gad_activity: event.gad_activity,
-          registered_count: event.registered_users?.length,
+          registered_count: event.attended_users?.length,
           organizing_office_unit: event.organizing_office_unit,
           start_date:
             event.start_date ||

@@ -351,7 +351,7 @@ export default function AttendanceInsights({ event, allEvents = [] }) {
                             {fmtDate(e.start_date || e.start_dates?.[0])}
                           </td>
                           <td className="py-2.5 pr-3 text-center text-gray-700">
-                            {e.registered_users?.length ?? 0}
+                            {e.attended_users?.length ?? 0}
                           </td>
                           <td className="py-2.5 pr-3 text-center font-semibold text-gray-900">
                             {e.attended_users?.length ?? 0}

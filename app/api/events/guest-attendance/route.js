@@ -10,13 +10,24 @@ const SEX = ["Male", "Female"];
 const PTYPE = ["Student", "Employee"];
 
 function windowOf(event) {
+  // Date-only events: attendance is open for the whole calendar day(s).
+  const dayStart = (d) => {
+    const t = new Date(d);
+    t.setHours(0, 0, 0, 0);
+    return t.getTime();
+  };
+  const dayEnd = (d) => {
+    const t = new Date(d);
+    t.setHours(23, 59, 59, 999);
+    return t.getTime();
+  };
   const s = [
-    ...(event.start_date ? [new Date(event.start_date).getTime()] : []),
-    ...(event.start_dates || []).filter(Boolean).map((d) => new Date(d).getTime()),
+    ...(event.start_date ? [dayStart(event.start_date)] : []),
+    ...(event.start_dates || []).filter(Boolean).map(dayStart),
   ];
   const e = [
-    ...(event.end_date ? [new Date(event.end_date).getTime()] : []),
-    ...(event.end_dates || []).filter(Boolean).map((d) => new Date(d).getTime()),
+    ...(event.end_date ? [dayEnd(event.end_date)] : []),
+    ...(event.end_dates || []).filter(Boolean).map(dayEnd),
   ];
   return {
     earliestStart: s.length ? Math.min(...s) : null,

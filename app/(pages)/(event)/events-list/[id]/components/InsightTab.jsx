@@ -18,12 +18,8 @@ export default function InsightTab({
   maleCount,
   femaleCount,
   statusCounts,
-  interestedCount,
-  notInterestedCount,
   ageGroupCounts,
-  goingCount,
   attendedCount,
-  showRate,
   genderDataChart,
   affiliationData,
   eventData,
@@ -33,30 +29,6 @@ export default function InsightTab({
 }) {
   const statCards = [
     {
-      label: "Interested",
-      value: interestedCount,
-      icon: FaUserTag,
-      gradient: "from-blue-600 to-blue-400",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-    },
-    {
-      label: "Not Interested",
-      value: notInterestedCount,
-      icon: FiUserX,
-      gradient: "from-red-500 to-rose-400",
-      iconBg: "bg-red-100",
-      iconColor: "text-red-500",
-    },
-    {
-      label: "Going",
-      value: goingCount,
-      icon: FiUserCheck,
-      gradient: "from-emerald-600 to-emerald-400",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-    },
-    {
       label: "Attended",
       value: attendedCount ?? 0,
       icon: FiUserCheck,
@@ -65,15 +37,7 @@ export default function InsightTab({
       iconColor: "text-teal-600",
     },
     {
-      label: "Show Rate",
-      value: showRate == null ? "—" : `${showRate}%`,
-      icon: FiActivity,
-      gradient: "from-fuchsia-600 to-pink-400",
-      iconBg: "bg-fuchsia-100",
-      iconColor: "text-fuchsia-600",
-    },
-    {
-      label: "Total Registered",
+      label: "Total Attended",
       value: totalRegistered,
       icon: FiUsers,
       gradient: "from-violet-600 to-purple-400",
@@ -96,11 +60,8 @@ export default function InsightTab({
             value={insightsFilter}
             onChange={(e) => setInsightsFilter(e.target.value)}
           >
-            <option value="all">All Participants</option>
-            <option value="going">Going</option>
+            <option value="all">All Attended</option>
             <option value="attended">Attended</option>
-            <option value="interested">Interested</option>
-            <option value="not_interested">Not Interested</option>
           </select>
         </div>
       </div>

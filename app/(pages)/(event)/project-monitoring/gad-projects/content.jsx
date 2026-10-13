@@ -2050,9 +2050,9 @@ export default function GADProjectsMonitoringContent() {
                                                   </td>
                                                   <td className="py-2 text-center text-gray-800">
                                                     {Array.isArray(
-                                                      ev?.registered_users,
+                                                      ev?.attended_users,
                                                     )
-                                                      ? ev.registered_users.length
+                                                      ? ev.attended_users.length
                                                       : "—"}
                                                   </td>
                                                   <td className="py-2 text-center text-gray-800">
