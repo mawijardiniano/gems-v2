@@ -340,14 +340,18 @@ export async function GET(req) {
     const url = new URL(req.url);
     const type =
       url.searchParams.get("type") === "employees" ? "employees" : "students";
-    const campus = url.searchParams.get("campus")?.trim();
-    const college = url.searchParams.get("college")?.trim();
-    const course = url.searchParams.get("course")?.trim();
-    const personnelType = url.searchParams.get("personnel_type")?.trim();
-    const appointmentStatus = url.searchParams.get("appointment_status")?.trim();
+    /* Multi-select filters arrive comma-joined (e.g. "1st,2nd"); single values
+       still parse to a one-item list so old callers keep working. */
+    const campuses = parseListParam(url.searchParams.get("campus"));
+    const colleges = parseListParam(url.searchParams.get("college"));
+    const courses = parseListParam(url.searchParams.get("course"));
+    const semesters = parseListParam(url.searchParams.get("semester"));
+    const yearLevels = parseListParam(url.searchParams.get("year_level"));
+    const personnelTypes = parseListParam(url.searchParams.get("personnel_type"));
+    const appointmentStatuses = parseListParam(
+      url.searchParams.get("appointment_status"),
+    );
     const schoolYear = url.searchParams.get("school_year")?.trim();
-    const semester = url.searchParams.get("semester")?.trim();
-    const yearLevel = url.searchParams.get("year_level")?.trim();
     const studentType = url.searchParams.get("student_type")?.trim();
     /* Scholar is an academic field, so it only applies to students. Solo Parent
        has no database field and is never offered live. */
@@ -368,7 +372,8 @@ export async function GET(req) {
     /* Bands are relative to today, so the day belongs in the cache key. */
     const today = new Date().toISOString().slice(0, 10);
 
-    const cacheKey = `gender-statistics:${type}:${campus || "all"}:${college || "all"}:${course || "all"}:${personnelType || "all"}:${appointmentStatus || "all"}:${schoolYear || "all"}:${semester || "all"}:${yearLevel || "all"}:${studentType || "all"}:${[...sexes].sort().join("+") || "all"}:${[...ageGroups].sort().join("+") || "all"}:${ageGroups.length ? today : "-"}:${[...demographics].sort().join("+") || "all"}`;
+    const keyOf = (list) => [...list].sort().join("+") || "all";
+    const cacheKey = `gender-statistics:${type}:${keyOf(campuses)}:${keyOf(colleges)}:${keyOf(courses)}:${keyOf(personnelTypes)}:${keyOf(appointmentStatuses)}:${schoolYear || "all"}:${keyOf(semesters)}:${keyOf(yearLevels)}:${studentType || "all"}:${keyOf(sexes)}:${keyOf(ageGroups)}:${ageGroups.length ? today : "-"}:${keyOf(demographics)}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -377,21 +382,26 @@ export async function GET(req) {
           "personal.currentStatus":
             type === "employees" ? "Employee" : "Student",
         };
-        if (campus) match["affiliation.academic_information.campus"] = campus;
-        if (type === "students" && college)
-          match["affiliation.academic_information.college"] = college;
-        if (type === "employees" && college)
-          match["affiliation.employment_information.office"] = college;
-        if (type === "employees" && personnelType)
-          match["affiliation.employment_information.employment_status"] =
-            personnelType;
-        if (type === "employees" && appointmentStatus)
+        if (campuses.length)
+          match["affiliation.academic_information.campus"] = { $in: campuses };
+        if (type === "students" && colleges.length)
+          match["affiliation.academic_information.college"] = { $in: colleges };
+        if (type === "employees" && colleges.length)
+          match["affiliation.employment_information.office"] = { $in: colleges };
+        if (type === "employees" && personnelTypes.length)
+          match["affiliation.employment_information.employment_status"] = {
+            $in: personnelTypes,
+          };
+        if (type === "employees" && appointmentStatuses.length)
           match[
             "affiliation.employment_information.employment_appointment_status"
-          ] = appointmentStatus;
-        if (course) match["affiliation.academic_information.course"] = course;
-        if (type === "students" && yearLevel) {
-          match["affiliation.academic_information.year_level"] = yearLevel;
+          ] = { $in: appointmentStatuses };
+        if (courses.length)
+          match["affiliation.academic_information.course"] = { $in: courses };
+        if (type === "students" && yearLevels.length) {
+          match["affiliation.academic_information.year_level"] = {
+            $in: yearLevels,
+          };
         }
         if (type === "students" && studentType && STUDENT_TYPE_FILTERS[studentType]) {
           Object.assign(match, STUDENT_TYPE_FILTERS[studentType]);
@@ -419,10 +429,10 @@ export async function GET(req) {
         const baseProfiles = await GemsProfile.find(match).lean();
 
         let profiles = baseProfiles;
-        if (schoolYear || semester) {
+        if (schoolYear || semesters.length) {
           const termFilter = {};
           if (schoolYear) termFilter.school_year = schoolYear;
-          if (semester) termFilter.semester = semester;
+          if (semesters.length) termFilter.semester = { $in: semesters };
           const terms = await ProfileTerm.find(termFilter, {
             profile_id: 1,
           }).lean();
@@ -438,7 +448,7 @@ export async function GET(req) {
         const semesterList = schoolYear
           ? await ProfileTerm.distinct("semester", { school_year: schoolYear })
           : await ProfileTerm.distinct("semester");
-        const semesters =
+        const semesterOptions =
           type === "students"
             ? ["1st", "2nd", "Summer"].filter((s) => semesterList.includes(s))
             : [];
@@ -451,7 +461,7 @@ export async function GET(req) {
         return {
           ...stats,
           schoolYears,
-          semesters,
+          semesters: semesterOptions,
           byAcademicYear,
           yearLevels: YEAR_LEVELS,
           ageGroups: AGE_GROUP_ORDER,

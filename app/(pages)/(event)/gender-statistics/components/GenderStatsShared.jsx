@@ -616,9 +616,19 @@ export function YearMultiSelect({ options, value, onChange }) {
   );
 }
 /** Generic checkbox dropdown. An empty `value` means "no restriction"
-    (all options), shown as `allLabel`. */
-export function MultiSelect({ label, options, value, onChange, allLabel }) {
+    (all options), shown as `allLabel`. `formatOption` customizes the label
+    shown for each value (e.g. "1st" -> "1st Semester"). */
+export function MultiSelect({
+  label,
+  options,
+  value,
+  onChange,
+  allLabel,
+  formatOption,
+}) {
   const [open, setOpen] = useState(false);
+
+  const format = formatOption || ((option) => option);
 
   const toggle = (option) => {
     const next = value.includes(option)
@@ -631,7 +641,7 @@ export function MultiSelect({ label, options, value, onChange, allLabel }) {
     value.length === 0
       ? allLabel || `All ${label}`
       : value.length <= 2
-        ? value.join(", ")
+        ? value.map(format).join(", ")
         : `${value.length} selected`;
 
   return (
@@ -662,7 +672,7 @@ export function MultiSelect({ label, options, value, onChange, allLabel }) {
                   checked={value.includes(option)}
                   onChange={() => toggle(option)}
                 />
-                {option}
+                {format(option)}
               </label>
             ))}
             {value.length > 0 && (

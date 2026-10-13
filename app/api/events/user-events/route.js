@@ -49,15 +49,15 @@ export async function GET(req) {
       .sort(sort)
       .limit(limit);
 
-    const participatedEvents = await Event.find({
-      registered_users: user_id,
+    const attendedEvents = await Event.find({
+      "attended_users.user_id": user_id,
     })
       .sort(sort)
       .limit(limit);
 
     const invitedEvents = await Event.find({
       created_by: { $ne: user_id },
-      registered_users: { $ne: user_id },
+      "attended_users.user_id": { $ne: user_id },
     })
       .sort(sort)
       .limit(limit);
@@ -66,7 +66,7 @@ export async function GET(req) {
       {
         message: "User events fetched successfully",
         createdEvents,
-        participatedEvents,
+        participatedEvents: attendedEvents,
         invitedEvents,
       },
       { status: 200 },

@@ -144,10 +144,8 @@ export default function AttendanceInsights({ event, allEvents = [] }) {
     const female = attendants.filter((a) => a.sex === "Female").length;
     const male = attendants.filter((a) => a.sex === "Male").length;
     const other = total - female - male;
-    const target = Number(event?.target_number_of_participants) || 0;
-    const rate = target > 0 ? Math.min(pct(total, target), 100) : 0;
-    return { total, female, male, other, target, rate };
-  }, [attendants, event?.target_number_of_participants]);
+    return { total, female, male, other };
+  }, [attendants]);
 
   const sectorData = useMemo(() => {
     const sectors = ["Student", "Employee", "Unspecified"];
@@ -299,65 +297,15 @@ export default function AttendanceInsights({ event, allEvents = [] }) {
         </div>
 
         <div className={CARD_CLS}>
-          <SectionTitle icon={FaChartPie}>Attendance Rate</SectionTitle>
-          {summary.target > 0 ? (
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Attended", value: summary.total },
-                      {
-                        name: "Remaining",
-                        value: Math.max(summary.target - summary.total, 0),
-                      },
-                    ]}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={58}
-                    outerRadius={80}
-                    startAngle={90}
-                    endAngle={-270}
-                    stroke="none"
-                  >
-                    <Cell fill="#10b981" />
-                    <Cell fill="#f3f4f6" />
-                  </Pie>
-                  <Tooltip
-                    contentStyle={chartTooltipStyle}
-                    formatter={(v, name) => [
-                      v,
-                      name === "Attended" ? "Attended" : "Remaining",
-                    ]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-bold text-gray-900">
-                  {summary.rate}%
-                </span>
-                <span className="text-[11px] text-gray-400">
-                  of {summary.target} target
-                </span>
-              </div>
-              <p className="mt-2 text-center text-xs text-gray-500">
-                <span className="font-semibold text-gray-700">
-                  {summary.total}
-                </span>{" "}
-                attended out of{" "}
-                <span className="font-semibold text-gray-700">
-                  {summary.target}
-                </span>{" "}
-                target participants
-              </p>
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400 italic">
-              No target number of participants set for this event.
+          <SectionTitle icon={FaChartPie}>Attendance Summary</SectionTitle>
+          <div className="relative">
+            <p className="mt-2 text-center text-xs text-gray-500">
+              <span className="font-semibold text-gray-700">
+                {summary.total}
+              </span>{" "}
+              attended
             </p>
-          )}
+          </div>
         </div>
       </div>
 

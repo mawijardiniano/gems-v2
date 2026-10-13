@@ -30,8 +30,8 @@ EVENT DETAILS
 ${data.gad_activity ? `- GAD Activity: ${data.gad_activity}` : ""}
 - Venue: ${data.venue || "Not specified"}
 - Date and Time: ${data.start_date ? new Date(data.start_date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : data.start_dates?.length ? data.start_dates.join(", ") : "Not specified"}
-- Total Registered Participants: ${data.registered_count ?? data.target_number_of_participants ?? "Not specified"}
-- Eligibility / Target Group: ${data.eligibility_criteria?.length ? data.eligibility_criteria.join(", ") : "Open to all"}
+- Total Registered Participants: ${data.registered_count ?? "Not specified"}
+- Eligibility / Target Group: Open to all
 - Organizing Office/Unit: ${data.organizing_office_unit?.length ? data.organizing_office_unit.join(", ") : "Not specified"}
 ${data.start_date ? `- Date Held: ${new Date(data.start_date).toLocaleDateString("en-US", { dateStyle: "long" })}` : data.start_dates?.length ? `- Date(s) Held: ${data.start_dates.join(", ")}` : ""}
 
@@ -48,13 +48,7 @@ ${
     ? "- This is a GAD (Gender and Development) activity: emphasize gender responsiveness, inclusivity, and the promotion of equal opportunities in the outcomes"
     : ""
 }
-${
-  data.eligibility_criteria?.some((e) =>
-    ["PWDs", "Solo Parent", "Indigenous Group", "LGBTQIA+", "Low Income Student"].includes(e)
-  )
-    ? `- The event targeted marginalized or vulnerable groups (${data.eligibility_criteria.join(", ")}): reflect empowerment, sensitivity, and inclusive outcomes in the narrative`
-    : ""
-}
+
 
 Return only the three paragraphs. No preamble, no title, no sign-off.
 `;

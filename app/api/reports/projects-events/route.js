@@ -420,7 +420,6 @@ function buildStatusReport({ projects, events, year, quarter }) {
       head: EVENT_HEAD,
       rows: rows.map(({ event }) => {
         eventIndex += 1;
-        const target = Number(event.target_number_of_participants) || 0;
         return [
           String(eventIndex),
           String(event.reference_number || "—"),
@@ -430,7 +429,7 @@ function buildStatusReport({ projects, events, year, quarter }) {
           fieldList(event.organizing_office_unit).join("; ") || "—",
           fmtDate(eventDate(event)),
           fmtDate(eventEndDate(event)),
-          `${attendedCount(event)} / ${target || "—"}`,
+          String(attendedCount(event)),
         ];
       }),
       columns: EVENT_COLUMNS(usableWidth),

@@ -1,69 +1,19 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
-import { QRCodeCanvas } from "qrcode.react";
-import eligibilityRequirementsMap from "@/lib/eligibilityRequirements";
-import AttendanceModal from "../../components/AttendanceModal";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 export default function DiscoverEventContent() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const eventId = params?.id;
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [statusUpdatingId, setStatusUpdatingId] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
-  const [eligibilityForm, setEligibilityForm] = useState({});
-  const [showParticipantModal, setShowParticipantModal] = useState(false);
-  const [assignedParticipantNumber, setAssignedParticipantNumber] =
-    useState(null);
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const profileRes = await axios.get("/api/profile/my-profile");
-        setUserId(profileRes.data?.user?._id || null);
-      } catch (profileErr) {
-        const status = profileErr?.response?.status;
-        if (status === 401 || status === 403) {
-          setUserId(null);
-        } else {
-          console.error(profileErr);
-        }
-      } finally {
-        setProfileChecked(true);
-      }
-    };
-
-    loadProfile();
-  }, []);
-
-
-  const fromEventQr = searchParams?.get("qr") === "1";
-  const fromAttendanceQr = searchParams?.get("attendance") === "1";
-  const loginRedirectParam = fromAttendanceQr ? "attendance=1" : "qr=1";
-  const accountGateActive =
-    profileChecked && !userId && (fromEventQr || fromAttendanceQr);
-
-  useEffect(() => {
-    const attendance = searchParams?.get("attendance");
-    if (attendance === "1" && profileChecked && userId && event) {
-      if (isAttendanceAllowed(event)) {
-        setShowAttendanceModal(true);
-      }
-    }
-  }, [searchParams, profileChecked, userId, event]);
 
   useEffect(() => {
     const load = async () => {
@@ -78,15 +28,11 @@ export default function DiscoverEventContent() {
         }
         setEvent(data);
       } catch (err) {
-        const errStatus = err.response?.status;
-
-        if (errStatus !== 401 && errStatus !== 403) {
-          setError(
-            err.response?.data?.message ||
-              err.response?.data?.error ||
-              "Unable to load event.",
-          );
-        }
+        setError(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            "Unable to load event.",
+        );
       } finally {
         setLoading(false);
       }
@@ -94,16 +40,6 @@ export default function DiscoverEventContent() {
 
     load();
   }, [eventId]);
-
-  const handleQrYesAccount = () => {
-    router.push(
-      `/?redirect=${encodeURIComponent(`/events/discover/${eventId}?${loginRedirectParam}`)}`,
-    );
-  };
-
-  const handleQrNoAccount = () => {
-    router.push("/profile-registration");
-  };
 
   const isPast = (evt) => {
     if (!evt) return false;
@@ -139,25 +75,6 @@ export default function DiscoverEventContent() {
     if (latestEnd !== null && now > latestEnd) return false;
     return true;
   };
-
-  const isUserInList = (list = [], id) =>
-    list.some((u) => (u?._id || u)?.toString?.() === id?.toString());
-
-  const getUserStatus = (evt) => {
-    if (!evt || !userId) return null;
-    if (isUserInList(evt.registered_users, userId)) return "going";
-    if (isUserInList(evt.interested_users, userId)) return "interested";
-    if (isUserInList(evt.not_interested_users, userId)) return "not_interested";
-    return null;
-  };
-
-  const myParticipantNumber = useMemo(() => {
-    if (!event?.participant_numbers || !userId) return null;
-    const entry = event.participant_numbers.find(
-      (p) => (p.user_id?._id || p.user_id)?.toString() === userId?.toString(),
-    );
-    return entry?.number ?? null;
-  }, [event, userId]);
 
   const posterUrl = (evt) =>
     evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
@@ -204,214 +121,41 @@ export default function DiscoverEventContent() {
     }
   };
 
-  const reloadEvent = async () => {
-    if (!eventId) return;
-    try {
-      const res = await axios.get(`/api/events/${eventId}`);
-      const data = res.data?.data || null;
-      if (data) setEvent(data);
-    } catch (err) {
-      console.error("Failed to reload event after attendance:", err);
-    }
-  };
+  const requirements = [];
 
-  const handleCloseAttendanceModal = () => {
-    setShowAttendanceModal(false);
-    // Remove the attendance=1 query param so the modal doesn't reopen
-    // when the event state changes (e.g. after reloadEvent)
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("attendance");
-      window.history.replaceState({}, "", url.toString());
-    }
-  };
-
-  const handleStatus = async (evt, status) => {
-    if (!evt || !evt._id) return;
-    if (!userId) {
-      setStatusMessage("You need to be logged in to set a status.");
-      return;
-    }
-
-    setStatusUpdatingId(evt._id);
-    setStatusMessage("");
-    try {
-      const res = await axios.post("/api/events/participation", {
-        event_id: evt._id,
-        user_id: userId,
-        status,
-      });
-      const updated = res.data?.event || evt;
-      setEvent(updated);
-      setStatusMessage("Status updated.");
-      if (status === "going" || status === "interested") {
-        const entry = updated?.participant_numbers?.find(
-          (p) =>
-            (p.user_id?._id || p.user_id)?.toString() === userId?.toString(),
-        );
-        if (entry?.number) {
-          setAssignedParticipantNumber(entry.number);
-          setShowParticipantModal(true);
-        }
-      }
-    } catch (err) {
-      setStatusMessage(
-        err.response?.data?.message ||
-          "Failed to update status. Please try again.",
-      );
-    } finally {
-      setStatusUpdatingId(null);
-    }
-  };
-
-  const requirements =
-    (event &&
-      event.eligibility_criteria &&
-      eligibilityRequirementsMap[event.eligibility_criteria]) ||
-    [];
-
-  const handleEligibilityInput = (field, value) => {
-    setEligibilityForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleEligibilitySubmit = async (e) => {
-    e.preventDefault();
-    await handleStatus(event, "going");
-    setShowEligibilityModal(false);
-    setEligibilityForm({});
-  };
-
-  if (loading || !profileChecked) {
+  if (loading) {
     return (
       <div className="p-6 text-center text-gray-500">Loading event...</div>
     );
   }
 
-  if (!accountGateActive) {
-    if (error) {
-      return (
-        <div className="p-6 space-y-4 max-w-5xl mx-auto">
-          <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
-            {error}
-          </div>
-
-          <button
-            onClick={() => router.push("/events/discover")}
-            className="px-4 py-2 border rounded hover:bg-gray-100"
-          >
-            Back to Discover
-          </button>
+  if (error) {
+    return (
+      <div className="p-6 space-y-4 max-w-5xl mx-auto">
+        <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
+          {error}
         </div>
-      );
-    }
 
-    if (!event) {
-      return (
-        <div className="p-6 text-center text-gray-500">Event not found.</div>
-      );
-    }
+        <button
+          onClick={() => router.push("/events/discover")}
+          className="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          Back to Discover
+        </button>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="p-6 text-center text-gray-500">Event not found.</div>
+    );
   }
 
   return (
     <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
-      {accountGateActive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Do you have an account?</h2>
-            <p className="text-gray-600">
-              We use your account to personalize your event experience. If you
-              do not have one, please sign up to continue.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                onClick={handleQrNoAccount}
-                className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100"
-              >
-                Sign Up
-              </button>
-              <button
-                onClick={handleQrYesAccount}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Yes, I have an account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {event ? (
         <>
-      {showParticipantModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4 text-center">
-            <div className="text-5xl font-bold text-blue-600">
-              #{assignedParticipantNumber}
-            </div>
-            <h2 className="text-xl font-semibold text-gray-800">
-              You&apos;re on the list!
-            </h2>
-            <p className="text-gray-500 text-sm">
-              This is your participant number for this event.
-            </p>
-            <button
-              onClick={() => setShowParticipantModal(false)}
-              className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
-            >
-              Got it!
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showEligibilityModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
-            <h2 className="text-xl font-semibold mb-2">
-              Eligibility Requirements
-            </h2>
-            <form onSubmit={handleEligibilitySubmit} className="space-y-4">
-              {requirements.length === 0 ? (
-                <div className="text-gray-600">
-                  No additional requirements for this eligibility criteria.
-                </div>
-              ) : (
-                requirements.map((req) => (
-                  <div key={req}>
-                    <label className="block text-sm font-medium mb-1">
-                      {req}
-                    </label>
-                    <input
-                      type="text"
-                      value={eligibilityForm[req] || ""}
-                      onChange={(e) =>
-                        handleEligibilityInput(req, e.target.value)
-                      }
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                      required
-                    />
-                  </div>
-                ))
-              )}
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEligibilityModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <div className="relative rounded-xl overflow-hidden">
         {posterUrl(event) && (
@@ -444,54 +188,20 @@ export default function DiscoverEventContent() {
               </p>
             )}
 
-            {myParticipantNumber && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg text-white text-sm font-medium">
-                <span>You are participant</span>
-                <span className="font-bold text-lg">
-                  #{myParticipantNumber}
-                </span>
+            {!isAttendanceAllowed(event) && (
+              <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
+                {isPast(event)
+                  ? "Attendance closed - Event has ended"
+                  : "Attendance opens when the event starts"}
               </div>
             )}
-
-            {userId &&
-              event &&
-              !isAttendanceAllowed(event) && (
-                <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
-                  {isPast(event)
-                    ? "Attendance closed - Event has ended"
-                    : "Attendance opens when the event starts"}
-                </div>
-              )}
-
-            {userId && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {["interested", "not_interested", "going"].map((s) => {
-                  const labels = {
-                    interested: "Interested",
-                    not_interested: "Not Interested",
-                    going: "Going",
-                  };
-
-                  const active = getUserStatus(event) === s;
-                  const disabled =
-                    isPast(event) || statusUpdatingId === event._id;
-
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => handleStatus(event, s)}
-                      disabled={disabled}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold ${
-                        active
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-800"
-                      }`}
-                    >
-                      {labels[s]}
-                    </button>
-                  );
-                })}
-              </div>
+            {isAttendanceAllowed(event) && !isPast(event) && (
+              <a
+                href={`/attend/${event._id}`}
+                className="inline-block mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
+              >
+                Mark Attendance (scan QR at venue)
+              </a>
             )}
           </div>
         </div>
@@ -512,14 +222,6 @@ export default function DiscoverEventContent() {
         </div>
       )}
 
-
-
-      <AttendanceModal
-        eventId={event._id}
-        isOpen={showAttendanceModal}
-        onClose={handleCloseAttendanceModal}
-        onAttendanceRecorded={reloadEvent}
-      />
         </>
       ) : (
         <div className="py-16 text-center">

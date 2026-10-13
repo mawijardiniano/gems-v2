@@ -13,7 +13,6 @@ import {
   FaChevronDown,
   FaCheck,
   FaBuilding,
-  FaClipboardList,
   FaProjectDiagram,
   FaTimes,
   FaExclamationCircle,
@@ -41,14 +40,17 @@ const ACTIVITY_TYPES = [
   "Students",
 ];
 
-const ELIGIBILITY_OPTIONS = [
-  { value: "Scholarship Applicant", label: "Scholarship Applicant" },
-  { value: "Solo Parent", label: "Solo Parent" },
-  { value: "PWDs", label: "Person with Disability (PWD)" },
-  { value: "Indigenous Group", label: "Indigenous Group Member" },
-  { value: "LGBTQIA+", label: "LGBTQIA+" },
-  { value: "Low Income Student", label: "Low-income Student" },
-  { value: "None", label: "None" },
+const EVENT_SOURCES = [
+  {
+    value: "project",
+    label: "Project-based (GPB)",
+    description: "Linked to a GPB project + GAD activity",
+  },
+  {
+    value: "independent",
+    label: "Independent",
+    description: "Not based on any project. Standalone event.",
+  },
 ];
 
 function SectionHeader({ icon: Icon, color = "blue", title, subtitle }) {
@@ -257,17 +259,16 @@ export default function CreateEventsContent() {
      used to prefill the organising office of the events they create. */
   const [userCollege, setUserCollege] = useState("");
   const [formData, setFormData] = useState({
+    event_source: "project",
     title: "",
     description: "",
     date: "",
     start_time: "",
     end_time: "",
     venue: "",
-    type_of_activity: "Academic",
+    type_of_activity: "GAD",
     organizing_office_unit: [],
     co_organizing_office_unit: [],
-    eligibility_criteria: [],
-    target_number_of_participants: "",
     project: "",
     gad_activity: "",
   });
@@ -286,14 +287,18 @@ export default function CreateEventsContent() {
      it out without touching offices the user picked by hand. */
   const autoOrganizingUnitRef = useRef(null);
 
+  const isProjectBased = formData.event_source === "project";
   const isGAD = formData.type_of_activity === "GAD";
 
   const filteredActivityTypes = useMemo(() => {
+    if (isProjectBased) {
+      return ACTIVITY_TYPES.filter((type) => type === "GAD");
+    }
     if (userRole === "dean" || isDeanRoute) {
       return ACTIVITY_TYPES.filter((type) => type !== "GAD");
     }
-    return ACTIVITY_TYPES;
-  }, [userRole, isDeanRoute]);
+    return ACTIVITY_TYPES.filter((type) => type !== "GAD");
+  }, [userRole, isDeanRoute, isProjectBased]);
 
   const todayLocal = useMemo(() => {
     const now = new Date();
@@ -310,10 +315,14 @@ export default function CreateEventsContent() {
       formData.start_time &&
       formData.end_time;
 
-    if (formData.type_of_activity === "GAD") {
-      return baseValid && Boolean(formData.gad_activity);
+    if (formData.event_source === "project") {
+      return (
+        baseValid &&
+        formData.type_of_activity === "GAD" &&
+        Boolean(formData.gad_activity)
+      );
     }
-    return baseValid;
+    return baseValid && formData.type_of_activity !== "GAD";
   }, [formData]);
 
   useEffect(() => {
@@ -374,7 +383,28 @@ export default function CreateEventsContent() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleSourceChange = (source) => {
+    if (source === "independent") {
+      setFormData((prev) => ({
+        ...prev,
+        event_source: "independent",
+        type_of_activity: prev.type_of_activity === "GAD" ? "" : prev.type_of_activity,
+        project: "",
+        gad_activity: "",
+      }));
+      autoOrganizingUnitRef.current = null;
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        event_source: "project",
+        type_of_activity: "GAD",
+      }));
+    }
+  };
+
   const handleTypeChange = (type) => {
+    if (formData.event_source === "project" && type !== "GAD") return;
+    if (formData.event_source === "independent" && type === "GAD") return;
     handleChange("type_of_activity", type);
     if (type !== "GAD") {
       setFormData((prev) => ({ ...prev, project: "", gad_activity: "" }));
@@ -404,8 +434,6 @@ export default function CreateEventsContent() {
         start_time,
         type_of_activity,
         gad_activity,
-        eligibility_criteria,
-        target_number_of_participants,
       } = formData;
 
       const response = await fetch("/api/events/generate-description", {
@@ -418,8 +446,6 @@ export default function CreateEventsContent() {
             date && start_time ? `${date}T${start_time}` : undefined,
           type_of_activity,
           gad_activity,
-          eligibility_criteria,
-          target_number_of_participants,
         }),
       });
 
@@ -444,11 +470,26 @@ export default function CreateEventsContent() {
       return;
     }
 
-    if (formData.type_of_activity === "GAD") {
-      if (!formData.project || !formData.gad_activity) {
+    if (formData.event_source === "project") {
+      if (
+        formData.type_of_activity !== "GAD" ||
+        !formData.project ||
+        !formData.gad_activity
+      ) {
         setError(
-          "Please select a GAD Activity — this field is required for GAD events.",
+          "Project-based events require a GAD Activity — select a project and its GAD activity.",
         );
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (formData.type_of_activity === "GAD") {
+        setError("GAD events must be project-based. Select Project-based (GPB) or choose another activity type.");
+        setLoading(false);
+        return;
+      }
+      if (formData.project || formData.gad_activity) {
+        setError("Independent events cannot be linked to a project.");
         setLoading(false);
         return;
       }
@@ -498,10 +539,10 @@ export default function CreateEventsContent() {
         type_of_activity: formData.type_of_activity,
         organizing_office_unit: formData.organizing_office_unit,
         co_organizing_office_unit: formData.co_organizing_office_unit,
-        eligibility_criteria: formData.eligibility_criteria,
-        target_number_of_participants: formData.target_number_of_participants,
-        ...(formData.project ? { project: formData.project } : {}),
-        ...(formData.gad_activity
+        ...(formData.event_source === "project" && formData.project
+          ? { project: formData.project }
+          : {}),
+        ...(formData.event_source === "project" && formData.gad_activity
           ? { gad_activity: formData.gad_activity }
           : {}),
         ...(userId ? { created_by: userId } : {}),
@@ -552,7 +593,51 @@ export default function CreateEventsContent() {
       {success && <AlertBanner type="success" message={success} />}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-    
+        {/* ── 0. Event Source ────────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+          <SectionHeader
+            icon={FaProjectDiagram}
+            color="cyan"
+            title="Event Source"
+            subtitle="Choose first — this controls the rest of the form"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {EVENT_SOURCES.map((source) => (
+              <button
+                type="button"
+                key={source.value}
+                onClick={() => handleSourceChange(source.value)}
+                className={`rounded-xl border p-4 text-left transition-all ${
+                  formData.event_source === source.value
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-sm"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      formData.event_source === source.value
+                        ? "border-blue-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {formData.event_source === source.value && (
+                      <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                    )}
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {source.label}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-gray-500">
+                  {source.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
           <SectionHeader
             icon={FaInfoCircle}
@@ -585,8 +670,8 @@ export default function CreateEventsContent() {
             </div>
           </div>
 
-          {/* Project / GAD Activity — only for GAD type */}
-          {isGAD && (
+          {/* Project / GAD Activity — only for project-based events */}
+          {isProjectBased && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 transition-all">
               <label className="block text-sm font-semibold text-emerald-800 mb-2">
                 <FaProjectDiagram className="inline h-4 w-4 mr-1.5 -mt-0.5" />
@@ -898,46 +983,6 @@ export default function CreateEventsContent() {
             allowCustom
             description="Select supporting offices, or type an office/unit that is not listed."
           />
-        </div>
-
-        {/* ── 5. Audience & Participants ───────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
-          <SectionHeader
-            icon={FaClipboardList}
-            color="rose"
-            title="Audience & Participants"
-            subtitle="Define who can join and expected attendance"
-          />
-
-          <CheckboxDropdown
-            label="Eligibility Criteria"
-            icon={FaClipboardList}
-            options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
-            selected={formData.eligibility_criteria || []}
-            onChange={(vals) =>
-              setFormData((prev) => ({
-                ...prev,
-                eligibility_criteria: vals,
-              }))
-            }
-            description="Leave empty to allow everyone."
-          />
-
-          <div>
-            <label className={labelClass}>
-              <FaUsers className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5" />
-              Target Number of Participants
-            </label>
-            <input
-              type="number"
-              value={formData.target_number_of_participants}
-              onChange={(e) =>
-                handleChange("target_number_of_participants", e.target.value)
-              }
-              className={inputClass}
-              placeholder="e.g. 150"
-            />
-          </div>
         </div>
 
         {/* ── Footer Actions ───────────────────────────────────── */}

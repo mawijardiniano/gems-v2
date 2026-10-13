@@ -21,8 +21,6 @@ const EDITABLE_FIELDS = [
   "type_of_activity",
   "organizing_office_unit",
   "co_organizing_office_unit",
-  "eligibility_criteria",
-  "target_number_of_participants",
   "project",
   "gad_activity",
   "event_poster",
@@ -57,26 +55,12 @@ export async function GET(req, { params }) {
     let query = Event.findById(id);
 
     if (!user) {
-      query = query.select(
-        "-registered_users -interested_users -not_interested_users -participant_numbers -attended_users",
-      );
+      query = query.select("-attended_users");
     }
 
     const event = await query
       .populate({
         path: "created_by",
-        ...USER_POPULATE_BASE,
-      })
-      .populate({
-        path: "registered_users",
-        ...USER_POPULATE_BASE,
-      })
-      .populate({
-        path: "interested_users",
-        ...USER_POPULATE_BASE,
-      })
-      .populate({
-        path: "not_interested_users",
         ...USER_POPULATE_BASE,
       })
       .populate({
@@ -123,6 +107,9 @@ export async function PUT(req, { params }) {
     if (body.gad_activity === "" || body.gad_activity === null || body.gad_activity === undefined) {
       body.gad_activity = "";
     }
+    // Legacy audience fields were removed — ignore them if an old client sends them.
+    delete body.eligibility_criteria;
+    delete body.target_number_of_participants;
 
     const event = await Event.findById(id);
     if (!event) {
@@ -154,6 +141,44 @@ export async function PUT(req, { params }) {
           ? canonicalOfficeList(body[field])
           : body[field],
       );
+    }
+
+    // Enforce Project-based (GPB) vs Independent on update.
+    const nextProjectId = event.project ? event.project.toString() : null;
+    const nextGadActivity = String(event.gad_activity || "").trim();
+    const nextType = event.type_of_activity;
+    if (nextProjectId) {
+      if (nextType !== "GAD" || !nextGadActivity) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message:
+              "Project-based events require the GAD activity type plus a project and its GAD activity.",
+          },
+          { status: 400 },
+        );
+      }
+    } else {
+      if (nextType === "GAD") {
+        return NextResponse.json(
+          {
+            status: "error",
+            message:
+              "GAD events must be project-based. Select Project-based (GPB) or choose another activity type.",
+          },
+          { status: 400 },
+        );
+      }
+      if (nextGadActivity) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: "Independent events cannot be linked to a project.",
+          },
+          { status: 400 },
+        );
+      }
+      event.set("gad_activity", "");
     }
 
     /* Reference numbers are normally assigned automatically from the type of
@@ -208,24 +233,6 @@ export async function PUT(req, { params }) {
     const populated = await Event.findById(id)
       .populate({
         path: "created_by",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: { path: "personal_info_id", model: "GemsProfile" },
-      })
-      .populate({
-        path: "registered_users",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: { path: "personal_info_id", model: "GemsProfile" },
-      })
-      .populate({
-        path: "interested_users",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: { path: "personal_info_id", model: "GemsProfile" },
-      })
-      .populate({
-        path: "not_interested_users",
         model: "UserAuth",
         select: "username role personal_info_id",
         populate: { path: "personal_info_id", model: "GemsProfile" },

@@ -30,8 +30,7 @@ EVENT DETAILS
 ${data.gad_activity ? `- GAD Activity: ${data.gad_activity}` : ""}
 - Venue: ${data.venue || "To be announced"}
 - Date and Time: ${data.start_date ? new Date(data.start_date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "To be announced"}${data.end_date ? ` - ${new Date(data.end_date).toLocaleString("en-US", { timeStyle: "short" })}` : ""}
-- Target Participants: ${data.target_number_of_participants || "Open to all"}
-- Eligibility: ${data.eligibility_criteria?.length ? data.eligibility_criteria.join(", ") : "Open to all"}
+- Target Participants: Open to all
 
 WRITING INSTRUCTIONS
 - Write 2 concise paragraphs only — no headers, no bullet points, no markdown
@@ -45,19 +44,7 @@ ${
     ? "- This is a GAD (Gender and Development) activity: emphasize gender responsiveness, inclusivity, and the promotion of equal opportunities"
     : ""
 }
-${
-  data.eligibility_criteria?.some((e) =>
-    [
-      "PWDs",
-      "Solo Parent",
-      "Indigenous Group",
-      "LGBTQIA+",
-      "Low Income Student",
-    ].includes(e),
-  )
-    ? `- The event targets marginalized or vulnerable groups (${data.eligibility_criteria.join(", ")}): reflect sensitivity, empowerment, and inclusivity in the language`
-    : ""
-}
+
 
 Return only the two paragraphs of the description. No preamble, no title, no sign-off.
 `;

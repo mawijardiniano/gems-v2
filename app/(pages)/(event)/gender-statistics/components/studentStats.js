@@ -71,14 +71,14 @@ function toList(countsObj, nameKey, order) {
 
 
 export const EMPTY_STUDENT_FILTERS = {
-  campus: "",
-  college: "",
-  course: "",
-  yearLevel: "",
+  campus: [],
+  college: [],
+  course: [],
+  yearLevel: [],
   studentType: "",
   demographics: [],
   schoolYear: "",
-  semester: "",
+  semester: [],
   ageGroups: [],
   sexes: [],
 };
@@ -117,8 +117,17 @@ export function matchesStudentType(record, studentType) {
 /** Apply every selected filter - campus, college, program, year level, student
     type and (through the term history) academic year/semester. */
 export function filterStudentRecords(records = [], filters = {}) {
-  const { campus, college, course, yearLevel, studentType, schoolYear, semester } =
-    filters;
+  /* Campus / college / program / year level / semester accept either a single
+     value (legacy callers) or an array (multi-select UI); either means OR. */
+  const toList = (value) =>
+    Array.isArray(value) ? value.filter(Boolean) : value ? [value] : [];
+  const campuses = toList(filters.campus);
+  const colleges = toList(filters.college);
+  const courses = toList(filters.course);
+  const yearLevels = toList(filters.yearLevel);
+  const semesters =
+    filters.semesters !== undefined ? toList(filters.semesters) : toList(filters.semester);
+  const { studentType, schoolYear } = filters;
   const ageGroups = Array.isArray(filters.ageGroups) ? filters.ageGroups : [];
   const sexes = Array.isArray(filters.sexes) ? filters.sexes : [];
 
@@ -127,10 +136,11 @@ export function filterStudentRecords(records = [], filters = {}) {
     if (ageGroups.length && !ageGroups.includes(ageGroupOf(record))) {
       return false;
     }
-    if (campus && record.campus !== campus) return false;
-    if (college && record.college !== college) return false;
-    if (course && record.course !== course) return false;
-    if (yearLevel && record.yearLevel !== yearLevel) return false;
+    if (campuses.length && !campuses.includes(record.campus)) return false;
+    if (colleges.length && !colleges.includes(record.college)) return false;
+    if (courses.length && !courses.includes(record.course)) return false;
+    if (yearLevels.length && !yearLevels.includes(record.yearLevel))
+      return false;
     if (studentType && !matchesStudentType(record, studentType)) return false;
     if (
       Array.isArray(filters.demographics) &&
@@ -139,12 +149,12 @@ export function filterStudentRecords(records = [], filters = {}) {
     ) {
       return false;
     }
-    if (schoolYear || semester) {
+    if (schoolYear || semesters.length) {
       const terms = record.terms || [];
       const enrolled = terms.some(
         (term) =>
           (!schoolYear || term.school_year === schoolYear) &&
-          (!semester || term.semester === semester),
+          (!semesters.length || semesters.includes(term.semester)),
       );
       if (!enrolled) return false;
     }

@@ -18,14 +18,17 @@ import CheckboxDropdown from "./CheckboxDropdown";
 import AttendanceInsights from "./AttendanceInsights";
 import { officeOptionList } from "@/lib/colleges";
 
-const ELIGIBILITY_OPTIONS = [
-  { value: "Scholarship Applicant", label: "Scholarship Applicant" },
-  { value: "Solo Parent", label: "Solo Parent" },
-  { value: "PWDs", label: "Person with Disability (PWD)" },
-  { value: "Indigenous Group", label: "Indigenous Group Member" },
-  { value: "LGBTQIA+", label: "LGBTQIA+" },
-  { value: "Low Income Student", label: "Low-income Student" },
-  { value: "None", label: "None" },
+const EVENT_SOURCES = [
+  {
+    value: "project",
+    label: "Project-based (GPB)",
+    description: "Linked to a GPB project + GAD activity",
+  },
+  {
+    value: "independent",
+    label: "Independent",
+    description: "Not based on any project. Standalone event.",
+  },
 ];
 
 export default function OverviewTab({
@@ -75,8 +78,6 @@ export default function OverviewTab({
         venue,
         type_of_activity,
         gad_activity,
-        eligibility_criteria,
-        target_number_of_participants,
         date,
         start_time,
       } = editData || {};
@@ -91,8 +92,6 @@ export default function OverviewTab({
             date && start_time ? `${date}T${start_time}` : undefined,
           type_of_activity,
           gad_activity,
-          eligibility_criteria,
-          target_number_of_participants,
         }),
       });
 
@@ -147,6 +146,7 @@ export default function OverviewTab({
     const startInput = formatForInput(startValue);
     const endInput = formatForInput(endValue);
     setEditData({
+      event_source: event.project ? "project" : "independent",
       type_of_activity:
         isDeanRoute && event.type_of_activity === "GAD"
           ? "Academic"
@@ -162,8 +162,6 @@ export default function OverviewTab({
       status: event.status || "active",
       organizing_office_unit: event.organizing_office_unit,
       co_organizing_office_unit: event.co_organizing_office_unit,
-      eligibility_criteria: event.eligibility_criteria,
-      target_number_of_participants: event.target_number_of_participants,
       event_poster: event.event_poster || null,
     });
   };
@@ -335,6 +333,51 @@ export default function OverviewTab({
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
+                <label className="label">
+                  Event Source <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {EVENT_SOURCES.map((source) => {
+                    const active =
+                      (editData?.event_source ||
+                        (event?.project ? "project" : "independent")) ===
+                      source.value;
+                    return (
+                      <button
+                        type="button"
+                        key={source.value}
+                        onClick={() => {
+                          if (source.value === "independent") {
+                            handleEditChange("event_source", "independent");
+                            if (editData?.type_of_activity === "GAD") {
+                              handleEditChange("type_of_activity", "Academic");
+                            }
+                            handleEditChange("project", "");
+                            handleEditChange("gad_activity", "");
+                          } else {
+                            handleEditChange("event_source", "project");
+                            handleEditChange("type_of_activity", "GAD");
+                          }
+                        }}
+                        className={`rounded-xl border p-4 text-left transition-all ${
+                          active
+                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-sm"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="text-sm font-semibold text-gray-900">
+                          {source.label}
+                        </span>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {source.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
                 <label className="label">Event Poster</label>
                 {editData?.event_poster && (
                   <div className="mb-3">
@@ -381,28 +424,40 @@ export default function OverviewTab({
                 <label className="label">
                   Type of Activity <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={editData?.type_of_activity}
-                  onChange={(e) => {
-                    handleEditChange("type_of_activity", e.target.value);
-                    if (e.target.value !== "GAD") {
-                      handleEditChange("project", "");
-                      handleEditChange("gad_activity", "");
-                    }
-                  }}
-                  className="input"
-                  required
-                >
-                  <option value="Academic">Academic</option>
-                  <option value="Administrative">Administrative</option>
-                  {!isDeanRoute && <option value="GAD">GAD</option>}
-                  <option value="Extension">Extension</option>
-                  <option value="Research">Research</option>
-                  <option value="Students">Students</option>
-                </select>
+                {(editData?.event_source ||
+                  (event?.project ? "project" : "independent")) ===
+                "project" ? (
+                  <input
+                    value="GAD"
+                    disabled
+                    className="input bg-gray-50"
+                    aria-label="Type of Activity"
+                  />
+                ) : (
+                  <select
+                    value={editData?.type_of_activity}
+                    onChange={(e) => {
+                      handleEditChange("type_of_activity", e.target.value);
+                      if (e.target.value !== "GAD") {
+                        handleEditChange("project", "");
+                        handleEditChange("gad_activity", "");
+                      }
+                    }}
+                    className="input"
+                    required
+                  >
+                    <option value="">Select activity type</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Administrative">Administrative</option>
+                    <option value="Extension">Extension</option>
+                    <option value="Research">Research</option>
+                    <option value="Students">Students</option>
+                  </select>
+                )}
               </div>
 
-              {editData?.type_of_activity === "GAD" && (
+              {(editData?.event_source ||
+                (event?.project ? "project" : "independent")) === "project" && (
                 <div>
                   <label className="label">
                     GAD Activity <span className="text-red-500">*</span>
@@ -566,33 +621,6 @@ export default function OverviewTab({
                   }
                   required
                   allowCustom
-                />
-              </div>
-              <div className="md:col-span-2">
-                <CheckboxDropdown
-                  label="Eligibility Criteria"
-                  options={ELIGIBILITY_OPTIONS.map((o) => o.value)}
-                  selected={editData?.eligibility_criteria || []}
-                  onChange={(vals) =>
-                    handleEditChange("eligibility_criteria", vals)
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="label">
-                  Target Number of Participants
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  value={editData?.target_number_of_participants || ""}
-                  onChange={(e) =>
-                    handleEditChange(
-                      "target_number_of_participants",
-                      e.target.value,
-                    )
-                  }
                 />
               </div>
             </div>

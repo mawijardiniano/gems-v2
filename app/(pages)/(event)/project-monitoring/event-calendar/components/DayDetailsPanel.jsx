@@ -141,11 +141,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
     ...(event.organizing_office_unit || []),
     ...(event.co_organizing_office_unit || []),
   ];
-  const eligibility = (event.eligibility_criteria || []).filter(
-    (crit) => crit && crit !== "None",
-  );
   const registeredCount = (event.registered_users || []).length;
-  const target = event.target_number_of_participants;
 
   return (
     <li
@@ -229,13 +225,10 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
                 <span>{offices.join(", ")}</span>
               </div>
             )}
-            {(registeredCount > 0 || target) && (
+            {registeredCount > 0 && (
               <div className="flex items-start gap-2 text-xs text-gray-600">
                 <FaUsers className="mt-0.5 shrink-0 text-gray-400" />
-                <span>
-                  {registeredCount} registered
-                  {target ? ` of ${target} target participants` : ""}
-                </span>
+                <span>{registeredCount} registered</span>
               </div>
             )}
             {organizerName && (
@@ -245,24 +238,6 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
               </div>
             )}
           </div>
-
-          {eligibility.length > 0 && (
-            <div>
-              <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">
-                Who can join
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {eligibility.map((crit) => (
-                  <span
-                    key={crit}
-                    className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-700"
-                  >
-                    {crit}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           {event.description && (
             <div className="border-t border-blue-100 pt-3">

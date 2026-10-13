@@ -6,6 +6,7 @@ import GemsProfile from "@/models/profile";
 import { logActivity } from "@/lib/activityLog";
 import Notification from "@/models/notification";
 import { rateLimiters } from "@/lib/rateLimit";
+import { usernameEqualsFilter } from "@/lib/usernames";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -25,7 +26,12 @@ export async function POST(req) {
     await connectDB();
     const { username, password } = await req.json();
 
-    const user = await UserAuth.findOne({ username }).select("+password");
+    const loginUsername = String(username || "").trim();
+    let user = await UserAuth.findOne({ username: loginUsername }).select("+password");
+    // Fallback so pre-normalization logins (e.g. 24b0128) still work after fix (24B0128).
+    if (!user && loginUsername) {
+      user = await UserAuth.findOne(usernameEqualsFilter(loginUsername)).select("+password");
+    }
 
     if (!user) {
       await logActivity({

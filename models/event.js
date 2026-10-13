@@ -26,20 +26,6 @@ const EventSchema = new Schema(
     },
     end_date: { type: Date },
     venue: { type: String, default: "" },
-    eligibility_criteria: [
-      {
-        type: String,
-        enum: [
-          "Scholarship Applicant",
-          "Solo Parent",
-          "PWDs",
-          "Indigenous Group",
-          "LGBTQIA+",
-          "Low Income Student",
-          "None",
-        ],
-      },
-    ],
     type_of_activity: {
       type: String,
       enum: [
@@ -118,44 +104,6 @@ const EventSchema = new Schema(
         trim: true,
       },
     ],
-    target_number_of_participants: {
-      type: Number,
-    },
-    created_by: {
-      type: Schema.Types.ObjectId,
-      ref: "UserAuth",
-      required: true,
-    },
-    updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
-    status_updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
-    status_updated_at: { type: Date },
-    cancelled_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
-    cancelled_at: { type: Date },
-    cancel_reason: { type: String, default: "" },
-    registered_users: [{ type: Schema.Types.ObjectId, ref: "UserAuth" }],
-    interested_users: [
-      { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
-    ],
-    not_interested_users: [
-      { type: Schema.Types.ObjectId, ref: "UserAuth", default: [] },
-    ],
-    attended_users: [
-      {
-        user_id: { type: Schema.Types.ObjectId, ref: "UserAuth" },
-        attended_at: { type: Date, default: Date.now },
-      },
-    ],
-    participant_numbers: [
-      {
-        user_id: { type: Schema.Types.ObjectId, ref: "UserAuth" },
-        number: { type: Number },
-      },
-    ],
-    status: {
-      type: String,
-      enum: ["active", "cancelled", "completed"],
-      default: "active",
-    },
     project: {
       type: Schema.Types.ObjectId,
       ref: "Project",
@@ -168,7 +116,7 @@ const EventSchema = new Schema(
           return true;
         },
         message:
-          "Project is required when type of activity is GAD.",
+          "Project-based events must use the GAD activity type and link a project. Independent events cannot link a project.",
       },
     },
     gad_activity: {
@@ -179,11 +127,32 @@ const EventSchema = new Schema(
           if (this.type_of_activity === "GAD") {
             return Boolean(value && String(value).trim().length > 0);
           }
-          return true;
+          return !value || String(value).trim().length === 0;
         },
         message:
-          "GAD Activity is required when type of activity is GAD.",
+          "A GAD Activity is required for project-based (GPB) events and must be empty for independent events.",
       },
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: "UserAuth",
+      required: true,
+    },
+    status_updated_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    status_updated_at: { type: Date },
+    cancelled_by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+    cancelled_at: { type: Date },
+    cancel_reason: { type: String, default: "" },
+    attended_users: [
+      {
+        user_id: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+        attended_at: { type: Date, default: Date.now },
+      },
+    ],
+    status: {
+      type: String,
+      enum: ["active", "cancelled", "completed"],
+      default: "active",
     },
     event_poster: {
       url: {

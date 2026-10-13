@@ -167,6 +167,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           const startInput = formatForInput(startValue);
           const endInput = formatForInput(endValue);
           setEditData({
+            event_source: evt.project ? "project" : "independent",
             type_of_activity: evt.type_of_activity,
             project: evt.project,
             gad_activity: evt.gad_activity,
@@ -179,8 +180,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
             status: evt.status || "active",
             organizing_office_unit: evt.organizing_office_unit,
             co_organizing_office_unit: evt.co_organizing_office_unit,
-            eligibility_criteria: evt.eligibility_criteria,
-            target_number_of_participants: evt.target_number_of_participants,
             event_poster: evt.event_poster || "",
           });
         }
@@ -221,7 +220,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     const buildQr = async () => {
       if (!baseUrl || !eventId) return;
       try {
-        const deepLink = `${baseUrl}/events/discover/${eventId}?qr=1`;
+        // Single attendance QR: scan → no-login form at /attend/[id].
+        const deepLink = `${baseUrl}/attend/${eventId}`;
         const dataUrl = await QRCode.toDataURL(deepLink, { width: 220 });
         setQrDataUrl(dataUrl);
       } catch (e) {
@@ -235,7 +235,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     const buildAttendanceQr = async () => {
       if (!baseUrl || !eventId) return;
       try {
-        const deepLink = `${baseUrl}/events/attendance/${eventId}`;
+        const deepLink = `${baseUrl}/attend/${eventId}`;
         const dataUrl = await QRCode.toDataURL(deepLink, { width: 220 });
         setAttendanceQrDataUrl(dataUrl);
       } catch (e) {
@@ -644,6 +644,13 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         end_date: endDateTime.toISOString(),
         updated_by: userId,
       };
+      // Never send the removed audience fields or the UI-only source flag.
+      delete payload.eligibility_criteria;
+      delete payload.target_number_of_participants;
+      delete payload.event_source;
+      // Normalize project linkage: independent sends null, project sends id.
+      if (!payload.project) payload.project = null;
+      if (!payload.project) payload.gad_activity = "";
 
       const res = await axios.put(`/api/events/${event._id}`, payload);
       const updated = res.data?.data || event;

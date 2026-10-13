@@ -1196,8 +1196,6 @@ export default function EventsDashboardContent() {
                     : "TBD";
 
                   const registrations = event.registered_users?.length || 0;
-                  const target = event.target_number_of_participants || 0;
-                  const fillPercent = target > 0 ? (registrations / target) * 100 : 0;
 
                   return (
                     <div
@@ -1239,20 +1237,9 @@ export default function EventsDashboardContent() {
                           </span>
                           <span className="text-xs text-gray-500 flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {registrations}/{target || "—"}
+                            {registrations} registered
                           </span>
                         </div>
-                        {/* Progress bar */}
-                        {target > 0 && (
-                          <div className="mt-1.5 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.min(fillPercent, 100)}%`,
-                              }}
-                            />
-                          </div>
-                        )}
                       </div>
 
                       <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />

@@ -12,6 +12,11 @@ import {
   mergeTermAffiliation,
 } from "@/app/api/integration/_utils/mapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+import {
+  normalizeStudentUsername,
+  normalizeEmployeeUsername,
+  usernameEqualsFilter,
+} from "@/lib/usernames";
 
 function asDate(value) {
   if (!value) return undefined;
@@ -21,9 +26,13 @@ function asDate(value) {
 
 function normalizeUsername(value) {
   if (!value) return "";
-  return String(value)
-    .trim()
-    .replace(/[^a-zA-Z0-9._-]/g, "");
+  // Locked rule for name/ID fallbacks: strip [-_. space], keep Aa-Zz case.
+  return normalizeEmployeeUsername(value);
+}
+
+function normalizeStudentIdUsername(value) {
+  if (!value) return "";
+  return normalizeStudentUsername(value);
 }
 
 async function ensureUserAuthForProfile(profile, identity, mapped) {
@@ -37,16 +46,16 @@ async function ensureUserAuthForProfile(profile, identity, mapped) {
   const last = normalizeUsername(mapped?.personal?.last_name);
 
   const candidates = [
-    normalizeUsername(identity?.student_id),
+    normalizeStudentIdUsername(identity?.student_id),
     normalizeUsername(identity?.employee_id),
     normalizeUsername(emailLocal),
-    normalizeUsername([first, last].filter(Boolean).join(".")),
-    normalizeUsername([first, identity?.student_id].filter(Boolean).join(".")),
+    normalizeUsername([first, last].filter(Boolean).join("")),
+    normalizeUsername([first, normalizeStudentIdUsername(identity?.student_id)].filter(Boolean).join("")),
   ].filter(Boolean);
 
   let chosenUsername = "";
   for (const candidate of candidates) {
-    const exists = await UserAuth.findOne({ username: candidate }).lean();
+    const exists = await UserAuth.findOne(usernameEqualsFilter(candidate)).lean();
     if (!exists) {
       chosenUsername = candidate;
       break;
@@ -54,10 +63,10 @@ async function ensureUserAuthForProfile(profile, identity, mapped) {
   }
 
   if (!chosenUsername) {
-    chosenUsername = `user.${String(profile._id).slice(-8).toLowerCase()}`;
+    chosenUsername = `user${String(profile._id).slice(-8).toLowerCase()}`;
     let counter = 1;
-    while (await UserAuth.findOne({ username: chosenUsername }).lean()) {
-      chosenUsername = `user.${String(profile._id).slice(-8).toLowerCase()}.${counter}`;
+    while (await UserAuth.findOne(usernameEqualsFilter(chosenUsername)).lean()) {
+      chosenUsername = `user${String(profile._id).slice(-8).toLowerCase()}${counter}`;
       counter += 1;
     }
   }

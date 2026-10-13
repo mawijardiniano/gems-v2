@@ -60,18 +60,6 @@ export async function GET(req) {
             path: "created_by",
             ...USER_POPULATE_BASE,
           })
-          .populate({
-            path: "registered_users",
-            ...USER_POPULATE_BASE,
-          })
-          .populate({
-            path: "interested_users",
-            ...USER_POPULATE_BASE,
-          })
-          .populate({
-            path: "not_interested_users",
-            ...USER_POPULATE_BASE,
-          })
           .lean();
       },
       EVENTS_LIST_CACHE_TTL,
@@ -106,8 +94,6 @@ export async function POST(req) {
       type_of_activity,
       organizing_office_unit,
       co_organizing_office_unit,
-      eligibility_criteria,
-      target_number_of_participants,
       project,
       gad_activity,
       event_poster,
@@ -124,9 +110,7 @@ export async function POST(req) {
       !start_date ||
       !end_date ||
       !type_of_activity ||
-      !officeUnits.length ||
-      target_number_of_participants == null ||
-      Number(target_number_of_participants) < 0
+      !officeUnits.length
     ) {
       return NextResponse.json(
         {
@@ -171,10 +155,12 @@ export async function POST(req) {
       );
     }
 
-    if (type_of_activity === "GAD") {
-      if (!project) {
+    const isProjectBased = Boolean(project);
+
+    if (isProjectBased) {
+      if (type_of_activity !== "GAD") {
         return NextResponse.json(
-          { message: "A project is required when the type of activity is GAD." },
+          { message: "Project-based events must use the GAD activity type." },
           { status: 400 },
         );
       }
@@ -182,8 +168,24 @@ export async function POST(req) {
         return NextResponse.json(
           {
             message:
-              "A GAD Activity is required when the type of activity is GAD.",
+              "A GAD Activity is required for project-based (GPB) events.",
           },
+          { status: 400 },
+        );
+      }
+    } else {
+      if (type_of_activity === "GAD") {
+        return NextResponse.json(
+          {
+            message:
+              "GAD events must be project-based. Select Project-based (GPB) or choose another activity type.",
+          },
+          { status: 400 },
+        );
+      }
+      if (gad_activity && String(gad_activity).trim()) {
+        return NextResponse.json(
+          { message: "Independent events cannot be linked to a project." },
           { status: 400 },
         );
       }
@@ -205,13 +207,10 @@ export async function POST(req) {
       type_of_activity,
       organizing_office_unit: officeUnits,
       co_organizing_office_unit: coOfficeUnits,
-      eligibility_criteria,
-      target_number_of_participants,
       created_by: user._id,
       updated_by: user._id,
-      registered_users: [],
       ...(project ? { project } : {}),
-      gad_activity,
+      ...(project && gad_activity ? { gad_activity } : { gad_activity: "" }),
       event_poster: event_poster || {
         url: "",
         key: "",

@@ -113,17 +113,17 @@ function buildInsights(data) {
 }
 
 export default function StudentGenderStatsContent() {
-  const [campus, setCampus] = useState("");
-  const [college, setCollege] = useState("");
-  const [course, setCourse] = useState("");
+  const [campuses, setCampuses] = useState([]);
+  const [colleges, setColleges] = useState([]);
+  const [courses, setCourses] = useState([]);
   /* Selected academic years, ascending. The latest one drives the single-year
      panels; two or more switch the page into comparison mode. */
   const [schoolYears, setSchoolYears] = useState([]);
   const schoolYear = schoolYears.length
     ? schoolYears[schoolYears.length - 1]
     : "";
-  const [semester, setSemester] = useState("");
-  const [yearLevel, setYearLevel] = useState("");
+  const [semesters, setSemesters] = useState([]);
+  const [yearLevels, setYearLevels] = useState([]);
   const [studentType, setStudentType] = useState("");
   const [demographics, setDemographics] = useState([]);
   const [ageGroups, setAgeGroups] = useState([]);
@@ -134,24 +134,24 @@ export default function StudentGenderStatsContent() {
     () => ({
       ...(ageGroups.length ? { age_group: ageGroups.join(",") } : {}),
       ...(sexes.length ? { sex: sexes.join(",") } : {}),
-      ...(campus ? { campus } : {}),
-      ...(college ? { college } : {}),
-      ...(course ? { course } : {}),
+      ...(campuses.length ? { campus: campuses.join(",") } : {}),
+      ...(colleges.length ? { college: colleges.join(",") } : {}),
+      ...(courses.length ? { course: courses.join(",") } : {}),
       ...(schoolYear ? { school_year: schoolYear } : {}),
-      ...(semester ? { semester } : {}),
-      ...(yearLevel ? { year_level: yearLevel } : {}),
+      ...(semesters.length ? { semester: semesters.join(",") } : {}),
+      ...(yearLevels.length ? { year_level: yearLevels.join(",") } : {}),
       ...(studentType ? { student_type: studentType } : {}),
       ...(demographics.length
         ? { demographic: demographics.join(",") }
         : {}),
     }),
     [
-      campus,
-      college,
-      course,
+      campuses,
+      colleges,
+      courses,
       schoolYear,
-      semester,
-      yearLevel,
+      semesters,
+      yearLevels,
       studentType,
       demographics,
       ageGroups,
@@ -163,26 +163,26 @@ export default function StudentGenderStatsContent() {
 
   const filters = useMemo(
     () => ({
-      campus,
-      college,
-      course,
-      yearLevel,
+      campus: campuses,
+      college: colleges,
+      course: courses,
+      yearLevel: yearLevels,
       studentType,
       demographics,
       schoolYear,
-      semester,
+      semester: semesters,
       ageGroups,
       sexes,
     }),
     [
-      campus,
-      college,
-      course,
-      yearLevel,
+      campuses,
+      colleges,
+      courses,
+      yearLevels,
       studentType,
       demographics,
       schoolYear,
-      semester,
+      semesters,
       ageGroups,
       sexes,
     ],
@@ -235,9 +235,21 @@ export default function StudentGenderStatsContent() {
   const showComparison = comparing && perYear.length >= 2;
 
   const programOptions = useMemo(() => {
-    if (college && COLLEGE_TO_PROGRAMS[college]) return COLLEGE_TO_PROGRAMS[college];
+    if (colleges.length) {
+      const union = [
+        ...new Set(colleges.flatMap((c) => COLLEGE_TO_PROGRAMS[c] || [])),
+      ];
+      if (union.length) return union;
+    }
     return ALL_PROGRAMS;
-  }, [college]);
+  }, [colleges]);
+
+  /* Drop programs that no longer belong to any selected college. */
+  useEffect(() => {
+    if (!courses.length) return;
+    const next = courses.filter((c) => programOptions.includes(c));
+    if (next.length !== courses.length) setCourses(next);
+  }, [programOptions, courses]);
 
   const yearLevelOptions = activeData?.yearLevels || YEAR_LEVEL_ORDER;
 
@@ -280,14 +292,14 @@ export default function StudentGenderStatsContent() {
   }, [activeData, schoolYears]);
 
   const clearFilters = () => {
-    setCampus(EMPTY_STUDENT_FILTERS.campus);
-    setCollege(EMPTY_STUDENT_FILTERS.college);
-    setCourse(EMPTY_STUDENT_FILTERS.course);
-    setYearLevel(EMPTY_STUDENT_FILTERS.yearLevel);
+    setCampuses(EMPTY_STUDENT_FILTERS.campus);
+    setColleges(EMPTY_STUDENT_FILTERS.college);
+    setCourses(EMPTY_STUDENT_FILTERS.course);
+    setYearLevels(EMPTY_STUDENT_FILTERS.yearLevel);
     setStudentType(EMPTY_STUDENT_FILTERS.studentType);
     setDemographics([]);
     setSchoolYears([]);
-    setSemester(EMPTY_STUDENT_FILTERS.semester);
+    setSemesters(EMPTY_STUDENT_FILTERS.semester);
     setAgeGroups([]);
     setSexes([]);
   };
@@ -323,96 +335,68 @@ export default function StudentGenderStatsContent() {
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             Semester
           </label>
-          <select
-            value={semester}
-            onChange={(e) => setSemester(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          >
-            <option value="">All Semesters</option>
-            {semesterOptions.map((s) => (
-              <option key={s} value={s}>
-                {s === "1st"
-                  ? "1st Semester"
-                  : s === "2nd"
-                    ? "2nd Semester"
-                    : "Summer"}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="Semester"
+            allLabel="All Semesters"
+            options={semesterOptions}
+            value={semesters}
+            onChange={setSemesters}
+            formatOption={(s) =>
+              s === "1st"
+                ? "1st Semester"
+                : s === "2nd"
+                  ? "2nd Semester"
+                  : "Summer"
+            }
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             Campus
           </label>
-          <select
-            value={campus}
-            onChange={(e) => {
-              setCampus(e.target.value);
-              setCourse("");
-            }}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          >
-            <option value="">All Campuses</option>
-            {CAMPUSES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="Campus"
+            allLabel="All Campuses"
+            options={CAMPUSES}
+            value={campuses}
+            onChange={setCampuses}
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             College
           </label>
-          <select
-            value={college}
-            onChange={(e) => {
-              setCollege(e.target.value);
-              setCourse("");
-            }}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[16rem]"
-          >
-            <option value="">All Colleges</option>
-            {COLLEGES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="College"
+            allLabel="All Colleges"
+            options={COLLEGES}
+            value={colleges}
+            onChange={setColleges}
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             Program
           </label>
-          <select
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[16rem]"
-          >
-            <option value="">All Programs</option>
-            {programOptions.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="Program"
+            allLabel="All Programs"
+            options={programOptions}
+            value={courses}
+            onChange={setCourses}
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">
             Year Level
           </label>
-          <select
-            value={yearLevel}
-            onChange={(e) => setYearLevel(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          >
-            <option value="">All Year Levels</option>
-            {yearLevelOptions.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
+          <MultiSelect
+            label="Year Level"
+            allLabel="All Year Levels"
+            options={yearLevelOptions}
+            value={yearLevels}
+            onChange={setYearLevels}
+          />
         </div>
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">

@@ -14,6 +14,10 @@ import {
   SexTable,
   DemographicTable,
   MultiSelect,
+  YearTotalsTable,
+  YearSexDonuts,
+  YearGroupedBars,
+  YearComparisonTable,
 } from "../components/GenderStatsShared";
 import {
   APPOINTMENT_ORDER,
@@ -86,9 +90,14 @@ export default function EmployeeGenderStatsContent() {
   const setFilter = (key) => (value) =>
     setFilters((prev) => {
       const next = { ...prev, [key]: value };
-      /* The department list depends on the office, so clear a department that
-         no longer belongs to the selected office. */
-      if (key === "office") next.department = "";
+      /* The department list depends on the offices, so drop departments that
+         no longer belong to any selected office (same as student programs). */
+      if (key === "office") {
+        const choices = departmentOptions(SAMPLE_EMPLOYEE_RECORDS, value);
+        next.department = (next.department || []).filter((d) =>
+          choices.includes(d),
+        );
+      }
       return next;
     });
 
@@ -96,12 +105,12 @@ export default function EmployeeGenderStatsContent() {
      (employment_status), college/office and employment status (appointment). */
   const params = useMemo(
     () => ({
-      ...(filters.office ? { college: filters.office } : {}),
-      ...(filters.personnelType
-        ? { personnel_type: filters.personnelType }
+      ...(filters.office.length ? { college: filters.office.join(",") } : {}),
+      ...(filters.personnelType.length
+        ? { personnel_type: filters.personnelType.join(",") }
         : {}),
-      ...(filters.appointmentStatus
-        ? { appointment_status: filters.appointmentStatus }
+      ...(filters.appointmentStatus.length
+        ? { appointment_status: filters.appointmentStatus.join(",") }
         : {}),
       ...(filters.ageGroups.length
         ? { age_group: filters.ageGroups.join(",") }
@@ -139,6 +148,29 @@ export default function EmployeeGenderStatsContent() {
   );
 
   const activeData = useSample ? sampleStats : data;
+
+  /* Comparison mode (sample-only, since the employee API has no year
+     dimension): one stats payload per selected academic year. */
+  const selectedYears = useMemo(
+    () => [...(filters.schoolYear || [])].sort(),
+    [filters.schoolYear],
+  );
+  const comparing = selectedYears.length >= 2;
+  const perYear = useMemo(() => {
+    if (!useSample || !comparing) return [];
+    return selectedYears.map((year) => ({
+      year,
+      stats: computeEmployeeStats(
+        filterEmployeeRecords(SAMPLE_EMPLOYEE_RECORDS, {
+          ...filters,
+          schoolYear: [year],
+        }),
+        SAMPLE_EMPLOYEE_RECORDS,
+      ),
+    }));
+  }, [useSample, comparing, selectedYears, filters]);
+  const showComparison = useSample && comparing && perYear.length >= 2;
+
   const totals = activeData?.totals || { Female: 0, Male: 0, total: 0 };
   const insights = useMemo(() => buildInsights(activeData), [activeData]);
   const showContent = useSample || (!loading && !!data);
@@ -170,17 +202,22 @@ export default function EmployeeGenderStatsContent() {
   /* Printed on the quick-report PDFs so a filtered report is self-describing. */
   const filterSummary = useMemo(() => {
     const parts = [];
-    if (filters.personnelType) parts.push(`Personnel Type: ${filters.personnelType}`);
-    if (filters.office) parts.push(`College/Office: ${filters.office}`);
-    if (filters.department) parts.push(`Department: ${filters.department}`);
-    if (filters.appointmentStatus) {
-      parts.push(`Employment Status: ${filters.appointmentStatus}`);
+    if (filters.personnelType.length)
+      parts.push(`Personnel Type: ${filters.personnelType.join(", ")}`);
+    if (filters.office.length)
+      parts.push(`College/Office: ${filters.office.join(", ")}`);
+    if (filters.department.length)
+      parts.push(`Department: ${filters.department.join(", ")}`);
+    if (filters.appointmentStatus.length) {
+      parts.push(
+        `Employment Status: ${filters.appointmentStatus.join(", ")}`,
+      );
     }
-    if (filters.positionLevel) {
-      parts.push(`Position Level: ${filters.positionLevel}`);
+    if (filters.positionLevel.length) {
+      parts.push(`Position Level: ${filters.positionLevel.join(", ")}`);
     }
-    if (filters.schoolYear) {
-      parts.push(`Academic Year: ${filters.schoolYear}`);
+    if (filters.schoolYear.length) {
+      parts.push(`Academic Year: ${filters.schoolYear.join(", ")}`);
     }
     if (filters.demographics.length) {
       parts.push(`Demographic Profile: ${filters.demographics.join(", ")}`);
@@ -212,54 +249,78 @@ export default function EmployeeGenderStatsContent() {
       {/* ===== FILTERS ===== */}
       <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-3">
         <div className="flex flex-wrap items-end gap-3">
-          <FilterSelect
-            label="Personnel Type"
-            value={filters.personnelType}
-            allLabel="All personnel types"
-            options={personnelTypeOptions}
-            onChange={setFilter("personnelType")}
-          />
-          <FilterSelect
-            label="College/Office"
-            value={filters.office}
-            allLabel="All colleges/offices"
-            options={OFFICE_OPTIONS}
-            onChange={setFilter("office")}
-          />
-          <FilterSelect
-            label="Department"
-            value={filters.department}
-            allLabel="All departments"
-            options={departmentChoices}
-            onChange={setFilter("department")}
-            disabled={!useSample}
-            hint="sample data only"
-          />
-          <FilterSelect
-            label="Employment Status"
-            value={filters.appointmentStatus}
-            allLabel="All employment statuses"
-            options={appointmentOptions}
-            onChange={setFilter("appointmentStatus")}
-          />
-          <FilterSelect
-            label="Position Level"
-            value={filters.positionLevel}
-            allLabel="All position levels"
-            options={POSITION_LEVEL_ORDER}
-            onChange={setFilter("positionLevel")}
-            disabled={!useSample}
-            hint="sample data only"
-          />
-          <FilterSelect
-            label="Academic Year"
-            value={filters.schoolYear}
-            allLabel="All academic years"
-            options={schoolYearOptions}
-            onChange={setFilter("schoolYear")}
-            disabled={!useSample}
-            hint="sample data only"
-          />
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Academic Year
+            </label>
+            <MultiSelect
+              label="Academic Year"
+              allLabel="All academic years"
+              options={schoolYearOptions}
+              value={filters.schoolYear}
+              onChange={setFilter("schoolYear")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Personnel Type
+            </label>
+            <MultiSelect
+              label="Personnel Type"
+              allLabel="All personnel types"
+              options={personnelTypeOptions}
+              value={filters.personnelType}
+              onChange={setFilter("personnelType")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              College/Office
+            </label>
+            <MultiSelect
+              label="College/Office"
+              allLabel="All colleges/offices"
+              options={OFFICE_OPTIONS}
+              value={filters.office}
+              onChange={setFilter("office")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Department
+            </label>
+            <MultiSelect
+              label="Department"
+              allLabel="All departments"
+              options={departmentChoices}
+              value={filters.department}
+              onChange={setFilter("department")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Employment Status
+            </label>
+            <MultiSelect
+              label="Employment Status"
+              allLabel="All employment statuses"
+              options={appointmentOptions}
+              value={filters.appointmentStatus}
+              onChange={setFilter("appointmentStatus")}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Position Level
+            </label>
+            <MultiSelect
+              label="Position Level"
+              allLabel="All position levels"
+              options={POSITION_LEVEL_ORDER}
+              value={filters.positionLevel}
+              onChange={setFilter("positionLevel")}
+            />
+          </div>
           <div className="flex flex-col">
             <label className="text-xs font-medium text-gray-500 mb-1 block">
               Demographic Profile
@@ -373,6 +434,54 @@ export default function EmployeeGenderStatsContent() {
 
       {showContent && (
         <>
+          {showComparison ? (
+            <>
+              <YearTotalsTable perYear={perYear} what="Employees" />
+              <YearSexDonuts perYear={perYear} />
+              <YearGroupedBars
+                title="Personnel by College / Office"
+                perYear={perYear}
+                rowsOf={(s) => s.byOffice}
+                nameKey="office"
+                height={320}
+              />
+              <YearGroupedBars
+                title="Personnel by Category"
+                perYear={perYear}
+                rowsOf={(s) => s.byCategory}
+                nameKey="category"
+              />
+              <YearGroupedBars
+                title="Personnel by Appointment Status"
+                perYear={perYear}
+                rowsOf={(s) => s.byAppointment}
+                nameKey="status"
+              />
+              <YearGroupedBars
+                title="Personnel by Position Level"
+                perYear={perYear}
+                rowsOf={(s) => s.byPositionLevel}
+                nameKey="level"
+              />
+              <YearGroupedBars
+                title="Personnel by Age Group"
+                perYear={perYear}
+                rowsOf={(s) => s.byAgeGroup}
+                nameKey="age_group"
+              />
+              <YearComparisonTable
+                title="Demographic Profile (Institutional Data)"
+                perYear={perYear}
+                rowsOf={(s) => s.demographics}
+                nameKey="label"
+              />
+              <p className="text-xs text-gray-400">
+                Insights and quick reports below describe the combined
+                selection ({selectedYears.join(", ")}).
+              </p>
+            </>
+          ) : (
+            <>
           <SummaryCards totals={totals} what="Employees" />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -458,6 +567,8 @@ export default function EmployeeGenderStatsContent() {
             rows={activeData.demographics || []}
             total={totals.total}
           />
+            </>
+          )}
           <KeyInsightsCard insights={insights} />
           <QuickReportsCard
             data={activeData}
@@ -467,47 +578,6 @@ export default function EmployeeGenderStatsContent() {
           />
         </>
       )}
-    </div>
-  );
-}
-
-/* Select control for the filter panel. `disabled` marks the sample-only
-   dimensions (Department, Position Level) while live data is showing. */
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-  allLabel,
-  disabled = false,
-  hint = "",
-}) {
-  return (
-    <div className="flex flex-col">
-      <label className="text-xs font-medium text-gray-500 mb-1 block">
-        {label}
-        {hint && (
-          <span className="ml-1 text-[10px] font-normal text-amber-600">
-            ({hint})
-          </span>
-        )}
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        title={
-          disabled ? `${label} is only available with sample data` : undefined
-        }
-        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[16rem] disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-      >
-        <option value="">{allLabel}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }
@@ -527,7 +597,14 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
     setStatus("");
     try {
       const query = new URLSearchParams({ type: "employees" });
-      if (college) query.set("college", college);
+      /* The PDF endpoint takes a single college — send the first selection and
+         let the on-screen stats carry the full multi-select. */
+      const colleges = Array.isArray(college)
+        ? college.filter(Boolean)
+        : college
+          ? [college]
+          : [];
+      if (colleges.length) query.set("college", colleges[0]);
       const res = await fetch(
         `/api/analytics/sex-disaggregated-data/report?${query.toString()}`,
         { method: "GET" },

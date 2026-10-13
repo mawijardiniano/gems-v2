@@ -10,7 +10,7 @@ export default function AttendancePageContent() {
 
   useEffect(() => {
     if (eventId) {
-      router.replace(`/events/discover/${eventId}?attendance=1`);
+      router.replace(`/attend/${eventId}`);
     }
   }, [eventId, router]);
 

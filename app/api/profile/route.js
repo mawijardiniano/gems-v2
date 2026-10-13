@@ -10,6 +10,11 @@ import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { toTitleCase } from "@/app/api/integration/_utils/mapping";
+import {
+  normalizeStudentUsername,
+  normalizeEmployeeUsername,
+  usernameEqualsFilter,
+} from "@/lib/usernames";
 import { rateLimiters } from "@/lib/rateLimit";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
 
@@ -35,21 +40,24 @@ async function generateUniqueUsername(personal, affiliation, contact) {
   if (isStudent) {
     const studentId = affiliation?.academic_information?.student_id;
     if (studentId) {
-      candidates.push(studentId.toUpperCase());
+      candidates.push(normalizeStudentUsername(studentId));
     }
   }
 
   if (isEmployee) {
     const email = contact?.email;
     if (email) {
-      candidates.push(email.toLowerCase());
+      const trimmed = String(email).trim();
+      // Keep full emails as-is so email login keeps working.
+      // Only sanitize the local-part fallback (no @) per locked rule.
+      candidates.push(trimmed.includes("@") ? trimmed : normalizeEmployeeUsername(trimmed));
     }
   }
 
   const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
 
   for (const candidate of uniqueCandidates) {
-    const exists = await UserAuth.findOne({ username: candidate }).lean();
+    const exists = await UserAuth.findOne(usernameEqualsFilter(candidate)).lean();
     if (!exists) {
       return candidate;
     }
@@ -283,9 +291,9 @@ export async function POST(req) {
         );
       }
 
-      const existingUsername = await UserAuth.findOne({
-        username: studentId.toUpperCase(),
-      }).lean();
+      const existingUsername = await UserAuth.findOne(
+        usernameEqualsFilter(normalizeStudentUsername(studentId)),
+      ).lean();
       if (existingUsername) {
         return NextResponse.json(
           {
@@ -313,9 +321,9 @@ export async function POST(req) {
         );
       }
 
-      const existingUsername = await UserAuth.findOne({
-        username: employeeId,
-      }).lean();
+      const existingUsername = await UserAuth.findOne(
+        usernameEqualsFilter(normalizeEmployeeUsername(employeeId)),
+      ).lean();
       if (existingUsername) {
         return NextResponse.json(
           {

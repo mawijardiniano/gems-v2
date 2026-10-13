@@ -103,13 +103,13 @@ function toList(countsObj, nameKey, order) {
 
 
 export const EMPTY_EMPLOYEE_FILTERS = {
-  personnelType: "",
-  office: "",
-  department: "",
-  appointmentStatus: "",
-  positionLevel: "",
+  schoolYear: [],
+  personnelType: [],
+  office: [],
+  department: [],
+  appointmentStatus: [],
+  positionLevel: [],
   demographics: [],
-  schoolYear: "",
   ageGroups: [],
   sexes: [],
 };
@@ -121,14 +121,18 @@ export function activeFilterCount(filters = {}) {
 }
 
 export function filterEmployeeRecords(records = [], filters = {}) {
-  const {
-    personnelType,
-    office,
-    department,
-    appointmentStatus,
-    positionLevel,
-    schoolYear,
-  } = filters;
+  /* Personnel type / office / department / appointment / position accept either
+     a single value (legacy callers) or an array (multi-select UI). */
+  const toList = (value) =>
+    Array.isArray(value) ? value.filter(Boolean) : value ? [value] : [];
+  const personnelTypes = toList(filters.personnelType);
+  const offices = toList(filters.office);
+  const departments = toList(filters.department);
+  const appointmentStatuses = toList(filters.appointmentStatus);
+  const positionLevels = toList(filters.positionLevel);
+  /* Academic year accepts either a single value (legacy callers) or an array
+     (multi-select UI); either means OR across the appointment history. */
+  const schoolYears = toList(filters.schoolYear);
   const ageGroups = Array.isArray(filters.ageGroups) ? filters.ageGroups : [];
   const sexes = Array.isArray(filters.sexes) ? filters.sexes : [];
 
@@ -137,13 +141,19 @@ export function filterEmployeeRecords(records = [], filters = {}) {
     if (ageGroups.length && !ageGroups.includes(ageGroupOf(record))) {
       return false;
     }
-    if (personnelType && record.personnelType !== personnelType) return false;
-    if (office && record.office !== office) return false;
-    if (department && record.department !== department) return false;
-    if (appointmentStatus && record.appointmentStatus !== appointmentStatus) {
+    if (personnelTypes.length && !personnelTypes.includes(record.personnelType))
+      return false;
+    if (offices.length && !offices.includes(record.office)) return false;
+    if (departments.length && !departments.includes(record.department))
+      return false;
+    if (
+      appointmentStatuses.length &&
+      !appointmentStatuses.includes(record.appointmentStatus)
+    ) {
       return false;
     }
-    if (positionLevel && record.positionLevel !== positionLevel) return false;
+    if (positionLevels.length && !positionLevels.includes(record.positionLevel))
+      return false;
     if (Array.isArray(filters.demographics) && filters.demographics.length) {
       const matched = filters.demographics.some((label) =>
         DEMOGRAPHIC_ROWS.some((row) => row.label === label && row.test(record)),
@@ -151,7 +161,12 @@ export function filterEmployeeRecords(records = [], filters = {}) {
       if (!matched) return false;
     }
     /* Academic year narrows through the appointment history. */
-    if (schoolYear && !(record.years || []).includes(schoolYear)) return false;
+    if (
+      schoolYears.length &&
+      !schoolYears.some((year) => (record.years || []).includes(year))
+    ) {
+      return false;
+    }
     return true;
   });
 }
@@ -168,9 +183,16 @@ export function uniqueFieldOptions(records = [], key) {
   return values;
 }
 
-export function departmentOptions(records = [], office = "") {
-  const scoped = office
-    ? records.filter((record) => record.office === office)
+export function departmentOptions(records = [], offices = []) {
+  /* Scoped to the union of the selected offices; empty (or legacy "") means
+     all offices. Accepts a single office string for backward compat. */
+  const list = Array.isArray(offices)
+    ? offices.filter(Boolean)
+    : offices
+      ? [offices]
+      : [];
+  const scoped = list.length
+    ? records.filter((record) => list.includes(record.office))
     : records;
   return uniqueFieldOptions(scoped, "department").sort((a, b) =>
     a.localeCompare(b),
