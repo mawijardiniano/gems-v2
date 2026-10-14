@@ -7,7 +7,8 @@ import { logActivity } from "@/lib/activityLog";
 import { cacheDelPrefix } from "@/lib/cache";
 
 const SEX = ["Male", "Female"];
-const PTYPE = ["Student", "Employee"];
+const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
+const PTYPE = ["Student", "Employee", "Stakeholder"];
 
 function windowOf(event) {
   // Date-only events: attendance is open for the whole calendar day(s).
@@ -47,8 +48,11 @@ export async function POST(req) {
     if (!name) return NextResponse.json({ message: "Full name is required" }, { status: 400 });
     if (!SEX.includes(b?.sex))
       return NextResponse.json({ message: "Sex must be Male or Female" }, { status: 400 });
+    const genderIdentity = String(b?.gender_identity || "").trim();
+    if (genderIdentity && !GENDER_IDENTITY.includes(genderIdentity))
+      return NextResponse.json({ message: "Gender identity must be Male, Female, or LGBTQIA+" }, { status: 400 });
     if (!PTYPE.includes(b?.participant_type))
-      return NextResponse.json({ message: "Participant type must be Student or Employee" }, { status: 400 });
+      return NextResponse.json({ message: "Participant type must be Student, Employee, or Stakeholder" }, { status: 400 });
     let ageNum = null;
     if (b?.age !== undefined && b?.age !== null && String(b.age).trim() !== "") {
       ageNum = Number(b.age);
@@ -73,15 +77,22 @@ export async function POST(req) {
         attended_at: existing.attended_at,
       });
     }
+    /* UI sends program / year / section separately; combine into one sheet value. */
+    const programPart = b?.participant_type === "Student" ? String(b?.program || b?.program_year_section || "").trim() : "";
+    const yearPart = b?.participant_type === "Student" ? String(b?.year || "").trim() : "";
+    const sectionPart = b?.participant_type === "Student" ? String(b?.section || "").trim() : "";
+    const combinedPYS = [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
     const guest = await EventGuest.create({
       event_id,
       full_name: name,
       sex: b.sex,
+      gender_identity: genderIdentity || undefined,
       age: ageNum,
+      contact: String(b?.contact || "").trim(),
       participant_type: b.participant_type,
       department_office_org: String(b?.department_office_org || "").trim(),
       position_designation: b.participant_type === "Student" ? "" : String(b?.position_designation || "").trim(),
-      program_year_section: b.participant_type === "Student" ? String(b?.program_year_section || "").trim() : "",
+      program_year_section: combinedPYS,
       attended_at: new Date(),
       source: "qr-scan",
     });

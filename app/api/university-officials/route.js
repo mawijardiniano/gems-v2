@@ -4,7 +4,8 @@ import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { findSeatByParts } from "@/lib/universityOfficialsConstants";
+import mongoose from "mongoose";
+import { HEADERS } from "@/lib/universityOfficialsConstants";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
@@ -82,11 +83,16 @@ export async function POST(req) {
   await connectDB();
 
   const body = await req.json();
-  const { header, title, unit = "", name, academic_year } = body || {};
+  const { header, title, position, unit = "", name, name_text = "", academic_year } = body || {};
 
-  if (!header || !title || !name) {
+  const positionText = String(position || title || "").trim();
+  const nameText = String(name_text || "").trim();
+  const nameId =
+    name && mongoose.isValidObjectId(name) ? name : null;
+
+  if (!header || !HEADERS.includes(header) || !positionText || (!nameId && !nameText)) {
     return Response.json(
-      { success: false, error: "Missing header, title, or name" },
+      { success: false, error: "Missing office, position, or name (pick a user or type a name)" },
       { status: 400 },
     );
   }
@@ -99,28 +105,18 @@ export async function POST(req) {
     );
   }
 
-  const seat = findSeatByParts({ header, title, unit });
-  if (!seat) {
-    return Response.json(
-      {
-        success: false,
-        error:
-          "Unknown seat — it is not part of the MarSU offices and administrative designations",
-      },
-      { status: 400 },
-    );
-  }
+  const titleText = String(title || positionText).trim();
+  const unitText = String(unit || "").trim();
 
   const existing = await UniversityOfficial.findOne({
     academic_year: academicYear,
-    header: seat.header,
-    title: seat.title,
-    unit: seat.unit,
+    header,
+    position: positionText,
   });
 
   if (existing) {
     return Response.json(
-      { success: false, error: `Seat is already filled for AY ${academicYear}` },
+      { success: false, error: `Position is already assigned for AY ${academicYear}` },
       { status: 409 },
     );
   }
@@ -128,24 +124,25 @@ export async function POST(req) {
   try {
     const doc = await UniversityOfficial.create({
       academic_year: academicYear,
-      header: seat.header,
-      title: seat.title,
-      unit: seat.unit,
-      name,
+      header,
+      title: titleText,
+      position: positionText,
+      unit: unitText,
+      name: nameId,
+      name_text: nameId ? "" : nameText,
     });
 
     await logActivity({
       req,
       action: "OFFICIAL_ASSIGN",
-      description: `Official assigned to "${seat.position}" (AY ${academicYear})`,
+      description: `Official assigned to "${positionText}" (AY ${academicYear})`,
       resource_type: "university_official",
       resource_id: doc._id,
       severity: "info",
       metadata: {
         academic_year: academicYear,
-        header: seat.header,
-        title: seat.title,
-        unit: seat.unit,
+        header,
+        position: positionText,
       },
     });
 
@@ -156,7 +153,7 @@ export async function POST(req) {
     return Response.json(
       {
         success: false,
-        error: isDuplicate ? "Seat is already filled" : err.message,
+        error: isDuplicate ? "Position is already assigned" : err.message,
       },
       { status: isDuplicate ? 409 : 400 },
     );

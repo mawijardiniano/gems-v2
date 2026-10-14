@@ -1,17 +1,11 @@
 import mongoose from "mongoose";
-import {
-  ALL_TITLES,
-  HEADERS,
-  composePosition,
-} from "../lib/universityOfficialsConstants";
-
+import { HEADERS } from "../lib/universityOfficialsConstants.js";
 /**
- * One document = one filled seat of the MarSU org chart.
+ * One document = one assigned official (temporary assigned-only mode).
  *
- * The catalog of every valid seat lives in code
- * (lib/universityOfficialsConstants.js); this collection only stores who
- * currently fills a seat. A seat is identified by header + title + unit,
- * which is unique across the whole chart.
+ * Offices (header) are saved/fixed; positions (title/position) are manually
+ * encoded since they are inconsistent; names may be a UserAuth ref or
+ * free text. Only assigned rows are stored/shown — no vacancy tracking.
  */
 const universityOfficialSchema = new mongoose.Schema(
   {
@@ -28,29 +22,42 @@ const universityOfficialSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      enum: ALL_TITLES,
       required: true,
+      trim: true,
     },
     unit: {
       type: String,
       trim: true,
       default: "",
     },
-    // Derived display string, e.g. "Head, Legal Services Unit".
+    // Manual position string, e.g. "Secretary of the University and of the Board of Regents".
     position: {
       type: String,
+      required: true,
+      trim: true,
     },
     name: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "UserAuth",
-      required: true,
+      required: false,
+      default: null,
+    },
+    name_text: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   { timestamps: true },
 );
 
 universityOfficialSchema.pre("validate", function () {
-  this.position = composePosition(this.title, this.unit);
+  if (!this.position && this.title) this.position = String(this.title).trim();
+  if (this.title) this.title = String(this.title).trim();
+  if (this.name_text) this.name_text = String(this.name_text).trim();
+  if (!this.name && !this.name_text) {
+    this.invalidate("name", "Official requires a user or a typed name");
+  }
 });
 
 // One person per seat per academic year — mirrors the API's 409 duplicate check.

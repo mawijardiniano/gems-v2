@@ -3,11 +3,21 @@ import UniversityOfficial from "@/models/universityOfficials";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 const POPULATE = {
   path: "name",
   model: "UserAuth",
   populate: { path: "personal_info_id", populate: { path: "personal" } },
+};
+
+const getDisplayName = (doc) => {
+  if (!doc) return "";
+  if (doc.name_text) return doc.name_text;
+  const personal = doc.name?.personal_info_id?.personal;
+  if (personal?.first_name || personal?.last_name)
+    return `${personal.first_name || ""} ${personal.last_name || ""}`.trim();
+  return doc.name?.username || "";
 };
 
 export async function GET(req, { params }) {
@@ -33,11 +43,14 @@ export async function PATCH(req, { params }) {
   await connectDB();
   const { id } = await params;
   const body = await req.json();
-  const { name, academic_year } = body || {};
+  const { name, name_text = "", academic_year } = body || {};
 
-  if (!name) {
+  const nameText = String(name_text || "").trim();
+  const nameId = name && mongoose.isValidObjectId(name) ? name : null;
+
+  if (!nameId && !nameText) {
     return Response.json(
-      { success: false, error: "Missing name" },
+      { success: false, error: "Missing name (pick a user or type a name)" },
       { status: 400 },
     );
   }
@@ -62,14 +75,11 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const prevName =
-      current.name?.personal_info_id?.personal
-        ? `${current.name.personal_info_id.personal.first_name || ""} ${current.name.personal_info_id.personal.last_name || ""}`.trim()
-        : current.name?.username || "";
+    const prevName = getDisplayName(current);
 
     const updated = await UniversityOfficial.findByIdAndUpdate(
       id,
-      { $set: { name } },
+      { $set: { name: nameId, name_text: nameId ? "" : nameText } },
       { new: true, runValidators: true },
     ).populate(POPULATE);
 
@@ -80,10 +90,7 @@ export async function PATCH(req, { params }) {
       );
     }
 
-    const newName =
-      updated.name?.personal_info_id?.personal
-        ? `${updated.name.personal_info_id.personal.first_name || ""} ${updated.name.personal_info_id.personal.last_name || ""}`.trim()
-        : updated.name?.username || "";
+    const newName = getDisplayName(updated);
 
     await logActivity({
       req,

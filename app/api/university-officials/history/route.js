@@ -3,7 +3,6 @@ import UniversityOfficial from "@/models/universityOfficials";
 import ActivityLog from "@/models/activity_log";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { findSeatByParts } from "@/lib/universityOfficialsConstants";
 import { normalizeAcademicYear } from "@/lib/academicYear";
 
 const POPULATE = {
@@ -13,9 +12,9 @@ const POPULATE = {
 };
 
 /**
- * GET /api/university-officials/history?header=&title=&unit=
- * Timeline of who held one seat across academic years (roster docs),
- * plus mid-year reassigns sourced from the activity log.
+ * GET /api/university-officials/history?header=&position=
+ * Timeline of who held one manually-encoded position across academic years
+ * (roster docs), plus mid-year reassigns sourced from the activity log.
  */
 export async function GET(req) {
   const { error, status } = await requireAuth(req);
@@ -24,22 +23,20 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const header = searchParams.get("header") || "";
-  const title = searchParams.get("title") || "";
-  const unit = searchParams.get("unit") || "";
+  const position =
+    searchParams.get("position") || searchParams.get("title") || "";
   const onlyYear = normalizeAcademicYear(searchParams.get("academic_year"));
 
-  const seat = findSeatByParts({ header, title, unit });
-  if (!seat) {
+  if (!header || !position.trim()) {
     return Response.json(
-      { success: false, error: "Unknown seat" },
+      { success: false, error: "Missing header or position" },
       { status: 400 },
     );
   }
 
   const rosterFilter = {
-    header: seat.header,
-    title: seat.title,
-    unit: seat.unit,
+    header,
+    position: position.trim(),
     ...(onlyYear ? { academic_year: onlyYear } : {}),
   };
   const roster = await UniversityOfficial.find(rosterFilter)
@@ -62,10 +59,8 @@ export async function GET(req) {
     success: true,
     data: {
       seat: {
-        header: seat.header,
-        title: seat.title,
-        unit: seat.unit,
-        position: seat.position,
+        header,
+        position: position.trim(),
       },
       roster,
       turnover: logs.map((l) => ({

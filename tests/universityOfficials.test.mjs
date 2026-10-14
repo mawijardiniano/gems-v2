@@ -1,17 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert";
 
-// Catalog + roster join behind the MarSU university officials feature.
+// Assigned-only roster join (temporary mode): offices saved, positions manual.
 // No DB or network required.
-import {
-  ALL_TITLES,
-  CATALOG,
-  HEADERS,
-  SEATS_BY_HEADER,
-  UNITS_BY_HEADER,
-  composePosition,
-  findSeatByParts,
-} from "../lib/universityOfficialsConstants.js";
+import { HEADERS } from "../lib/universityOfficialsConstants.js";
 import {
   buildOrgChart,
   findSeat,
@@ -19,159 +11,66 @@ import {
   isSeatFilled,
 } from "../lib/universityOfficialsMerge.js";
 
-test("catalog encodes every header and seat from the official document", () => {
-  assert.strictEqual(HEADERS.length, 10);
-  assert.strictEqual(CATALOG.length, 147);
-  assert.strictEqual(Object.keys(SEATS_BY_HEADER).length, 10);
-});
-
-test("no two seats share a key (header + title + unit is unique)", () => {
-  const keys = new Set(CATALOG.map((seat) => seat.key));
-  assert.strictEqual(keys.size, CATALOG.length);
-});
-
-test("titles repeat across the chart while units stay header-specific", () => {
-  assert.strictEqual(ALL_TITLES.length, 23);
-  assert.ok(ALL_TITLES.includes("Head"));
-  assert.ok(ALL_TITLES.includes("Program Chair"));
-  assert.ok(ALL_TITLES.includes("GAD Focal Person"));
-
-  const headSeats = CATALOG.filter((seat) => seat.title === "Head");
-  assert.strictEqual(headSeats.length, 50);
-
-  const programChairs = CATALOG.filter(
-    (seat) => seat.header === "PROGRAM CHAIRPERSONS",
-  );
-  assert.strictEqual(programChairs.length, 42);
-
-  assert.ok(UNITS_BY_HEADER["OFFICE OF THE PRESIDENT"].includes("Legal Services Unit"));
-});
-
-test("identical title+unit under different branches are disambiguated by header", () => {
-  const shared = CATALOG.filter(
-    (seat) =>
-      seat.title === "Head" && seat.unit === "Student Affairs and Services",
-  );
-  assert.deepStrictEqual(
-    shared.map((seat) => seat.header),
-    ["MARSU TORRIJOS BRANCH", "MARSU SANTA CRUZ BRANCH", "MARSU GASAN BRANCH"],
-  );
-});
-
-test("composePosition joins on the first comma only, unit-less titles stand alone", () => {
-  assert.strictEqual(
-    composePosition("Head", "Information, Communication & Technology Services Center"),
-    "Head, Information, Communication & Technology Services Center",
-  );
-  assert.strictEqual(
-    composePosition("Program Chair", "BSIT Welding, Mechanical & Fabrication Tech"),
-    "Program Chair, BSIT Welding, Mechanical & Fabrication Tech",
-  );
-  assert.strictEqual(composePosition("GAD Focal Person", ""), "GAD Focal Person");
-  assert.strictEqual(composePosition("University President"), "University President");
-});
-
-test("findSeatByParts accepts real seats and rejects invented ones", () => {
-  assert.ok(
-    findSeatByParts({
-      header: "OFFICE OF THE PRESIDENT",
-      title: "Head",
-      unit: "Legal Services Unit",
-    }),
-  );
-  assert.strictEqual(
-    findSeatByParts({
-      header: "OFFICE OF THE PRESIDENT",
-      title: "Chief",
-      unit: "Made-Up Office",
-    }),
-    null,
-  );
-});
-
-test("buildOrgChart joins the roster onto seats, counts vacancies, flags unlisted", () => {
+test("assigned-only chart shows only assigned rows grouped by header", () => {
   const roster = [
     {
-      header: "EXECUTIVE OFFICIALS",
-      title: "University President",
-      unit: "",
-      position: "University President",
-      name: "u1",
+      _id: "a1",
+      header: HEADERS[0],
+      title: "Secretary of the University and of the Board of Regents",
+      position: "Secretary of the University and of the Board of Regents",
+      name_text: "Dr. Maria Morena V. Santos",
     },
     {
-      header: "MARSU GASAN BRANCH",
-      title: "Head",
-      unit: "Research, Extension and Training",
-      position: "Head, Research, Extension and Training",
-      name: "u2",
-    },
-    {
-      header: "OFFICE OF THE PRESIDENT",
-      title: "Head",
-      unit: "OLD Information Unit Name (renamed)",
-      position: "Head, OLD Information Unit Name (renamed)",
-      name: "u3",
+      _id: "a2",
+      header: HEADERS[0],
+      title: "Chief, Presidential Management Staff",
+      position: "Chief, Presidential Management Staff",
+      name_text: "Dr. Alfredo M. Ofrecio III",
     },
   ];
 
   const chart = buildOrgChart(roster);
 
-  assert.strictEqual(chart.stats.seats, 147);
   assert.strictEqual(chart.stats.filled, 2);
-  assert.strictEqual(chart.stats.vacant, 145);
-
-  const president = chart.rows.find((row) => row.title === "University President");
-  assert.strictEqual(president.official.name, "u1");
-
-  const vacantSeat = findSeat({
-    header: "EXECUTIVE OFFICIALS",
-    title: "Executive Assistant",
-    unit: "",
-  });
-  const vacantRow = chart.rows.find((row) => row.key === vacantSeat.key);
-  assert.strictEqual(vacantRow.official, null);
-
-  assert.strictEqual(chart.unlisted.length, 1);
-  assert.strictEqual(chart.unlisted[0].name, "u3");
-
-  const exec = chart.byHeader.find((h) => h.header === "EXECUTIVE OFFICIALS");
-  assert.strictEqual(exec.total, 12);
-  assert.strictEqual(exec.filled, 1);
-  assert.strictEqual(exec.seats.length, 12);
+  assert.strictEqual(chart.stats.vacant, 0);
+  assert.deepStrictEqual(chart.unlisted, []);
+  assert.strictEqual(chart.rows.length, 2);
+  assert.strictEqual(chart.byHeader.length, 1);
+  assert.strictEqual(chart.byHeader[0].seats.length, 2);
 });
 
 test("buildOrgChart tolerates empty and missing rosters", () => {
   const empty = buildOrgChart([]);
   assert.strictEqual(empty.stats.filled, 0);
-  assert.strictEqual(empty.stats.vacant, 147);
-  assert.strictEqual(buildOrgChart(undefined).stats.seats, 147);
+  assert.strictEqual(empty.stats.vacant, 0);
+  assert.strictEqual(buildOrgChart(undefined).stats.seats, 0);
 });
 
-test("isSeatFilled detects duplicate assignments, findSeat resolves catalog rows", () => {
+test("isSeatFilled matches header + position text", () => {
   const roster = [
     {
-      header: "PROGRAM CHAIRPERSONS",
-      title: "Program Chair",
-      unit: "BS in Nursing",
+      header: HEADERS[0],
+      title: "Chief, Presidential Management Staff",
+      position: "Chief, Presidential Management Staff",
     },
   ];
 
-  const taken = findSeat({
-    header: "PROGRAM CHAIRPERSONS",
-    title: "Program Chair",
-    unit: "BS in Nursing",
-  });
-  const free = findSeat({
-    header: "PROGRAM CHAIRPERSONS",
-    title: "Program Chair",
-    unit: "BS in Midwifery",
-  });
-
-  assert.ok(isSeatFilled(roster, taken));
-  assert.strictEqual(isSeatFilled(roster, free), false);
+  assert.ok(
+    isSeatFilled(roster, {
+      header: HEADERS[0],
+      position: "chief, presidential management staff",
+    }),
+  );
+  assert.strictEqual(
+    isSeatFilled(roster, { header: HEADERS[0], position: "Other Position" }),
+    false,
+  );
+  assert.ok(findSeat({ header: HEADERS[0], position: "Some Position" }));
 });
 
-test("getOfficialPersonName reads populated and lean name references", () => {
+test("getOfficialPersonName prefers typed names, then populated refs", () => {
+  assert.strictEqual(getOfficialPersonName("Dr. Maria Morena V. Santos"), "Dr. Maria Morena V. Santos");
+  assert.strictEqual(getOfficialPersonName({ name_text: "Ms. Lenie P. Zulueta" }), "Ms. Lenie P. Zulueta");
   assert.strictEqual(
     getOfficialPersonName({
       personal_info_id: { personal: { first_name: "Maria", last_name: "Santos" } },

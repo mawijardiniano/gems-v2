@@ -21,7 +21,6 @@ import {
 } from "react-icons/fa";
 import {
   HEADERS,
-  SEATS_BY_HEADER,
 } from "@/lib/universityOfficialsConstants";
 import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
 import PrintUniversityOfficials from "../components/Print/PrintUniversityOfficials";
@@ -78,8 +77,8 @@ function getUserFullName(user) {
   return user.username || user._id || "";
 }
 
-// ─── User Search Field ─────────────────────────────────────────────
-function UserSearchField({ onChange, users, selectedUserId, autoFocus }) {
+// ─── User Search Field + typed-name fallback ─────────────────────────
+function UserSearchField({ onChange, users, selectedUserId, selectedNameText, autoFocus }) {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -98,11 +97,12 @@ function UserSearchField({ onChange, users, selectedUserId, autoFocus }) {
   }, [search, users]);
 
   const selectedName = useMemo(() => {
+    if (selectedNameText) return selectedNameText;
     if (!selectedUserId) return "";
     const u = users.find((u) => u._id === selectedUserId);
     if (!u) return "";
     return getUserFullName(u);
-  }, [selectedUserId, users]);
+  }, [selectedUserId, selectedNameText, users]);
 
   return (
     <div className="relative">
@@ -111,23 +111,36 @@ function UserSearchField({ onChange, users, selectedUserId, autoFocus }) {
         <input
           type="text"
           className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
-          placeholder="Search user by name or username..."
+          placeholder="Search user, or type a name..."
           value={search || selectedName}
           onChange={(e) => {
             setSearch(e.target.value);
             setShowDropdown(true);
-            onChange("");
+            onChange({ userId: "", nameText: e.target.value });
           }}
           onFocus={() => setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           autoComplete="off"
           autoFocus={autoFocus}
-          required
         />
       </div>
       {showDropdown && (
         <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-          {filteredUsers.length === 0 ? (
+          {search.trim() && (
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 transition"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onChange({ userId: "", nameText: search.trim() });
+                setSearch("");
+                setShowDropdown(false);
+              }}
+            >
+              Use &quot;{search.trim()}&quot;
+            </button>
+          )}
+          {filteredUsers.length === 0 && !search.trim() ? (
             <div className="px-3 py-2 text-sm text-gray-400">No users found</div>
           ) : (
             filteredUsers.map((u) => (
@@ -138,7 +151,7 @@ function UserSearchField({ onChange, users, selectedUserId, autoFocus }) {
                   selectedUserId === u._id ? "bg-blue-50 text-blue-700" : "text-gray-700"
                 }`}
                 onClick={() => {
-                  onChange(u._id);
+                  onChange({ userId: u._id, nameText: "" });
                   setSearch("");
                   setShowDropdown(false);
                 }}
@@ -168,18 +181,13 @@ function OfficialModal({
   onFormChange,
   users,
   form,
-  filledKeys,
+  positionSuggestions,
   loading,
   error,
 }) {
   if (!open) return null;
 
   const isEdit = mode === "edit";
-  const seats = SEATS_BY_HEADER[form.header] || [];
-  const selectedSeat = seats.find((seat) => seat.key === form.seatKey);
-
-  const pickFirstOpenSeat = (header) =>
-    (SEATS_BY_HEADER[header] || []).find((seat) => !filledKeys.has(seat.key)) || null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -228,7 +236,7 @@ function OfficialModal({
                 Position
               </label>
               <div className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
-                {selectedSeat?.position || form.position || ""}
+                {form.position || ""}
               </div>
               <p className="mt-1.5 text-xs text-gray-400">{form.header}</p>
             </div>
@@ -240,62 +248,53 @@ function OfficialModal({
                 </label>
                 <select
                   value={form.header || ""}
-                  onChange={(e) => {
-                    const header = e.target.value;
-                    const seat = pickFirstOpenSeat(header);
-                    onFormChange("header", header);
-                    onFormChange("seatKey", seat?.key || "");
-                  }}
+                  onChange={(e) => onFormChange("header", e.target.value)}
                   className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
                 >
                   <option value="">Select office / group</option>
-                  {HEADERS.map((header) => {
-                    const list = SEATS_BY_HEADER[header] || [];
-                    const openCount = list.filter((s) => !filledKeys.has(s.key)).length;
-                    return (
-                      <option key={header} value={header}>
-                        {header} ({openCount}/{list.length} open)
-                      </option>
-                    );
-                  })}
+                  {HEADERS.map((header) => (
+                    <option key={header} value={header}>
+                      {header}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-                  Position / Designation
+                  Position / Designation (type manually)
                 </label>
-                <select
-                  value={form.seatKey || ""}
-                  onChange={(e) => onFormChange("seatKey", e.target.value)}
+                <input
+                  type="text"
+                  list="official-position-suggestions"
+                  value={form.position || ""}
+                  onChange={(e) => onFormChange("position", e.target.value)}
                   required
                   disabled={!form.header}
+                  placeholder="e.g. Secretary of the University and of the Board of Regents"
                   className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white disabled:bg-gray-50 disabled:text-gray-400"
-                >
-                  <option value="">Select position</option>
-                  {seats.map((seat) => (
-                    <option
-                      key={seat.key}
-                      value={seat.key}
-                      disabled={filledKeys.has(seat.key)}
-                    >
-                      {seat.position}
-                      {filledKeys.has(seat.key) ? " — filled" : ""}
-                    </option>
+                />
+                <datalist id="official-position-suggestions">
+                  {(positionSuggestions || []).map((p) => (
+                    <option key={p} value={p} />
                   ))}
-                </select>
+                </datalist>
               </div>
             </>
           )}
 
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-              Name
+              Name (pick a user or type a name)
             </label>
             <UserSearchField
-              onChange={(userId) => onFormChange("name", userId)}
+              onChange={({ userId, nameText }) => {
+                onFormChange("name", userId);
+                onFormChange("name_text", nameText);
+              }}
               users={users}
               selectedUserId={form.name}
+              selectedNameText={form.name_text}
               autoFocus={isEdit}
             />
           </div>
@@ -335,9 +334,8 @@ function HeaderCard({
 }) {
   const Icon = headerIcon(header);
   const color = headerColor(header);
-  const filled = seats.filter((seat) => seat.official).length;
+  const filled = seats.length;
   const total = seats.length;
-  const complete = filled === total;
 
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden mb-5 transition-all duration-200 hover:shadow-md">
@@ -352,21 +350,13 @@ function HeaderCard({
           <div className="text-left">
             <h3 className="text-sm font-semibold text-gray-900">{header}</h3>
             <p className="text-xs text-gray-500">
-              {filled} of {total} seat{total !== 1 ? "s" : ""} filled
+              {filled} assigned official{total !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              complete
-                ? "bg-emerald-50 text-emerald-600"
-                : filled > 0
-                  ? "bg-amber-50 text-amber-600"
-                  : "bg-gray-50 text-gray-400"
-            }`}
-          >
-            {complete ? "Complete" : filled > 0 ? "Partial" : "All Vacant"}
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+            Assigned only
           </span>
           {expanded ? (
             <FaChevronDown className="h-3.5 w-3.5 text-gray-400" />
@@ -399,63 +389,46 @@ function HeaderCard({
             </thead>
             <tbody className="divide-y divide-gray-50">
               {seats.map((seat) => {
-                const person = seat.official ? getOfficialPersonName(seat.official.name) : "";
+                const official = seat.official;
+                const person = official
+                  ? getOfficialPersonName(official.name_text || official.name)
+                  : "";
                 return (
                   <tr key={seat.key} className="hover:bg-gray-50/80 transition-colors duration-150 group">
                     <td className="px-6 py-3.5">
                       <span className="text-sm text-gray-700">{seat.position}</span>
                     </td>
                     <td className="px-6 py-3.5">
-                      {seat.official ? (
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
-                            {(person[0] || "?").toUpperCase()}
-                          </div>
-                          <span className="text-sm font-medium text-gray-900">{person}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
+                          {(person[0] || "?").toUpperCase()}
                         </div>
-                      ) : (
-                        <span className="text-sm text-gray-300">—</span>
-                      )}
+                        <span className="text-sm font-medium text-gray-900">{person}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-3.5">
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          seat.official
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-gray-50 text-gray-400"
-                        }`}
-                      >
-                        {seat.official ? "Filled" : "Vacant"}
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+                        Assigned
                       </span>
                     </td>
                     {!isCoordinator && (
                       <td className="px-6 py-3.5 text-right">
-                        {seat.official ? (
-                          <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button
-                              onClick={() => onEdit(seat)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
-                            >
-                              <FaEdit className="h-3 w-3" />
-                              Reassign
-                            </button>
-                            <button
-                              onClick={() => onVacate(seat)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
-                            >
-                              <FaTrash className="h-3 w-3" />
-                              Vacate
-                            </button>
-                          </div>
-                        ) : (
+                        <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                           <button
-                            onClick={() => onAssign(seat)}
+                            onClick={() => onEdit(official)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
                           >
-                            <FaPlus className="h-3 w-3" />
-                            Assign
+                            <FaEdit className="h-3 w-3" />
+                            Reassign
                           </button>
-                        )}
+                          <button
+                            onClick={() => onVacate(official)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
+                          >
+                            <FaTrash className="h-3 w-3" />
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -469,66 +442,9 @@ function HeaderCard({
   );
 }
 
-// ─── Unlisted Assignments ──────────────────────────────────────────
-function UnlistedCard({ unlisted, onEdit, onVacate, isCoordinator }) {
-  if (unlisted.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl bg-white border border-amber-200 shadow-sm overflow-hidden mb-5">
-      <div className="px-6 py-4 flex items-center gap-3 bg-amber-50/50">
-        <div className="h-9 w-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-          <FaExclamationTriangle className="h-4 w-4" />
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">
-            Unlisted assignments ({unlisted.length})
-          </h3>
-          <p className="text-xs text-gray-500">
-            These seats no longer match the designations document — reassign or vacate them.
-          </p>
-        </div>
-      </div>
-      <div className="overflow-x-auto border-t border-amber-100">
-        <table className="w-full text-sm">
-          <tbody className="divide-y divide-gray-50">
-            {unlisted.map((official) => (
-              <tr key={official._id} className="hover:bg-gray-50/80 transition-colors group">
-                <td className="px-6 py-3.5">
-                  <span className="text-sm text-gray-700">{official.position}</span>
-                  <p className="text-xs text-gray-400">{official.header}</p>
-                </td>
-                <td className="px-6 py-3.5">
-                  <span className="text-sm font-medium text-gray-900">
-                    {getOfficialPersonName(official.name)}
-                  </span>
-                </td>
-                {!isCoordinator && (
-                  <td className="px-6 py-3.5 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        onClick={() => onEdit(official)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
-                      >
-                        <FaEdit className="h-3 w-3" />
-                        Reassign
-                      </button>
-                      <button
-                        onClick={() => onVacate(official)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-all"
-                      >
-                        <FaTrash className="h-3 w-3" />
-                        Vacate
-                      </button>
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+// ─── Unlisted Assignments (unused in assigned-only mode) ─────────────
+function UnlistedCard() {
+  return null;
 }
 
 // ─── Main Component ────────────────────────────────────────────────
@@ -553,7 +469,6 @@ export default function UniversityOfficialsContent() {
   // Org-chart filters (applied on top of the selected year).
   const [search, setSearch] = useState("");
   const [headerFilter, setHeaderFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all"); // all | filled | vacant
 
   const isArchived = Boolean(activeYear && academicYear && academicYear !== activeYear);
   const canEdit = !isCoordinator && !isArchived;
@@ -569,14 +484,12 @@ export default function UniversityOfficialsContent() {
     const q = search.trim().toLowerCase();
     const matchesSeat = (row) => {
       if (headerFilter !== "all" && row.header !== headerFilter) return false;
-      if (statusFilter === "filled" && !row.official) return false;
-      if (statusFilter === "vacant" && row.official) return false;
       if (!q) return true;
-      const name = getOfficialPersonName(row.official?.name).toLowerCase();
+      const name = getOfficialPersonName(row.official?.name_text || row.official?.name).toLowerCase();
       return (
         name.includes(q) ||
         row.position.toLowerCase().includes(q) ||
-        row.title.toLowerCase().includes(q) ||
+        (row.title || "").toLowerCase().includes(q) ||
         (row.unit || "").toLowerCase().includes(q)
       );
     };
@@ -587,23 +500,28 @@ export default function UniversityOfficialsContent() {
         return {
           ...group,
           seats,
-          filled: seats.filter((s) => s.official).length,
+          filled: seats.length,
           total: seats.length,
         };
       })
       .filter((group) => group.seats.length > 0);
     return { ...base, rows, byHeader };
-  }, [assignments, search, headerFilter, statusFilter]);
+  }, [assignments, search, headerFilter]);
 
   const chart = filteredChart;
 
-  const filledKeys = useMemo(
-    () =>
-      new Set(
-        assignments.map((a) => `${a.header}::${a.title}::${a.unit || ""}`),
+  const positionSuggestions = useMemo(() => {
+    const header = modalForm.header;
+    if (!header) return [];
+    return [
+      ...new Set(
+        assignments
+          .filter((a) => a.header === header)
+          .map((a) => a.position || a.title)
+          .filter(Boolean),
       ),
-    [assignments],
-  );
+    ];
+  }, [assignments, modalForm.header]);
 
   useEffect(() => {
     if (success) {
@@ -736,19 +654,10 @@ export default function UniversityOfficialsContent() {
     setModalForm((prev) => ({ ...prev, [field]: value }));
 
   const openAssign = (seat) => {
-    const header =
-      seat?.header ||
-      HEADERS.find((h) =>
-        (SEATS_BY_HEADER[h] || []).some((s) => !filledKeys.has(s.key)),
-      ) ||
-      HEADERS[0];
-    const seatKey =
-      seat?.key ||
-      (SEATS_BY_HEADER[header] || []).find((s) => !filledKeys.has(s.key))?.key ||
-      "";
+    const header = seat?.header || HEADERS[0];
 
     setModalMode("assign");
-    setModalForm({ header, seatKey, name: "", position: "" });
+    setModalForm({ header, position: "", name: "", name_text: "" });
     setModalError("");
     setModalOpen(true);
   };
@@ -757,11 +666,14 @@ export default function UniversityOfficialsContent() {
     setModalMode("edit");
     setModalForm({
       header: official.header,
-      seatKey:
-        official.key ||
-        `${official.header}::${official.title}::${official.unit || ""}`,
       position: official.position,
-      name: official.name?._id || official.name || "",
+      name:
+        typeof official.name === "object"
+          ? official.name?._id || ""
+          : "",
+      name_text:
+        official.name_text ||
+        (typeof official.name === "string" ? official.name : ""),
       editingId: official._id,
     });
     setModalError("");
@@ -780,8 +692,13 @@ export default function UniversityOfficialsContent() {
     setModalLoading(true);
 
     try {
-      if (!modalForm.name) {
-        setModalError("Select the person for this seat");
+      const personName = String(modalForm.name_text || "").trim();
+      if (!modalForm.header) {
+        setModalError("Select an office");
+        return;
+      }
+      if (!personName && !modalForm.name) {
+        setModalError("Pick a user or type a name");
         return;
       }
 
@@ -789,30 +706,29 @@ export default function UniversityOfficialsContent() {
         const res = await fetch(`/api/university-officials/${modalForm.editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: modalForm.name, academic_year: academicYear }),
+          body: JSON.stringify({ name: modalForm.name || null, name_text: modalForm.name ? "" : personName, academic_year: academicYear }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          setModalError(data.error || "Failed to reassign seat");
+          setModalError(data.error || "Failed to reassign official");
           return;
         }
-        setSuccess("Seat reassigned successfully!");
+        setSuccess("Official reassigned successfully!");
       } else {
-        const seat = (SEATS_BY_HEADER[modalForm.header] || []).find(
-          (s) => s.key === modalForm.seatKey,
-        );
-        if (!seat) {
-          setModalError("Select a valid position");
+        const positionText = String(modalForm.position || "").trim();
+        if (!positionText) {
+          setModalError("Type the position / designation");
           return;
         }
         const res = await fetch("/api/university-officials", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            header: seat.header,
-            title: seat.title,
-            unit: seat.unit,
-            name: modalForm.name,
+            header: modalForm.header,
+            title: positionText,
+            position: positionText,
+            name: modalForm.name || null,
+            name_text: modalForm.name ? "" : personName,
             academic_year: academicYear,
           }),
         });
@@ -822,7 +738,7 @@ export default function UniversityOfficialsContent() {
           return;
         }
         setSuccess("Official assigned successfully!");
-        setExpanded((prev) => ({ ...prev, [seat.header]: true }));
+        setExpanded((prev) => ({ ...prev, [modalForm.header]: true }));
       }
 
       closeModal();
@@ -993,21 +909,12 @@ export default function UniversityOfficialsContent() {
               </option>
             ))}
           </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
-          >
-            <option value="all">All seats</option>
-            <option value="filled">Filled</option>
-            <option value="vacant">Vacant</option>
-          </select>
         </div>
       )}
 
       {/* ── Summary ─────────────────────────────────────────────── */}
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -1015,9 +922,9 @@ export default function UniversityOfficialsContent() {
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Seats
+                  Assigned Officials
                 </p>
-                <p className="text-xl font-bold text-gray-900">{chart.stats.seats}</p>
+                <p className="text-xl font-bold text-gray-900">{chart.stats.filled}</p>
               </div>
             </div>
           </div>
@@ -1028,22 +935,9 @@ export default function UniversityOfficialsContent() {
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Filled
+                  Offices Shown
                 </p>
-                <p className="text-xl font-bold text-gray-900">{chart.stats.filled}</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center">
-                <FaBuilding className="h-6 w-6 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vacant
-                </p>
-                <p className="text-xl font-bold text-gray-900">{chart.stats.vacant}</p>
+                <p className="text-xl font-bold text-gray-900">{chart.byHeader.length}</p>
               </div>
             </div>
           </div>
@@ -1076,12 +970,7 @@ export default function UniversityOfficialsContent() {
             />
           ))}
 
-          <UnlistedCard
-            unlisted={chart.unlisted}
-            onEdit={openEdit}
-            onVacate={handleVacate}
-            isCoordinator={isCoordinator || isArchived}
-          />
+          <UnlistedCard />
         </>
       )}
 
@@ -1093,7 +982,7 @@ export default function UniversityOfficialsContent() {
         onFormChange={changeModalForm}
         users={users}
         form={modalForm}
-        filledKeys={filledKeys}
+        positionSuggestions={positionSuggestions}
         loading={modalLoading}
         error={modalError}
       />

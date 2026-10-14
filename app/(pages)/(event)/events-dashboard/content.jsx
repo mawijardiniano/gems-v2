@@ -1,6 +1,23 @@
 "use client";
 
 import axios from "axios";
+import {
+  SAMPLE_SCHOOL_YEARS,
+  SAMPLE_EMPLOYEE_PROFILE_COUNT,
+  SAMPLE_STUDENT_PROFILE_COUNT,
+  SAMPLE_STUDENT_PROFILE_RECORDS,
+  SAMPLE_EMPLOYEE_PROFILE_RECORDS,
+} from "../gender-statistics/components/sampleProfileRecords";
+import { buildSampleDashboardData } from "../gender-statistics/components/sampleDashboardData";
+import {
+  computeStudentStats,
+  filterStudentRecords,
+} from "../gender-statistics/components/studentStats";
+import {
+  computeEmployeeStats,
+  filterEmployeeRecords,
+} from "../gender-statistics/components/employeeStats";
+import { SampleToggle, SampleDataNotice } from "../gender-statistics/components/SampleToggle";
 import { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
@@ -157,17 +174,84 @@ function fmtPesoCompact(value) {
   return `₱${n.toFixed(0)}`;
 }
 
-function StatCard({ icon: Icon, iconClass, label, value, hint }) {
+/** Female share + lowest-participation groups from sample dashboard payload. */
+function sampleImpactStats(sampleData) {
+  if (!sampleData) return null;
+  const snap = sampleData.snapshot || {};
+  const total = Number(snap.total) || 0;
+  const female = Number(snap.femaleCount) || 0;
+  const male = Number(snap.maleCount) || 0;
+  const femalePct = total > 0 ? Math.round((female / total) * 100) : null;
+
+  const groups = [];
+  const collect = (rows, kind) => {
+    (rows || []).forEach((row) => {
+      const f = Number(row.Female) || 0;
+      const m = Number(row.Male) || 0;
+      const t = f + m;
+      if (t < 10) return;
+      groups.push({ name: row.name, kind, femalePct: Math.round((f / t) * 100), total: t });
+    });
+  };
+  collect(sampleData.demographics?.studentCollegeData, "college");
+  collect(sampleData.demographics?.employeeOfficeData, "office");
+  groups.sort((a, b) => a.femalePct - b.femalePct);
+  const gaps = groups.filter((g) => g.femalePct < 40).slice(0, 4);
+
+  return { total, female, male, femalePct, gaps };
+}
+
+function SourceTag({ sample }) {
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+    <span
+      className={`ml-1.5 inline-flex items-center align-middle px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
+        sample
+          ? "bg-amber-50 text-amber-700 border border-amber-200"
+          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+      }`}
+    >
+      {sample ? "Sample" : "Live"}
+    </span>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  iconClass,
+  label,
+  value,
+  hint,
+  barPercent,
+  barClass,
+  source,
+  onClick,
+}) {
+  const clickable = typeof onClick === "function";
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-2xl bg-white border border-gray-100 shadow-sm p-5 ${
+        clickable
+          ? "cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+          : ""
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
+          <p className="text-xs font-medium text-gray-500 truncate">
+            {label}
+            {source ? <SourceTag sample={source === "sample"} /> : null}
+          </p>
           <p className="mt-1 text-2xl font-bold tracking-tight text-gray-900">
             {value}
           </p>
           {hint ? (
             <p className="mt-1 text-xs text-gray-400 truncate">{hint}</p>
+          ) : null}
+          {typeof barPercent === "number" ? (
+            <div className="mt-2">
+              <MiniBar percent={barPercent} barClass={barClass} />
+            </div>
           ) : null}
         </div>
         <div
@@ -333,6 +417,11 @@ export default function EventsDashboardContent() {
   const [genderLoading, setGenderLoading] = useState(true);
   const [genderError, setGenderError] = useState("");
 
+  // Sample-data mode (default ON, mirrors gender-statistics pages): the two
+  // gender hero cards read the synthetic profile dataset client-side, while
+  // budget/completion stay on live GPB data. Each card carries a SAMPLE/LIVE tag.
+  const [useSample, setUseSample] = useState(true);
+
   const router = useRouter();
 
   const { totalGAA, totalGAD, avgGADPercent } = useMemo(() => {
@@ -411,6 +500,55 @@ export default function EventsDashboardContent() {
     () => GPB.find((g) => String(g?.year) === String(selectedYear)) || null,
     [GPB, selectedYear],
   );
+
+  // Sample hero data: same AY filter the dashboard year picker produces.
+  const sampleImpact = useMemo(() => {
+    const ay = academicYearLabel(selectedYear);
+    if (!SAMPLE_SCHOOL_YEARS.includes(ay)) return null;
+    try {
+      return sampleImpactStats(buildSampleDashboardData({ school_year: ay }));
+    } catch {
+      return null;
+    }
+  }, [selectedYear]);
+
+  /* Sample Gender Statistics card: same school-year scoping as the live API
+     (students narrowed by AY, employees unfiltered), built with the same
+     filter/compute helpers the gender-statistics pages use so both views
+     stay in sync. */
+  const sampleGenderStats = useMemo(() => {
+    try {
+      const ay = academicYearLabel(selectedYear);
+      const studentTotals = SAMPLE_SCHOOL_YEARS.includes(ay)
+        ? computeStudentStats(
+            filterStudentRecords(SAMPLE_STUDENT_PROFILE_RECORDS, {
+              schoolYear: ay,
+            }),
+            SAMPLE_STUDENT_PROFILE_RECORDS,
+          ).totals
+        : null;
+      const employeeTotals = computeEmployeeStats(
+        filterEmployeeRecords(SAMPLE_EMPLOYEE_PROFILE_RECORDS, {}),
+        SAMPLE_EMPLOYEE_PROFILE_RECORDS,
+      ).totals;
+      return {
+        students: studentTotals ? { totals: studentTotals } : null,
+        employees: employeeTotals ? { totals: employeeTotals } : null,
+      };
+    } catch {
+      return null;
+    }
+  }, [selectedYear]);
+
+  /* What the Gender Statistics card renders: sample totals while the toggle
+     is on (no database reads), live API totals once it is off. */
+  const activeGenderStats = useSample ? sampleGenderStats : genderStats;
+  const showGenderLoading = useSample ? false : genderLoading;
+  const showGenderError = useSample
+    ? !sampleGenderStats?.students && !sampleGenderStats?.employees
+      ? "Sample data is unavailable for the selected year."
+      : ""
+    : genderError;
 
   const projectsSnapshot = useMemo(() => {
     const projects = (Array.isArray(selectedGpb?.projects)
@@ -554,6 +692,13 @@ export default function EventsDashboardContent() {
   }, [selectedYear]);
 
   useEffect(() => {
+    /* Sample mode renders from the bundled dataset, so skip the live
+       gender-statistics reads entirely (mirrors the hero cards above). */
+    if (useSample) {
+      setGenderLoading(false);
+      setGenderError("");
+      return;
+    }
     let mounted = true;
     const load = async () => {
       setGenderLoading(true);
@@ -582,7 +727,7 @@ export default function EventsDashboardContent() {
     return () => {
       mounted = false;
     };
-  }, [selectedYear]);
+  }, [selectedYear, useSample]);
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -593,11 +738,11 @@ export default function EventsDashboardContent() {
             Dashboard
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Overview of events, report readiness, projects, and budget
-            allocation
+            GAD impact, participation gaps, and project delivery
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <SampleToggle useSample={useSample} onToggle={() => setUseSample((s) => !s)} />
           <div className="flex items-center gap-2">
             <label
               htmlFor="dashboard-year"
@@ -655,49 +800,102 @@ export default function EventsDashboardContent() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {eventsLoading ? (
+        {eventsLoading || gpbLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-        ) : eventStats.total === 0 ? (
-          <div className="sm:col-span-2 xl:col-span-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
-            <EmptyState
-              icon={Inbox}
-              title="No events this academic year"
-              description={`No events were recorded for ${selectedYearLabel}. Pick a different academic year to see its activity.`}
-            />
-          </div>
         ) : (
           <>
             <StatCard
-              icon={CalendarDays}
-              iconClass="bg-blue-50 text-blue-600"
-              label="Total Events"
-              value={eventStats.total}
-              hint={`${eventStats.cancelled} cancelled · ${selectedYearLabel}`}
-            />
-            <StatCard
-              icon={Activity}
-              iconClass="bg-emerald-50 text-emerald-600"
-              label="Active Events"
-              value={eventStats.active}
-              hint={`Ongoing and upcoming · ${selectedYearLabel}`}
-            />
-            <StatCard
-              icon={CalendarCheck}
-              iconClass="bg-violet-50 text-violet-600"
-              label="Completed Events"
-              value={eventStats.completed}
-              hint={`Finished activities · ${selectedYearLabel}`}
-            />
-            <StatCard
               icon={Users}
-              iconClass="bg-amber-50 text-amber-600"
-              label="Total Registrations"
-              value={eventStats.totalParticipants.toLocaleString()}
-              hint={`Across ${selectedYearLabel} events`}
+              iconClass="bg-pink-50 text-pink-600"
+              label="Female Participation"
+              source={useSample ? "sample" : "live"}
+              value={
+                useSample
+                  ? sampleImpact?.femalePct != null
+                    ? `${sampleImpact.femalePct}%`
+                    : "—"
+                  : genderLoading
+                    ? "…"
+                    : "—"
+              }
+              hint={
+                useSample
+                  ? sampleImpact
+                    ? `${sampleImpact.female.toLocaleString()} F · ${sampleImpact.male.toLocaleString()} M · ${selectedYearLabel}`
+                    : `No sample data for ${selectedYearLabel}`
+                  : selectedYearLabel
+              }
+              barPercent={useSample ? sampleImpact?.femalePct : undefined}
+              barClass="bg-pink-500"
+              onClick={() => router.push("/gender-statistics/students")}
+            />
+            <StatCard
+              icon={AlertCircle}
+              iconClass={
+                useSample && sampleImpact && sampleImpact.gaps.length === 0
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "bg-amber-50 text-amber-600"
+              }
+              label="Participation Gaps"
+              source={useSample ? "sample" : "live"}
+              value={
+                useSample
+                  ? sampleImpact
+                    ? sampleImpact.gaps.length
+                    : "—"
+                  : (readinessLoading
+                    ? "…"
+                    : (readiness?.projects?.missingAccomplishments?.length || 0) +
+                      (readiness?.projects?.missingEvidence?.length || 0))
+              }
+              hint={
+                useSample
+                  ? sampleImpact
+                    ? sampleImpact.gaps.length === 0
+                      ? `All clear · ${selectedYearLabel}`
+                      : `Lowest: ${sampleImpact.gaps[0].name} ${sampleImpact.gaps[0].femalePct}% · ${selectedYearLabel}`
+                    : `No sample data for ${selectedYearLabel}`
+                  : `Missing entries · ${selectedYearLabel}`
+              }
+              onClick={() => router.push("/gender-statistics/students")}
+            />
+            <StatCard
+              icon={PiggyBank}
+              iconClass="bg-emerald-50 text-emerald-600"
+              label="Budget Utilized"
+              source="live"
+              value={`${projectsSnapshot.utilizationPct}%`}
+              hint={`${fmtPesoCompact(projectsSnapshot.spent)} of ${fmtPesoCompact(projectsSnapshot.allotted)} · ${selectedYearLabel}`}
+              barPercent={projectsSnapshot.utilizationPct}
+              barClass="bg-emerald-500"
+              onClick={() =>
+                selectedYear ? router.push(`/gpb/${selectedYear}`) : router.push("/gpb")
+              }
+            />
+            <StatCard
+              icon={Target}
+              iconClass="bg-blue-50 text-blue-600"
+              label="Completion"
+              source="live"
+              value={
+                projectsSnapshot.total
+                  ? `${projectsSnapshot.completed}/${projectsSnapshot.total}`
+                  : "—"
+              }
+              hint={
+                projectsSnapshot.total
+                  ? `${projectsSnapshot.completionPct}% done · ${projectsSnapshot.ongoing} ongoing · ${selectedYearLabel}`
+                  : `No GPB projects · ${selectedYearLabel}`
+              }
+              barPercent={projectsSnapshot.completionPct}
+              barClass="bg-blue-500"
+              onClick={() => router.push("/project-monitoring/gad-projects")}
             />
           </>
         )}
       </div>
+
+      {useSample && <SampleDataNotice />}
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -862,13 +1060,18 @@ export default function EventsDashboardContent() {
         <CardShell
           icon={Users}
           iconClass="bg-pink-50 text-pink-600"
-          title="Gender Statistics"
+          title={
+            <>
+              Gender Statistics
+              <SourceTag sample={useSample} />
+            </>
+          }
           subtitle="Share of female records on file"
         >
-          {genderLoading ? (
+          {showGenderLoading ? (
             <SnapshotSkeleton rows={2} />
-          ) : genderError ? (
-            <p className="text-xs text-gray-500 italic">{genderError}</p>
+          ) : showGenderError ? (
+            <p className="text-xs text-gray-500 italic">{showGenderError}</p>
           ) : (
             <>
               <div className="space-y-4">
@@ -877,13 +1080,13 @@ export default function EventsDashboardContent() {
                     key: "students",
                     label: "Students",
                     scope: selectedYearLabel,
-                    totals: genderStats.students?.totals,
+                    totals: activeGenderStats?.students?.totals,
                   },
                   {
                     key: "employees",
                     label: "Employees",
                     scope: "all years",
-                    totals: genderStats.employees?.totals,
+                    totals: activeGenderStats?.employees?.totals,
                   },
                 ].map((row) => (
                   <div key={row.key} className="space-y-1.5">
@@ -1135,7 +1338,7 @@ export default function EventsDashboardContent() {
                     Upcoming Events
                   </h2>
                   <p className="text-xs text-gray-500">
-                    Next {upcomingEvents.length} active events
+                    Next {upcomingEvents.length} active events · {eventStats.active} active · {eventStats.completed} completed · {selectedYearLabel}
                   </p>
                 </div>
               </div>

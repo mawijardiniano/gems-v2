@@ -2,12 +2,9 @@
 
 import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
 
-const VACANT = "—";
-
 /**
- * Prints the full MarSU offices & administrative designations document.
- * Vacant seats are printed as "—" so the paper output always mirrors the
- * official chart, whether or not a person has been assigned yet.
+ * Prints the assigned MarSU officials roster (assigned-only mode).
+ * Only assigned rows print — no vacant seats, no unlisted section.
  */
 export default function PrintUniversityOfficials({ officials, academicYear }) {
   const handlePrintOfficials = () => {
@@ -18,13 +15,14 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
       .map(({ header, seats }) => {
         const rows = seats
           .map((seat) => {
-            const name = seat.official
-              ? getOfficialPersonName(seat.official.name)
-              : VACANT;
+            const official = seat.official;
+            const name = getOfficialPersonName(
+              official?.name_text || official?.name,
+            );
             return `
               <tr>
                 <td>${seat.position}</td>
-                <td${seat.official ? "" : ' class="vacant"'}>${name}</td>
+                <td>${name}</td>
               </tr>
             `;
           })
@@ -44,32 +42,6 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
         `;
       })
       .join("");
-
-    const unlistedHtml = chart.unlisted.length
-      ? `
-        <h4>UNLISTED ASSIGNMENTS</h4>
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 62%">Position / Designation</th>
-              <th>Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${chart.unlisted
-              .map(
-                (o) => `
-              <tr>
-                <td>${o.position || ""}</td>
-                <td>${getOfficialPersonName(o.name)}</td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
-      `
-      : "";
 
     const html = `
     <html>
@@ -125,7 +97,6 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
         <p class="subtitle">Offices &amp; Administrative Designations${yearLabel}</p>
 
         ${sectionsHtml}
-        ${unlistedHtml}
       </body>
     </html>
   `;
