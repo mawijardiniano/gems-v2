@@ -54,3 +54,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# dev-only: tests + one-off scripts (kept locally, hidden from GitHub)
+tests/
+scripts/
+# exception: needed by the "postinstall" hook so a fresh clone can build PDFs
+!scripts/copy-pdf-worker.mjs
+data/sample-profiles.json
+
+# generated / local-only (keep the file, hide it from the index)
+public/pdf.worker.min.mjs
+!.gitignore
+.kilo/
+.vscode/
+.flowbite-react/
+gpb-progress-preview-*.pdf

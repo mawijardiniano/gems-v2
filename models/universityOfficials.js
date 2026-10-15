@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
-import { HEADERS } from "../lib/universityOfficialsConstants.js";
 /**
  * One document = one assigned official (temporary assigned-only mode).
  *
- * Offices (header) are saved/fixed; positions (title/position) are manually
- * encoded since they are inconsistent; names may be a UserAuth ref or
- * free text. Only assigned rows are stored/shown — no vacancy tracking.
+ * Offices (header) are stored in the `universityoffices` collection so they
+ * can be added / deactivated from the UI; the API validates `header` against
+ * an active office instead of a compile-time enum. Positions (title/position)
+ * are manually encoded since they are inconsistent; names may be a UserAuth
+ * ref or free text. Only assigned rows are stored/shown — no vacancy tracking.
  */
 const universityOfficialSchema = new mongoose.Schema(
   {
@@ -17,8 +18,8 @@ const universityOfficialSchema = new mongoose.Schema(
     },
     header: {
       type: String,
-      enum: HEADERS,
       required: true,
+      trim: true,
     },
     title: {
       type: String,

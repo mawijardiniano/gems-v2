@@ -18,12 +18,18 @@ import {
   FaMapMarkerAlt,
   FaGraduationCap,
   FaUserPlus,
+  FaBan,
+  FaCog,
 } from "react-icons/fa";
-import {
-  HEADERS,
-} from "@/lib/universityOfficialsConstants";
+import Link from "next/link";
+import { HEADERS } from "@/lib/universityOfficialsConstants";
 import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
+import { normalizeOfficeName, selectableOffices } from "@/lib/universityOffices";
+import useUniversityOffices from "@/lib/useUniversityOffices";
 import PrintUniversityOfficials from "../components/Print/PrintUniversityOfficials";
+
+/** Sentinel option value for the "+ Add new office…" entry in the picker. */
+const ADD_NEW_OFFICE_VALUE = "__add_new_office__";
 
 // ─── Header presentation ───────────────────────────────────────────
 const HEADER_ICONS = {
@@ -61,8 +67,20 @@ const colorMap = {
 };
 
 const headerIcon = (header) => HEADER_ICONS[header] || FaBuilding;
-const headerColor = (header) =>
-  HEADER_COLORS[HEADERS.indexOf(header) % HEADER_COLORS.length];
+/**
+ * Colour for an office card. Offices are added at runtime now, so an unknown
+ * one falls back to a stable slot derived from its name instead of -1.
+ */
+const headerColor = (header) => {
+  const index = HEADERS.indexOf(header);
+  const slot =
+    index >= 0
+      ? index
+      : String(header)
+          .split("")
+          .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return HEADER_COLORS[slot % HEADER_COLORS.length];
+};
 
 // ─── Helpers ───────────────────────────────────────────────────────
 function getUserFullName(user) {
@@ -172,6 +190,128 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
   );
 }
 
+// ─── Office / Group picker ──────────────────────────────────────────
+/**
+ * Picks one office from the shared list.
+ *
+ * The list itself is edited on the Settings page ("Offices & Groups —" card),
+ * so this stays a plain picker plus an inline "add a name that is not there
+ * yet" row — the one write the modal still needs, because assigning somebody to
+ * a brand-new office should not require leaving the modal. Deactivating lives
+ * in Settings only, so the two surfaces cannot disagree about it.
+ */
+function OfficeSelect({
+  offices,
+  value,
+  onChange,
+  includeInactive,
+  onToggleInactive,
+  onAddOffice,
+  canAddOffice = false,
+  busy,
+}) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const options = useMemo(
+    () =>
+      selectableOffices(offices, includeInactive).filter(
+        (o) => o.is_active !== false || o.header === value,
+      ),
+    [offices, includeInactive, value],
+  );
+
+  const submitNewOffice = async () => {
+    const name = normalizeOfficeName(draft);
+    if (!name) return;
+    const created = await onAddOffice(name);
+    setDraft("");
+    setAdding(false);
+    if (created) onChange(created.header);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <select
+          value={adding ? "" : value || ""}
+          onChange={(e) => {
+            if (e.target.value === ADD_NEW_OFFICE_VALUE) {
+              setAdding(true);
+              return;
+            }
+            onChange(e.target.value);
+          }}
+          className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+        >
+          <option value="">Select office / group</option>
+          {options.map((office) => (
+            <option key={office._id || office.header} value={office.header}>
+              {office.header}
+              {office.is_active === false ? " (inactive)" : ""}
+            </option>
+          ))}
+          {canAddOffice && (
+            <option value={ADD_NEW_OFFICE_VALUE}>+ Add new office…</option>
+          )}
+        </select>
+      </div>
+
+      {adding && (
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submitNewOffice();
+              }
+              if (e.key === "Escape") {
+                setAdding(false);
+                setDraft("");
+              }
+            }}
+            placeholder="e.g. OFFICE OF THE REGISTRAR"
+            className="flex-1 min-w-0 px-3 py-2 text-sm border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+          />
+          <button
+            type="button"
+            onClick={submitNewOffice}
+            disabled={busy || !normalizeOfficeName(draft)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 shrink-0"
+          >
+            <FaPlus className="h-3 w-3" />
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAdding(false);
+              setDraft("");
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition shrink-0"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      <label className="inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={includeInactive}
+          onChange={(e) => onToggleInactive(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-100"
+        />
+        Show inactive offices
+      </label>
+    </div>
+  );
+}
+
 // ─── Assign / Reassign Modal ───────────────────────────────────────
 function OfficialModal({
   open,
@@ -184,6 +324,13 @@ function OfficialModal({
   positionSuggestions,
   loading,
   error,
+  offices,
+  includeInactiveOffices,
+  onToggleInactiveOffices,
+  canAddOffice = false,
+  onAddOffice,
+  assignedCounts,
+  officeBusy,
 }) {
   if (!open) return null;
 
@@ -246,18 +393,23 @@ function OfficialModal({
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
                   Office / Group
                 </label>
-                <select
-                  value={form.header || ""}
-                  onChange={(e) => onFormChange("header", e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
-                >
-                  <option value="">Select office / group</option>
-                  {HEADERS.map((header) => (
-                    <option key={header} value={header}>
-                      {header}
-                    </option>
-                  ))}
-                </select>
+                <OfficeSelect
+                  offices={offices || []}
+                  value={form.header}
+                  onChange={(header) => onFormChange("header", header)}
+                  includeInactive={includeInactiveOffices}
+                  onToggleInactive={onToggleInactiveOffices}
+                  onAddOffice={onAddOffice}
+                  canAddOffice={canAddOffice}
+                  busy={officeBusy}
+                />
+                {assignedCounts && form.header ? (
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    {assignedCounts.map[form.header] || 0} assigned official
+                    {(assignedCounts.map[form.header] || 0) === 1 ? "" : "s"}{" "}
+                    already in this office.
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -459,12 +611,34 @@ export default function UniversityOfficialsContent() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // Academic-year snapshot state. Every roster is year-scoped; past years
-  // stay viewable + printable, only the active year is editable.
+  /* Academic-year snapshot state. Every roster is year-scoped; past years
+     stay viewable + printable, only the active year is editable. Declared
+     before the office hook because the office counts are scoped to it. */
   const [academicYear, setAcademicYear] = useState("");
   const [yearOptions, setYearOptions] = useState([]);
   const [activeYear, setActiveYear] = useState("");
   const [copying, setCopying] = useState(false);
+
+  /* ── Offices & Groups ────────────────────────────────────────────────
+     The office list is global and shared with the Settings > Offices & Groups
+     card through lib/useUniversityOffices.js, so both surfaces show the same
+     rows and the same assigned-official counts. Adding/deactivating is done
+     from Settings; the modal's picker can still create a new name inline. */
+  const {
+    offices,
+    setOffices,
+    busy: officeBusy,
+    includeInactive: includeInactiveOffices,
+    setIncludeInactive: setIncludeInactiveOffices,
+    activeHeaders,
+    counts: officeCounts,
+    addOffice: handleAddOffice,
+  } = useUniversityOffices({
+    includeCounts: true,
+    academicYear,
+    onError: setError,
+    onSuccess: setSuccess,
+  });
 
   // Org-chart filters (applied on top of the selected year).
   const [search, setSearch] = useState("");
@@ -544,10 +718,11 @@ export default function UniversityOfficialsContent() {
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/university-officials?academic_year=${encodeURIComponent(target)}`,
+          `/api/university-officials?academic_year=${encodeURIComponent(target)}&include_inactive=true`,
         );
         const data = await res.json();
         setAssignments(Array.isArray(data.data) ? data.data : []);
+        if (Array.isArray(data.offices)) setOffices(data.offices);
         if (Array.isArray(data.years) && data.years.length) {
           setYearOptions(data.years);
         }
@@ -638,14 +813,14 @@ export default function UniversityOfficialsContent() {
     if (academicYear) fetchOfficials(academicYear);
   }, [academicYear]);
 
-  // Expand the first header on first load so the page does not look empty.
+  // Expand the first office on first load so the page does not look empty.
   useEffect(() => {
-    if (!loading && HEADERS.length) {
+    if (!loading && activeHeaders.length) {
       setExpanded((prev) =>
-        Object.keys(prev).length ? prev : { [HEADERS[0]]: true },
+        Object.keys(prev).length ? prev : { [activeHeaders[0]]: true },
       );
     }
-  }, [loading]);
+  }, [loading, activeHeaders]);
 
   const toggleHeader = (header) =>
     setExpanded((prev) => ({ ...prev, [header]: !prev[header] }));
@@ -654,7 +829,7 @@ export default function UniversityOfficialsContent() {
     setModalForm((prev) => ({ ...prev, [field]: value }));
 
   const openAssign = (seat) => {
-    const header = seat?.header || HEADERS[0];
+    const header = seat?.header || activeHeaders[0] || "";
 
     setModalMode("assign");
     setModalForm({ header, position: "", name: "", name_text: "" });
@@ -789,6 +964,16 @@ export default function UniversityOfficialsContent() {
             <p className="text-sm text-gray-500 mt-0.5">
               Manage the MarSU offices and administrative designations per academic year
             </p>
+            {/* The Office / Group picker in the assign modal is fed by the
+                global office list, which is edited under Settings. This links
+                there and the card flashes so the operator sees where they are. */}
+            <Link
+              href="/gad-settings#offices"
+              className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+            >
+              <FaCog className="h-3 w-3" />
+              Manage Offices
+            </Link>
             {academicYear && (
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <label
@@ -903,7 +1088,7 @@ export default function UniversityOfficialsContent() {
             className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
           >
             <option value="all">All offices</option>
-            {HEADERS.map((h) => (
+            {activeHeaders.map((h) => (
               <option key={h} value={h}>
                 {h}
               </option>
@@ -985,6 +1170,13 @@ export default function UniversityOfficialsContent() {
         positionSuggestions={positionSuggestions}
         loading={modalLoading}
         error={modalError}
+        offices={offices}
+        includeInactiveOffices={includeInactiveOffices}
+        onToggleInactiveOffices={setIncludeInactiveOffices}
+        canAddOffice={canEdit}
+        onAddOffice={handleAddOffice}
+        assignedCounts={officeCounts}
+        officeBusy={officeBusy}
       />
     </div>
   );

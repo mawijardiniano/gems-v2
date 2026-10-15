@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import OfficesManager from "../components/offices/OfficesManager";
+import useUniversityOffices from "@/lib/useUniversityOffices";
 import {
   FaSignInAlt,
   FaUserEdit,
@@ -70,6 +73,12 @@ function ActivityIcon({ action }) {
 }
 
 export default function Settings() {
+  const role = useSelector((state) => state.auth.role);
+  /* The office list is global, so only the GAD focal person may write to it.
+     Coordinators and the planning director see the same card read-only, and the
+     API refuses their writes regardless of what this renders. */
+  const canManageOffices = role?.toLowerCase() === "gad focal person";
+
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -94,6 +103,66 @@ export default function Settings() {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  /* ── Offices & Groups (see lib/useUniversityOffices.js) ──
+     The list is global, so it is loaded with the assigned-official counts for
+     the active academic year and edited here rather than in the assign modal.
+
+     The banner callbacks are memoised: `useUniversityOffices` keeps them in a
+     ref, but a stable identity here also stops `setMessage` being called with a
+     fresh object on every render. */
+  const reportOfficeError = useCallback(
+    (text) => setMessage({ type: "error", text }),
+    [],
+  );
+  const reportOfficeSuccess = useCallback(
+    (text) => setMessage({ type: "success", text }),
+    [],
+  );
+
+  const {
+    offices,
+    loading: officesLoading,
+    busy: officeBusy,
+    counts,
+    addOffice: handleAddOffice,
+    deactivateOffice: handleDeactivateOffice,
+    reactivateOffice: handleReactivateOffice,
+  } = useUniversityOffices({
+    includeCounts: true,
+    onError: reportOfficeError,
+    onSuccess: reportOfficeSuccess,
+  });
+
+  /* Which academic year the assigned counts belong to — exactly the one the
+     active rows carry, so an install whose active term is unset does not label
+     the numbers with a year nobody is looking at. */
+  const officesAcademicYear = useMemo(() => {
+    const years = offices
+      .filter((o) => o.is_active !== false && o.assigned_count > 0)
+      .map((o) => o.academic_year)
+      .filter(Boolean);
+    return years[0] || "";
+  }, [offices]);
+
+  /* Deep link from University Officials ("Manage Offices" -> #offices): keep the
+     section in view once the card has rendered and flash it so the operator can
+     see where they landed. */
+  const [officesHighlighted, setOfficesHighlighted] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#offices") return;
+    const scroll = window.setTimeout(
+      () => document.getElementById("offices")?.scrollIntoView({ block: "start" }),
+      80,
+    );
+    setOfficesHighlighted(true);
+    const clear = window.setTimeout(() => setOfficesHighlighted(false), 2200);
+    return () => {
+      window.clearTimeout(scroll);
+      window.clearTimeout(clear);
+    };
+  }, [officesLoading]);
 
   const firstInputRef = useRef(null);
 
@@ -205,6 +274,8 @@ export default function Settings() {
         setNewPassword("");
         setConfirmPassword("");
         setPasswordModalOpen(false);
+        // Keep the activity card honest — the change is logged like any other.
+        fetchActivities(1);
       } else {
         setMessage({
           type: "error",
@@ -235,12 +306,40 @@ export default function Settings() {
   const passwordChangedAt = userInfo?.passwordChangedAt;
   const lastLogin = userInfo?.lastLogin;
 
+  const officesBanner =
+    message &&
+    (message.type === "error" ? (
+      <div
+        role="alert"
+        className="mb-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        <FaExclamationCircle className="mt-0.5 shrink-0" />
+        <span className="flex-1">{message.text}</span>
+        <button
+          type="button"
+          onClick={() => setMessage(null)}
+          aria-label="Dismiss"
+          className="shrink-0 text-red-400 transition hover:text-red-600"
+        >
+          <FaTimesCircle />
+        </button>
+      </div>
+    ) : (
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <FaCheckCircle className="shrink-0" />
+        {message.text}
+      </div>
+    ));
+
   return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your account credentials, security, and activity log</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Manage your account credentials, the university offices, and your
+          activity log
+        </p>
       </div>
 
       {/* Security Section */}
@@ -314,6 +413,27 @@ export default function Settings() {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Offices & Groups Section — the office list behind the
+          "Office / Group" picker on the University Officials page. */}
+      <section id="offices" className="mb-8 scroll-mt-24">
+        {officesBanner}
+        <div
+          className={`rounded-2xl transition-shadow duration-500 ${
+            officesHighlighted ? "ring-2 ring-blue-300 ring-offset-2" : ""
+          }`}
+        >
+          <OfficesManager
+            offices={offices}
+            counts={counts}
+            academicYear={officesAcademicYear}
+            busy={officeBusy}
+            onAdd={canManageOffices ? handleAddOffice : undefined}
+            onDeactivate={canManageOffices ? handleDeactivateOffice : undefined}
+            onReactivate={canManageOffices ? handleReactivateOffice : undefined}
+          />
         </div>
       </section>
 

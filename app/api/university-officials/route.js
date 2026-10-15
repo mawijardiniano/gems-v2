@@ -1,11 +1,12 @@
 import { connectDB } from "@/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
+import UniversityOffice from "@/models/universityOffice";
 import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { HEADERS } from "@/lib/universityOfficialsConstants";
+import { buildDefaultOfficeRows, isOfficeAssignable } from "@/lib/universityOffices";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
@@ -27,6 +28,22 @@ async function getActiveTermYear() {
   }
 }
 
+/**
+ * Seeds the offices collection on first use so an upgraded install (offices
+ * used to be hard-coded) is not left with an unusable picker.
+ */
+async function ensureOfficesSeeded() {
+  const count = await UniversityOffice.estimatedDocumentCount();
+  if (count > 0) return;
+  try {
+    await UniversityOffice.insertMany(buildDefaultOfficeRows(), {
+      ordered: false,
+    });
+  } catch (err) {
+    if (err?.code !== 11000 && !err?.writeErrors) throw err;
+  }
+}
+
 export async function GET(req) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
@@ -38,6 +55,14 @@ export async function GET(req) {
     query: searchParams.get("academic_year"),
     activeTerm: activeYear,
   });
+
+  await ensureOfficesSeeded();
+  const includeInactive = searchParams.get("include_inactive") === "true";
+  const offices = await UniversityOffice.find(
+    includeInactive ? {} : { is_active: { $ne: false } },
+  )
+    .sort({ sort_order: 1, header: 1 })
+    .lean();
 
   const years = sortAcademicYearsDesc(
     await UniversityOfficial.distinct("academic_year"),
@@ -70,6 +95,7 @@ export async function GET(req) {
   return Response.json({
     success: true,
     data: officials,
+    offices,
     academic_year: academicYear,
     active_year: activeYear,
     years,
@@ -90,10 +116,27 @@ export async function POST(req) {
   const nameId =
     name && mongoose.isValidObjectId(name) ? name : null;
 
-  if (!header || !HEADERS.includes(header) || !positionText || (!nameId && !nameText)) {
+  if (!header || !positionText || (!nameId && !nameText)) {
     return Response.json(
       { success: false, error: "Missing office, position, or name (pick a user or type a name)" },
       { status: 400 },
+    );
+  }
+
+  // Offices are database rows now, so a stale client cannot file an official
+  // under an office that was renamed or deactivated since the page loaded.
+  await ensureOfficesSeeded();
+  const officeRows = await UniversityOffice.find({}).lean();
+  if (!officeRows.some((office) => office.header === header)) {
+    return Response.json(
+      { success: false, error: `Unknown office "${header}". Add it first.` },
+      { status: 400 },
+    );
+  }
+  if (!isOfficeAssignable(officeRows, header)) {
+    return Response.json(
+      { success: false, error: `Office "${header}" is deactivated and cannot take new assignments.` },
+      { status: 409 },
     );
   }
 
