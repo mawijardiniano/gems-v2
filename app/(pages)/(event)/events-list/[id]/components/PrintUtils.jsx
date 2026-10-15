@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
   const toDetails = (g) => {
@@ -19,7 +19,12 @@ export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
     }
     return extractGuestDetails(g);
   };
-  const sorted = [...guests].sort((a, b) => {
+  /* Official sheets only carry validated guests. Rows without a status were
+     created before manual validation, so they stay in. */
+  const approved = (Array.isArray(guests) ? guests : []).filter(
+    (g) => !g?.validation_status || g.validation_status === "approved",
+  );
+  const sorted = [...approved].sort((a, b) => {
     const detailsA = toDetails(a);
     const detailsB = toDetails(b);
     const nameA = (detailsA.name || "").toLowerCase();
@@ -108,7 +113,7 @@ export function handlePrintGuests(guests, event, buildRows) {
   const selectedType = event.type_of_activity;
 
   const typeOfActivityHTML = ACTIVITY_TYPES.map((type) => {
-    const checked = type === selectedType ? "☑" : "☐";
+    const checked = type === selectedType ? "â˜‘" : "â˜";
     return `<span class="checkbox-item">${checked} ${type}</span>`;
   }).join("");
 
@@ -261,8 +266,8 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
 
   const selectedType = event.type_of_activity;
 
-  // Use [X]/[ ] instead of ☑/☐ because jsPDF's built-in WinAnsi
-  // fonts cannot render ☑/☐ characters.
+  // Use [X]/[ ] instead of â˜‘/â˜ because jsPDF's built-in WinAnsi
+  // fonts cannot render â˜‘/â˜ characters.
   const typeOfActivityText = ACTIVITY_TYPES.map((type) => {
     const checked = type === selectedType ? "[X]" : "[ ]";
     return `${checked} ${type}`;
@@ -418,7 +423,7 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
         margin: { left: margin, right: margin },
       });
 
-      pdf.save(`${event.title || "guest-list"}-guests.pdf`);
+      pdf.save(`${event.title || "attendance"}-attendance.pdf`);
     })
     .catch((err) => {
       console.error("PDF export failed", err);
@@ -502,7 +507,7 @@ export function handleDownloadBlankGuestsPdf(event) {
   const selectedType = event.type_of_activity;
 
   const typeOfActivityHTML = ACTIVITY_TYPES.map((type) => {
-    const checked = type === selectedType ? "☑" : "☐";
+    const checked = type === selectedType ? "â˜‘" : "â˜";
     return `<span class="checkbox-item">${checked} ${type}</span>`;
   }).join("");
 
@@ -556,7 +561,7 @@ export function handleDownloadBlankGuestsPdf(event) {
         .from(html)
         .set({
           margin: 0,
-          filename: `${event.title || "guest-list"}-guests.pdf`,
+          filename: `${event.title || "attendance"}-attendance.pdf`,
           html2canvas: { scale: 2 },
           jsPDF: { orientation: "landscape", unit: "mm", format: "legal" },
         })

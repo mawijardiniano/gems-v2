@@ -15,7 +15,6 @@ import {
   FaClipboardCheck,
 } from "react-icons/fa";
 import CheckboxDropdown from "./CheckboxDropdown";
-import AttendanceInsights from "./AttendanceInsights";
 import { officeOptionList } from "@/lib/colleges";
 
 const EVENT_SOURCES = [
@@ -46,7 +45,8 @@ export default function OverviewTab({
   eventId,
   attendanceQrDataUrl,
   handleDownloadAttendanceQr,
-  formatRange,
+  attendedCount,
+  pendingGuestCount,
   userId,
   showDeleteModal,
   setShowDeleteModal,
@@ -54,7 +54,6 @@ export default function OverviewTab({
   deleting,
   handleDeleteEvent,
   projects,
-  allEvents,
   formatForInput,
   formatRangeLines,
 }) {
@@ -76,14 +75,23 @@ export default function OverviewTab({
         start_time,
       } = editData || {};
 
+      /* Time source of truth is the saved event: editData only carries a
+         date-only string (the date input), but event.start_date/end_date
+         hold the real datetimes the AI prompt should describe. */
+      const startDate =
+        editData?.start_date ||
+        event?.start_date ||
+        (date && start_time ? `${date}T${start_time}` : undefined);
+      const endDate = editData?.end_date || event?.end_date || undefined;
+
       const response = await fetch("/api/events/generate-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           venue,
-          start_date:
-            date && start_time ? `${date}T${start_time}` : undefined,
+          start_date: startDate,
+          end_date: endDate,
           type_of_activity,
           gad_activity,
         }),
@@ -212,7 +220,17 @@ export default function OverviewTab({
       gradient: "from-emerald-600 to-emerald-400",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
-      value: (event.attended_users || []).length || "—",
+      /* Same number the Insights tab shows: profiles + approved guests. */
+      value: attendedCount || "\u2014",
+    },
+    {
+      label: "Pending Validation",
+      icon: FaClipboardCheck,
+      gradient: "from-violet-600 to-purple-400",
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+      /* QR check-ins waiting for organizer approval in the Attendance tab. */
+      value: pendingGuestCount || "\u2014",
     },
   ];
 
@@ -320,8 +338,6 @@ export default function OverviewTab({
                 );
               })}
             </div>
-
-            <AttendanceInsights event={event} allEvents={allEvents} />
           </div>
         ) : (
           <>
@@ -658,7 +674,7 @@ export default function OverviewTab({
                   Attendance QR
                 </h3>
                 <p className="mt-0.5 text-sm text-gray-500">
-                  Guests scan, fill the form, recorded as attended — no login
+                  Guests scan, fill the form, recorded as pending — validate to include in attendance
                 </p>
               </div>
             </div>

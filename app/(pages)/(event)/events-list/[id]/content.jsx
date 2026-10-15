@@ -8,7 +8,7 @@ import { FiArrowLeft, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/lib/colleges";
 import OverviewTab from "./components/OverviewTab";
-import GuestTab from "./components/GuestTab";
+import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
 import ReportTab from "./components/ReportTab";
 import {
@@ -39,6 +39,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
+  const [guestSexFilter, setGuestSexFilter] = useState("all");
   const [guestCollegeFilter, setGuestCollegeFilter] = useState("");
   const [guestCourseFilter, setGuestCourseFilter] = useState("");
   const [guestYearFilter, setGuestYearFilter] = useState("");
@@ -46,25 +47,59 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [projects, setProjects] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
-  const [insightsFilter, setInsightsFilter] = useState("all");
   const [guests, setGuests] = useState([]);
   const [guestsLoading, setGuestsLoading] = useState(false);
+  const [guestValidationFilter, setGuestValidationFilter] = useState("all");
+  const [guestCounts, setGuestCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  });
+  const [guestReloadKey, setGuestReloadKey] = useState(0);
+
+  const loadGuests = async (statusFilter = guestValidationFilter) => {
+    if (!eventId) return;
+    setGuestsLoading(true);
+    try {
+      const res = await axios.get(
+        `/api/events/guests?event_id=${eventId}&validation_status=${statusFilter}`,
+      );
+      setGuests(res.data?.data || []);
+      if (res.data?.counts) setGuestCounts(res.data.counts);
+    } catch (err) {
+      setGuests([]);
+    } finally {
+      setGuestsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (activeTab !== "guests" || !eventId) return;
-    const loadGuests = async () => {
-      setGuestsLoading(true);
-      try {
-        const res = await axios.get(`/api/events/guests?event_id=${eventId}`);
-        setGuests(res.data?.data || []);
-      } catch (err) {
-        setGuests([]);
-      } finally {
-        setGuestsLoading(false);
-      }
-    };
-    loadGuests();
-  }, [activeTab, eventId, event]);
+    /* Overview and Insights both read guests: approved ones join every
+       headcount, pending ones drive the validation badge. */
+    if (
+      (activeTab !== "attendance" &&
+        activeTab !== "overview" &&
+        activeTab !== "insights") ||
+      !eventId
+    )
+      return;
+    /* Insight counts must include every validation status, not just the
+       queue the Attendance tab is currently filtered to. */
+    loadGuests(activeTab === "attendance" ? guestValidationFilter : "all");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, eventId, guestValidationFilter, guestReloadKey, event]);
+
+  const handleGuestValidation = async (guestIds, action, note) => {
+    const ids = (Array.isArray(guestIds) ? guestIds : [guestIds]).filter(Boolean);
+    if (ids.length === 0 || !eventId) return;
+    await axios.patch("/api/events/guests", {
+      event_id: eventId,
+      guest_ids: ids,
+      action,
+      note: note || "",
+    });
+    setGuestReloadKey((k) => k + 1);
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -101,6 +136,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         if (guestTypeFilter === "student") return details.status === "Student";
         if (guestTypeFilter === "employee")
           return details.status === "Employee";
+        if (guestTypeFilter === "stakeholder")
+          return details.status === "Stakeholder";
         return true;
       })
       .filter((guest) => {
@@ -327,50 +364,23 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const interestedProfiles = [];
   const notInterestedProfiles = [];
 
+  /* Profiles of attendees with a system account. Deduped because attend
+     rows were collapsed in a9ff854. Guests live in `approvedGuests`. */
   const attendedProfiles = useMemo(
-    () =>
-      (event?.attended_users || [])
+    () => {
+      const seen = new Set();
+      return (event?.attended_users || [])
         .map((a) => a?.user_id?.personal_info_id)
-        .filter(Boolean),
+        .filter((p) => {
+          if (!p) return false;
+          const key = String(p?._id ?? p);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    },
     [event],
   );
-
-  const ageGroupCounts = useMemo(() => {
-    const counts = {};
-    (event?.attended_users || []).forEach((a) => {
-      const u = a?.user_id || {};
-      const info = u?.personal_info_id || u?.personal_info || {};
-      const personal = info.personal || u?.personal || {};
-      const birthday = personal.birthday;
-      if (!birthday) return;
-      const birth = new Date(birthday);
-      if (Number.isNaN(birth.getTime())) return;
-      const now = new Date();
-      let age = now.getFullYear() - birth.getFullYear();
-      const m = now.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-      if (age < 0) return;
-      const bucket = Math.floor(age / 10) * 10;
-      const label = `${bucket}-${bucket + 9}`;
-      counts[label] = (counts[label] || 0) + 1;
-    });
-    return counts;
-  }, [event]);
-
-  const allProfiles = useMemo(() => {
-    const seen = new Set();
-    return [...attendedProfiles].filter((p) => {
-      const key = String(p?._id ?? p);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [attendedProfiles]);
-
-  const filteredProfiles = useMemo(() => {
-    if (insightsFilter === "attended") return attendedProfiles;
-    return allProfiles;
-  }, [insightsFilter, attendedProfiles, allProfiles]);
 
   const calculateAge = (birthday) => {
     if (!birthday) return null;
@@ -438,21 +448,62 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const buildRows = (list) =>
     buildGuestRows(list, extractGuestDetails, capitalizeName);
 
+  /* Approved guest check-ins (legacy rows without a status count as approved). */
+  const approvedGuests = useMemo(
+    () =>
+      (Array.isArray(guests) ? guests : []).filter(
+        (g) => !g?.validation_status || g.validation_status === "approved",
+      ),
+    [guests],
+  );
+
+/* Every insight below reads the same two sources: attendedProfiles
+   (users with accounts) + approvedGuests (QR check-ins). No filter —
+   the old All/Attended dropdown was a no-op. */
+  const roleCounts = useMemo(() => {
+    const counts = { Student: 0, Employee: 0, Stakeholder: 0, Unspecified: 0 };
+    attendedProfiles.forEach((p) => {
+      const status = p?.personal?.currentStatus;
+      if (status === "Student") counts.Student += 1;
+      else if (status === "Employee") counts.Employee += 1;
+      else counts.Unspecified += 1;
+    });
+    approvedGuests.forEach((g) => {
+      const type = g?.participant_type;
+      if (type === "Student") counts.Student += 1;
+      else if (type === "Employee") counts.Employee += 1;
+      else if (type === "Stakeholder") counts.Stakeholder += 1;
+      else counts.Unspecified += 1;
+    });
+    return counts;
+  }, [attendedProfiles, approvedGuests]);
+
   const genderData = useMemo(() => {
     const counts = { Male: 0, Female: 0 };
-    filteredProfiles.forEach((p) => {
+    attendedProfiles.forEach((p) => {
       const g = p?.gadData?.sexAtBirth;
       if (g && counts[g] !== undefined) counts[g] += 1;
     });
+    approvedGuests.forEach((g) => {
+      const sex = g?.sex === "Male" || g?.sex === "Female" ? g.sex : null;
+      if (sex) counts[sex] += 1;
+    });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [filteredProfiles]);
+  }, [attendedProfiles, approvedGuests]);
   const genderDataChart = genderData;
 
   const ageData = useMemo(() => {
     const bins = {};
-    filteredProfiles.forEach((p) => {
+    attendedProfiles.forEach((p) => {
       const age = calculateAge(p?.personal?.birthday);
       if (age === null || Number.isNaN(age)) return;
+      const bucket = Math.floor(age / 10) * 10;
+      const label = `${bucket}-${bucket + 9}`;
+      bins[label] = (bins[label] || 0) + 1;
+    });
+    approvedGuests.forEach((g) => {
+      const age = Number(g?.age);
+      if (!Number.isFinite(age) || age <= 0) return;
       const bucket = Math.floor(age / 10) * 10;
       const label = `${bucket}-${bucket + 9}`;
       bins[label] = (bins[label] || 0) + 1;
@@ -460,28 +511,44 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     return Object.keys(bins)
       .sort((a, b) => parseInt(a) - parseInt(b))
       .map((age) => ({ name: age, value: bins[age] }));
-  }, [filteredProfiles]);
+  }, [attendedProfiles, approvedGuests]);
 
   const collegeData = useMemo(() => {
     const counts = {};
-    filteredProfiles.forEach((p) => {
+    attendedProfiles.forEach((p) => {
       const departmentUnit =
         p?.affiliation?.employment_information?.office ||
         p?.affiliation?.academic_information?.college;
       const college = departmentUnit;
       counts[college] = (counts[college] || 0) + 1;
     });
+    approvedGuests.forEach((g) => {
+      const college = String(g?.department_office_org || "").trim();
+      if (!college) return;
+      counts[college] = (counts[college] || 0) + 1;
+    });
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, value]) => ({ name, value }));
-  }, [filteredProfiles]);
+  }, [attendedProfiles, approvedGuests]);
 
   const perYearData = useMemo(() => {
     const counts = {};
-    filteredProfiles.forEach((p) => {
+    attendedProfiles.forEach((p) => {
       let year = p?.affiliation?.academic_information?.year_level;
       if (!year || typeof year !== "string" || !year.trim()) return;
       year = year.trim();
+      counts[year] = (counts[year] || 0) + 1;
+    });
+    /* Guest students store "Program Year Section" — take the first year token. */
+    approvedGuests.forEach((g) => {
+      if (g?.participant_type !== "Student") return;
+      const raw = String(g?.program_year_section || "");
+      const match = raw.match(
+        /\b([1-6](?:st|nd|rd|th)\s*Year|[1-6](?:st|nd|rd|th))\b/i,
+      );
+      if (!match) return;
+      const year = match[1].replace(/\s+/g, " ").trim();
       counts[year] = (counts[year] || 0) + 1;
     });
 
@@ -511,28 +578,53 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       .filter(([name]) => name && name !== "null" && name !== "undefined")
       .sort((a, b) => getOrder(a[0]) - getOrder(b[0]))
       .map(([name, value]) => ({ name, value }));
-  }, [filteredProfiles]);
+  }, [attendedProfiles]);
 
   const statusCounts = useMemo(() => {
     const counts = {};
-    filteredProfiles.forEach((p) => {
+    attendedProfiles.forEach((p) => {
       const status = p?.personal?.currentStatus || "Unknown";
       counts[status] = (counts[status] || 0) + 1;
     });
+    /* Approved guest check-ins join the breakdown by their participant type so
+       Students, Employees and Stakeholders are all represented. */
+    (Array.isArray(guests) ? guests : [])
+      .filter((g) => !g?.validation_status || g.validation_status === "approved")
+      .forEach((g) => {
+        const status = g?.participant_type || "Unknown";
+        counts[status] = (counts[status] || 0) + 1;
+      });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [filteredProfiles]);
+  }, [attendedProfiles, guests]);
 
   const affiliationData = statusCounts;
 
-  const totalRegistered = attendedProfiles.length;
   const maleCount = genderData.find((d) => d.name === "Male")?.value || 0;
   const femaleCount = genderData.find((d) => d.name === "Female")?.value || 0;
-  const attendedCount = (event?.attended_users || []).length + guests.length;
+  /* Strict validation: only approved guest check-ins count toward attendance.
+     Guest rows without a status (created before manual validation) count too. */
+  const approvedGuestCount = approvedGuests.length;
+  const attendedCount = (event?.attended_users || []).length + approvedGuestCount;
 
-  const eventData = useMemo(
-    () => [{ name: "Attended", value: attendedCount }],
-    [attendedCount],
-  );
+  /* Mean age across every attended participant with a known age — profile
+     birthdays plus the age guests type into the QR form. */
+  const avgAge = useMemo(() => {
+    const ages = [];
+    attendedProfiles.forEach((p) => {
+      const age = calculateAge(p?.personal?.birthday);
+      if (age !== null && !Number.isNaN(age)) ages.push(age);
+    });
+    approvedGuests.forEach((g) => {
+      const age = Number(g?.age);
+      if (Number.isFinite(age) && age > 0) ages.push(age);
+    });
+    if (ages.length === 0) return null;
+    return Math.round((ages.reduce((s, a) => s + a, 0) / ages.length) * 10) / 10;
+  }, [attendedProfiles, approvedGuests]);
+
+  const pendingGuestCount = (Array.isArray(guests) ? guests : []).filter(
+    (g) => g?.validation_status === "pending",
+  ).length;
 
   const handleEditChange = (field, value) => {
     setEditData((prev) => ({ ...(prev || {}), [field]: value }));
@@ -677,7 +769,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       <div className="flex gap-2 border-b border-gray-200 pb-0 overflow-x-auto">
         {[
           { key: "overview", label: "Overview" },
-          { key: "guests", label: "Guests" },
+          { key: "attendance", label: "Attendance" },
           { key: "insights", label: "Insights" },
           { key: "reports", label: "Post-Activity Report" },
         ].map((tab) => (
@@ -711,6 +803,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           eventId={eventId}
           attendanceQrDataUrl={attendanceQrDataUrl}
           handleDownloadAttendanceQr={handleDownloadAttendanceQr}
+          attendedCount={attendedCount}
+          pendingGuestCount={pendingGuestCount}
           userId={userId}
           showDeleteModal={showDeleteModal}
           setShowDeleteModal={setShowDeleteModal}
@@ -719,16 +813,21 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           handleDeleteEvent={handleDeleteEvent}
           projects={projects}
           allEvents={allEvents}
+          guests={guests}
           formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}
         />
       )}
 
-      {activeTab === "guests" && (
-        <GuestTab
+      {activeTab === "attendance" && (
+        <AttendanceTab
           event={event}
           guests={guests}
           guestsLoading={guestsLoading}
+          counts={guestCounts}
+          validationFilter={guestValidationFilter}
+          setValidationFilter={setGuestValidationFilter}
+          onValidate={handleGuestValidation}
           handleDownloadGuestsPdf={(list) =>
             handleDownloadGuestsPdf(list, event, buildRows)
           }
@@ -740,6 +839,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           }
           guestTypeFilter={guestTypeFilter}
           setGuestTypeFilter={setGuestTypeFilter}
+          guestSexFilter={guestSexFilter}
+          setGuestSexFilter={setGuestSexFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
         />
@@ -747,24 +848,23 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
       {activeTab === "insights" && (
         <InsightTab
-          insightsFilter={insightsFilter}
-          setInsightsFilter={setInsightsFilter}
-          totalRegistered={totalRegistered}
+          attendedCount={attendedCount}
           maleCount={maleCount}
           femaleCount={femaleCount}
+          avgAge={avgAge}
+          roleCounts={roleCounts}
           statusCounts={statusCounts}
-          ageGroupCounts={ageGroupCounts}
-          attendedCount={attendedCount}
           genderDataChart={genderDataChart}
           affiliationData={affiliationData}
-          eventData={eventData}
           ageData={ageData}
           collegeData={collegeData}
           perYearData={perYearData}
         />
       )}
 
-      {activeTab === "reports" && <ReportTab event={event} />}
+      {activeTab === "reports" && (
+        <ReportTab event={event} approvedGuestCount={approvedGuestCount} />
+      )}
     </div>
   );
 }

@@ -128,21 +128,6 @@ export function StatusChart({ data }) {
   );
 }
 
-export function EventChart({ data }) {
-  const safeData = Array.isArray(data) ? data : [];
-  const total = safeData.reduce((s, d) => s + (d.value || 0), 0);
-
-  return (
-    <ChartCard title="Event Breakdown" subtitle="Interested vs going vs attended vs not interested" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
-      ) : (
-        <DonutChart data={safeData} />
-      )}
-    </ChartCard>
-  );
-}
-
 /* ── Horizontal bar charts ──────────────────────────────────────── */
 function HorzBarChart({ data, height = 280, yWidth = 140 }) {
   return (

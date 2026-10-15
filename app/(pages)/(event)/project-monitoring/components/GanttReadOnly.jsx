@@ -2,6 +2,7 @@
 
 import { calcDurationDays, toInputDate } from "@/lib/gantt";
 import GanttTimeline from "./GanttTimeline";
+import PrintGantt from "./PrintGantt";
 
 const fmt = (value) => {
   const iso = toInputDate(value);
@@ -14,7 +15,7 @@ const fmt = (value) => {
   });
 };
 
-/** Year shown on the timeline: first activity start, else project start/year. */
+/** Base year for the timeline: first activity start, else project start/year. */
 const pickYear = (project, activities) => {
   const first = activities.find((a) => toInputDate(a.start_date));
   const iso =
@@ -32,9 +33,19 @@ export default function GanttReadOnly({ project, compact = false }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-        Gantt Activities{compact ? ` (${activities.length})` : ""}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          Gantt Activities{compact ? ` (${activities.length})` : ""}
+        </p>
+        <PrintGantt
+          project={project}
+          className={
+            compact
+              ? "inline-flex shrink-0 items-center gap-1 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          }
+        />
+      </div>
       {activities.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
           No Gantt activities encoded yet.

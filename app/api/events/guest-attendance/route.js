@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { cacheDelPrefix } from "@/lib/cache";
+import { optionalAuth } from "@/lib/auth";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
@@ -36,9 +37,22 @@ function windowOf(event) {
   };
 }
 
+/* UI sends program / year / section separately; combine into one sheet value. */
+function buildProgramYearSection(b) {
+  if (b?.participant_type !== "Student") return "";
+  const programPart = String(b?.program || b?.program_year_section || "").trim();
+  const yearPart = String(b?.year || "").trim();
+  const sectionPart = String(b?.section || "").trim();
+  return [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
+}
+
 export async function POST(req) {
   try {
     await connectDB();
+    /* Optional: a logged-in student scanning the same QR still goes through
+       the pending flow — the identity is recorded for review only. */
+    const { user: submittingUser } = await optionalAuth(req);
+    const submittedBy = submittingUser?._id || null;
     const b = await req.json();
     const event_id = b?.event_id;
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
@@ -71,17 +85,64 @@ export async function POST(req) {
       return NextResponse.json({ message: "The QR code has expired. This event has already ended.", code: "EVENT_EXPIRED" }, { status: 400 });
     const existing = await EventGuest.findOne({ event_id, full_name: name });
     if (existing) {
+      if (existing.validation_status === "approved") {
+        return NextResponse.json({
+          message:
+            "You are already marked as attended for this event.",
+          already_attended: true,
+          validation_status: "approved",
+          attended_at: existing.attended_at,
+        });
+      }
+      if (existing.validation_status === "rejected") {
+        /* Not approved last time — let the guest resubmit on the same row so
+           the unique event_id + full_name index still holds. */
+        existing.sex = b.sex;
+        existing.gender_identity = genderIdentity || undefined;
+        existing.age = ageNum;
+        existing.contact = String(b?.contact || "").trim();
+        existing.participant_type = b.participant_type;
+        existing.department_office_org = String(
+          b?.department_office_org || "",
+        ).trim();
+        existing.position_designation =
+          b.participant_type === "Student"
+            ? ""
+            : String(b?.position_designation || "").trim();
+        existing.program_year_section = buildProgramYearSection(b);
+        existing.attended_at = new Date();
+        existing.source = "qr-scan";
+        existing.validation_status = "pending";
+        existing.validated_by = null;
+        existing.validated_at = null;
+        existing.validation_note = "";
+        await existing.save();
+        cacheDelPrefix("events:list:");
+        await logActivity({
+          req,
+          action: "EVENT_GUEST_RESUBMIT",
+          description: "Guest resubmitted a rejected QR check-in",
+          resource_type: "event",
+          resource_id: event_id,
+          severity: "info",
+          metadata: { guest_id: existing._id },
+        });
+        return NextResponse.json({
+          message: "Your check-in was submitted for validation.",
+          pending: true,
+          validation_status: "pending",
+          submitted_at: existing.attended_at.toISOString(),
+          guest_id: existing._id,
+        });
+      }
       return NextResponse.json({
-        message: "You have already been marked as attended for this event.",
-        already_attended: true,
-        attended_at: existing.attended_at,
+        message:
+          "You have already submitted a check-in for this event. Please wait for the organizer to validate it.",
+        already_submitted: true,
+        validation_status: "pending",
+        submitted_at: existing.attended_at,
       });
     }
-    /* UI sends program / year / section separately; combine into one sheet value. */
-    const programPart = b?.participant_type === "Student" ? String(b?.program || b?.program_year_section || "").trim() : "";
-    const yearPart = b?.participant_type === "Student" ? String(b?.year || "").trim() : "";
-    const sectionPart = b?.participant_type === "Student" ? String(b?.section || "").trim() : "";
-    const combinedPYS = [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
     const guest = await EventGuest.create({
       event_id,
       full_name: name,
@@ -92,30 +153,40 @@ export async function POST(req) {
       participant_type: b.participant_type,
       department_office_org: String(b?.department_office_org || "").trim(),
       position_designation: b.participant_type === "Student" ? "" : String(b?.position_designation || "").trim(),
-      program_year_section: combinedPYS,
+      program_year_section: buildProgramYearSection(b),
       attended_at: new Date(),
       source: "qr-scan",
+      validation_status: "pending",
     });
     cacheDelPrefix("events:list:");
     await logActivity({
       req,
-      action: "EVENT_ATTENDANCE",
-      description: "Guest checked in to event via QR",
+      action: "EVENT_GUEST_CHECKIN",
+      description: "Guest submitted a QR check-in pending validation",
       resource_type: "event",
       resource_id: event_id,
       severity: "info",
-      metadata: { guest_id: guest._id, participant_type: b.participant_type },
+      metadata: {
+        guest_id: guest._id,
+        participant_type: b.participant_type,
+        validation_status: "pending",
+        submitted_by: submittedBy,
+      },
     });
     return NextResponse.json({
-      message: "Attendance recorded successfully",
-      attended_at: guest.attended_at.toISOString(),
+      message: "Your check-in was submitted for validation.",
+      pending: true,
+      validation_status: "pending",
+      submitted_at: guest.attended_at.toISOString(),
       guest_id: guest._id,
     });
   } catch (err) {
     if (err?.code === 11000) {
       return NextResponse.json({
-        message: "You have already been marked as attended for this event.",
-        already_attended: true,
+        message:
+          "You have already submitted a check-in for this event. Please wait for the organizer to validate it.",
+        already_submitted: true,
+        validation_status: "pending",
       });
     }
     console.error(err);

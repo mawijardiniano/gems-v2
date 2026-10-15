@@ -17,7 +17,7 @@ import {
 import { FaMagic } from "react-icons/fa";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 
-export default function ReportTab({ event }) {
+export default function ReportTab({ event, approvedGuestCount = 0 }) {
   const [form, setForm] = useState({ narrative: "" });
   const [files, setFiles] = useState({
     office_memorandum: null,
@@ -57,7 +57,8 @@ export default function ReportTab({ event }) {
           venue: event.venue,
           type_of_activity: event.type_of_activity,
           gad_activity: event.gad_activity,
-          registered_count: event.attended_users?.length,
+          registered_count:
+            (event.attended_users?.length || 0) + approvedGuestCount,
           organizing_office_unit: event.organizing_office_unit,
           start_date:
             event.start_date ||

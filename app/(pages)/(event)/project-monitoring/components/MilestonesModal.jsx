@@ -21,6 +21,7 @@ import {
 import GanttEncodeTab from "./GanttEncodeTab";
 import GanttUploadTab from "./GanttUploadTab";
 import GanttTimeline from "./GanttTimeline";
+import PrintGantt from "./PrintGantt";
 
 const CARD = "rounded-xl border border-gray-200 bg-white p-4 min-w-0";
 const CARD_TITLE =
@@ -396,14 +397,20 @@ export default function MilestonesModal({
               one proof file.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={closeAndCleanup}
-            className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
-            aria-label="Close"
-          >
-            <FaTimes size={14} />
-          </button>
+          <div className="flex items-center gap-2">
+            <PrintGantt
+              project={{ ...project, gantt_activities: activities }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <button
+              type="button"
+              onClick={closeAndCleanup}
+              className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+              aria-label="Close"
+            >
+              <FaTimes size={14} />
+            </button>
+          </div>
         </div>
         )}
 
@@ -459,6 +466,10 @@ export default function MilestonesModal({
             <div className={CARD_HEADER}>
               <h4 className={CARD_TITLE_INLINE}>Encode Gantt Chart</h4>
               <div className="flex flex-wrap items-center gap-2">
+                <PrintGantt
+                  project={{ ...project, gantt_activities: activities }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                />
                 <button
                   type="button"
                   onClick={addActivity}
@@ -486,7 +497,13 @@ export default function MilestonesModal({
           </section>
 
           <section className={CARD}>
-            <h4 className={CARD_TITLE}>Gantt Chart</h4>
+            <div className={CARD_HEADER}>
+              <h4 className={CARD_TITLE_INLINE}>Gantt Chart</h4>
+              <PrintGantt
+                project={{ ...project, gantt_activities: activities }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
             <GanttTimeline activities={activities} year={timelineYear} />
           </section>
 
