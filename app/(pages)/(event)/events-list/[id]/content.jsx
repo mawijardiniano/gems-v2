@@ -56,13 +56,21 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     rejected: 0,
   });
   const [guestReloadKey, setGuestReloadKey] = useState(0);
+  /* Bumped after a manual encode so the event and the attendance table are
+     re-fetched and every headcount / insight recomputes. */
+  const [eventReloadKey, setEventReloadKey] = useState(0);
 
-  const loadGuests = async (statusFilter = guestValidationFilter) => {
+  /* Always fetch every validation status into `guests` so the Attendance
+     table and every Insight number read the exact same records. The queue
+     filter is applied in the component instead of on the server: a server
+     side filter used to drop the row an organizer had just encoded, which
+     made Insights and Attendance disagree. */
+  const loadGuests = async () => {
     if (!eventId) return;
     setGuestsLoading(true);
     try {
       const res = await axios.get(
-        `/api/events/guests?event_id=${eventId}&validation_status=${statusFilter}`,
+        `/api/events/guests?event_id=${eventId}&validation_status=all`,
       );
       setGuests(res.data?.data || []);
       if (res.data?.counts) setGuestCounts(res.data.counts);
@@ -83,11 +91,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       !eventId
     )
       return;
-    /* Insight counts must include every validation status, not just the
-       queue the Attendance tab is currently filtered to. */
-    loadGuests(activeTab === "attendance" ? guestValidationFilter : "all");
+    loadGuests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, eventId, guestValidationFilter, guestReloadKey, event]);
+  }, [activeTab, eventId, guestReloadKey]);
 
   const handleGuestValidation = async (guestIds, action, note) => {
     const ids = (Array.isArray(guestIds) ? guestIds : [guestIds]).filter(Boolean);
@@ -243,7 +249,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     };
 
     load();
-  }, [eventId]);
+  }, [eventId, eventReloadKey]);
 
   useEffect(() => {
     const envQrPublic = process.env.NEXT_PUBLIC_QR_BASE_URL;
@@ -323,9 +329,14 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
     if (!startValue) return ["No date"];
 
-    const startStr = formatDate(startValue);
+    /* Date-only overview card: the time of day is noise here, and a
+       same-day event should read as one date, not "X - X". */
+    const startStr = formatDateOnly(startValue);
     if (!endValue) return [startStr];
-    return [`${startStr} - ${formatDate(endValue)}`];
+
+    const endStr = formatDateOnly(endValue);
+    if (startStr === endStr) return [startStr];
+    return [`${startStr} - ${endStr}`];
   };
 
   const formatRangeLines = (start, end, evt) => {
@@ -364,12 +375,30 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const interestedProfiles = [];
   const notInterestedProfiles = [];
 
-  /* Profiles of attendees with a system account. Deduped because attend
-     rows were collapsed in a9ff854. Guests live in `approvedGuests`. */
+  /* Ids of accounts already present in the guest sheet. A manual encode writes
+     an EventGuest row, so the same person can sit in both attended_users (their
+     QR check-in) and approvedGuests (the organizer's record). Insights must
+     count them once, and the Attendance table must not list them twice. */
+  const guestUserIds = useMemo(() => {
+    const ids = new Set();
+    (Array.isArray(guests) ? guests : []).forEach((g) => {
+      if (g?.user_id) ids.add(String(g.user_id));
+    });
+    return ids;
+  }, [guests]);
+
+  /* Profiles of attendees with a system account that the guest sheet does not
+     already cover — one per person, so a repeated scan cannot inflate a count.
+     Guests handled below live in `approvedGuests`. */
   const attendedProfiles = useMemo(
     () => {
       const seen = new Set();
       return (event?.attended_users || [])
+        .filter((a) => {
+          const id = a?.user_id?._id ?? a?.user_id;
+          if (!id) return false;
+          return !guestUserIds.has(String(id));
+        })
         .map((a) => a?.user_id?.personal_info_id)
         .filter((p) => {
           if (!p) return false;
@@ -379,7 +408,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           return true;
         });
     },
-    [event],
+    [event, guestUserIds],
   );
 
   const calculateAge = (birthday) => {
@@ -456,6 +485,59 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       ),
     [guests],
   );
+
+  /* A QR check-in by somebody with an account writes Event.attended_users and
+     no guest row, so the sheet used to stay empty for them even though Insights
+     counted them. Those profiles are turned into approved table rows here, with
+     the same column shape a guest row has. Rows are keyed by the account id
+     with a `checkin:` prefix so they can never collide with an EventGuest _id,
+     and Accounts already covered by the sheet are skipped — no double rows. */
+  const checkinGuestRows = useMemo(() => {
+    return (event?.attended_users || [])
+      .map((entry) => ({
+        entry,
+        user: entry?.user_id,
+      }))
+      .filter(({ user }) => user && (user._id || user.personal_info_id))
+      .filter(({ user }) => {
+        const accountId = user?._id ?? user?.user_id;
+        if (accountId && guestUserIds.has(String(accountId))) return false;
+        if (user?.personal_info_id) {
+          const pid = String(user.personal_info_id?._id ?? user.personal_info_id);
+          if (guestUserIds.has(pid)) return false;
+        }
+        return true;
+      })
+      .map(({ entry, user }) => {
+        const details = extractGuestDetails(user);
+        return {
+          _id: `checkin:${user?._id ?? user?.personal_info_id}`,
+          full_name: details.name,
+          sex: details.sex,
+          age: details.age,
+          participant_type: details.status,
+          department_office_org: details.department || details.college || details.office,
+          program_year_section: details.programYearSection,
+          position_designation: details.positionDesignation,
+          contact: details.contact,
+          attended_at: entry?.attended_at || null,
+          validation_status: "approved",
+          source: "account-check-in",
+          validation_note: "Recorded automatically from a signed-in QR check-in",
+        };
+      });
+  }, [event, guestUserIds]);
+
+  /* What the Attendance table renders: every guest row plus the QR-only
+     account check-ins, approved ones first so a freshly recorded row is
+     visible on page one. */
+  const attendanceGuests = useMemo(() => {
+    const score = (g) => (!g?.validation_status || g.validation_status === "approved" ? 0 : 1);
+    const time = (g) => new Date(g?.attended_at || 0).getTime() || 0;
+    return [...(Array.isArray(guests) ? guests : []), ...checkinGuestRows].sort(
+      (a, b) => score(a) - score(b) || time(b) - time(a),
+    );
+  }, [guests, checkinGuestRows]);
 
 /* Every insight below reads the same two sources: attendedProfiles
    (users with accounts) + approvedGuests (QR check-ins). No filter —
@@ -602,9 +684,11 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const maleCount = genderData.find((d) => d.name === "Male")?.value || 0;
   const femaleCount = genderData.find((d) => d.name === "Female")?.value || 0;
   /* Strict validation: only approved guest check-ins count toward attendance.
-     Guest rows without a status (created before manual validation) count too. */
+     Guest rows without a status (created before manual validation) count too.
+     `attendedProfiles` already excludes accounts the sheet covers, so a person
+     recorded by hand after scanning the QR is counted once, not twice. */
   const approvedGuestCount = approvedGuests.length;
-  const attendedCount = (event?.attended_users || []).length + approvedGuestCount;
+  const attendedCount = attendedProfiles.length + approvedGuestCount;
 
   /* Mean age across every attended participant with a known age — profile
      birthdays plus the age guests type into the QR form. */
@@ -813,7 +897,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           handleDeleteEvent={handleDeleteEvent}
           projects={projects}
           allEvents={allEvents}
-          guests={guests}
+          guests={attendanceGuests}
           formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}
         />
@@ -822,7 +906,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       {activeTab === "attendance" && (
         <AttendanceTab
           event={event}
-          guests={guests}
+          guests={attendanceGuests}
           guestsLoading={guestsLoading}
           counts={guestCounts}
           validationFilter={guestValidationFilter}
@@ -843,6 +927,11 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setGuestSexFilter={setGuestSexFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
+          existingGuests={attendanceGuests}
+          onEncoded={() => {
+            setGuestReloadKey((k) => k + 1);
+            setEventReloadKey((k) => k + 1);
+          }}
         />
       )}
 
@@ -863,7 +952,11 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       )}
 
       {activeTab === "reports" && (
-        <ReportTab event={event} approvedGuestCount={approvedGuestCount} />
+        <ReportTab
+          event={event}
+          approvedGuestCount={approvedGuestCount}
+          attendedCount={attendedCount}
+        />
       )}
     </div>
   );

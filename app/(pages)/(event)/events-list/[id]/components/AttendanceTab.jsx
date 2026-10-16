@@ -12,8 +12,10 @@ import {
   FiX,
   FiClock,
   FiLoader,
+  FiUserPlus,
 } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
+import ManualEncodeModal from "./ManualEncodeModal";
 
 const STATUS_META = {
   pending: {
@@ -36,6 +38,12 @@ const STATUS_META = {
 /* Rows created before manual validation have no status — treat as approved. */
 const statusOf = (g) => g?.validation_status || "approved";
 
+/* Rows that exist only because somebody with an account scanned the QR: they
+   live in the event's own check-in list, not in EventGuest. Their id carries a
+   `checkin:` prefix and they have no guest record to validate, so the
+   approve/reject actions are hidden for them. */
+const isGuestRecord = (g) => !String(g?._id || "").startsWith("checkin:");
+
 export default function AttendanceTab(props) {
   const list = Array.isArray(props.guests) ? props.guests : [];
   const guestsLoading = props.guestsLoading;
@@ -45,7 +53,6 @@ export default function AttendanceTab(props) {
   const setGuestTypeFilter = props.setGuestTypeFilter;
   const guestSexFilter = props.guestSexFilter || "all";
   const setGuestSexFilter = props.setGuestSexFilter;
-  const counts = props.counts || { pending: 0, approved: 0, rejected: 0 };
   const validationFilter = props.validationFilter || "all";
   const setValidationFilter = props.setValidationFilter;
   const onValidate = props.onValidate;
@@ -57,15 +64,29 @@ export default function AttendanceTab(props) {
   const [actionError, setActionError] = useState("");
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [showManualEncode, setShowManualEncode] = useState(false);
   const q = String(guestSearch || "").toLowerCase();
 
-  /* Role tabs count every fetched record so the numbers stay stable while
-     the sex / search filters narrow the table underneath. */
+  /* The parent always fetches every validation status, so the queue filter is
+     applied here. Legacy rows without a status count as approved — the same
+     rule the Insights numbers use, which keeps both tabs in agreement. */
+  const matchesValidation = (g) => {
+    if (validationFilter === "all") return true;
+    const status = statusOf(g);
+    if (validationFilter === "approved") return status === "approved";
+    return status === validationFilter;
+  };
+
+  const statusList = list.filter(matchesValidation);
+
+  /* Role tabs count every record in the active queue so the numbers stay
+     stable while the sex / search filters narrow the table underneath. */
   const roleCounts = {
-    all: list.length,
-    student: list.filter((g) => g.participant_type === "Student").length,
-    employee: list.filter((g) => g.participant_type === "Employee").length,
-    stakeholder: list.filter((g) => g.participant_type === "Stakeholder").length,
+    all: statusList.length,
+    student: statusList.filter((g) => g.participant_type === "Student").length,
+    employee: statusList.filter((g) => g.participant_type === "Employee").length,
+    stakeholder: statusList.filter((g) => g.participant_type === "Stakeholder")
+      .length,
   };
 
   const matchesRole = (g) => {
@@ -76,7 +97,7 @@ export default function AttendanceTab(props) {
     return true;
   };
 
-  const filtered = list.filter((g) => {
+  const filtered = statusList.filter((g) => {
     if (!matchesRole(g)) return false;
     if (guestSexFilter !== "all" && (g.sex || "").toLowerCase() !== guestSexFilter)
       return false;
@@ -105,9 +126,19 @@ export default function AttendanceTab(props) {
     return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString();
   };
   const pageIds = rows.map((g) => g._id).filter(Boolean);
+  /* Only real guest rows can be approved / rejected / reset. */
+  const pageGuestIds = rows.filter(isGuestRecord).map((g) => g._id);
   const allOnPageSelected =
-    pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
-  const pendingCount = counts.pending || 0;
+    pageGuestIds.length > 0 && pageGuestIds.every((id) => selected.includes(id));
+  /* Queue badges mirror the rows the table would show for each queue, so the
+     numbers can never disagree with the list underneath them. */
+  const queueCounts = {
+    pending: list.filter((g) => isGuestRecord(g) && statusOf(g) === "pending").length,
+    approved: list.filter((g) => statusOf(g) === "approved").length,
+    rejected: list.filter((g) => isGuestRecord(g) && statusOf(g) === "rejected")
+      .length,
+  };
+  const pendingCount = queueCounts.pending;
 
   const runValidate = async (ids, action, note) => {
     if (!onValidate) return;
@@ -137,6 +168,33 @@ export default function AttendanceTab(props) {
 
   return (
     <div className="space-y-5">
+      {/* Manual encoding banner: organizers use this for attendees who cannot
+          or did not scan the QR, so it sits above every filter as a primary
+          action rather than among the small export buttons. */}
+      <div className="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white">
+            <FiUserPlus size={18} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-blue-900">
+              Manual Attendance Encoding
+            </p>
+            <p className="text-xs text-blue-700">
+              No QR? Search a student or employee record and record their
+              attendance instantly.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowManualEncode(true)}
+          className="btn-primary !py-2.5 !px-5 !text-sm !rounded-lg shrink-0 inline-flex items-center justify-center gap-2"
+        >
+          <FiUserPlus size={15} /> Encode Attendance
+        </button>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between gap-3">
         <div className="relative flex-1 max-w-md">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -206,9 +264,9 @@ export default function AttendanceTab(props) {
       <div className="flex flex-wrap items-center gap-2">
         {[
           { key: "pending", label: "Pending", count: pendingCount },
-          { key: "approved", label: "Approved", count: counts.approved || 0 },
-          { key: "rejected", label: "Not approved", count: counts.rejected || 0 },
-          { key: "all", label: "All", count: (counts.pending || 0) + (counts.approved || 0) + (counts.rejected || 0) },
+          { key: "approved", label: "Approved", count: queueCounts.approved },
+          { key: "rejected", label: "Not approved", count: queueCounts.rejected },
+          { key: "all", label: "All", count: list.length },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -287,9 +345,9 @@ export default function AttendanceTab(props) {
                       onChange={(e) =>
                         setSelected((prev) => {
                           if (e.target.checked) {
-                            return [...new Set([...prev, ...pageIds])];
+                            return [...new Set([...prev, ...pageGuestIds])];
                           }
-                          return prev.filter((id) => !pageIds.includes(id));
+                          return prev.filter((id) => !pageGuestIds.includes(id));
                         })
                       }
                     />
@@ -311,24 +369,42 @@ export default function AttendanceTab(props) {
                   const st = statusOf(g);
                   const meta = STATUS_META[st];
                   const StatusIcon = meta.icon;
+                  const editable = isGuestRecord(g);
                   return (
                     <tr key={g._id || idx}>
                       <td>
-                        <input
-                          type="checkbox"
-                          aria-label={`Select ${g.full_name}`}
-                          checked={selected.includes(g._id)}
-                          onChange={(e) =>
-                            setSelected((prev) =>
-                              e.target.checked
-                                ? [...new Set([...prev, g._id])]
-                                : prev.filter((id) => id !== g._id),
-                            )
-                          }
-                        />
+                        {editable ? (
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${g.full_name}`}
+                            checked={selected.includes(g._id)}
+                            onChange={(e) =>
+                              setSelected((prev) =>
+                                e.target.checked
+                                  ? [...new Set([...prev, g._id])]
+                                  : prev.filter((id) => id !== g._id),
+                              )
+                            }
+                          />
+                        ) : null}
                       </td>
                       <td className="text-gray-500">{(page - 1) * pageSize + idx + 1}</td>
-                      <td className="font-medium text-gray-900">{g.full_name}</td>
+                      <td className="font-medium text-gray-900">
+                        {g.full_name}
+                        {g.source === "manual-encode" && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 align-middle text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                            Manual
+                          </span>
+                        )}
+                        {!editable && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 align-middle text-[10px] font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20"
+                            title="Signed-in QR check-in — counted, with no guest record to validate"
+                          >
+                            QR / Account
+                          </span>
+                        )}
+                      </td>
                       <td className="text-center">{g.sex || "-"}</td>
                       <td className="text-center">{g.age ?? "-"}</td>
                       <td className="text-center">{g.participant_type || "-"}</td>
@@ -348,7 +424,9 @@ export default function AttendanceTab(props) {
                       <td className="text-center text-emerald-700 font-medium">{fmtTime(g.attended_at)}</td>
                       <td className="text-center">
                         <div className="inline-flex items-center gap-1.5">
-                          {busyId === g._id ? (
+                          {!editable ? (
+                            <span className="text-[11px] text-gray-400">—</span>
+                          ) : busyId === g._id ? (
                             <FiLoader className="animate-spin text-gray-400" size={14} />
                           ) : (
                             <>
@@ -470,6 +548,26 @@ export default function AttendanceTab(props) {
           </div>
         </div>
       )}
+
+      <ManualEncodeModal
+        open={showManualEncode}
+        onClose={() => setShowManualEncode(false)}
+        eventId={props.event?._id}
+        eventTitle={props.event?.title}
+        existingGuests={list}
+        onEncoded={() => {
+          /* A recorded guest lands as approved. Show the whole sheet rather
+             than guessing a queue, and drop every table filter that could
+             mask the new row. The row sorts first, so return to page one. */
+          setValidationFilter?.("all");
+          setGuestTypeFilter?.("all");
+          setGuestSexFilter?.("all");
+          setGuestSearch?.("");
+          setPage(1);
+          setSelected([]);
+          props.onEncoded?.();
+        }}
+      />
     </div>
   );
 }

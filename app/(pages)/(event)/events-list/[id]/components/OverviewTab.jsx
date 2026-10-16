@@ -4,6 +4,7 @@ import axios from "axios";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { FiEdit2, FiTrash2, FiDownload, FiX } from "react-icons/fi";
+import { FiCopy, FiCheck, FiExternalLink } from "react-icons/fi";
 import {
   FaSpinner,
   FaMagic,
@@ -62,6 +63,36 @@ export default function OverviewTab({
   const [posterUploading, setPosterUploading] = useState(false);
   const [posterError, setPosterError] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  /* The exact deep link the QR encodes — guests open it with no login. */
+  const attendanceUrl =
+    baseUrl && eventId ? `${baseUrl}/attend/${eventId}` : "";
+
+  const handleCopyAttendanceLink = async () => {
+    if (!attendanceUrl) return;
+    try {
+      await navigator.clipboard.writeText(attendanceUrl);
+    } catch (err) {
+      /* LAN IP over plain http is not a secure context, so the async
+         Clipboard API is unavailable — fall back to the legacy copy. */
+      const textarea = document.createElement("textarea");
+      textarea.value = attendanceUrl;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch (fallbackErr) {
+        console.error("Copy failed:", fallbackErr);
+      }
+      document.body.removeChild(textarea);
+    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const generateDescription = async () => {
     setGenerating(true);
@@ -701,11 +732,43 @@ export default function OverviewTab({
                   Scan Destination
                 </p>
                 <p className="break-all text-xs text-gray-500 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
-                  {`${baseUrl}/attend/${eventId}`}
+                  {attendanceUrl}
                 </p>
                 <p className="text-xs text-emerald-600 font-medium mt-2">
                   → Opens the attendance form — no login needed
                 </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyAttendanceLink}
+                    disabled={!attendanceUrl}
+                    className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
+                  >
+                    {linkCopied ? (
+                      <>
+                        <FiCheck size={13} className="text-emerald-600" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <FiCopy size={13} />
+                        Copy Link
+                      </>
+                    )}
+                  </button>
+                  <a
+                    href={attendanceUrl || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-disabled={!attendanceUrl}
+                    className={`btn-secondary !py-2 !px-3 !text-xs !rounded-lg ${
+                      attendanceUrl ? "" : "pointer-events-none opacity-50"
+                    }`}
+                  >
+                    <FiExternalLink size={13} />
+                    Open Link
+                  </a>
+                </div>
               </div>
             </div>
           ) : (

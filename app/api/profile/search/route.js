@@ -75,6 +75,11 @@ if (role) {
               "personal_info_id.personal.first_name": 1,
               "personal_info_id.personal.last_name": 1,
               "personal_info_id.personal.currentStatus": 1,
+              /* The attendance sheet only accepts Male / Female, and the manual
+                 encode endpoint rejects a profile without `gadData.sexAtBirth`.
+                 The modal needs it up front to block the Record button instead
+                 of letting the request fail after the organizer has chosen. */
+              "personal_info_id.gadData.sexAtBirth": 1,
             },
           },
         );

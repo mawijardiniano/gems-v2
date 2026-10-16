@@ -41,7 +41,21 @@ const EventGuestSchema = new Schema(
     position_designation: { type: String, default: "", trim: true },
     program_year_section: { type: String, default: "", trim: true },
     attended_at: { type: Date, default: Date.now },
-    source: { type: String, default: "qr-scan" },
+    /* qr-scan: public no-login check-in form. manual-encode: an organizer
+       recorded a profile holder straight from the Attendance tab, so the row
+       lands approved (see /api/events/guests/manual). */
+    source: {
+      type: String,
+      enum: ["qr-scan", "manual-encode"],
+      default: "qr-scan",
+    },
+    /* Set only for manual-encode rows: the account the organizer picked.
+       Kept for traceability and to dedupe profile holders per event. */
+    user_id: {
+      type: Schema.Types.ObjectId,
+      ref: "UserAuth",
+      default: null,
+    },
     validation_status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
@@ -62,6 +76,14 @@ const EventGuestSchema = new Schema(
 /* Guests check in per event — dedupe on name within the same event. */
 EventGuestSchema.index({ event_id: 1, full_name: 1 }, { unique: true });
 EventGuestSchema.index({ event_id: 1, attended_at: -1 });
+/* One manual row per account per event — QR rows keep the name-based index. */
+EventGuestSchema.index(
+  { event_id: 1, user_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { user_id: { $type: "objectId" } },
+  },
+);
 /* Organizer review queue: pending first, newest submission first. */
 EventGuestSchema.index({ event_id: 1, validation_status: 1, attended_at: -1 });
 

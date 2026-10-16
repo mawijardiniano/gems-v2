@@ -35,6 +35,14 @@ export function legacySafeStatusFilter(status) {
   return null;
 }
 
+/* Shared gate: an organizer role, or the person who created the event, may
+   record/validate attendance for somebody else. */
+export function isEventOrganizer(user, event) {
+  if (!user) return false;
+  if (ORGANIZER_ROLES.includes(user.role)) return true;
+  return Boolean(event?.created_by) && String(event.created_by) === String(user._id);
+}
+
 export async function GET(req) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
@@ -111,7 +119,6 @@ export async function PATCH(req) {
         { message: "You are not allowed to validate guest check-ins for this event." },
         { status: 403 },
       );
-
     const note = String(body?.note || "").trim().slice(0, 500);
     const nextStatus =
       action === "approve" ? "approved" : action === "reject" ? "rejected" : "pending";
