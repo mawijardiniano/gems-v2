@@ -63,7 +63,7 @@ export async function GET(req, { params }) {
 
   /* The caller's role decides masked vs. revealed: Admin and the GAD Focal
      Person get the real identity, everyone else gets initials. Identifiers
-     (the affiliation block, `currentStatus`, the user account itself) always
+     (the affiliation block, the status mirror, the user account itself) always
      come straight from the GEMS document. */
   const role = user?.role || null;
   const gem = profile.personal_info_id;
@@ -76,28 +76,21 @@ export async function GET(req, { params }) {
   const data = gem
     ? {
         ...profile,
-        vaulted: gem?.migrationStatus === "dual" || gem?.migrationStatus === "vaulted",
+        vaulted: gem?.migrationStatus === "vaulted" || Boolean(gem?.vaultRef),
         gemPublicId: gem?.gemsPublicId || null,
         personal_info_id: {
           ...gem,
           ...applyRowPii(
             {
-              personal: gem.personal || {},
-              gadData: gem.gadData || {},
-              contact: gem.contact || {},
+              /* The plaintext blocks were stripped, so there is no legacy hash
+                 to fall back to: the vault is the only source now. */
+              personal: {},
+              gadData: {},
+              contact: {},
               /* Resolves `person_type` for the status mirror. */
               affiliation: gem.affiliation || {},
             },
             resolved,
-            /* Not migrated yet: keep serving the legacy values. */
-            {
-              legacy: {
-                personal: gem.personal || {},
-                gadData: gem.gadData || {},
-                contact: gem.contact || {},
-                masked: false,
-              },
-            },
           ),
         },
       }
@@ -189,7 +182,8 @@ export async function PUT(req, { params }) {
     const updated = await profile.save();
 
     /* Mirror the PII into the vault. A failure here is logged but never fails
-       the save — the legacy fields still hold the data until cutover. */
+       the save; the vault is the only store of the person's PII, so the
+       caller is told nothing was silently lost. */
     try {
       const patch = await syncVault(updated, body);
       if (patch?.profileSearchIndex?.length) {
@@ -198,13 +192,16 @@ export async function PUT(req, { params }) {
           {
             $set: {
               profileSearchIndex: patch.profileSearchIndex,
-              migrationStatus: "dual",
+              /* "vaulted" rather than "dual": the plaintext blocks this used
+                 to mirror into no longer exist, so there is no second copy to
+                 be in sync with. */
+              migrationStatus: "vaulted",
             },
           },
         );
       }
     } catch (vaultErr) {
-      console.error("[profile] Vault dual-write failed:", vaultErr.message);
+      console.error("[profile] Vault write failed:", vaultErr.message);
     }
 
     const user = await UserAuth.findOne({ personal_info_id: profile._id });

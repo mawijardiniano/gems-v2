@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 import { Schema } from "mongoose";
-import personalSchema from "./personal.js";
-import gadDataSchema from "./gadData.js";
 import affiliationSchema from "./affiliation.js";
-import contactSchema from "./contact.js";
 
 const gemsProfileSchema = new Schema(
   {
@@ -16,9 +13,11 @@ const gemsProfileSchema = new Schema(
        details. Neither can be derived from the other, so a leaked GEMS
        document reveals identifiers only — never a complete identity.
 
-       The legacy `personal` / `gadData` / `contact` blocks below are kept
-       during the migration (dual-write) and removed once the Vault is
-       verified. See scripts/migrate-to-vault.mjs. */
+       The legacy `personal` / `gadData` / `contact` blocks used to live here.
+       They were removed once the Vault was verified: every profile round-trips
+       through the vault, and scripts/verify-no-pii.mjs reports zero profiles
+       holding plaintext. `affiliation` stays because it is GEMS-owned
+       organisational data, not identity data. */
     gemsPublicId: {
       type: String,
       unique: true,
@@ -36,7 +35,11 @@ const gemsProfileSchema = new Schema(
     migrationStatus: {
       type: String,
       enum: ["legacy", "dual", "vaulted"],
-      default: "legacy",
+      /* New profiles are vaulted from the moment they are created. The default
+         was "legacy" while the plaintext blocks still existed and a row had to
+         be migrated; now that they are gone, a row that is not vaulted has no
+         PII anywhere and "vaulted" is the only honest default. */
+      default: "vaulted",
       index: true,
     },
     /* HMAC digests of the name parts (lib/identityVault.blindIndex). They let
@@ -48,10 +51,7 @@ const gemsProfileSchema = new Schema(
       index: true,
     },
 
-    personal: personalSchema,
-    gadData: gadDataSchema,
     affiliation: affiliationSchema,
-    contact: contactSchema,
 
     created_by: {
       type: Schema.Types.ObjectId,
@@ -77,17 +77,12 @@ const gemsProfileSchema = new Schema(
   },
 );
 
-gemsProfileSchema.virtual("fullName").get(function () {
-  const p = this.personal;
-  if (!p) return "";
-  return [p.first_name, p.middle_name, p.last_name]
-    .filter(Boolean)
-    .join(" ");
-});
+/* The `fullName` virtual used to join the plaintext name here. It is gone with
+   the `personal` block: a name now arrives decrypted from the vault, and
+   lib/profileBroker.js composes it (`maskProfilePii` / `revealProfilePii`)
+   rather than the schema deriving it from columns that no longer exist. */
 
-gemsProfileSchema.index({ "personal.currentStatus": 1 });
 gemsProfileSchema.index({ "affiliation.person_type": 1 });
-gemsProfileSchema.index({ "gadData.sexAtBirth": 1 });
 gemsProfileSchema.index({ "affiliation.academic_information.college": 1 });
 gemsProfileSchema.index({ "affiliation.academic_information.year_level": 1 });
 gemsProfileSchema.index({ "affiliation.academic_information.student_id": 1 });
@@ -99,7 +94,6 @@ gemsProfileSchema.index({
 gemsProfileSchema.index({
   "affiliation.employment_information.employment_appointment_status": 1,
 });
-gemsProfileSchema.index({ "contact.email": 1 });
 
 gemsProfileSchema.set("toJSON", { virtuals: true });
 gemsProfileSchema.set("toObject", { virtuals: true });

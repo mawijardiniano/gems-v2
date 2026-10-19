@@ -560,9 +560,9 @@ export async function POST(req) {
     /* `affiliation.person_type` is the required student/employee discriminator.
        The registration form still posts it as `personal.currentStatus`, so it
        is lifted onto the affiliation block here — the one place every create
-       path passes through. Both copies are written during the transition: the
-       affiliation field is the durable one, and `personal.currentStatus` stays
-       until the legacy block is stripped so existing readers keep working. */
+       path passes through. `personal.currentStatus` itself is no longer echoed
+       onto the document: the legacy block was stripped, so `person_type` is
+       now its only home. */
     const affiliationPayload = { ...(capitalizedBody.affiliation || {}) };
     if (!affiliationPayload.person_type) {
       affiliationPayload.person_type =
@@ -571,10 +571,17 @@ export async function POST(req) {
 
     const profilePayload = {
       ...capitalizedBody,
-      personal,
       affiliation: affiliationPayload,
     };
     delete profilePayload.personal_information;
+    /* The legacy blocks no longer exist on the schema, and their values are
+       written to the vault below. Passing them to `create` would be ignored by
+       Mongoose anyway (paths not in the schema), but sending them explicitly
+       would also mean a future strict-mode change could store plaintext PII
+       again — the exact thing this migration removed. */
+    delete profilePayload.personal;
+    delete profilePayload.gadData;
+    delete profilePayload.contact;
 
     /* PII split, step 1 of 2: mint the identifiers. `gemsPublicId` is the only
        identifier a screen may show, and `vaultRef` links this profile to its
@@ -596,7 +603,7 @@ export async function POST(req) {
       created_by: createdByUserId,
       gemsPublicId,
       vaultRef,
-      migrationStatus: "dual",
+      migrationStatus: "vaulted",
     };
 
     const email = capitalizedBody?.contact?.email;
