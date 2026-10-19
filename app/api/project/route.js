@@ -12,6 +12,7 @@ import { normalizeRefNumber, nextRefNumber } from "@/lib/referenceNumber";
 import {
   PROJECT_EVENTS_POPULATE,
   withGeneratedAccomplishment,
+  hydrateProjectAttendanceSex,
 } from "@/lib/accomplishmentSummary";
 import {
   NO_BUDGET_WARNING,
@@ -30,6 +31,8 @@ export async function GET(req) {
   /* Events are deep-populated so the actual accomplishment can be derived live
      from linked events + attendance instead of a stale saved snapshot. */
   const projects = await Project.find().populate(PROJECT_EVENTS_POPULATE);
+  /* Sex counts come from the vault, not the encrypted legacy column. */
+  await Promise.all(projects.map(hydrateProjectAttendanceSex));
   return Response.json({ data: projects.map(withGeneratedAccomplishment) });
 }
 

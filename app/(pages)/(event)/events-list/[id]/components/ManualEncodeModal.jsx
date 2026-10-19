@@ -34,10 +34,14 @@ const MIN_QUERY = 2;
 const DEBOUNCE_MS = 300;
 
 const fullNameOf = (person) => {
-  const personal = person?.personal_info_id?.personal || {};
+  const info = person?.personal_info_id || {};
+  const personal = info.personal || {};
   const first = personal.first_name || personal.firstName || "";
   const last = personal.last_name || personal.lastName || "";
-  return `${first} ${last}`.trim();
+  const composed = `${first} ${last}`.trim();
+  /* Masked callers get initials in `displayName` instead of the raw name parts,
+     so the picker still shows something to choose by rather than a blank row. */
+  return composed || info.displayName || "";
 };
 
 /* Student rows show course / year / college; employee rows show office /

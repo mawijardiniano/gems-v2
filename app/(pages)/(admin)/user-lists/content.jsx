@@ -328,7 +328,9 @@ export default function UserListPageContent({
                     />
                   </TableCell>
                   <TableCell>
-                    {personal.first_name || ""} {personal.last_name || ""}
+                    {personal.first_name || personal.last_name
+                      ? `${personal.first_name || ""} ${personal.last_name || ""}`.trim()
+                      : p.displayName || "—"}
                   </TableCell>
                   <TableCell>{gad.sexAtBirth || "—"}</TableCell>
                   <TableCell>{acad.college || emp.office || "—"}</TableCell>

@@ -57,8 +57,11 @@ export async function GET(req) {
     }
 
     // Build a cache key from the authenticated user + query params so
-    // each user/filter combination gets its own cached result.
-    const cacheKey = `activity:${decoded.id}:${JSON.stringify(filter)}:${page}:${limit}`;
+    // each user/filter combination gets its own cached result. The role is
+    // part of the identity here: an Admin asking for another user's activity
+    // must never be served a non-Admin's own-activity page, and vice versa,
+    // since the same filter string can be reached by both.
+    const cacheKey = `activity:${decoded.id}:${decoded.role || "anon"}:${JSON.stringify(filter)}:${page}:${limit}`;
 
     const result = await cacheOrSet(
       cacheKey,

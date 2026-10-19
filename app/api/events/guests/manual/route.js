@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { logActivity } from "@/lib/activityLog";
 import { cacheDelPrefix } from "@/lib/cache";
+import { loadDecryptedPii, revealProfilePii } from "@/lib/profileBroker";
 import { isEventOrganizer } from "../route";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
@@ -189,6 +190,32 @@ export async function POST(req) {
         { status: 400 },
       );
 
+    /* The name, sex-at-birth, birthday and contact below live in the vault, not
+       on the GEMS document: reading the legacy columns would come back empty
+       once they are stripped and every manual record would be rejected for
+       "no sex at birth on record". The organizer recording the row is acting
+       in an official capacity, so the identity is revealed through the broker
+       rather than masked, and the values are overlaid onto the profile so the
+       helpers below read the same shape they always did. `affiliation` and
+       `personal.currentStatus` are GEMS-owned and stay as they are. */
+    const pii = profile.vaultRef ? await loadDecryptedPii(profile.vaultRef) : null;
+    const revealed = pii ? revealProfilePii(pii) : null;
+    /* Only non-null vault values overlay the legacy ones, so a partially filled
+       vault row cannot erase a value that is still present mid-migration. */
+    const overlay = (base, resolved) => {
+      const out = { ...(base || {}) };
+      for (const [key, value] of Object.entries(resolved || {})) {
+        if (value !== null && value !== undefined) out[key] = value;
+      }
+      return out;
+    };
+    const identity = {
+      ...profile,
+      personal: overlay(profile.personal, revealed?.personal),
+      gadData: overlay(profile.gadData, revealed?.gadData),
+      contact: overlay(profile.contact, revealed?.contact),
+    };
+
     /* Identity fields may arrive in the body: when the picked person shares a
        name with a QR walk-in, the API adopts that row and these values complete
        it instead of leaving the row half-blank. The profile record stays the
@@ -197,7 +224,7 @@ export async function POST(req) {
     const bodySex = String(body?.sex || "").trim();
     const bodyContact = String(body?.contact || "").trim();
 
-    const personal = profile.personal || {};
+    const personal = identity.personal || {};
     const fullName =
       `${personal.first_name || ""} ${personal.last_name || ""}`.trim() ||
       String(account.username || "").trim() ||
@@ -208,7 +235,7 @@ export async function POST(req) {
        pick whose record is not covered by the manual-encode search payload can
        still be recorded. */
     const sexAtBirth = String(
-      profile?.gadData?.sexAtBirth || bodySex || "",
+      identity?.gadData?.sexAtBirth || bodySex || "",
     ).trim();
     if (sexAtBirth !== "Male" && sexAtBirth !== "Female")
       return NextResponse.json(
@@ -242,12 +269,12 @@ export async function POST(req) {
       full_name: fullName,
       sex: sexAtBirth,
       age,
-      contact: contactOf(profile) || bodyContact,
+      contact: contactOf(identity) || bodyContact,
       participant_type: participantType,
-      department_office_org: departmentOf(profile, participantType),
-      position_designation: positionOf(profile, participantType),
+      department_office_org: departmentOf(identity, participantType),
+      position_designation: positionOf(identity, participantType),
       program_year_section:
-        participantType === STUDENT ? programYearSectionOf(profile) : "",
+        participantType === STUDENT ? programYearSectionOf(identity) : "",
       /* Set for an adopted / created row so the Attendance table can say where
          the row came from and who signed it off. */
       validation_status: "approved",

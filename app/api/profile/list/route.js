@@ -7,13 +7,11 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet } from "@/lib/cache";
+import { logPiiAccess } from "@/lib/activityLog";
+import { canViewPII, resolvePiiBatch, searchIndexQuery, applyRowPii } from "@/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const LIST_CACHE_TTL = 15 * 1000; // 15 seconds
-
-function escapeRegex(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 function parseListParam(value) {
   if (!value) return null;
@@ -26,7 +24,7 @@ function parseListParam(value) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -53,6 +51,9 @@ export async function GET(req) {
     const semester = url.searchParams.get("semester")?.trim() || null;
     const search = url.searchParams.get("search")?.trim() || null;
 
+    const role = user?.role || null;
+    /* The payload carries `assignedCollege`, which the account document does
+       not; the token itself is already verified by requireAuth above. */
     const token = req.cookies.get("auth_token")?.value;
     let decoded = null;
     if (token) {
@@ -64,7 +65,9 @@ export async function GET(req) {
     }
     const scopedCollege = college || decoded?.assignedCollege || null;
 
-    const cacheKey = `profile:list:${scopedCollege || "all"}:${type || "all"}:${page}:${limit}:${sex || "all"}:${yearLevel || "all"}:${colleges?.join(",") || "all"}:${offices?.join(",") || "all"}:${employmentStatus || "all"}:${appointmentStatus?.join(",") || "all"}:${schoolYear || "all"}:${semester || "all"}:${search || "all"}`;
+    /* `role` is part of the key: the response is masked or revealed by role,
+       so serving one caller's cached page to another would leak a name. */
+    const cacheKey = `profile:list:${role || "anon"}:${scopedCollege || "all"}:${type || "all"}:${page}:${limit}:${sex || "all"}:${yearLevel || "all"}:${colleges?.join(",") || "all"}:${offices?.join(",") || "all"}:${employmentStatus || "all"}:${appointmentStatus?.join(",") || "all"}:${schoolYear || "all"}:${semester || "all"}:${search || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -101,9 +104,11 @@ export async function GET(req) {
         if (type) {
           conditions.push({ "personal_info_id.personal.currentStatus": type });
         }
-        if (sex) {
-          conditions.push({ "personal_info_id.gadData.sexAtBirth": sex });
-        }
+        /* The sex filter is applied in memory after the vault overlay, not in
+           the query: `gadData.sexAtBirth` is vault-owned and encrypted, so a
+           `$match` on it would silently return an empty page once the legacy
+           column is stripped. Filtering here would also break the total count,
+           which is computed from the same pipeline. */
         if (yearLevel) {
           conditions.push({
             "personal_info_id.affiliation.academic_information.year_level":
@@ -143,23 +148,17 @@ export async function GET(req) {
           conditions.push({ "personal_info_id._id": { $in: termIds } });
         }
         if (search) {
-          const re = escapeRegex(search);
-          conditions.push({
-            $or: [
-              {
-                "personal_info_id.personal.first_name": {
-                  $regex: re,
-                  $options: "i",
-                },
-              },
-              {
-                "personal_info_id.personal.last_name": {
-                  $regex: re,
-                  $options: "i",
-                },
-              },
-            ],
-          });
+          /* Name search runs on the blind-index digests stored on the GEMS
+             profile, not on the name columns: those are encrypted (or gone),
+             so a `$regex` there would silently match nothing. A term with no
+             usable tokens is answered as "no matches" rather than falling
+             back to a scan that cannot succeed. */
+          const digests = searchIndexQuery(search);
+          conditions.push(
+            digests?.length
+              ? { "personal_info_id.profileSearchIndex": { $in: digests } }
+              : { _id: null },
+          );
         }
 
         const match = conditions.length ? { $and: conditions } : {};
@@ -210,27 +209,39 @@ export async function GET(req) {
           dataPipeline.push({ $match: { "personal_info_id._id": { $ne: null } } });
           dataPipeline.push({ $match: match });
         }
-        dataPipeline.push(
-          { $skip: (page - 1) * limit },
-          { $limit: limit },
+        /* The sex filter cannot run in the database (the value is encrypted in
+           the vault), so when it is set the whole matching set is pulled, then
+           narrowed in memory after the vault overlay. Pagination is applied to
+           the filtered set below, and `total` is derived from it too, so the
+           page count stays honest. Every other filter is plaintext and still
+           runs in the query. */
+        const sexFilteredInMemory = Boolean(sex);
 
-          {
-            $project: {
-              _id: 1,
-              username: 1,
-              role: 1,
-              assignedCollege: 1,
-              is_active: 1,
-              "personal_info_id._id": 1,
-              "personal_info_id.personal.first_name": 1,
-              "personal_info_id.personal.last_name": 1,
-              "personal_info_id.personal.currentStatus": 1,
-              "personal_info_id.gadData.sexAtBirth": 1,
-              "personal_info_id.affiliation.academic_information": 1,
-              "personal_info_id.affiliation.employment_information": 1,
-            },
+        if (!sexFilteredInMemory) {
+          dataPipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+        }
+
+        dataPipeline.push({
+          $project: {
+            _id: 1,
+            username: 1,
+            role: 1,
+            assignedCollege: 1,
+            is_active: 1,
+            "personal_info_id._id": 1,
+            /* The vault link and the public identifier are the only
+               identity fields this list is allowed to carry out of the
+               database. The name is resolved from the vault below, by role. */
+            "personal_info_id.vaultRef": 1,
+            "personal_info_id.gemsPublicId": 1,
+            "personal_info_id.migrationStatus": 1,
+            /* `currentStatus` and the affiliation block are identifiers, not
+               PII, so they keep coming straight from the GEMS document. */
+            "personal_info_id.personal.currentStatus": 1,
+            "personal_info_id.affiliation.academic_information": 1,
+            "personal_info_id.affiliation.employment_information": 1,
           },
-        );
+        });
 
         const data = await UserAuth.aggregate(dataPipeline);
 
@@ -295,8 +306,60 @@ export async function GET(req) {
           };
         });
 
+        /* One vault read for the whole page, then each row is masked or
+           revealed by the caller's role. A profile with no vault row yet is
+           left exactly as it came out of the database (legacy fields). */
+        const piiByRef = await resolvePiiBatch({
+          vaultRefs: dataWithTerms.map(
+            (user) => user.personal_info_id?.vaultRef,
+          ),
+          role,
+        });
+
+        const dataWithPii = dataWithTerms.map((user) => {
+          const info = user.personal_info_id;
+          if (!info) return user;
+
+          const resolved = piiByRef.get(String(info.vaultRef || ""));
+          if (!resolved) return user;
+
+          return {
+            ...user,
+            gemPublicId: info.gemsPublicId || null,
+            personal_info_id: {
+              ...info,
+              ...applyRowPii(
+                {
+                  personal: info.personal || {},
+                  gadData: info.gadData || {},
+                  contact: info.contact || {},
+                },
+                resolved,
+              ),
+            },
+          };
+        });
+
+        /* With a sex filter the set returned above is the whole match, so the
+           vault-backed value is known for every row and the page can be sliced
+           here. `total` comes from this same filtered set, keeping the page
+           count and the pagination controls in agreement. */
+        if (sexFilteredInMemory) {
+          const matched = dataWithPii.filter(
+            (user) => user.personal_info_id?.gadData?.sexAtBirth === sex,
+          );
+          const start = (page - 1) * limit;
+          return {
+            data: matched.slice(start, start + limit),
+            total: matched.length,
+            page,
+            limit,
+            totalPages: Math.max(1, Math.ceil(matched.length / limit)),
+          };
+        }
+
         return {
-          data: dataWithTerms,
+          data: dataWithPii,
           total,
           page,
           limit,
@@ -305,6 +368,18 @@ export async function GET(req) {
       },
       LIST_CACHE_TTL,
     );
+
+    /* A revealed page contains real names, so the read is recorded. One entry
+       per request (not per row) keeps the log useful rather than enormous. */
+    if (canViewPII(role) && Array.isArray(result?.data) && result.data.length) {
+      await logPiiAccess({
+        req,
+        user_id: user?._id || null,
+        role,
+        fields: ["personal", "gadData", "contact"],
+        context: "profile-list",
+      });
+    }
 
     return NextResponse.json({ status: "success", ...result });
   } catch (error) {

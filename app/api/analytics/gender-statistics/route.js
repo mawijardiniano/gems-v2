@@ -2,14 +2,10 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { cacheOrSet } from "@/lib/cache";
 import { optionalAuth } from "@/lib/auth";
+import { canViewPII, resolvePiiBatch, applyRowPii } from "@/lib/profileBroker";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
-import {
-  AGE_GROUP_ORDER,
-  ageGroupOf,
-  ageGroupBirthdayRange,
-  parseListParam,
-} from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
+import { AGE_GROUP_ORDER, ageGroupOf, parseListParam } from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
 
 const CACHE_TTL = 60 * 1000;
 
@@ -21,6 +17,20 @@ function sexBucket(profile) {
      "not recorded". The gender-statistics pages no longer show it, but the
      endpoint keeps counting it so the totals stay complete. */
   return "Other";
+}
+
+/*
+ * A statistically unusable bucket, and how it comes about: once the vault is
+ * the source of identity, a profile whose PII has not been migrated yet (or
+ * whose vault read failed) has no sex on this row at all. `sexBucket` maps
+ * that to "Other" and the row silently inflates Other while deflating both
+ * Female and Male — a wrong GPB headline with nothing in the response to show
+ * for it. `sexIsKnown` lets the builders count those rows separately so the
+ * caller can tell "genuinely not recorded" from "identity missing".
+ */
+function sexIsKnown(profile) {
+  const sex = profile?.gadData?.sexAtBirth;
+  return sex === "Male" || sex === "Female";
 }
 
 /* The gender-identity values the schema allows in gadData.gender_preference. */
@@ -164,7 +174,13 @@ function buildStudentTypes(profiles, sexOf) {
 function buildStats(profiles, type) {
   const sexOf = (p) => sexBucket(p);
   const totals = emptyCounts();
-  profiles.forEach((p) => addCounts(totals, sexOf(p)));
+  /* Rows whose identity did not resolve — see sexIsKnown. Reported, never
+     silently folded into "Other". */
+  let unresolvedSex = 0;
+  profiles.forEach((p) => {
+    if (!sexIsKnown(p)) unresolvedSex += 1;
+    addCounts(totals, sexOf(p));
+  });
 
   const isStudent = type === "students";
   const lgbtqia = profiles.filter(
@@ -280,6 +296,10 @@ function buildStats(profiles, type) {
       Male: totals.Male,
       Other: totals.Other,
       total: totals.total,
+      /* Non-zero means the identity did not resolve for this many rows, so
+         the Female/Male split understates them. Surfaced because a report
+         built on it would otherwise look complete. */
+      unresolvedSex,
       pctFemale: totals.total ? Math.round((totals.Female / totals.total) * 1000) / 10 : 0,
       pctMale: totals.total ? Math.round((totals.Male / totals.total) * 1000) / 10 : 0,
       pctOther: totals.total ? Math.round((totals.Other / totals.total) * 1000) / 10 : 0,
@@ -332,7 +352,7 @@ async function buildByAcademicYear(baseProfiles, sexOf) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await optionalAuth(req);
+    const { error, status, user } = await optionalAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -373,6 +393,13 @@ export async function GET(req) {
     const today = new Date().toISOString().slice(0, 10);
 
     const keyOf = (list) => [...list].sort().join("+") || "all";
+    const accessible = canViewPII(user?.role);
+    /* The response depends on the role... except it must not. This route
+       returns counts only — no name, no birthday, no contact — so masked and
+       revealed produce identical output. `role` is deliberately NOT in the
+       cache key for that reason (unlike the list and dashboard routes, where
+       the row payload differs). If a future change ever puts an identity field
+       in this response, this key has to gain the role too. */
     const cacheKey = `gender-statistics:${type}:${keyOf(campuses)}:${keyOf(colleges)}:${keyOf(courses)}:${keyOf(personnelTypes)}:${keyOf(appointmentStatuses)}:${schoolYear || "all"}:${keyOf(semesters)}:${keyOf(yearLevels)}:${studentType || "all"}:${keyOf(sexes)}:${keyOf(ageGroups)}:${ageGroups.length ? today : "-"}:${keyOf(demographics)}`;
 
     const result = await cacheOrSet(
@@ -416,19 +443,33 @@ export async function GET(req) {
           ];
         }
         if (sexes.length) match["gadData.sexAtBirth"] = { $in: sexes };
-        if (ageGroups.length) {
-          const now = new Date();
-          match.$or = ageGroups
-            .map((group) => ageGroupBirthdayRange(group, now))
-            .filter(Boolean)
-            .map((range) => ({
-              "personal.birthday": { $gt: range.gt, $lte: range.lte },
-            }));
-        }
+        /* Age bands cannot be filtered here: the birthday is encrypted in the
+           vault. They are applied in memory after the vault read, below.
+           A `$or` used to sit on this query for exactly that filter — it is
+           gone, and leaving a stale one would silently widen the match. */
 
+        /* Identity is never named in the projection: the route needs counts,
+           and reading the columns would both defeat the vault and break the
+           moment they are stripped. */
         const baseProfiles = await GemsProfile.find(match).lean();
 
-        let profiles = baseProfiles;
+        /* One vault read for the whole result set, then each row is given the
+           masked or revealed shape by role. buildStats keeps only gender and
+           age, so masked and revealed produce identical counts here — the
+           role is passed anyway so the broker, not the route, decides. */
+        const piiByRef = await resolvePiiBatch({
+          vaultRefs: baseProfiles.map((p) => p.vaultRef),
+          role: user?.role,
+        });
+
+        let profiles = baseProfiles.map((p) => {
+          const identity = applyRowPii(
+            { personal: p.personal || {}, gadData: p.gadData || {}, contact: p.contact || {} },
+            piiByRef.get(String(p.vaultRef || "")),
+          );
+          return { ...p, personal: identity.personal, gadData: identity.gadData };
+        });
+
         if (schoolYear || semesters.length) {
           const termFilter = {};
           if (schoolYear) termFilter.school_year = schoolYear;
@@ -437,7 +478,16 @@ export async function GET(req) {
             profile_id: 1,
           }).lean();
           const idSet = new Set(terms.map((t) => String(t.profile_id)));
-          profiles = baseProfiles.filter((p) => idSet.has(String(p._id)));
+          profiles = profiles.filter((p) => idSet.has(String(p._id)));
+        }
+
+        /* Age bands are relative to today and computed from the vault birthday,
+           so the filter runs here rather than in the query. */
+        if (ageGroups.length) {
+          const wanted = new Set(ageGroups);
+          profiles = profiles.filter((p) =>
+            wanted.has(ageGroupOf({ birthday: p?.personal?.birthday })),
+          );
         }
 
         const stats = buildStats(profiles, type);
@@ -468,6 +518,15 @@ export async function GET(req) {
           sexes: ["Female", "Male"],
           studentTypes: STUDENT_TYPES,
           demographicOptions,
+          /* Whether this caller may be shown identities, and whether the
+             figures were computed from the vault or from the legacy columns.
+             The route returns aggregates only, so these change no number —
+             they let the screen say where a figure came from instead of
+             leaving a silent zero to be discovered in a GPB submission. */
+          accessIndicators: {
+            canViewPii: accessible,
+            identitySource: "vault",
+          },
         };
       },
       CACHE_TTL,

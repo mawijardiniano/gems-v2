@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activityLog";
 import Notification from "@/models/notification";
 import { rateLimiters } from "@/lib/rateLimit";
 import { usernameEqualsFilter } from "@/lib/usernames";
+import { resolvePii } from "@/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -142,17 +143,37 @@ export async function POST(req) {
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
 
+    /* The identity lives in the vault; `GemsProfile` keeps only the pointer and
+       the GEMS-owned fields. Read the vault first and fall back to the legacy
+       blocks so a profile still mid-migration keeps behaving as before. The
+       resolved identity is used only to compute `missingFields` — it must never
+       travel back to the client (see the payload below). */
+    let missingFields = [];
     try {
-      const missingFields = [];
+      let identity = profile;
+      if (profile?.vaultRef) {
+        const resolved = await resolvePii({
+          vaultRef: profile.vaultRef,
+          role: user.role,
+        });
+        if (resolved?.raw) {
+          identity = {
+            ...profile,
+            personal: { ...(profile.personal || {}), ...(resolved.raw.personal || {}) },
+            gadData: { ...(profile.gadData || {}), ...(resolved.raw.gadData || {}) },
+            contact: { ...(profile.contact || {}), ...(resolved.raw.contact || {}) },
+          };
+        }
+      }
 
-      if (profile) {
-        const personal = profile.personal || {};
-        const contact = profile.contact || {};
-        const affiliation = profile.affiliation || {};
+      if (identity) {
+        const personal = identity.personal || {};
+        const contact = identity.contact || {};
+        const affiliation = identity.affiliation || {};
         const academic = affiliation.academic_information || {};
         const employment = affiliation.employment_information || {};
 
-        const gadData = profile.gadData || {};
+        const gadData = identity.gadData || {};
 
         // Check required personal fields
         if (!personal.first_name) missingFields.push("First Name");
@@ -259,7 +280,7 @@ export async function POST(req) {
     const res = NextResponse.json({
       success: true,
       user: userWithoutPassword,
-      profile: profile || null,
+      missingFields,
     });
 
     res.cookies.set("auth_token", token, {

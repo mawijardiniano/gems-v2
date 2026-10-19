@@ -9,7 +9,7 @@ import { requireAuth, optionalAuth } from "@/lib/auth";
 import { cacheDelPrefix } from "@/lib/cache";
 import { canonicalOfficeList } from "@/lib/colleges";
 import { deleteEventCascade } from "@/lib/eventCascade";
-import { USER_POPULATE_BASE } from "@/lib/userPopulate";
+import { USER_POPULATE_BASE, hydrateUserPopulate } from "@/lib/userPopulate";
 import { normalizeRefNumber } from "@/lib/referenceNumber";
 
 const EDITABLE_FIELDS = [
@@ -74,6 +74,13 @@ export async function GET(req, { params }) {
         { status: "error", message: "Event not found" },
         { status: 404 },
       );
+
+    /* Names, birthdays and sex-at-birth live in the vault. The attendance modal
+       reads `attended_users.user_id.personal_info_id.gadData.sexAtBirth` to fill
+       its Sex column and `personal.birthday` for age, so without this the modal
+       would come up blank once the legacy columns are stripped. */
+    await hydrateUserPopulate(event.attended_users);
+    await hydrateUserPopulate(event.created_by);
 
     return NextResponse.json({ status: "success", data: event });
   } catch (err) {

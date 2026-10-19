@@ -7,6 +7,17 @@ import { cacheOrSet } from "@/lib/cache";
 
 const FILTERS_CACHE_TTL = 30 * 1000;
 
+/* The sex filter's options.
+ *
+ * These used to be `Profile.distinct("gadData.sexAtBirth")`. That field is now
+ * encrypted in the vault, so the distinct would return an empty array and the
+ * dropdown would go blank with no error — the filter would simply stop being
+ * offered. An aggregate cannot decrypt, so there is no vault equivalent: the
+ * options come from the schema, which allows exactly these two values
+ * (`sexAtBirth` is Male or Female; anything else means "not recorded" and is
+ * not offered as a filter). Keep this in step with models/profile.js. */
+const SEX_OPTIONS = ["Female", "Male"];
+
 export async function GET(req) {
   try {
     const { error, status } = await requireAuth(req);
@@ -39,7 +50,7 @@ export async function GET(req) {
         const yearLevels = await Profile.distinct(
           "affiliation.academic_information.year_level",
         );
-        const sexOptions = await Profile.distinct("gadData.sexAtBirth");
+        const sexOptions = SEX_OPTIONS;
         const employmentStatuses = await Profile.distinct(
           "affiliation.employment_information.employment_status",
         );

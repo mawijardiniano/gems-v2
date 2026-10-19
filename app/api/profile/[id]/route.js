@@ -3,11 +3,44 @@ import UserAuth from "@/models/user";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity, logPiiAccess } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { applyRowPii, resolvePii } from "@/lib/profileBroker";
+import { extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
+
+/*
+ * Re-writes the vaulted copy of a profile's PII after an update.
+ *
+ * Best-effort by design: the legacy fields on the GEMS document are still the
+ * source of truth during the migration, so a vault hiccup must not fail the
+ * user's save. The profile row records `migrationStatus` so a missed write is
+ * visible to scripts/verify-no-pii.mjs and can be replayed.
+ */
+async function syncVault(profile, body) {
+  const existing = extractPiiFromProfile({
+    personal: profile.personal,
+    gadData: profile.gadData,
+    contact: profile.contact,
+  });
+  const incoming = extractPiiFromProfile({
+    personal: body.personal,
+    gadData: body.gadData,
+    contact: body.contact,
+  });
+
+  const { patch } = await savePii({
+    profileId: profile._id,
+    vaultRef: profile.vaultRef,
+    pii: incoming,
+    mergedWith: existing,
+    ownerType: "profile",
+  });
+
+  return patch;
+}
 
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -28,7 +61,63 @@ export async function GET(req, { params }) {
       { status: 404 },
     );
 
-  return NextResponse.json({ status: "success", data: profile });
+  /* The caller's role decides masked vs. revealed: Admin and the GAD Focal
+     Person get the real identity, everyone else gets initials. Identifiers
+     (the affiliation block, `currentStatus`, the user account itself) always
+     come straight from the GEMS document. */
+  const role = user?.role || null;
+  const gem = profile.personal_info_id;
+
+  const resolved = await resolvePii({
+    vaultRef: gem?.vaultRef || null,
+    role,
+  });
+
+  const data = gem
+    ? {
+        ...profile,
+        vaulted: gem?.migrationStatus === "dual" || gem?.migrationStatus === "vaulted",
+        gemPublicId: gem?.gemsPublicId || null,
+        personal_info_id: {
+          ...gem,
+          ...applyRowPii(
+            {
+              personal: gem.personal || {},
+              gadData: gem.gadData || {},
+              contact: gem.contact || {},
+            },
+            resolved,
+            /* Not migrated yet: keep serving the legacy values. */
+            {
+              legacy: {
+                personal: gem.personal || {},
+                gadData: gem.gadData || {},
+                contact: gem.contact || {},
+                masked: false,
+              },
+            },
+          ),
+        },
+      }
+    : { ...profile, gemPublicId: null };
+
+  if (resolved?.fullAccess) {
+    await logPiiAccess({
+      req,
+      user_id: user?._id || null,
+      role,
+      profileId: gem?._id || null,
+      gemsPublicId: gem?.gemsPublicId || null,
+      fields: ["personal", "gadData", "contact"],
+      context: "profile-detail",
+    });
+  }
+
+  return NextResponse.json({
+    status: "success",
+    masked: !(resolved?.fullAccess ?? false),
+    data,
+  });
 }
 
 export async function PUT(req, { params }) {
@@ -96,6 +185,25 @@ export async function PUT(req, { params }) {
     }
 
     const updated = await profile.save();
+
+    /* Mirror the PII into the vault. A failure here is logged but never fails
+       the save — the legacy fields still hold the data until cutover. */
+    try {
+      const patch = await syncVault(updated, body);
+      if (patch?.profileSearchIndex?.length) {
+        await Profile.updateOne(
+          { _id: profile._id },
+          {
+            $set: {
+              profileSearchIndex: patch.profileSearchIndex,
+              migrationStatus: "dual",
+            },
+          },
+        );
+      }
+    } catch (vaultErr) {
+      console.error("[profile] Vault dual-write failed:", vaultErr.message);
+    }
 
     const user = await UserAuth.findOne({ personal_info_id: profile._id });
     const userId = user?._id;

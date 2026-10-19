@@ -12,11 +12,19 @@ import {
   resolveAcademicYear,
   sortAcademicYearsDesc,
 } from "@/lib/academicYear";
+import { hydrateUniversityOfficialNames } from "@/lib/userPopulate";
 
 const POPULATE = {
   path: "name",
   model: "UserAuth",
-  populate: { path: "personal_info_id", populate: { path: "personal" } },
+  populate: {
+    path: "personal_info_id",
+    /* `vaultRef` is what lets the roster resolve the seat holder's name from the
+       vault; the `personal` sub-populate is the legacy fallback and goes away
+       with that column. */
+    select: "vaultRef personal",
+    populate: { path: "personal" },
+  },
 };
 
 async function getActiveTermYear() {
@@ -91,6 +99,11 @@ export async function GET(req) {
       legacy = true;
     }
   }
+
+  /* The seat holder's name comes from the vault; the populated `personal` block
+     is the legacy fallback and goes blank once that column is stripped. Fixing
+     it here keeps the picker and the assigned-official list showing names. */
+  await hydrateUniversityOfficialNames(officials);
 
   return Response.json({
     success: true,
@@ -190,6 +203,9 @@ export async function POST(req) {
     });
 
     await doc.populate(POPULATE);
+    /* The freshly assigned seat's name is returned to the picker right away, so
+       it needs the vault overlay for the same reason GET does. */
+    await hydrateUniversityOfficialNames(doc);
     return Response.json({ success: true, data: doc }, { status: 201 });
   } catch (err) {
     const isDuplicate = err?.code === 11000;

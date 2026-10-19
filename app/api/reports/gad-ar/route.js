@@ -11,11 +11,18 @@ import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 import {
   PROJECT_EVENTS_POPULATE,
   resolveAccomplishmentText,
+  hydrateProjectAttendanceSex,
 } from "@/lib/accomplishmentSummary";
+import { resolvePii, CAN_VIEW_PII_ROLES } from "@/lib/profileBroker";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const REPORT_CACHE_TTL = 60 * 1000;
+
+/* Signatures are published names on an official document, so they resolve with
+   the same privilege as the GAD Focal Person rather than the requesting role:
+   a Dean generating the report must still see the President's name printed. */
+const SIGNATORY_ROLE = CAN_VIEW_PII_ROLES[1];
 
 function fieldValue(field) {
   if (!field) return "";
@@ -88,6 +95,46 @@ function extractName(userAuth) {
   return [first, mid, last].filter(Boolean).join(" ").trim();
 }
 
+/**
+ * The signatory's real name, on an official document, for one populated
+ * `UniversityOfficial.name` reference.
+ *
+ * The report populate reads `personal_info_id.personal.first_name` — a legacy
+ * plaintext column that is being dropped. Once it is gone the naive read returns
+ * "" and the signature line silently prints an underscore rule instead of the
+ * official's name: a wrong official document, not an error.
+ *
+ * So the identity is resolved through the broker first. Signatories are named
+ * officials appearing on a published report, so a reveal is correct here. The
+ * legacy read stays as the fallback for any row that has not been migrated yet,
+ * and a typed `name_text` (an official with no user account) wins because there
+ * is nothing to decrypt.
+ */
+export async function resolveSignatoryName(official) {
+  const person = official?.name;
+  if (!person) return official?.name_text || "";
+  if (typeof person === "string") return person;
+
+  const profile = person.personal_info_id;
+  const vaultRef = profile?.vaultRef;
+  if (vaultRef) {
+    const resolved = await resolvePii({ vaultRef, role: SIGNATORY_ROLE });
+    if (resolved?.raw) {
+      const first = resolved.raw.first_name || "";
+      const middle = resolved.raw.middle_name || "";
+      const last = resolved.raw.last_name || "";
+      const mid = middle
+        ? `${String(middle).trim().charAt(0).toUpperCase()}.`
+        : "";
+      const name = [first, mid, last].filter(Boolean).join(" ").trim();
+      if (name) return name;
+    }
+  }
+
+  /* Mid-migration fallback: the legacy columns still hold the name. */
+  return extractName(person) || person.personal_info_id?.displayName || "";
+}
+
 const MAIN_TABLE_HEAD = [
   [
     { content: "#", styles: { halign: "center" } },
@@ -133,6 +180,11 @@ export async function GET(req) {
             message: `No GAD projects found for AY ${year}.`,
           };
         }
+
+        /* The report's sex-disaggregated figures are read from
+           `gadData.sexAtBirth`, which is encrypted — so they are filled from
+           the vault here rather than from the legacy column. */
+        await Promise.all(projects.map(hydrateProjectAttendanceSex));
 
         const [gpb, officials] = await Promise.all([
           GPB.findOne({ year }).populate("gaaBudgetId").lean(),
@@ -412,10 +464,9 @@ export async function GET(req) {
         });
 
         const focalEntry = findGadFocalOfficial(officials);
-        const focalPointName = extractName(focalEntry?.name);
-        const presidentName = extractName(
-          (officials || []).find((item) => item?.title === "University President")
-            ?.name,
+        const focalPointName = await resolveSignatoryName(focalEntry);
+        const presidentName = await resolveSignatoryName(
+          (officials || []).find((item) => item?.title === "University President"),
         );
 
         let signY = doc.lastAutoTable.finalY + 10;

@@ -12,7 +12,7 @@ import "@/models/profile";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { findDuplicates } from "@/lib/duplicateDetection";
-import { withGeneratedAccomplishment } from "@/lib/accomplishmentSummary";
+import { withGeneratedAccomplishment, hydrateProjectAttendanceSex } from "@/lib/accomplishmentSummary";
 import { normalizeRefNumber } from "@/lib/referenceNumber";
 import { deleteFileFromBucket } from "@/lib/delete";
 import { deleteEventCascade } from "@/lib/eventCascade";
@@ -444,11 +444,14 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
-        select: "gadData.sexAtBirth personal.currentStatus",
+        /* `sexAtBirth` is filled from the vault below; `vaultRef` is what
+           makes that lookup possible. */
+        select: "vaultRef gadData.sexAtBirth personal.currentStatus",
       },
     },
   });
   if (!projects) return Response.json({ error: "Not found" }, { status: 404 });
+  await hydrateProjectAttendanceSex(projects);
   return Response.json({ data: withGeneratedAccomplishment(projects) });
 }
 

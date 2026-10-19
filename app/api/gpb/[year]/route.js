@@ -9,7 +9,7 @@ import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
  import { requireAuth } from "@/lib/auth";
 import { validateBudgetLink } from "@/lib/budgetLinking";
-import { withGeneratedAccomplishment } from "@/lib/accomplishmentSummary";
+import { withGeneratedAccomplishment, hydrateProjectAttendanceSex } from "@/lib/accomplishmentSummary";
 import {NextResponse} from "next/server"
 
 
@@ -36,7 +36,10 @@ export async function GET(req, { params }) {
         populate: {
           path: "personal_info_id",
           model: "GemsProfile",
-          select: "gadData.sexAtBirth",
+          /* `sexAtBirth` is read from the vault, not from this column — see
+             `withResolvedAttendanceSex` below. `vaultRef` is selected so the
+             identity can be resolved in one batch for the whole report. */
+          select: "vaultRef gadData.sexAtBirth personal.currentStatus",
         },
       },
     },
@@ -44,13 +47,21 @@ export async function GET(req, { params }) {
       path: "createdBy",
       model: "UserAuth",
       select: "username role personal_info_id",
-      populate: { path: "personal_info_id", model: "GemsProfile" },
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+        select: "vaultRef personal.currentStatus affiliation",
+      },
     },
     {
       path: "comments.userId",
       model: "UserAuth",
       select: "username role personal_info_id",
-      populate: { path: "personal_info_id", model: "GemsProfile" },
+      populate: {
+        path: "personal_info_id",
+        model: "GemsProfile",
+        select: "vaultRef personal.currentStatus affiliation",
+      },
     },
   ];
 
@@ -81,7 +92,13 @@ export async function GET(req, { params }) {
       );
 
       const gpbObject = gpb.toObject();
-      gpbObject.projects = orphanProjects.map(withGeneratedAccomplishment);
+      gpbObject.projects = await Promise.all(
+        orphanProjects.map(async (project) => {
+          const plain = project.toObject ? project.toObject() : project;
+          await hydrateProjectAttendanceSex(plain);
+          return withGeneratedAccomplishment(plain);
+        }),
+      );
 
       return Response.json({
         data: gpbObject,
@@ -94,7 +111,12 @@ export async function GET(req, { params }) {
      (monitoring page, GAD AR table, printouts) reads the same up-to-date value. */
   const gpbData = gpb.toObject();
   gpbData.projects = Array.isArray(gpbData.projects)
-    ? gpbData.projects.map(withGeneratedAccomplishment)
+    ? await Promise.all(
+        gpbData.projects.map(async (project) => {
+          await hydrateProjectAttendanceSex(project);
+          return withGeneratedAccomplishment(project);
+        }),
+      )
     : [];
 
   return Response.json({ data: gpbData });

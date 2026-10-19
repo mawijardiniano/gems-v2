@@ -12,6 +12,7 @@ import {
   mergeMembers,
   normalizeSectionOfficials,
 } from "@/lib/gfpsServer";
+import { hydrateUniversityOfficialNames } from "@/lib/userPopulate";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
@@ -46,6 +47,12 @@ export async function GET(req) {
   })
     .populate(UNIVERSITY_OFFICIALS_POPULATE)
     .lean();
+
+  /* Officials are linked to user accounts; the real name lives in the vault, so
+     the roster would render every seat blank once the legacy columns are
+     stripped. Hydrating here covers both the details lookup below and the
+     names the response carries. */
+  await hydrateUniversityOfficialNames(universityOfficials);
 
   const { filterSectionWithDetails } = makeFilterHelpers(universityOfficials);
 

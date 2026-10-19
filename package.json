@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node server.js",
-    "postinstall": "node scripts/copy-pdf-worker.mjs"
+    "postinstall": "node scripts/copy-pdf-worker.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "verify:pii": "node scripts/verify-no-pii.mjs",
+    "verify:pii:strict": "node scripts/verify-no-pii.mjs --strict",
+    "backup:identity": "node scripts/backup-identity.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1034.0",

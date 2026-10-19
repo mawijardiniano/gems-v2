@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
-import { USER_POPULATE_BASE } from "@/lib/userPopulate";
+import { USER_POPULATE_BASE, hydrateUserPopulate } from "@/lib/userPopulate";
 import {
   eventYearFromDate,
   nextEventRefNumber,
@@ -55,12 +55,15 @@ export async function GET(req) {
     const events = await cacheOrSet(
       cacheKey,
       async () => {
-        return Event.find(filter)
+        const rows = await Event.find(filter)
           .populate({
             path: "created_by",
             ...USER_POPULATE_BASE,
           })
           .lean();
+        /* The creator's name and birthday come from the vault now; without this
+           the list renders blank names once the legacy columns are stripped. */
+        return hydrateUserPopulate(rows);
       },
       EVENTS_LIST_CACHE_TTL,
     );

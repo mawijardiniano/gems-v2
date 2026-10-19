@@ -6,6 +6,7 @@ import UserAuth from "@/models/user";
 import ProfileTerm from "@/models/profileTerm";
 import { requireAuth } from "@/lib/auth";
 import { cacheOrSet } from "@/lib/cache";
+import { applyRowPii, resolvePiiBatch } from "@/lib/profileBroker";
 
 const DASHBOARD_CACHE_TTL = 15 * 1000;
 
@@ -66,7 +67,7 @@ function sortStudentYearLevels(rows) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -81,7 +82,12 @@ export async function GET(req) {
     const employment = url.searchParams.get("employment")?.trim() || null;
     const appointment = url.searchParams.get("appointment")?.trim() || null;
 
-    const cacheKey = `analytics:dashboard:${college || "all"}:${schoolYear || "all"}:${semester || "all"}:${sex || "all"}:${personType || "all"}:${yearLevel || "all"}:${employment || "all"}:${appointment || "all"}`;
+    const role = user?.role || null;
+    /* The counts this route returns are identical for every role — the vault
+       read is masked or revealed by the caller, but only numbers leave here —
+       yet `role` stays in the key so a future field that does depend on it
+       cannot be served from the wrong cache entry. */
+    const cacheKey = `analytics:dashboard:${role || "anon"}:${college || "all"}:${schoolYear || "all"}:${semester || "all"}:${sex || "all"}:${personType || "all"}:${yearLevel || "all"}:${employment || "all"}:${appointment || "all"}`;
 
     const result = await cacheOrSet(
       cacheKey,
@@ -136,9 +142,11 @@ export async function GET(req) {
             },
           ];
         }
-        if (sex) {
-          match["personal_info_id.gadData.sexAtBirth"] = sex;
-        }
+        /* Sex is deliberately NOT filtered in the query. `gadData.sexAtBirth`
+           is vault-owned and encrypted, so a `$match` on it can never be
+           answered from the database once the legacy column is stripped — it
+           would silently return zero users. The filter is applied in memory
+           after the vault overlay below, where the real value is known. */
         if (personType) {
           match["personal_info_id.personal.currentStatus"] = personType;
         }
@@ -163,6 +171,16 @@ export async function GET(req) {
         }
 
         const users = await UserAuth.aggregate(pipeline);
+
+        /* Demographics are counted from the vault, not from the GEMS document:
+           gender, birthday, civil status and religion are all PII and will be
+           absent from the profile once the legacy fields are stripped. One
+           batched read covers the whole result set; rows with no vault entry
+           yet keep their legacy values. */
+        const piiByRef = await resolvePiiBatch({
+          vaultRefs: users.map((u) => u.personal_info_id?.vaultRef),
+          role,
+        });
 
         let total = 0;
         let femaleCount = 0;
@@ -203,37 +221,52 @@ export async function GET(req) {
           const acad = p.affiliation?.academic_information || {};
           const emp = p.affiliation?.employment_information || {};
 
-          total += 1;
-          if (gad?.sexAtBirth === "Female") femaleCount += 1;
-          if (gad?.sexAtBirth === "Male") maleCount += 1;
-          if (gad?.isPWD === true) pwdCount += 1;
-          if (gad?.isIndigenousPerson === true) ipCount += 1;
+          /* The vault holds the counts' inputs. `identity` is the masked or
+             revealed row shape; this route only reads the values it counts, so
+             the two are interchangeable here. */
+          const identity = applyRowPii(
+            { personal, gadData: gad, contact: p.contact || {} },
+            piiByRef.get(String(p.vaultRef || "")),
+          );
+          const vPersonal = identity.personal || {};
+          const vGad = identity.gadData || {};
 
-          if (gad?.sexAtBirth === "Female") genderFemale += 1;
-          if (gad?.sexAtBirth === "Male") genderMale += 1;
-          const pref = gad?.gender_preference;
+          /* The sex filter runs here, not in the query: the value is encrypted
+             in the vault, so the database cannot match on it. A row that does
+             not match is skipped whole, exactly as the removed `$match` did. */
+          if (sex && vGad?.sexAtBirth !== sex) continue;
+
+          total += 1;
+          if (vGad?.sexAtBirth === "Female") femaleCount += 1;
+          if (vGad?.sexAtBirth === "Male") maleCount += 1;
+          if (vGad?.isPWD === true) pwdCount += 1;
+          if (vGad?.isIndigenousPerson === true) ipCount += 1;
+
+          if (vGad?.sexAtBirth === "Female") genderFemale += 1;
+          if (vGad?.sexAtBirth === "Male") genderMale += 1;
+          const pref = vGad?.gender_preference;
           if (pref === "Male") prefCounts.Male += 1;
           else if (pref === "Female") prefCounts.Female += 1;
           else if (pref === "LGBTQIA+") prefCounts["LGBTQIA+"] += 1;
           else unspecifiedCount += 1;
 
-          const age = calcAge(personal?.birthday);
+          const age = identity.age ?? calcAge(vPersonal?.birthday);
           if (age !== null) {
             const bucket = Math.floor(age / 10) * 10;
             const label = `${bucket}–${bucket + 9}`;
             ageCounts[label] = (ageCounts[label] || 0) + 1;
           }
 
-          const civil = personal?.civil_status || UNKNOWN;
+          const civil = vPersonal?.civil_status || UNKNOWN;
           civilCounts[civil] = (civilCounts[civil] || 0) + 1;
 
-          const religion = personal?.religion || UNKNOWN;
+          const religion = vPersonal?.religion || UNKNOWN;
           religionCounts[religion] = (religionCounts[religion] || 0) + 1;
 
           const status = (personal?.currentStatus || "").toLowerCase();
           const isStu = status === "student";
           const isEmp = status === "employee";
-          const gender = normalizeGender(gad?.sexAtBirth);
+          const gender = normalizeGender(vGad?.sexAtBirth);
 
           if (isStu) {
             const collegeName = acad?.college || UNKNOWN;
@@ -273,9 +306,9 @@ export async function GET(req) {
             const office = emp?.office || UNKNOWN;
             addGender(officeGroups, office, gender);
 
-            if (gad?.sexAtBirth === "Female") empFemale += 1;
-            if (gad?.sexAtBirth === "Male") empMale += 1;
-            const empPref = gad?.gender_preference;
+            if (vGad?.sexAtBirth === "Female") empFemale += 1;
+            if (vGad?.sexAtBirth === "Male") empMale += 1;
+            const empPref = vGad?.gender_preference;
             if (empPref === "Male") empPrefCounts.Male += 1;
             else if (empPref === "Female") empPrefCounts.Female += 1;
             else if (empPref === "LGBTQIA+") empPrefCounts["LGBTQIA+"] += 1;

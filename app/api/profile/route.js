@@ -17,6 +17,8 @@ import {
 } from "@/lib/usernames";
 import { rateLimiters } from "@/lib/rateLimit";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+import { assignIdentifiers, extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
+import { resolvePiiBatch, applyRowPii } from "@/lib/profileBroker";
 
 const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -87,6 +89,84 @@ function capitalizeObjectStrings(value) {
   return newObj;
 }
 
+/**
+ * The GEMS-owned fields that live inside the legacy `personal` block but are
+ * not identity, so they survive the move to the vault. Everything else in that
+ * block (name parts, `civil_status`, `nationality`, `bloodType`,
+ * `religion_other`, `birthday`) belongs to the vault and must never be used as
+ * a merge base — see `rosterRowForClient`.
+ */
+const GEMS_OWNED_PERSONAL_FIELDS = ["currentStatus"];
+
+/** A `personal` block reduced to the fields GEMS itself owns. */
+function gemsOwnedPersonal(personal) {
+  if (!personal) return {};
+  const out = {};
+  for (const key of GEMS_OWNED_PERSONAL_FIELDS) {
+    if (personal[key] !== undefined) out[key] = personal[key];
+  }
+  return out;
+}
+
+/**
+ * Shapes one roster row for the client: strips the password, routes the
+ * identity through the broker, and removes the vault bookkeeping.
+ *
+ * `vaultRef` and `profileSearchIndex` must never reach the browser. The ref is
+ * a handle into the encrypted vault, and the index is a set of HMAC digests of
+ * every spelling of a person's name — a small, offline-checkable name oracle.
+ * Neither is read by any client, so both are dropped for every role.
+ *
+ * The identity itself is masked or revealed by `applyRowPii` according to the
+ * caller's role.
+ *
+ * The row handed to `applyRowPii` carries ONLY the GEMS-owned `personal`
+ * fields, never the legacy plaintext block. `applyRowPii` merges as
+ * `{ ...row.personal, ...chosen.personal }`, so any plaintext key the chosen
+ * identity shape omits would silently survive the merge: `maskedRowPii`
+ * returns only the initials and `birthday`, so seeding the merge with the raw
+ * block left `civil_status`, `nationality`, `bloodType` and `religion_other`
+ * in a MASKED row. Withholding them here makes the broker's answer — masked or
+ * revealed — the sole source of identity.
+ *
+ * `legacy` is passed only for a row the vault cannot answer for, so a
+ * mid-migration record still renders instead of blanking out. A row with a
+ * vault entry is resolved from the vault alone.
+ */
+export function rosterRowForClient(user, resolvedByRef) {
+  if (!user) return user;
+
+  const { password: _password, ...rest } = user;
+
+  const profile = rest.personal_info_id;
+  if (profile) {
+    const ref = profile.vaultRef;
+    const resolved = ref ? resolvedByRef?.get(String(ref)) || null : null;
+
+    /* A resolved row reads from the vault only; the legacy block still holds
+       plaintext for it, so letting it through as a fallback would undo the
+       broker's masking. */
+    const legacy = resolved
+      ? null
+      : {
+          personal: profile.personal || null,
+          gadData: profile.gadData || null,
+          contact: profile.contact || null,
+        };
+
+    rest.personal_info_id = applyRowPii(
+      { ...profile, personal: gemsOwnedPersonal(profile.personal) },
+      resolved,
+      { legacy },
+    );
+
+    delete rest.personal_info_id.vaultRef;
+    delete rest.personal_info_id.profileSearchIndex;
+  }
+
+  return rest;
+}
+
 export async function GET(req) {
   try {
     const { error, status } = await requireAuth(req);
@@ -105,7 +185,13 @@ export async function GET(req) {
     }
 
     const assignedCollege = decoded?.assignedCollege || null;
-    const cacheKey = `profile:list:${assignedCollege || "all"}`;
+    const role = decoded?.role || null;
+    /* `role` is part of the key because the rows this route returns are
+       masked or revealed by it, and `assignedCollege` alone does not separate
+       the two: a Dean and an Admin in the same college would otherwise share
+       one cached entry, and whichever request landed first would decide
+       whether the other saw real names. */
+    const cacheKey = `profile:list:${assignedCollege || "all"}:${role || "anon"}`;
 
     const usersNoPassword = await cacheOrSet(
       cacheKey,
@@ -205,10 +291,17 @@ export async function GET(req) {
           })
           .filter((u) => u.username !== "Admin" && u.username !== "Focal");
 
-        return filteredUsers.map((u) => {
-          const { password, ...rest } = u;
-          return rest;
-        });
+        /* One batch decrypt for the whole page, then mask or reveal per role.
+           Doing this here (after the filters) keeps it to a single vault query
+           regardless of page size. */
+        const vaultRefs = filteredUsers
+          .map((u) => u.personal_info_id?.vaultRef)
+          .filter(Boolean);
+        const resolvedByRef = vaultRefs.length
+          ? await resolvePiiBatch({ vaultRefs, role })
+          : new Map();
+
+        return filteredUsers.map((u) => rosterRowForClient(u, resolvedByRef));
       },
       PROFILE_LIST_CACHE_TTL,
     );
@@ -373,6 +466,12 @@ export async function POST(req) {
     const profilePayload = { ...capitalizedBody, personal };
     delete profilePayload.personal_information;
 
+    /* PII split, step 1 of 2: mint the identifiers. `gemsPublicId` is the only
+       identifier a screen may show, and `vaultRef` links this profile to its
+       encrypted IdentityVault row. Both are random, so neither can be guessed
+       from the other or from a leaked GEMS document. */
+    const { gemsPublicId, vaultRef } = await assignIdentifiers(Profile);
+
     const token = req.cookies.get("auth_token")?.value;
     let createdByUserId = null;
     if (token) {
@@ -385,6 +484,9 @@ export async function POST(req) {
     const profilePayloadWithAudit = {
       ...profilePayload,
       created_by: createdByUserId,
+      gemsPublicId,
+      vaultRef,
+      migrationStatus: "dual",
     };
 
     const email = capitalizedBody?.contact?.email;
@@ -454,6 +556,29 @@ export async function POST(req) {
 
     const createdProfile = profile[0];
 
+    /* PII split, step 2 of 2: encrypt the personal / GAD / contact values into
+       the vault and store the search digests on the GEMS row. The legacy
+       fields stay populated for now (dual-write) so nothing breaks while the
+       rest of the app is moved over. */
+    const pii = extractPiiFromProfile({
+      personal,
+      gadData: capitalizedBody.gadData,
+      contact: capitalizedBody.contact,
+    });
+
+    const { patch } = await savePii({
+      profileId: createdProfile._id,
+      vaultRef,
+      pii,
+      ownerType: "profile",
+    });
+
+    createdProfile.profileSearchIndex = patch.profileSearchIndex;
+    await Profile.updateOne(
+      { _id: createdProfile._id },
+      { $set: { profileSearchIndex: patch.profileSearchIndex } },
+    );
+
     cacheDelPrefix("profile:list:");
 
     await logActivity({
@@ -474,6 +599,7 @@ export async function POST(req) {
       {
         success: true,
         profile_id: createdProfile._id,
+        gems_public_id: createdProfile.gemsPublicId,
         username,
         temporary_password: tempPassword,
         role,
