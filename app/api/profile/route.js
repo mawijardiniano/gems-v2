@@ -203,21 +203,20 @@ export function rosterRowForClient(user, resolvedByRef) {
     const ref = profile.vaultRef;
     const resolved = ref ? resolvedByRef?.get(String(ref)) || null : null;
 
-    /* A resolved row reads from the vault only; the legacy block still holds
-       plaintext for it, so letting it through as a fallback would undo the
-       broker's masking. */
-    const legacy = resolved
-      ? null
-      : {
-          personal: profile.personal || null,
-          gadData: profile.gadData || null,
-          contact: profile.contact || null,
-        };
+    /* No `legacy` fallback. It read `profile.personal` / `gadData` / `contact`,
+       which the strip deleted - so post-strip it could only ever yield nulls,
+       and pre-strip it handed the raw plaintext block to `applyRowPii`'s merge
+       base, which bypassed the broker's masking entirely for a MASKED caller.
+       That was a leak dressed as a safety net. A row the vault cannot answer
+       for now renders as identifiers only, which is the honest result for a
+       row holding no identity data.
 
+       `tests/piiStrip.test.mjs` asserted this fallback's removal from
+       app/api/profile/[id]/route.js only, so this second copy survived the
+       strip with the suite still green. Both routes are covered now. */
     rest.personal_info_id = applyRowPii(
       { ...profile, personal: gemsOwnedPersonal(profile.personal) },
       resolved,
-      { legacy },
     );
 
     delete rest.personal_info_id.vaultRef;

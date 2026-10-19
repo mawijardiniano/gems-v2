@@ -233,6 +233,26 @@ async function main() {
   console.log(`  modified: ${result.modifiedCount}`);
   console.log("");
 
+  /* Deleting the blocks is only half the strip. `migrationStatus` is what every
+     reader uses to decide whether to look for plaintext at all, and the first
+     strip left it at "dual" on all 10,846 rows - so rows that had no blocks
+     still advertised themselves as mid-migration. Writers moved to "vaulted"
+     long ago and the schema default is "vaulted", but a default only applies
+     to documents written after it changes; it never rewrites existing rows.
+     Any reader that branches on this field would still take the dual path.
+
+     Mongoose defaults are also why this is invisible from the model: hydration
+     fills "vaulted" for a row that stores nothing, so the field must be read
+     with the native driver to see what is actually there. */
+  console.log("[strip] stamping migrationStatus ...");
+  const statusResult = await profiles.updateMany(
+    { migrationStatus: { $ne: "vaulted" } },
+    { $set: { migrationStatus: "vaulted" } },
+  );
+  console.log(`  matched : ${statusResult.matchedCount}`);
+  console.log(`  modified: ${statusResult.modifiedCount}`);
+  console.log("");
+
   /* ---- Confirm the blocks are gone ------------------------------------ */
   console.log("[strip] post-check");
   let remaining = 0;
@@ -246,6 +266,13 @@ async function main() {
     affiliation: { $exists: true },
   });
   console.log(`  affiliation preserved on ${affiliation} row(s)`);
+
+  /* Checked here as well as in verify-no-pii.mjs: the two scripts have to agree
+     on what "stripped" means, and this is the field that was missed once. */
+  const stillDual = await profiles.countDocuments({
+    migrationStatus: { $ne: "vaulted" },
+  });
+  console.log(`  migrationStatus != vaulted on ${stillDual} row(s)`);
 
   console.log("");
   if (remaining > 0) {

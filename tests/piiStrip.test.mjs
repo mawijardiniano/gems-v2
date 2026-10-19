@@ -20,6 +20,10 @@ import { readFileSync } from "node:fs";
  *   3. The schema must not still declare the stripped blocks, or a future
  *      write could carry plaintext PII back in through a path the strip just
  *      emptied and the migration would silently undo itself.
+ *   4. The strip must converge `migrationStatus`, not only the blocks. A row
+ *      with no blocks that still says "dual" is still a half-migrated row to
+ *      every reader that branches on the field, and the first strip produced
+ *      exactly that on all 10,846 rows.
  */
 
 function read(...parts) {
@@ -28,8 +32,63 @@ function read(...parts) {
 
 const CENSUS = read("scripts", "census-strip-gap.mjs");
 const STRIP = read("scripts", "strip-plaintext-pii.mjs");
+const VERIFY = read("scripts", "verify-no-pii.mjs");
 const MODEL = read("models", "profile.js");
 const VAULT = read("lib", "identityVault.js");
+
+/*
+ * Negative controls.
+ *
+ * A source-level assertion is only worth having if it would fail on the code it
+ * describes. The route test below compares two strings: the real roster route
+ * as it is now (clean) and the same route with the removed fallback put back
+ * (dirty). If the assertion cannot tell them apart it is decoration, and the
+ * previous version of this test was exactly that - it named one file and read
+ * as if it covered both.
+ *
+ * These run the assertion logic against a fixture instead of the filesystem so
+ * the control cannot drift from the real source.
+ */
+
+const LEGACY_FALLBACK = `
+    const legacy = resolved
+      ? null
+      : {
+          personal: profile.personal || null,
+          gadData: profile.gadData || null,
+          contact: profile.contact || null,
+        };
+
+    rest.personal_info_id = applyRowPii(row, resolved, { legacy });
+`;
+
+const CLEAN_SHAPE = `
+    rest.personal_info_id = applyRowPii(row, resolved);
+`;
+
+function detectsLegacyFallback(source) {
+  try {
+    assert.doesNotMatch(source, /^\s*const legacy\s*=/m);
+    assert.doesNotMatch(source, /legacy\s*\}\s*\)/);
+    assert.doesNotMatch(source, /profile\.(personal|gadData|contact)\s*\|\|/);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+test("the route assertion detects the legacy fallback it guards against", () => {
+  assert.equal(
+    detectsLegacyFallback(LEGACY_FALLBACK),
+    true,
+    "the pattern must reject the old fallback construct",
+  );
+  assert.equal(
+    detectsLegacyFallback(CLEAN_SHAPE),
+    false,
+    "the pattern must accept the cleaned-up route",
+  );
+});
 
 /* Pulls the field names out of PII_FIELDS, which is the vault's contract. */
 function vaultFieldNames() {
@@ -145,16 +204,70 @@ test("the writers mark profiles vaulted, not dual", () => {
   }
 });
 
-test("the profile detail route no longer falls back to legacy plaintext", () => {
+test("no profile route falls back to legacy plaintext", () => {
   /* The fallback read gem.personal / gem.gadData / gem.contact, which no
-     longer exist. Left in place it would silently serve empty blocks. */
-  const idRoute = read("app", "api", "profile", "[id]", "route.js");
-  const applyCall = idRoute.match(/applyRowPii\(([\s\S]*?)\n\s*\),/)?.[1] || "";
-  assert.ok(applyCall, "applyRowPii call must exist");
-  assert.doesNotMatch(
-    applyCall,
-    /legacy:/,
-    "the legacy fallback must be removed now the columns are gone",
+     longer exist. Left in place it would silently serve empty blocks, and
+     pre-strip it bypassed the broker's masking for a MASKED caller.
+
+     Both routes are checked. The original version of this test named only
+     app/api/profile/[id]/route.js, so the identical construct in the roster
+     route (app/api/profile/route.js) survived the strip with the suite green -
+     a test that asserted half a property and read as if it asserted all of it. */
+  for (const parts of [
+    ["app", "api", "profile", "[id]", "route.js"],
+    ["app", "api", "profile", "route.js"],
+  ]) {
+    const source = read(...parts);
+    const label = parts.join("/");
+    if (!/applyRowPii\(/.test(source)) continue; /* route does not shape rows */
+    assert.doesNotMatch(
+      source,
+      /^\s*const legacy\s*=/m,
+      `${label}: the legacy fallback must be removed now the columns are gone`,
+    );
+    assert.doesNotMatch(
+      source,
+      /legacy\s*\}\s*\)/,
+      `${label}: the legacy fallback must not be passed to the broker`,
+    );
+    assert.doesNotMatch(
+      source,
+      /profile\.(personal|gadData|contact)\s*\|\|/,
+      `${label}: must not read a stripped block as a fallback`,
+    );
+  }
+});
+
+test("the strip converges migrationStatus, not just the blocks", () => {
+  /* Deleting the blocks leaves a row that still calls itself "dual". Every
+     reader that branches on this field then takes the legacy path. The first
+     strip did exactly this: 0 rows held plaintext, all 10,846 stored "dual",
+     and verify-no-pii.mjs reported a clean pass because it only looked at
+     block contents. */
+  assert.match(
+    STRIP,
+    /\$set:\s*\{\s*migrationStatus:\s*"vaulted"\s*\}/,
+    "the strip must set migrationStatus to vaulted",
+  );
+  assert.match(
+    STRIP,
+    /migrationStatus:\s*\{\s*\$ne:\s*"vaulted"\s*\}/,
+    "the strip must select only rows that are not already vaulted",
+  );
+});
+
+test("the verifier reads migrationStatus from the stored document", () => {
+  /* A hydrated field would report the schema default and call a "dual" row
+     clean. The check has to be raw, and it has to fail under --strict. */
+  assert.match(
+    VERIFY,
+    /report\.notVaulted/,
+    "the verifier must count rows that are not vaulted",
+  );
+  assert.match(
+    VERIFY,
+    /migrationStatus/,
+    "the verifier must inspect the migrationStatus field",
   );
 });
 
