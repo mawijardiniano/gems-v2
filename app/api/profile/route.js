@@ -18,7 +18,12 @@ import {
 import { rateLimiters } from "@/lib/rateLimit";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
 import { assignIdentifiers, extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
-import { resolvePiiBatch, applyRowPii } from "@/lib/profileBroker";
+import {
+  resolvePiiBatch,
+  applyRowPii,
+  searchIndexQuery,
+  loadDecryptedPiiBatch,
+} from "@/lib/profileBroker";
 
 const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -96,6 +101,61 @@ function capitalizeObjectStrings(value) {
  * `religion_other`, `birthday`) belongs to the vault and must never be used as
  * a merge base — see `rosterRowForClient`.
  */
+/**
+ * Confirms a name collision is really the same person by comparing birthdays.
+ *
+ * The name match comes from the blind index, so it can only say "some name
+ * part digests as the same string". The birthday is the second factor, and it
+ * is encrypted with a random IV, so it cannot be compared in the query: equal
+ * dates never produce equal ciphertext. It has to be decrypted first.
+ *
+ * Only the handful of rows the index already narrowed down are decrypted, so
+ * this stays a small, bounded read rather than a scan.
+ *
+ * An unreadable or missing vault row counts as no match: refusing a
+ * registration because a vault read failed would be worse than the duplicate
+ * it was guarding against.
+ */
+async function findSameNameAndBirthday(candidates, birthday) {
+  if (!candidates?.length) return null;
+  if (Number.isNaN(birthday?.getTime?.())) return null;
+
+  const refs = candidates.map((c) => c.vaultRef).filter(Boolean);
+  if (!refs.length) return null;
+
+  let piiByRef;
+  try {
+    piiByRef = await loadDecryptedPiiBatch(refs);
+  } catch (err) {
+    console.error("[profile] duplicate-check vault read failed:", err.message);
+    return null;
+  }
+
+  for (const candidate of candidates) {
+    const pii = piiByRef.get(String(candidate.vaultRef));
+    if (!pii?.birthday) continue;
+
+    const existing = new Date(pii.birthday);
+    if (Number.isNaN(existing.getTime())) continue;
+
+    /* Compare on the calendar day: the stored value may be a date at midnight
+       in a different zone, so an exact timestamp compare would miss a real
+       duplicate. */
+    if (sameCalendarDay(existing, birthday)) return candidate;
+  }
+
+  return null;
+}
+
+/** True when two dates fall on the same UTC year/month/day. */
+function sameCalendarDay(a, b) {
+  return (
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
+  );
+}
+
 const GEMS_OWNED_PERSONAL_FIELDS = ["currentStatus"];
 
 /** A `personal` block reduced to the fields GEMS itself owns. */
@@ -346,25 +406,59 @@ export async function POST(req) {
     }
 
     if (personal.birthday) {
-      const birthdayDate = new Date(personal.birthday);
-      const existingByNameAndBirthday = await Profile.findOne({
-        "personal.first_name": {
-          $regex: new RegExp(`^${personal.first_name}$`, "i"),
-        },
-        "personal.last_name": {
-          $regex: new RegExp(`^${personal.last_name}$`, "i"),
-        },
-        "personal.birthday": birthdayDate,
-      });
-      if (existingByNameAndBirthday) {
-        return NextResponse.json(
+      /* Duplicate detection runs on the blind index, not on the name columns.
+         `personal.first_name` / `personal.last_name` are PII and are removed by
+         the strip, so the `$regex` that used to sit here would match nothing —
+         and a filter that matches nothing reads as "no duplicate", which is
+         the wrong answer in the one direction that matters: it would let a
+         second record for the same person through.
+
+         The index holds digests of every spelling of the name, so the terms
+         are looked up as digests. The exact-token digest is the one that
+         corresponds to "first name equals X", which is stricter than the old
+         case-insensitive `$regex` (it also no longer treats `O'Brien` and
+         `OBrien` as the same person).
+
+         The birthday cannot be compared here — it is encrypted with a random
+         IV, so equal dates never produce equal ciphertext and no index can
+         match it. It is therefore checked after decryption, below. */
+      const firstDigests = searchIndexQuery(personal.first_name);
+      const lastDigests = searchIndexQuery(personal.last_name);
+
+      if (firstDigests && lastDigests) {
+        /* The whole-field digest is the first token `blindIndexTokens`
+           produces, and it is the one that means "this stored field is exactly
+           this string" — which is what a name-and-birthday duplicate check
+           wants. Matching on every token instead would also require the row to
+           carry the same first-name split, so a stored "Vic Ronel" would fail
+           to match a submitted "Vic" even though the person is the same.
+
+           `$all` takes a flat list of digests the index must contain. */
+        const candidates = await Profile.find(
           {
-            success: false,
-            error:
-              "A user with the same name and birthday already exists in the system",
+            profileSearchIndex: {
+              $all: [firstDigests[0], lastDigests[0]],
+            },
           },
-          { status: 409 },
+          { _id: 1, vaultRef: 1 },
+        ).lean();
+
+        const birthdayDate = new Date(personal.birthday);
+        const collision = await findSameNameAndBirthday(
+          candidates,
+          birthdayDate,
         );
+
+        if (collision) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "A user with the same name and birthday already exists in the system",
+            },
+            { status: 409 },
+          );
+        }
       }
     }
 
@@ -507,7 +601,15 @@ export async function POST(req) {
 
     const email = capitalizedBody?.contact?.email;
     if (email) {
-      const existingEmail = await Profile.findOne({ "contact.email": email });
+      /* Same reasoning as the name check above: `contact.email` is PII and is
+         being removed, so a query against the column would stop matching once
+         the strip lands. The digest is carried in the same blind index. */
+      const emailDigests = searchIndexQuery(email);
+      const existingEmail = emailDigests
+        ? await Profile.findOne({
+            profileSearchIndex: { $in: emailDigests },
+          })
+        : null;
       if (existingEmail) {
         return NextResponse.json(
           {
