@@ -102,7 +102,11 @@ export async function GET(req) {
           });
         }
         if (type) {
-          conditions.push({ "personal_info_id.personal.currentStatus": type });
+          /* Filter on `affiliation.person_type`, the column that replaced
+             `personal.currentStatus`. It is dropped from the row by the strip,
+             so a `$match` on the legacy path would silently page out every
+             result. `person_type` is GEMS-owned and survives. */
+          conditions.push({ "personal_info_id.affiliation.person_type": type });
         }
         /* The sex filter is applied in memory after the vault overlay, not in
            the query: `gadData.sexAtBirth` is vault-owned and encrypted, so a
@@ -235,9 +239,12 @@ export async function GET(req) {
             "personal_info_id.vaultRef": 1,
             "personal_info_id.gemsPublicId": 1,
             "personal_info_id.migrationStatus": 1,
-            /* `currentStatus` and the affiliation block are identifiers, not
-               PII, so they keep coming straight from the GEMS document. */
+            /* `person_type` and the affiliation block are identifiers, not
+               PII, so they keep coming straight from the GEMS document. The
+               legacy `currentStatus` path is selected alongside for rows the
+               backfill has not reached yet. */
             "personal_info_id.personal.currentStatus": 1,
+            "personal_info_id.affiliation.person_type": 1,
             "personal_info_id.affiliation.academic_information": 1,
             "personal_info_id.affiliation.employment_information": 1,
           },
@@ -333,6 +340,10 @@ export async function GET(req) {
                   personal: info.personal || {},
                   gadData: info.gadData || {},
                   contact: info.contact || {},
+                  /* `applyRowPii` needs the affiliation block to resolve
+                     `person_type`; the spread above would otherwise carry the
+                     raw block through while the status mirror stays empty. */
+                  affiliation: info.affiliation || {},
                 },
                 resolved,
               ),

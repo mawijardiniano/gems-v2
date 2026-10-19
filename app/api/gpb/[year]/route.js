@@ -38,8 +38,11 @@ export async function GET(req, { params }) {
           model: "GemsProfile",
           /* `sexAtBirth` is read from the vault, not from this column — see
              `withResolvedAttendanceSex` below. `vaultRef` is selected so the
-             identity can be resolved in one batch for the whole report. */
-          select: "vaultRef gadData.sexAtBirth personal.currentStatus",
+             identity can be resolved in one batch for the whole report.
+             `affiliation.person_type` is the student/employee discriminator
+             that replaced `personal.currentStatus`; the legacy path is still
+             selected for rows the backfill has not reached yet. */
+          select: "vaultRef gadData.sexAtBirth personal.currentStatus affiliation.person_type",
         },
       },
     },

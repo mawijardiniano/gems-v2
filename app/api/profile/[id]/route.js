@@ -85,6 +85,8 @@ export async function GET(req, { params }) {
               personal: gem.personal || {},
               gadData: gem.gadData || {},
               contact: gem.contact || {},
+              /* Resolves `person_type` for the status mirror. */
+              affiliation: gem.affiliation || {},
             },
             resolved,
             /* Not migrated yet: keep serving the legacy values. */

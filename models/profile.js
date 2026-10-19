@@ -86,6 +86,7 @@ gemsProfileSchema.virtual("fullName").get(function () {
 });
 
 gemsProfileSchema.index({ "personal.currentStatus": 1 });
+gemsProfileSchema.index({ "affiliation.person_type": 1 });
 gemsProfileSchema.index({ "gadData.sexAtBirth": 1 });
 gemsProfileSchema.index({ "affiliation.academic_information.college": 1 });
 gemsProfileSchema.index({ "affiliation.academic_information.year_level": 1 });
@@ -102,6 +103,43 @@ gemsProfileSchema.index({ "contact.email": 1 });
 
 gemsProfileSchema.set("toJSON", { virtuals: true });
 gemsProfileSchema.set("toObject", { virtuals: true });
+
+/**
+ * Keeps the student/employee discriminator consistent across both of its
+ * paths, in both directions.
+ *
+ * The field used to live as `personal.currentStatus` and now lives as
+ * `affiliation.person_type`, because the PII strip deletes the `personal`
+ * block and the status is a GEMS-owned identifier rather than identity data.
+ * The two coexist during the transition: the registration and profile-edit
+ * forms still post `personal.currentStatus`, while every query and report
+ * reads `affiliation.person_type`.
+ *
+ * Rather than trust ~30 call sites to set both, this normalizes them at the
+ * schema boundary so the invariant holds for every writer — including the
+ * generic `profile.set(body)` in `app/api/profile/[id]/route.js`, which
+ * passes whichever of the two the form happened to send.
+ *
+ * Whichever path a writer supplies wins; if both are supplied and disagree
+ * the affiliation field is authoritative, because it is the one that
+ * survives the strip. Runs on `validate`, so it also applies to the
+ * `required: true` check on `person_type`: a payload carrying only the legacy
+ * path is promoted before that check runs, not rejected by it.
+ */
+gemsProfileSchema.pre("validate", function syncPersonType() {
+  const fromAffiliation = this.affiliation?.person_type;
+  const fromLegacy = this.personal?.currentStatus;
+
+  const resolved = fromAffiliation || fromLegacy;
+  if (!resolved) return;
+
+  if (this.affiliation && this.affiliation.person_type !== resolved) {
+    this.affiliation.person_type = resolved;
+  }
+  if (this.personal && this.personal.currentStatus !== resolved) {
+    this.personal.currentStatus = resolved;
+  }
+});
 
 const GemsProfile =
   mongoose.models.GemsProfile ||

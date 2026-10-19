@@ -96,6 +96,7 @@ export async function GET(req) {
               "personal_info_id.vaultRef": 1,
               "personal_info_id.gemsPublicId": 1,
               "personal_info_id.personal.currentStatus": 1,
+              "personal_info_id.affiliation.person_type": 1,
               /* The attendance sheet only accepts Male / Female, and the manual
                  encode endpoint rejects a profile without `gadData.sexAtBirth`.
                  The modal needs it up front to block the Record button instead
@@ -128,6 +129,8 @@ export async function GET(req) {
               personal: info.personal || {},
               gadData: info.gadData || {},
               contact: info.contact || {},
+              /* Resolves `person_type` for the status mirror below. */
+              affiliation: info.affiliation || {},
             },
             resolved,
           );

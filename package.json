@@ -10,7 +10,8 @@
     "test": "node --test \"tests/*.test.mjs\"",
     "verify:pii": "node scripts/verify-no-pii.mjs",
     "verify:pii:strict": "node scripts/verify-no-pii.mjs --strict",
-    "backup:identity": "node scripts/backup-identity.mjs"
+    "backup:identity": "node scripts/backup-identity.mjs",
+    "backfill:person-type": "node scripts/backfill-person-type.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1034.0",

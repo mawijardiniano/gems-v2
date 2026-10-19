@@ -149,6 +149,7 @@ const sexAtBirth = toSexAtBirth(
           : undefined,
     },
     affiliation: {
+      person_type: currentStatus || undefined,
       academic_information: academicInformation,
       employment_information: employmentInformation,
     },

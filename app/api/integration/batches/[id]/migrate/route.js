@@ -157,7 +157,17 @@ export async function POST(req, { params }) {
               birthday: asDate(mapped.personal?.birthday),
             },
             gadData: mapped.gadData || {},
-            affiliation: mapped.affiliation || {},
+            /* `person_type` is GEMS-owned and required, so it is carried onto
+               the affiliation block explicitly. It arrives on the mapped
+               payload's affiliation already; the fallback covers a payload
+               built before the field existed. */
+            affiliation: {
+              ...(mapped.affiliation || {}),
+              person_type:
+                mapped.affiliation?.person_type ||
+                mapped.personal?.currentStatus ||
+                undefined,
+            },
             contact: mapped.contact || {},
           });
           profileAction = "created";

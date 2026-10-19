@@ -463,7 +463,23 @@ export async function POST(req) {
         ) || personal.bloodType;
     }
 
-    const profilePayload = { ...capitalizedBody, personal };
+    /* `affiliation.person_type` is the required student/employee discriminator.
+       The registration form still posts it as `personal.currentStatus`, so it
+       is lifted onto the affiliation block here — the one place every create
+       path passes through. Both copies are written during the transition: the
+       affiliation field is the durable one, and `personal.currentStatus` stays
+       until the legacy block is stripped so existing readers keep working. */
+    const affiliationPayload = { ...(capitalizedBody.affiliation || {}) };
+    if (!affiliationPayload.person_type) {
+      affiliationPayload.person_type =
+        personal.currentStatus || undefined;
+    }
+
+    const profilePayload = {
+      ...capitalizedBody,
+      personal,
+      affiliation: affiliationPayload,
+    };
     delete profilePayload.personal_information;
 
     /* PII split, step 1 of 2: mint the identifiers. `gemsPublicId` is the only

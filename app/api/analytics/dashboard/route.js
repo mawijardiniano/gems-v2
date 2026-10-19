@@ -148,7 +148,7 @@ export async function GET(req) {
            would silently return zero users. The filter is applied in memory
            after the vault overlay below, where the real value is known. */
         if (personType) {
-          match["personal_info_id.personal.currentStatus"] = personType;
+          match["personal_info_id.affiliation.person_type"] = personType;
         }
         if (yearLevel) {
           match[
@@ -218,14 +218,18 @@ export async function GET(req) {
           const p = d.personal_info_id || {};
           const personal = p.personal || {};
           const gad = p.gadData || {};
+          const affiliation = p.affiliation || {};
           const acad = p.affiliation?.academic_information || {};
           const emp = p.affiliation?.employment_information || {};
 
           /* The vault holds the counts' inputs. `identity` is the masked or
              revealed row shape; this route only reads the values it counts, so
-             the two are interchangeable here. */
+             the two are interchangeable here. `affiliation` is passed in so
+             `applyRowPii` can read `person_type` — with it omitted the status
+             would be read as empty and every user would land in the
+             unspecified bucket. */
           const identity = applyRowPii(
-            { personal, gadData: gad, contact: p.contact || {} },
+            { personal, gadData: gad, contact: p.contact || {}, affiliation },
             piiByRef.get(String(p.vaultRef || "")),
           );
           const vPersonal = identity.personal || {};
@@ -263,7 +267,11 @@ export async function GET(req) {
           const religion = vPersonal?.religion || UNKNOWN;
           religionCounts[religion] = (religionCounts[religion] || 0) + 1;
 
-          const status = (personal?.currentStatus || "").toLowerCase();
+          const status = (
+            identity.affiliation?.person_type ||
+            vPersonal?.currentStatus ||
+            ""
+          ).toLowerCase();
           const isStu = status === "student";
           const isEmp = status === "employee";
           const gender = normalizeGender(vGad?.sexAtBirth);

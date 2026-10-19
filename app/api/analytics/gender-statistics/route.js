@@ -406,7 +406,7 @@ export async function GET(req) {
       cacheKey,
       async () => {
         const match = {
-          "personal.currentStatus":
+          "affiliation.person_type":
             type === "employees" ? "Employee" : "Student",
         };
         if (campuses.length)
@@ -464,10 +464,23 @@ export async function GET(req) {
 
         let profiles = baseProfiles.map((p) => {
           const identity = applyRowPii(
-            { personal: p.personal || {}, gadData: p.gadData || {}, contact: p.contact || {} },
+            {
+              personal: p.personal || {},
+              gadData: p.gadData || {},
+              contact: p.contact || {},
+              /* Needed by `applyRowPii` to resolve `person_type`: without it
+                 the status reads empty and every row falls into the wrong
+                 student/employee bucket. */
+              affiliation: p.affiliation || {},
+            },
             piiByRef.get(String(p.vaultRef || "")),
           );
-          return { ...p, personal: identity.personal, gadData: identity.gadData };
+          return {
+            ...p,
+            personal: identity.personal,
+            gadData: identity.gadData,
+            affiliation: identity.affiliation || p.affiliation,
+          };
         });
 
         if (schoolYear || semesters.length) {
