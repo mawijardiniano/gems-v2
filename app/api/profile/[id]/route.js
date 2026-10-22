@@ -74,27 +74,37 @@ export async function GET(req, { params }) {
   });
 
   const data = gem
-    ? {
-        ...profile,
-        vaulted: gem?.migrationStatus === "vaulted" || Boolean(gem?.vaultRef),
-        gemPublicId: gem?.gemsPublicId || null,
-        personal_info_id: {
-          ...gem,
-          ...applyRowPii(
-            {
-              /* The plaintext blocks were stripped, so there is no legacy hash
-                 to fall back to: the vault is the only source now. */
-              personal: {},
-              gadData: {},
-              contact: {},
-              /* Resolves `person_type` for the status mirror. */
-              affiliation: gem.affiliation || {},
-            },
-            resolved,
-          ),
-        },
-      }
-    : { ...profile, gemPublicId: null };
+    ? (() => {
+        /* `vaultRef` and `migrationStatus` are internal: the ref was used to
+           resolve the identity above and must not reach the browser, and the
+           migration state is exposed through the `vaulted` boolean instead. */
+        const { vaultRef: _vaultRef, migrationStatus: _migrationStatus, ...safeGem } =
+          gem;
+        return {
+          ...profile,
+          /* `migrationStatus` records whether the row was migrated into the
+             vault. It is the only correct signal: `vaultRef` is present on
+             every row, migrated or not, so `Boolean(vaultRef)` was always true
+             and reported an unmigrated profile as vaulted. */
+          vaulted: gem?.migrationStatus === "vaulted",
+          personal_info_id: {
+            ...safeGem,
+            ...applyRowPii(
+              {
+                /* The plaintext blocks were stripped, so there is no legacy hash
+                   to fall back to: the vault is the only source now. */
+                personal: {},
+                gadData: {},
+                contact: {},
+                /* Resolves `person_type` for the status mirror. */
+                affiliation: gem.affiliation || {},
+              },
+              resolved,
+            ),
+          },
+        };
+      })()
+    : { ...profile };
 
   if (resolved?.fullAccess) {
     await logPiiAccess({
@@ -170,13 +180,18 @@ export async function PUT(req, { params }) {
     try {
       const token = req.cookies.get("auth_token")?.value;
       if (token) {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback");
+        /* No `|| "fallback"` here. A hardcoded default would let a forged token
+           signed with the literal string "fallback" be accepted as a valid
+           session — and this block stamps `updated_by` on a PII record. An
+           unset secret must fail closed, not degrade to a known value. */
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         if (decoded?.id) {
           profile.updated_by = decoded.id;
         }
       }
     } catch {
-      
+      /* Provenance is best-effort: an absent or invalid token leaves
+         `updated_by` untouched rather than blocking the save. */
     }
 
     const updated = await profile.save();

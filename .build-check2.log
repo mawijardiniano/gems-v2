@@ -1,0 +1,218 @@
+
+> gems-v2@0.1.0 build
+> next build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Mark\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Mark\projects\gems-v2\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+Generating .flowbite-react\class-list.json file...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Generating .flowbite-react\class-list.json file...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+✓ Compiled successfully in 59s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+  Generating static pages using 7 workers (0/128) ...
+  Generating static pages using 7 workers (32/128) 
+  Generating static pages using 7 workers (64/128) 
+  Generating static pages using 7 workers (96/128) 
+✓ Generating static pages using 7 workers (128/128) in 6.4s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /activity-logs
+├ ○ /admin-dashboard
+├ ○ /admin-settings
+├ ƒ /api/academic-project
+├ ƒ /api/academic-project/[id]
+├ ƒ /api/academic-project/[id]/comments
+├ ƒ /api/activity
+├ ƒ /api/admin/vault-health
+├ ƒ /api/analytics/dashboard
+├ ƒ /api/analytics/filters
+├ ƒ /api/analytics/gender-statistics
+├ ƒ /api/analytics/report-readiness
+├ ƒ /api/analytics/sex-disaggregated-data/report
+├ ƒ /api/analytics/sex-disaggregated-data/summary
+├ ƒ /api/analytics/terms
+├ ƒ /api/auth/change-password
+├ ƒ /api/auth/demo-accounts
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/users
+├ ƒ /api/auth/users/[id]
+├ ƒ /api/auth/users/reset-password
+├ ƒ /api/auth/users/reset-password/[id]
+├ ƒ /api/auth/users/toggle-status
+├ ƒ /api/auth/users/toggle-status/[id]
+├ ƒ /api/download
+├ ƒ /api/events
+├ ƒ /api/events/[id]
+├ ƒ /api/events/[id]/status
+├ ƒ /api/events/accomplishment-report
+├ ƒ /api/events/accomplishment-report/[id]
+├ ƒ /api/events/attendance
+├ ƒ /api/events/generate-description
+├ ƒ /api/events/generate-narrative
+├ ƒ /api/events/guest-attendance
+├ ƒ /api/events/guests
+├ ƒ /api/events/guests/manual
+├ ƒ /api/events/public/[id]
+├ ƒ /api/events/upcoming
+├ ƒ /api/events/user-events
+├ ƒ /api/files/proxy
+├ ƒ /api/gaa-budget
+├ ƒ /api/gaa-budget/[id]
+├ ƒ /api/gfps
+├ ƒ /api/gfps/[id]
+├ ƒ /api/gfps/[id]/audit
+├ ƒ /api/gfps/[id]/members
+├ ƒ /api/gfps/[id]/members/add
+├ ƒ /api/gfps/[id]/members/delete
+├ ƒ /api/gfps/copy-forward
+├ ƒ /api/gpb
+├ ƒ /api/gpb/[year]
+├ ƒ /api/gpb/comment/[id]
+├ ƒ /api/gpb/status/[id]
+├ ƒ /api/integration/batches
+├ ƒ /api/integration/batches/[id]
+├ ƒ /api/integration/batches/[id]/approve
+├ ƒ /api/integration/batches/[id]/logs
+├ ƒ /api/integration/batches/[id]/migrate
+├ ƒ /api/integration/batches/[id]/records
+├ ƒ /api/integration/batches/[id]/reject
+├ ƒ /api/integration/batches/[id]/validate
+├ ƒ /api/integration/config
+├ ƒ /api/integration/fetch
+├ ƒ /api/integration/records/[id]
+├ ƒ /api/integration/upload
+├ ƒ /api/knowledge-resources
+├ ƒ /api/knowledge-resources/[id]
+├ ƒ /api/notifications
+├ ƒ /api/notifications/[id]/read
+├ ƒ /api/positions
+├ ƒ /api/positions/[id]
+├ ƒ /api/profile
+├ ƒ /api/profile/[id]
+├ ƒ /api/profile/check-id
+├ ƒ /api/profile/delete-bulk
+├ ƒ /api/profile/list
+├ ƒ /api/profile/my-profile
+├ ƒ /api/profile/search
+├ ƒ /api/project
+├ ƒ /api/project/[id]
+├ ƒ /api/project/[id]/comments
+├ ƒ /api/project/budget/summary/[year]
+├ ƒ /api/protected
+├ ƒ /api/re-extension-project
+├ ƒ /api/re-extension-project/[id]
+├ ƒ /api/re-extension-project/[id]/comments
+├ ƒ /api/reports/gad-ar
+├ ƒ /api/reports/gpb-matrix
+├ ƒ /api/reports/gpb-progress
+├ ƒ /api/reports/projects-events
+├ ƒ /api/settings
+├ ƒ /api/socket
+├ ƒ /api/university-offices
+├ ƒ /api/university-offices/[id]
+├ ƒ /api/university-officials
+├ ƒ /api/university-officials/[id]
+├ ƒ /api/university-officials/assign-legacy
+├ ƒ /api/university-officials/copy-forward
+├ ƒ /api/university-officials/history
+├ ƒ /api/university-officials/years
+├ ƒ /api/upload
+├ ƒ /attend/[id]
+├ ○ /create
+├ ƒ /dashboard
+├ ○ /dashboard/academic
+├ ƒ /dashboard/contact-information
+├ ○ /dashboard/employment
+├ ƒ /dashboard/gender-equity-data
+├ ƒ /dashboard/personal-information
+├ ○ /dean/dashboard
+├ ○ /dean/knowledge-resources
+├ ○ /dean/projects
+├ ƒ /dean/projects/[id]
+├ ○ /dean/projects/create
+├ ○ /dean/settings
+├ ○ /dean/students
+├ ƒ /events
+├ ○ /events-dashboard
+├ ○ /events-list
+├ ƒ /events-list/[id]
+├ ƒ /events/attendance/[id]
+├ ○ /events/discover
+├ ƒ /events/discover/[id]
+├ ○ /gaa-budget
+├ ○ /gad-ars
+├ ○ /gad-settings
+├ ○ /gender-statistics/employees
+├ ○ /gender-statistics/students
+├ ○ /gfps
+├ ○ /gpb
+├ ƒ /gpb/[year]
+├ ƒ /gpb/projects/[id]
+├ ○ /ictu-director/dashboard
+├ ○ /ictu-director/integration
+├ ○ /ictu-director/manual-upload
+├ ○ /ictu-director/settings
+├ ○ /integration
+├ ○ /integration-staging
+├ ○ /knowledge-resources
+├ ○ /manage-role
+├ ○ /manual-upload
+├ ○ /not-authorized
+├ ○ /planning-director/dashboard
+├ ○ /planning-director/gpb
+├ ƒ /planning-director/gpb/[year]
+├ ○ /planning-director/knowledge-resources
+├ ○ /planning-director/settings
+├ ○ /president/dashboard
+├ ○ /president/gender-statistics/employees
+├ ○ /president/gender-statistics/students
+├ ○ /president/knowledge-resources
+├ ○ /president/project-monitoring/academic-projects
+├ ○ /president/project-monitoring/event-calendar
+├ ○ /president/project-monitoring/gad-projects
+├ ○ /president/project-monitoring/re-extension-projects
+├ ○ /president/reports
+├ ○ /president/settings
+├ ○ /profile-registration
+├ ○ /project-monitoring/academic-projects
+├ ○ /project-monitoring/event-calendar
+├ ○ /project-monitoring/gad-projects
+├ ○ /project-monitoring/re-extension-projects
+├ ○ /reports
+├ ○ /settings
+├ ○ /university-officials
+├ ○ /user-lists
+├ ○ /user-lists/employees
+└ ○ /user-lists/students
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

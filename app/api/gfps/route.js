@@ -12,7 +12,10 @@ import {
   mergeMembers,
   normalizeSectionOfficials,
 } from "@/lib/gfpsServer";
-import { hydrateUniversityOfficialNames } from "@/lib/userPopulate";
+import {
+  hydrateUniversityOfficialNames,
+  stripOfficialVaultRefs,
+} from "@/lib/userPopulate";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
@@ -29,7 +32,7 @@ async function getActiveTermYear() {
 }
 
 export async function GET(req) {
-  const { error, status } = await requireAuth(req);
+  const { user, error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
@@ -51,10 +54,17 @@ export async function GET(req) {
   /* Officials are linked to user accounts; the real name lives in the vault, so
      the roster would render every seat blank once the legacy columns are
      stripped. Hydrating here covers both the details lookup below and the
-     names the response carries. */
-  await hydrateUniversityOfficialNames(universityOfficials);
+     names the response carries - gated on the caller's role, since the unmasked
+     name is PII. */
+  /* Both helpers return the value to use: the hydrator works on plain-object
+     copies, and the scrubber drops the pointer during serialization. */
+  const hydratedOfficials = await hydrateUniversityOfficialNames(
+    universityOfficials,
+    user?.role,
+  );
+  const safeOfficials = stripOfficialVaultRefs(hydratedOfficials, user?.role);
 
-  const { filterSectionWithDetails } = makeFilterHelpers(universityOfficials);
+  const { filterSectionWithDetails } = makeFilterHelpers(safeOfficials);
 
   const years = sortAcademicYearsDesc(await GFPS.distinct("academic_year"));
   if (!years.includes(academicYear)) years.unshift(academicYear);

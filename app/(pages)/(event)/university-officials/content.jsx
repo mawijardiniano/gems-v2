@@ -20,6 +20,8 @@ import {
   FaUserPlus,
   FaBan,
   FaCog,
+  FaHistory,
+  FaSitemap,
 } from "react-icons/fa";
 import Link from "next/link";
 import { HEADERS } from "@/lib/universityOfficialsConstants";
@@ -27,9 +29,30 @@ import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsM
 import { normalizeOfficeName, selectableOffices } from "@/lib/universityOffices";
 import useUniversityOffices from "@/lib/useUniversityOffices";
 import PrintUniversityOfficials from "../components/Print/PrintUniversityOfficials";
+import SeatHistoryPanel from "../components/SeatHistoryPanel";
 
 /** Sentinel option value for the "+ Add new office…" entry in the picker. */
 const ADD_NEW_OFFICE_VALUE = "__add_new_office__";
+
+/**
+ * Badge for a term's `status`, as the roster's Status column shows it.
+ *
+ * The palette mirrors SeatHistoryPanel (amber for the temporary designations,
+ * emerald for the regular holder) so a person reads the same in the roster row
+ * and in their seat's timeline.
+ *
+ * `interim` is in the schema enum but has no rows and no logic anywhere, so it
+ * is styled alongside `acting` rather than given a meaning of its own. An
+ * absent or unrecognised status falls back to `substantive`: the roster row is
+ * built from data that always carries a status, and defaulting to the ordinary
+ * case is the honest reading for anything that somehow does not.
+ */
+const STATUS_BADGE = {
+  substantive: { label: "Assigned", cls: "bg-emerald-50 text-emerald-600" },
+  acting: { label: "Acting", cls: "bg-amber-50 text-amber-700" },
+  interim: { label: "Interim", cls: "bg-amber-50 text-amber-700" },
+  concurrent: { label: "Concurrent", cls: "bg-blue-50 text-blue-700" },
+};
 
 // ─── Header presentation ───────────────────────────────────────────
 const HEADER_ICONS = {
@@ -356,7 +379,7 @@ function OfficialModal({
                 <p className="text-xs text-gray-500">
                   {isEdit
                     ? "Assign a different person to this seat"
-                    : "Pick a position from the MarSU chart, then the person who fills it"}
+                    : "Pick a seat from the MarSU chart, then the person who fills it"}
                 </p>
               </div>
             </div>
@@ -380,10 +403,10 @@ function OfficialModal({
           {isEdit ? (
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-                Position
+                Seat
               </label>
               <div className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
-                {form.position || ""}
+                {form.name || ""}
               </div>
               <p className="mt-1.5 text-xs text-gray-400">{form.header}</p>
             </div>
@@ -414,19 +437,19 @@ function OfficialModal({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-                  Position / Designation (type manually)
+                  Seat (type manually)
                 </label>
                 <input
                   type="text"
-                  list="official-position-suggestions"
-                  value={form.position || ""}
-                  onChange={(e) => onFormChange("position", e.target.value)}
+                  list="official-seat-suggestions"
+                  value={form.name || ""}
+                  onChange={(e) => onFormChange("name", e.target.value)}
                   required
                   disabled={!form.header}
                   placeholder="e.g. Secretary of the University and of the Board of Regents"
                   className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white disabled:bg-gray-50 disabled:text-gray-400"
                 />
-                <datalist id="official-position-suggestions">
+                <datalist id="official-seat-suggestions">
                   {(positionSuggestions || []).map((p) => (
                     <option key={p} value={p} />
                   ))}
@@ -437,18 +460,39 @@ function OfficialModal({
 
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
-              Name (pick a user or type a name)
+              Official (pick a user or type a name)
             </label>
             <UserSearchField
               onChange={({ userId, nameText }) => {
-                onFormChange("name", userId);
-                onFormChange("name_text", nameText);
+                onFormChange("official", userId);
+                onFormChange("official_text", nameText);
               }}
               users={users}
-              selectedUserId={form.name}
-              selectedNameText={form.name_text}
+              selectedUserId={form.official}
+              selectedNameText={form.official_text}
               autoFocus={isEdit}
             />
+          </div>
+
+          {/* How the seat is held, not who holds it. Only the three statuses
+              that carry data are offered: `interim` is in the schema enum but
+              has no rows and nothing in the app reads it, so offering it would
+              invent vocabulary the data does not have. Whether an acting or
+              concurrent designation can be filed on a seat that already has a
+              substantive holder is enforced server-side, not here. */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              Status
+            </label>
+            <select
+              value={form.status || "substantive"}
+              onChange={(e) => onFormChange("status", e.target.value)}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+            >
+              <option value="substantive">Substantive — regular holder</option>
+              <option value="acting">Acting — temporary designation</option>
+              <option value="concurrent">Concurrent — holds a second seat</option>
+            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -489,6 +533,14 @@ function HeaderCard({
   const filled = seats.length;
   const total = seats.length;
 
+  /* Which seat rows have their tenure trail open. Keyed by seat name (unique
+     within one office), held here rather than in the parent so collapsing the
+     office also discards it — reopening a card starts from the roster again. */
+  const [historyFor, setHistoryFor] = useState({});
+
+  const toggleHistory = (seatName) =>
+    setHistoryFor((prev) => ({ ...prev, [seatName]: !prev[seatName] }));
+
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden mb-5 transition-all duration-200 hover:shadow-md">
       <button
@@ -524,7 +576,7 @@ function HeaderCard({
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Position / Designation
+                  Seat
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Name
@@ -532,58 +584,102 @@ function HeaderCard({
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                {!isCoordinator && (
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                )}
+                {/* Always present now: the History button lives in this column
+                    and is offered to every role. */}
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {seats.map((seat) => {
                 const official = seat.official;
                 const person = official
-                  ? getOfficialPersonName(official.name_text || official.name)
+                  ? getOfficialPersonName(official.official_text || official.official)
                   : "";
+                const historyOpen = !!historyFor[seat.name];
+                /* Vacant seats take the row without an `official`, so the badge
+                   is resolved from what is actually there rather than assumed. */
+                const badge = official
+                  ? STATUS_BADGE[official.status] || STATUS_BADGE.substantive
+                  : null;
                 return (
-                  <tr key={seat.key} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                    <td className="px-6 py-3.5">
-                      <span className="text-sm text-gray-700">{seat.position}</span>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
-                          {(person[0] || "?").toUpperCase()}
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">{person}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
-                        Assigned
-                      </span>
-                    </td>
-                    {!isCoordinator && (
-                      <td className="px-6 py-3.5 text-right">
-                        <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            onClick={() => onEdit(official)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
-                          >
-                            <FaEdit className="h-3 w-3" />
-                            Reassign
-                          </button>
-                          <button
-                            onClick={() => onVacate(official)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
-                          >
-                            <FaTrash className="h-3 w-3" />
-                            Remove
-                          </button>
+                  <React.Fragment key={seat.key}>
+                    <tr className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                      <td className="px-6 py-3.5">
+                        <span className="text-sm text-gray-700">{seat.name}</span>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
+                            {(person[0] || "?").toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">{person}</span>
                         </div>
                       </td>
+                      <td className="px-6 py-3.5">
+                        {badge ? (
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${badge.cls}`}
+                          >
+                            {badge.label}
+                          </span>
+                        ) : (
+                          /* The seat exists but nobody holds it. Previously every
+                             row printed "Assigned", vacancy included. */
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                            Vacant
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-3.5 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          {/* History is read-only, so it is offered to every role —
+                              coordinators included — and stays visible on hover
+                              rather than hiding with the edit actions. */}
+                          <button
+                            onClick={() => toggleHistory(seat.name)}
+                            aria-expanded={historyOpen}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-all ${
+                              historyOpen
+                                ? "text-gray-700 bg-gray-100 border-gray-300"
+                                : "text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                            }`}
+                          >
+                            <FaHistory className="h-3 w-3" />
+                            {historyOpen ? "Hide" : "History"}
+                          </button>
+                          {!isCoordinator && (
+                            <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              <button
+                                onClick={() => onEdit(official)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
+                              >
+                                <FaEdit className="h-3 w-3" />
+                                Reassign
+                              </button>
+                              <button
+                                onClick={() => onVacate(official)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
+                              >
+                                <FaTrash className="h-3 w-3" />
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                    {historyOpen && (
+                      <tr>
+                        {/* Mounting this is what triggers the fetch, so the trail
+                            is only ever requested for a seat actually opened. */}
+                        <td colSpan={4} className="p-0">
+                          <SeatHistoryPanel header={header} name={seat.name} />
+                        </td>
+                      </tr>
                     )}
-                  </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -659,13 +755,10 @@ export default function UniversityOfficialsContent() {
     const matchesSeat = (row) => {
       if (headerFilter !== "all" && row.header !== headerFilter) return false;
       if (!q) return true;
-      const name = getOfficialPersonName(row.official?.name_text || row.official?.name).toLowerCase();
-      return (
-        name.includes(q) ||
-        row.position.toLowerCase().includes(q) ||
-        (row.title || "").toLowerCase().includes(q) ||
-        (row.unit || "").toLowerCase().includes(q)
-      );
+      const person = getOfficialPersonName(
+        row.official?.official_text || row.official?.official,
+      ).toLowerCase();
+      return person.includes(q) || (row.name || "").toLowerCase().includes(q);
     };
     const rows = base.rows.filter(matchesSeat);
     const byHeader = base.byHeader
@@ -691,7 +784,7 @@ export default function UniversityOfficialsContent() {
       ...new Set(
         assignments
           .filter((a) => a.header === header)
-          .map((a) => a.position || a.title)
+          .map((a) => a.name)
           .filter(Boolean),
       ),
     ];
@@ -832,7 +925,15 @@ export default function UniversityOfficialsContent() {
     const header = seat?.header || activeHeaders[0] || "";
 
     setModalMode("assign");
-    setModalForm({ header, position: "", name: "", name_text: "" });
+    setModalForm({
+      header,
+      name: "",
+      official: "",
+      official_text: "",
+      /* Substantive is the ordinary case, so the picker opens on it and an
+         operator who ignores the field gets the same term as before. */
+      status: "substantive",
+    });
     setModalError("");
     setModalOpen(true);
   };
@@ -841,14 +942,17 @@ export default function UniversityOfficialsContent() {
     setModalMode("edit");
     setModalForm({
       header: official.header,
-      position: official.position,
-      name:
-        typeof official.name === "object"
-          ? official.name?._id || ""
+      name: official.name,
+      official:
+        typeof official.official === "object"
+          ? official.official?._id || ""
           : "",
-      name_text:
-        official.name_text ||
-        (typeof official.name === "string" ? official.name : ""),
+      official_text:
+        official.official_text ||
+        (typeof official.official === "string" ? official.official : ""),
+      /* Seeded from the row so the picker reflects the term that is actually
+         there rather than silently resetting it to substantive. */
+      status: official.status || "substantive",
       editingId: official._id,
     });
     setModalError("");
@@ -867,12 +971,12 @@ export default function UniversityOfficialsContent() {
     setModalLoading(true);
 
     try {
-      const personName = String(modalForm.name_text || "").trim();
+      const personName = String(modalForm.official_text || "").trim();
       if (!modalForm.header) {
         setModalError("Select an office");
         return;
       }
-      if (!personName && !modalForm.name) {
+      if (!personName && !modalForm.official) {
         setModalError("Pick a user or type a name");
         return;
       }
@@ -881,7 +985,11 @@ export default function UniversityOfficialsContent() {
         const res = await fetch(`/api/university-officials/${modalForm.editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: modalForm.name || null, name_text: modalForm.name ? "" : personName, academic_year: academicYear }),
+          body: JSON.stringify({
+            official: modalForm.official || null,
+            official_text: modalForm.official ? "" : personName,
+            academic_year: academicYear,
+          }),
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -890,9 +998,9 @@ export default function UniversityOfficialsContent() {
         }
         setSuccess("Official reassigned successfully!");
       } else {
-        const positionText = String(modalForm.position || "").trim();
-        if (!positionText) {
-          setModalError("Type the position / designation");
+        const seatName = String(modalForm.name || "").trim();
+        if (!seatName) {
+          setModalError("Type the seat");
           return;
         }
         const res = await fetch("/api/university-officials", {
@@ -900,11 +1008,11 @@ export default function UniversityOfficialsContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             header: modalForm.header,
-            title: positionText,
-            position: positionText,
-            name: modalForm.name || null,
-            name_text: modalForm.name ? "" : personName,
+            name: seatName,
+            official: modalForm.official || null,
+            official_text: modalForm.official ? "" : personName,
             academic_year: academicYear,
+            status: modalForm.status || "substantive",
           }),
         });
         const data = await res.json();
@@ -928,7 +1036,7 @@ export default function UniversityOfficialsContent() {
   const handleVacate = async (official) => {
     if (
       !window.confirm(
-        `Vacate "${official.position}"? The seat stays in the chart and can be reassigned later.`,
+        `Vacate "${official.name}"? The seat stays in the chart and can be reassigned later.`,
       )
     ) {
       return;
@@ -964,16 +1072,27 @@ export default function UniversityOfficialsContent() {
             <p className="text-sm text-gray-500 mt-0.5">
               Manage the MarSU offices and administrative designations per academic year
             </p>
-            {/* The Office / Group picker in the assign modal is fed by the
-                global office list, which is edited under Settings. This links
-                there and the card flashes so the operator sees where they are. */}
-            <Link
-              href="/gad-settings#offices"
-              className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
-            >
-              <FaCog className="h-3 w-3" />
-              Manage Offices
-            </Link>
+            {/* The Office / Group picker and the Seat picker in the assign modal
+                are both fed by the lists edited under Settings. These link there
+                and the target card flashes so the operator sees where they are.
+                Offices and Positions are separate cards because they are separate
+                things: Offices are the columns, Positions are the seats in them. */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <Link
+                href="/gad-settings#offices"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+              >
+                <FaCog className="h-3 w-3" />
+                Manage Offices
+              </Link>
+              <Link
+                href="/gad-settings#positions"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+              >
+                <FaSitemap className="h-3 w-3" />
+                Manage Positions
+              </Link>
+            </div>
             {academicYear && (
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <label
@@ -1078,7 +1197,7 @@ export default function UniversityOfficialsContent() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or position..."
+              placeholder="Search name or seat..."
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
             />
           </div>

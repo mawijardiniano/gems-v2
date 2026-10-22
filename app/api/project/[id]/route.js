@@ -445,8 +445,10 @@ export async function GET(req, { params }) {
         path: "personal_info_id",
         model: "GemsProfile",
         /* `sexAtBirth` is filled from the vault below; `vaultRef` is what
-           makes that lookup possible. */
-        select: "vaultRef gadData.sexAtBirth personal.currentStatus",
+           makes that lookup possible. Only real schema paths are projected:
+           `gadData.sexAtBirth` and `personal.currentStatus` were removed from
+           GemsProfile, and projecting them dropped the joined profile entirely. */
+        select: "vaultRef",
       },
     },
   });

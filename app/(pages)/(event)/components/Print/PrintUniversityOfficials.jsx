@@ -17,11 +17,11 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
           .map((seat) => {
             const official = seat.official;
             const name = getOfficialPersonName(
-              official?.name_text || official?.name,
+              official?.official_text || official?.official,
             );
             return `
               <tr>
-                <td>${seat.position}</td>
+                <td>${seat.name}</td>
                 <td>${name}</td>
               </tr>
             `;

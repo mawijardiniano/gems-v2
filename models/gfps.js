@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import "./universityOfficials";
+import "./officialTerm";
 import "./user";
 
 const MemberSchema = new mongoose.Schema({
   official: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "UniversityOfficial",
+    ref: "OfficialTerm",
     required: false,
   },
   // Legacy field from the old aggregate officials document. New records leave
@@ -25,7 +25,7 @@ const MemberSchema = new mongoose.Schema({
 const ExecutiveMemberSchema = new mongoose.Schema({
   official: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "UniversityOfficial",
+    ref: "OfficialTerm",
     required: false,
   },
   // Same as MemberSchema.official_ref — legacy, unused for new records.

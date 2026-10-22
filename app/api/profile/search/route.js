@@ -93,6 +93,9 @@ export async function GET(req) {
               role: 1,
               assignedCollege: 1,
               "personal_info_id._id": 1,
+              /* `vaultRef` is selected so the identity can be resolved below,
+                 then stripped from the response — it is the pointer into the
+                 vault and must never reach the browser. */
               "personal_info_id.vaultRef": 1,
               "personal_info_id.gemsPublicId": 1,
               "personal_info_id.personal.currentStatus": 1,
@@ -137,10 +140,8 @@ export async function GET(req) {
 
           return {
             ...row,
-            gemPublicId: info.gemsPublicId || null,
             personal_info_id: {
               _id: info._id,
-              vaultRef: info.vaultRef,
               gemsPublicId: info.gemsPublicId,
               personal: merged.personal,
               gadData: merged.gadData,

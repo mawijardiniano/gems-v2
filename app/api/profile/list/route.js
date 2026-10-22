@@ -233,12 +233,12 @@ export async function GET(req) {
             assignedCollege: 1,
             is_active: 1,
             "personal_info_id._id": 1,
-            /* The vault link and the public identifier are the only
-               identity fields this list is allowed to carry out of the
-               database. The name is resolved from the vault below, by role. */
+            /* `vaultRef` is the pointer into the identity vault. It is needed
+               here to resolve the identity below, but it is stripped from the
+               response before it is returned — it must never reach the
+               browser. `gemsPublicId` is a public identifier and may stay. */
             "personal_info_id.vaultRef": 1,
             "personal_info_id.gemsPublicId": 1,
-            "personal_info_id.migrationStatus": 1,
             /* `person_type` and the affiliation block are identifiers, not
                PII, so they keep coming straight from the GEMS document. The
                legacy `currentStatus` path is selected alongside for rows the
@@ -327,14 +327,22 @@ export async function GET(req) {
           const info = user.personal_info_id;
           if (!info) return user;
 
+          /* `vaultRef` was selected to resolve the identity just below; it is
+             dropped before any early return so the browser never receives the
+             vault pointer, whether or not a vault row answered. */
+          const { vaultRef: _vaultRef, ...safeInfo } = info;
+
           const resolved = piiByRef.get(String(info.vaultRef || ""));
-          if (!resolved) return user;
+          if (!resolved) {
+            /* No vault row (unmigrated profile): keep the legacy fields, but
+               still return the row without the pointer. */
+            return { ...user, personal_info_id: safeInfo };
+          }
 
           return {
             ...user,
-            gemPublicId: info.gemsPublicId || null,
             personal_info_id: {
-              ...info,
+              ...safeInfo,
               ...applyRowPii(
                 {
                   personal: info.personal || {},

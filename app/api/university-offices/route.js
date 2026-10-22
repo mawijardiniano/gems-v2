@@ -1,11 +1,15 @@
 import { connectDB } from "@/lib/db";
 import UniversityOffice from "@/models/universityOffice";
-import UniversityOfficial from "@/models/universityOfficials";
+import OfficialTerm from "@/models/officialTerm";
 import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { canReadOffices, canWriteOffices } from "@/lib/officesAccess";
-import { normalizeAcademicYear, resolveAcademicYear } from "@/lib/academicYear";
+import {
+  academicYearRange,
+  normalizeAcademicYear,
+  resolveAcademicYear,
+} from "@/lib/academicYear";
 import { NextResponse } from "next/server";
 import {
   buildDefaultOfficeRows,
@@ -32,32 +36,61 @@ async function getActiveTermYear() {
 }
 
 /**
- * Assigned-official count per office header.
+ * Assigned-seat count per office header.
+ *
+ * Counted from `OfficialTerm` joined to `positions`, exactly as
+ * `app/api/positions/route.js` does, so the two cards cannot disagree about the
+ * same roster. This previously counted rows of `UniversityOfficial`, a
+ * collection that is empty on a current install — every office therefore
+ * reported `assigned_count: 0` and `occupied_all: 0`, and the Offices card read
+ * "0 seats" while the Positions card next to it listed 156.
+ *
+ * OfficialTerm stores `startDate`/`endDate` rather than a per-year snapshot, so
+ * a seat's occupancy for a year is a **date-range overlap**: the term started
+ * on or before the year ends and had not ended before the year began. Filtering
+ * on a stored `academic_year` would match nothing, because the field does not
+ * exist on this model.
  *
  * Scoped to the active academic year by default, because the cards count the
- * seats the operator is looking at. An office with history in older years also
- * reports `occupied_all`, which is what the deactivation guard checks.
+ * seats the operator is looking at. `occupied_all` is the same count with no
+ * year filter, which is what the deactivation guard checks.
  */
 async function getAssignedCounts(academicYear) {
-  const pipeline = [];
-  if (academicYear) {
-    pipeline.push({ $match: { academic_year: academicYear } });
-  }
-  pipeline.push({
-    $group: { _id: { header: "$header", year: "$academic_year" }, count: { $sum: 1 } },
-  });
+  const range = academicYearRange(academicYear);
 
-  const rows = await UniversityOfficial.aggregate(pipeline);
+  const match = range
+    ? {
+        startDate: { $lte: range.end },
+        $or: [{ endDate: null }, { endDate: { $gte: range.start } }],
+      }
+    : {};
+
+  const rows = await OfficialTerm.aggregate([
+    ...(Object.keys(match).length ? [{ $match: match }] : []),
+    {
+      $lookup: {
+        from: "positions",
+        localField: "position",
+        foreignField: "_id",
+        as: "seat",
+      },
+    },
+    { $unwind: "$seat" },
+    { $group: { _id: "$seat.header", count: { $sum: 1 } } },
+  ]);
+
   const counts = new Map();
   for (const row of rows) {
-    const header = row._id?.header;
+    const header = row._id;
     if (!header) continue;
-    const count = row.count || 0;
     const entry = counts.get(header) || { assigned_count: 0, occupied_all: 0 };
-    if (academicYear && row._id?.year === academicYear) {
-      entry.assigned_count = count;
+    /* A scoped run only contains terms overlapping the requested year, so each
+       row counts toward both totals. An unscoped run (`academicYear` unset) has
+       no year to scope to, so the history total is the only meaningful figure. */
+    if (academicYear) {
+      entry.assigned_count += row.count || 0;
     }
-    entry.occupied_all += count;
+    entry.occupied_all += row.count || 0;
     counts.set(header, entry);
   }
   return counts;

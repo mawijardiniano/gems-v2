@@ -62,8 +62,10 @@ export async function GET(req) {
           })
           .lean();
         /* The creator's name and birthday come from the vault now; without this
-           the list renders blank names once the legacy columns are stripped. */
-        return hydrateUserPopulate(rows);
+           the list renders blank names once the legacy columns are stripped.
+           The role gate inside the hydrator decides who actually gets a
+           decrypted identity. */
+        return hydrateUserPopulate(rows, user?.role);
       },
       EVENTS_LIST_CACHE_TTL,
     );

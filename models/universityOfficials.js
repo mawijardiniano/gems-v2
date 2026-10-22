@@ -1,12 +1,22 @@
 import mongoose from "mongoose";
 /**
- * One document = one assigned official (temporary assigned-only mode).
+ * One document = one assigned official for one academic year (temporary
+ * assigned-only mode). This is the *snapshot* shape that
+ * scripts/migrate-officials-to-terms.mjs reads from the on-disk backup and
+ * converts into Position + OfficialTerm; the collection itself is retired
+ * after migration.
  *
  * Offices (header) are stored in the `universityoffices` collection so they
  * can be added / deactivated from the UI; the API validates `header` against
- * an active office instead of a compile-time enum. Positions (title/position)
- * are manually encoded since they are inconsistent; names may be a UserAuth
- * ref or free text. Only assigned rows are stored/shown — no vacancy tracking.
+ * an active office instead of a compile-time enum.
+ *
+ * The seat is addressed by { header, name } — the same pair Position is keyed
+ * on. title/unit/position are no longer stored: `name` is the composed
+ * display string, so there is one representation instead of three.
+ *
+ * The person is `official` (an Official ref) with `official_text` as the
+ * typed fallback. The fields were previously called name/name_text, which
+ * collided with the seat's own `name`; the rename frees `name` for the seat.
  */
 const universityOfficialSchema = new mongoose.Schema(
   {
@@ -21,29 +31,19 @@ const universityOfficialSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    unit: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    // Manual position string, e.g. "Secretary of the University and of the Board of Regents".
-    position: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    // Composed display string, e.g. "Secretary of the University and of the Board of Regents".
     name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    official: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "UserAuth",
+      ref: "Official",
       required: false,
       default: null,
     },
-    name_text: {
+    official_text: {
       type: String,
       trim: true,
       default: "",
@@ -53,17 +53,17 @@ const universityOfficialSchema = new mongoose.Schema(
 );
 
 universityOfficialSchema.pre("validate", function () {
-  if (!this.position && this.title) this.position = String(this.title).trim();
-  if (this.title) this.title = String(this.title).trim();
-  if (this.name_text) this.name_text = String(this.name_text).trim();
-  if (!this.name && !this.name_text) {
-    this.invalidate("name", "Official requires a user or a typed name");
+  if (this.header) this.header = String(this.header).trim();
+  if (this.name) this.name = String(this.name).trim();
+  if (this.official_text) this.official_text = String(this.official_text).trim();
+  if (!this.official && !this.official_text) {
+    this.invalidate("official", "Official requires an official or a typed name");
   }
 });
 
 // One person per seat per academic year — mirrors the API's 409 duplicate check.
 universityOfficialSchema.index(
-  { academic_year: 1, header: 1, title: 1, unit: 1 },
+  { academic_year: 1, header: 1, name: 1 },
   { unique: true },
 );
 

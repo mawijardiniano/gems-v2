@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { GFPS_SECTION_KEYS } from "@/lib/gfpsServer";
 import { normalizeAcademicYear } from "@/lib/academicYear";
 
-const seatKey = (o) => `${o?.header || ""}::${o?.title || ""}::${o?.unit || ""}`;
+const seatKey = (o) => `${o?.header || ""}::${o?.name || o?.position || o?.title || ""}`;
 
 /**
  * POST /api/gfps/copy-forward { from, to }

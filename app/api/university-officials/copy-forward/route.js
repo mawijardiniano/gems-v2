@@ -53,10 +53,9 @@ export async function POST(req) {
   const docs = source.map((d) => ({
     academic_year: to,
     header: d.header,
-    title: d.title,
-    unit: d.unit,
-    position: d.position,
     name: d.name,
+    official: d.official,
+    official_text: d.official_text,
   }));
 
   let inserted = [];

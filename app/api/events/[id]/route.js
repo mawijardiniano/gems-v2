@@ -78,9 +78,12 @@ export async function GET(req, { params }) {
     /* Names, birthdays and sex-at-birth live in the vault. The attendance modal
        reads `attended_users.user_id.personal_info_id.gadData.sexAtBirth` to fill
        its Sex column and `personal.birthday` for age, so without this the modal
-       would come up blank once the legacy columns are stripped. */
-    await hydrateUserPopulate(event.attended_users);
-    await hydrateUserPopulate(event.created_by);
+       would come up blank once the legacy columns are stripped.
+       This route is reachable anonymously (`optionalAuth`), so the role gate
+       inside the hydrator is what stops an unauthenticated caller from reading a
+       decrypted identity out of `created_by` and the attendance list. */
+    await hydrateUserPopulate(event.attended_users, user?.role);
+    await hydrateUserPopulate(event.created_by, user?.role);
 
     return NextResponse.json({ status: "success", data: event });
   } catch (err) {

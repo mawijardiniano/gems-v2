@@ -39,10 +39,12 @@ export async function GET(req, { params }) {
           /* `sexAtBirth` is read from the vault, not from this column — see
              `withResolvedAttendanceSex` below. `vaultRef` is selected so the
              identity can be resolved in one batch for the whole report.
-             `affiliation.person_type` is the student/employee discriminator
-             that replaced `personal.currentStatus`; the legacy path is still
-             selected for rows the backfill has not reached yet. */
-          select: "vaultRef gadData.sexAtBirth personal.currentStatus affiliation.person_type",
+             Only real schema paths are projected: `gadData.sexAtBirth` and
+             `personal.currentStatus` were removed from GemsProfile, and
+             projecting them made Mongoose drop the joined profile (and its
+             `vaultRef`) entirely. `affiliation.person_type` is the
+             student/employee discriminator that replaced `personal.currentStatus`. */
+          select: "vaultRef affiliation.person_type",
         },
       },
     },
@@ -53,7 +55,9 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
-        select: "vaultRef personal.currentStatus affiliation",
+        /* `vaultRef` only: `personal` was removed from the Profile schema, so
+           projecting it would drop the joined profile entirely. */
+        select: "vaultRef affiliation",
       },
     },
     {
@@ -63,7 +67,7 @@ export async function GET(req, { params }) {
       populate: {
         path: "personal_info_id",
         model: "GemsProfile",
-        select: "vaultRef personal.currentStatus affiliation",
+        select: "vaultRef affiliation",
       },
     },
   ];

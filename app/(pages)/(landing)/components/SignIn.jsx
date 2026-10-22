@@ -1,74 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { loginSuccess } from "@/store/slices/authSlice";
 
-const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || "";
-
 /* Quick Sign In is a dev convenience — hidden in production builds so demo
    accounts never render on prod. Override with
-   NEXT_PUBLIC_SHOW_QUICK_SIGNIN=true to force it on (e.g. staging). */
+   NEXT_PUBLIC_SHOW_QUICK_SIGNIN=true to force it on (e.g. staging).
+   This flag is a UI hint only: the credentials live on the server, and
+   /api/auth/demo-accounts answers 404 in production regardless of this value. */
 const SHOW_QUICK_SIGNIN =
   process.env.NEXT_PUBLIC_SHOW_QUICK_SIGNIN === "true" ||
   (process.env.NEXT_PUBLIC_SHOW_QUICK_SIGNIN !== "false" &&
     process.env.NODE_ENV !== "production");
-
-const QUICK_ACCOUNTS = SHOW_QUICK_SIGNIN
-  ? [
-  {
-    label: "Admin",
-    username: process.env.NEXT_PUBLIC_ADMIN_USERNAME,
-    password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || DEFAULT_PASSWORD,
-  },
-  {
-    label: "GAD Focal",
-    username: process.env.NEXT_PUBLIC_FOCAL_USERNAME,
-    password: process.env.NEXT_PUBLIC_FOCAL_PASSWORD || DEFAULT_PASSWORD,
-  },
-    {
-    label: "GAD Coordinator",
-    username: process.env.NEXT_PUBLIC_COORDINATOR_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-  {
-    label: "Dean",
-    username: process.env.NEXT_PUBLIC_DEAN_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-  {
-    label: "Planning Director",
-    username: process.env.NEXT_PUBLIC_PLANNINGDIRECTOR_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-  {
-    label: "SUC President",
-    username: process.env.NEXT_PUBLIC_PRESIDENT_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-    {
-    label: "ICTU Director",
-    username: process.env.NEXT_PUBLIC_ICTUDIRECTOR_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-  {
-    label: "Student",
-    username: process.env.NEXT_PUBLIC_STUDENT_USERNAME,
-    password: DEFAULT_PASSWORD,
-  },
-  ]
-  : [];
 
 export default function LoginForm({ redirect, compact = false }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  /* Populated from the server. Previously this array was built at module scope
+     from `NEXT_PUBLIC_*` variables, which inlined every demo account's password
+     into the client bundle. */
+  const [quickAccounts, setQuickAccounts] = useState([]);
   const dispatch = useDispatch();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!SHOW_QUICK_SIGNIN) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get("/api/auth/demo-accounts");
+        if (!cancelled) setQuickAccounts(res.data?.accounts || []);
+      } catch {
+        /* 404 in production, or a transient failure: the section simply stays
+           hidden. This is a convenience feature, so it never surfaces an error. */
+        if (!cancelled) setQuickAccounts([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = async (e, creds) => {
     e?.preventDefault();
@@ -298,7 +277,7 @@ export default function LoginForm({ redirect, compact = false }) {
               {loading ? "Signing in..." : "Sign in"}
             </button>
 
-            {SHOW_QUICK_SIGNIN && QUICK_ACCOUNTS.length > 0 && (
+            {SHOW_QUICK_SIGNIN && quickAccounts.length > 0 && (
               <>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -312,7 +291,7 @@ export default function LoginForm({ redirect, compact = false }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {QUICK_ACCOUNTS.filter((acc) => acc.username).map((acc) => (
+                  {quickAccounts.map((acc) => (
                     <button
                       key={acc.label}
                       type="button"

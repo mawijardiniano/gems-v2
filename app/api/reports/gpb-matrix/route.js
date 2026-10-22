@@ -5,6 +5,11 @@ import { cacheOrSet } from "@/lib/cache";
 import Project from "@/models/projects";
 import GPB from "@/models/gpb";
 import UniversityOfficial from "@/models/universityOfficials";
+/* Side-effect import: `GPB.gaaBudgetId` refs the `GAABudget` model, and a
+   populate for a model that was never registered throws
+   `Schema hasn't been registered for model "GAABudget"`. Importing the module
+   is what registers it, so this line is load-bearing. */
+import "@/models/gaa_budget";
 import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
 import { resolvePii, CAN_VIEW_PII_ROLES } from "@/lib/profileBroker";
 import { jsPDF } from "jspdf";
@@ -103,8 +108,8 @@ function extractName(userAuth) {
  * (an official with no user account) wins because there is nothing to decrypt.
  */
 export async function resolveSignatoryName(official) {
-  const person = official?.name;
-  if (!person) return official?.name_text || "";
+  const person = official?.official ?? official?.name;
+  if (!person) return official?.official_text || official?.name_text || "";
   if (typeof person === "string") return person;
 
   const profile = person.personal_info_id;
@@ -176,9 +181,14 @@ export async function GET(req) {
           GPB.findOne({ year }).populate("gaaBudgetId").lean(),
           UniversityOfficial.find()
             .populate({
-              path: "name",
+              path: "official",
               model: "UserAuth",
-              populate: { path: "personal_info_id", populate: { path: "personal" } },
+              /* No `select` here: the plaintext `personal` block is gone from
+                 the DB, so a narrow projection makes Mongoose drop the whole
+                 profile (and `vaultRef` with it) on serialization. The full
+                 document is safe — `resolveSignatoryName` reads only the name
+                 fields and the pointer, and the ref never reaches the client. */
+              populate: { path: "personal_info_id" },
             })
             .lean(),
         ]);

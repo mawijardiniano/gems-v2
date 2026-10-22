@@ -7,15 +7,17 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
 const POPULATE = {
-  path: "name",
+  path: "official",
   model: "UserAuth",
+  /* `vaultRef` is what lets GET resolve the name from the vault. Keep the
+     projection to that single field: the legacy `personal` block is no longer
+     in the Profile schema, and a `populate: { path: "personal" }` sub-populate
+     against it threw ("Cannot populate path ... because it is not in your
+     schema") and turned this route into a 500. Selecting a path that does not
+     exist is equally harmful - Mongoose drops the joined document entirely. */
   populate: {
     path: "personal_info_id",
-    /* `vaultRef` is what lets GET resolve the name from the vault; the
-       `personal` sub-populate is the legacy fallback and goes away with the
-       column. */
-    select: "vaultRef personal",
-    populate: { path: "personal" },
+    select: "vaultRef",
   },
 };
 
@@ -28,11 +30,11 @@ const POPULATE = {
  */
 const getDisplayName = (doc) => {
   if (!doc) return "";
-  if (doc.name_text) return doc.name_text;
-  const personal = doc.name?.personal_info_id?.personal;
+  if (doc.official_text) return doc.official_text;
+  const personal = doc.official?.personal_info_id?.personal;
   if (personal?.first_name || personal?.last_name)
     return `${personal.first_name || ""} ${personal.last_name || ""}`.trim();
-  return doc.name?.username || "";
+  return doc.official?.username || "";
 };
 
 /**
@@ -49,9 +51,9 @@ const getDisplayName = (doc) => {
  */
 const resolveDisplayName = async (doc, { role } = {}) => {
   if (!doc) return "";
-  if (doc.name_text) return doc.name_text;
+  if (doc.official_text) return doc.official_text;
 
-  const profile = doc.name?.personal_info_id;
+  const profile = doc.official?.personal_info_id;
   const vaultRef = profile?.vaultRef;
 
   if (vaultRef) {
@@ -70,7 +72,7 @@ const resolveDisplayName = async (doc, { role } = {}) => {
 
   return profile?.personal
     ? `${profile.personal.first_name || ""} ${profile.personal.last_name || ""}`.trim()
-    : doc.name?.username || "";
+    : doc.official?.username || "";
 };
 
 export async function GET(req, { params }) {
@@ -91,9 +93,9 @@ export async function GET(req, { params }) {
      identity — this response used to carry the whole plaintext profile. */
   const displayName = await resolveDisplayName(official, { role: user?.role });
   const data = official.toObject();
-  if (data.name?.personal_info_id) {
-    const { personal, ...rest } = data.name.personal_info_id;
-    data.name = { ...data.name, personal_info_id: rest };
+  if (data.official?.personal_info_id) {
+    const { personal, ...rest } = data.official.personal_info_id;
+    data.official = { ...data.official, personal_info_id: rest };
   }
 
   return Response.json({ success: true, data: { ...data, display_name: displayName } });
@@ -106,14 +108,14 @@ export async function PATCH(req, { params }) {
   await connectDB();
   const { id } = await params;
   const body = await req.json();
-  const { name, name_text = "", academic_year } = body || {};
+  const { official, official_text = "", academic_year } = body || {};
 
-  const nameText = String(name_text || "").trim();
-  const nameId = name && mongoose.isValidObjectId(name) ? name : null;
+  const personText = String(official_text || "").trim();
+  const personId = official && mongoose.isValidObjectId(official) ? official : null;
 
-  if (!nameId && !nameText) {
+  if (!personId && !personText) {
     return Response.json(
-      { success: false, error: "Missing name (pick a user or type a name)" },
+      { success: false, error: "Missing official (pick a user or type a name)" },
       { status: 400 },
     );
   }
@@ -142,7 +144,7 @@ export async function PATCH(req, { params }) {
 
     const updated = await UniversityOfficial.findByIdAndUpdate(
       id,
-      { $set: { name: nameId, name_text: nameId ? "" : nameText } },
+      { $set: { official: personId, official_text: personId ? "" : personText } },
       { new: true, runValidators: true },
     ).populate(POPULATE);
 
@@ -158,15 +160,14 @@ export async function PATCH(req, { params }) {
     await logActivity({
       req,
       action: "OFFICIAL_UPDATE",
-      description: `Official reassigned for "${updated.position}" (AY ${updated.academic_year})`,
+      description: `Official reassigned for "${updated.name}" (AY ${updated.academic_year})`,
       resource_type: "university_official",
       resource_id: id,
       severity: "info",
       metadata: {
         academic_year: updated.academic_year,
         header: updated.header,
-        title: updated.title,
-        unit: updated.unit,
+        name: updated.name,
         prev_name: prevName,
         new_name: newName,
       },
@@ -199,15 +200,14 @@ export async function DELETE(req, { params }) {
   await logActivity({
     req,
     action: "OFFICIAL_VACATE",
-    description: `Official vacated "${deleted.position}" (AY ${deleted.academic_year})`,
+    description: `Official vacated "${deleted.name}" (AY ${deleted.academic_year})`,
     resource_type: "university_official",
     resource_id: id,
     severity: "warning",
     metadata: {
       academic_year: deleted.academic_year,
       header: deleted.header,
-      title: deleted.title,
-      unit: deleted.unit,
+      name: deleted.name,
     },
   });
 

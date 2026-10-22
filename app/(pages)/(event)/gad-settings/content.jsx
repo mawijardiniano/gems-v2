@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import OfficesManager from "../components/offices/OfficesManager";
 import useUniversityOffices from "@/lib/useUniversityOffices";
+import PositionsManager from "@/components/positions/PositionsManager";
+import useUniversityPositions from "@/lib/useUniversityPositions";
+import { pickResolvedAcademicYear } from "@/lib/academicYear";
 import {
   FaSignInAlt,
   FaUserEdit,
@@ -78,6 +81,10 @@ export default function Settings() {
      Coordinators and the planning director see the same card read-only, and the
      API refuses their writes regardless of what this renders. */
   const canManageOffices = role?.toLowerCase() === "gad focal person";
+  /* The seat list is the same kind of global org-chart data as the office list,
+     so it is gated identically: the GAD focal person writes, everyone who can
+     reach the University Officials page reads. */
+  const canManagePositions = canManageOffices;
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -125,6 +132,7 @@ export default function Settings() {
     loading: officesLoading,
     busy: officeBusy,
     counts,
+    academicYear: officesYear,
     addOffice: handleAddOffice,
     deactivateOffice: handleDeactivateOffice,
     reactivateOffice: handleReactivateOffice,
@@ -134,30 +142,59 @@ export default function Settings() {
     onSuccess: reportOfficeSuccess,
   });
 
-  /* Which academic year the assigned counts belong to — exactly the one the
-     active rows carry, so an install whose active term is unset does not label
-     the numbers with a year nobody is looking at. */
-  const officesAcademicYear = useMemo(() => {
-    const years = offices
-      .filter((o) => o.is_active !== false && o.assigned_count > 0)
-      .map((o) => o.academic_year)
-      .filter(Boolean);
-    return years[0] || "";
-  }, [offices]);
+  /* ── Positions / seats (see lib/useUniversityPositions.js) ──
+     The seat list is a separate collection from the office list — offices are
+     the columns of the org chart, positions are the seats inside them — so it
+     has its own hook, its own endpoint and its own card, but the same audience
+     and the same never-delete rule.
 
-  /* Deep link from University Officials ("Manage Offices" -> #offices): keep the
-     section in view once the card has rendered and flash it so the operator can
-     see where they landed. */
-  const [officesHighlighted, setOfficesHighlighted] = useState(false);
+     It is handed the year the *offices* response resolved rather than a year
+     derived here. Deriving it locally meant reading `academic_year` off office
+     rows, which do not carry it (the route reports it on the response body), so
+     the value was always `""` — an empty-year fetch that then had to be
+     corrected by a second one. Passing the real year loads the roster once. */
+  const {
+    positions,
+    offices: positionOffices,
+    loading: positionsLoading,
+    busy: positionBusy,
+    academicYear: positionsYear,
+    addPosition: handleAddPosition,
+    updatePosition: handleUpdatePosition,
+    deactivatePosition: handleDeactivatePosition,
+    reactivatePosition: handleReactivatePosition,
+  } = useUniversityPositions({
+    includeCounts: true,
+    academicYear: officesYear,
+    onError: reportOfficeError,
+    onSuccess: reportOfficeSuccess,
+  });
+
+  /* Which academic year the assigned counts belong to — taken from whichever
+     response has resolved one, so an install whose active term is unset does
+     not label the numbers with a year nobody is looking at. */
+  const officesAcademicYear = pickResolvedAcademicYear(positionsYear, officesYear);
+
+  /* Deep links from University Officials ("Manage Offices" -> #offices,
+     "Manage Positions" -> #positions): keep the section in view once the card
+     has rendered and flash it so the operator can see where they landed.
+     The sections carry `scroll-mt-24` already, so only the allowlist below
+     decides which hash is honoured — an unrecognised hash is ignored rather
+     than scrolled to. */
+  const DEEP_LINK_SECTIONS = ["offices", "positions"];
+  const [highlightedSection, setHighlightedSection] = useState(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.location.hash !== "#offices") return;
+    const target = DEEP_LINK_SECTIONS.find(
+      (id) => window.location.hash === `#${id}`,
+    );
+    if (!target) return;
     const scroll = window.setTimeout(
-      () => document.getElementById("offices")?.scrollIntoView({ block: "start" }),
+      () => document.getElementById(target)?.scrollIntoView({ block: "start" }),
       80,
     );
-    setOfficesHighlighted(true);
-    const clear = window.setTimeout(() => setOfficesHighlighted(false), 2200);
+    setHighlightedSection(target);
+    const clear = window.setTimeout(() => setHighlightedSection(null), 2200);
     return () => {
       window.clearTimeout(scroll);
       window.clearTimeout(clear);
@@ -337,8 +374,8 @@ export default function Settings() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Manage your account credentials, the university offices, and your
-          activity log
+          Manage your account credentials, the university offices and their
+          positions, and your activity log
         </p>
       </div>
 
@@ -422,7 +459,9 @@ export default function Settings() {
         {officesBanner}
         <div
           className={`rounded-2xl transition-shadow duration-500 ${
-            officesHighlighted ? "ring-2 ring-blue-300 ring-offset-2" : ""
+            highlightedSection === "offices"
+              ? "ring-2 ring-blue-300 ring-offset-2"
+              : ""
           }`}
         >
           <OfficesManager
@@ -433,6 +472,30 @@ export default function Settings() {
             onAdd={canManageOffices ? handleAddOffice : undefined}
             onDeactivate={canManageOffices ? handleDeactivateOffice : undefined}
             onReactivate={canManageOffices ? handleReactivateOffice : undefined}
+          />
+        </div>
+      </section>
+
+      {/* Positions Section — the seats inside each office column. Distinct from
+          Offices & Groups above: that card edits the columns, this edits the
+          rows within them. */}
+      <section id="positions" className="mb-8 scroll-mt-24">
+        <div
+          className={`rounded-2xl transition-shadow duration-500 ${
+            highlightedSection === "positions"
+              ? "ring-2 ring-blue-300 ring-offset-2"
+              : ""
+          }`}
+        >
+          <PositionsManager
+            positions={positions}
+            offices={positionOffices.length ? positionOffices : offices}
+            academicYear={officesAcademicYear}
+            busy={positionBusy}
+            onAdd={canManagePositions ? handleAddPosition : undefined}
+            onUpdate={canManagePositions ? handleUpdatePosition : undefined}
+            onDeactivate={canManagePositions ? handleDeactivatePosition : undefined}
+            onReactivate={canManagePositions ? handleReactivatePosition : undefined}
           />
         </div>
       </section>
