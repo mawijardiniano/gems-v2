@@ -85,10 +85,49 @@ export function EmptyState({ onAdd }) {
   );
 }
 
-export function OfficialRow({ official, avatarBg, avatarText }) {
-  const o = official || {};
-  const initials = `${(o.first_name?.[0] || "").toUpperCase()}${(o.last_name?.[0] || "").toUpperCase()}`;
-  const extra = o.branch || o.college;
+/* Derives the initials to show in the avatar from the row's typed name.
+   Deliberately never reads `position_title`: a seat like "Director, Research"
+   would derive "DR", which reads as a person's initials rather than as an
+   unfilled position. A vacant seat shows "?" instead.
+
+   The name is read from `official_text` alone. Rows used to also carry split
+   `first_name` / `last_name` parts, but every write path derived those from the
+   same typed text, so preferring them changed nothing while making the avatar
+   depend on fields no display path used. */
+function initialsFor(member) {
+  const words = String(member?.official_text || "")
+    .replace(/[^\p{L}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) return "";
+  return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : ""))
+    .toUpperCase();
+}
+
+/**
+ * One member line on a GFPS card.
+ *
+ * A row carries two independent facts: the seat (`position_title`, fixed by the
+ * memorandum) and the person (`official_text`, typed by hand). Either may be
+ * absent, and both states are normal — a seat is seeded before its appointment
+ * exists, and a hand-added member may have no formal seat at all.
+ *
+ * So the line shows the person when there is one and the seat beneath it; when
+ * nobody is appointed yet the seat becomes the headline, marked Vacant, which
+ * is how the chart stays faithful to the memo rather than looking empty.
+ */
+export function OfficialRow({ member, avatarBg, avatarText }) {
+  const m = member || {};
+  const name = String(m.official_text || "").trim();
+  const position = String(m.position_title || "").trim();
+  const initials = initialsFor(m);
+
+  /* Displaying "Vacant" rather than "Unnamed member" is the point of the seat
+     model: the position provably exists, the appointment has not been made. */
+  const vacant = Boolean(m.vacant) || (!name && Boolean(position));
+  const headline = name || position || "Unnamed member";
+
   return (
     <div className="flex items-center gap-3">
       <div className={`flex-shrink-0 w-8 h-8 rounded-full ${avatarBg} flex items-center justify-center`}>
@@ -97,15 +136,31 @@ export function OfficialRow({ official, avatarBg, avatarText }) {
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-700 truncate">
-          {o.position}
-          {extra && (
-            <span className="text-gray-400 font-normal"> — {extra}</span>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-gray-700 truncate">{headline}</p>
+          {/* A manual row is a typed name, not a live roster seat. Said plainly
+              rather than hidden, so an unlinked member is not mistaken for a
+              broken link. `manual` is derived on read (lib/gfpsServer.js) — every
+              GFPS row is typed by hand now, so it is never stored. */}
+          {m.manual && (
+            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+              Manual
+            </span>
           )}
-        </p>
-        <p className="text-xs text-gray-400 truncate">
-          {o.first_name} {o.last_name}
-        </p>
+          {vacant && (
+            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+              Vacant
+            </span>
+          )}
+        </div>
+        {/* The seat is shown beneath the name whenever both are known, so the
+            memo's structure stays visible next to the appointee. */}
+        {name && position && (
+          <p className="text-xs text-gray-500 truncate">{position}</p>
+        )}
+        {m.role === "chair" && (
+          <p className="text-xs text-gray-400 truncate">Chair</p>
+        )}
       </div>
     </div>
   );

@@ -69,3 +69,9 @@ public/pdf.worker.min.mjs
 .vscode/
 .flowbite-react/
 gpb-progress-preview-*.pdf
+
+# one-off local artifacts: data backups and captured command output
+.tmp-*
+dev-err.txt
+dev-out.txt
+gfps-retired-cleanup-backup.json

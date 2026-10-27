@@ -12,15 +12,32 @@ import {
   getSectionEditMembers,
   sectionHasData,
 } from "./gfps-config";
-import { findOfficialKey, getOfficialNames } from "./officials";
+import { resolveSaveRequest } from "@/lib/gfpsSaveRequest";
+import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
+
+/* Where the page-header "Add Member" button opens. The chair/head of agency is
+   a single slot rather than a row list, so a dialog opened there could offer no
+   way to add a row; the first section that holds a list is the safe landing
+   point. This only chooses the selector's initial value — the operator is free
+   to switch, and the list always starts empty. */
+const DEFAULT_ADD_SECTION =
+  SECTIONS.find((s) => !SECTION_BEHAVIOR[s.key]?.isSingle)?.key ?? SECTIONS[0].key;
 
 export default function GFPSManager() {
   const [section, setSection] = useState(SECTIONS[0].key);
   const [showModal, setShowModal] = useState(false);
   const [selectedOfficials, setSelectedOfficials] = useState([]);
+  /* Typed names for manual member rows, keyed by their synthetic selection key.
+     Kept beside the selection so a manual entry is edited in place rather than
+     being flattened into a roster pick when the modal reopens. */
+  const [manualTexts, setManualTexts] = useState({});
+  /* Seats typed alongside manual names, plus the subset that came from the
+     memorandum and therefore cannot be renamed (see EditMemberModal). */
+  const [manualPositions, setManualPositions] = useState({});
+  const [lockedPositions, setLockedPositions] = useState({});
+  const [modalError, setModalError] = useState("");
   const [gfps, setGfps] = useState({});
   const [loadingGfps, setLoadingGfps] = useState(true);
-  const [officials, setOfficials] = useState([]);
   const [execRoles, setExecRoles] = useState({});
   const [editingSection, setEditingSection] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -93,21 +110,16 @@ export default function GFPSManager() {
     fetchGfps();
   }, [academicYear]);
 
-  useEffect(() => {
-    if (!academicYear) return;
-    async function fetchOfficials() {
-      const res = await fetch(
-        `/api/university-officials?academic_year=${encodeURIComponent(academicYear)}`,
-      );
-      const data = await res.json();
-      setOfficials(Array.isArray(data.data) ? data.data : []);
-    }
-    fetchOfficials();
-  }, [academicYear]);
-
-  const resolveOfficialKey = useCallback(
-    (officialId) => findOfficialKey(officials, officialId),
-    [officials],
+  /* Resolves one selection key to the member row the API stores.
+   *
+   * Every key is a typed name the operator entered, so it carries no roster
+   * link at all. Rows seeded from the memorandum take the same route: they are
+   * manual rows with a seat, which is what makes a vacant position renderable
+   * without inventing a person for it. */
+  const resolveSelectedMember = useCallback(
+    (key, manualText = "", manualPosition = "") =>
+      manualMemberNames(manualText, manualPosition),
+    [],
   );
 
   async function fetchGfps(year) {
@@ -155,12 +167,6 @@ export default function GFPSManager() {
       );
       setIsLegacy(false);
       await fetchGfps(academicYear);
-      const off = await fetch(
-        `/api/university-officials?academic_year=${encodeURIComponent(academicYear)}`,
-      )
-        .then((r) => r.json())
-        .catch(() => ({}));
-      if (Array.isArray(off?.data)) setOfficials(off.data);
     } catch {
       setNotice("Network error");
     } finally {
@@ -196,12 +202,24 @@ export default function GFPSManager() {
         setNotice(data.error || "Failed to copy GFPS");
         return;
       }
-      const unmapped = Array.isArray(data.data?.unmapped) ? data.data.unmapped : [];
-      setNotice(
-        unmapped.length
-          ? `Copied from AY ${source}. ${unmapped.length} member(s) need re-picking (seat changed).`
-          : `Copied GFPS from AY ${source}!`,
-      );
+      const carried = Array.isArray(data.data?.carried) ? data.data.carried : [];
+      const copied = Number(data.data?.copied) || 0;
+
+      /* Report what actually landed. A copy that carried rows but resolved no
+         names would otherwise read as a success while the chart stayed blank,
+         which is how a bad copy went unnoticed. */
+      if (!copied) {
+        setNotice(
+          `Nothing could be copied from AY ${source} — none of its rows resolved to a name or a seat. Add members manually.`,
+        );
+      } else {
+        setNotice(
+          `Copied ${copied} member(s) from AY ${source}.` +
+            (carried.length
+              ? ` ${carried.length} row(s) were skipped because they identified neither a person nor a seat.`
+              : ""),
+        );
+      }
       await fetchGfps(academicYear);
     } catch {
       setNotice("Network error");
@@ -210,38 +228,134 @@ export default function GFPSManager() {
     }
   };
 
+  /* Re-seats a section's stored members as typed-name rows in the modal's
+   * selection state.
+   *
+   * Both opening the editor and opening "Add Member" need this. Add starts from
+   * the section as it stands rather than from an empty list: the modal is the
+   * only place the chart's rows can be revised, so opening it blank on a section
+   * that already has members would hide them and the save would look like it
+   * deleted them. It also means a typed row has to be entered once — an edit
+   * round-trip carries the existing names back into the form.
+   *
+   * Returns the seat state so the caller can add its own blank row or apply
+   * roles without recomputing any of it.
+   */
+  const seatSectionMembers = (sectionKey) => {
+    const sectionMembers = getSectionEditMembers(gfps, sectionKey);
+    const keys = [];
+    const texts = {};
+    const positions = {};
+    const locked = {};
+
+    /* GFPS is maintained by hand, so every stored member is re-seated as a
+       typed-name row carrying its own `official_text` and `position_title`.
+       Nothing is re-resolved back into a roster pick: the modal has no roster
+       route, and re-seating a row under a roster key would make it invisible
+       there and drop it on the next save. */
+    sectionMembers.forEach((m) => {
+      const text = String(m.official_text || "").trim();
+      const seat = String(m.position_title || "").trim();
+
+      /* A memo-seeded seat has a position but no name yet, so testing the name
+         alone would drop every vacant seat from the editor. The row exists if
+         either half does. */
+      if (!text && !seat) return;
+
+      const manualKey = nextManualKey();
+      keys.push(manualKey);
+      texts[manualKey] = text;
+      positions[manualKey] = seat;
+
+      /* Seats that arrived from the memorandum keep their title: the seeded
+         rows are the chart's structure, so they are shown read-only rather than
+         silently renameable. Rows the operator typed from scratch stay free. */
+      const fromMemo = seat && !text;
+      if (fromMemo) locked[manualKey] = true;
+    });
+
+    return { sectionMembers, keys, texts, positions, locked };
+  };
+
   const openAddModal = () => {
+    /* "Add Member" is a single button in the page header, not one per section,
+       so it carries no section context of its own: the operator picks the
+       section with the modal's own selector, which is enabled while adding.
+
+       It therefore opens EMPTY. It used to seed Executive Committee — the
+       first section that can hold a list — and that meant the dialog showed
+       that section's existing members before anything had been chosen, and kept
+       showing them after the selector was switched, so saving wrote them into
+       the newly chosen section. Seeding a section the operator has not picked
+       is how a member of one committee ended up in another. */
+    const sectionKey = DEFAULT_ADD_SECTION;
+
+    /* No rows are seeded and no blank row is appended. Submit requires every
+       row to name a person or a seat (`canSubmit` in the modal, and the
+       `blankRow` guard in handleSubmit), so seeding an always-empty draft would
+       leave the form permanently unsubmittable and the save would silently
+       never happen. The modal's own "Add another" button mints a row when the
+       operator wants one, and it invites them to do so when the list is empty. */
     setEditingSection(null);
+    setSection(sectionKey);
     setSelectedOfficials([]);
+    setManualTexts({});
+    setManualPositions({});
+    setLockedPositions({});
     setExecRoles({});
-    setSection(SECTIONS[0].key);
+
+    setModalError("");
     setShowModal(true);
+  };
+
+  /* Switching section while adding starts that section from scratch.
+   *
+   * The selector only changed the heading before, leaving the previous
+   * section's rows in the form, so saving wrote one committee's members into
+   * another. Re-seating is deliberately not used here: "Add Member" is for
+   * adding, and loading the target section's existing rows would turn it into
+   * an edit of a section the operator only meant to append to. Editing an
+   * existing section's rows is what the section card's own edit action is for.
+   */
+  const handleAddSectionChange = (sectionKey) => {
+    setSection(sectionKey);
+    setSelectedOfficials([]);
+    setManualTexts({});
+    setManualPositions({});
+    setLockedPositions({});
+    setExecRoles({});
+    setModalError("");
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingSection(null);
     setSelectedOfficials([]);
+    setManualTexts({});
+    setManualPositions({});
+    setLockedPositions({});
     setExecRoles({});
+    setModalError("");
   };
 
   const handleEdit = (sectionKey) => {
-    if (!officials.length) return;
-
     setEditingSection(sectionKey);
     setSection(sectionKey);
+    setModalError("");
 
-    const editMembers = getSectionEditMembers(gfps, sectionKey);
-    setSelectedOfficials(
-      editMembers
-        .map((m) => resolveOfficialKey(m.official_ref || m.official?._id || m.official))
-        .filter(Boolean),
-    );
+    const { sectionMembers, keys, texts, positions, locked } =
+      seatSectionMembers(sectionKey);
+
+    setSelectedOfficials(keys);
+    setManualTexts(texts);
+    setManualPositions(positions);
+    setLockedPositions(locked);
 
     if (SECTION_BEHAVIOR[sectionKey].supportsRoles) {
       const roles = {};
-      editMembers.forEach((m) => {
-        const key = resolveOfficialKey(m.official_ref || m.official?._id || m.official);
+      sectionMembers.forEach((m) => {
+        const text = String(m.official_text || "").trim();
+        const key = keys.find((k) => texts[k] === text && text);
         if (key) roles[key] = m.role || "member";
       });
       setExecRoles(roles);
@@ -257,10 +371,37 @@ export default function GFPSManager() {
     setSubmitting(true);
 
     try {
-      const resolvedOfficials = selectedOfficials.map((key) => ({
-        key,
-        ...getOfficialNames(officials, key),
-      }));
+      /* Every key in the selection becomes one member row, whether it came off
+         the roster or was typed by hand. Manual text is read from the same
+         `manualTexts` map the modal keeps, so a name only has to be entered
+         once and survives an edit round-trip. */
+      const resolvedOfficials = selectedOfficials
+        .map((key) => {
+          const member = resolveSelectedMember(
+            key,
+            manualTexts[key] || "",
+            manualPositions[key] || "",
+          );
+          return { key, ...member };
+        })
+        .filter((member) => isManualKey(member.key) || member.officialTerm);
+
+      /* A manual row that names neither a person nor a seat would store an
+         empty member, so it is refused here rather than written as a blank row.
+         A seat on its own is fine — that is a position the memo defines and
+         nobody fills yet. */
+      const blankRow = resolvedOfficials.some(
+        (m) =>
+          isManualKey(m.key) &&
+          !m.official_text &&
+          !String(m.position_title || "").trim(),
+      );
+      if (blankRow) {
+        setModalError(
+          "Enter a name or a position for each member, or remove the row",
+        );
+        return;
+      }
 
       const behavior = SECTION_BEHAVIOR[section];
       const payload = {
@@ -268,9 +409,15 @@ export default function GFPSManager() {
         academic_year: academicYear,
       };
 
-      const isEditing = !!editingSection;
-      const method = isEditing ? "PUT" : "POST";
-      const url = isEditing ? `/api/gfps/${gfps._id}` : "/api/gfps";
+      /* The save target is decided by `resolveSaveRequest`, which refuses to
+         build a PUT without a real document id. Interpolating `gfps._id` here
+         unconditionally is what sent a first save to `/api/gfps/undefined`,
+         a path with no POST handler, so the write was answered 405 and lost. */
+      const { method, url } = resolveSaveRequest({
+        editingSection,
+        gfpsId: gfps?._id,
+        academicYear,
+      });
 
       const res = await fetch(url, {
         method,
@@ -281,7 +428,14 @@ export default function GFPSManager() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        alert(data?.message || "Failed to save GFPS");
+        /* 405 means the chosen path has no handler for this method — the
+           signature of a bad save target rather than a rejected payload, so it
+           is named instead of surfacing as an anonymous failure. */
+        setModalError(
+          res.status === 405
+            ? "Could not save: the save route rejected this request. Reload the page and try again."
+            : data?.error || data?.message || "Failed to save GFPS",
+        );
       } else {
         handleCloseModal();
         await fetchGfps(academicYear);
@@ -294,9 +448,16 @@ export default function GFPSManager() {
     }
   };
 
+  /* A year with no document at all loads as `{}`, so there is genuinely nothing
+     to draw. But a document that exists and happens to hold no rows is a
+     different state: it is a real (if empty) committee, and collapsing the page
+     to `EmptyState` hid every section card — which made an empty chart read as
+     "members are not being recorded" and left no surface for a per-section
+     error. A document id is therefore enough to render the sections. */
   const hasData =
-    Object.keys(gfps).length > 0 &&
-    SECTIONS.some((sec) => sectionHasData(gfps, sec.key));
+    Boolean(gfps?._id) ||
+    (Object.keys(gfps).length > 0 &&
+      SECTIONS.some((sec) => sectionHasData(gfps, sec.key)));
 
   return (
     <div className="p-6 max-w-8xl mx-auto space-y-8">
@@ -423,14 +584,18 @@ export default function GFPSManager() {
         <EditMemberModal
           section={section}
           editingSection={editingSection}
-          officials={officials}
           selectedOfficials={selectedOfficials}
+          manualTexts={manualTexts}
+          manualPositions={manualPositions}
+          lockedPositions={lockedPositions}
           execRoles={execRoles}
+          error={modalError}
           submitting={submitting}
-          academicYear={academicYear}
           onClose={handleCloseModal}
-          onSectionChange={setSection}
+          onSectionChange={handleAddSectionChange}
           onSelectedChange={setSelectedOfficials}
+          onManualTextsChange={setManualTexts}
+          onManualPositionsChange={setManualPositions}
           onExecRolesChange={setExecRoles}
           onSubmit={handleSubmit}
         />

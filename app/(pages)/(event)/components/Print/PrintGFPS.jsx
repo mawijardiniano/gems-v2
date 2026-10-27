@@ -49,27 +49,41 @@ const PRINT_STYLES = `
   }
 `;
 
+/* The name to print for a member: its typed `official_text` is the source of
+   truth. There is nothing to fall back to any more — the retired split
+   `first_name` / `last_name` parts and the resolved roster seat both came from
+   data that no longer exists on a GFPS row. */
+const memberName = (m) => String(m?.official_text || "").trim();
+
 const formatMember = (m) => {
-  const o = m?.official || {};
-  const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
-  const position = o.position || "";
-  const extra = o.branch || o.college ? ` - ${o.branch || o.college}` : "";
-  return `${position}${extra} (${name})`;
+  const name = memberName(m);
+
+  /* The seat is the row's own `position_title`, which the memorandum defines
+     independently of any appointment. The role label keeps an ad-hoc chair from
+     printing with no position at all. */
+  const position =
+    String(m?.position_title || "").trim() || (m?.role === "chair" ? "Chair" : "");
+  const label = position;
+
+  /* An unfilled seat prints as "(Vacant)": the position is part of the
+     memorandum, so the line is reported as unfilled rather than left blank,
+     which would make the seat look as though it had been dropped. */
+  if (!name && label) return `${label} (Vacant)`;
+  return label ? `${label} (${name})` : name;
 };
 
 const buildSectionRow = (sec, gfps) => {
   const { members, chairData } = getSectionData(gfps, sec.key);
 
   if (chairData) {
-    const o = chairData.official || {};
-    const name = `${o.first_name || ""} ${o.last_name || ""}`.trim();
-    const position = o.position || "";
+    const name = memberName(chairData);
+    const position = String(chairData.position_title || "").trim();
     return `
       <tr>
         <td class="section">${sec.label}</td>
         <td>
-          <strong>${position}</strong><br/>
-          ${name}
+          ${position ? `<strong>${position}</strong><br/>` : ""}
+          ${name || (position ? "<em>(Vacant)</em>" : "")}
         </td>
       </tr>
     `;

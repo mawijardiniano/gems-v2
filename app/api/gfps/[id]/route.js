@@ -3,31 +3,30 @@ import GFPS from "@/models/gfps";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { normalizeOfficialId } from "@/lib/gfpsServer";
+import {
+  GFPS_SECTION_KEYS,
+  normalizeSectionOfficials,
+} from "@/lib/gfpsServer";
 
-async function normalizeSectionOfficials(section) {
-  if (!section) return section;
-
-  if (Array.isArray(section)) {
-    return Promise.all(section.map(normalizeSectionOfficials));
-  }
-
-  const normalized = { ...section };
-
-  if (normalized.official) {
-    normalized.official = await normalizeOfficialId(normalized.official);
-  }
-  if (normalized.chair) {
-    normalized.chair = await normalizeSectionOfficials(normalized.chair);
-  }
-  if (normalized.members) {
-    normalized.members = await Promise.all(
-      (normalized.members || []).map(normalizeSectionOfficials),
-    );
-  }
-
-  return normalized;
-}
+/* Members are stored as typed `official_text` rows, so nothing here resolves a
+   pointer at the retired `universityofficials` collection.
+ *
+ * This route must normalize its input exactly as POST does. `normalizeSectionOfficials`
+ * is what applies `hasIdentity`, so a row the operator emptied out (no name, no
+ * seat, no roster link) is dropped here instead of being written as a blank
+ * member. Skipping it made PUT store raw client rows that POST would have
+ * discarded, which is how an added member could vanish on the next read.
+ *
+ * Sections are ASSIGNED, not merged. The modal opens with the section's whole
+ * member list already seated (`seatSectionMembers`) and submits it back whole,
+ * so the submitted list is the section's complete truth — including the members
+ * the operator just deleted.
+ *
+ * `mergeMembers` must NOT be used here. It is a union: it can add and update but
+ * it has no branch that removes, so a member the operator deleted stayed in the
+ * document and reappeared on the next read. That is exactly the bug this route
+ * had. Merging is only ever correct for a caller that submits a delta, and
+ * nothing in GFPS does: both Add and Edit submit a full section. */
 
 export async function PUT(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -46,33 +45,47 @@ export async function PUT(req, { params }) {
       );
     }
 
-    if (body.chairOrHeadOfAgency) {
-      existing.chairOrHeadOfAgency = await normalizeSectionOfficials(
-        body.chairOrHeadOfAgency,
-      );
-    }
+    /* Normalize first, so `hasIdentity` rejects a blank row before it can be
+       merged in. `normalizeSectionOfficials` returns `null` for a single-slot
+       section whose only row identifies nothing, which is how clearing the
+       chair is expressed.
+       Guard on `key in body`, not on truthiness: `null` is the value that
+       clears a slot, and `if (body[key])` would skip it and silently keep the
+       previous chair. */
+    GFPS_SECTION_KEYS.forEach((key) => {
+      if (!(key in body)) return;
+      body[key] = normalizeSectionOfficials(body[key], {
+        isExecutiveCommittee: key === "executiveCommittee",
+      });
+    });
 
-    if (body.executiveCommittee) {
-      const normalized = await normalizeSectionOfficials(
-        body.executiveCommittee,
-      );
-      existing.executiveCommittee = { members: normalized.members || [] };
-    }
+    /* Assign every named section, driven off `GFPS_SECTION_KEYS` so this branch
+       cannot drift out of step with the model — the previous hand-written list
+       silently ignored any key it did not spell out. */
+    GFPS_SECTION_KEYS.forEach((key) => {
+      if (!(key in body)) return;
+      const value = body[key];
 
-    if (body.technicalWorkingGroup) {
-      const normalized = await normalizeSectionOfficials(
-        body.technicalWorkingGroup,
-      );
-      existing.technicalWorkingGroup = { members: normalized.members || [] };
-    }
+      if (key === "chairOrHeadOfAgency") {
+        existing.chairOrHeadOfAgency = value;
+      } else if (Array.isArray(value)) {
+        existing[key] = value;
+      } else if (value?.members) {
+        existing[key] ||= { members: [] };
+        existing[key].members = value.members;
+      }
 
-    if (body.secretariat) {
-      existing.secretariat = await normalizeSectionOfficials(
-        body.secretariat,
-      );
-    }
+      /* Assignment alone does not always mark a nested path dirty, and an
+         unmarked path is written back unchanged while the response still
+         reports success. */
+      existing.markModified(key);
+    });
 
     await existing.save();
+
+    /* Read back from the database rather than responding with the in-memory
+       document, so the response matches what a following GET will return. */
+    const reread = await GFPS.findById(id).lean();
 
     await logActivity({
       req,

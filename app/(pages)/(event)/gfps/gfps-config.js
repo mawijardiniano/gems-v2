@@ -51,14 +51,36 @@ export const SECTION_STYLES = {
   },
 };
 
+/* Builds one member row for the API.
+ *
+ * A member carries a typed `official_text` as the source of truth for the
+ * person and a `position_title` for the seat the memorandum defines. Both are
+ * sent even when only one is known: the memo seeds seats before appointments
+ * exist, and a hand-typed member may have no seat at all.
+ *
+ * Nothing else is sent. The row used to also carry `official_term`,
+ * `official_group`, `manual` and the split `first_name` / `last_name`; the
+ * roster picker is gone, so those were either always null/""/true or a second
+ * copy of `official_text`, and `normalizeMember` on the server rebuilds rows
+ * from the two text fields plus `sort_order` / `role` anyway. */
 const toPayloadMember = (resolved, role) => ({
-  official: resolved?.officialId,
-  official_ref: resolved?.officialRef || undefined,
-  official_group: resolved?.officialGroup || undefined,
+  position_title: String(resolved?.position_title || "").trim(),
+  official_text: String(resolved?.official_text || "").trim(),
+  ...(resolved?.sort_order !== undefined && resolved?.sort_order !== null
+    ? { sort_order: Number(resolved.sort_order) }
+    : {}),
   ...(role ? { role } : {}),
-  first_name: resolved?.first_name || "",
-  last_name: resolved?.last_name || "",
 });
+
+/* The chair section is one slot, so an empty selection has no row at all.
+ * `toPayloadMember(undefined)` would still return an object — every field blank
+ * rather than `null` — and a blank row is not the same as no chair. Sending
+ * blanks made the API normalize the value to `null`, and because the routes
+ * guard with `if (body[key])` a `null` was then never assigned: the request
+ * reported success while the stored chair was left untouched, so adding a chair
+ * appeared to do nothing. Sending an explicit `null` clears the slot instead. */
+const toPayloadSingle = (resolved) =>
+  resolved ? toPayloadMember(resolved) : null;
 
 export const SECTION_BEHAVIOR = {
   chairOrHeadOfAgency: {
@@ -69,7 +91,7 @@ export const SECTION_BEHAVIOR = {
       chairData: gfps?.chairOrHeadOfAgency || null,
     }),
     buildPayload: (resolved) => ({
-      chairOrHeadOfAgency: toPayloadMember(resolved[0]),
+      chairOrHeadOfAgency: toPayloadSingle(resolved[0]),
     }),
   },
   executiveCommittee: {

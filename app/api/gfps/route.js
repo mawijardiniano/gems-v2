@@ -1,21 +1,14 @@
 import { connectDB } from "@/lib/db";
 import GFPS from "@/models/gfps";
-import UniversityOfficial from "@/models/universityOfficials";
 import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import {
   GFPS_SECTION_KEYS,
-  UNIVERSITY_OFFICIALS_POPULATE,
   makeFilterHelpers,
-  mergeMembers,
   normalizeSectionOfficials,
 } from "@/lib/gfpsServer";
-import {
-  hydrateUniversityOfficialNames,
-  stripOfficialVaultRefs,
-} from "@/lib/userPopulate";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
@@ -32,7 +25,7 @@ async function getActiveTermYear() {
 }
 
 export async function GET(req) {
-  const { user, error, status } = await requireAuth(req);
+  const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
@@ -43,28 +36,11 @@ export async function GET(req) {
     activeTerm: activeYear,
   });
 
-  // Only same-year officials may resolve GFPS member links. Mixing years
-  // would null out details or leak people across snapshots.
-  const universityOfficials = await UniversityOfficial.find({
-    academic_year: academicYear,
-  })
-    .populate(UNIVERSITY_OFFICIALS_POPULATE)
-    .lean();
-
-  /* Officials are linked to user accounts; the real name lives in the vault, so
-     the roster would render every seat blank once the legacy columns are
-     stripped. Hydrating here covers both the details lookup below and the
-     names the response carries - gated on the caller's role, since the unmasked
-     name is PII. */
-  /* Both helpers return the value to use: the hydrator works on plain-object
-     copies, and the scrubber drops the pointer during serialization. */
-  const hydratedOfficials = await hydrateUniversityOfficialNames(
-    universityOfficials,
-    user?.role,
-  );
-  const safeOfficials = stripOfficialVaultRefs(hydratedOfficials, user?.role);
-
-  const { filterSectionWithDetails } = makeFilterHelpers(safeOfficials);
+  /* GFPS members are manual-first: each row owns its seat and its typed name,
+     and nothing here consults — or needs — the officials roster. This used to
+     aggregate OfficialTerm on every read to resolve `official_term` links; the
+     links are gone, so the aggregation is too. */
+  const { filterSectionWithDetails } = makeFilterHelpers();
 
   const years = sortAcademicYearsDesc(await GFPS.distinct("academic_year"));
   if (!years.includes(academicYear)) years.unshift(academicYear);
@@ -91,10 +67,7 @@ export async function GET(req) {
   gfps = gfps.map((doc) => ({
     ...doc,
     ...Object.fromEntries(
-      GFPS_SECTION_KEYS.map((key) => [
-        key,
-        filterSectionWithDetails(doc[key]),
-      ]),
+      GFPS_SECTION_KEYS.map((key) => [key, filterSectionWithDetails(doc[key])]),
     ),
   }));
 
@@ -115,6 +88,7 @@ export async function POST(req) {
 
   const body = await req.json();
   const academicYear = normalizeAcademicYear(body?.academic_year);
+
   if (!academicYear) {
     return Response.json(
       { success: false, error: "Missing or invalid academic_year (e.g. 2025-2026)" },
@@ -122,8 +96,16 @@ export async function POST(req) {
     );
   }
 
+  /* Normalize only the sections the request actually names. Guarding on
+     `key in body` rather than on truthiness matters: a section can normalize to
+     `null`, which is how "clear this slot" is expressed, and `if (body[key])`
+     would skip that assignment and leave the old value in place while reporting
+     success. */
   GFPS_SECTION_KEYS.forEach((key) => {
-    if (body[key]) body[key] = normalizeSectionOfficials(body[key]);
+    if (!(key in body)) return;
+    body[key] = normalizeSectionOfficials(body[key], {
+      isExecutiveCommittee: key === "executiveCommittee",
+    });
   });
 
   let doc = await GFPS.findOne({ academic_year: academicYear });
@@ -132,26 +114,42 @@ export async function POST(req) {
   if (!doc) {
     doc = await GFPS.create({ ...body, academic_year: academicYear });
   } else {
-    if (body.chairOrHeadOfAgency) {
-      doc.chairOrHeadOfAgency = body.chairOrHeadOfAgency;
-    }
+    /* Assign every named section rather than a hand-written list of fields.
+       The previous version named each section individually, which meant any
+       section key not spelled out there was accepted, normalized, reported as
+       saved — and never written. Driving it off `GFPS_SECTION_KEYS` keeps this
+       branch and the model in step by construction. */
+    GFPS_SECTION_KEYS.forEach((key) => {
+      if (!(key in body)) return;
+      const value = body[key];
 
-    if (body.executiveCommittee?.members) {
-      doc.executiveCommittee ||= { members: [] };
-      mergeMembers(doc.executiveCommittee.members, body.executiveCommittee.members);
-    }
+      /* A single-slot section (`chairOrHeadOfAgency`) is a subdocument, while
+         the list sections are either an array (`secretariat`) or an object
+         holding `members`. Assigning the normalized value wholesale is what
+         makes a cleared slot actually clear. */
+      if (key === "chairOrHeadOfAgency") {
+        doc.chairOrHeadOfAgency = value;
+      } else if (Array.isArray(value)) {
+        doc[key] = value;
+      } else if (value?.members) {
+        doc[key] ||= { members: [] };
+        doc[key].members = value.members;
+      }
 
-    if (body.technicalWorkingGroup?.members) {
-      doc.technicalWorkingGroup ||= { members: [] };
-      mergeMembers(doc.technicalWorkingGroup.members, body.technicalWorkingGroup.members);
-    }
-
-    if (body.secretariat) {
-      mergeMembers(doc.secretariat, body.secretariat);
-    }
+      /* Nested arrays are not guaranteed to be marked dirty by assignment, and
+         an unmarked path is saved as-is — the "saved but unchanged" failure. */
+      doc.markModified(key);
+    });
 
     await doc.save();
   }
+
+  /* Read the document back from the database rather than trusting the in-memory
+     result, and respond with that (`onDisk`). A subdocument path the write did
+     not touch is serialized by Mongoose as an empty shell (`{members: []}`),
+     which made the response claim sections held members they did not. The lean
+     document is also exactly what the client will get from the next GET. */
+  const onDisk = await GFPS.findById(doc._id).lean();
 
   await logActivity({
     req,
@@ -165,7 +163,9 @@ export async function POST(req) {
     metadata: { academic_year: academicYear },
   });
 
-  return Response.json({ success: true, data: doc });
+  /* Respond with the document as re-read from disk, so the response matches what
+     a following GET will return. */
+  return Response.json({ success: true, data: onDisk });
 }
 
 export async function DELETE(req) {

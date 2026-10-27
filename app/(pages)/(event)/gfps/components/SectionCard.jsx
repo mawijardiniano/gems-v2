@@ -3,6 +3,17 @@
 import { SECTION_STYLES, getSectionData } from "../gfps-config";
 import { OfficialRow, SECTION_ICONS } from "./ui";
 
+/* A member's identity for React's key: its typed name, else its seat title.
+   There is no roster link to key on any more. Falling back to the array index
+   would let React reuse the wrong row's DOM when a member is added or removed;
+   without the seat title tier every vacant memo row would share one key and
+   React would render the wrong content for them. */
+const memberKey = (m, i) =>
+  m?._id ||
+  m?.official_text?.trim()?.toLowerCase() ||
+  m?.position_title?.trim()?.toLowerCase() ||
+  i;
+
 function ExecutiveGroupedBody({ members }) {
   const chairs = members.filter((m) => m.role === "chair");
   const regulars = members.filter((m) => m.role !== "chair");
@@ -17,8 +28,8 @@ function ExecutiveGroupedBody({ members }) {
           <div className="space-y-2.5">
             {chairs.map((m, i) => (
               <OfficialRow
-                key={m.official_ref || m.official?._id || i}
-                official={m.official}
+                key={memberKey(m, i)}
+                member={m}
                 avatarBg="bg-blue-100"
                 avatarText="text-blue-600"
               />
@@ -34,8 +45,8 @@ function ExecutiveGroupedBody({ members }) {
           <div className="space-y-2.5">
             {regulars.map((m, i) => (
               <OfficialRow
-                key={m.official_ref || m.official?._id || i}
-                official={m.official}
+                key={memberKey(m, i)}
+                member={m}
                 avatarBg="bg-white"
                 avatarText="text-gray-600"
               />
@@ -52,8 +63,8 @@ function FlatMembersBody({ members }) {
     <div className="space-y-2.5">
       {members.map((m, i) => (
         <OfficialRow
-          key={m.official_ref || m.official?._id || i}
-          official={m.official}
+          key={memberKey(m, i)}
+          member={m}
           avatarBg="bg-white"
           avatarText="text-gray-600"
         />
@@ -108,7 +119,7 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
       <div className="px-5 py-4 min-h-[100px]">
         {chairData ? (
           <OfficialRow
-            official={chairData.official || chairData}
+            member={chairData}
             avatarBg={style.avatarBg}
             avatarText={style.avatarText}
           />

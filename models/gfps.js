@@ -1,42 +1,55 @@
 import mongoose from "mongoose";
-import "./officialTerm";
-import "./user";
+import "./user.js";
 
-const MemberSchema = new mongoose.Schema({
-  official: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "OfficialTerm",
-    required: false,
-  },
-  // Legacy field from the old aggregate officials document. New records leave
-  // it empty — a seat is already a single UniversityOfficial document.
-  official_ref: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: false,
-  },
-  // Which chart header the seat belongs to
-  // (e.g., "OFFICE OF THE PRESIDENT", "MARSU TORRIJOS BRANCH").
-  official_group: {
+/* GFPS members are manual-first. The committee is its own record, not a view
+   over the officials roster: one person can legitimately sit in several
+   sections (a President is in both the Executive Committee and the
+   Secretariat), which the unique-per-seat roster model cannot express. So a
+   member's identity is its own row, and the row holds text only.
+
+   The row is deliberately four fields: the seat, the typed name, the memo's
+   order, and (for the Executive Committee) the role. Everything the roster
+   picker used to add — `official_term`, the legacy `official` / `official_ref`
+   pointers, the split `first_name` / `last_name`, the `official_group` header
+   and the `manual` provenance flag — was removed once the picker was dropped
+   and every write path hardcoded it to null/""/true. `manual` had a single
+   possible value, so it is derived on read (`lib/gfpsServer.js`) rather than
+   stored; the split name parts duplicated `official_text`, which every display
+   path reads first anyway. */
+const memberFields = {
+  /* The seat from the GFPS memorandum ("Director, Research"). Fixed by the
+     memo and independent of who holds it — a position outlives its occupant,
+     so it must never be conflated with the person's name. This is what lets
+     the chart be complete before any appointment is known. */
+  position_title: {
     type: String,
     required: false,
+    trim: true,
+    default: "",
   },
-});
+  /* The member's name, typed by hand. This is the source of truth for who
+     occupies `position_title`, and it never depends on a roster lookup.
+     NOT required: the memo seeds seats before appointments exist, so a vacant
+     seat is a valid row. `hasIdentity` in lib/gfpsServer.js enforces that a
+     row still identifies something (a person or a seat). */
+  official_text: {
+    type: String,
+    required: false,
+    trim: true,
+    default: "",
+  },
+  /* Where the row sits in the memo's listing, so the chart mirrors the
+     memorandum instead of database insertion order. */
+  sort_order: {
+    type: Number,
+    required: false,
+  },
+};
+
+const MemberSchema = new mongoose.Schema(memberFields);
 
 const ExecutiveMemberSchema = new mongoose.Schema({
-  official: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "OfficialTerm",
-    required: false,
-  },
-  // Same as MemberSchema.official_ref — legacy, unused for new records.
-  official_ref: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: false,
-  },
-  official_group: {
-    type: String,
-    required: false,
-  },
+  ...memberFields,
   role: {
     type: String,
     enum: ["chair", "member"],
