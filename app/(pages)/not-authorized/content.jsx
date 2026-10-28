@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React from "react";
+import BrandMark from "@/components/BrandMark";
 
 export default function NotAuthorizedContent() {
   const router = useRouter();
@@ -10,7 +11,14 @@ export default function NotAuthorizedContent() {
     <main className="min-h-screen bg-slate-100 text-slate-900 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/80">
         <div className="p-8 sm:p-10">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <BrandMark size={28} />
+            <span className="text-sm font-bold tracking-tight text-slate-700">
+              GEMS
+            </span>
+          </div>
+
+          <div className="mt-6 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
                 Access denied

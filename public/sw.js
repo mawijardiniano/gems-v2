@@ -1,4 +1,4 @@
-const CACHE_NAME = "gems-attendance-v2";
+const CACHE_NAME = "gems-attendance-v3";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/icons/icon-192.png",

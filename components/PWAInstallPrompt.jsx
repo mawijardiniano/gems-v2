@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import BrandMark from "@/components/BrandMark";
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -55,15 +56,13 @@ export default function PWAInstallPrompt() {
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
       <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-3">
-        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary-600 flex items-center justify-center text-white text-2xl">
-          ✓
-        </div>
+        <BrandMark size={48} className="flex-shrink-0 rounded-xl shadow-sm" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-800 text-sm">
-            Install Attendance App
+            Install GEMS
           </p>
           <p className="text-gray-500 text-xs">
-            Get faster access and offline attendance at events.
+            Get faster access to event attendance and reports, even offline.
           </p>
         </div>
         <div className="flex flex-col gap-2">

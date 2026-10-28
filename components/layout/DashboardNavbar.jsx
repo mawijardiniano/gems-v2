@@ -3,17 +3,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaBars, FaChevronDown, FaCog, FaSignOutAlt } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import NotificationBell from "@/components/NotificationBell";
 import useMyProfile from "@/lib/useMyProfile";
 import { logout as reduxLogout } from "@/store/slices/authSlice";
 
+/**
+ * The brand lockup ("GEMS" / "Gender Equality Management System") lives in each
+ * sidebar's own header now, so this bar only carries the sidebar toggle and the
+ * account controls.
+ */
 
 export default function DashboardNavbar({
   toggleSidebar,
-  title,
-  subtitle = "",
   settingsHref = "/settings",
   fallbackInitial = "U",
   fallbackName = "User",
@@ -25,7 +28,6 @@ export default function DashboardNavbar({
   const triggerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
-  const role = useSelector((state) => state.auth.role);
 
   const getInitials = useCallback(() => {
     if (profile?.personal) {
@@ -95,33 +97,24 @@ export default function DashboardNavbar({
     displayName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
     360;
 
-  const resolvedSubtitle =
-    typeof subtitle === "function" ? subtitle(role) : subtitle;
-
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/80 flex justify-between items-center px-4 z-30 shadow-sm"
+      className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/80 flex justify-between items-center px-4 z-30 sm:z-40 shadow-sm"
     >
-      {/* Left section */}
-      <div className="flex items-center space-x-4">
+      {/* Left section — the brand lockup and the collapse/expand control both
+          live in the sidebar header now. On desktop the sidebar (z-50) covers
+          this bar's left end, so the toggle is hidden there to avoid a dead
+          button underneath it; on mobile the sidebar is off-canvas and this is
+          the only way to open it. */}
+      <div className="flex min-w-0 items-center space-x-3 sm:space-x-4">
         <button
           onClick={toggleSidebar}
-          className="text-gray-500 hover:text-gray-800 transition-colors p-2 rounded-lg hover:bg-gray-100"
+          className="shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:hidden"
           aria-label="Toggle sidebar"
         >
           <FaBars size={18} />
         </button>
-        <div className="hidden sm:block">
-          <span className="text-lg font-bold tracking-tight text-gray-900">
-            {title}
-          </span>
-          {resolvedSubtitle && (
-            <p className="text-[11px] text-gray-400 font-medium tracking-wide uppercase">
-              {resolvedSubtitle}
-            </p>
-          )}
-        </div>
       </div>
 
       <div className="flex items-center gap-3">

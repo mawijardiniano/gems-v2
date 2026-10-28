@@ -33,8 +33,9 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#8e3b9e" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Attendance" />
+        <meta name="apple-mobile-web-app-title" content="GEMS" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

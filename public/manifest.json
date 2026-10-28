@@ -1,7 +1,7 @@
 {
-  "name": "GEMS Attendance",
-  "short_name": "Attendance",
-  "description": "Mark your attendance at university events",
+  "name": "GEMS — Gender Equality Management System",
+  "short_name": "GEMS",
+  "description": "Gender Equality Management System — event attendance, reporting and analytics",
   "start_url": "/events/discover",
   "scope": "/",
   "display": "standalone",

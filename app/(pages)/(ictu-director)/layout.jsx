@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
+import PageBreadcrumbs from "@/components/layout/PageBreadcrumbs";
 
 export default function IctuLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -94,11 +95,12 @@ export default function IctuLayout({ children }) {
 
       <div
         className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? "sm:ml-64" : "ml-0 sm:ml-16"
+          sidebarOpen ? "sm:ml-80" : "ml-0 sm:ml-20"
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <main className="mt-16 px-4 sm:px-6 bg-gray-50 h-screen">
+          <PageBreadcrumbs role="ictu-director" />
           {children}
         </main>
       </div>

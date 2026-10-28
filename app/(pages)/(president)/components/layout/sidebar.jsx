@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import BrandMark from "@/components/BrandMark";
 import useMyProfile from "@/lib/useMyProfile";
 import {
+  FaBars,
   FaHome,
   FaCog,
   FaSignOutAlt,
@@ -19,6 +21,9 @@ import {
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
+const BRAND_NAME = "GEMS";
+const BRAND_TAGLINE = "Gender Equality Management System";
 
 const TooltipWrapper = ({ label, children, collapsed }) => {
   if (!collapsed) return children;
@@ -123,8 +128,8 @@ export default function Sidebar({ open, setOpen, role }) {
   return (
     <>
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
-          open ? "w-64" : "w-0 sm:w-[72px]"
+        className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-40 sm:z-50 flex flex-col overflow-hidden ${
+          open ? "w-80" : "w-0 sm:w-20"
         }`}
       >
         {/* Brand glow — lilac wash at bottom-left; the light at the top
@@ -133,6 +138,56 @@ export default function Sidebar({ open, setOpen, role }) {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_0%_100%,rgba(168,81,184,0.28),transparent_70%)]"
         />
+        {/* ===== BRAND LOCKUP ===== */}
+        <div
+          className={`flex-shrink-0 h-20 border-b border-white/10 ${
+            open ? "gap-2.5 px-4" : "justify-center px-0"
+          } ${open ? "flex" : "hidden sm:flex"} items-center`}
+        >
+          {open ? (
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {/* "plain" draws the gem straight on the panel gradient: no inner
+                  18% tile padding, so the mark gets the full 46px of height. */}
+              <BrandMark size={46} variant="plain" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-lg font-bold leading-tight tracking-tight text-white">
+                  {BRAND_NAME}
+                </span>
+                <span className="block truncate text-[11px] font-medium leading-tight text-accent-300">
+                  {BRAND_TAGLINE}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="ml-auto shrink-0 rounded-lg p-1.5 text-secondary-100/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Collapse sidebar"
+              >
+                <FaBars size={16} />
+              </button>
+            </div>
+          ) : (
+            <TooltipWrapper label="Expand sidebar" collapsed={!open}>
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="group/expand relative flex h-11 w-11 items-center justify-center rounded-lg text-secondary-100/75 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Expand sidebar"
+              >
+                <BrandMark
+                  size={40}
+                  variant="plain"
+                  className="transition-opacity duration-150 group-hover/expand:opacity-0"
+                />
+                <FaBars
+                  size={16}
+                  className="absolute opacity-0 transition-opacity duration-150 group-hover/expand:opacity-100"
+                />
+              </button>
+            </TooltipWrapper>
+          )}
+        </div>
+
         <div
           className={`flex-shrink-0 border-b border-white/10 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"

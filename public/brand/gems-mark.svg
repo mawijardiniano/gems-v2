@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 132" fill="none">
+  <!--
+    GEMS mark — faceted "egg" of triangles.
+    PLACEHOLDER RECONSTRUCTION of the supplied artwork: every facet is drawn as a
+    transparent fill with a thin white stroke, so on the purple brand tile it
+    reads as the white line-art gem. Replace this file with the real export
+    (keep the viewBox ratio) and the whole system follows.
+  -->
+  <!-- outer silhouette -->
+  <path
+    d="M50 3 L61 18 L72 32 L81 56 L84 80 L78 103 L61 119 L50 126 L39 119 L22 103 L16 80 L19 56 L28 32 L39 18 Z"
+    stroke="#ffffff" stroke-width="1.7" stroke-linejoin="round" stroke-opacity="0.92"
+  />
+
+  <!-- upper crown / bezel -->
+  <path d="M50 3 L43 33 L57 33 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+  <path d="M43 33 L39 18 L28 32 L25 33 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+  <path d="M57 33 L61 18 L72 32 L75 33 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+
+  <!-- bead band: zigzag along both outer sides -->
+  <path
+    d="M25 33 L19 56 L14 44 Z M19 56 L16 80 L10 66 Z M16 80 L22 103 L9 92 Z"
+    stroke="#ffffff" stroke-width="1.15" stroke-linejoin="round" stroke-opacity="0.8"
+  />
+  <path
+    d="M75 33 L81 56 L86 44 Z M81 56 L84 80 L90 66 Z M84 80 L78 103 L91 92 Z"
+    stroke="#ffffff" stroke-width="1.15" stroke-linejoin="round" stroke-opacity="0.8"
+  />
+
+  <!-- lower crown -->
+  <path d="M22 103 L39 119 L50 126 L42 96 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+  <path d="M78 103 L61 119 L50 126 L58 96 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+  <path d="M42 96 L58 96 L50 126 Z" stroke="#ffffff" stroke-width="1.15" stroke-opacity="0.85" />
+
+  <!-- inner table (large centre facets) -->
+  <path d="M43 33 L57 33 L58 96 L42 96 Z" stroke="#ffffff" stroke-width="1.35" stroke-opacity="0.8" />
+  <path d="M43 33 L19 56 L42 96 Z" stroke="#ffffff" stroke-width="1.35" stroke-opacity="0.8" />
+  <path d="M57 33 L81 56 L58 96 Z" stroke="#ffffff" stroke-width="1.35" stroke-opacity="0.8" />
+
+  <!-- pavilion highlights -->
+  <path d="M42 96 L58 96 L50 74 Z" stroke="#ffffff" stroke-width="1.05" stroke-opacity="0.62" />
+  <path d="M19 56 L42 96 L28 70 Z" stroke="#ffffff" stroke-width="1.05" stroke-opacity="0.5" />
+  <path d="M81 56 L58 96 L72 70 Z" stroke="#ffffff" stroke-width="1.05" stroke-opacity="0.5" />
+</svg>
+

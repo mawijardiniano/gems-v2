@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FaUserPlus, FaSignInAlt, FaTimes, FaBars } from "react-icons/fa";
+import BrandMark from "@/components/BrandMark";
 import SignIn from "../SignIn";
 
 export default function Navbar() {
@@ -40,14 +41,17 @@ export default function Navbar() {
         <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary-700 to-secondary-500 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
-              GE
-            </div>
-            <span className={`text-lg font-bold transition-all duration-300 ${
-              scrolled
-                ? "bg-gradient-to-r from-secondary-800 to-secondary-500 bg-clip-text text-transparent"
-                : "text-white drop-shadow-sm"
-            }`}>
+            <BrandMark
+              size={34}
+              className="shadow-md transition-shadow group-hover:shadow-lg"
+            />
+            <span
+              className={`text-lg font-bold transition-all duration-300 ${
+                scrolled
+                  ? "bg-gradient-to-r from-secondary-800 to-secondary-500 bg-clip-text text-transparent"
+                  : "text-white drop-shadow-sm"
+              }`}
+            >
               Gender Equality
             </span>
           </Link>
