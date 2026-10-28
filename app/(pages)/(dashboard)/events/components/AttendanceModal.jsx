@@ -330,10 +330,10 @@ export default function AttendanceModal({
           className={`p-6 text-center ${
             attendanceStatus === "success"
               ? queued
-                ? "bg-amber-500"
+                ? "bg-secondary-500"
                 : "bg-green-600"
               : attendanceStatus === "already"
-                ? "bg-blue-600"
+                ? "bg-secondary-600"
                 : attendanceStatus === "error"
                   ? "bg-red-600"
                   : "bg-gray-600"
@@ -362,7 +362,7 @@ export default function AttendanceModal({
             <>
               <div className="text-5xl mb-3">📋</div>
               <h2 className="text-xl font-bold">Already Attended</h2>
-              <p className="text-blue-100 text-sm mt-1">
+              <p className="text-secondary-100 text-sm mt-1">
                 You were already marked as attended
               </p>
             </>
@@ -408,7 +408,7 @@ export default function AttendanceModal({
           )}
 
           {attendanceStatus === "success" && queued && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+            <div className="bg-secondary-50 border border-secondary-200 rounded-lg p-3 text-sm text-secondary-700">
               Your attendance was captured at{" "}
               {attendedAt ? formatDateTime(attendedAt) : "the time you tapped"}.
               It will be submitted automatically once your device reconnects —
@@ -423,7 +423,7 @@ export default function AttendanceModal({
           )}
 
           {attendanceStatus === "already" && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+            <div className="bg-secondary-50 border border-secondary-200 rounded-lg p-3 text-sm text-secondary-700">
               You have already been marked as attended for this event. No
               further action needed.
             </div>
@@ -445,7 +445,7 @@ export default function AttendanceModal({
             {attendanceStatus === "success" && (
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                className="flex-1 px-4 py-2 bg-secondary-600 text-white rounded-lg text-sm hover:bg-secondary-700"
               >
                 Done
               </button>

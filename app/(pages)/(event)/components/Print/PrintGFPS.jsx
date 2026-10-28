@@ -161,7 +161,7 @@ const printHtml = (html) => {
 export default function PrintGFPS({ SECTIONS = DEFAULT_SECTIONS, gfps = {} }) {
   return (
     <button
-      className="px-4 py-2 bg-blue-600 text-white rounded-xl  hover:bg-blue-700"
+      className="px-4 py-2 bg-secondary-600 text-white rounded-xl  hover:bg-secondary-700"
       onClick={() => printHtml(buildPrintHtml(SECTIONS, gfps))}
     >
       Print GFPS

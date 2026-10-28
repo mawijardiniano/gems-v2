@@ -193,29 +193,35 @@ export default function Sidebar({ open, setOpen, role }) {
   return (
     <>
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
+        {/* Brand glow — lilac wash at bottom-left; the light at the top
+            comes from the panel gradient itself */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_0%_100%,rgba(168,81,184,0.28),transparent_70%)]"
+        />
         {/* ===== USER PROFILE HEADER ===== */}
         <div
-          className={`flex-shrink-0 border-b border-gray-100/80 ${
+          className={`flex-shrink-0 border-b border-white/10 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"
           }`}
         >
           {open ? (
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 flex-shrink-0"
                 style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
               >
                 {getInitials()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
-                <p className="text-[11px] font-medium text-indigo-600 truncate mt-0.5 uppercase tracking-wider">
+                <p className="text-[11px] font-medium text-accent-300 truncate mt-0.5 uppercase tracking-wider">
                   Admin
                 </p>
               </div>
@@ -223,7 +229,7 @@ export default function Sidebar({ open, setOpen, role }) {
           ) : (
             <TooltipWrapper label={getDisplayName()} collapsed={!open}>
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white cursor-default flex-shrink-0 mx-auto"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 cursor-default flex-shrink-0 mx-auto"
                 style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
               >
                 {getInitials()}
@@ -239,7 +245,7 @@ export default function Sidebar({ open, setOpen, role }) {
           }`}
         >
           {open && (
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
               Administration
             </p>
           )}
@@ -270,8 +276,8 @@ export default function Sidebar({ open, setOpen, role }) {
                       open ? "p-2.5" : "p-3 justify-center mx-1.5"
                     } ${
                       linkActive
-                        ? "bg-gradient-to-r from-indigo-50 to-purple-50/50 text-indigo-700"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                        : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <span
@@ -287,7 +293,7 @@ export default function Sidebar({ open, setOpen, role }) {
                       </span>
                     )}
                     {linkActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-full" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                     )}
                   </Link>
                 </TooltipWrapper>
@@ -306,8 +312,8 @@ export default function Sidebar({ open, setOpen, role }) {
                       open ? "p-2.5" : "p-3 justify-center mx-1.5"
                     } ${
                       linkActive
-                        ? "bg-gradient-to-r from-indigo-50 to-purple-50/50 text-indigo-700"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                        : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                     aria-expanded={isOpen}
                   >
@@ -330,14 +336,14 @@ export default function Sidebar({ open, setOpen, role }) {
                         className={`flex-shrink-0 transition-all duration-200 ${
                           isOpen ? "rotate-0" : "-rotate-90"
                         } ${
-                          linkActive ? "text-indigo-500" : "text-gray-300"
+                          linkActive ? "text-accent-300" : "text-white/50"
                         }`}
                       >
                         <FaChevronDown size={10} />
                       </span>
                     )}
                     {linkActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-full" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                     )}
                   </button>
                 </TooltipWrapper>
@@ -348,7 +354,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     isOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                   }`}
                 >
-                  <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                  <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">
                     {link.children.map((child) => {
                       const childActive = isActive(child.href);
                       return (
@@ -364,13 +370,13 @@ export default function Sidebar({ open, setOpen, role }) {
                               open ? "p-2" : "p-2.5 justify-center mx-1"
                             } ${
                               childActive
-                                ? "bg-indigo-50 text-indigo-700 font-medium"
-                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                ? "bg-secondary-100 text-secondary-800 font-medium ring-1 ring-white/10"
+                                : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
                             }`}
                           >
                             <span
                               className={`flex-shrink-0 transition-transform ${
-                                childActive ? "scale-110 text-indigo-500" : ""
+                                childActive ? "scale-110 text-accent-300" : ""
                               }`}
                             >
                               {SUB_ICONS[child.href] || (
@@ -383,7 +389,7 @@ export default function Sidebar({ open, setOpen, role }) {
                               </span>
                             )}
                             {childActive && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-indigo-500" />
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-secondary-500" />
                             )}
                           </Link>
                         </TooltipWrapper>
@@ -398,7 +404,7 @@ export default function Sidebar({ open, setOpen, role }) {
 
         {/* ===== BOTTOM ACTIONS ===== */}
         <div
-          className={`flex-shrink-0 border-t border-gray-100/80 py-2 ${
+          className={`flex-shrink-0 border-t border-white/10 py-2 ${
             open ? "px-3" : "px-0"
           }`}
         >
@@ -410,14 +416,14 @@ export default function Sidebar({ open, setOpen, role }) {
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
                 pathname === "/admin-settings"
-                  ? "bg-gradient-to-r from-gray-50 to-gray-100/50 text-gray-800"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                  : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
               }`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:rotate-90 duration-300">
                 <FaCog
                   size={16}
-                  className="text-gray-400 group-hover:text-gray-600"
+                  className="text-secondary-200/85 group-hover:text-secondary-100/85"
                 />
               </span>
               {open && <span className="text-sm font-medium">Settings</span>}
@@ -429,7 +435,7 @@ export default function Sidebar({ open, setOpen, role }) {
               onClick={() => setShowLogoutModal(true)}
               className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group w-full ${
                 open ? "p-2.5" : "p-3 justify-center mx-0"
-              } text-red-500 hover:bg-red-50 hover:text-red-600`}
+              } text-accent-300 hover:bg-white/5 hover:text-accent-300`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:translate-x-0.5 duration-200">
                 <FaArrowRightFromBracket size={16} />

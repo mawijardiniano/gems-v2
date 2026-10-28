@@ -69,7 +69,7 @@ export default function SeatHistoryPanel({ header, name }) {
           <button
             type="button"
             onClick={load}
-            className="ml-2 text-xs font-medium text-blue-700 underline"
+            className="ml-2 text-xs font-medium text-secondary-700 underline"
           >
             Retry
           </button>
@@ -137,7 +137,7 @@ function HistoryRow({ entry }) {
             {person}
           </span>
           {entry.status && entry.status !== "substantive" ? (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 capitalize">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary-50 text-secondary-700 capitalize">
               {entry.status}
             </span>
           ) : null}

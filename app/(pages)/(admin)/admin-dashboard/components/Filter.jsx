@@ -4,7 +4,7 @@ import { HiChevronDown, HiX } from "react-icons/hi";
 function Select({ value, onChange, label, options }) {
   return (
     <select
-      className="h-9 appearance-none rounded-lg border border-gray-200 bg-white px-3 pr-8 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      className="h-9 appearance-none rounded-lg border border-gray-200 bg-white px-3 pr-8 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
@@ -45,13 +45,13 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
-        className={`flex h-9 items-center gap-2 rounded-lg border bg-white px-3 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 ${
-          open ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"
+        className={`flex h-9 items-center gap-2 rounded-lg border bg-white px-3 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100 ${
+          open ? "border-secondary-400 ring-2 ring-secondary-100" : "border-gray-200"
         }`}
       >
         <span className="truncate">{placeholder}</span>
         {count > 0 && (
-          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-100 px-1.5 text-[10px] font-medium text-blue-700">
+          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-secondary-100 px-1.5 text-[10px] font-medium text-secondary-700">
             {count}
           </span>
         )}
@@ -72,7 +72,7 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
               <button
                 type="button"
                 onClick={clear}
-                className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800"
+                className="flex items-center gap-1 text-[11px] text-secondary-600 hover:text-secondary-800"
               >
                 <HiX className="text-xs" />
                 Clear
@@ -86,7 +86,7 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
                 <label
                   key={opt}
                   className={`flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-gray-50 ${
-                    checked ? "bg-blue-50 text-blue-800" : "text-gray-700"
+                    checked ? "bg-secondary-50 text-secondary-800" : "text-gray-700"
                   }`}
                 >
                   <input
@@ -99,7 +99,7 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
                           : [...value, opt],
                       )
                     }
-                    className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-200"
+                    className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-200"
                   />
                   {opt}
                 </label>

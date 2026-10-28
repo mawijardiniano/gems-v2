@@ -235,7 +235,7 @@ export default function EmployeeGenderStatsContent() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
-          <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+          <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-600 to-secondary-400 flex items-center justify-center text-white shadow-lg shadow-secondary-200">
             <FaUserTie size={18} />
           </span>
           Employee Gender Statistics
@@ -367,13 +367,13 @@ export default function EmployeeGenderStatsContent() {
               aria-pressed={useSample}
               className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                 useSample
-                  ? "border-amber-300 bg-amber-50 text-amber-700"
+                  ? "border-secondary-300 bg-secondary-50 text-secondary-700"
                   : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
               <span
                 className={`h-2 w-2 rounded-full ${
-                  useSample ? "bg-amber-500" : "bg-gray-300"
+                  useSample ? "bg-secondary-500" : "bg-gray-300"
                 }`}
               />
               {useSample ? "Sample data: ON" : "Use sample data"}
@@ -397,7 +397,7 @@ export default function EmployeeGenderStatsContent() {
       </div>
 
       {useSample && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
           Showing synthetic <strong>sample data</strong> built from
           <code className="mx-1">data/sample-profiles.json</code>
           ({SAMPLE_EMPLOYEE_COUNT.toLocaleString()} named employees · 413 female / 272 male / 26 LGBTQIA+), expanded into
@@ -417,7 +417,7 @@ export default function EmployeeGenderStatsContent() {
         data &&
         filterCount > 0 &&
         totals.total === 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
             No employees match the selected filters.
             {liveUnspecifiedEmployment > 0 && (
               <>
@@ -585,7 +585,7 @@ export default function EmployeeGenderStatsContent() {
 /* Buttons shared by the quick-report card, so the sample-data and live-data
    variants look identical. */
 const QUICK_REPORT_BTN_CLS =
-  "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
 
 function QuickReportsCard({ data, useSample, filterSummary, college }) {
   const [busy, setBusy] = useState("");
@@ -652,7 +652,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-blue-600" /> Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" /> Quick Reports
       </h3>
       <div className="flex flex-wrap gap-3">
         {useSample ? (
@@ -697,7 +697,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-amber-500" /> Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" /> Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -707,7 +707,7 @@ function KeyInsightsCard({ insights }) {
         <ul className="space-y-2">
           {list.map((line, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-secondary-500 shrink-0" />
               {line}
             </li>
           ))}

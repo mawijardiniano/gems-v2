@@ -15,7 +15,7 @@ export default function CTA() {
           <button
             type="button"
             onClick={() => router.push("/profile-registration")}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md"
+            className="bg-secondary-600 hover:bg-secondary-700 text-white px-6 py-2 rounded-md"
           >
             Take Survey
           </button>

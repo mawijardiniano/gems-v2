@@ -420,7 +420,7 @@ export default function ReportsContent() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
-          <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-violet-200">
+          <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-700 to-secondary-500 flex items-center justify-center text-white shadow-lg shadow-secondary-200">
             <FaFileAlt size={18} />
           </span>
           Generate Report
@@ -448,7 +448,7 @@ export default function ReportsContent() {
                    reports, so it resets whenever the type changes. */
                 setSampleSemester("");
               }}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
             >
               {REPORT_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -474,7 +474,7 @@ export default function ReportsContent() {
                     /* Employees carry no semester history. */
                     if (next === "employees") setSampleSemester("");
                   }}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   {PROFILE_POPULATIONS.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -533,7 +533,7 @@ export default function ReportsContent() {
               <select
                 value={sampleYear}
                 onChange={(e) => setSampleYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 <option value="">All academic years</option>
                 {[...SAMPLE_REPORT_SCHOOL_YEARS].reverse().map((y) => (
@@ -556,7 +556,7 @@ export default function ReportsContent() {
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 {years.length === 0 && <option value="">No years available</option>}
                 {years.map((y) => (
@@ -581,7 +581,7 @@ export default function ReportsContent() {
                 <select
                   value={sampleSemester}
                   onChange={(e) => setSampleSemester(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   <option value="">All semesters</option>
                   {SAMPLE_REPORT_SEMESTERS.map((s) => (
@@ -605,7 +605,7 @@ export default function ReportsContent() {
               <select
                 value={quarter}
                 onChange={(e) => setQuarter(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 {quarterOptionsFor(reportType).map((q) => (
                   <option key={q.value || "all"} value={q.value}>
@@ -622,7 +622,7 @@ export default function ReportsContent() {
           )}
 
           {usesSample && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-800">
+            <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2.5 text-[11px] leading-relaxed text-secondary-800">
               Built in your browser from the sample dataset (same source as
               Gender Statistics → Quick Reports), so every figure is complete.
               No database reads — the PDF is marked “Sample data”.{" "}
@@ -636,7 +636,7 @@ export default function ReportsContent() {
             type="button"
             onClick={handleGenerate}
             disabled={generating || (!usesSample && !year)}
-            className="w-full rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full rounded-lg bg-secondary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {generating && (
               <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -694,19 +694,19 @@ export default function ReportsContent() {
                   {item.level === "warning" && (
                     <FaExclamationTriangle
                       size={12}
-                      className="mt-0.5 text-amber-500 shrink-0"
+                      className="mt-0.5 text-secondary-500 shrink-0"
                     />
                   )}
                   {item.level === "info" && (
                     <FaInfoCircle
                       size={12}
-                      className="mt-0.5 text-blue-400 shrink-0"
+                      className="mt-0.5 text-secondary-400 shrink-0"
                     />
                   )}
                   <span
                     className={
                       item.level === "warning"
-                        ? "text-amber-700"
+                        ? "text-secondary-700"
                         : item.level === "ok"
                           ? "text-emerald-700"
                           : "text-gray-600"
@@ -716,7 +716,7 @@ export default function ReportsContent() {
                     {item.href && (
                       <Link
                         href={item.href}
-                        className="ml-1.5 text-violet-600 font-medium hover:underline"
+                        className="ml-1.5 text-secondary-600 font-medium hover:underline"
                       >
                         {item.linkLabel} →
                       </Link>
@@ -755,7 +755,7 @@ export default function ReportsContent() {
                       onClick={() =>
                         router.push(`/gad-ars${year ? `?year=${year}` : ""}`)
                       }
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-[11px] font-medium text-violet-700 hover:bg-violet-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-[11px] font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
                     >
                       <FaEye size={10} />
                       Preview
@@ -765,7 +765,7 @@ export default function ReportsContent() {
                     type="button"
                     onClick={() => downloadReport(t.value)}
                     disabled={generating}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700 transition-colors disabled:opacity-50"
                     title="Download report"
                   >
                     ⬇

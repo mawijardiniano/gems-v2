@@ -16,7 +16,7 @@ export default function PromotingFairness() {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background with warm gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-red-600" />
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary-600 via-orange-600 to-red-600" />
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-10 left-1/3 w-72 h-72 bg-yellow-300 rounded-full blur-[120px]" />
         <div className="absolute bottom-10 right-1/4 w-64 h-64 bg-red-300 rounded-full blur-[100px]" />
@@ -41,7 +41,7 @@ export default function PromotingFairness() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight text-white">
                 Promoting Fairness
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-amber-200">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-secondary-200">
                   And Inclusion
                 </span>
               </h1>
@@ -106,12 +106,12 @@ export default function PromotingFairness() {
                       <stop offset="100%" stopColor="#10B981" stopOpacity="0.9" />
                     </linearGradient>
                     <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.9" />
-                      <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.9" />
+                      <stop offset="0%" stopColor="var(--color-primary-300)" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="var(--color-primary-500)" stopOpacity="0.9" />
                     </linearGradient>
                     <linearGradient id="g5" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.9" />
-                      <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="var(--color-secondary-500)" stopOpacity="0.9" />
                     </linearGradient>
                     <linearGradient id="g6" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#FDBA74" stopOpacity="0.9" />

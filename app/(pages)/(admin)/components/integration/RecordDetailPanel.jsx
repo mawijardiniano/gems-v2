@@ -58,11 +58,11 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
           )}
           {record.validation_errors.filter((e) => e.level === "warning")
             .length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded p-2">
-              <div className="font-semibold text-amber-700 mb-1">
+            <div className="bg-secondary-50 border border-secondary-200 rounded p-2">
+              <div className="font-semibold text-secondary-700 mb-1">
                 Warnings (non-blocking):
               </div>
-              <div className="space-y-1 text-amber-700">
+              <div className="space-y-1 text-secondary-700">
                 {record.validation_errors
                   .filter((e) => e.level === "warning")
                   .map((err, idx) => (
@@ -77,11 +77,11 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
       )}
 
       {migration && (migration.action || migration.message) && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-2">
-          <div className="font-semibold text-amber-700 mb-1">
+        <div className="bg-secondary-50 border border-secondary-200 rounded p-2">
+          <div className="font-semibold text-secondary-700 mb-1">
             Migration Result:
           </div>
-          <div className="space-y-1 text-amber-700">
+          <div className="space-y-1 text-secondary-700">
             {migration.action && <div>• Action: {migration.action}</div>}
             {migration.message && <div>• Reason: {migration.message}</div>}
             {migration.profile_id && (
@@ -92,11 +92,11 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
             )}
           </div>
           {migration.changes && migration.changes.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-amber-200">
-              <div className="font-semibold text-amber-700 mb-1">
+            <div className="mt-2 pt-2 border-t border-secondary-200">
+              <div className="font-semibold text-secondary-700 mb-1">
                 Changes made: {migration.changes.length}
               </div>
-              <div className="space-y-1 text-amber-700">
+              <div className="space-y-1 text-secondary-700">
                 {migration.changes.map((change, idx) => (
                   <div key={idx}>
                     • {change.field}: {String(change.from ?? "")} →{" "}
@@ -125,7 +125,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
           <div className="font-semibold text-gray-900 mb-1">
             Normalized Data:
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded p-1.5 overflow-auto max-h-30">
+          <div className="bg-secondary-50 border border-secondary-200 rounded p-1.5 overflow-auto max-h-30">
             <pre className="text-[10px] text-gray-700">
               {JSON.stringify(record.mapped_payload, null, 2)}
             </pre>

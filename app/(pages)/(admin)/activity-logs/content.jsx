@@ -34,25 +34,25 @@ const ACTION_COLORS = {
   LOGIN: "text-green-600 bg-green-50",
   LOGOUT: "text-gray-600 bg-gray-50",
   LOGIN_FAILED: "text-red-600 bg-red-50",
-  CREATE: "text-blue-600 bg-blue-50",
+  CREATE: "text-secondary-600 bg-secondary-50",
   UPDATE: "text-yellow-600 bg-yellow-50",
   DELETE: "text-red-600 bg-red-50",
-  PROFILE_UPDATE: "text-blue-600 bg-blue-50",
-  EVENT_CREATE: "text-purple-600 bg-purple-50",
+  PROFILE_UPDATE: "text-secondary-600 bg-secondary-50",
+  EVENT_CREATE: "text-secondary-600 bg-secondary-50",
   EVENT_UPDATE: "text-yellow-600 bg-yellow-50",
   EVENT_DELETE: "text-red-600 bg-red-50",
   EVENT_CANCEL: "text-red-600 bg-red-50",
-  EVENT_REGISTER: "text-indigo-600 bg-indigo-50",
+  EVENT_REGISTER: "text-secondary-600 bg-secondary-50",
   CHANGE_PASSWORD: "text-orange-600 bg-orange-50",
   RESET_PASSWORD: "text-red-600 bg-red-50",
-  PROFILE_UPDATE: "text-blue-600 bg-blue-50",
+  PROFILE_UPDATE: "text-secondary-600 bg-secondary-50",
   LOGIN_FAILED: "text-red-600 bg-red-50",
   REGISTER: "text-green-600 bg-green-50",
   LOGOUT: "text-gray-600 bg-gray-50",
-  ROLE_CHANGE: "text-purple-600 bg-purple-50",
+  ROLE_CHANGE: "text-secondary-600 bg-secondary-50",
   USER_DELETE: "text-red-700 bg-red-100",
   STATUS_CHANGE: "text-orange-600 bg-orange-50",
-  PROFILE_CREATE: "text-blue-600 bg-blue-50",
+  PROFILE_CREATE: "text-secondary-600 bg-secondary-50",
   PROFILE_BULK_DELETE: "text-red-700 bg-red-100",
 
   GFP_CREATE: "text-cyan-600 bg-cyan-50",
@@ -82,34 +82,34 @@ const ACTION_COLORS = {
   PROJECT_BULK_DELETE: "text-red-700 bg-red-100",
   PROJECT_COMMENT: "text-gray-600 bg-gray-50",
   PROJECT_COMMENT_DELETE: "text-red-600 bg-red-50",
-  EVENT_PARTICIPATE: "text-indigo-600 bg-indigo-50",
+  EVENT_PARTICIPATE: "text-secondary-600 bg-secondary-50",
   ACCOMPLISHMENT_CREATE: "text-pink-600 bg-pink-50",
   ACCOMPLISHMENT_UPDATE: "text-pink-600 bg-pink-50",
-  ROLE_CHANGE: "text-purple-600 bg-purple-50",
+  ROLE_CHANGE: "text-secondary-600 bg-secondary-50",
   STATUS_CHANGE: "text-orange-600 bg-orange-50",
   PROJECT_CREATE: "text-teal-600 bg-teal-50",
   PROJECT_UPDATE: "text-yellow-600 bg-yellow-50",
   PROJECT_COMMENT: "text-gray-600 bg-gray-50",
   APPROVE: "text-green-600 bg-green-50",
   REJECT: "text-red-600 bg-red-50",
-  EXPORT: "text-indigo-600 bg-indigo-50",
-  IMPORT: "text-purple-600 bg-purple-50",
+  EXPORT: "text-secondary-600 bg-secondary-50",
+  IMPORT: "text-secondary-600 bg-secondary-50",
   INTEGRATION_SYNC: "text-cyan-600 bg-cyan-50",
   NOTIFICATION_READ: "text-gray-600 bg-gray-50",
   OTHER: "text-gray-500 bg-gray-100",
 };
 
 const SEVERITY_COLORS = {
-  info: "text-blue-600 bg-blue-50",
+  info: "text-secondary-600 bg-secondary-50",
   warning: "text-yellow-600 bg-yellow-50",
   error: "text-red-600 bg-red-50",
   critical: "text-red-700 bg-red-100",
 };
 
 const RESOURCE_COLORS = {
-  user: "text-purple-600 bg-purple-50",
-  profile: "text-blue-600 bg-blue-50",
-  event: "text-indigo-600 bg-indigo-50",
+  user: "text-secondary-600 bg-secondary-50",
+  profile: "text-secondary-600 bg-secondary-50",
+  event: "text-secondary-600 bg-secondary-50",
   project: "text-teal-600 bg-teal-50",
   gpb: "text-green-600 bg-green-50",
   gfps: "text-cyan-600 bg-cyan-50",
@@ -263,7 +263,7 @@ export default function ActivityLogsContent() {
     <div className="mt-20 px-4 md:px-8 pb-10">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <FaHistory className="text-2xl text-blue-600" />
+          <FaHistory className="text-2xl text-secondary-600" />
           <h1 className="text-2xl font-bold">Activity Logs</h1>
         </div>
         <div className="flex items-center gap-2">
@@ -288,7 +288,7 @@ export default function ActivityLogsContent() {
               value={searchUserId}
               onChange={(e) => { setSearchUserId(e.target.value); setPage(1); }}
               placeholder="Filter by user ID..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
           <div>
@@ -296,7 +296,7 @@ export default function ActivityLogsContent() {
             <select
               value={searchAction}
               onChange={(e) => { setSearchAction(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             >
               <option value="">All Actions</option>
               <option value="LOGIN">LOGIN</option>
@@ -348,7 +348,7 @@ export default function ActivityLogsContent() {
               type="date"
               value={dateFrom}
               onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
           <div>
@@ -357,7 +357,7 @@ export default function ActivityLogsContent() {
               type="date"
               value={dateTo}
               onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
         </div>

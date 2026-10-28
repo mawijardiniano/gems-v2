@@ -264,7 +264,7 @@ export default function IntegrationStagingContent() {
           <button
             type="submit"
             disabled={busyAction !== ""}
-            className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:opacity-50"
+            className="px-4 py-2 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
           >
             {busyAction === "Fetch to Staging"
               ? "Fetching..."
@@ -356,7 +356,7 @@ export default function IntegrationStagingContent() {
               {batches.map((batch) => (
                 <tr
                   key={batch._id}
-                  className={selectedBatchId === batch._id ? "bg-blue-50" : ""}
+                  className={selectedBatchId === batch._id ? "bg-secondary-50" : ""}
                 >
                   <td className="px-3 py-2">{batch.source_name || "-"}</td>
                   <td className="px-3 py-2">{batch.source_type}</td>
@@ -471,7 +471,7 @@ export default function IntegrationStagingContent() {
                     },
                   }))
                 }
-                className="px-3 py-1.5 rounded bg-amber-500 text-white text-sm disabled:opacity-50"
+                className="px-3 py-1.5 rounded bg-secondary-500 text-white text-sm disabled:opacity-50"
               >
                 {busyAction === "Validate Batch" ? "Validating..." : "Validate"}
               </button>
@@ -489,7 +489,7 @@ export default function IntegrationStagingContent() {
                     },
                   }))
                 }
-                className="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm disabled:opacity-50"
+                className="px-3 py-1.5 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
               >
                 {busyAction === "Approve Batch"
                   ? "Approving..."
@@ -561,7 +561,7 @@ export default function IntegrationStagingContent() {
                       <tr
                         key={r._id}
                         className={`border-t border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                          selectedRecordId === r._id ? "bg-blue-50" : ""
+                          selectedRecordId === r._id ? "bg-secondary-50" : ""
                         }`}
                         onClick={() => selectRecord(r._id)}
                       >
@@ -574,7 +574,7 @@ export default function IntegrationStagingContent() {
                                 : r.status === "invalid"
                                   ? "bg-red-100 text-red-700"
                                   : r.status === "approved"
-                                    ? "bg-blue-100 text-blue-700"
+                                    ? "bg-secondary-100 text-secondary-700"
                                     : r.status === "migrated"
                                       ? "bg-emerald-100 text-emerald-700"
                                       : "bg-gray-100 text-gray-700"
@@ -655,11 +655,11 @@ export default function IntegrationStagingContent() {
                     {selectedRecord.migration_result &&
                       (selectedRecord.migration_result.action ||
                         selectedRecord.migration_result.message) && (
-                        <div className="bg-amber-50 border border-amber-200 rounded p-2">
-                          <div className="font-semibold text-amber-700 mb-1">
+                        <div className="bg-secondary-50 border border-secondary-200 rounded p-2">
+                          <div className="font-semibold text-secondary-700 mb-1">
                             Migration Result:
                           </div>
-                          <div className="space-y-1 text-amber-700">
+                          <div className="space-y-1 text-secondary-700">
                             {selectedRecord.migration_result.action && (
                               <div>
                                 • Action:{" "}
@@ -716,7 +716,7 @@ export default function IntegrationStagingContent() {
                         <div className="font-semibold text-gray-900 mb-1">
                           Normalized Data:
                         </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded p-1.5 overflow-auto max-h-30">
+                        <div className="bg-secondary-50 border border-secondary-200 rounded p-1.5 overflow-auto max-h-30">
                           <pre className="text-[10px] text-gray-700">
                             {JSON.stringify(
                               selectedRecord.mapped_payload,

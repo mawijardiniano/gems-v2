@@ -16,7 +16,7 @@ const ACTION_LABELS = {
 
 const LEVEL_STYLES = {
   info: { dot: "bg-green-500", title: "text-green-700" },
-  warn: { dot: "bg-amber-500", title: "text-amber-700" },
+  warn: { dot: "bg-secondary-500", title: "text-secondary-700" },
   error: { dot: "bg-red-500", title: "text-red-700" },
 };
 

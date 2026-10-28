@@ -655,7 +655,7 @@ export default function StudentsUserListContent({ college }) {
 
         <div>
           <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span className="w-2 h-2 rounded-full bg-secondary-500"></span>
             Permanent Address
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -775,7 +775,7 @@ export default function StudentsUserListContent({ college }) {
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                 {(personal.first_name?.[0] || "").toUpperCase()}
                 {(personal.last_name?.[0] || "").toUpperCase()}
               </div>
@@ -814,7 +814,7 @@ export default function StudentsUserListContent({ college }) {
                     onClick={() => setViewTab(tab.id)}
                     className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
                       viewTab === tab.id
-                        ? "border-blue-600 text-blue-600"
+                        ? "border-secondary-600 text-secondary-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                   >
@@ -906,7 +906,7 @@ export default function StudentsUserListContent({ college }) {
             placeholder="Search by name..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-secondary-400 focus:ring-2 focus:ring-secondary-100 outline-none transition-all"
           />
         </div>
       </div>
@@ -925,7 +925,7 @@ export default function StudentsUserListContent({ college }) {
           <button
             onClick={generatePDF}
             disabled={generating}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition shadow-sm"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-secondary-600 text-white hover:bg-secondary-700 disabled:bg-secondary-300 disabled:cursor-not-allowed transition shadow-sm"
           >
             <svg
               className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`}
@@ -958,14 +958,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      nameSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      nameSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      nameSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      nameSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -982,14 +982,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      sexSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      sexSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      sexSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      sexSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -1006,14 +1006,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      collegeSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      collegeSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      collegeSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      collegeSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -1030,14 +1030,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      campusSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      campusSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      campusSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      campusSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -1054,14 +1054,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      courseSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      courseSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      courseSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      courseSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -1078,14 +1078,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-[10px]">
                   <span
                     className={
-                      yearSort === "asc" ? "text-blue-600" : "text-gray-300"
+                      yearSort === "asc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      yearSort === "desc" ? "text-blue-600" : "text-gray-300"
+                      yearSort === "desc" ? "text-secondary-600" : "text-gray-300"
                     }
                   >
                     ▼
@@ -1115,7 +1115,7 @@ export default function StudentsUserListContent({ college }) {
                 >
                   <TableCell className="px-4 py-3 text-sm text-gray-800">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-600 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-secondary-50 flex items-center justify-center text-xs font-semibold text-secondary-600 shrink-0">
                         {(personal.first_name?.[0] || "?").toUpperCase()}
                         {(personal.last_name?.[0] || "").toUpperCase()}
                       </div>
@@ -1186,7 +1186,7 @@ export default function StudentsUserListContent({ college }) {
                               userId: user._id,
                             })
                           }
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-amber-600 border border-amber-200 hover:bg-amber-50 transition-all"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-secondary-600 border border-secondary-200 hover:bg-secondary-50 transition-all"
                         >
                           Reset
                         </button>
@@ -1311,7 +1311,7 @@ export default function StudentsUserListContent({ college }) {
                 }}
                 className={`px-4 py-2 text-sm font-medium rounded-lg text-white transition shadow-sm ${
                   confirmAction.type === "reset"
-                    ? "bg-amber-500 hover:bg-amber-600"
+                    ? "bg-secondary-500 hover:bg-secondary-600"
                     : confirmAction.isActive
                       ? "bg-red-500 hover:bg-red-600"
                       : "bg-emerald-500 hover:bg-emerald-600"

@@ -196,7 +196,7 @@ export default function NotificationBell() {
                   key={item._id}
                   onClick={() => handleNotificationClick(item)}
                   className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 ${
-                    item.isRead ? "bg-white" : "bg-blue-50/60"
+                    item.isRead ? "bg-white" : "bg-secondary-50/60"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

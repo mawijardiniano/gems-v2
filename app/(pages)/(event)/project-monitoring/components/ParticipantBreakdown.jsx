@@ -15,13 +15,13 @@ const INNER_RADIUS = 56;
 
 /* Colours mirror the event attendance insights so the same slice always reads the same way. */
 const SEX_COLORS = {
-  Female: "#ec4899",
-  Male: "#3b82f6",
+  Female: "var(--color-accent-500)",
+  Male: "var(--color-primary-500)",
   Unspecified: "#9ca3af",
 };
 
 const SECTOR_COLORS = {
-  Student: "#8b5cf6",
+  Student: "var(--color-secondary-500)",
   Employee: "#14b8a6",
   Unspecified: "#9ca3af",
 };

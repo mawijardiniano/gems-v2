@@ -73,10 +73,10 @@ function EmptyState({ icon: Icon, title, description, action }) {
 // ─── Stat Card ─────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color = "blue" }) {
   const colorMap = {
-    blue: "bg-blue-50 text-blue-600",
+    blue: "bg-secondary-50 text-secondary-600",
     green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    amber: "bg-secondary-50 text-secondary-600",
+    violet: "bg-secondary-50 text-secondary-600",
   };
 
   return (
@@ -306,7 +306,7 @@ export default function GAABudgetContent() {
                 setEditBudget(null);
                 setModalOpen(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add Budget
@@ -368,8 +368,8 @@ export default function GAABudgetContent() {
         {/* Table header */}
         <div className="px-6 py-5 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-violet-50 flex items-center justify-center">
-              <FaPiggyBank className="h-5 w-5 text-violet-600" />
+            <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
+              <FaPiggyBank className="h-5 w-5 text-secondary-600" />
             </div>
             <div>
               <h2 className="text-sm font-semibold text-gray-900">
@@ -390,7 +390,7 @@ export default function GAABudgetContent() {
                 placeholder="Search budgets..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-48 pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+                className="w-48 pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
               />
             </div>
 
@@ -431,7 +431,7 @@ export default function GAABudgetContent() {
                     setEditBudget(null);
                     setModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
                 >
                   <FaPlus className="h-3 w-3" />
                   Add Budget
@@ -480,7 +480,7 @@ export default function GAABudgetContent() {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700 border border-secondary-100">
                         {b.gadPercent}%
                       </span>
                     </td>
@@ -494,7 +494,7 @@ export default function GAABudgetContent() {
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button
                             onClick={() => handleEdit(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition-all"
                           >
                             <FaEdit className="h-3 w-3" />
                             Edit
@@ -511,7 +511,7 @@ export default function GAABudgetContent() {
                         <div className="sm:hidden flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition-all"
                           >
                             <FaEdit className="h-3 w-3" />
                           </button>
@@ -678,7 +678,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                 <FaPiggyBank className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -726,7 +726,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   max={2100}
                   required
                   disabled={!!initial}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </div>
             </div>
@@ -746,7 +746,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   step="0.01"
                   required
                   placeholder="0.00"
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
                 />
               </div>
             </div>
@@ -770,7 +770,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   max={100}
                   step="0.1"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">
@@ -807,7 +807,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
             >
               {loading ? (
                 <>

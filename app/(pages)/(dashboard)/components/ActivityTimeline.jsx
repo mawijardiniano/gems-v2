@@ -65,7 +65,7 @@ export default function ActivityTimeline() {
               Icon = <FaUserEdit />;
               break;
             case "EVENT_REGISTER":
-              Icon = <FaCalendarCheck className="text-blue-500" />;
+              Icon = <FaCalendarCheck className="text-secondary-500" />;
               break;
             case "EVENT_CREATE":
               Icon = <FaPlusCircle className="text-green-500" />;

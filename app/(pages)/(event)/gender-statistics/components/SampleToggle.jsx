@@ -20,13 +20,13 @@ export function SampleToggle({ useSample, onToggle, className = "" }) {
       aria-pressed={useSample}
       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
         useSample
-          ? "border-amber-300 bg-amber-50 text-amber-700"
+          ? "border-secondary-300 bg-secondary-50 text-secondary-700"
           : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
       } ${className}`}
     >
       <span
         className={`h-2 w-2 rounded-full ${
-          useSample ? "bg-amber-500" : "bg-emerald-500"
+          useSample ? "bg-secondary-500" : "bg-emerald-500"
         }`}
       />
       {useSample ? "Sample data" : "Live data"}
@@ -36,7 +36,7 @@ export function SampleToggle({ useSample, onToggle, className = "" }) {
 
 export function SampleDataNotice() {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+    <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
       Showing synthetic <strong>sample data</strong> for{" "}
       {SAMPLE_DASHBOARD_POPULATION.students.toLocaleString()} students and{" "}
       {SAMPLE_DASHBOARD_POPULATION.employees.toLocaleString()} employees with a

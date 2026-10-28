@@ -12,11 +12,11 @@ import Skeleton from "@/components/Skeleton";
 import EventDetailsModal from "./EventDetailsModal";
 
 const ACTIVITY_COLORS = {
-  Academic: "bg-blue-50 text-blue-700 border-blue-200",
-  Administrative: "bg-purple-50 text-purple-700 border-purple-200",
+  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
+  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
   Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
@@ -79,7 +79,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
       aria-label={`View details for ${event.title}`}
       onClick={() => onOpen(event)}
       onKeyDown={handleKeyDown}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-indigo-500"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-secondary-500"
     >
       {/* Poster */}
       {posterUrl ? (
@@ -92,13 +92,13 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       ) : (
-        <div className="h-2 bg-gradient-to-r from-indigo-50 to-purple-50" />
+        <div className="h-2 bg-gradient-to-r from-secondary-50 to-secondary-100/60" />
       )}
 
       <div className="flex flex-1 flex-col gap-3 p-5">
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 transition-colors group-hover:text-indigo-600">
+          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 transition-colors group-hover:text-secondary-600">
             {event.title}
           </h3>
           {event.type_of_activity && (
@@ -222,7 +222,7 @@ export default function UpcomingEvents() {
         {/* Section header */}
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-indigo-600">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-secondary-600">
               What&apos;s on campus
             </p>
             <h2 className="text-3xl font-bold text-gray-900">Upcoming Events</h2>
@@ -233,7 +233,7 @@ export default function UpcomingEvents() {
           </div>
           <Link
             href="/events/discover"
-            className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+            className="inline-flex shrink-0 items-center gap-2 text-sm font-medium text-secondary-600 transition-colors hover:text-secondary-700"
           >
             View all events
             <FaArrowRight className="text-xs" />

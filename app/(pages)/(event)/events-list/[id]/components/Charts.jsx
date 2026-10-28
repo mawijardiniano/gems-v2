@@ -13,7 +13,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const COLORS = ["#2563eb", "#f97316", "#10b981", "#a855f7", "#06b6d4", "#ef4444", "#ec4899"];
+const COLORS = ["var(--color-primary-600)", "#f97316", "#10b981", "#a855f7", "#06b6d4", "#ef4444", "var(--color-accent-500)"];
 
 const chartTooltipStyle = {
   borderRadius: 10,

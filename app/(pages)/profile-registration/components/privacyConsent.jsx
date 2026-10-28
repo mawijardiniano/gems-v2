@@ -25,14 +25,14 @@ export default function PrivacyConsent() {
     <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+        <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
               <FaShieldAlt className="text-white text-2xl" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Privacy & Consent</h1>
-              <p className="text-blue-100 text-sm mt-1">
+              <p className="text-secondary-100 text-sm mt-1">
                 Marinduque State University &mdash; Gender Equity Management System
               </p>
             </div>
@@ -51,7 +51,7 @@ export default function PrivacyConsent() {
             is committed to protecting your privacy and ensuring that all
             personal and sensitive personal information (SPI) collected through
             the{" "}
-            <span className="font-semibold text-blue-700">
+            <span className="font-semibold text-secondary-700">
               Gender Equity Management System (GEMS)
             </span>{" "}
             is processed in compliance with the{" "}
@@ -61,7 +61,7 @@ export default function PrivacyConsent() {
             .
           </p>
 
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
             <p className="font-semibold text-gray-900 mb-1">
               1. Purpose of Data Collection
             </p>
@@ -81,7 +81,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
             <p className="font-semibold text-gray-900 mb-1">
               2. Types of Information Collected
             </p>
@@ -118,7 +118,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
             <p className="font-semibold text-gray-900 mb-1">
               4. Your Rights
             </p>
@@ -147,8 +147,8 @@ export default function PrivacyConsent() {
               <div
                 className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
                   checked
-                    ? "bg-blue-600 border-blue-600"
-                    : "border-gray-300 group-hover:border-blue-400"
+                    ? "bg-secondary-600 border-secondary-600"
+                    : "border-gray-300 group-hover:border-secondary-400"
                 }`}
               >
                 {checked && <FaCheckCircle className="text-white text-xs" />}
@@ -165,7 +165,7 @@ export default function PrivacyConsent() {
             disabled={!checked}
             className={`mt-5 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
               checked
-                ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200 hover:shadow-blue-300"
+                ? "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >

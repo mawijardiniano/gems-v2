@@ -437,7 +437,7 @@ export default function GADARContent() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+            className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
           >
             <option value="">Select Year</option>
             {gpbList.map((g) => (
@@ -768,7 +768,7 @@ export default function GADARContent() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => downloadEvidenceFile(viewerFile)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                 >
                   <FaDownload className="h-3.5 w-3.5" />
                   Download
@@ -815,7 +815,7 @@ export default function GADARContent() {
                   <p className="text-sm text-gray-300">{previewError}</p>
                   <button
                     onClick={() => downloadEvidenceFile(viewerFile)}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FaDownload className="h-3.5 w-3.5" />
                     Download instead
@@ -858,7 +858,7 @@ export default function GADARContent() {
                   </p>
                   <button
                     onClick={() => downloadEvidenceFile(viewerFile)}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FaDownload className="h-3.5 w-3.5" />
                     Download to view

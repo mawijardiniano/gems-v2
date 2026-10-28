@@ -36,7 +36,7 @@ export default function BatchTable({
               <tr
                 key={batch._id}
                 className={`border-t border-gray-100 ${
-                  selectedBatchId === batch._id ? "bg-blue-50" : ""
+                  selectedBatchId === batch._id ? "bg-secondary-50" : ""
                 }`}
               >
                 <td className="px-3 py-2">{batch.source_name || "-"}</td>

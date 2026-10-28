@@ -49,9 +49,9 @@ const ADD_NEW_OFFICE_VALUE = "__add_new_office__";
  */
 const STATUS_BADGE = {
   substantive: { label: "Assigned", cls: "bg-emerald-50 text-emerald-600" },
-  acting: { label: "Acting", cls: "bg-amber-50 text-amber-700" },
-  interim: { label: "Interim", cls: "bg-amber-50 text-amber-700" },
-  concurrent: { label: "Concurrent", cls: "bg-blue-50 text-blue-700" },
+  acting: { label: "Acting", cls: "bg-secondary-50 text-secondary-700" },
+  interim: { label: "Interim", cls: "bg-secondary-50 text-secondary-700" },
+  concurrent: { label: "Concurrent", cls: "bg-secondary-50 text-secondary-700" },
 };
 
 // ─── Header presentation ───────────────────────────────────────────
@@ -77,14 +77,14 @@ const HEADER_COLORS = [
 ];
 
 const colorMap = {
-  amber: "bg-amber-50 text-amber-600",
-  blue: "bg-blue-50 text-blue-600",
+  amber: "bg-secondary-50 text-secondary-600",
+  blue: "bg-secondary-50 text-secondary-600",
   green: "bg-emerald-50 text-emerald-600",
-  violet: "bg-violet-50 text-violet-600",
-  indigo: "bg-indigo-50 text-indigo-600",
+  violet: "bg-secondary-50 text-secondary-600",
+  indigo: "bg-secondary-50 text-secondary-600",
   emerald: "bg-emerald-50 text-emerald-600",
   rose: "bg-rose-50 text-rose-600",
-  sky: "bg-sky-50 text-sky-600",
+  sky: "bg-primary-50 text-primary-600",
   orange: "bg-orange-50 text-orange-600",
   teal: "bg-teal-50 text-teal-600",
 };
@@ -151,7 +151,7 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
         <input
           type="text"
-          className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+          className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
           placeholder="Search user, or type a name..."
           value={search || selectedName}
           onChange={(e) => {
@@ -170,7 +170,7 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
           {search.trim() && (
             <button
               type="button"
-              className="w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 transition"
+              className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-50 transition"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 onChange({ userId: "", nameText: search.trim() });
@@ -188,8 +188,8 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
               <button
                 key={u._id}
                 type="button"
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition flex items-center gap-2 ${
-                  selectedUserId === u._id ? "bg-blue-50 text-blue-700" : "text-gray-700"
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 ${
+                  selectedUserId === u._id ? "bg-secondary-50 text-secondary-700" : "text-gray-700"
                 }`}
                 onClick={() => {
                   onChange({ userId: u._id, nameText: "" });
@@ -265,7 +265,7 @@ function OfficeSelect({
             }
             onChange(e.target.value);
           }}
-          className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+          className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
         >
           <option value="">Select office / group</option>
           {options.map((office) => (
@@ -298,13 +298,13 @@ function OfficeSelect({
               }
             }}
             placeholder="e.g. OFFICE OF THE REGISTRAR"
-            className="flex-1 min-w-0 px-3 py-2 text-sm border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+            className="flex-1 min-w-0 px-3 py-2 text-sm border border-secondary-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
           />
           <button
             type="button"
             onClick={submitNewOffice}
             disabled={busy || !normalizeOfficeName(draft)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             <FaPlus className="h-3 w-3" />
             Save
@@ -327,7 +327,7 @@ function OfficeSelect({
           type="checkbox"
           checked={includeInactive}
           onChange={(e) => onToggleInactive(e.target.checked)}
-          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-100"
+          className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-100"
         />
         Show inactive offices
       </label>
@@ -365,7 +365,7 @@ function OfficialModal({
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                 {isEdit ? (
                   <FaEdit className="h-4 w-4 text-white" />
                 ) : (
@@ -447,7 +447,7 @@ function OfficialModal({
                   required
                   disabled={!form.header}
                   placeholder="e.g. Secretary of the University and of the Board of Regents"
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white disabled:bg-gray-50 disabled:text-gray-400"
                 />
                 <datalist id="official-seat-suggestions">
                   {(positionSuggestions || []).map((p) => (
@@ -487,7 +487,7 @@ function OfficialModal({
             <select
               value={form.status || "substantive"}
               onChange={(e) => onFormChange("status", e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
             >
               <option value="substantive">Substantive — regular holder</option>
               <option value="acting">Acting — temporary designation</option>
@@ -506,7 +506,7 @@ function OfficialModal({
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
             >
               {loading ? "Saving..." : isEdit ? "Save Changes" : "Assign Official"}
             </button>
@@ -611,7 +611,7 @@ function HeaderCard({
                       </td>
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700 shrink-0">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-secondary-50 to-secondary-100 border border-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700 shrink-0">
                             {(person[0] || "?").toUpperCase()}
                           </div>
                           <span className="text-sm font-medium text-gray-900">{person}</span>
@@ -653,7 +653,7 @@ function HeaderCard({
                             <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                               <button
                                 onClick={() => onEdit(official)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition-all"
                               >
                                 <FaEdit className="h-3 w-3" />
                                 Reassign
@@ -1062,7 +1062,7 @@ export default function UniversityOfficialsContent() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-lg shadow-secondary-200">
             <FaUniversity className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -1105,7 +1105,7 @@ export default function UniversityOfficialsContent() {
                   id="officials-year"
                   value={academicYear}
                   onChange={(e) => setAcademicYear(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
@@ -1115,7 +1115,7 @@ export default function UniversityOfficialsContent() {
                   ))}
                 </select>
                 {isArchived ? (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700 border border-secondary-200">
                     Archived
                   </span>
                 ) : (
@@ -1133,7 +1133,7 @@ export default function UniversityOfficialsContent() {
             <button
               onClick={handleCopyForward}
               disabled={copying}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all duration-200 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition-all duration-200 disabled:opacity-50"
             >
               {copying ? "Copying..." : "Copy from previous year"}
             </button>
@@ -1141,7 +1141,7 @@ export default function UniversityOfficialsContent() {
           {canEdit && (
             <button
               onClick={() => openAssign(null)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Assign Official
@@ -1151,7 +1151,7 @@ export default function UniversityOfficialsContent() {
       </div>
 
       {isArchived && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>
             Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
@@ -1160,14 +1160,14 @@ export default function UniversityOfficialsContent() {
       )}
 
       {!loading && canEdit && assignments.length === 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
             No roster for AY {academicYear} yet. Copy last year&apos;s assignments or assign seats manually.
           </span>
           <button
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
           </button>
@@ -1198,13 +1198,13 @@ export default function UniversityOfficialsContent() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name or seat..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
             />
           </div>
           <select
             value={headerFilter}
             onChange={(e) => setHeaderFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none"
+            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
           >
             <option value="all">All offices</option>
             {activeHeaders.map((h) => (
@@ -1221,8 +1221,8 @@ export default function UniversityOfficialsContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                <FaUserTie className="h-6 w-6 text-blue-600" />
+              <div className="h-12 w-12 rounded-xl bg-secondary-50 flex items-center justify-center">
+                <FaUserTie className="h-6 w-6 text-secondary-600" />
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">

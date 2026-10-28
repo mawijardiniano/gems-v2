@@ -6,10 +6,10 @@ export default function Footer() {
           © {new Date().getFullYear()} Gender Equity Management System
         </div>
         <div className="flex gap-4 text-sm">
-          <a href="/" className="text-indigo-600">
+          <a href="/" className="text-secondary-600">
             Home
           </a>
-          <a href="/profile-registration" className="text-indigo-600">
+          <a href="/profile-registration" className="text-secondary-600">
             Survey
           </a>
         </div>

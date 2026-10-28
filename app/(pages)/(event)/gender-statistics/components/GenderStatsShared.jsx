@@ -57,19 +57,19 @@ const tooltipStyle = {
   padding: "8px 12px",
 };
 
-export const SEX_COLORS = { Female: "#ec4899", Male: "#3b82f6" };
+export const SEX_COLORS = { Female: "var(--color-accent-500)", Male: "var(--color-primary-500)" };
 
 export const GENDER_IDENTITY_COLORS = {
-  Male: "#3b82f6",
-  Female: "#ec4899",
-  "LGBTQIA+": "#8b5cf6",
+  Male: "var(--color-primary-500)",
+  Female: "var(--color-accent-500)",
+  "LGBTQIA+": "var(--color-secondary-500)",
   "Not specified": "#9ca3af",
 };
 
 export function LoadingState({ label = "Loading statistics…" }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-10 flex items-center justify-center gap-3 text-gray-400 text-sm">
-      <span className="h-5 w-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+      <span className="h-5 w-5 rounded-full border-2 border-secondary-500 border-t-transparent animate-spin" />
       {label}
     </div>
   );
@@ -102,9 +102,9 @@ export function SummaryCards({ totals, what, deltas }) {
       label: `Total ${what}`,
       value: totals.total,
       pct: "100%",
-      accent: "from-indigo-600 to-indigo-400",
+      accent: "from-secondary-600 to-secondary-400",
       icon: "👥",
-      iconBg: "bg-indigo-100",
+      iconBg: "bg-secondary-100",
       sex: null,
     },
     {
@@ -120,18 +120,18 @@ export function SummaryCards({ totals, what, deltas }) {
       label: `Male ${what}`,
       value: totals.Male,
       pct: `${totals.pctMale ?? 0}%`,
-      accent: "from-blue-600 to-blue-400",
+      accent: "from-secondary-600 to-secondary-400",
       icon: "♂",
-      iconBg: "bg-blue-100",
+      iconBg: "bg-secondary-100",
       sex: "Male",
     },
     {
       label: "LGBTQIA+",
       value: totals.lgbtqia,
       pct: totals.pctLgbtqia != null ? `${totals.pctLgbtqia}%` : "—",
-      accent: "from-purple-600 to-purple-400",
+      accent: "from-secondary-600 to-secondary-400",
       icon: "🏳️‍🌈",
-      iconBg: "bg-purple-100",
+      iconBg: "bg-secondary-100",
       sex: null,
     },
   ];
@@ -386,7 +386,7 @@ export function DemographicTable({ rows, total }) {
                 <tr key={r.label} className="border-b border-gray-50 last:border-0">
                   <td className="py-2.5 pr-3 text-gray-700">{r.label}</td>
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">{r.Female}</td>
-                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">{r.Male}</td>
+                  <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">{r.Male}</td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">{r.total}</td>
                   <td className="py-2.5 text-right text-xs text-gray-400">
                     {total ? `${Math.round((r.total / total) * 1000) / 10}%` : "—"}
@@ -452,7 +452,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
                     {(r.Female || 0).toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
+                  <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {(r.Male || 0).toLocaleString()}
                   </td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
@@ -472,7 +472,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                 <td className="py-2.5 pr-3 text-right text-pink-700">
                   {totals.Female.toLocaleString()}
                 </td>
-                <td className="py-2.5 pr-3 text-right text-blue-700">
+                <td className="py-2.5 pr-3 text-right text-secondary-700">
                   {totals.Male.toLocaleString()}
                 </td>
                 <td className="py-2.5 pr-3 text-right">
@@ -494,11 +494,11 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
 /* == Multi-year comparison ============================================= */
 
 export const YEAR_COLORS = [
-  "#6366f1",
+  "var(--color-secondary-600)",
   "#f59e0b",
   "#10b981",
   "#ef4444",
-  "#8b5cf6",
+  "var(--color-secondary-500)",
 ];
 
 const yearColor = (index) => YEAR_COLORS[index % YEAR_COLORS.length];
@@ -584,7 +584,7 @@ export function YearMultiSelect({ options, value, onChange }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={options.length === 0}
-        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
         <span className="text-xs text-gray-400">▾</span>
@@ -653,7 +653,7 @@ export function MultiSelect({
         aria-expanded={open}
         aria-label={label}
         disabled={options.length === 0}
-        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
         <span className="text-xs text-gray-400">v</span>
@@ -679,7 +679,7 @@ export function MultiSelect({
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="px-2 pt-1 text-[11px] text-blue-600 hover:underline"
+                className="px-2 pt-1 text-[11px] text-secondary-600 hover:underline"
               >
                 Clear selection
               </button>
@@ -753,7 +753,7 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
                     {t.Female.toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
+                  <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {t.Male.toLocaleString()}
                   </td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
@@ -963,7 +963,7 @@ export function YearComparisonTable({
                           <td className="px-2 py-2.5 text-right text-pink-600 font-medium">
                             {(row?.Female || 0).toLocaleString()}
                           </td>
-                          <td className="px-2 py-2.5 text-right text-blue-600 font-medium">
+                          <td className="px-2 py-2.5 text-right text-secondary-600 font-medium">
                             {(row?.Male || 0).toLocaleString()}
                           </td>
                           <td className="px-2 py-2.5 text-right font-semibold text-gray-900">

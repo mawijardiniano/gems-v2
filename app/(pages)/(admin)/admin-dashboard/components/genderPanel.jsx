@@ -7,7 +7,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const COLORS = ["#8B5CF6", "#3B82F6", "#F59E0B", "#10B981", "#EF4444"];
+const COLORS = ["var(--color-secondary-500)", "var(--color-primary-500)", "#F59E0B", "#10B981", "#EF4444"];
 
 const SEX_COLORS = [COLORS[0], COLORS[1]];
 const PREFERENCE_COLORS = [COLORS[0], COLORS[1], COLORS[2], COLORS[3]];

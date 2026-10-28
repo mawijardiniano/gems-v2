@@ -14,11 +14,11 @@ import {
 } from "react-icons/fa";
 
 const ACTIVITY_COLORS = {
-  Academic: "bg-blue-50 text-blue-700 border-blue-200",
-  Administrative: "bg-purple-50 text-purple-700 border-purple-200",
+  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
+  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
   Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
@@ -114,7 +114,7 @@ function EventCard({ event, onClick, isPast }) {
 
   return (
     <div
-      className="group relative bg-white rounded-xl border border-gray-200 hover:border-indigo-200 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+      className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
     >
       {/* Status banner */}
@@ -147,7 +147,7 @@ function EventCard({ event, onClick, isPast }) {
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+            <h3 className="text-base font-semibold text-gray-900 group-hover:text-secondary-600 transition-colors line-clamp-2">
               {event.title}
             </h3>
             {event.reference_number && (
@@ -183,7 +183,7 @@ function EventCard({ event, onClick, isPast }) {
 
         {/* View details link */}
         <div className="flex items-center justify-end pt-1 border-t border-gray-50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-0 group-hover:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[8px]" />
           </span>
         </div>
@@ -307,7 +307,7 @@ export default function EventContent({
       <div className="max-w-5xl mx-auto p-5">
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-secondary-200 border-t-indigo-500 rounded-full animate-spin" />
             <p className="text-sm text-gray-400">Loading events...</p>
           </div>
         </div>
@@ -343,7 +343,7 @@ export default function EventContent({
             onClick={() => setActiveTab("upcoming")}
             className={`pb-3 px-1 -mb-px border-b-2 text-sm font-medium transition ${
               activeTab === "upcoming"
-                ? "border-indigo-600 text-indigo-600"
+                ? "border-secondary-600 text-secondary-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -354,7 +354,7 @@ export default function EventContent({
             onClick={() => setActiveTab("past")}
             className={`pb-3 px-1 -mb-px border-b-2 text-sm font-medium transition ${
               activeTab === "past"
-                ? "border-indigo-600 text-indigo-600"
+                ? "border-secondary-600 text-secondary-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -419,7 +419,7 @@ export default function EventContent({
             <p className="text-sm text-gray-500 mt-0.5">Find and register for upcoming events</p>
           </div>
           <button
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 shrink-0"
+            className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1 shrink-0"
             onClick={() => router.push("/events/discover")}
           >
             View All <FaChevronRight className="text-[10px]" />
@@ -434,7 +434,7 @@ export default function EventContent({
             placeholder="Search events by title, description, venue..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
           />
         </div>
 

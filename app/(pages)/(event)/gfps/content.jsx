@@ -464,7 +464,7 @@ export default function GFPSManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 text-white shadow-lg shadow-secondary-200">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -488,7 +488,7 @@ export default function GFPSManager() {
                     id="gfps-year"
                     value={academicYear}
                     onChange={(e) => setAcademicYear(e.target.value)}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                   >
                     {yearOptions.map((y) => (
                       <option key={y} value={y}>
@@ -498,7 +498,7 @@ export default function GFPSManager() {
                     ))}
                   </select>
                   {isArchived ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700 border border-secondary-200">
                       Archived
                     </span>
                   ) : (
@@ -517,7 +517,7 @@ export default function GFPSManager() {
             <button
               onClick={handleCopyForward}
               disabled={copying}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all font-medium text-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition-all font-medium text-sm disabled:opacity-50"
             >
               {copying ? "Copying..." : "Copy from previous year"}
             </button>
@@ -525,7 +525,7 @@ export default function GFPSManager() {
           {canEdit && (
             <button
               onClick={openAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white rounded-xl hover:bg-secondary-700 transition-all font-medium text-sm shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -537,7 +537,7 @@ export default function GFPSManager() {
       </div>
 
       {isArchived && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm">
           <span>
             Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
           </span>
@@ -545,20 +545,20 @@ export default function GFPSManager() {
       )}
 
       {notice && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-sm">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm">
           <span>{notice}</span>
         </div>
       )}
 
       {isLegacy && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
             Showing untagged records from before the academic-year migration. Assign them to AY {academicYear} to keep them.
           </span>
           <button
             onClick={handleAssignLegacy}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-xl hover:bg-amber-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
           >
             {copying ? "Assigning..." : `Assign to AY ${academicYear}`}
           </button>
@@ -566,14 +566,14 @@ export default function GFPSManager() {
       )}
 
       {!loadingGfps && canEdit && !hasData && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
             No GFPS for AY {academicYear} yet. Copy last year&apos;s committee or add members manually.
           </span>
           <button
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
           </button>

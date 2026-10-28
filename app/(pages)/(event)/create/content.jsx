@@ -27,7 +27,7 @@ import {
 import { OFFICE_OPTIONS, addTypedOffice, defaultOrganizingUnit } from "@/lib/colleges";
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500";
+  "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
 
 const labelClass = "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
 
@@ -55,10 +55,10 @@ const EVENT_SOURCES = [
 
 function SectionHeader({ icon: Icon, color = "blue", title, subtitle }) {
   const colorMap = {
-    blue: "bg-blue-50 text-blue-600",
+    blue: "bg-secondary-50 text-secondary-600",
     emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    amber: "bg-secondary-50 text-secondary-600",
+    violet: "bg-secondary-50 text-secondary-600",
     rose: "bg-rose-50 text-rose-600",
     cyan: "bg-cyan-50 text-cyan-600",
   };
@@ -143,9 +143,9 @@ function CheckboxDropdown({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+        className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 ${
           open
-            ? "border-blue-500 bg-blue-50/50"
+            ? "border-secondary-500 bg-secondary-50/50"
             : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
         } ${selected.length === 0 ? "text-gray-400" : "text-gray-900"}`}
       >
@@ -164,13 +164,13 @@ function CheckboxDropdown({
           {selected.map((item) => (
             <span
               key={item}
-              className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700"
+              className="inline-flex items-center gap-1 rounded-full bg-secondary-50 border border-secondary-100 px-2.5 py-0.5 text-xs font-medium text-secondary-700"
             >
               {item}
               <button
                 type="button"
                 onClick={() => toggleOption(item)}
-                className="hover:text-blue-900 transition-colors"
+                className="hover:text-secondary-900 transition-colors"
               >
                 <FaTimes className="h-2.5 w-2.5" />
               </button>
@@ -191,7 +191,7 @@ function CheckboxDropdown({
               >
                 <span className="pr-2">{option}</span>
                 {selected.includes(option) && (
-                  <FaCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <FaCheck className="h-3.5 w-3.5 text-secondary-600 shrink-0" />
                 )}
               </button>
             ))}
@@ -210,13 +210,13 @@ function CheckboxDropdown({
                   }
                 }}
                 placeholder="Type an office not listed..."
-                className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               />
               <button
                 type="button"
                 onClick={addDraft}
                 disabled={!draft.trim()}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaPlus className="h-3 w-3" /> Add
               </button>
@@ -570,7 +570,7 @@ export default function CreateEventsContent() {
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-blue-600 mb-4 transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-secondary-600 mb-4 transition-colors"
       >
         <FaArrowLeft className="h-4 w-4" />
         Back
@@ -578,7 +578,7 @@ export default function CreateEventsContent() {
 
       {/* Header */}
       <div className="flex items-start gap-4 mb-8">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-lg shadow-secondary-500/20 shrink-0">
           <FaCalendarAlt className="h-6 w-6 text-white" />
         </div>
         <div>
@@ -610,7 +610,7 @@ export default function CreateEventsContent() {
                 onClick={() => handleSourceChange(source.value)}
                 className={`rounded-xl border p-4 text-left transition-all ${
                   formData.event_source === source.value
-                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-sm"
+                    ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-500/20 shadow-sm"
                     : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -618,12 +618,12 @@ export default function CreateEventsContent() {
                   <span
                     className={`flex h-5 w-5 items-center justify-center rounded-full border ${
                       formData.event_source === source.value
-                        ? "border-blue-600"
+                        ? "border-secondary-600"
                         : "border-gray-300"
                     }`}
                   >
                     {formData.event_source === source.value && (
-                      <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-secondary-600" />
                     )}
                   </span>
                   <span className="text-sm font-semibold text-gray-900">
@@ -660,7 +660,7 @@ export default function CreateEventsContent() {
                   onClick={() => handleTypeChange(type)}
                   className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
                     formData.type_of_activity === type
-                      ? "border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-500/20 shadow-sm"
+                      ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-2 ring-secondary-500/20 shadow-sm"
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
@@ -807,8 +807,8 @@ export default function CreateEventsContent() {
               onClick={() => posterInputRef.current?.click()}
               className={`flex items-center gap-4 rounded-xl border-2 border-dashed p-4 cursor-pointer transition-all ${
                 posterPreview
-                  ? "border-blue-200 bg-blue-50/40"
-                  : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30"
+                  ? "border-secondary-200 bg-secondary-50/40"
+                  : "border-gray-200 hover:border-secondary-300 hover:bg-secondary-50/30"
               }`}
             >
               {posterPreview ? (
@@ -910,7 +910,7 @@ export default function CreateEventsContent() {
                 type="button"
                 onClick={generateDescription}
                 disabled={generating || !canGenerateDescription}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 px-3 py-1.5 text-xs font-medium text-black shadow-sm transition-all hover:shadow-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-secondary-500 to-fuchsia-500 px-3 py-1.5 text-xs font-medium text-black shadow-sm transition-all hover:shadow-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <FaMagic className="h-3 w-3" />
                 {generating ? "Generating..." : "Generate with AI"}
@@ -997,7 +997,7 @@ export default function CreateEventsContent() {
           <button
             type="submit"
             disabled={loading || uploading}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-medium text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 text-sm font-medium text-white shadow-lg shadow-secondary-500/25 transition-all hover:shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {loading || uploading ? "Creating..." : "Create Event"}
           </button>

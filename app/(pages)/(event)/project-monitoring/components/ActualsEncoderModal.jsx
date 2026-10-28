@@ -267,11 +267,11 @@ export default function ActualsEncoderModal({
                 {fmtPeso(plannedBudget)}
               </p>
             </div>
-            <div className="rounded-lg bg-blue-50/60 border border-blue-100 px-3 py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-400">
+            <div className="rounded-lg bg-secondary-50/60 border border-secondary-100 px-3 py-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-secondary-400">
                 Actual
               </p>
-              <p className="text-sm font-bold text-blue-900 mt-0.5">
+              <p className="text-sm font-bold text-secondary-900 mt-0.5">
                 {fmtPeso(spent)}
               </p>
             </div>
@@ -337,7 +337,7 @@ export default function ActualsEncoderModal({
               placeholder="0.00"
             />
             {spent > 0 && evidence.length === 0 && (
-              <p className="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
+              <p className="text-[11px] text-secondary-600 mt-1 flex items-center gap-1">
                 <FaExclamationTriangle size={10} />
                 Expenditures require evidence before saving.
               </p>
@@ -354,7 +354,7 @@ export default function ActualsEncoderModal({
             </label>
             <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
               {evidenceUploading ? (
-                <FaSpinner className="animate-spin text-blue-500" size={12} />
+                <FaSpinner className="animate-spin text-secondary-500" size={12} />
               ) : (
                 <FaPaperclip size={12} />
               )}
@@ -384,7 +384,7 @@ export default function ActualsEncoderModal({
                       href={getEvidenceDownloadUrl(file) || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-gray-400 hover:text-blue-600 transition-colors"
+                      className="text-gray-400 hover:text-secondary-600 transition-colors"
                       title="Download"
                     >
                       <FaDownload size={11} />

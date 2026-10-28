@@ -9,7 +9,7 @@ function StatusRow({ ok, warn, label, hint }) {
   const color = ok
     ? "text-emerald-500"
     : warn
-      ? "text-amber-500"
+      ? "text-secondary-500"
       : "text-gray-300";
   return (
     <li className="flex items-start gap-2.5 py-1.5">
@@ -68,7 +68,7 @@ function ComplianceTracker({ compliance, useSample }) {
       </ul>
       <Link
         href="/president/reports"
-        className="mt-4 inline-block text-xs font-medium text-violet-600 hover:underline"
+        className="mt-4 inline-block text-xs font-medium text-secondary-600 hover:underline"
       >
         Open Reports →
       </Link>

@@ -14,11 +14,11 @@ import {
 } from "react-icons/fa";
 
 const ACTIVITY_COLORS = {
-  Academic: "bg-blue-50 text-blue-700 border-blue-200",
-  Administrative: "bg-purple-50 text-purple-700 border-purple-200",
+  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
+  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
   Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
@@ -74,8 +74,8 @@ function getStatusBadge(event) {
     };
   return {
     label: "Upcoming",
-    dot: "bg-blue-500",
-    cls: "bg-blue-50 text-blue-700 border-blue-200",
+    dot: "bg-secondary-500",
+    cls: "bg-secondary-50 text-secondary-700 border-secondary-200",
   };
 }
 
@@ -147,7 +147,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
     <li
       className={`overflow-hidden rounded-xl border transition-colors ${
         expanded
-          ? "border-blue-200 bg-blue-50/30"
+          ? "border-secondary-200 bg-secondary-50/30"
           : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
       }`}
     >
@@ -184,7 +184,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
       </button>
 
       {expanded && (
-        <div className="space-y-3 border-t border-blue-100 px-4 py-4">
+        <div className="space-y-3 border-t border-secondary-100 px-4 py-4">
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.cls}`}
@@ -240,7 +240,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
           </div>
 
           {event.description && (
-            <div className="border-t border-blue-100 pt-3">
+            <div className="border-t border-secondary-100 pt-3">
               <p
                 className={`text-xs leading-relaxed whitespace-pre-line text-gray-600 ${
                   descExpanded ? "" : "line-clamp-4"
@@ -252,7 +252,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
                 <button
                   type="button"
                   onClick={() => setDescExpanded((v) => !v)}
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 transition-colors hover:text-indigo-700"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-secondary-600 transition-colors hover:text-secondary-700"
                 >
                   {descExpanded ? (
                     <>
@@ -272,7 +272,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
             <button
               type="button"
               onClick={() => onManage(event)}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-semibold text-white shadow-md transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-[0.99]"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 py-2.5 text-xs font-semibold text-white shadow-md transition-all hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
             >
               Manage event
             </button>

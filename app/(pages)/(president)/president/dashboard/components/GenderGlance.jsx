@@ -20,16 +20,16 @@ function MiniDonut({ title, female, male }) {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={38} outerRadius={58} stroke="transparent">
-              <Cell fill="#8B5CF6" />
-              <Cell fill="#3B82F6" />
+              <Cell fill="var(--color-secondary-500)" />
+              <Cell fill="var(--color-primary-500)" />
             </Pie>
             <Tooltip formatter={(v) => [Number(v).toLocaleString(), "Count"]} />
           </PieChart>
         </ResponsiveContainer>
       </div>
       <div className="flex items-center gap-3 text-[11px] text-gray-600">
-        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-violet-500" />F {f.toLocaleString()}</span>
-        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-blue-500" />M {m.toLocaleString()}</span>
+        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />F {f.toLocaleString()}</span>
+        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />M {m.toLocaleString()}</span>
       </div>
     </div>
   );
@@ -52,8 +52,8 @@ function GenderGlance({ snapshot, parityGaps }) {
         <MiniDonut title="Students" female={s.totalStudents !== null && s.totalStudents !== undefined ? Math.round(((s.femaleStudentsPct || 0) / 100) * s.totalStudents) : s.femaleCount} male={s.totalStudents !== null && s.totalStudents !== undefined ? Math.round(((100 - (s.femaleStudentsPct || 0)) / 100) * s.totalStudents) : s.maleCount} />
         <MiniDonut title="Employees" female={s.totalEmployees !== null && s.totalEmployees !== undefined ? Math.round(((s.femaleEmployeesPct || 0) / 100) * s.totalEmployees) : null} male={s.totalEmployees !== null && s.totalEmployees !== undefined ? Math.round(((100 - (s.femaleEmployeesPct || 0)) / 100) * s.totalEmployees) : null} />
       </div>
-      <div className="mt-4 rounded-lg bg-amber-50/60 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+      <div className="mt-4 rounded-lg bg-secondary-50/60 p-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary-700">
           Parity gaps to watch
         </p>
         {gaps.length === 0 ? (
@@ -74,10 +74,10 @@ function GenderGlance({ snapshot, parityGaps }) {
         </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-3">
-        <Link href="/president/gender-statistics/students" className="text-xs font-medium text-violet-600 hover:underline">
+        <Link href="/president/gender-statistics/students" className="text-xs font-medium text-secondary-600 hover:underline">
           Open Students →
         </Link>
-        <Link href="/president/gender-statistics/employees" className="text-xs font-medium text-violet-600 hover:underline">
+        <Link href="/president/gender-statistics/employees" className="text-xs font-medium text-secondary-600 hover:underline">
           Open Employees →
         </Link>
       </div>

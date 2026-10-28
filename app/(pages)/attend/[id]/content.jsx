@@ -33,11 +33,11 @@ const EMPTY = {
 
 /* Same colour families the event cards use for type_of_activity. */
 const ACTIVITY_COLORS = {
-  Academic: "bg-blue-50 text-blue-700 border-blue-200",
-  Administrative: "bg-purple-50 text-purple-700 border-purple-200",
+  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
+  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
   Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
@@ -227,17 +227,17 @@ export default function AttendContent() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
         <div className="card w-full max-w-md overflow-hidden text-center animate-slide-up">
-          <div className="h-1.5 w-full bg-gradient-to-r from-violet-600 to-indigo-600" />
+          <div className="h-1.5 w-full bg-gradient-to-r from-secondary-700 to-secondary-500" />
           <div className="p-8">
             <div
               className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-                done.pending ? "bg-amber-50" : done.already ? "bg-blue-50" : "bg-emerald-50"
+                done.pending ? "bg-secondary-50" : done.already ? "bg-secondary-50" : "bg-emerald-50"
               }`}
             >
               {done.pending ? (
-                <FaUserCheck className="text-amber-500" size={26} />
+                <FaUserCheck className="text-secondary-500" size={26} />
               ) : done.already ? (
-                <FaUserCheck className="text-blue-500" size={26} />
+                <FaUserCheck className="text-secondary-500" size={26} />
               ) : (
                 <FaCheckCircle className="text-emerald-500" size={26} />
               )}
@@ -292,7 +292,7 @@ export default function AttendContent() {
       <div className="mx-auto w-full max-w-lg">
         <div className="card overflow-hidden animate-slide-up">
           {/* ── Event header ─────────────────────────────────────── */}
-          <div className="relative bg-gradient-to-br from-violet-600 to-indigo-600 text-white">
+          <div className="relative bg-gradient-to-br from-secondary-700 to-secondary-500 text-white">
             {posterUrl && (
               <>
                 <img
@@ -472,7 +472,7 @@ export default function AttendContent() {
                         key={value}
                         className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
                           active
-                            ? "border-blue-500 bg-blue-50 text-blue-700 ring-4 ring-blue-500/10"
+                            ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-4 ring-secondary-500/10"
                             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                         }`}
                       >
@@ -485,7 +485,7 @@ export default function AttendContent() {
                           className="sr-only"
                         />
                         <Icon
-                          className={active ? "text-blue-600" : "text-gray-400"}
+                          className={active ? "text-secondary-600" : "text-gray-400"}
                           size={16}
                         />
                         {label}

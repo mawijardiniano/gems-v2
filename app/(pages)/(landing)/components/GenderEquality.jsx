@@ -8,10 +8,10 @@ export default function GenderEquality() {
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-violet-800 to-pink-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary-900 via-secondary-800 to-pink-900" />
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400 rounded-full blur-[120px]" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-violet-400 rounded-full blur-[150px]" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-400 rounded-full blur-[150px]" />
       </div>
 
       <div className="absolute inset-0 opacity-[0.03]">
@@ -29,7 +29,7 @@ export default function GenderEquality() {
           <div className="space-y-8">
             <div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight text-white">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-white to-violet-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-white to-secondary-300">
                   Gender Equality
                 </span>
                 <br />
@@ -44,7 +44,7 @@ export default function GenderEquality() {
 
           <div className="relative flex justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-violet-500/30 to-pink-500/30 rounded-full blur-[80px]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-secondary-500/30 to-pink-500/30 rounded-full blur-[80px]" />
 
               <div className="relative bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-3 backdrop-blur-sm border border-white/10 shadow-2xl">
                 <img

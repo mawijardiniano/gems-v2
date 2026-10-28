@@ -36,10 +36,10 @@ export default function TransformGenderData() {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
+      <div className="absolute inset-0 bg-gradient-to-br from-secondary-600 via-secondary-600 to-secondary-700" />
       <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-10 right-20 w-80 h-80 bg-indigo-300 rounded-full blur-[130px]" />
-        <div className="absolute bottom-10 left-20 w-64 h-64 bg-purple-300 rounded-full blur-[100px]" />
+        <div className="absolute top-10 right-20 w-80 h-80 bg-secondary-300 rounded-full blur-[130px]" />
+        <div className="absolute bottom-10 left-20 w-64 h-64 bg-secondary-300 rounded-full blur-[100px]" />
       </div>
 
       {/* Abstract shapes */}

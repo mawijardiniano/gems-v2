@@ -105,36 +105,42 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <>
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
+        {/* Brand glow — lilac wash at bottom-left; the light at the top
+            comes from the panel gradient itself */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_0%_100%,rgba(168,81,184,0.28),transparent_70%)]"
+        />
         {/* ===== USER PROFILE HEADER ===== */}
         <div
-          className={`flex-shrink-0 border-b border-gray-100/80 ${
+          className={`flex-shrink-0 border-b border-white/10 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"
           }`}
         >
           {open ? (
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 flex-shrink-0"
                 style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
               >
                 {getInitials()}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-white truncate">
                   {getDisplayName()}
                 </p>
-                <p className="text-[11px] text-gray-400 font-medium tracking-wide uppercase truncate">
+                <p className="text-[11px] text-secondary-200/85 font-medium tracking-wide uppercase truncate">
                   ICTU Director
                 </p>
               </div>
             </div>
           ) : (
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25"
               style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
             >
               {getInitials()}
@@ -158,13 +164,13 @@ export default function Sidebar({ open, setOpen }) {
                     open ? "mx-3 p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-indigo-50 text-indigo-700 font-medium"
-                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                      ? "bg-secondary-100 text-secondary-800 font-medium ring-1 ring-white/10"
+                      : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
                   }`}
                 >
                   <span
                     className={`flex-shrink-0 transition-transform ${
-                      linkActive ? "scale-110 text-indigo-500" : "group-hover:scale-110"
+                      linkActive ? "scale-110 text-accent-300" : "group-hover:scale-110"
                     }`}
                   >
                     {link.icon}
@@ -175,7 +181,7 @@ export default function Sidebar({ open, setOpen }) {
                     </span>
                   )}
                   {linkActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                   )}
                 </Link>
               </TooltipWrapper>
@@ -184,7 +190,7 @@ export default function Sidebar({ open, setOpen }) {
         </nav>
 
         <div
-          className={`flex-shrink-0 border-t border-gray-100/80 py-2 ${
+          className={`flex-shrink-0 border-t border-white/10 py-2 ${
             open ? "px-3" : "px-0"
           }`}
         >
@@ -196,14 +202,14 @@ export default function Sidebar({ open, setOpen }) {
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
                 pathname === "/ictu-director/settings"
-                  ? "bg-gradient-to-r from-gray-50 to-gray-100/50 text-gray-800"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                  : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
               }`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:rotate-90 duration-300">
                 <FaCog
                   size={16}
-                  className="text-gray-400 group-hover:text-gray-600"
+                  className="text-secondary-200/85 group-hover:text-secondary-100/85"
                 />
               </span>
               {open && <span className="text-sm font-medium">Settings</span>}
@@ -215,7 +221,7 @@ export default function Sidebar({ open, setOpen }) {
               onClick={() => setShowLogoutModal(true)}
               className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group w-full ${
                 open ? "p-2.5" : "p-3 justify-center mx-0"
-              } text-red-500 hover:bg-red-50 hover:text-red-600`}
+              } text-accent-300 hover:bg-white/5 hover:text-accent-300`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:translate-x-0.5 duration-200">
                 <FaArrowRightFromBracket size={16} />

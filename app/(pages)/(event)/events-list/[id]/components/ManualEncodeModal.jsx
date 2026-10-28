@@ -270,7 +270,7 @@ export default function ManualEncodeModal({
       <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
           <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
               <FiUserPlus size={16} />
             </span>
             <div>
@@ -309,7 +309,7 @@ export default function ManualEncodeModal({
                   }}
                   className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
                     active
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                      ? "border-secondary-600 bg-secondary-50 text-secondary-700"
                       : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
                   }`}
                 >
@@ -376,7 +376,7 @@ export default function ManualEncodeModal({
                     <li
                       key={person._id}
                       className={`flex items-center justify-between gap-3 px-4 py-3 ${
-                        active ? "bg-blue-50/60" : ""
+                        active ? "bg-secondary-50/60" : ""
                       }`}
                     >
                       <div className="min-w-0">
@@ -397,7 +397,7 @@ export default function ManualEncodeModal({
                         }}
                         className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                           active
-                            ? "border-blue-600 bg-blue-600 text-white"
+                            ? "border-secondary-600 bg-secondary-600 text-white"
                             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800"
                         }`}
                       >
@@ -420,32 +420,32 @@ export default function ManualEncodeModal({
             <div
               className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
                 pickedSexMissing
-                  ? "border-amber-200 bg-amber-50"
+                  ? "border-secondary-200 bg-secondary-50"
                   : "border-emerald-200 bg-emerald-50"
               }`}
             >
               {pickedSexMissing ? (
-                <FiAlertCircle className="mt-0.5 shrink-0 text-amber-600" size={14} />
+                <FiAlertCircle className="mt-0.5 shrink-0 text-secondary-600" size={14} />
               ) : (
                 <FiCheck className="mt-0.5 shrink-0 text-emerald-600" size={14} />
               )}
               <div className="min-w-0">
                 <p
                   className={`truncate text-sm font-semibold ${
-                    pickedSexMissing ? "text-amber-900" : "text-emerald-900"
+                    pickedSexMissing ? "text-secondary-900" : "text-emerald-900"
                   }`}
                 >
                   {chosenName}
                 </p>
                 <p
                   className={`truncate text-xs ${
-                    pickedSexMissing ? "text-amber-700" : "text-emerald-700"
+                    pickedSexMissing ? "text-secondary-700" : "text-emerald-700"
                   }`}
                 >
                   {[chosenId, chosenDetails || type].filter(Boolean).join(" • ")}
                 </p>
                 {pickedSexMissing && (
-                  <p className="mt-1 text-xs text-amber-700">
+                  <p className="mt-1 text-xs text-secondary-700">
                     No sex at birth on record for this profile, so the attendance
                     sheet cannot include them. Add it to the person&apos;s GAD
                     data first.
@@ -461,7 +461,7 @@ export default function ManualEncodeModal({
                 feedback.tone === "error"
                   ? "border-rose-200 bg-rose-50 text-rose-700"
                   : feedback.tone === "warn"
-                    ? "border-amber-200 bg-amber-50 text-amber-800"
+                    ? "border-secondary-200 bg-secondary-50 text-secondary-800"
                     : "border-emerald-200 bg-emerald-50 text-emerald-700"
               }`}
             >

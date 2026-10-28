@@ -36,12 +36,12 @@ const ROLES = [
 ];
 
 const ROLE_COLORS = {
-  "SUC President": "bg-purple-100 text-purple-800 ring-purple-600/20",
-  "GAD Coordinator": "bg-blue-100 text-blue-800 ring-blue-600/20",
+  "SUC President": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
+  "GAD Coordinator": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "GAD Focal Person": "bg-cyan-100 text-cyan-800 ring-cyan-600/20",
-  "ICTU Director": "bg-indigo-100 text-indigo-800 ring-indigo-600/20",
+  "ICTU Director": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "Planning Director": "bg-teal-100 text-teal-800 ring-teal-600/20",
-  Dean: "bg-amber-100 text-amber-800 ring-amber-600/20",
+  Dean: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "Campus Director": "bg-rose-100 text-rose-800 ring-rose-600/20",
   User: "bg-gray-100 text-gray-800 ring-gray-600/20",
 };
@@ -317,7 +317,7 @@ export default function ManageRoleContent() {
         </div>
         <button
           onClick={openAssignModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl shadow-md hover:from-blue-700 hover:to-blue-800 hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-secondary-600 to-secondary-700 text-white text-sm font-semibold rounded-xl shadow-md hover:from-secondary-700 hover:to-secondary-800 hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
         >
           <HiOutlineShieldCheck className="h-5 w-5" />
           Assign Role
@@ -331,7 +331,7 @@ export default function ManageRoleContent() {
           placeholder="Search by name, role, or college..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all duration-200"
         />
       </div>
 
@@ -382,8 +382,8 @@ export default function ManageRoleContent() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-blue-600">
+                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-secondary-50 to-secondary-100/60 border border-secondary-100 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-secondary-600">
                               {firstName.charAt(0)}
                               {lastName.charAt(0)}
                             </span>
@@ -411,7 +411,7 @@ export default function ManageRoleContent() {
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-150"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-secondary-600 bg-secondary-50 hover:bg-secondary-100 rounded-lg transition-colors duration-150"
                         >
                           <HiOutlinePencilAlt className="h-4 w-4" />
                           Edit
@@ -467,7 +467,7 @@ export default function ManageRoleContent() {
                       onClick={() => setCurrentPage(p)}
                       className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                         currentPage === p
-                          ? "bg-blue-600 text-white shadow-sm"
+                          ? "bg-secondary-600 text-white shadow-sm"
                           : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
@@ -499,8 +499,8 @@ export default function ManageRoleContent() {
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center">
-                  <HiOutlineShieldCheck className="h-5 w-5 text-blue-600" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-50 to-secondary-100/60 border border-secondary-100 flex items-center justify-center">
+                  <HiOutlineShieldCheck className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -531,7 +531,7 @@ export default function ManageRoleContent() {
                   <input
                     type="text"
                     placeholder="Search by name or username..."
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all"
                     value={modalSearch}
                     onChange={(e) => setModalSearch(e.target.value)}
                   />
@@ -554,14 +554,14 @@ export default function ManageRoleContent() {
                           onClick={() => setSelectedUser(u)}
                           className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
                             isSelected
-                              ? "bg-blue-50 border-l-2 border-blue-500"
+                              ? "bg-secondary-50 border-l-2 border-secondary-500"
                               : "hover:bg-gray-50 border-l-2 border-transparent"
                           }`}
                         >
                           <div
                             className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                               isSelected
-                                ? "bg-blue-100 text-blue-600"
+                                ? "bg-secondary-100 text-secondary-600"
                                 : "bg-gray-100 text-gray-500"
                             }`}
                           >
@@ -579,7 +579,7 @@ export default function ManageRoleContent() {
                             )}
                           </div>
                           {isSelected && (
-                            <HiOutlineCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                            <HiOutlineCheck className="h-4 w-4 text-secondary-600 shrink-0" />
                           )}
                         </div>
                       );
@@ -602,13 +602,13 @@ export default function ManageRoleContent() {
                         onClick={() => setSelectedRole(role)}
                         className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 ${
                           isActive
-                            ? "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-200"
+                            ? "bg-secondary-50 border-secondary-200 text-secondary-700 ring-1 ring-secondary-200"
                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-blue-500" : "text-gray-400"
+                            isActive ? "text-secondary-500" : "text-gray-400"
                           }`}
                         />
                         <span className="truncate">{role}</span>
@@ -626,7 +626,7 @@ export default function ManageRoleContent() {
                   <select
                     value={assignedCollege}
                     onChange={(e) => setAssignedCollege(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all"
                   >
                     <option value="">Select a college...</option>
                     {COLLEGES.map((c) => (
@@ -653,7 +653,7 @@ export default function ManageRoleContent() {
                   loading ||
                   (SCOPED_ROLES.includes(selectedRole) && !assignedCollege)
                 }
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-lg shadow-sm hover:from-secondary-700 hover:to-secondary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
               >
                 {loading ? (
                   <>

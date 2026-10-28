@@ -21,7 +21,7 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wider text-violet-600">
+          <p className="text-xs font-medium uppercase tracking-wider text-secondary-600">
             SUC President · Executive Overview
           </p>
           <h1 className="mt-1 text-xl font-bold text-gray-900">
@@ -77,14 +77,14 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
           </button>
           <Link
             href="/president/reports"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-secondary-700"
           >
             <FaEye size={11} />
             View GAR
           </Link>
           <Link
             href="/president/reports"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100"
             title={year ? `Executive brief for ${year}` : "Executive brief"}
           >
             <FaDownload size={11} />
@@ -118,7 +118,7 @@ function PresidentDashboardContent() {
       />
       {useSample && <SampleDataNotice />}
       {extraError && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+        <div className="rounded-xl border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
           {extraError} Showing whatever sections loaded successfully.
         </div>
       )}

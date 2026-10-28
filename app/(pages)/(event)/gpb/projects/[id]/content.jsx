@@ -45,7 +45,7 @@ export default function ProjectContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex items-center gap-3 text-gray-500">
-          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-secondary-500 border-t-transparent rounded-full animate-spin" />
           <span>Loading project...</span>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function ProjectContent() {
           <p className="text-red-600 font-medium mb-4">{error}</p>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-600 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition"
           >
             <FiArrowLeft /> Back to Projects
           </button>
@@ -75,7 +75,7 @@ export default function ProjectContent() {
           <p className="text-gray-600 font-medium mb-4">Project not found.</p>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-600 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition"
           >
             <FiArrowLeft /> Back to Projects
           </button>
@@ -149,11 +149,11 @@ export default function ProjectContent() {
 
   const getProjectTypeBadge = (type) => {
     if (type === "Client Focused")
-      return "bg-blue-100 text-blue-700 border-blue-200";
+      return "bg-secondary-100 text-secondary-700 border-secondary-200";
     if (type === "Organization Focused")
       return "bg-emerald-100 text-emerald-700 border-emerald-200";
     if (type === "Attributed Program")
-      return "bg-purple-100 text-purple-700 border-purple-200";
+      return "bg-secondary-100 text-secondary-700 border-secondary-200";
     return "bg-gray-100 text-gray-600 border-gray-200";
   };
 
@@ -163,7 +163,7 @@ export default function ProjectContent() {
       
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition"
+          className="inline-flex items-center gap-2 text-sm font-medium text-secondary-600 hover:text-secondary-700 hover:underline transition"
         >
           <FiArrowLeft /> Back to Projects
         </button>
@@ -172,7 +172,7 @@ export default function ProjectContent() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-200 shrink-0">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-secondary-200 shrink-0">
                 {project.project_name?.[0]?.toUpperCase() || "P"}
               </div>
               <div>
@@ -237,14 +237,14 @@ export default function ProjectContent() {
         {indicatorProgress.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                <FaBullseye className="h-4 w-4 text-blue-600" />
+                <FaBullseye className="h-4 w-4 text-secondary-600" />
                 <h2 className="text-lg font-semibold text-gray-900">
                   Performance Targets vs. Actual
                 </h2>
               </div>
 
             {measurableCount > 0 && (
-              <div className="px-6 py-4 bg-gradient-to-br from-blue-50/60 to-indigo-50/40">
+              <div className="px-6 py-4 bg-gradient-to-br from-secondary-50/60 to-secondary-50/40">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total Target
@@ -265,7 +265,7 @@ export default function ProjectContent() {
                 <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      aggregateExceeded ? "bg-emerald-500" : "bg-blue-500"
+                      aggregateExceeded ? "bg-emerald-500" : "bg-secondary-500"
                     }`}
                     style={{
                       width: `${Math.min(
@@ -277,7 +277,7 @@ export default function ProjectContent() {
                 </div>
                 <p
                   className={`mt-1.5 text-xs font-medium ${
-                    aggregateExceeded ? "text-emerald-600" : "text-amber-600"
+                    aggregateExceeded ? "text-emerald-600" : "text-secondary-600"
                   }`}
                 >
                   {aggregateExceeded ? (
@@ -343,7 +343,7 @@ export default function ProjectContent() {
                         </span>
                       </td>
                       <td className="py-3 px-6">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700 border border-secondary-100">
                           {event.type_of_activity || "-"}
                         </span>
                       </td>

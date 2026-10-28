@@ -624,7 +624,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       nameSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -633,7 +633,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       nameSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -652,7 +652,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       sexSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -661,7 +661,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       sexSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -680,7 +680,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       collegeSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -689,7 +689,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       collegeSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -708,7 +708,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       campusSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -717,7 +717,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       campusSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -736,7 +736,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       courseSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -745,7 +745,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       courseSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -764,7 +764,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       yearSort === "asc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -773,7 +773,7 @@ export default function StudentsUserListContent({
                   <span
                     className={
                       yearSort === "desc"
-                        ? "text-blue-600 font-bold"
+                        ? "text-secondary-600 font-bold"
                         : "text-gray-400"
                     }
                   >
@@ -851,7 +851,7 @@ export default function StudentsUserListContent({
                         setSelectedUser(user);
                         setActiveTab("personal");
                       }}
-                      className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                      className="px-3 py-1 text-xs rounded-md bg-secondary-600 text-white hover:bg-secondary-700 transition"
                     >
                       View
                     </button>
@@ -972,7 +972,7 @@ export default function StudentsUserListContent({
                     setConfirmAction(null);
                   }
                 }}
-                className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 text-sm rounded bg-secondary-600 text-white hover:bg-secondary-700"
               >
                 Confirm
               </button>
@@ -999,7 +999,7 @@ export default function StudentsUserListContent({
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                     {(personal.first_name?.[0] || "").toUpperCase()}
                     {(personal.last_name?.[0] || "").toUpperCase()}
                   </div>
@@ -1038,7 +1038,7 @@ export default function StudentsUserListContent({
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
                           activeTab === tab.id
-                            ? "border-blue-600 text-blue-600"
+                            ? "border-secondary-600 text-secondary-600"
                             : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         }`}
                       >
@@ -1095,7 +1095,7 @@ export default function StudentsUserListContent({
                         userId: selectedUser._id,
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 hover:bg-amber-100 transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-secondary-50 text-secondary-700 ring-1 ring-secondary-600/20 hover:bg-secondary-100 transition"
                   >
                     Reset Password
                   </button>

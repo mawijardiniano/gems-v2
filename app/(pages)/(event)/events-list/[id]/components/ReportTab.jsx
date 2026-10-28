@@ -480,14 +480,14 @@ export default function ReportTab({
                       key={i}
                       className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white"
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
                         <FiPaperclip size={14} />
                       </span>
                       <a
                         href={file.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline flex-1 truncate"
+                        className="text-secondary-600 hover:underline flex-1 truncate"
                       >
                         {file.name || `Attachment ${i + 1}`}
                       </a>
@@ -521,7 +521,7 @@ export default function ReportTab({
         className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-8"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
             <FiFileText size={18} />
           </div>
           <div>
@@ -558,7 +558,7 @@ export default function ReportTab({
               disabled={generating}
               className="btn-secondary !py-1.5 !px-3 !text-xs !rounded-lg"
             >
-              <FaMagic className="text-violet-500" size={12} />
+              <FaMagic className="text-secondary-500" size={12} />
               {generating ? "Generating..." : "Generate Narrative"}
             </button>
           </div>
@@ -598,7 +598,7 @@ export default function ReportTab({
                   />
                 </div>
                 {uploading[field.key] && (
-                  <p className="text-xs text-blue-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
                     <FiLoader className="animate-spin" /> Uploading...
                   </p>
                 )}
@@ -637,7 +637,7 @@ export default function ReportTab({
             />
           </div>
           {uploading.photos && (
-            <p className="text-xs text-blue-500 mt-2 flex items-center gap-1">
+            <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
               <FiLoader className="animate-spin" /> Uploading photos...
             </p>
           )}
@@ -675,7 +675,7 @@ export default function ReportTab({
             />
           </div>
           {uploading.other_attachments && (
-            <p className="text-xs text-blue-500 mt-2 flex items-center gap-1">
+            <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
               <FiLoader className="animate-spin" /> Uploading attachments...
             </p>
           )}
@@ -693,7 +693,7 @@ export default function ReportTab({
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline flex-1 truncate"
+                    className="text-secondary-600 hover:underline flex-1 truncate"
                   >
                     {file.name || `Attachment ${i + 1}`}
                   </a>

@@ -140,20 +140,26 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <>
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
+        {/* Brand glow — lilac wash at bottom-left; the light at the top
+            comes from the panel gradient itself */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_0%_100%,rgba(168,81,184,0.28),transparent_70%)]"
+        />
         {/* User Profile Header */}
         <div
-          className={`flex-shrink-0 border-b border-gray-100/80 ${
+          className={`flex-shrink-0 border-b border-white/10 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"
           }`}
         >
           {open ? (
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 flex-shrink-0"
                 style={{
                   backgroundColor: `hsl(${avatarColor}, 55%, 50%)`,
                 }}
@@ -161,11 +167,11 @@ export default function Sidebar({ open, setOpen }) {
                 {getInitials()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
                 {getEmail() && (
-                  <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                  <p className="text-[11px] text-secondary-200/85 truncate mt-0.5">
                     {getEmail()}
                   </p>
                 )}
@@ -174,7 +180,7 @@ export default function Sidebar({ open, setOpen }) {
           ) : (
             <TooltipWrapper label={getDisplayName()} collapsed={!open}>
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white cursor-default flex-shrink-0 mx-auto"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 cursor-default flex-shrink-0 mx-auto"
                 style={{
                   backgroundColor: `hsl(${avatarColor}, 55%, 50%)`,
                 }}
@@ -194,7 +200,7 @@ export default function Sidebar({ open, setOpen }) {
           {/* ===== OVERVIEW SECTION ===== */}
           <div>
             {open && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
                 Main Menu
               </p>
             )}
@@ -206,8 +212,8 @@ export default function Sidebar({ open, setOpen }) {
                   open ? "p-2.5" : "p-3 justify-center mx-1.5"
                 } ${
                   isOverviewActive
-                    ? "bg-gradient-to-r from-blue-50 to-indigo-50/50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                    : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                 }`}
                 onClick={() => {
                   if (open) {
@@ -227,7 +233,7 @@ export default function Sidebar({ open, setOpen }) {
                   >
                     <FaHome
                       className={
-                        isOverviewActive ? "text-blue-600" : "text-gray-400"
+                        isOverviewActive ? "text-accent-300" : "text-secondary-200/85"
                       }
                       size={16}
                     />
@@ -242,7 +248,7 @@ export default function Sidebar({ open, setOpen }) {
                   <span
                     className={`flex-shrink-0 transition-all duration-200 ${
                       isProfileOpen ? "rotate-0" : "-rotate-90"
-                    } ${isOverviewActive ? "text-blue-500" : "text-gray-300"}`}
+                    } ${isOverviewActive ? "text-accent-300" : "text-white/50"}`}
                   >
                     <FaChevronDown size={10} />
                   </span>
@@ -250,7 +256,7 @@ export default function Sidebar({ open, setOpen }) {
 
                 {/* Active indicator */}
                 {isOverviewActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-500 rounded-full" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-secondary-500 rounded-full" />
                 )}
               </div>
             </TooltipWrapper>
@@ -261,7 +267,7 @@ export default function Sidebar({ open, setOpen }) {
                 isProfileOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
-              <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+              <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">
                 {[
                   "/dashboard/personal-information",
                   ...(personType === "Student"
@@ -287,13 +293,13 @@ export default function Sidebar({ open, setOpen }) {
                           open ? "p-2" : "p-2.5 justify-center mx-1"
                         } ${
                           isActive
-                            ? "bg-blue-50 text-blue-700 font-medium"
-                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                            ? "bg-secondary-100 text-secondary-800 font-medium ring-1 ring-white/10"
+                            : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
                         }`}
                       >
                         <span
                           className={`flex-shrink-0 transition-transform ${
-                            isActive ? "scale-110 text-blue-500" : ""
+                            isActive ? "scale-110 text-accent-300" : ""
                           }`}
                         >
                           {SUB_ICONS[subPath] || <FaIdCard />}
@@ -306,7 +312,7 @@ export default function Sidebar({ open, setOpen }) {
 
                         {/* Active dot indicator */}
                         {isActive && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-blue-500" />
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-secondary-500" />
                         )}
                       </Link>
                     </TooltipWrapper>
@@ -318,13 +324,13 @@ export default function Sidebar({ open, setOpen }) {
 
           {/* Divider */}
           <div className={`${open ? "px-3" : "px-4"} py-1`}>
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-white/10" />
           </div>
 
           {/* ===== EVENTS SECTION ===== */}
           <div>
             {open && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
                 Engagement
               </p>
             )}
@@ -335,8 +341,8 @@ export default function Sidebar({ open, setOpen }) {
                   open ? "p-2.5" : "p-3 justify-center mx-1.5"
                 } ${
                   isEventsActive
-                    ? "bg-gradient-to-r from-amber-50 to-orange-50/50 text-amber-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                    : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                 }`}
                 onClick={() => {
                   if (open) {
@@ -356,7 +362,7 @@ export default function Sidebar({ open, setOpen }) {
                   >
                     <FaCalendar
                       className={
-                        isEventsActive ? "text-amber-600" : "text-gray-400"
+                        isEventsActive ? "text-accent-300" : "text-secondary-200/85"
                       }
                       size={16}
                     />
@@ -371,7 +377,7 @@ export default function Sidebar({ open, setOpen }) {
                   <span
                     className={`flex-shrink-0 transition-all duration-200 ${
                       isEventOpen ? "rotate-0" : "-rotate-90"
-                    } ${isEventsActive ? "text-amber-500" : "text-gray-300"}`}
+                    } ${isEventsActive ? "text-accent-300" : "text-white/50"}`}
                   >
                     <FaChevronDown size={10} />
                   </span>
@@ -379,7 +385,7 @@ export default function Sidebar({ open, setOpen }) {
 
                 {/* Active indicator */}
                 {isEventsActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-amber-500 rounded-full" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-secondary-500 rounded-full" />
                 )}
               </div>
             </TooltipWrapper>
@@ -390,7 +396,7 @@ export default function Sidebar({ open, setOpen }) {
                 isEventOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
-              <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-gray-100 pl-2">
+              <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">
                 <TooltipWrapper label="Discover Events" collapsed={!open}>
                   <Link
                     href="/events/discover"
@@ -399,14 +405,14 @@ export default function Sidebar({ open, setOpen }) {
                       open ? "p-2" : "p-2.5 justify-center mx-1"
                     } ${
                       pathname === "/events/discover"
-                        ? "bg-amber-50 text-amber-700 font-medium"
-                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                        ? "bg-secondary-100 text-secondary-800 font-medium ring-1 ring-white/10"
+                        : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
                     }`}
                   >
                     <span
                       className={`flex-shrink-0 transition-transform ${
                         pathname === "/events/discover"
-                          ? "scale-110 text-amber-500"
+                          ? "scale-110 text-accent-300"
                           : ""
                       }`}
                     >
@@ -424,7 +430,7 @@ export default function Sidebar({ open, setOpen }) {
 
         {/* ===== BOTTOM ACTIONS ===== */}
         <div
-          className={`flex-shrink-0 border-t border-gray-100/80 py-2 ${
+          className={`flex-shrink-0 border-t border-white/10 py-2 ${
             open ? "px-3" : "px-0"
           }`}
         >
@@ -436,14 +442,14 @@ export default function Sidebar({ open, setOpen }) {
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
                 pathname === "/settings"
-                  ? "bg-gradient-to-r from-gray-50 to-gray-100/50 text-gray-800"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                  : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
               }`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:rotate-90 duration-300">
                 <FaCog
                   size={16}
-                  className="text-gray-400 group-hover:text-gray-600"
+                  className="text-secondary-200/85 group-hover:text-secondary-100/85"
                 />
               </span>
               {open && <span className="text-sm font-medium">Settings</span>}
@@ -455,7 +461,7 @@ export default function Sidebar({ open, setOpen }) {
               onClick={() => setShowLogoutModal(true)}
               className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group w-full ${
                 open ? "p-2.5" : "p-3 justify-center mx-0"
-              } text-red-500 hover:bg-red-50 hover:text-red-600`}
+              } text-accent-300 hover:bg-white/5 hover:text-accent-300`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:translate-x-0.5 duration-200">
                 <FaArrowRightFromBracket size={16} />

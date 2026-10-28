@@ -242,7 +242,7 @@ function DetailCard({ icon, label, value, color }) {
     <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-indigo-50 text-indigo-600"}`}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}
         >
           {icon}
         </div>
@@ -527,7 +527,7 @@ export default function PersonalInformationContent({ profile }) {
         <select
           value={value || ""}
           onChange={(e) => handleChange(key, e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
         >
           <option value="">Select {label}</option>
           {options.map((opt) => (
@@ -545,7 +545,7 @@ export default function PersonalInformationContent({ profile }) {
     return (
       <input
         type={inputType}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
         value={value || ""}
         onChange={(e) => handleChange(key, e.target.value)}
         {...(key === "birthday" ? { max: maxDate } : {})}
@@ -565,8 +565,8 @@ export default function PersonalInformationContent({ profile }) {
       variant === "emerald"
         ? "focus:ring-emerald-200 focus:border-emerald-300"
         : variant === "amber"
-          ? "focus:ring-amber-200 focus:border-amber-300"
-          : "focus:ring-indigo-200 focus:border-indigo-300";
+          ? "focus:ring-secondary-200 focus:border-secondary-300"
+          : "focus:ring-secondary-200 focus:border-secondary-300";
     return isEditing ? (
       <select
         className={`w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition-all disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -595,8 +595,8 @@ export default function PersonalInformationContent({ profile }) {
       variant === "emerald"
         ? "focus:ring-emerald-200 focus:border-emerald-300"
         : variant === "amber"
-          ? "focus:ring-amber-200 focus:border-amber-300"
-          : "focus:ring-indigo-200 focus:border-indigo-300";
+          ? "focus:ring-secondary-200 focus:border-secondary-300"
+          : "focus:ring-secondary-200 focus:border-secondary-300";
     return isEditing ? (
       <input
         className={`w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition-all`}
@@ -616,19 +616,19 @@ export default function PersonalInformationContent({ profile }) {
       icon: <FaUser />,
       label: "First Name",
       value: formData.first_name,
-      color: "bg-indigo-50 text-indigo-600",
+      color: "bg-secondary-50 text-secondary-600",
     },
     {
       icon: <FaUser />,
       label: "Middle Name",
       value: formData.middle_name,
-      color: "bg-indigo-50 text-indigo-600",
+      color: "bg-secondary-50 text-secondary-600",
     },
     {
       icon: <FaUser />,
       label: "Last Name",
       value: formData.last_name,
-      color: "bg-indigo-50 text-indigo-600",
+      color: "bg-secondary-50 text-secondary-600",
     },
     {
       icon: <FaVenusMars />,
@@ -643,7 +643,7 @@ export default function PersonalInformationContent({ profile }) {
         formData.religion === "Other"
           ? formData.religion_other
           : formData.religion,
-      color: "bg-purple-50 text-purple-600",
+      color: "bg-secondary-50 text-secondary-600",
     },
     {
       icon: <FaGlobeAsia />,
@@ -655,13 +655,13 @@ export default function PersonalInformationContent({ profile }) {
       icon: <FaIdBadge />,
       label: "Current Status",
       value: formData.currentStatus,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-secondary-50 text-secondary-600",
     },
     {
       icon: <FaBirthdayCake />,
       label: "Birthday",
       value: formatDate(formData.birthday),
-      color: "bg-sky-50 text-sky-600",
+      color: "bg-primary-50 text-primary-600",
     },
     {
       icon: <FaTint />,
@@ -691,7 +691,7 @@ export default function PersonalInformationContent({ profile }) {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -710,7 +710,7 @@ export default function PersonalInformationContent({ profile }) {
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  : "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300"
+                  : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
               {isEditing ? (
@@ -731,7 +731,7 @@ export default function PersonalInformationContent({ profile }) {
       {!isEditing && (
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaUser />
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
@@ -751,7 +751,7 @@ export default function PersonalInformationContent({ profile }) {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
           <div className="px-8 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaUser />
               </div>
               <div>
@@ -771,7 +771,7 @@ export default function PersonalInformationContent({ profile }) {
                   First Name <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.first_name}
                   onChange={(e) => handleChange("first_name", e.target.value)}
                 />
@@ -781,7 +781,7 @@ export default function PersonalInformationContent({ profile }) {
                   Middle Name
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.middle_name}
                   onChange={(e) => handleChange("middle_name", e.target.value)}
                 />
@@ -791,7 +791,7 @@ export default function PersonalInformationContent({ profile }) {
                   Last Name <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.last_name}
                   onChange={(e) => handleChange("last_name", e.target.value)}
                 />
@@ -801,7 +801,7 @@ export default function PersonalInformationContent({ profile }) {
                   Civil Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.civil_status}
                   onChange={(e) => handleChange("civil_status", e.target.value)}
                 >
@@ -818,7 +818,7 @@ export default function PersonalInformationContent({ profile }) {
                   Religion <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.religion}
                   onChange={(e) => handleChange("religion", e.target.value)}
                 >
@@ -836,7 +836,7 @@ export default function PersonalInformationContent({ profile }) {
                     Specify Religion
                   </label>
                   <input
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                     placeholder="Please specify your religion"
                     value={formData.religion_other || ""}
                     onChange={(e) =>
@@ -850,7 +850,7 @@ export default function PersonalInformationContent({ profile }) {
                   Nationality
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.nationality}
                   onChange={(e) => handleChange("nationality", e.target.value)}
                 />
@@ -860,7 +860,7 @@ export default function PersonalInformationContent({ profile }) {
                   Current Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.currentStatus}
                   onChange={(e) =>
                     handleChange("currentStatus", e.target.value)
@@ -880,7 +880,7 @@ export default function PersonalInformationContent({ profile }) {
                 </label>
                 <input
                   type="date"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.birthday}
                   onChange={(e) => handleChange("birthday", e.target.value)}
                   max={new Date().toISOString().split("T")[0]}
@@ -891,7 +891,7 @@ export default function PersonalInformationContent({ profile }) {
                   Blood Type <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.bloodType}
                   onChange={(e) => handleChange("bloodType", e.target.value)}
                 >
@@ -1010,7 +1010,7 @@ export default function PersonalInformationContent({ profile }) {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
           <div className="px-8 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaBriefcase />
               </div>
               <div>

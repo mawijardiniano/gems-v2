@@ -36,11 +36,11 @@ function CollegeRanking({ ranking }) {
               </div>
               <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="bg-violet-500"
+                  className="bg-secondary-500"
                   style={{ width: `${((r.female || 0) / max) * 100}%` }}
                 />
                 <div
-                  className="bg-blue-400"
+                  className="bg-secondary-400"
                   style={{ width: `${((r.male || 0) / max) * 100}%` }}
                 />
               </div>
@@ -49,10 +49,10 @@ function CollegeRanking({ ranking }) {
         </ul>
       )}
       <div className="mt-3 flex items-center gap-3 text-[11px] text-gray-500">
-        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-violet-500" />Female</span>
-        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-blue-400" />Male</span>
+        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />Female</span>
+        <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-400" />Male</span>
       </div>
-      <Link href="/president/gender-statistics/students" className="mt-3 inline-block text-xs font-medium text-violet-600 hover:underline">
+      <Link href="/president/gender-statistics/students" className="mt-3 inline-block text-xs font-medium text-secondary-600 hover:underline">
         Open detailed statistics →
       </Link>
     </div>

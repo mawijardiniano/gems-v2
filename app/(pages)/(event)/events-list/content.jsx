@@ -19,11 +19,11 @@ import {
 
 const ActivityTypeBadge = ({ type }) => {
   const colorMap = {
-    Academic: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
+    Academic: { bg: "bg-secondary-100", text: "text-secondary-700", dot: "bg-secondary-500" },
     Administrative: {
-      bg: "bg-purple-100",
-      text: "text-purple-700",
-      dot: "bg-purple-500",
+      bg: "bg-secondary-100",
+      text: "text-secondary-700",
+      dot: "bg-secondary-500",
     },
     GAD: {
       bg: "bg-emerald-100",
@@ -31,9 +31,9 @@ const ActivityTypeBadge = ({ type }) => {
       dot: "bg-emerald-500",
     },
     Extension: {
-      bg: "bg-amber-100",
-      text: "text-amber-700",
-      dot: "bg-amber-500",
+      bg: "bg-secondary-100",
+      text: "text-secondary-700",
+      dot: "bg-secondary-500",
     },
     Research: {
       bg: "bg-rose-100",
@@ -102,7 +102,7 @@ const EventStatusBadge = ({ event }) => {
     }
     return {
       label: "Upcoming",
-      classes: "bg-blue-50 text-blue-600 border border-blue-200",
+      classes: "bg-secondary-50 text-secondary-600 border border-secondary-200",
     };
   };
 
@@ -244,7 +244,7 @@ export default function EventsListContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-secondary-50 p-6">
         <div className="max-w-8xl mx-auto space-y-6">
           <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
           <div className="h-5 w-64 bg-gray-200 rounded animate-pulse" />
@@ -259,7 +259,7 @@ export default function EventsListContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-secondary-50/30">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -274,7 +274,7 @@ export default function EventsListContent() {
 
           <button
             onClick={() => router.push("/create")}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-blue-200 hover:shadow-xl hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-secondary-200 hover:shadow-xl hover:from-secondary-700 hover:to-secondary-600 transition-all duration-200"
           >
             <FaPlus size={14} />
             Create Event
@@ -295,7 +295,7 @@ export default function EventsListContent() {
             <FaFilter className="text-gray-400" size={14} />
             <div className="relative">
               <select
-                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
+                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
               >
@@ -311,7 +311,7 @@ export default function EventsListContent() {
 
             <div className="relative">
               <select
-                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
+                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
               >
@@ -366,7 +366,7 @@ export default function EventsListContent() {
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Top color accent bar */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-400 to-secondary-600" />
 
                   {/* Poster */}
                   {evt.event_poster?.url ? (
@@ -378,8 +378,8 @@ export default function EventsListContent() {
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-32 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-                      <FaGlobeAsia className="text-blue-300" size={40} />
+                    <div className="w-full h-32 bg-gradient-to-br from-secondary-50 to-secondary-100/60 flex items-center justify-center">
+                      <FaGlobeAsia className="text-secondary-300" size={40} />
                     </div>
                   )}
 
@@ -387,7 +387,7 @@ export default function EventsListContent() {
                     {/* Title + Type Badge */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-secondary-600 transition-colors line-clamp-2">
                           {evt.title}
                         </h3>
                         {evt.reference_number && (
@@ -448,7 +448,7 @@ export default function EventsListContent() {
                       </div>
                       <button
                         onClick={() => goToManage(evt._id)}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-secondary-600 hover:text-secondary-700 bg-secondary-50 hover:bg-secondary-100 px-3 py-1.5 rounded-lg transition-colors"
                       >
                         Manage <FaArrowRight size={12} />
                       </button>

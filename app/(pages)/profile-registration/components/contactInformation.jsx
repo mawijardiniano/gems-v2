@@ -129,7 +129,7 @@ export default function ContactInformation() {
     return (
       <div className="space-y-3">
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
           value={region}
           onChange={(e) => {
             update(`${prefix}.region`, e.target.value);
@@ -146,7 +146,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
           value={province}
           onChange={(e) => {
             update(`${prefix}.province`, e.target.value);
@@ -163,7 +163,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
           value={city}
           onChange={(e) => {
             update(`${prefix}.city`, e.target.value);
@@ -179,7 +179,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
           value={contact[prefix]?.barangay || ""}
           onChange={(e) => update(`${prefix}.barangay`, e.target.value)}
           disabled={!city}
@@ -202,14 +202,14 @@ export default function ContactInformation() {
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+          <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaMapMarkerAlt className="text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Contact Information</h2>
-                <p className="text-blue-100 text-xs mt-0.5">
+                <p className="text-secondary-100 text-xs mt-0.5">
                   Your contact details and address
                 </p>
               </div>
@@ -221,14 +221,14 @@ export default function ContactInformation() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
                 <div className="flex items-center gap-2 mb-3">
-                  <FaEnvelope className="text-blue-500" />
+                  <FaEnvelope className="text-secondary-500" />
                   <label className="text-sm font-semibold text-gray-700">
                     Email <span className="text-red-400">*</span>
                   </label>
                 </div>
                 <input
                   type="email"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
                   value={contact.email}
                   onChange={(e) => update("email", e.target.value)}
                   placeholder="example@email.com"
@@ -242,7 +242,7 @@ export default function ContactInformation() {
                   </label>
                 </div>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
                   type="number"
                   value={contact.mobileNumber}
                   onChange={(e) => update("mobileNumber", e.target.value)}
@@ -259,7 +259,7 @@ export default function ContactInformation() {
               {/* Permanent Address */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-blue-500" />
+                  <FaMapMarkerAlt className="text-secondary-500" />
                   Permanent Address <span className="text-red-400">*</span>
                 </h3>
                 <AddressSelect prefix="permanentAddress" label="Permanent" />
@@ -269,17 +269,17 @@ export default function ContactInformation() {
               <div>
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <FaMapMarkerAlt className="text-purple-500" />
+                    <FaMapMarkerAlt className="text-secondary-500" />
                     Current Address <span className="text-red-400">*</span>
                   </h3>
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer hover:text-blue-600 transition-colors">
+                  <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer hover:text-secondary-600 transition-colors">
                     <input
                       type="checkbox"
                       checked={copyChecked}
                       onChange={(e) => handleCopyChecked(e.target.checked)}
                       className="sr-only"
                     />
-                    <FaCopy className={`${copyChecked ? "text-blue-500" : "text-gray-400"}`} />
+                    <FaCopy className={`${copyChecked ? "text-secondary-500" : "text-gray-400"}`} />
                     <span className="font-medium">Same as Permanent</span>
                   </label>
                 </div>
@@ -308,7 +308,7 @@ export default function ContactInformation() {
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"
+                  : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
               }`}
             >
               Review & Submit <FaArrowRight className="text-xs" />

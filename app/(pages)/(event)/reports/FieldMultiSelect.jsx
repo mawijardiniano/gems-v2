@@ -60,7 +60,7 @@ export default function FieldMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+        className="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span className="truncate text-left">
           {selected.length
@@ -90,7 +90,7 @@ export default function FieldMultiSelect({
                 <div
                   className={`flex items-center gap-2 rounded px-2 py-1 text-xs ${
                     field.available
-                      ? "text-gray-700 hover:bg-violet-50"
+                      ? "text-gray-700 hover:bg-secondary-50"
                       : "text-gray-300"
                   }`}
                 >
@@ -104,7 +104,7 @@ export default function FieldMultiSelect({
                       checked={field.available && value.includes(field.value)}
                       disabled={!field.available}
                       onChange={() => toggle(field)}
-                      className="accent-violet-600"
+                      className="accent-secondary-600"
                     />
                     <span className="truncate">{field.label}</span>
                     {field.note && (

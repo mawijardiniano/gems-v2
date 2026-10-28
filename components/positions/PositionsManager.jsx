@@ -140,13 +140,13 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
           onChange={(e) => setName(e.target.value)}
           aria-label="Position name"
           placeholder="e.g. Head, Student Affairs and Services"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
         />
         <select
           value={header}
           onChange={(e) => setHeader(e.target.value)}
           aria-label="Office / group"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
         >
           {/*
             The seat's own header comes first: it can be missing from `offices`
@@ -169,14 +169,14 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
           onChange={(e) => setOrder(e.target.value)}
           aria-label="Sort order"
           placeholder="Order in column"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
         />
       </div>
       <div className="flex shrink-0 items-start gap-2">
         <button
           type="submit"
           disabled={busy || !name.trim()}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
         >
           <FaCheckCircle className="h-3 w-3" />
           Save
@@ -235,7 +235,7 @@ function SeatRow({
             {ambiguous && (
               <span
                 title="Another office column has a seat with this same name"
-                className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700"
+                className="rounded-full border border-secondary-200 bg-secondary-50 px-2 py-0.5 text-[10px] font-medium text-secondary-700"
               >
                 shared name
               </span>
@@ -275,7 +275,7 @@ function SeatRow({
                 onClick={() => onDeactivate(seat)}
                 disabled={busy}
                 title="Deactivate this seat (no longer offered for new assignments)"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 hover:border-amber-300 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 transition hover:bg-secondary-100 hover:border-secondary-300 disabled:opacity-50"
               >
                 <FaBan className="h-3 w-3" />
                 Deactivate
@@ -532,7 +532,7 @@ export default function PositionsManager({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
             <FaLayerGroup />
           </div>
           <div>
@@ -575,7 +575,7 @@ export default function PositionsManager({
             value={addHeader}
             onChange={(e) => setAddHeader(e.target.value)}
             aria-label="Office / group for the new seat"
-            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 lg:w-64"
+            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100 lg:w-64"
           >
             <option value="">Select office / group…</option>
             {activeOfficeOptions.map((o) => (
@@ -590,12 +590,12 @@ export default function PositionsManager({
             onChange={(e) => setAddName(e.target.value)}
             placeholder="e.g. Head, Student Affairs and Services"
             aria-label="New position name"
-            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
           <button
             type="submit"
             disabled={busy || !addHeader || !addName.trim()}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-secondary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
           >
             <FaPlus className="h-3 w-3" />
             {busy ? "Working..." : "Add Position"}
@@ -621,7 +621,7 @@ export default function PositionsManager({
               onClick={() => setTab(t.key)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 isActiveTab
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  ? "border-secondary-200 bg-secondary-50 text-secondary-700"
                   : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -651,7 +651,7 @@ export default function PositionsManager({
             checked={showInactive || tab === "inactive"}
             disabled={tab === "inactive"}
             onChange={(e) => setShowInactive(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-100 disabled:opacity-50"
+            className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-100 disabled:opacity-50"
           />
           Show inactive seats
         </label>

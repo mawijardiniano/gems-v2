@@ -160,7 +160,7 @@ export default function AcademicInformation() {
     return (
       <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
         <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+          <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaGraduationCap className="text-white" />
@@ -169,7 +169,7 @@ export default function AcademicInformation() {
                 <h2 className="text-xl font-bold text-white">
                   Academic Information
                 </h2>
-                <p className="text-blue-100 text-xs mt-0.5">Student details</p>
+                <p className="text-secondary-100 text-xs mt-0.5">Student details</p>
               </div>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function AcademicInformation() {
             </div>
             <p className="text-gray-600 font-medium">
               This section is available when Current Status is set to{" "}
-              <span className="font-semibold text-blue-600">Student</span>.
+              <span className="font-semibold text-secondary-600">Student</span>.
             </p>
             <p className="text-gray-400 text-sm mt-1">
               Please go back to Personal Information to update your status.
@@ -194,7 +194,7 @@ export default function AcademicInformation() {
             </button>
             <button
               onClick={() => dispatch(nextStep())}
-              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition text-sm font-semibold shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-secondary-600 text-white hover:bg-secondary-700 transition text-sm font-semibold shadow-lg shadow-secondary-200"
             >
               Next Step <FaArrowRight className="text-xs" />
             </button>
@@ -208,7 +208,7 @@ export default function AcademicInformation() {
     <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-4xl">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+          <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaGraduationCap className="text-white" />
@@ -217,7 +217,7 @@ export default function AcademicInformation() {
                 <h2 className="text-xl font-bold text-white">
                   Academic Information
                 </h2>
-                <p className="text-blue-100 text-xs mt-0.5">
+                <p className="text-secondary-100 text-xs mt-0.5">
                   Provide your student academic details
                 </p>
               </div>
@@ -235,7 +235,7 @@ export default function AcademicInformation() {
                     className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all bg-gray-50 hover:bg-white ${
                       idError
                         ? "border-red-400 focus:ring-red-200 focus:border-red-400"
-                        : "border-gray-200 focus:ring-blue-200 focus:border-blue-400"
+                        : "border-gray-200 focus:ring-secondary-200 focus:border-secondary-400"
                     }`}
                     value={academic?.student_id || ""}
                     onChange={(e) => handleStudentIdChange(e.target.value)}
@@ -259,7 +259,7 @@ export default function AcademicInformation() {
                   Campus <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={academic?.campus || ""}
                   onChange={(e) => update("campus", e.target.value)}
                 >
@@ -276,7 +276,7 @@ export default function AcademicInformation() {
                   College <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={academic?.college || ""}
                   onChange={(e) => handleCollegeChange(e.target.value)}
                 >
@@ -296,7 +296,7 @@ export default function AcademicInformation() {
                   Course <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
                   value={academic?.course || ""}
                   onChange={(e) => update("course", e.target.value)}
                   disabled={!academic?.college}
@@ -319,7 +319,7 @@ export default function AcademicInformation() {
                   Year Level <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={academic?.year_level || ""}
                   onChange={(e) => update("year_level", e.target.value)}
                 >
@@ -345,7 +345,7 @@ export default function AcademicInformation() {
                 Are you a scholar? <span className="text-red-400">*</span>
               </label>
               <select
-                className="w-full md:w-1/3 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                className="w-full md:w-1/3 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                 value={academic?.isScholar || ""}
                 onChange={(e) => update("isScholar", e.target.value)}
               >
@@ -369,7 +369,7 @@ export default function AcademicInformation() {
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"
+                  : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
               }`}
             >
               Next Step <FaArrowRight className="text-xs" />

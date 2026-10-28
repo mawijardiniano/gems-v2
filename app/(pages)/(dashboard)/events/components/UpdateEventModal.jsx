@@ -414,7 +414,7 @@ export default function UpdateEventModal({
           <button
             disabled={loading}
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded text-sm disabled:bg-gray-400"
+            className="px-4 py-2 bg-secondary-600 text-white rounded text-sm disabled:bg-gray-400"
           >
             {loading ? "Updating..." : "Update Event"}
           </button>

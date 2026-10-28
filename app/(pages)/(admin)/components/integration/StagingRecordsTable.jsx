@@ -68,7 +68,7 @@ export default function StagingRecordsTable({
               <tr
                 key={r._id}
                 className={`border-t border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                  selectedRecordId === r._id ? "bg-blue-50" : ""
+                  selectedRecordId === r._id ? "bg-secondary-50" : ""
                 }`}
                 onClick={() => onRowClick(r._id)}
               >
@@ -111,7 +111,7 @@ export default function StagingRecordsTable({
                         (e) => e.level === "warning",
                       ) && (
                         <span
-                          className="text-xs text-amber-500 font-semibold"
+                          className="text-xs text-secondary-500 font-semibold"
                           title="Warnings (non-blocking)"
                         >
                           ⚠

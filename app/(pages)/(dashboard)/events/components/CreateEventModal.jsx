@@ -493,7 +493,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+            className="px-4 py-2 bg-secondary-600 text-white rounded hover:bg-secondary-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
           >
             {loading ? "Creating..." : "Create Event"}
           </button>

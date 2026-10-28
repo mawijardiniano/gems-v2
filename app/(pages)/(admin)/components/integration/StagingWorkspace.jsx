@@ -110,7 +110,7 @@ export default function StagingWorkspace({ d }) {
                 batch.totals?.identical > 0) && (
                 <p className="text-xs mt-1">
                   {batch.totals?.existing > 0 && (
-                    <span className="text-amber-600 font-medium">
+                    <span className="text-secondary-600 font-medium">
                       {batch.totals.existing} already exist in production
                     </span>
                   )}

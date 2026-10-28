@@ -20,10 +20,10 @@ import {
 
 const ActivityTypeBadge = ({ type }) => {
   const colorMap = {
-    Academic: "bg-blue-100 text-blue-700",
-    Administrative: "bg-purple-100 text-purple-700",
+    Academic: "bg-secondary-100 text-secondary-700",
+    Administrative: "bg-secondary-100 text-secondary-700",
     GAD: "bg-emerald-100 text-emerald-700",
-    Extension: "bg-amber-100 text-amber-700",
+    Extension: "bg-secondary-100 text-secondary-700",
     Research: "bg-rose-100 text-rose-700",
     Students: "bg-cyan-100 text-cyan-700",
     Others: "bg-gray-100 text-gray-700",
@@ -60,7 +60,7 @@ const EventStatusBadge = ({ event }) => {
       return { label: "Past", classes: "bg-red-50 text-red-600 border border-red-200" };
     if (startDate.getTime() <= now.getTime() && endDate.getTime() >= now.getTime())
       return { label: "Ongoing", classes: "bg-green-50 text-green-600 border border-green-200" };
-    return { label: "Upcoming", classes: "bg-blue-50 text-blue-600 border border-blue-200" };
+    return { label: "Upcoming", classes: "bg-secondary-50 text-secondary-600 border border-secondary-200" };
   };
 
   const status = getStatus();

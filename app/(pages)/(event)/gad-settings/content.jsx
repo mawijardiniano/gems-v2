@@ -57,8 +57,8 @@ function formatDateTime(dateStr) {
 }
 
 const ACTION_CONFIG = {
-  LOGIN: { icon: <FaSignInAlt />, color: "bg-blue-100 text-blue-600", label: "Login" },
-  UPDATE_PROFILE: { icon: <FaUserEdit />, color: "bg-purple-100 text-purple-600", label: "Profile Updated" },
+  LOGIN: { icon: <FaSignInAlt />, color: "bg-secondary-100 text-secondary-600", label: "Login" },
+  UPDATE_PROFILE: { icon: <FaUserEdit />, color: "bg-secondary-100 text-secondary-600", label: "Profile Updated" },
   EVENT_REGISTER: { icon: <FaCalendarCheck />, color: "bg-emerald-100 text-emerald-600", label: "Event Registration" },
   EVENT_CREATE: { icon: <FaPlusCircle />, color: "bg-green-100 text-green-600", label: "Event Created" },
   EVENT_STATUS_UPDATE: { icon: <FaTimesCircle />, color: "bg-red-100 text-red-600", label: "Event Status Change" },
@@ -421,8 +421,8 @@ export default function Settings() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <FaExclamationCircle className="text-amber-400 shrink-0" />
-                          <span className="text-amber-600">Password has never been changed</span>
+                          <FaExclamationCircle className="text-secondary-400 shrink-0" />
+                          <span className="text-secondary-600">Password has never been changed</span>
                         </div>
                       )}
                       {lastLogin && (
@@ -460,7 +460,7 @@ export default function Settings() {
         <div
           className={`rounded-2xl transition-shadow duration-500 ${
             highlightedSection === "offices"
-              ? "ring-2 ring-blue-300 ring-offset-2"
+              ? "ring-2 ring-secondary-300 ring-offset-2"
               : ""
           }`}
         >
@@ -483,7 +483,7 @@ export default function Settings() {
         <div
           className={`rounded-2xl transition-shadow duration-500 ${
             highlightedSection === "positions"
-              ? "ring-2 ring-blue-300 ring-offset-2"
+              ? "ring-2 ring-secondary-300 ring-offset-2"
               : ""
           }`}
         >
@@ -506,7 +506,7 @@ export default function Settings() {
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaClipboardList />
                 </div>
                 <div>

@@ -220,9 +220,9 @@ export default function OverviewTab({
     {
       label: "Date Range",
       icon: FaCalendarAlt,
-      gradient: "from-blue-600 to-blue-400",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
+      gradient: "from-secondary-600 to-secondary-400",
+      iconBg: "bg-secondary-100",
+      iconColor: "text-secondary-600",
       value: (
         <div className="flex flex-col gap-1">
           {formatRangeLines(
@@ -240,9 +240,9 @@ export default function OverviewTab({
     {
       label: "Venue",
       icon: FaMapMarkerAlt,
-      gradient: "from-amber-500 to-orange-400",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
+      gradient: "from-secondary-500 to-secondary-400",
+      iconBg: "bg-secondary-100",
+      iconColor: "text-secondary-600",
       value: event.venue || "—",
     },
     {
@@ -257,9 +257,9 @@ export default function OverviewTab({
     {
       label: "Pending Validation",
       icon: FaClipboardCheck,
-      gradient: "from-violet-600 to-purple-400",
-      iconBg: "bg-violet-100",
-      iconColor: "text-violet-600",
+      gradient: "from-secondary-600 to-secondary-400",
+      iconBg: "bg-secondary-100",
+      iconColor: "text-secondary-600",
       /* QR check-ins waiting for organizer approval in the Attendance tab. */
       value: pendingGuestCount || "\u2014",
     },
@@ -268,15 +268,15 @@ export default function OverviewTab({
   return (
     <div className="space-y-6 animate-fade-in">
       {isPast && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+        <div className="rounded-xl border border-secondary-200 bg-secondary-50 p-5 flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-secondary-100 text-secondary-600">
             <FiTrash2 size={18} />
           </div>
           <div className="pt-0.5">
-            <p className="text-sm font-semibold text-amber-900">
+            <p className="text-sm font-semibold text-secondary-900">
               This event has ended
             </p>
-            <p className="text-sm text-amber-700/80 mt-0.5">
+            <p className="text-sm text-secondary-700/80 mt-0.5">
               Thank you for hosting. We hope it was a success!
             </p>
           </div>
@@ -286,7 +286,7 @@ export default function OverviewTab({
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm animate-slide-up">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
               <FiEdit2 size={18} />
             </div>
             <div>
@@ -402,7 +402,7 @@ export default function OverviewTab({
                         }}
                         className={`rounded-xl border p-4 text-left transition-all ${
                           active
-                            ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-sm"
+                            ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-500/20 shadow-sm"
                             : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                         }`}
                       >
@@ -452,7 +452,7 @@ export default function OverviewTab({
                 </div>
 
                 {posterUploading && (
-                  <p className="text-sm text-blue-500 mt-2 flex items-center gap-2">
+                  <p className="text-sm text-secondary-500 mt-2 flex items-center gap-2">
                     <FaSpinner className="animate-spin" /> Uploading...
                   </p>
                 )}
@@ -624,7 +624,7 @@ export default function OverviewTab({
                     disabled={generating}
                     className="btn-secondary !py-1.5 !px-3 !text-xs"
                   >
-                    <FaMagic className="text-blue-500" size={12} />
+                    <FaMagic className="text-secondary-500" size={12} />
                     {generating ? "Generating..." : "Auto-Generate"}
                   </button>
                 </div>

@@ -232,7 +232,7 @@ export default function PrintSummaryButton({
   return (
     <button
       onClick={handlePrintSummary}
-      className="absolute right-5 top-0 bg-violet-700 hover:bg-violet-800 text-white px-5 py-2 rounded-lg"
+      className="absolute right-5 top-0 bg-secondary-700 hover:bg-secondary-800 text-white px-5 py-2 rounded-lg"
     >
       Print
     </button>

@@ -20,7 +20,7 @@ import ManualEncodeModal from "./ManualEncodeModal";
 const STATUS_META = {
   pending: {
     label: "Pending",
-    pill: "bg-amber-50 text-amber-700 ring-amber-600/20",
+    pill: "bg-secondary-50 text-secondary-700 ring-secondary-600/20",
     icon: FiClock,
   },
   approved: {
@@ -171,16 +171,16 @@ export default function AttendanceTab(props) {
       {/* Manual encoding banner: organizers use this for attendees who cannot
           or did not scan the QR, so it sits above every filter as a primary
           action rather than among the small export buttons. */}
-      <div className="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-secondary-200 bg-secondary-50 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-600 text-white">
             <FiUserPlus size={18} />
           </span>
           <div>
-            <p className="text-sm font-semibold text-blue-900">
+            <p className="text-sm font-semibold text-secondary-900">
               Manual Attendance Encoding
             </p>
-            <p className="text-xs text-blue-700">
+            <p className="text-xs text-secondary-700">
               No QR? Search a student or employee record and record their
               attendance instantly.
             </p>
@@ -247,13 +247,13 @@ export default function AttendanceTab(props) {
             onClick={() => { setGuestTypeFilter?.(role.key); setPage(1); setSelected([]); }}
             className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
               guestTypeFilter === role.key
-                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                ? "border-secondary-600 bg-secondary-50 text-secondary-700"
                 : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             {role.label}
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-              guestTypeFilter === role.key ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"
+              guestTypeFilter === role.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
             }`}>
               {roleCounts[role.key] || 0}
             </span>
@@ -273,13 +273,13 @@ export default function AttendanceTab(props) {
             onClick={() => { setValidationFilter?.(tab.key); setPage(1); setSelected([]); }}
             className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
               validationFilter === tab.key
-                ? "border-blue-600 bg-blue-50 text-blue-700"
+                ? "border-secondary-600 bg-secondary-50 text-secondary-700"
                 : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             {tab.label}
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-              validationFilter === tab.key ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
+              validationFilter === tab.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
             }`}>
               {tab.count}
             </span>
@@ -288,8 +288,8 @@ export default function AttendanceTab(props) {
       </div>
 
       {pendingCount > 0 && validationFilter === "pending" && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-sm text-amber-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-secondary-200 bg-secondary-50 px-4 py-3">
+          <p className="text-sm text-secondary-800">
             <span className="font-semibold">{pendingCount}</span> check-in{pendingCount === 1 ? "" : "s"} awaiting validation. Approved guests count toward attendance and reports.
           </p>
           <div className="flex items-center gap-2">
@@ -392,7 +392,7 @@ export default function AttendanceTab(props) {
                       <td className="font-medium text-gray-900">
                         {g.full_name}
                         {g.source === "manual-encode" && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 align-middle text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                          <span className="ml-2 inline-flex items-center rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-[10px] font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
                             Manual
                           </span>
                         )}

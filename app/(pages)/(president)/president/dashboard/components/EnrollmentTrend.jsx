@@ -43,13 +43,13 @@ function EnrollmentTrend({ trend }) {
               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
               <Tooltip formatter={(v) => [Number(v).toLocaleString(), ""]} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="students" name="Students" stroke="#8B5CF6" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="employees" name="Employees" stroke="#3B82F6" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="students" name="Students" stroke="var(--color-secondary-500)" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="employees" name="Employees" stroke="var(--color-primary-500)" strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       )}
-      <Link href="/president/gender-statistics/students" className="mt-3 inline-block text-xs font-medium text-violet-600 hover:underline">
+      <Link href="/president/gender-statistics/students" className="mt-3 inline-block text-xs font-medium text-secondary-600 hover:underline">
         Open enrollment detail →
       </Link>
     </div>

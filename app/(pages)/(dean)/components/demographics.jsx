@@ -16,16 +16,16 @@ import {
 } from "recharts";
 
 const PIE_COLORS = [
-  "#8B5CF6",
-  "#3B82F6",
+  "var(--color-secondary-500)",
+  "var(--color-primary-500)",
   "#F59E0B",
   "#10B981",
   "#EF4444",
-  "#EC4899",
+  "var(--color-accent-500)",
 ];
 const GENDER_BAR_COLORS = {
-  Male: "#3B82F6",
-  Female: "#EC4899",
+  Male: "var(--color-primary-500)",
+  Female: "var(--color-accent-500)",
   Other: "#A3E635",
 };
 
@@ -375,8 +375,8 @@ export default function Demographics({
 
   if (demographics) {
     const palette = [
-      "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-      "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
+      "var(--color-primary-500)", "#10B981", "#F59E0B", "#EF4444", "var(--color-secondary-500)",
+      "var(--color-accent-500)", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
       "#14B8A6", "#D946EF", "#0EA5E9", "#22C55E", "#EAB308",
     ];
     const keys = serverCourseKeys || [];
@@ -598,8 +598,8 @@ export default function Demographics({
 
   const courseColors = (() => {
     const palette = [
-      "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-      "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
+      "var(--color-primary-500)", "#10B981", "#F59E0B", "#EF4444", "var(--color-secondary-500)",
+      "var(--color-accent-500)", "#06B6D4", "#84CC16", "#F97316", "#6366F1",
       "#14B8A6", "#D946EF", "#0EA5E9", "#22C55E", "#EAB308",
     ];
     const map = {};

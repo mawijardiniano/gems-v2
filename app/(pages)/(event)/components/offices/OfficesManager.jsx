@@ -87,7 +87,7 @@ function OfficeRow({ office, canEdit, busy, onDeactivate, onReactivate }) {
               onClick={() => onDeactivate(office)}
               disabled={busy}
               title="Deactivate this office (hidden from new assignments)"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 hover:border-amber-300 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 transition hover:bg-secondary-100 hover:border-secondary-300 disabled:opacity-50"
             >
               <FaBan className="h-3 w-3" />
               Deactivate
@@ -147,7 +147,7 @@ export default function OfficesManager({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
             <FaBuilding />
           </div>
           <div>
@@ -176,12 +176,12 @@ export default function OfficesManager({
             onChange={(e) => setDraft(e.target.value)}
             placeholder="e.g. OFFICE OF THE REGISTRAR"
             aria-label="New office name"
-            className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-secondary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
           >
             <FaPlus className="h-3 w-3" />
             {busy ? "Working..." : "Add Office"}
@@ -206,7 +206,7 @@ export default function OfficesManager({
               onClick={() => setTab(t.key)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 isActiveTab
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  ? "border-secondary-200 bg-secondary-50 text-secondary-700"
                   : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -221,7 +221,7 @@ export default function OfficesManager({
             checked={showInactive || tab === "inactive"}
             disabled={tab === "inactive"}
             onChange={(e) => setShowInactive(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-100 disabled:opacity-50"
+            className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-100 disabled:opacity-50"
           />
           Show inactive offices
         </label>

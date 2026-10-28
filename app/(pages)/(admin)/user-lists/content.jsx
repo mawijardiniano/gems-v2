@@ -354,7 +354,7 @@ export default function UserListPageContent({
                   <TableCell>
                     <Button
                       size="xs"
-                      className="bg-blue-600 text-white hover:bg-blue-700"
+                      className="bg-secondary-600 text-white hover:bg-secondary-700"
                     >
                       Edit
                     </Button>

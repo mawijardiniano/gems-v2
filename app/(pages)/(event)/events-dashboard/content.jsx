@@ -102,11 +102,11 @@ function SkeletonChart() {
 
 function StatusBadge({ status }) {
   const styles = {
-    draft: "bg-amber-50 text-amber-700 border-amber-200",
+    draft: "bg-secondary-50 text-secondary-700 border-secondary-200",
     approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
     rejected: "bg-red-50 text-red-700 border-red-200",
     disapproved: "bg-red-50 text-red-700 border-red-200",
-    completed: "bg-blue-50 text-blue-700 border-blue-200",
+    completed: "bg-secondary-50 text-secondary-700 border-secondary-200",
     active: "bg-emerald-50 text-emerald-700 border-emerald-200",
     cancelled: "bg-red-50 text-red-700 border-red-200",
   };
@@ -206,7 +206,7 @@ function SourceTag({ sample }) {
     <span
       className={`ml-1.5 inline-flex items-center align-middle px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
         sample
-          ? "bg-amber-50 text-amber-700 border border-amber-200"
+          ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
           : "bg-emerald-50 text-emerald-700 border border-emerald-200"
       }`}
     >
@@ -264,7 +264,7 @@ function StatCard({
   );
 }
 
-function MiniBar({ percent, barClass = "bg-blue-500" }) {
+function MiniBar({ percent, barClass = "bg-secondary-500" }) {
   const safe = Math.max(0, Math.min(Number(percent) || 0, 100));
   return (
     <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
@@ -343,7 +343,7 @@ function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpen }) {
         {clear ? (
           <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
         ) : (
-          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+          <AlertCircle className="h-4 w-4 text-secondary-500 shrink-0 mt-0.5" />
         )}
         <div className="min-w-0">
           <p className={`text-sm ${clear ? "text-gray-500" : "text-gray-800"}`}>
@@ -355,7 +355,7 @@ function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpen }) {
           {!clear && onOpen ? (
             <button
               onClick={onOpen}
-              className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-secondary-600 hover:text-secondary-700 transition-colors"
             >
               {linkLabel}
               <ArrowRight className="h-3 w-3" />
@@ -754,7 +754,7 @@ export default function EventsDashboardContent() {
               id="dashboard-year"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
             >
               {yearOptions.map((year) => (
                 <option key={year} value={String(year)}>
@@ -772,7 +772,7 @@ export default function EventsDashboardContent() {
           </button>
           <button
             onClick={() => router.push("/create")}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
           >
             <Activity className="h-4 w-4" />
             Create Event
@@ -787,13 +787,13 @@ export default function EventsDashboardContent() {
         </div>
       )}
       {gpbError && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm animate-slide-up">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{gpbError}</span>
         </div>
       )}
       {gaaError && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm animate-slide-up">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{gaaError}</span>
         </div>
@@ -834,7 +834,7 @@ export default function EventsDashboardContent() {
               iconClass={
                 useSample && sampleImpact && sampleImpact.gaps.length === 0
                   ? "bg-emerald-50 text-emerald-600"
-                  : "bg-amber-50 text-amber-600"
+                  : "bg-secondary-50 text-secondary-600"
               }
               label="Participation Gaps"
               source={useSample ? "sample" : "live"}
@@ -874,7 +874,7 @@ export default function EventsDashboardContent() {
             />
             <StatCard
               icon={Target}
-              iconClass="bg-blue-50 text-blue-600"
+              iconClass="bg-secondary-50 text-secondary-600"
               label="Completion"
               source="live"
               value={
@@ -888,7 +888,7 @@ export default function EventsDashboardContent() {
                   : `No GPB projects · ${selectedYearLabel}`
               }
               barPercent={projectsSnapshot.completionPct}
-              barClass="bg-blue-500"
+              barClass="bg-secondary-500"
               onClick={() => router.push("/project-monitoring/gad-projects")}
             />
           </>
@@ -901,7 +901,7 @@ export default function EventsDashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <CardShell
           icon={ClipboardCheck}
-          iconClass="bg-amber-50 text-amber-600"
+          iconClass="bg-secondary-50 text-secondary-600"
           title="Report Readiness"
           subtitle={selectedYear ? `GPB ${selectedYear}` : "No year selected"}
           action={
@@ -949,7 +949,7 @@ export default function EventsDashboardContent() {
               <div className="mt-3 pt-3 border-t border-gray-50">
                 <button
                   onClick={() => router.push("/reports")}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
                 >
                   Open Reports &amp; Readiness
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -990,7 +990,7 @@ export default function EventsDashboardContent() {
                   onClick={() =>
                     router.push("/project-monitoring/gad-projects")
                   }
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-xs font-medium text-secondary-600 hover:text-secondary-700 transition-colors"
                 >
                   Open Project Monitoring
                 </button>
@@ -1032,7 +1032,7 @@ export default function EventsDashboardContent() {
                     projectsSnapshot.spent,
                   )} / ${fmtPesoCompact(projectsSnapshot.allotted)}`}
                   percent={projectsSnapshot.utilizationPct}
-                  barClass="bg-violet-500"
+                  barClass="bg-secondary-500"
                 />
                 <SnapshotRow
                   icon={Clock}
@@ -1047,7 +1047,7 @@ export default function EventsDashboardContent() {
                   onClick={() =>
                     router.push("/project-monitoring/gad-projects")
                   }
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
                 >
                   Open Project Monitoring
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -1123,13 +1123,13 @@ export default function EventsDashboardContent() {
               <div className="mt-3 pt-3 border-t border-gray-50 grid grid-cols-2 gap-2">
                 <button
                   onClick={() => router.push("/gender-statistics/students")}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600"
                 >
                   Students
                 </button>
                 <button
                   onClick={() => router.push("/gender-statistics/employees")}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600"
                 >
                   Employees
                 </button>
@@ -1145,8 +1145,8 @@ export default function EventsDashboardContent() {
           <div className="p-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
+                  <BarChart3 className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">
@@ -1194,7 +1194,7 @@ export default function EventsDashboardContent() {
                     <Bar
                       dataKey="gaa"
                       name="Total GAA"
-                      fill="#2563eb"
+                      fill="var(--color-primary-600)"
                       radius={[6, 6, 0, 0]}
                       maxBarSize={48}
                     >
@@ -1235,8 +1235,8 @@ export default function EventsDashboardContent() {
           <div className="p-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <Layers className="h-5 w-5 text-amber-600" />
+                <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
+                  <Layers className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">
@@ -1272,7 +1272,7 @@ export default function EventsDashboardContent() {
                 action={
                   <button
                     onClick={() => router.push("/gpb")}
-                    className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                    className="text-xs font-medium text-secondary-600 hover:text-secondary-700 transition-colors"
                   >
                     Create GPB
                   </button>
@@ -1291,7 +1291,7 @@ export default function EventsDashboardContent() {
                       onClick={() => router.push(`/gpb/${gpb.year}`)}
                     >
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-secondary-600 transition-colors">
                           GPB {gpb.year}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -1301,7 +1301,7 @@ export default function EventsDashboardContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={gpb?.status_of_gpb?.status} />
-                        <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                        <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-secondary-500 transition-colors" />
                       </div>
                     </div>
                   );
@@ -1313,7 +1313,7 @@ export default function EventsDashboardContent() {
               <div className="mt-3 pt-3 border-t border-gray-50">
                 <button
                   onClick={() => router.push("/gpb")}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
                 >
                   View All GPB
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -1344,7 +1344,7 @@ export default function EventsDashboardContent() {
               </div>
               <button
                 onClick={() => router.push("/events-list")}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                className="text-xs font-medium text-secondary-600 hover:text-secondary-700 transition-colors"
               >
                 View All
               </button>
@@ -1375,7 +1375,7 @@ export default function EventsDashboardContent() {
                 action={
                   <button
                     onClick={() => router.push("/create")}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
                   >
                     <Activity className="h-3.5 w-3.5" />
                     Create Event
@@ -1409,15 +1409,15 @@ export default function EventsDashboardContent() {
                       }
                     >
                       {/* Date badge */}
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-blue-700 leading-none">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-secondary-50 to-secondary-100 border border-secondary-200 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-secondary-700 leading-none">
                           {eventStartDate
                             ? new Date(eventStartDate)
                                 .toLocaleDateString("en-US", { month: "short" })
                                 .charAt(0)
                             : "—"}
                         </span>
-                        <span className="text-lg font-bold text-blue-700 leading-tight">
+                        <span className="text-lg font-bold text-secondary-700 leading-tight">
                           {eventStartDate
                             ? new Date(eventStartDate).getDate()
                             : "—"}
@@ -1425,7 +1425,7 @@ export default function EventsDashboardContent() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-secondary-600 transition-colors">
                           {event.title}
                         </p>
                         {event.reference_number && (
@@ -1445,7 +1445,7 @@ export default function EventsDashboardContent() {
                         </div>
                       </div>
 
-                      <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
+                      <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-secondary-500 transition-colors shrink-0" />
                     </div>
                   );
                 })}
@@ -1459,8 +1459,8 @@ export default function EventsDashboardContent() {
           <div className="p-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-violet-50 flex items-center justify-center">
-                  <PiggyBank className="h-5 w-5 text-violet-600" />
+                <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
+                  <PiggyBank className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">
@@ -1513,7 +1513,7 @@ export default function EventsDashboardContent() {
                           ₱ {Number(gaa.totalGAA).toLocaleString()}
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700">
                             {gaa.gadPercent}%
                           </span>
                         </td>
@@ -1531,7 +1531,7 @@ export default function EventsDashboardContent() {
               <div className="mt-3 pt-3 border-t border-gray-50">
                 <button
                   onClick={() => router.push("/gaa-budget")}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
                 >
                   View All Budgets
                   <ArrowRight className="h-3.5 w-3.5" />

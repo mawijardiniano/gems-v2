@@ -9,11 +9,11 @@ import {
 } from "react-icons/fa";
 
 const ACTIVITY_COLORS = {
-  Academic: "bg-blue-50 text-blue-700 border-blue-200",
-  Administrative: "bg-purple-50 text-purple-700 border-purple-200",
+  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
+  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
   Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-amber-50 text-amber-700 border-amber-200",
+  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
@@ -85,7 +85,7 @@ export default function EventDetailsModal({ event, onClose }) {
             className="h-36 w-full shrink-0 object-cover"
           />
         ) : (
-          <div className="h-2 w-full shrink-0 bg-gradient-to-r from-indigo-50 to-purple-50" />
+          <div className="h-2 w-full shrink-0 bg-gradient-to-r from-secondary-50 to-secondary-100/60" />
         )}
 
         {/* Scrollable details */}
@@ -172,7 +172,7 @@ export default function EventDetailsModal({ event, onClose }) {
               {event.description.length > 180 && (
                 <button
                   onClick={() => setDescExpanded((v) => !v)}
-                  className="mt-2 text-xs font-semibold text-indigo-600 transition-colors hover:text-indigo-700"
+                  className="mt-2 text-xs font-semibold text-secondary-600 transition-colors hover:text-secondary-700"
                 >
                   {descExpanded ? "Show less" : "Read more"}
                 </button>
@@ -191,7 +191,7 @@ export default function EventDetailsModal({ event, onClose }) {
             className={`block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition-all ${
               isCancelled || hasEnded
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
-                : "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:from-violet-700 hover:to-indigo-700 active:scale-[0.99]"
+                : "bg-gradient-to-r from-secondary-700 to-secondary-500 text-white shadow-md hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
             }`}
           >
             {isCancelled

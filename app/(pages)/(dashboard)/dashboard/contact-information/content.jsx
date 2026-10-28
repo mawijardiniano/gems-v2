@@ -26,7 +26,7 @@ function DetailCard({ icon, label, value, color }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-indigo-50 text-indigo-600"}`}>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
@@ -214,7 +214,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Region</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
             value={addr.region.code}
             onChange={(e) => handleAddressChange(which, "region", e.target.value)}
           >
@@ -227,7 +227,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Province</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
             value={addr.province.code}
             onChange={(e) => handleAddressChange(which, "province", e.target.value)}
             disabled={!addr.region.code}
@@ -241,7 +241,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">City/Municipality</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
             value={addr.city.code}
             onChange={(e) => handleAddressChange(which, "city", e.target.value)}
             disabled={!addr.province.code}
@@ -255,7 +255,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Barangay</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
             value={addr.barangay.code}
             onChange={(e) => handleAddressChange(which, "barangay", e.target.value)}
             disabled={!addr.city.code}
@@ -271,10 +271,10 @@ export default function ContactInformationContent({ profile }) {
   };
 
   const contactCards = [
-    { icon: <FaEnvelope />, label: "Email Address", value: formData.email, color: "bg-blue-50 text-blue-600" },
+    { icon: <FaEnvelope />, label: "Email Address", value: formData.email, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaPhone />, label: "Mobile Number", value: formData.mobileNumber, color: "bg-green-50 text-green-600" },
-    { icon: <FaHome />, label: "Permanent Address", value: getAddressSummary(formData.permanentAddress), color: "bg-purple-50 text-purple-600" },
-    { icon: <FaMapMarkerAlt />, label: "Current Address", value: getAddressSummary(formData.currentAddress), color: "bg-amber-50 text-amber-600" },
+    { icon: <FaHome />, label: "Permanent Address", value: getAddressSummary(formData.permanentAddress), color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaMapMarkerAlt />, label: "Current Address", value: getAddressSummary(formData.currentAddress), color: "bg-secondary-50 text-secondary-600" },
   ];
 
   return (
@@ -291,7 +291,7 @@ export default function ContactInformationContent({ profile }) {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -305,7 +305,7 @@ export default function ContactInformationContent({ profile }) {
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  : "bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300"
+                  : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
               {isEditing ? (
@@ -322,7 +322,7 @@ export default function ContactInformationContent({ profile }) {
       {!isEditing && (
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaIdCard />
             </div>
             <h2 className="text-lg font-semibold text-gray-900">Contact Details</h2>
@@ -342,7 +342,7 @@ export default function ContactInformationContent({ profile }) {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
             <div className="px-8 py-5 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaEnvelope />
                 </div>
                 <div>
@@ -357,7 +357,7 @@ export default function ContactInformationContent({ profile }) {
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Email Address <span className="text-red-400">*</span></label>
                   <input
                     type="email"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                   />
@@ -366,7 +366,7 @@ export default function ContactInformationContent({ profile }) {
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
                   <input
                     type="number"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                     value={formData.mobileNumber}
                     onChange={(e) => handleChange("mobileNumber", e.target.value)}
                   />
@@ -379,7 +379,7 @@ export default function ContactInformationContent({ profile }) {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
             <div className="px-8 py-5 border-b border-gray-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaHome />
                 </div>
                 <div>
@@ -400,7 +400,7 @@ export default function ContactInformationContent({ profile }) {
             <div className="px-8 py-5 border-b border-gray-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                  <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                     <FaMapMarkerAlt />
                   </div>
                   <div>
@@ -411,7 +411,7 @@ export default function ContactInformationContent({ profile }) {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    className="w-4 h-4 rounded border-gray-300 text-secondary-600 focus:ring-secondary-500"
                     onChange={(e) => {
                       if (e.target.checked) {
                         setFormData((prev) => ({

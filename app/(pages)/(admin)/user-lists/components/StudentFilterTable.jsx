@@ -96,7 +96,7 @@ export default function StudentFilterTable({
         >
           <span className="truncate mr-2">Colleges</span>
           {Array.isArray(filterCollege) && filterCollege.length > 0 && (
-            <span className="ml-2 inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
+            <span className="ml-2 inline-block bg-secondary-100 text-secondary-800 text-xs px-2 py-0.5 rounded">
               {filterCollege.length}
             </span>
           )}
@@ -111,7 +111,7 @@ export default function StudentFilterTable({
               <button
                 type="button"
                 onClick={() => setFilterCollege([])}
-                className="text-xs text-blue-600"
+                className="text-xs text-secondary-600"
               >
                 Clear
               </button>

@@ -48,14 +48,14 @@ export default function PersonalInformation() {
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+          <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaUser className="text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Personal Information</h2>
-                <p className="text-blue-100 text-xs mt-0.5">
+                <p className="text-secondary-100 text-xs mt-0.5">
                   Please provide your basic personal details
                 </p>
               </div>
@@ -78,7 +78,7 @@ export default function PersonalInformation() {
                       {required && <span className="text-red-400 ml-1">*</span>}
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                       value={personal[field]}
                       onChange={(e) => updatePersonal(field, e.target.value)}
                       placeholder={`Enter ${label.toLowerCase()}`}
@@ -97,7 +97,7 @@ export default function PersonalInformation() {
                 </label>
                 <input
                   type="date"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={personal.birthday}
                   onChange={(e) => updatePersonal("birthday", e.target.value)}
                   max={new Date().toISOString().split("T")[0]}
@@ -109,7 +109,7 @@ export default function PersonalInformation() {
                   Blood Type <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={personal.bloodType}
                   onChange={(e) => updatePersonal("bloodType", e.target.value)}
                 >
@@ -129,7 +129,7 @@ export default function PersonalInformation() {
                   Nationality <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={personal.nationality}
                   onChange={(e) => updatePersonal("nationality", e.target.value)}
                 />
@@ -146,7 +146,7 @@ export default function PersonalInformation() {
                   Civil Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={personal.civil_status}
                   onChange={(e) => updatePersonal("civil_status", e.target.value)}
                 >
@@ -165,7 +165,7 @@ export default function PersonalInformation() {
                   Religion <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                   value={personal.religion}
                   onChange={(e) => {
                     updatePersonal("religion", e.target.value);
@@ -194,7 +194,7 @@ export default function PersonalInformation() {
                 </select>
                 {personal.religion === "Other" && (
                   <input
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white mt-2"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white mt-2"
                     placeholder="Please specify your religion"
                     value={personal.religion_other || ""}
                     onChange={(e) => updatePersonal("religion_other", e.target.value)}
@@ -212,7 +212,7 @@ export default function PersonalInformation() {
                 Current Status <span className="text-red-400">*</span>
               </label>
               <select
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white"
+                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
                 value={personal.currentStatus}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -257,7 +257,7 @@ export default function PersonalInformation() {
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"
+                  : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
               }`}
             >
               Next Step

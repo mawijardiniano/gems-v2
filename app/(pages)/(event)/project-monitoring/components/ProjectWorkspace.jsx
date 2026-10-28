@@ -556,7 +556,7 @@ export default function ProjectWorkspace({ config }) {
                           milestone.status === "completed"
                             ? "bg-emerald-500"
                             : milestone.status === "ongoing"
-                              ? "bg-blue-500"
+                              ? "bg-secondary-500"
                               : "bg-gray-300"
                         }`}
                       />
@@ -740,7 +740,7 @@ export default function ProjectWorkspace({ config }) {
         />
         <StatCard
           icon={<FaClock size={14} />}
-          iconClass="bg-blue-50 text-blue-600"
+          iconClass="bg-secondary-50 text-secondary-600"
           label="Ongoing"
           value={stats.ongoing}
         />
@@ -753,7 +753,7 @@ export default function ProjectWorkspace({ config }) {
         {budgetView !== BUDGET_VIEW.NONE && (
           <StatCard
             icon={<FaWallet size={14} />}
-            iconClass="bg-amber-50 text-amber-600"
+            iconClass="bg-secondary-50 text-secondary-600"
             label="Budget"
             value={fmtPeso(budgetSummary.totalBudget)}
             sub={`Spent ${fmtPeso(budgetSummary.totalExpenditures)}`}

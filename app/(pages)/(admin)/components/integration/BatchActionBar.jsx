@@ -33,7 +33,7 @@ export default function BatchActionBar({
           type="button"
           disabled={!canValidate}
           onClick={onValidate}
-          className="px-3 py-1.5 rounded bg-amber-500 text-white text-sm disabled:opacity-50"
+          className="px-3 py-1.5 rounded bg-secondary-500 text-white text-sm disabled:opacity-50"
         >
           {busyAction === "Validate Batch" ? "Validating..." : "Validate"}
         </button>
@@ -41,7 +41,7 @@ export default function BatchActionBar({
           type="button"
           disabled={!canReview}
           onClick={() => onApprove(hasSelection ? [...selectedIds] : null)}
-          className="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm disabled:opacity-50"
+          className="px-3 py-1.5 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
         >
           {busyAction.startsWith("Approve")
             ? "Approving..."

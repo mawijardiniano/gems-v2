@@ -64,7 +64,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#6366f1]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-secondary-600)]" />
           <span className="text-gray-600">Male</span>
           <span className="ml-auto font-semibold text-gray-900">{male}</span>
           <span className="text-xs text-gray-400">({malePct}%)</span>
@@ -72,12 +72,12 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${malePct}%`, background: "#6366f1" }}
+            style={{ width: `${malePct}%`, background: "var(--color-secondary-600)" }}
           />
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ec4899]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-accent-500)]" />
           <span className="text-gray-600">Female</span>
           <span className="ml-auto font-semibold text-gray-900">{female}</span>
           <span className="text-xs text-gray-400">({femalePct}%)</span>
@@ -85,7 +85,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${femalePct}%`, background: "#ec4899" }}
+            style={{ width: `${femalePct}%`, background: "var(--color-accent-500)" }}
           />
         </div>
 
@@ -131,7 +131,7 @@ function SegmentedToggle({ active, onChange }) {
         onClick={() => onChange("chart")}
         className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
           active === "chart"
-            ? "bg-white text-violet-700 shadow-sm"
+            ? "bg-white text-secondary-700 shadow-sm"
             : "text-gray-500 hover:text-gray-700"
         }`}
       >
@@ -142,7 +142,7 @@ function SegmentedToggle({ active, onChange }) {
         onClick={() => onChange("table")}
         className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
           active === "table"
-            ? "bg-white text-violet-700 shadow-sm"
+            ? "bg-white text-secondary-700 shadow-sm"
             : "text-gray-500 hover:text-gray-700"
         }`}
       >
@@ -457,8 +457,8 @@ export default function ProfileStats() {
     totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
   const overallPieData = [
-    { name: "Male", value: totalMale, color: "#6366f1" },
-    { name: "Female", value: totalFemale, color: "#ec4899" },
+    { name: "Male", value: totalMale, color: "var(--color-secondary-600)" },
+    { name: "Female", value: totalFemale, color: "var(--color-accent-500)" },
   ];
   if (totalUnspecified > 0) {
     overallPieData.push({ name: "Unspecified", value: totalUnspecified, color: "#94a3b8" });
@@ -505,7 +505,7 @@ export default function ProfileStats() {
     }, [])
     .sort((a, b) => yearOrder.indexOf(a.year) - yearOrder.indexOf(b.year));
 
-  const CHART_COLORS = { Male: "#6366f1", Female: "#ec4899" };
+  const CHART_COLORS = { Male: "var(--color-secondary-600)", Female: "var(--color-accent-500)" };
 
  
   return (
@@ -513,7 +513,7 @@ export default function ProfileStats() {
       <div className="mx-auto max-w-7xl">
         
         <div className="relative mb-10 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-1.5 text-sm font-medium text-violet-700 mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-secondary-50 px-4 py-1.5 text-sm font-medium text-secondary-700 mb-4">
             <FiPieChart className="h-4 w-4" />
             Gender Equality Dashboard
           </div>
@@ -539,7 +539,7 @@ export default function ProfileStats() {
                 id="school-year-select"
                 value={selectedSchoolYear}
                 onChange={handleSchoolYearChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/20 hover:border-gray-300"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
               >
                 {activeSchoolYears.length === 0 && (
                   <option value="">No terms available</option>
@@ -563,7 +563,7 @@ export default function ProfileStats() {
                 id="semester-select"
                 value={selectedSemester}
                 onChange={handleSemesterChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500/20 hover:border-gray-300"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
               >
                 {availableSemesters.length === 0 && (
                   <option value="">No semesters available</option>
@@ -590,13 +590,13 @@ export default function ProfileStats() {
                 aria-pressed={useSample}
                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
                   useSample
-                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    ? "border-secondary-300 bg-secondary-50 text-secondary-700"
                     : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    useSample ? "bg-amber-500" : "bg-emerald-500"
+                    useSample ? "bg-secondary-500" : "bg-emerald-500"
                   }`}
                 />
                 {useSample ? "Sample data" : "Live data"}
@@ -622,7 +622,7 @@ export default function ProfileStats() {
           )}
 
           {useSample && (
-            <div className="mx-auto mt-3 max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            <div className="mx-auto mt-3 max-w-2xl rounded-xl border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
               Showing synthetic <strong>sample data</strong> from the
               sample-profile dataset (2022-2023 to 2026-2027). Your database
               is not being read and nothing is saved — turn the toggle off to
@@ -661,7 +661,7 @@ export default function ProfileStats() {
             male={totalMale}
             female={totalFemale}
             unspecified={totalUnspecified}
-            accent="linear-gradient(135deg, #6366f1, #8b5cf6)"
+            accent="linear-gradient(135deg, var(--color-secondary-600), var(--color-secondary-400))"
           />
           <StatCard
             icon={HiOutlineBriefcase}
@@ -886,7 +886,7 @@ export default function ProfileStats() {
         <div className="mb-12 animate-slide-up">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HiOutlineAcademicCap className="h-5 w-5 text-amber-600" />
+              <HiOutlineAcademicCap className="h-5 w-5 text-secondary-600" />
               <h3 className="text-lg font-semibold text-gray-900">
                 Students — Per College
               </h3>
@@ -1004,7 +1004,7 @@ export default function ProfileStats() {
         <div className="mb-12 animate-slide-up">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HiOutlineUserGroup className="h-5 w-5 text-violet-600" />
+              <HiOutlineUserGroup className="h-5 w-5 text-secondary-600" />
               <h3 className="text-lg font-semibold text-gray-900">
                 Students — By Year Level
               </h3>

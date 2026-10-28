@@ -11,19 +11,19 @@ const statCards = [
     key: "total",
     label: "Total Population",
     icon: FaUsers,
-    gradient: "from-blue-600 to-blue-400",
-    lightBg: "bg-blue-50",
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
+    gradient: "from-secondary-600 to-secondary-400",
+    lightBg: "bg-secondary-50",
+    iconBg: "bg-secondary-100",
+    iconColor: "text-secondary-600",
   },
   {
     key: "gender",
     label: "Gender Breakdown",
     icon: FaVenusMars,
-    gradient: "from-purple-600 to-pink-400",
-    lightBg: "bg-purple-50",
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
+    gradient: "from-secondary-600 to-secondary-400",
+    lightBg: "bg-secondary-50",
+    iconBg: "bg-secondary-100",
+    iconColor: "text-secondary-600",
   },
   {
     key: "pwd",
@@ -118,20 +118,20 @@ function Snapshot({ data, snapshot }) {
 
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
-            <span className="text-purple-600">{femaleCount}</span>
+            <span className="text-secondary-600">{femaleCount}</span>
             <span className="text-sm font-normal text-gray-400">·</span>
-            <span className="text-blue-600">{maleCount}</span>
+            <span className="text-secondary-600">{maleCount}</span>
             <span className="text-xs font-normal text-gray-400">(F · M)</span>
           </div>
           {/* Mini bar */}
           {total > 0 && (
             <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
-                className="bg-purple-500 transition-all duration-500"
+                className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(femaleCount / total) * 100}%` }}
               />
               <div
-                className="bg-blue-500 transition-all duration-500"
+                className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(maleCount / total) * 100}%` }}
               />
             </div>

@@ -136,7 +136,7 @@ export default function SubmitProfile() {
   const SummaryCard = ({ icon, title, children }) => (
     <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
       <div className="flex items-center gap-2 px-5 py-3 bg-gray-50 border-b border-gray-100">
-        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+        <div className="w-7 h-7 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
           {icon}
         </div>
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
@@ -169,21 +169,21 @@ export default function SubmitProfile() {
               </p>
             </div>
             <div className="p-8 space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-3">
+              <div className="bg-secondary-50 border border-secondary-200 rounded-xl p-5">
+                <p className="text-xs font-semibold text-secondary-700 uppercase tracking-wide mb-3">
                   Your Account Credentials
                 </p>
                 <div className="space-y-3">
-                  <div className="bg-white rounded-lg px-4 py-3 border border-amber-100">
+                  <div className="bg-white rounded-lg px-4 py-3 border border-secondary-100">
                     <p className="text-xs text-gray-500">Username</p>
                     <p className="text-sm font-bold text-gray-900 font-mono">{credentials.username}</p>
                   </div>
-                  <div className="bg-white rounded-lg px-4 py-3 border border-amber-100">
+                  <div className="bg-white rounded-lg px-4 py-3 border border-secondary-100">
                     <p className="text-xs text-gray-500">Temporary Password</p>
                     <p className="text-sm font-bold text-gray-900 font-mono">{credentials.temporary_password}</p>
                   </div>
                 </div>
-                <p className="text-xs text-amber-600 mt-3">
+                <p className="text-xs text-secondary-600 mt-3">
                   Please change your password after first login.
                 </p>
               </div>
@@ -192,7 +192,7 @@ export default function SubmitProfile() {
                   dispatch(reset());
                   router.push("/");
                 }}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-secondary-600 text-white rounded-xl font-semibold text-sm hover:bg-secondary-700 transition shadow-lg shadow-secondary-200"
               >
                 Back to Home
               </button>
@@ -210,14 +210,14 @@ export default function SubmitProfile() {
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+          <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaClipboardList className="text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Review & Submit</h2>
-                <p className="text-blue-100 text-xs mt-0.5">
+                <p className="text-secondary-100 text-xs mt-0.5">
                   Please review your details before submitting
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function SubmitProfile() {
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                   isSubmitting
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200"
+                    : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
                 }`}
               >
                 {isSubmitting ? (

@@ -39,7 +39,7 @@ export default function Progress() {
                     isCompleted
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
                       : isActive
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-200 ring-4 ring-blue-100"
+                      ? "bg-secondary-600 text-white shadow-md shadow-secondary-200 ring-4 ring-secondary-100"
                       : "bg-gray-100 text-gray-400"
                   }`}
                 >
@@ -52,7 +52,7 @@ export default function Progress() {
                 <span
                   className={`text-[10px] mt-1.5 font-medium transition-colors duration-300 whitespace-nowrap ${
                     isActive
-                      ? "text-blue-600"
+                      ? "text-secondary-600"
                       : isCompleted
                       ? "text-emerald-600"
                       : "text-gray-400"
@@ -78,11 +78,11 @@ export default function Progress() {
         <div className="flex items-center gap-3 mb-2">
           <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-600 transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-secondary-600 transition-all duration-500 ease-out rounded-full"
               style={{ width: `${(visualIndex / (STEPS.length - 1)) * 100}%` }}
             />
           </div>
-          <span className="text-xs font-semibold text-blue-600 whitespace-nowrap">
+          <span className="text-xs font-semibold text-secondary-600 whitespace-nowrap">
             {visualIndex + 1}/{STEPS.length}
           </span>
         </div>

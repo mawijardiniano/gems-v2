@@ -76,7 +76,7 @@ function DetailCard({ icon, label, value, color }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-indigo-50 text-indigo-600"}`}>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
@@ -227,7 +227,7 @@ export default function EmploymentContent() {
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-3 text-gray-400">
-          <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm">Loading employment information...</p>
         </div>
       </div>
@@ -244,8 +244,8 @@ export default function EmploymentContent() {
 
   const employmentCards = [
     { icon: <FaIdBadge />, label: "Employee ID", value: formData.employee_id, color: "bg-rose-50 text-rose-600" },
-    { icon: <FaBuilding />, label: "Office", value: formData.office, color: "bg-purple-50 text-purple-600" },
-    { icon: <FaUserTie />, label: "Employment Status", value: formData.employment_status, color: "bg-amber-50 text-amber-600" },
+    { icon: <FaBuilding />, label: "Office", value: formData.office, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaUserTie />, label: "Employment Status", value: formData.employment_status, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaClipboardList />, label: "Appointment Status", value: formData.employment_appointment_status, color: "bg-teal-50 text-teal-600" },
   ];
 
@@ -263,7 +263,7 @@ export default function EmploymentContent() {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -284,7 +284,7 @@ export default function EmploymentContent() {
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:border-amber-300"
+                  : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
               {isEditing ? (
@@ -301,7 +301,7 @@ export default function EmploymentContent() {
       {!isEditing && (
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaBriefcase />
             </div>
             <h2 className="text-lg font-semibold text-gray-900">Employment Profile</h2>
@@ -319,7 +319,7 @@ export default function EmploymentContent() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
           <div className="px-8 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaBriefcase />
               </div>
               <div>
@@ -333,7 +333,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Employee ID <span className="text-red-400">*</span></label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.employee_id}
                   onChange={(e) => handleChange("employee_id", e.target.value)}
                 />
@@ -341,7 +341,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Office <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.office}
                   onChange={(e) => handleChange("office", e.target.value)}
                 >
@@ -352,7 +352,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Employment Status <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
                   value={formData.employment_status}
                   onChange={(e) => handleChange("employment_status", e.target.value)}
                 >
@@ -363,7 +363,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Appointment Status</label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-all disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
                   value={formData.employment_appointment_status}
                   onChange={(e) => handleChange("employment_appointment_status", e.target.value)}
                   disabled={!formData.employment_status}

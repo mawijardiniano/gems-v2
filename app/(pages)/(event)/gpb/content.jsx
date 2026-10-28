@@ -58,7 +58,7 @@ function EmptyState({ icon: Icon, title, description, action }) {
 
 function StatusBadge({ status }) {
   const styles = {
-    draft: "bg-amber-50 text-amber-700 border-amber-200",
+    draft: "bg-secondary-50 text-secondary-700 border-secondary-200",
     approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
     disapproved: "bg-red-50 text-red-700 border-red-200",
   };
@@ -72,10 +72,10 @@ function StatusBadge({ status }) {
 
 function StatCard({ icon: Icon, label, value, color = "blue" }) {
   const colorMap = {
-    blue: "bg-blue-50 text-blue-600",
+    blue: "bg-secondary-50 text-secondary-600",
     green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    amber: "bg-secondary-50 text-secondary-600",
+    violet: "bg-secondary-50 text-secondary-600",
   };
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-200">
@@ -103,8 +103,8 @@ function QuickReportButton({
 }) {
   const accentClass =
     accent === "violet"
-      ? "hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700"
-      : "hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700";
+      ? "hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700"
+      : "hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700";
   return (
     <button
       type="button"
@@ -412,7 +412,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
           {canManage && (
             <button
               onClick={openModal}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm shadow-blue-200"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add GPB
@@ -463,7 +463,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               canManage ? (
                 <button
                   onClick={openModal}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
                 >
                   <FaPlus className="h-3 w-3" />
                   Create GPB
@@ -488,14 +488,14 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                       ? "bg-emerald-500"
                       : item.status_of_gpb?.status === "disapproved"
                         ? "bg-red-500"
-                        : "bg-amber-400"
+                        : "bg-secondary-400"
                   }`} />
 
                   <div className="p-6">
                   
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary-50 text-secondary-700 border border-secondary-100">
                           GPB
                         </span>
                         <StatusBadge status={item.status_of_gpb?.status} />
@@ -592,7 +592,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     </div>
                     <Link href={`${basePath}/${item.year}`} className="block">
                       <div className="mb-4">
-                        <span className="text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        <span className="text-3xl font-bold text-gray-900 group-hover:text-secondary-600 transition-colors">
                           {item.year}
                         </span>
                       </div>
@@ -634,7 +634,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         </div>
                       </div>
 
-                      <div className="mt-5 flex items-center gap-1.5 text-sm font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="mt-5 flex items-center gap-1.5 text-sm font-medium text-secondary-600 opacity-0 group-hover:opacity-100 transition-opacity">
                         Open year
                         <FaArrowRight className="h-3.5 w-3.5" />
                       </div>
@@ -701,7 +701,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white"
+                  className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
                 >
                   {[3, 6, 9, 12, 24].map((n) => (
                     <option key={n} value={n}>{n}</option>
@@ -734,7 +734,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`inline-flex items-center justify-center h-9 w-9 rounded-lg text-sm font-medium transition ${
                         currentPage === pageNum
-                          ? "bg-blue-600 text-white shadow-sm"
+                          ? "bg-secondary-600 text-white shadow-sm"
                           : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                     >
@@ -763,7 +763,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             <div className="px-6 py-5 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                     <FaFolderOpen className="h-5 w-5 text-white" />
                   </div>
                   <div>
@@ -795,7 +795,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     placeholder={`e.g. ${new Date().getFullYear() + 1}`}
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
                   />
                 </div>
                 {yearAlreadyExists ? (
@@ -806,7 +806,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 ) : (
                   selectedYear !== "" &&
                   !selectedBudget && (
-                    <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-secondary-600 mt-1.5 flex items-center gap-1">
                       <FaExclamationTriangle className="h-3 w-3" />
                       No GAA budget for {selectedYear} yet — you can create the
                       GPB now and link the budget later.
@@ -826,7 +826,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 <select
                   value={selectedBudget}
                   onChange={(e) => setSelectedBudget(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white appearance-none"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
                 >
                   <option value="">No budget — link later</option>
                   {availableBudgets.map((budget) => (
@@ -861,7 +861,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-500">GAD %</span>
-                          <span className="font-semibold text-blue-600">{budget.gadPercent}%</span>
+                          <span className="font-semibold text-secondary-600">{budget.gadPercent}%</span>
                         </div>
                       </div>
                     );
@@ -880,7 +880,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 <button
                   disabled={!selectedYear || yearAlreadyExists || creating}
                   onClick={handleCreate}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
                 >
                   {creating ? (
                     <>
@@ -931,7 +931,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             <div className="p-6 space-y-5">
               {attachableBudgets.length === 0 ? (
                 <p className="text-sm text-gray-500 flex items-start gap-2">
-                  <FaExclamationTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <FaExclamationTriangle className="h-4 w-4 text-secondary-500 shrink-0 mt-0.5" />
                   <span>
                     No GAA budget exists for {attachModal.gpb.year} yet. Create
                     it under GAA Budget and this GPB will link automatically.
@@ -945,7 +945,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   <select
                     value={attachBudgetId}
                     onChange={(e) => setAttachBudgetId(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition bg-white appearance-none"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
                   >
                     <option value="">Select a budget</option>
                     {attachableBudgets.map((budget) => (
@@ -970,7 +970,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 <button
                   disabled={!attachBudgetId || attaching}
                   onClick={handleAttach}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-200"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
                 >
                   {attaching
                     ? "Linking..."

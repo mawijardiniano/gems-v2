@@ -68,7 +68,7 @@ function getEventStatus(e) {
     return { label: "Past", dot: "bg-gray-400", chip: "bg-gray-50 text-gray-600 hover:bg-gray-100" };
   if (startT <= now)
     return { label: "Ongoing", dot: "bg-green-500", chip: "bg-green-50 text-green-700 hover:bg-green-100" };
-  return { label: "Upcoming", dot: "bg-blue-500", chip: "bg-blue-50 text-blue-700 hover:bg-blue-100" };
+  return { label: "Upcoming", dot: "bg-secondary-500", chip: "bg-secondary-50 text-secondary-700 hover:bg-secondary-100" };
 }
 
 export default function EventCalendarContent() {
@@ -207,7 +207,7 @@ export default function EventCalendarContent() {
       <div className="lg:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
-            <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+            <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-700 to-secondary-500 flex items-center justify-center text-white shadow-lg shadow-secondary-200">
               <FaCalendarDay size={18} />
             </span>
             Event Calendar
@@ -240,7 +240,7 @@ export default function EventCalendarContent() {
           <button
             type="button"
             onClick={goToday}
-            className="ml-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+            className="ml-1 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2 text-xs font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
           >
             Today
           </button>
@@ -252,7 +252,7 @@ export default function EventCalendarContent() {
           {loading ? "Loading…" : `${monthEventCount} event${monthEventCount === 1 ? "" : "s"} this month`}
         </span>
         {[
-          { label: "Upcoming", dot: "bg-blue-500" },
+          { label: "Upcoming", dot: "bg-secondary-500" },
           { label: "Ongoing", dot: "bg-green-500" },
           { label: "Past", dot: "bg-gray-400" },
           { label: "Cancelled", dot: "bg-red-500" },
@@ -291,7 +291,7 @@ export default function EventCalendarContent() {
 
         {loading ? (
           <div className="p-8 flex items-center justify-center gap-3 text-gray-400 text-sm">
-            <FaSpinner className="animate-spin text-blue-500" size={18} />
+            <FaSpinner className="animate-spin text-secondary-500" size={18} />
             Loading calendar…
           </div>
         ) : (
@@ -307,12 +307,12 @@ export default function EventCalendarContent() {
                   onClick={() => selectDate(cell.key)}
                   className={`min-h-[92px] border-b border-r border-gray-100 p-1.5 text-left align-top transition-colors last:border-r-0 ${
                     cell.inMonth ? "bg-white" : "bg-gray-50/50"
-                  } ${isSelected ? "ring-2 ring-inset ring-blue-500" : "hover:bg-blue-50/40"}`}
+                  } ${isSelected ? "ring-2 ring-inset ring-secondary-500" : "hover:bg-secondary-50/40"}`}
                 >
                   <span
                     className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold mb-1 ${
                       isToday
-                        ? "bg-blue-600 text-white"
+                        ? "bg-secondary-600 text-white"
                         : cell.inMonth
                           ? "text-gray-700"
                           : "text-gray-300"

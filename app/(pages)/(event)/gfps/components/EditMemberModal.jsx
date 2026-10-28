@@ -9,7 +9,7 @@ function ModalHeader({ editingSection, onClose }) {
     <div className="px-6 py-5 border-b border-gray-100">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+          <div className="p-2 rounded-lg bg-secondary-50 text-secondary-600">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={editingSection ? "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" : "M12 4v16m8-8H4"} />
             </svg>
@@ -52,7 +52,7 @@ function SectionSelect({ section, editingSection, onChange }) {
           if (!editingSection) onChange(e.target.value);
         }}
         disabled={!!editingSection}
-        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
       >
         {SECTIONS.map((s) => (
           <option key={s.key} value={s.key}>
@@ -112,7 +112,7 @@ function AssignRoles({
                     [key]: e.target.value,
                   }))
                 }
-                className="ml-3 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="ml-3 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none"
               >
                 <option value="member">Member</option>
                 <option value="chair">Chair</option>
@@ -178,7 +178,7 @@ function ManualEntries({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+          className="inline-flex items-center gap-1 text-xs font-medium text-secondary-600 hover:text-secondary-700"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -219,7 +219,7 @@ function ManualEntries({
                       onManualTextsChange((prev) => ({ ...prev, [key]: e.target.value }))
                     }
                     placeholder="e.g. Dela Cruz, Juan"
-                    className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all"
                   />
                   <button
                     type="button"
@@ -247,7 +247,7 @@ function ManualEntries({
                     }
                     disabled={locked}
                     placeholder="e.g. Director, Research"
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                   {locked && (
                     <p className="mt-1 text-[11px] text-gray-400">
@@ -387,7 +387,7 @@ export default function EditMemberModal({
           <button
             type="submit"
             disabled={!canSubmit}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {submitting && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

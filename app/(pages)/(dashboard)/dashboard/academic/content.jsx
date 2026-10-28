@@ -94,7 +94,7 @@ function DetailCard({ icon, label, value, color }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-indigo-50 text-indigo-600"}`}>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ export default function AcademicContent() {
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-3 text-gray-400">
-          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm">Loading academic information...</p>
         </div>
       </div>
@@ -256,10 +256,10 @@ export default function AcademicContent() {
 
   if (!isStudent) return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
-        <FaGraduationCap className="mx-auto text-amber-400 text-4xl mb-4" />
-        <h2 className="text-lg font-semibold text-amber-800 mb-2">Academic Information</h2>
-        <p className="text-sm text-amber-700">
+      <div className="bg-secondary-50 border border-secondary-200 rounded-xl p-8 text-center">
+        <FaGraduationCap className="mx-auto text-secondary-400 text-4xl mb-4" />
+        <h2 className="text-lg font-semibold text-secondary-800 mb-2">Academic Information</h2>
+        <p className="text-sm text-secondary-700">
           Academic details apply only to students. Set your current status to <strong>Student</strong> in your Personal Information to edit these details.
         </p>
       </div>
@@ -268,11 +268,11 @@ export default function AcademicContent() {
 
   const academicCards = [
     { icon: <FaIdBadge />, label: "Student ID", value: formData.student_id, color: "bg-rose-50 text-rose-600" },
-    { icon: <FaSchool />, label: "Campus", value: formData.campus, color: "bg-purple-50 text-purple-600" },
-    { icon: <FaUniversity />, label: "College", value: formData.college, color: "bg-indigo-50 text-indigo-600" },
+    { icon: <FaSchool />, label: "Campus", value: formData.campus, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaUniversity />, label: "College", value: formData.college, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaBookOpen />, label: "Course", value: formData.course, color: "bg-teal-50 text-teal-600" },
-    { icon: <FaLayerGroup />, label: "Year Level", value: formData.year_level, color: "bg-amber-50 text-amber-600" },
-    { icon: <FaAward />, label: "Scholarship", value: formData.isScholar, color: "bg-sky-50 text-sky-600" },
+    { icon: <FaLayerGroup />, label: "Year Level", value: formData.year_level, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaAward />, label: "Scholarship", value: formData.isScholar, color: "bg-primary-50 text-primary-600" },
   ];
 
   const availableCourses = COLLEGE_TO_PROGRAMS[formData.college] || [];

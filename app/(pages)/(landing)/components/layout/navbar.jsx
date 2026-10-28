@@ -40,12 +40,12 @@ export default function Navbar() {
         <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary-700 to-secondary-500 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
               GE
             </div>
             <span className={`text-lg font-bold transition-all duration-300 ${
               scrolled
-                ? "bg-gradient-to-r from-violet-700 to-indigo-700 bg-clip-text text-transparent"
+                ? "bg-gradient-to-r from-secondary-800 to-secondary-500 bg-clip-text text-transparent"
                 : "text-white drop-shadow-sm"
             }`}>
               Gender Equality
@@ -57,7 +57,7 @@ export default function Navbar() {
               href="/profile-registration"
               className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
                 scrolled
-                  ? "text-violet-700 hover:text-violet-900 hover:bg-violet-50"
+                  ? "text-secondary-700 hover:text-secondary-900 hover:bg-secondary-50"
                   : "text-white/90 hover:text-white hover:bg-white/10"
               }`}
             >
@@ -66,7 +66,7 @@ export default function Navbar() {
             </Link> */}
             <button
               onClick={() => setShowSignIn(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-700 to-secondary-500 rounded-xl hover:from-secondary-700 hover:to-secondary-700 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
             >
               <FaSignInAlt size={14} />
               Sign in
@@ -77,7 +77,7 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className={`sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
               scrolled
-                ? "text-violet-700 hover:bg-violet-50"
+                ? "text-secondary-700 hover:bg-secondary-50"
                 : "text-white hover:bg-white/10"
             }`}
             aria-label="Toggle menu"
@@ -98,9 +98,9 @@ export default function Navbar() {
               {/* <Link
                 href="/profile-registration"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 rounded-xl transition-colors"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-secondary-50 hover:text-secondary-700 rounded-xl transition-colors"
               >
-                <FaUserPlus size={16} className="text-violet-500" />
+                <FaUserPlus size={16} className="text-secondary-500" />
                 Sign up
               </Link> */}
               <button
@@ -108,7 +108,7 @@ export default function Navbar() {
                   setMobileMenuOpen(false);
                   setShowSignIn(true);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-700 to-secondary-500 rounded-xl hover:from-secondary-700 hover:to-secondary-700 transition-colors"
               >
                 <FaSignInAlt size={16} />
                 Sign in

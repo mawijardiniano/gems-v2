@@ -444,13 +444,13 @@ export default function StudentGenderStatsContent() {
             aria-pressed={useSample}
             className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
               useSample
-                ? "border-amber-300 bg-amber-50 text-amber-700"
+                ? "border-secondary-300 bg-secondary-50 text-secondary-700"
                 : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
             }`}
           >
             <span
               className={`h-2 w-2 rounded-full ${
-                useSample ? "bg-amber-500" : "bg-emerald-500"
+                useSample ? "bg-secondary-500" : "bg-emerald-500"
               }`}
             />
             {useSample ? "Sample data" : "Live data"}
@@ -468,7 +468,7 @@ export default function StudentGenderStatsContent() {
       </div>
 
       {useSample && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
           Showing synthetic <strong>sample data</strong> for{" "}
           {SAMPLE_STUDENT_COUNT.toLocaleString()} students with a five-year
           enrollment history (2020-2021 to 2024-2025), expanded into individual
@@ -489,7 +489,7 @@ export default function StudentGenderStatsContent() {
       {!useSample && loading && <LoadingState />}
 
       {useSample && filterCount > 0 && filteredSampleRecords.length === 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
           No sample students match the selected filters -{" "}
           <button
             type="button"
@@ -674,7 +674,7 @@ function TopProgramsTable({ rows }) {
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
                     {r.Female}
                   </td>
-                  <td className="py-2.5 pr-3 text-right text-blue-600 font-medium">
+                  <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {r.Male}
                   </td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
@@ -698,7 +698,7 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-amber-500" /> Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" /> Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -743,12 +743,12 @@ function QuickReportsCard({ data, useSample = false, filters }) {
   };
 
   const buttonClass =
-    "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-blue-600" /> Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" /> Quick Reports
       </h3>
       <p className="text-xs text-gray-500 mt-1 mb-4">
         Each button generates its own separate PDF from the data currently

@@ -13,19 +13,19 @@ const statCards = [
     key: "total",
     label: "Total Population",
     icon: FaUsers,
-    gradient: "from-blue-600 to-blue-400",
-    lightBg: "bg-blue-50",
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
+    gradient: "from-secondary-600 to-secondary-400",
+    lightBg: "bg-secondary-50",
+    iconBg: "bg-secondary-100",
+    iconColor: "text-secondary-600",
   },
   {
     key: "gender",
     label: "Gender Breakdown",
     icon: FaVenusMars,
-    gradient: "from-purple-600 to-pink-400",
-    lightBg: "bg-purple-50",
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
+    gradient: "from-secondary-600 to-secondary-400",
+    lightBg: "bg-secondary-50",
+    iconBg: "bg-secondary-100",
+    iconColor: "text-secondary-600",
   },
   {
     key: "pwd",
@@ -130,10 +130,10 @@ export default function Snapshot({
       key: row.label,
       label: row.label,
       icon: FaGraduationCap,
-      gradient: "from-amber-500 to-yellow-400",
-      lightBg: "bg-amber-50",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
+      gradient: "from-secondary-500 to-secondary-400",
+      lightBg: "bg-secondary-50",
+      iconBg: "bg-secondary-100",
+      iconColor: "text-secondary-600",
     }));
 
     return (
@@ -152,19 +152,19 @@ export default function Snapshot({
 
           <StatCard card={statCards[1]}>
             <div className="flex items-baseline gap-2">
-              <span className="text-purple-600">{femaleCount}</span>
+              <span className="text-secondary-600">{femaleCount}</span>
               <span className="text-sm font-normal text-gray-400">·</span>
-              <span className="text-blue-600">{maleCount}</span>
+              <span className="text-secondary-600">{maleCount}</span>
               <span className="text-xs font-normal text-gray-400">(F · M)</span>
             </div>
             {total > 0 && (
               <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="bg-purple-500 transition-all duration-500"
+                  className="bg-secondary-500 transition-all duration-500"
                   style={{ width: `${(femaleCount / total) * 100}%` }}
                 />
                 <div
-                  className="bg-blue-500 transition-all duration-500"
+                  className="bg-secondary-500 transition-all duration-500"
                   style={{ width: `${(maleCount / total) * 100}%` }}
                 />
               </div>
@@ -205,9 +205,9 @@ export default function Snapshot({
               {yearRows.map((row, i) => (
                 <StatCard key={row.label} card={yearLevelStatCards[i]}>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-purple-600">{row.Female || 0}</span>
+                    <span className="text-secondary-600">{row.Female || 0}</span>
                     <span className="text-sm font-normal text-gray-400">·</span>
-                    <span className="text-blue-600">{row.Male || 0}</span>
+                    <span className="text-secondary-600">{row.Male || 0}</span>
                     <span className="text-xs font-normal text-gray-400">
                       (F · M)
                     </span>
@@ -215,11 +215,11 @@ export default function Snapshot({
                   {row.total > 0 && (
                     <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                       <div
-                        className="bg-purple-500 transition-all duration-500"
+                        className="bg-secondary-500 transition-all duration-500"
                         style={{ width: `${((row.Female || 0) / row.total) * 100}%` }}
                       />
                       <div
-                        className="bg-blue-500 transition-all duration-500"
+                        className="bg-secondary-500 transition-all duration-500"
                         style={{ width: `${((row.Male || 0) / row.total) * 100}%` }}
                       />
                     </div>
@@ -301,10 +301,10 @@ export default function Snapshot({
     key: row.label,
     label: row.label,
     icon: FaGraduationCap,
-    gradient: "from-amber-500 to-yellow-400",
-    lightBg: "bg-amber-50",
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
+    gradient: "from-secondary-500 to-secondary-400",
+    lightBg: "bg-secondary-50",
+    iconBg: "bg-secondary-100",
+    iconColor: "text-secondary-600",
   }));
 
   return (
@@ -323,19 +323,19 @@ export default function Snapshot({
 
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
-            <span className="text-purple-600">{femaleCount}</span>
+            <span className="text-secondary-600">{femaleCount}</span>
             <span className="text-sm font-normal text-gray-400">·</span>
-            <span className="text-blue-600">{maleCount}</span>
+            <span className="text-secondary-600">{maleCount}</span>
             <span className="text-xs font-normal text-gray-400">(F · M)</span>
           </div>
           {total > 0 && (
             <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
-                className="bg-purple-500 transition-all duration-500"
+                className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(femaleCount / total) * 100}%` }}
               />
               <div
-                className="bg-blue-500 transition-all duration-500"
+                className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(maleCount / total) * 100}%` }}
               />
             </div>
@@ -377,9 +377,9 @@ export default function Snapshot({
             {studentYearGenderData.map((row, i) => (
               <StatCard key={row.label} card={yearLevelStatCards[i]}>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-purple-600">{row.Female}</span>
+                  <span className="text-secondary-600">{row.Female}</span>
                   <span className="text-sm font-normal text-gray-400">·</span>
-                  <span className="text-blue-600">{row.Male}</span>
+                  <span className="text-secondary-600">{row.Male}</span>
                   <span className="text-xs font-normal text-gray-400">
                     (F · M)
                   </span>
@@ -387,11 +387,11 @@ export default function Snapshot({
                 {row.total > 0 && (
                   <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                     <div
-                      className="bg-purple-500 transition-all duration-500"
+                      className="bg-secondary-500 transition-all duration-500"
                       style={{ width: `${(row.Female / row.total) * 100}%` }}
                     />
                     <div
-                      className="bg-blue-500 transition-all duration-500"
+                      className="bg-secondary-500 transition-all duration-500"
                       style={{ width: `${(row.Male / row.total) * 100}%` }}
                     />
                   </div>

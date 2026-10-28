@@ -38,7 +38,7 @@ const MILESTONE_STATUS_META = {
   },
   ongoing: {
     label: "Ongoing",
-    classes: "bg-blue-50 text-blue-700 border-blue-200",
+    classes: "bg-secondary-50 text-secondary-700 border-secondary-200",
   },
   completed: {
     label: "Completed",
@@ -447,14 +447,14 @@ export default function MilestonesModal({
           )}
 
           {milestonesOutdated && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2 text-xs text-secondary-800">
               <span>
                 The Gantt chart changed. Milestones are out of date.
               </span>
               <button
                 type="button"
                 onClick={regenerateMilestones}
-                className="rounded-md border border-amber-300 bg-white px-2.5 py-1 font-medium text-amber-800 hover:bg-amber-100"
+                className="rounded-md border border-secondary-300 bg-white px-2.5 py-1 font-medium text-secondary-800 hover:bg-secondary-100"
               >
                 Apply to Milestones
               </button>
@@ -706,7 +706,7 @@ export default function MilestonesModal({
                                   />
                                 </label>
                                 {(row.proofs || []).length === 0 && (
-                                  <p className="text-[10px] font-medium text-amber-600">
+                                  <p className="text-[10px] font-medium text-secondary-600">
                                     Proof required
                                   </p>
                                 )}

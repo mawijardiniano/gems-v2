@@ -36,10 +36,10 @@ export default function SimplifyGender() {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] pt-16 flex items-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-700 via-purple-700 to-violet-800" />
+      <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-700 via-secondary-700 to-secondary-800" />
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-20 right-20 w-80 h-80 bg-fuchsia-300 rounded-full blur-[130px]" />
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-violet-300 rounded-full blur-[100px]" />
+        <div className="absolute bottom-20 left-20 w-64 h-64 bg-secondary-300 rounded-full blur-[100px]" />
       </div>
 
       {/* Hexagonal pattern overlay */}
@@ -94,7 +94,7 @@ export default function SimplifyGender() {
           <div className="relative flex justify-center">
             <div className="relative">
    
-              <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/30 to-violet-500/30 rounded-full blur-[80px]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/30 to-secondary-500/30 rounded-full blur-[80px]" />
               
               <div className="relative bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-3 backdrop-blur-sm border border-white/10 shadow-2xl">
                 <img

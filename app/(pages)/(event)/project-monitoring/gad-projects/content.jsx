@@ -117,7 +117,7 @@ const PROJECT_STATUS_META = {
   },
   ongoing: {
     label: "Ongoing",
-    classes: "bg-blue-50 text-blue-700 border-blue-200",
+    classes: "bg-secondary-50 text-secondary-700 border-secondary-200",
   },
   completed: {
     label: "Completed",
@@ -153,7 +153,7 @@ const MILESTONE_STATUS_META = {
   },
   ongoing: {
     label: "Ongoing",
-    classes: "bg-blue-50 text-blue-700 border-blue-200",
+    classes: "bg-secondary-50 text-secondary-700 border-secondary-200",
   },
   completed: {
     label: "Completed",
@@ -185,8 +185,8 @@ const EVENT_STATUS_META = {
   },
   active: {
     label: "Ongoing",
-    dot: "bg-blue-500",
-    classes: "bg-blue-50 text-blue-700 border-blue-200",
+    dot: "bg-secondary-500",
+    classes: "bg-secondary-50 text-secondary-700 border-secondary-200",
   },
   cancelled: {
     label: "Cancelled",
@@ -784,7 +784,7 @@ export default function GADProjectsMonitoringContent() {
       >
         <StatCard
           icon={FaClipboardList}
-          iconClass="bg-purple-50 text-purple-600"
+          iconClass="bg-secondary-50 text-secondary-600"
           label="Total GAD Projects/Activities"
           value={filteredProjects.length}
           sub={yearFilter ? ayLabel(yearFilter) : "—"}
@@ -802,7 +802,7 @@ export default function GADProjectsMonitoringContent() {
         />
         <StatCard
           icon={FaClock}
-          iconClass="bg-amber-50 text-amber-600"
+          iconClass="bg-secondary-50 text-secondary-600"
           label="Ongoing"
           value={totals.ongoing}
           sub={`${
@@ -1675,7 +1675,7 @@ export default function GADProjectsMonitoringContent() {
                                                                             file.name ||
                                                                             "View proof"
                                                                           }
-                                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition"
+                                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
                                                                         >
                                                                           <FaPaperclip className="h-2.5 w-2.5" />
                                                                           <span className="max-w-[120px] truncate">
@@ -1697,7 +1697,7 @@ export default function GADProjectsMonitoringContent() {
                                                             </ul>
                                                           ) : m.status ===
                                                             "completed" ? (
-                                                            <span className="text-[10px] font-medium text-amber-600">
+                                                            <span className="text-[10px] font-medium text-secondary-600">
                                                               Missing proof
                                                             </span>
                                                           ) : (
@@ -1832,7 +1832,7 @@ export default function GADProjectsMonitoringContent() {
                                               <span
                                                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal ${
                                                   isOverride
-                                                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                    ? "border-secondary-200 bg-secondary-50 text-secondary-700"
                                                     : "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                 }`}
                                               >
@@ -1971,7 +1971,7 @@ export default function GADProjectsMonitoringContent() {
                                                     href={url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition"
+                                                    className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
                                                   >
                                                     <FaPaperclip className="h-3 w-3" />
                                                     <span className="max-w-[160px] truncate">

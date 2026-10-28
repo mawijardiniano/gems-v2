@@ -34,7 +34,7 @@ function AgeChart({ data }) {
             <YAxis dataKey="age" type="category" tick={AXIS_TICK} width={70} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Legend />
-            <Bar dataKey="count" fill="#8884d8">
+            <Bar dataKey="count" fill="var(--color-secondary-500)">
               <LabelList dataKey="count" position="right" />
             </Bar>
           </BarChart>

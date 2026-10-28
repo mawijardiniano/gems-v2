@@ -23,7 +23,7 @@ export function FilterButton({ active, onClick }) {
       onClick={onClick}
       className={`rounded border px-1.5 py-0.5 text-[10px] ${
         active
-          ? "border-violet-300 bg-violet-50 text-violet-700"
+          ? "border-secondary-300 bg-secondary-50 text-secondary-700"
           : "border-gray-200 text-gray-500 hover:bg-gray-50"
       }`}
     >
@@ -51,7 +51,7 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
             type="checkbox"
             checked={selected.includes(option.value)}
             onChange={() => toggle(option.value)}
-            className="accent-violet-600"
+            className="accent-secondary-600"
           />
           <span className="truncate">{option.value}</span>
           <span className="ml-auto text-[10px] text-gray-400">
@@ -70,7 +70,7 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
         <button
           type="button"
           onClick={onDone}
-          className="text-violet-600 hover:underline"
+          className="text-secondary-600 hover:underline"
         >
           Done
         </button>
@@ -89,7 +89,7 @@ export function FilterChips({ chips, labelOf, flagFields, onClear }) {
           type="button"
           onClick={() => onClear(key)}
           title="Clear this filter"
-          className="rounded-full bg-violet-50 border border-violet-200 px-2 py-0.5 text-[10px] text-violet-700 hover:bg-violet-100"
+          className="rounded-full bg-secondary-50 border border-secondary-200 px-2 py-0.5 text-[10px] text-secondary-700 hover:bg-secondary-100"
         >
           {labelOf(key)}
           {flagFields.includes(key) ? " = " : ": "}

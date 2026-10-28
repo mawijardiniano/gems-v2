@@ -32,7 +32,7 @@ function Card({ icon: Icon, label, value, sub, bar, href, linkLabel, tint }) {
           {href && (
             <Link
               href={href}
-              className="mt-2 inline-block text-xs font-medium text-violet-600 hover:underline"
+              className="mt-2 inline-block text-xs font-medium text-secondary-600 hover:underline"
             >
               {linkLabel || "View details →"}
             </Link>
@@ -43,7 +43,7 @@ function Card({ icon: Icon, label, value, sub, bar, href, linkLabel, tint }) {
   );
 }
 
-function MiniBar({ pct, from = "bg-violet-500", to = "bg-blue-500" }) {
+function MiniBar({ pct, from = "bg-secondary-500", to = "bg-secondary-500" }) {
   if (pct === null || pct === undefined) return null;
   return (
     <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -91,14 +91,14 @@ function ExecutiveSnapshot({ snapshot, useSample }) {
           sub={s.femaleStudentsPct !== null && s.femaleStudentsPct !== undefined ? `${s.femaleStudentsPct}% female students` : "Enrolled population"}
           bar={s.femaleStudentsPct !== null && s.femaleStudentsPct !== undefined ? <MiniBar pct={s.femaleStudentsPct} /> : null}
           href="/president/gender-statistics/students"
-          tint="from-blue-600 to-blue-400"
+          tint="from-secondary-600 to-secondary-400"
         />
         <Card
           icon={FaUserTie}
           label="Employees"
           value={fmt(s.totalEmployees ?? "—")}
           sub={s.femaleEmployeesPct !== null && s.femaleEmployeesPct !== undefined ? `${s.femaleEmployeesPct}% female employees` : "Workforce headcount"}
-          bar={s.femaleEmployeesPct !== null && s.femaleEmployeesPct !== undefined ? <MiniBar pct={s.femaleEmployeesPct} from="bg-pink-500" to="bg-blue-500" /> : null}
+          bar={s.femaleEmployeesPct !== null && s.femaleEmployeesPct !== undefined ? <MiniBar pct={s.femaleEmployeesPct} from="bg-pink-500" to="bg-secondary-500" /> : null}
           href="/president/gender-statistics/employees"
           tint="from-cyan-600 to-cyan-400"
         />
@@ -107,10 +107,10 @@ function ExecutiveSnapshot({ snapshot, useSample }) {
           label="Female share"
           value={femalePct !== null ? `${femalePct}%` : "—"}
           sub={femaleSub}
-          bar={femalePct !== null ? <MiniBar pct={femalePct} from="bg-purple-500" to="bg-blue-500" /> : null}
+          bar={femalePct !== null ? <MiniBar pct={femalePct} from="bg-secondary-500" to="bg-secondary-500" /> : null}
           href="/president/gender-statistics/students"
           linkLabel="Open gender statistics →"
-          tint="from-purple-600 to-pink-400"
+          tint="from-secondary-600 to-secondary-400"
         />
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">

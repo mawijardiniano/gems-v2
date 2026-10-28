@@ -4,7 +4,7 @@ export const RECORD_STATUS_STYLES = {
   pending: "bg-gray-100 text-gray-700",
   valid: "bg-green-100 text-green-700",
   invalid: "bg-red-100 text-red-700",
-  approved: "bg-blue-100 text-blue-700",
+  approved: "bg-secondary-100 text-secondary-700",
   rejected: "bg-orange-100 text-orange-700",
   duplicate: "bg-yellow-100 text-yellow-700",
   migrated: "bg-emerald-100 text-emerald-700",
@@ -13,9 +13,9 @@ export const RECORD_STATUS_STYLES = {
 
 export const BATCH_STATUS_STYLES = {
   pending: "bg-gray-100 text-gray-700",
-  validating: "bg-amber-100 text-amber-700",
-  ready: "bg-blue-100 text-blue-700",
-  migrating: "bg-indigo-100 text-indigo-700",
+  validating: "bg-secondary-100 text-secondary-700",
+  ready: "bg-secondary-100 text-secondary-700",
+  migrating: "bg-secondary-100 text-secondary-700",
   completed: "bg-emerald-100 text-emerald-700",
   failed: "bg-red-100 text-red-700",
 };

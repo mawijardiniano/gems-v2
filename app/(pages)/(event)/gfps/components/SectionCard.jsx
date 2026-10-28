@@ -30,8 +30,8 @@ function ExecutiveGroupedBody({ members }) {
               <OfficialRow
                 key={memberKey(m, i)}
                 member={m}
-                avatarBg="bg-blue-100"
-                avatarText="text-blue-600"
+                avatarBg="bg-secondary-100"
+                avatarText="text-secondary-600"
               />
             ))}
           </div>
@@ -105,7 +105,7 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
         {canEdit && (
           <button
             onClick={() => onEdit(sectionKey)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-secondary-600 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

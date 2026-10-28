@@ -36,9 +36,9 @@ import {
 
 // ─── Constants ──────────────────────────────────────────────────────
 const CATEGORY_STYLES = {
-  "Training Material": "bg-blue-100 text-blue-800 ring-blue-600/20",
+  "Training Material": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Manual: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
-  Research: "bg-violet-100 text-violet-800 ring-violet-600/20",
+  Research: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Other: "bg-gray-100 text-gray-700 ring-gray-500/20",
 };
 

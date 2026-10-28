@@ -94,11 +94,11 @@ function EventCard({ event, onClick, compact = false }) {
       onClick={() => onClick(event._id)}
       className={`group cursor-pointer bg-white rounded-xl border ${
         isCancelled ? "border-red-100" : "border-gray-100"
-      } p-4 hover:border-indigo-200 hover:shadow-md transition-all duration-200`}
+      } p-4 hover:border-secondary-200 hover:shadow-md transition-all duration-200`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
+          <h4 className="font-semibold text-sm text-gray-900 group-hover:text-secondary-600 transition-colors truncate">
             {event.title}
           </h4>
           {event.reference_number && (
@@ -217,19 +217,19 @@ export default function DashboardContent({ profile, userId }) {
   }, [allEvents, registeredIds, createdIds]);
 
   const studentStats = [
-    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-blue-50 text-blue-600" },
-    { icon: <FaUniversity />, label: "Campus", value: academic.campus, color: "bg-purple-50 text-purple-600" },
-    { icon: <FaGraduationCap />, label: "College", value: academic.college, color: "bg-indigo-50 text-indigo-600" },
+    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaUniversity />, label: "Campus", value: academic.campus, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaGraduationCap />, label: "College", value: academic.college, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaLayerGroup />, label: "Course", value: academic.course, color: "bg-teal-50 text-teal-600" },
-    { icon: <FaClock />, label: "Year Level", value: academic.year_level, color: "bg-amber-50 text-amber-600" },
+    { icon: <FaClock />, label: "Year Level", value: academic.year_level, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaIdBadge />, label: "Student ID", value: academic.student_id, color: "bg-rose-50 text-rose-600" },
   ];
 
   const employeeStats = [
-    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-blue-50 text-blue-600" },
-    { icon: <FaBriefcase />, label: "Office", value: employment.office, color: "bg-purple-50 text-purple-600" },
+    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-secondary-50 text-secondary-600" },
+    { icon: <FaBriefcase />, label: "Office", value: employment.office, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaClock />, label: "Employment Status", value: employment.employment_status, color: "bg-teal-50 text-teal-600" },
-    { icon: <FaIdBadge />, label: "Appointment", value: employment.employment_appointment_status, color: "bg-amber-50 text-amber-600" },
+    { icon: <FaIdBadge />, label: "Appointment", value: employment.employment_appointment_status, color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaIdBadge />, label: "Employee ID", value: employment.employee_id, color: "bg-rose-50 text-rose-600" },
   ];
 
@@ -238,7 +238,7 @@ export default function DashboardContent({ profile, userId }) {
    
       <div className="mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
             {initials || "U"}
           </div>
           <div>
@@ -254,7 +254,7 @@ export default function DashboardContent({ profile, userId }) {
           <h2 className="text-lg font-semibold text-gray-900">Profile Overview</h2>
           <button
             onClick={() => router.push("/dashboard/personal-information")}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
           >
             View Profile <FaArrowRight className="text-[10px]" />
           </button>
@@ -275,7 +275,7 @@ export default function DashboardContent({ profile, userId }) {
               <h2 className="text-base font-semibold text-gray-900">Discover Events</h2>
               <button
                 onClick={() => router.push("/events/discover")}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
               >
                 View All <FaArrowRight className="text-[10px]" />
               </button>
@@ -301,7 +301,7 @@ export default function DashboardContent({ profile, userId }) {
               <h2 className="text-base font-semibold text-gray-900">Your Events</h2>
               <button
                 onClick={() => router.push("/events")}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
               >
                 View All <FaArrowRight className="text-[10px]" />
               </button>

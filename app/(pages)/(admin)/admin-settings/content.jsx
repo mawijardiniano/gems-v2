@@ -56,12 +56,12 @@ function formatDateTime(dateStr) {
 const ACTION_CONFIG = {
   LOGIN: {
     icon: <FaSignInAlt />,
-    color: "bg-blue-100 text-blue-600",
+    color: "bg-secondary-100 text-secondary-600",
     label: "Login",
   },
   UPDATE_PROFILE: {
     icon: <FaUserEdit />,
-    color: "bg-purple-100 text-purple-600",
+    color: "bg-secondary-100 text-secondary-600",
     label: "Profile Updated",
   },
   EVENT_REGISTER: {
@@ -367,7 +367,7 @@ export default function AdminSettings() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaLock />
               </div>
               <div>
@@ -385,7 +385,7 @@ export default function AdminSettings() {
               <div className="space-y-3">
                 <button
                   onClick={openPasswordModal}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors shadow-sm hover:shadow-md"
                 >
                   <FaLock className="text-xs" />
                   Change Password
@@ -409,8 +409,8 @@ export default function AdminSettings() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <FaExclamationCircle className="text-amber-400 shrink-0" />
-                          <span className="text-amber-600">
+                          <FaExclamationCircle className="text-secondary-400 shrink-0" />
+                          <span className="text-secondary-600">
                             Password has never been changed
                           </span>
                         </div>
@@ -448,7 +448,7 @@ export default function AdminSettings() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaGraduationCap />
               </div>
               <div>
@@ -475,7 +475,7 @@ export default function AdminSettings() {
                     <select
                       value={termSchoolYear}
                       onChange={(e) => setTermSchoolYear(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 bg-white"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                     >
                       <option value="">Select School Year</option>
                       <option value="2024-2025">2024-2025</option>
@@ -493,7 +493,7 @@ export default function AdminSettings() {
                     <select
                       value={termSemester}
                       onChange={(e) => setTermSemester(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 bg-white"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                     >
                       <option value="">Select Semester</option>
                       <option value="1st">1st Semester</option>
@@ -519,7 +519,7 @@ export default function AdminSettings() {
                   <button
                     onClick={saveActiveTerm}
                     disabled={termSaving}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
                   >
                     {termSaving ? (
                       <>
@@ -546,7 +546,7 @@ export default function AdminSettings() {
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaClipboardList />
                 </div>
                 <div>
@@ -564,7 +564,7 @@ export default function AdminSettings() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                   showFilters
-                    ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                    ? "bg-secondary-50 border-secondary-200 text-secondary-700"
                     : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -585,7 +585,7 @@ export default function AdminSettings() {
                   <select
                     value={filterAction}
                     onChange={(e) => setFilterAction(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                   >
                     <option value="">All Actions</option>
                     <option value="LOGIN">Login</option>
@@ -607,7 +607,7 @@ export default function AdminSettings() {
                     type="date"
                     value={filterFrom}
                     onChange={(e) => setFilterFrom(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                   />
                 </div>
                 <div>
@@ -618,13 +618,13 @@ export default function AdminSettings() {
                     type="date"
                     value={filterTo}
                     onChange={(e) => setFilterTo(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                   />
                 </div>
                 <div className="flex items-end gap-2">
                   <button
                     onClick={() => fetchActivities(1)}
-                    className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                    className="px-3 py-2 bg-secondary-600 text-white text-xs font-medium rounded-lg hover:bg-secondary-700 transition-colors"
                   >
                     Apply
                   </button>
@@ -733,7 +733,7 @@ export default function AdminSettings() {
                         onClick={() => handlePageChange(p)}
                         className={`w-7 h-7 rounded-lg text-xs font-medium ${
                           p === pagination.page
-                            ? "bg-indigo-600 text-white"
+                            ? "bg-secondary-600 text-white"
                             : "border border-gray-200 text-gray-600 hover:bg-gray-50"
                         }`}
                       >
@@ -796,12 +796,12 @@ export default function AdminSettings() {
                       type={showCurrent ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
+                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrent((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
                     >
                       {showCurrent ? "Hide" : "Show"}
                     </button>
@@ -817,12 +817,12 @@ export default function AdminSettings() {
                       type={showNew ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
+                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNew((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
                     >
                       {showNew ? "Hide" : "Show"}
                     </button>
@@ -841,12 +841,12 @@ export default function AdminSettings() {
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-sm"
+                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
                     >
                       {showConfirm ? "Hide" : "Show"}
                     </button>
@@ -864,7 +864,7 @@ export default function AdminSettings() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    className="px-4 py-2.5 rounded-lg bg-secondary-600 text-white text-sm font-medium hover:bg-secondary-700 transition-colors disabled:opacity-50"
                   >
                     {loading ? "Saving..." : "Change Password"}
                   </button>
@@ -900,7 +900,7 @@ export default function AdminSettings() {
                 </button>
                 <button
                   onClick={performChange}
-                  className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  className="px-4 py-2.5 rounded-lg bg-secondary-600 text-white text-sm font-medium hover:bg-secondary-700 transition-colors"
                 >
                   Confirm
                 </button>

@@ -153,7 +153,7 @@ export default function IntegrationContent() {
               type="button"
               onClick={syncNow}
               disabled={d.busyAction !== "" || !endpoint}
-              className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:opacity-50"
+              className="px-4 py-2 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
             >
               {d.busyAction === "Sync Now" ? "Syncing..." : "Sync Now"}
             </button>
@@ -226,7 +226,7 @@ export default function IntegrationContent() {
               onClick={() => setTab(t.id)}
               className={`px-3 py-2 text-sm rounded-t-md -mb-px border-b-2 ${
                 tab === t.id
-                  ? "border-blue-600 text-blue-700 font-medium"
+                  ? "border-secondary-600 text-secondary-700 font-medium"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >

@@ -3,11 +3,11 @@
 import { TIMELINE_MONTHS, timelineLayout, timelineYears } from "@/lib/gantt";
 
 const BAR_COLORS = [
-  "bg-sky-400",
+  "bg-primary-400",
   "bg-emerald-400",
-  "bg-amber-400",
+  "bg-secondary-400",
   "bg-orange-300",
-  "bg-violet-400",
+  "bg-secondary-400",
   "bg-teal-400",
 ];
 

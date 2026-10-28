@@ -30,7 +30,7 @@ const ACTION_LABELS = {
 
 const LEVEL_DOT = {
   info: "bg-green-500",
-  warn: "bg-amber-500",
+  warn: "bg-secondary-500",
   error: "bg-red-500",
 };
 
@@ -140,20 +140,20 @@ export default function IctuDashboard() {
     {
       label: "Total Batches",
       value: batches.length,
-      icon: <FaDatabase className="text-blue-600" />,
-      color: "bg-blue-50",
+      icon: <FaDatabase className="text-secondary-600" />,
+      color: "bg-secondary-50",
     },
     {
       label: "In Progress",
       value: stats.byStatus.pending + stats.byStatus.validating + stats.byStatus.migrating,
-      icon: <FaHourglassHalf className="text-amber-600" />,
-      color: "bg-amber-50",
+      icon: <FaHourglassHalf className="text-secondary-600" />,
+      color: "bg-secondary-50",
     },
     {
       label: "Ready to Migrate",
       value: stats.byStatus.ready,
-      icon: <FaBoxOpen className="text-indigo-600" />,
-      color: "bg-indigo-50",
+      icon: <FaBoxOpen className="text-secondary-600" />,
+      color: "bg-secondary-50",
     },
     {
       label: "Completed",
@@ -182,14 +182,14 @@ export default function IctuDashboard() {
       desc: "Fetch, validate, and migrate HRMIS data",
       href: "/ictu-director/integration",
       icon: <FaDatabase size={20} />,
-      color: "bg-blue-600",
+      color: "bg-secondary-600",
     },
     {
       label: "Manual Upload",
       desc: "Upload CSV/Excel files to staging",
       href: "/ictu-director/manual-upload",
       icon: <FaCloudUploadAlt size={20} />,
-      color: "bg-purple-600",
+      color: "bg-secondary-600",
     },
     {
       label: "Admin Settings",
@@ -216,7 +216,7 @@ export default function IctuDashboard() {
           <button
             onClick={loadBatches}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-900 text-white text-sm font-medium hover:bg-purple-800 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary-900 text-white text-sm font-medium hover:bg-secondary-800 transition-colors disabled:opacity-50"
           >
             <FaSyncAlt className={loading ? "animate-spin" : ""} />
             Refresh
@@ -235,7 +235,7 @@ export default function IctuDashboard() {
             <Link
               key={action.href}
               href={action.href}
-              className="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-200 transition-all"
+              className="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-secondary-200 transition-all"
             >
               <span
                 className={`w-11 h-11 rounded-lg flex items-center justify-center text-white ${action.color}`}
@@ -298,7 +298,7 @@ export default function IctuDashboard() {
               </h2>
               <Link
                 href="/ictu-director/integration"
-                className="text-xs font-medium text-purple-700 hover:text-purple-900"
+                className="text-xs font-medium text-secondary-700 hover:text-secondary-900"
               >
                 View all →
               </Link>
@@ -387,7 +387,7 @@ export default function IctuDashboard() {
             </h2>
             <Link
               href="/ictu-director/manual-upload"
-              className="text-xs font-medium text-purple-700 hover:text-purple-900"
+              className="text-xs font-medium text-secondary-700 hover:text-secondary-900"
             >
               New upload →
             </Link>

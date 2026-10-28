@@ -91,7 +91,7 @@ export default function FieldMappingPanel() {
               <td className="px-3 py-1.5 font-mono text-[11px] text-gray-700">
                 {m.source}
               </td>
-              <td className="px-3 py-1.5 font-mono text-[11px] text-blue-700">
+              <td className="px-3 py-1.5 font-mono text-[11px] text-secondary-700">
                 {m.target}
               </td>
             </tr>

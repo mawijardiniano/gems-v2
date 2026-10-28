@@ -113,25 +113,31 @@ export default function Sidebar({ open, setOpen, role }) {
   return (
     <>
       <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white/90 backdrop-blur-xl border-r border-gray-200/80 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-gradient-to-b from-secondary-700 via-secondary-900 to-secondary-950 border-r border-white/10 shadow-xl shadow-secondary-950/40 transition-all duration-300 z-30 flex flex-col overflow-hidden ${
           open ? "w-64" : "w-0 sm:w-[72px]"
         }`}
       >
+        {/* Brand glow — lilac wash at bottom-left; the light at the top
+            comes from the panel gradient itself */}
         <div
-          className={`flex-shrink-0 border-b border-gray-100/80 ${
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_0%_100%,rgba(168,81,184,0.28),transparent_70%)]"
+        />
+        <div
+          className={`flex-shrink-0 border-b border-white/10 ${
             open ? "px-4 py-5" : "px-0 py-4 hidden sm:flex sm:justify-center"
           }`}
         >
           {open ? (
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 flex-shrink-0"
                 style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
               >
                 {getInitials()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
                 <p className="text-[11px] font-medium text-emerald-600 truncate mt-0.5 uppercase tracking-wider">
@@ -142,7 +148,7 @@ export default function Sidebar({ open, setOpen, role }) {
           ) : (
             <TooltipWrapper label={getDisplayName()} collapsed={!open}>
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white cursor-default flex-shrink-0 mx-auto"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ring-2 ring-white/25 cursor-default flex-shrink-0 mx-auto"
                 style={{ backgroundColor: `hsl(${avatarColor}, 55%, 50%)` }}
               >
                 {getInitials()}
@@ -157,7 +163,7 @@ export default function Sidebar({ open, setOpen, role }) {
           }`}
         >
           {open && (
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
               Dean Panel
             </p>
           )}
@@ -174,7 +180,7 @@ export default function Sidebar({ open, setOpen, role }) {
                   } ${
                     linkActive
                       ? "bg-gradient-to-r from-emerald-50 to-teal-50/50 text-emerald-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <span
@@ -198,7 +204,7 @@ export default function Sidebar({ open, setOpen, role }) {
           })}
         </nav>
         <div
-          className={`flex-shrink-0 border-t border-gray-100/80 py-2 ${
+          className={`flex-shrink-0 border-t border-white/10 py-2 ${
             open ? "px-3" : "px-0"
           }`}
         >
@@ -210,14 +216,14 @@ export default function Sidebar({ open, setOpen, role }) {
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
                 pathname === "/dean/settings"
-                  ? "bg-gradient-to-r from-gray-50 to-gray-100/50 text-gray-800"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
+                  : "text-secondary-100/85 hover:bg-white/5 hover:text-secondary-100/85"
               }`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:rotate-90 duration-300">
                 <FaCog
                   size={16}
-                  className="text-gray-400 group-hover:text-gray-600"
+                  className="text-secondary-200/85 group-hover:text-secondary-100/85"
                 />
               </span>
               {open && <span className="text-sm font-medium">Settings</span>}
@@ -229,7 +235,7 @@ export default function Sidebar({ open, setOpen, role }) {
               onClick={() => setShowLogoutModal(true)}
               className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group w-full ${
                 open ? "p-2.5" : "p-3 justify-center mx-0"
-              } text-red-500 hover:bg-red-50 hover:text-red-600`}
+              } text-accent-300 hover:bg-white/5 hover:text-accent-300`}
             >
               <span className="flex-shrink-0 transition-transform group-hover:translate-x-0.5 duration-200">
                 <FaArrowRightFromBracket size={16} />

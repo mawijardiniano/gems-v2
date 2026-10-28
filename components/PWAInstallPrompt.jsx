@@ -55,7 +55,7 @@ export default function PWAInstallPrompt() {
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
       <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-3">
-        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center text-white text-2xl">
+        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary-600 flex items-center justify-center text-white text-2xl">
           ✓
         </div>
         <div className="flex-1 min-w-0">
@@ -69,7 +69,7 @@ export default function PWAInstallPrompt() {
         <div className="flex flex-col gap-2">
           <button
             onClick={handleInstall}
-            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700"
+            className="px-3 py-1.5 bg-secondary-600 text-white rounded-lg text-xs font-semibold hover:bg-secondary-700"
           >
             Install
           </button>

@@ -114,7 +114,7 @@ export default function AttendanceSyncToast() {
             toast.type === "success"
               ? "bg-green-600"
               : toast.type === "info"
-                ? "bg-blue-600"
+                ? "bg-secondary-600"
                 : "bg-red-600"
           }`}
         >

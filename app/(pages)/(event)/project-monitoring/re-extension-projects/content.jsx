@@ -14,7 +14,7 @@ import {
    ProjectWorkspace component. */
 
 const BADGE_CLASSES = {
-  Research: "bg-indigo-100 text-indigo-700",
+  Research: "bg-secondary-100 text-secondary-700",
   Extension: "bg-teal-100 text-teal-700",
 };
 

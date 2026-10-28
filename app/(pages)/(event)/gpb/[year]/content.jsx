@@ -59,10 +59,10 @@ function getScannedFileType(url) {
 
 function StatCard({ icon: Icon, label, value, sub, color = "blue", badge, danger = false }) {
   const colorMap = {
-    blue: "bg-blue-50 text-blue-600",
+    blue: "bg-secondary-50 text-secondary-600",
     green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
+    amber: "bg-secondary-50 text-secondary-600",
+    violet: "bg-secondary-50 text-secondary-600",
     red: "bg-red-50 text-red-600",
   };
 
@@ -248,14 +248,14 @@ function PerformanceIndicatorInput({ value, onChange }) {
           </button>
           <button
             type="button"
-            className="px-2 py-0.5 rounded-full bg-blue-600 text-white"
+            className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
           >
             ● Free Text
           </button>
         </div>
         <textarea
           rows={3}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
           placeholder="Type any performance indicator... (e.g. At least 50% increase in male scholarship applicants)"
           value={value._raw || ""}
           onChange={(e) => onChange({ _raw: e.target.value })}
@@ -280,7 +280,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
         <span className="text-gray-400">Format:</span>
         <button
           type="button"
-          className="px-2 py-0.5 rounded-full bg-blue-600 text-white"
+          className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
         >
           ● Structured
         </button>
@@ -303,7 +303,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
             className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
               activityTypeMissing
                 ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-blue-400"
+                : "border-gray-300 focus:ring-secondary-400"
             }`}
             value={v.activityType}
             onChange={(e) => onChange({ ...v, activityType: e.target.value })}
@@ -328,7 +328,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
             className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
               activityCountMissing
                 ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-blue-400"
+                : "border-gray-300 focus:ring-secondary-400"
             }`}
             value={v.totalActivities}
             onChange={(e) =>
@@ -342,7 +342,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
           <input
             type="number"
             min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
             value={v.totalMale}
             onChange={(e) => onChange({ ...v, totalMale: e.target.value })}
             placeholder="0"
@@ -353,7 +353,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
           <input
             type="number"
             min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
             value={v.totalFemale}
             onChange={(e) => onChange({ ...v, totalFemale: e.target.value })}
             placeholder="0"
@@ -373,7 +373,7 @@ function PerformanceIndicatorInput({ value, onChange }) {
       )}
 
       {preview && (
-        <div className="text-xs text-blue-600 bg-blue-50 rounded-lg px-2 py-1.5 italic">
+        <div className="text-xs text-secondary-600 bg-secondary-50 rounded-lg px-2 py-1.5 italic">
           {preview}
         </div>
       )}
@@ -499,7 +499,7 @@ const CommentBox = ({
         <button
           type="button"
           onClick={onComment}
-          className="text-xs text-blue-500 hover:underline mt-1"
+          className="text-xs text-secondary-500 hover:underline mt-1"
         >
           + Comment
         </button>
@@ -1493,7 +1493,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     <div className="p-6">
       <button
         onClick={() => router.push(backPath)}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary-600 hover:text-secondary-700 hover:underline mb-4 transition-colors"
       >
         <FiArrowLeft className="h-4 w-4" /> Back to GPB List
       </button>
@@ -1508,7 +1508,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               <button
                 onClick={openScannedViewer}
                 title="Preview the scanned copy attached to this status"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-600 bg-secondary-50 border border-secondary-200 px-2.5 py-1 rounded-full hover:bg-secondary-100 transition-colors"
               >
                 <FiEye className="h-3 w-3" />
                 View scanned copy
@@ -1520,7 +1520,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   : status === "disapproved"
                     ? "bg-red-50 text-red-700 border border-red-200"
-                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                    : "bg-secondary-50 text-secondary-700 border border-secondary-200"
               }`}
             >
               <span
@@ -1529,7 +1529,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     ? "bg-emerald-500"
                     : status === "disapproved"
                       ? "bg-red-500"
-                      : "bg-amber-500"
+                      : "bg-secondary-500"
                 }`}
               />
               {status || "draft"}
@@ -1586,7 +1586,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                 {selectedGPBStatus?.scanned_copy?.url && (
                   <button
                     onClick={openScannedViewer}
-                    className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                    className="text-secondary-600 hover:underline text-xs mt-1 inline-block"
                   >
                     View current scanned copy
                   </button>
@@ -1600,7 +1600,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               </label>
 
               <select
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 value={statusType}
                 onChange={(e) => setStatusType(e.target.value)}
               >
@@ -1619,7 +1619,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               </label>
 
               <textarea
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 rows={4}
                 placeholder="Write the reason..."
                 value={reasonField}
@@ -1692,7 +1692,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           >
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm shrink-0">
                   <FiFileText className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -1707,7 +1707,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={downloadScannedCopy}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                 >
                   <FiDownload className="h-3.5 w-3.5" />
                   Download
@@ -1757,7 +1757,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   <p className="text-sm text-gray-300">{scannedPreviewError}</p>
                   <button
                     onClick={downloadScannedCopy}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FiDownload className="h-3.5 w-3.5" />
                     Download instead
@@ -1802,7 +1802,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   </p>
                   <button
                     onClick={downloadScannedCopy}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FiDownload className="h-3.5 w-3.5" />
                     Download to view
@@ -1887,7 +1887,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   {commentField.map((f) => (
                     <span
                       key={f}
-                      className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full capitalize"
+                      className="bg-secondary-100 text-secondary-700 text-xs px-2 py-0.5 rounded-full capitalize"
                     >
                       {f.replace(/_/g, " ")}
                     </span>
@@ -1954,7 +1954,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         {role !== "gad coordinator" && (
           <button
             onClick={handleUpdateStatusModal}
-            className="bg-blue-600 py-2 px-5 text-white rounded-md font-medium"
+            className="bg-secondary-600 py-2 px-5 text-white rounded-md font-medium"
           >
             Update Status
           </button>
@@ -2089,7 +2089,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                 <h2 className="text-xl font-bold text-gray-800">
                   Edit Project
                   {editRow.reference_number && (
-                    <span className="ml-2 align-middle font-mono text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5">
+                    <span className="ml-2 align-middle font-mono text-xs font-semibold text-secondary-700 bg-secondary-50 border border-secondary-200 rounded px-2 py-0.5">
                       {editRow.reference_number}
                     </span>
                   )}
@@ -2118,7 +2118,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               {/* Section 1 */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                     1
                   </div>
                   <h3 className="text-base font-semibold text-gray-700">
@@ -2130,7 +2130,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     Project Type <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={3}
                     value={editRow.project_type}
                     onChange={(e) =>
@@ -2156,7 +2156,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         <span className="text-red-500">*</span>
                       </label>
                       <textarea
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                         rows={3}
                         value={editRow.gender_issue || ""}
                         onChange={(e) =>
@@ -2164,7 +2164,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         }
                       />
                       {editDuplicateWarnings.length > 0 && (
-                        <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs space-y-1">
+                        <div className="mt-2 p-3 rounded-lg bg-secondary-50 border border-secondary-200 text-secondary-700 text-xs space-y-1">
                           <p className="font-semibold flex items-center gap-1">
                             ⚠️ Similar Gender Issue / GAD Mandate exists:
                           </p>
@@ -2188,7 +2188,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               {idx + 1}.
                             </span>
                             <textarea
-                              className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                               rows={2}
                               value={val}
                               onChange={(e) => {
@@ -2243,7 +2243,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               {!isAttributedProgram(editRow) && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                     2
                   </div>
                   <h3 className="text-base font-semibold text-gray-700">
@@ -2263,7 +2263,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                             {idx + 1}.
                           </span>
                           <textarea
-                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                             rows={2}
                             value={val}
                             onChange={(e) => {
@@ -2311,7 +2311,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Supporting Statistics / Data
                     </label>
                     <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                       rows={3}
                       value={editRow.supporting_statistics_data || ""}
                       onChange={(e) =>
@@ -2328,7 +2328,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                       rows={2}
                       value={editRow.relevant_agency || ""}
                       onChange={(e) =>
@@ -2343,7 +2343,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               {/* Section 3 */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                     3
                   </div>
                   <h3 className="text-base font-semibold text-gray-700">
@@ -2370,7 +2370,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           </span>
                           <div className="flex-1 space-y-2">
                             <textarea
-                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                               rows={2}
                               placeholder="GAD activity title"
                               value={val}
@@ -2382,7 +2382,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               }
                             />
                             <textarea
-                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                               rows={2}
                               placeholder="Description (optional)"
                               value={
@@ -2511,7 +2511,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         <input
                           type="number"
                           min="0"
-                          className="w-full border border-gray-300 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="w-full border border-gray-300 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
                           value={editRow.gad_budget || ""}
                           onChange={(e) =>
                             handleEditRowChange(
@@ -2527,7 +2527,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         Source of Budget <span className="text-red-500">*</span>
                       </label>
                       <textarea
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                         rows={2}
                         value={editRow.source_budget || ""}
                         onChange={(e) =>
@@ -2570,7 +2570,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   type="button"
                   onClick={saveEdit}
                   disabled={editLoading || !isEditRowValid(editRow)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-secondary-600 text-white rounded-xl text-sm font-medium hover:bg-secondary-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {editLoading ? "Saving..." : "Save Changes"}
                 </button>
@@ -2609,7 +2609,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   <div
                     className={`flex items-center gap-1.5 ${
                       wizardStep === i + 1
-                        ? "text-blue-600"
+                        ? "text-secondary-600"
                         : wizardStep > i + 1
                           ? "text-green-600"
                           : "text-gray-400"
@@ -2618,7 +2618,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
                         wizardStep === i + 1
-                          ? "border-blue-600 bg-blue-50"
+                          ? "border-secondary-600 bg-secondary-50"
                           : wizardStep > i + 1
                             ? "border-green-600 bg-green-50"
                             : "border-gray-300"
@@ -2640,7 +2640,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
             </div>
 
             {budgetSummary !== null && !budgetSummary.hasBudget && (
-              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+              <div className="whitespace-pre-line rounded-xl bg-secondary-50 border border-secondary-200 px-4 py-3 text-secondary-700 mb-4">
                 No GAA budget allocated for {year} yet — you can still record
                 this project. Utilization will be tracked and capped
                 automatically once the budget arrives.
@@ -2654,7 +2654,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
             )}
 
             {addWarning && (
-              <div className="mb-4 p-3 rounded bg-amber-50 border border-amber-200 text-amber-700 text-sm whitespace-pre-line">
+              <div className="mb-4 p-3 rounded bg-secondary-50 border border-secondary-200 text-secondary-700 text-sm whitespace-pre-line">
                 {addWarning}
               </div>
             )}
@@ -2666,7 +2666,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     Project Type <span className="text-red-500">*</span>
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={3}
                     value={newProject.project_type}
                     onChange={(e) =>
@@ -2697,7 +2697,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         <span className="text-red-500">*</span>
                       </label>
                       <textarea
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                         rows={3}
                         value={newProject.gender_issue}
                         onChange={(e) =>
@@ -2705,7 +2705,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         }
                       />
                       {duplicateWarnings.length > 0 && (
-                        <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs space-y-1">
+                        <div className="mt-2 p-3 rounded-lg bg-secondary-50 border border-secondary-200 text-secondary-700 text-xs space-y-1">
                           <p className="font-semibold flex items-center gap-1">
                             ⚠️ Similar Gender Issue / GAD Mandate exists:
                           </p>
@@ -2725,7 +2725,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       {newProject.cause_gender_issue.map((val, idx) => (
                         <div key={idx} className="flex gap-2 mb-2">
                           <textarea
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                             rows={2}
                             value={val}
                             onChange={(e) =>
@@ -2778,7 +2778,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   {newProject.gad_objective.map((val, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                       <textarea
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                         rows={2}
                         value={val}
                         onChange={(e) =>
@@ -2819,7 +2819,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     Supporting Statistics / Data
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={3}
                     value={newProject.supporting_statistics_data}
                     onChange={(e) =>
@@ -2836,7 +2836,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={2}
                     value={newProject.relevant_agency}
                     onChange={(e) =>
@@ -2864,7 +2864,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     >
                       <div className="flex-1 space-y-2">
                         <textarea
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                           rows={2}
                           placeholder="GAD activity title"
                           value={val}
@@ -2873,7 +2873,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           }
                         />
                         <textarea
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                           rows={2}
                           placeholder="Description (optional)"
                           value={
@@ -2975,7 +2975,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                     <input
                       type="number"
                       min="0"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                       value={newProject.gad_budget}
                       onChange={(e) =>
                         handleNewProjectChange(
@@ -2990,7 +2990,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Source of Budget <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                       rows={2}
                       value={newProject.source_budget}
                       onChange={(e) =>
@@ -3182,7 +3182,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           }
                         }}
                         disabled={!stepValid}
-                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="px-5 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         Next →
                       </button>
@@ -3215,7 +3215,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         <div className="overflow-x-auto">
           <form onSubmit={handleAddProject}>
             {budgetSummary !== null && !budgetSummary.hasBudget && (
-              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+              <div className="whitespace-pre-line rounded-xl bg-secondary-50 border border-secondary-200 px-4 py-3 text-secondary-700 mb-4">
                 No GAA budget allocated for {year} yet — you can still record
                 this project. Utilization will be tracked and capped
                 automatically once the budget arrives.
@@ -3229,7 +3229,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
             )}
 
             {addWarning && (
-              <div className="whitespace-pre-line rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-700 mb-4">
+              <div className="whitespace-pre-line rounded-xl bg-secondary-50 border border-secondary-200 px-4 py-3 text-secondary-700 mb-4">
                 {addWarning}
               </div>
             )}
@@ -3339,7 +3339,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               required
                             />
                             {duplicateWarnings.length > 0 && (
-                              <div className="mt-1 p-2 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px]">
+                              <div className="mt-1 p-2 rounded bg-secondary-50 border border-secondary-200 text-secondary-700 text-[10px]">
                                 ⚠️ Similar: "{duplicateWarnings[0].gender_issue}" ({Math.round(duplicateWarnings[0].similarity * 100)}%)
                               </div>
                             )}
@@ -3613,7 +3613,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           <td className="py-2 px-4 border-b">
                             <button
                               type="submit"
-                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                              className="px-3 py-1 bg-secondary-600 text-white rounded hover:bg-secondary-700 transition"
                               disabled={addLoading}
                             >
                               {addLoading ? "Adding..." : "Add"}
@@ -4553,7 +4553,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                               setCommentProjectId(project._id);
                                               setShowCommentForm(true);
                                             }}
-                                            className="mt-1 text-blue-500 hover:underline text-xs"
+                                            className="mt-1 text-secondary-500 hover:underline text-xs"
                                           >
                                             + Add Comment
                                           </button>
@@ -4607,7 +4607,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                 <div className="flex flex-col items-center gap-2">
                                                   <button
                                                     type="button"
-                                                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                                    className="px-3 py-1 bg-secondary-500 text-white rounded hover:bg-secondary-600 transition"
                                                     onClick={() =>
                                                       router.push(
                                                         `/gpb/projects/${project._id}`,

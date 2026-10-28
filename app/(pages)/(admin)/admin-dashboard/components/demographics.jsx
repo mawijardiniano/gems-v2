@@ -14,16 +14,16 @@ import {
 } from "recharts";
 
 const PIE_COLORS = [
-  "#8B5CF6",
-  "#3B82F6",
+  "var(--color-secondary-500)",
+  "var(--color-primary-500)",
   "#F59E0B",
   "#10B981",
   "#EF4444",
-  "#EC4899",
+  "var(--color-accent-500)",
 ];
 const GENDER_BAR_COLORS = {
-  Male: "#3B82F6",
-  Female: "#EC4899",
+  Male: "var(--color-primary-500)",
+  Female: "var(--color-accent-500)",
   Other: "#A3E635",
 };
 
