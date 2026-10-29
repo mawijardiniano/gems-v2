@@ -7,7 +7,7 @@ export function FlagSelect({ selected, onChange }) {
     <select
       value={selected?.[0] || ""}
       onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
-      className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[11px] text-gray-600"
+      className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600"
     >
       <option value="">All</option>
       <option value="Yes">Yes</option>
@@ -21,7 +21,7 @@ export function FilterButton({ active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded border px-1.5 py-0.5 text-[10px] ${
+      className={`rounded border px-2.5 py-1 text-xs ${
         active
           ? "border-secondary-300 bg-secondary-50 text-secondary-700"
           : "border-gray-200 text-gray-500 hover:bg-gray-50"
@@ -41,11 +41,11 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
     );
   return (
     <div className="ml-7 mb-1 rounded border border-gray-100 bg-gray-50 p-2">
-      <p className="text-[10px] text-gray-400 mb-1">Include only:</p>
+      <p className="text-[11px] text-gray-500 mb-1">Include only:</p>
       {options.map((option) => (
         <label
           key={option.value}
-          className="flex items-center gap-2 py-0.5 text-[11px] text-gray-700 cursor-pointer"
+          className="flex items-center gap-2 py-1 text-xs text-gray-700 cursor-pointer"
         >
           <input
             type="checkbox"
@@ -54,12 +54,12 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
             className="accent-secondary-600"
           />
           <span className="truncate">{option.value}</span>
-          <span className="ml-auto text-[10px] text-gray-400">
+          <span className="ml-auto text-[11px] text-gray-500">
             ({option.count.toLocaleString("en-US")})
           </span>
         </label>
       ))}
-      <div className="mt-1 flex gap-3 text-[10px]">
+      <div className="mt-1 flex gap-3 text-xs">
         <button
           type="button"
           onClick={() => onChange([])}
@@ -89,7 +89,7 @@ export function FilterChips({ chips, labelOf, flagFields, onClear }) {
           type="button"
           onClick={() => onClear(key)}
           title="Clear this filter"
-          className="rounded-full bg-secondary-50 border border-secondary-200 px-2 py-0.5 text-[10px] text-secondary-700 hover:bg-secondary-100"
+          className="rounded-full bg-secondary-50 border border-secondary-200 px-2.5 py-1 text-xs text-secondary-700 hover:bg-secondary-100"
         >
           {labelOf(key)}
           {flagFields.includes(key) ? " = " : ": "}
