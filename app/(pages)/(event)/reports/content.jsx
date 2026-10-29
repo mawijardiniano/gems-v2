@@ -20,14 +20,21 @@ import {
   isSampleQuickReport,
 } from "./sampleGenderProfiles";
 import FieldMultiSelect from "./FieldMultiSelect";
+import ReportTablePreview from "./ReportTablePreview";
 import {
   PROFILE_POPULATIONS,
+  buildProfileTable,
   defaultProfileFields,
   normalizeProfileFields,
   profileFieldsFor,
   profileMode,
 } from "./profileReportFields";
-import { downloadProfileReport, baseProfileRecords } from "./profileReport";
+import {
+  downloadProfileReport,
+  baseProfileRecords,
+  profileReportRecords,
+  profileScopeSummary,
+} from "./profileReport";
 import {
   PROFILE_FILTER_KINDS,
   normalizeProfileFilters,
@@ -175,6 +182,8 @@ export default function ReportsContent() {
   const [error, setError] = useState("");
   const [readiness, setReadiness] = useState(null);
   const [readinessLoading, setReadinessLoading] = useState(false);
+  /* Table preview of the Gender Profile Report; null means closed. */
+  const [preview, setPreview] = useState(null);
 
   /* Load available years from the GPB collection */
   useEffect(() => {
@@ -221,27 +230,46 @@ export default function ReportsContent() {
     loadReadiness(year);
   }, [year, loadReadiness]);
 
+  /* Single source of truth for what the Gender Profile Report covers. Preview
+     and download both go through this so the two can never drift apart. */
+  const resolveProfileArgs = useCallback(() => {
+    const fields = normalizeProfileFields(population, profileFields);
+    const filters = {
+      schoolYear: sampleYear,
+      semester: population === "employees" ? "" : sampleSemester,
+    };
+    const valueFilters = normalizeProfileFilters(population, profileFilters);
+    return { fields, filters, valueFilters };
+  }, [population, profileFields, sampleYear, sampleSemester, profileFilters]);
+
+  /* Builds the same table the PDF prints, but as plain data — no jsPDF, so the
+     preview opens instantly and follows every filter change. */
+  const handlePreview = () => {
+    setError("");
+    const { fields, filters, valueFilters } = resolveProfileArgs();
+    if (!fields.length) {
+      setError("Select at least one report field.");
+      return;
+    }
+    const records = profileReportRecords(population, filters, valueFilters);
+    setPreview({
+      table: buildProfileTable({ population, fields, records }),
+      scope: profileScopeSummary(population, filters, records.length, valueFilters),
+    });
+  };
+
   const downloadReport = async (type) => {
     setGenerating(true);
     setStatus("");
     setError("");
     try {
       if (type === PROFILE_REPORT) {
-        const fields = normalizeProfileFields(population, profileFields);
+        const { fields, filters, valueFilters } = resolveProfileArgs();
         if (!fields.length) {
           setError("Select at least one report field.");
           return;
         }
-        const filters = {
-          schoolYear: sampleYear,
-          semester: population === "employees" ? "" : sampleSemester,
-        };
-        await downloadProfileReport(
-          population,
-          filters,
-          fields,
-          normalizeProfileFilters(population, profileFilters),
-        );
+        await downloadProfileReport(population, filters, fields, valueFilters);
         const popLabel = PROFILE_POPULATIONS.find(
           (p) => p.value === population,
         )?.label;
@@ -431,11 +459,14 @@ export default function ReportsContent() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-start">
+      <div className="grid grid-cols-1 gap-5 items-start xl:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
 
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-4 xl:col-span-2">
+          <h2 className="text-sm font-semibold text-gray-900 pb-3 border-b border-gray-100">
+            Filters
+          </h2>
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-sm font-medium text-gray-700 mb-1 block">
               Report Type
             </label>
             <select
@@ -448,7 +479,7 @@ export default function ReportsContent() {
                    reports, so it resets whenever the type changes. */
                 setSampleSemester("");
               }}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
             >
               {REPORT_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -461,7 +492,7 @@ export default function ReportsContent() {
           {isProfile && (
             <>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Population
                 </label>
                 <select
@@ -474,7 +505,7 @@ export default function ReportsContent() {
                     /* Employees carry no semester history. */
                     if (next === "employees") setSampleSemester("");
                   }}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   {PROFILE_POPULATIONS.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -485,7 +516,7 @@ export default function ReportsContent() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Report Fields
                 </label>
                 <FieldMultiSelect
@@ -497,7 +528,7 @@ export default function ReportsContent() {
                   flagFields={FLAG_FILTER_FIELDS}
                   onFiltersChange={setProfileFilters}
                 />
-                <p className="text-[10px] text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Name selected → one row per person (masterlist). Name not
                   selected → counts grouped by the selected fields, split by
                   sex when Sex is selected.
@@ -513,27 +544,27 @@ export default function ReportsContent() {
               before. */}
           {isSampleAllYearsReport(reportType) ? (
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Academic Year
               </label>
               <div className="w-full rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
                 All sample years (AY {SAMPLE_REPORT_SCHOOL_YEARS[0]} to{" "}
                 {SAMPLE_REPORT_SCHOOL_YEARS[SAMPLE_REPORT_SCHOOL_YEARS.length - 1]})
               </div>
-              <p className="text-[10px] text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 A comparative multi-year report always covers every sample year,
                 so it has no academic-year filter.
               </p>
             </div>
           ) : usesSample ? (
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Academic Year
               </label>
               <select
                 value={sampleYear}
                 onChange={(e) => setSampleYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 <option value="">All academic years</option>
                 {[...SAMPLE_REPORT_SCHOOL_YEARS].reverse().map((y) => (
@@ -542,7 +573,7 @@ export default function ReportsContent() {
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Sample window: AY {SAMPLE_REPORT_SCHOOL_YEARS[0]} to{" "}
                 {SAMPLE_REPORT_SCHOOL_YEARS[SAMPLE_REPORT_SCHOOL_YEARS.length - 1]}{" "}
                 — every sample year is a complete snapshot.
@@ -550,13 +581,13 @@ export default function ReportsContent() {
             </div>
           ) : (
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Academic Year
               </label>
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 {years.length === 0 && <option value="">No years available</option>}
                 {years.map((y) => (
@@ -575,13 +606,13 @@ export default function ReportsContent() {
               !isSampleAllYearsReport(reportType) &&
               SAMPLE_QUICK_REPORTS[reportType]?.source === "students")) && (
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Semester
                 </label>
                 <select
                   value={sampleSemester}
                   onChange={(e) => setSampleSemester(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   <option value="">All semesters</option>
                   {SAMPLE_REPORT_SEMESTERS.map((s) => (
@@ -590,7 +621,7 @@ export default function ReportsContent() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[10px] text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Narrows the sample term history; every sample student holds at
                   least one term in each enrolled year.
                 </p>
@@ -599,13 +630,13 @@ export default function ReportsContent() {
 
           {QUARTER_REPORT_TYPES.includes(reportType) && (
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Quarter
               </label>
               <select
                 value={quarter}
                 onChange={(e) => setQuarter(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               >
                 {quarterOptionsFor(reportType).map((q) => (
                   <option key={q.value || "all"} value={q.value}>
@@ -613,7 +644,7 @@ export default function ReportsContent() {
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {reportType === "milestones"
                   ? "Calendar quarters (Q1 = Jan–Mar … Q4 = Oct–Dec) covering the whole academic year. Each milestone follows its target date (actual date when no target is set); undated ones are listed at the end of the report."
                   : "Calendar quarters (Q1 = Jan–Mar … Q4 = Oct–Dec) covering the whole academic year. Projects follow their start date, events their start date; undated ones are listed at the end of the report."}
@@ -622,7 +653,7 @@ export default function ReportsContent() {
           )}
 
           {usesSample && (
-            <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2.5 text-[11px] leading-relaxed text-secondary-800">
+            <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2.5 text-xs leading-relaxed text-secondary-800">
               Built in your browser from the sample dataset (same source as
               Gender Statistics → Quick Reports), so every figure is complete.
               No database reads — the PDF is marked “Sample data”.{" "}
@@ -632,17 +663,30 @@ export default function ReportsContent() {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={generating || (!usesSample && !year)}
-            className="w-full rounded-lg bg-secondary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {generating && (
-              <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {isProfile && (
+              <button
+                type="button"
+                onClick={handlePreview}
+                disabled={generating}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-5 py-2.5 text-sm font-semibold text-secondary-700 transition-colors hover:bg-secondary-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                <FaEye size={13} />
+                Preview
+              </button>
             )}
-            {generating ? "Generating…" : "Generate Report"}
-          </button>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating || (!usesSample && !year)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-secondary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generating && (
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              )}
+              {generating ? "Generating…" : "Generate Report"}
+            </button>
+          </div>
 
           {status && (
             <p className="text-xs text-emerald-600 flex items-center gap-1.5">
@@ -744,7 +788,7 @@ export default function ReportsContent() {
                 key={t.value}
                 className="py-2.5 flex items-center justify-between gap-3"
               >
-                <span className="text-xs text-gray-700 flex items-center gap-2 min-w-0">
+                <span className="text-sm text-gray-700 flex items-center gap-2 min-w-0">
                   <FaFileAlt size={11} className="text-gray-400 shrink-0" />
                   <span className="truncate">{t.label}</span>
                 </span>
@@ -755,7 +799,7 @@ export default function ReportsContent() {
                       onClick={() =>
                         router.push(`/gad-ars${year ? `?year=${year}` : ""}`)
                       }
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-[11px] font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
                     >
                       <FaEye size={10} />
                       Preview
@@ -765,7 +809,7 @@ export default function ReportsContent() {
                     type="button"
                     onClick={() => downloadReport(t.value)}
                     disabled={generating}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700 transition-colors disabled:opacity-50"
                     title="Download report"
                   >
                     ⬇
@@ -774,13 +818,23 @@ export default function ReportsContent() {
               </li>
             ))}
           </ul>
-          <p className="text-[10px] text-gray-400 mt-3 flex items-start gap-1">
+          <p className="text-xs text-gray-500 mt-3 flex items-start gap-1">
             <FaInfoCircle size={9} className="mt-0.5 shrink-0" />
             Actuals are encoded in Project Monitoring → GAD Projects; completed
             events auto-fill their accomplishment lines.
           </p>
         </div>
       </div>
+
+      {preview && (
+        <ReportTablePreview
+          table={preview.table}
+          scope={preview.scope}
+          downloading={generating}
+          onClose={() => setPreview(null)}
+          onDownload={() => downloadReport(PROFILE_REPORT)}
+        />
+      )}
     </div>
   );
 }
