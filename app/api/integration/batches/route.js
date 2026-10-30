@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import ImportBatch from "@/models/importBatch";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
+import { logActivity } from "@/lib/activityLog";
 import { stageRows } from "@/app/api/integration/_utils/staging";
 
 export async function GET(req) {
@@ -66,6 +67,32 @@ export async function POST(req) {
       defaults: {
         school_year: defaultSchoolYear,
         semester: defaultSemester,
+      },
+    });
+
+    await logActivity({
+      req,
+      actor: {
+        user_id: auth.user._id,
+        username: auth.user.username,
+        role: auth.user.role,
+        auth_method: "session",
+      },
+      action: "IMPORT_BATCH_UPLOAD",
+      description: `Staged import batch ${sourceName || batch._id} from ${sourceType} (${insertedCount} staged)`,
+      severity: "warning",
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        source_type: sourceType,
+        source_name: sourceName || null,
+        source_file_key: sourceFileKey || null,
+        fetched: rows.length,
+        staged: insertedCount,
+        duplicates_flagged: duplicateCount,
+        school_year: defaultSchoolYear || null,
+        semester: defaultSemester || null,
       },
     });
 

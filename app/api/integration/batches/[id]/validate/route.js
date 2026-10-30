@@ -7,6 +7,7 @@ import ProfileTerm from "@/models/profileTerm";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { validateMappedPayload, buildIdentityDedupeKey } from "@/app/api/integration/_utils/mapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req, { params }) {
   try {
@@ -192,11 +193,48 @@ export async function POST(req, { params }) {
       });
     }
 
+    const totalsBefore = {
+      valid: batch.totals.valid,
+      invalid: batch.totals.invalid,
+      existing: batch.totals.existing,
+    };
+
     batch.status = valid > 0 ? "ready" : "failed";
     batch.totals.valid = valid;
     batch.totals.invalid = invalid;
     batch.totals.existing = existingCount;
     await batch.save();
+
+    /* Validation is the gate, not a read-only check: the result decides whether
+       the batch becomes eligible for migration. The change is recorded because
+       the existence of a `ready` batch, and who made it ready, is what a later
+       reviewer needs to judge whether an import should have proceeded. Row-level
+       detail already lives in SyncLog and is deliberately not duplicated here. */
+    await logActivity({
+      req,
+      user_id: auth.user._id,
+      action: "IMPORT_BATCH_VALIDATE",
+      description: `Validated batch: ${valid} valid, ${invalid} invalid, ${existingCount} already in records`,
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        batch_id: String(batch._id),
+        source_name: batch.source_name || null,
+        previous_status: "validating",
+        new_status: batch.status,
+        valid,
+        invalid,
+        existing: existingCount,
+      },
+      changes: [
+        { field: "status", before: "validating", after: batch.status, redacted: false },
+        { field: "totals.valid", before: totalsBefore.valid, after: valid, redacted: false },
+        { field: "totals.invalid", before: totalsBefore.invalid, after: invalid, redacted: false },
+        { field: "totals.existing", before: totalsBefore.existing, after: existingCount, redacted: false },
+      ],
+      outcome: { result: valid > 0 ? "success" : "failure", status_code: 200 },
+    });
 
     return NextResponse.json({
       status: "success",

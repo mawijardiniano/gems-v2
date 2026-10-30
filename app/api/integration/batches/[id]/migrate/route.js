@@ -6,6 +6,7 @@ import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
+import { logActivity } from "@/lib/activityLog";
 import {
   findExistingProfileForRecord,
   mergeProfile,
@@ -312,6 +313,39 @@ export async function POST(req, { params }) {
     batch.totals.skipped = skipped;
     batch.totals.failed = failed;
     await batch.save();
+
+    /* Migration is where staged rows become live profiles *and live login
+       accounts*. Per-record detail is in SyncLog, which dies with the batch;
+       this is the durable record that the import ran, when, by whom, and with
+       what result — the fact an access review needs a year later. */
+    await logActivity({
+      req,
+      actor: {
+        user_id: auth.user._id,
+        username: auth.user.username,
+        role: auth.user.role,
+        auth_method: "session",
+      },
+      action: failed > 0 ? "IMPORT_BATCH_MIGRATE_PARTIAL" : "IMPORT_BATCH_MIGRATE",
+      description: `Migrated import batch ${batch.source_name || id}: ${created} created, ${updated} updated, ${failed} failed`,
+      severity: failed > 0 ? "error" : "warning",
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        created,
+        updated,
+        identical,
+        skipped,
+        failed,
+        batch_status: batch.status,
+      },
+      outcome: {
+        result: failed > 0 ? "failure" : "success",
+        error_code: failed > 0 ? "PARTIAL_MIGRATION" : null,
+        message: failed > 0 ? `${failed} record(s) failed to migrate` : null,
+      },
+    });
 
     return NextResponse.json({
       status: "success",

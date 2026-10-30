@@ -17,6 +17,7 @@
     "brand:icons": "node scripts/brand/build-icons.mjs",
     "verify:pii": "node scripts/verify-no-pii.mjs",
     "verify:pii:strict": "node scripts/verify-no-pii.mjs --strict",
+    "audit:retention": "node scripts/audit-retention.mjs",
     "backup:identity": "node scripts/backup-identity.mjs",
     "backfill:person-type": "node scripts/backfill-person-type.mjs"
   },

@@ -36,13 +36,19 @@ export async function POST(req) {
 
     if (!user) {
       await logActivity({
+        /* No id: the account does not exist, and that is the finding. The
+           username is kept on the actor so a reader can still group repeated
+           attempts against the same target. */
         user_id: null,
+        actor: { username: loginUsername, auth_method: "none" },
         action: "LOGIN_FAILED",
-        description: `Login failed - invalid credentials for username: ${username}`,
+        description: "Login failed - no such account",
         req,
-        metadata: { module: "auth", username },
+        metadata: { username: loginUsername },
         resource_type: "user",
+        module: "auth",
         severity: "warning",
+        outcome: { result: "failure", status_code: 401, error_code: "INVALID_CREDENTIALS" },
       });
 
       return NextResponse.json(
@@ -58,13 +64,16 @@ export async function POST(req) {
 
       await logActivity({
         user_id: user._id,
+        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
         action: "LOGIN_FAILED",
         description: `Login blocked - account locked for ${lockTimeRemaining} minutes`,
         req,
-        metadata: { module: "auth", lockTimeRemaining },
+        metadata: { lockTimeRemaining },
         resource_type: "user",
         resource_id: user._id,
+        module: "auth",
         severity: "warning",
+        outcome: { result: "failure", status_code: 429, error_code: "ACCOUNT_LOCKED" },
       });
 
       return NextResponse.json(
@@ -78,13 +87,16 @@ export async function POST(req) {
     if (user.is_active === false) {
       await logActivity({
         user_id: user._id,
+        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
         action: "LOGIN_FAILED",
         description: "Login blocked - account deactivated",
         req,
-        metadata: { module: "auth" },
+        metadata: {},
         resource_type: "user",
         resource_id: user._id,
+        module: "auth",
         severity: "warning",
+        outcome: { result: "failure", status_code: 403, error_code: "ACCOUNT_DEACTIVATED" },
       });
 
       return NextResponse.json(
@@ -99,16 +111,18 @@ export async function POST(req) {
 
       await logActivity({
         user_id: user._id,
+        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
         action: "LOGIN_FAILED",
         description: `Login failed - invalid password (attempt ${user.loginAttempts})`,
         req,
         metadata: {
-          module: "auth",
           loginAttempts: user.loginAttempts,
         },
         resource_type: "user",
         resource_id: user._id,
+        module: "auth",
         severity: "warning",
+        outcome: { result: "failure", status_code: 401, error_code: "INVALID_CREDENTIALS" },
       });
 
       return NextResponse.json(
@@ -121,13 +135,18 @@ export async function POST(req) {
 
     await logActivity({
       user_id: user._id,
+      actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "password" },
       action: "LOGIN",
-      description: `Account logged in successfully`,
+      description: "Account logged in successfully",
       req,
-      metadata: { module: "auth", role: user.role },
+      metadata: { role: user.role },
       resource_type: "user",
       resource_id: user._id,
-      severity: "info",
+      module: "auth",
+      /* `info` would make this fire-and-forget. A successful login is the
+         anchor record every later action is read against, so it is awaited. */
+      severity: "warning",
+      outcome: { result: "success", status_code: 200 },
     });
 
     const token = jwt.sign(

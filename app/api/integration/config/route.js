@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
+import { logActivity } from "@/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
 const SENSITIVE_HEADER_KEYS = [
@@ -137,6 +138,32 @@ export async function PUT(req) {
       { key: CONFIG_KEY, value },
       { upsert: true, new: true },
     );
+
+    /* The integration config carries the endpoint and auth headers used to pull
+       staff records from HRMIS. Whoever can change it can redirect the import
+       at a server of their choosing, so this is logged at critical — and the
+       credentials themselves are recorded only as *which header names were
+       set*, never their values. */
+    await logActivity({
+      req,
+      actor: {
+        user_id: auth.user._id,
+        username: auth.user.username,
+        role: auth.user.role,
+        auth_method: "session",
+      },
+      action: "INTEGRATION_CONFIG_UPDATE",
+      description: `Updated HRMIS integration configuration (endpoint: ${value.endpoint})`,
+      severity: "critical",
+      resource_type: "integration_config",
+      module: "integration",
+      metadata: {
+        endpoint: value.endpoint,
+        /* Header names only. Values are secrets and must not enter the log,
+           which every Admin can read. */
+        header_keys: Object.keys(value.headers || {}),
+      },
+    });
 
     return NextResponse.json({
       status: "success",

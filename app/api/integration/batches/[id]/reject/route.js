@@ -4,6 +4,7 @@ import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req, { params }) {
   try {
@@ -50,6 +51,26 @@ export async function POST(req, { params }) {
       details: { modifiedCount: result.modifiedCount, ids: ids || "all valid" },
       executedBy: auth.user._id,
       executedByUsername: auth.user.username,
+    });
+
+    await logActivity({
+      req,
+      actor: {
+        user_id: auth.user._id,
+        username: auth.user.username,
+        role: auth.user.role,
+        auth_method: "session",
+      },
+      action: "IMPORT_BATCH_REJECT",
+      description: `Rejected ${result.modifiedCount} record(s) in import batch ${batch.source_name || id}`,
+      severity: "warning",
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        modified_count: result.modifiedCount,
+        record_ids: ids || "all valid",
+      },
     });
 
     return NextResponse.json({

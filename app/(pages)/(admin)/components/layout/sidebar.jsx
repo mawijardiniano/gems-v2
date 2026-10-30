@@ -82,7 +82,7 @@ export default function Sidebar({ open, setOpen, role }) {
       key: "manual-upload",
     },
     {
-      name: "Activity Logs",
+      name: "Audit Trail",
       href: "/activity-logs",
       icon: <FaHistory size={16} />,
       key: "activity-logs",

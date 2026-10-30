@@ -4,9 +4,42 @@ import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { stageRows } from "@/app/api/integration/_utils/staging";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+import { logActivity } from "@/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
 const FETCH_TIMEOUT_MS = 30000;
+
+/* An endpoint URL may carry a token in its query string. Only the host is ever
+   written to the log — enough to name the external system, not enough to leak
+   the credential used to reach it. */
+function safeHost(endpoint) {
+  try {
+    return new URL(endpoint).host || null;
+  } catch {
+    return null;
+  }
+}
+
+/* A refused or unreachable external system is a fact worth keeping: repeated
+   failures here are how a misconfigured — or deliberately sabotaged — sync is
+   recognised. Severity is `warning` so the write is awaited and visible. */
+async function logFetchFailure(req, auth, { endpoint, sourceName, errorCode, statusCode, message }) {
+  await logActivity({
+    req,
+    user_id: auth.user._id,
+    action: "IMPORT_BATCH_FETCH_FAILED",
+    description: `Fetch from ${sourceName} failed: ${message}`,
+    severity: "warning",
+    resource_type: "integration_config",
+    module: "integration",
+    metadata: {
+      source_name: sourceName,
+      endpoint_host: safeHost(endpoint),
+      fetched: 0,
+    },
+    outcome: { result: "failure", status_code: statusCode, error_code: errorCode, message },
+  });
+}
 
 export async function POST(req) {
   try {
@@ -56,6 +89,13 @@ export async function POST(req) {
     } catch (err) {
       clearTimeout(timeout);
       if (err?.name === "AbortError") {
+        await logFetchFailure(req, auth, {
+          endpoint,
+          sourceName,
+          errorCode: "FETCH_TIMEOUT",
+          statusCode: 504,
+          message: `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
+        });
         return NextResponse.json(
           {
             status: "error",
@@ -64,6 +104,13 @@ export async function POST(req) {
           { status: 504 },
         );
       }
+      await logFetchFailure(req, auth, {
+        endpoint,
+        sourceName,
+        errorCode: "FETCH_UNREACHABLE",
+        statusCode: 502,
+        message: err.message,
+      });
       return NextResponse.json(
         { status: "error", message: `Failed to reach endpoint: ${err.message}` },
         { status: 502 },
@@ -72,6 +119,13 @@ export async function POST(req) {
     clearTimeout(timeout);
 
     if (!response.ok) {
+      await logFetchFailure(req, auth, {
+        endpoint,
+        sourceName,
+        errorCode: "FETCH_REJECTED",
+        statusCode: 400,
+        message: `Endpoint responded ${response.status}`,
+      });
       return NextResponse.json(
         {
           status: "error",
@@ -125,6 +179,35 @@ export async function POST(req) {
       },
       executedBy: auth.user._id,
       executedByUsername: auth.user.username,
+    });
+
+    /* A fetch is the unvetted half of the pipeline: it pulls an external
+       system's view of staff and students into a batch nobody has approved yet.
+       Audited because it is *not* the same act as the upload route's — this one
+       is triggered from inside the app against a configured live endpoint, at a
+       time of the operator's choosing, which is exactly the pattern an
+       investigation asks about later. The endpoint host is recorded, never the
+       configured headers: those carry credentials. */
+    await logActivity({
+      req,
+      user_id: auth.user._id,
+      action: "IMPORT_BATCH_FETCH",
+      description: `Fetched ${rows.length} row(s) from ${sourceName} into a new batch`,
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        batch_id: String(batch._id),
+        source_name: sourceName,
+        source_type: "hrmis_api",
+        endpoint_host: safeHost(endpoint),
+        school_year: defaultSchoolYear || null,
+        semester: defaultSemester || null,
+        fetched: rows.length,
+        staged: insertedCount,
+        duplicates_flagged: duplicateCount,
+      },
+      outcome: { result: "success", status_code: 201 },
     });
 
     return NextResponse.json(

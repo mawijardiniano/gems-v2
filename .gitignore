@@ -47,6 +47,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# exception: the example file documents required configuration and contains no
+# secrets. It is the only place an operator can discover the audit retention and
+# archive variables, so it has to travel with the code.
+!.env.example
 
 # vercel
 .vercel
@@ -56,10 +60,27 @@ yarn-error.log*
 next-env.d.ts
 
 # dev-only: tests + one-off scripts (kept locally, hidden from GitHub)
-tests/
-scripts/
+#
+# Ignored as "contents of" rather than as a directory: git never descends into
+# an excluded directory, so `!tests/audit*.test.mjs` would have no effect while
+# the rule read `tests/`. With `tests/*` the directory is still walked and the
+# exceptions below can re-include individual files.
+tests/*
+scripts/*
 # exception: needed by the "postinstall" hook so a fresh clone can build PDFs
 !scripts/copy-pdf-worker.mjs
+# exception: the audit-trail tests and the retention script are not dev
+# scratch. They are the enforcement of a compliance control (tamper-evidence,
+# retention, disposal): a clone without them gets the hardening and none of the
+# checks, so it can rot silently. Everything else under tests/ stays local.
+#
+# Matched by name pattern rather than a single file so a new audit test is
+# covered without editing this file. Note `audit*` covers tests/audit*.test.mjs;
+# `activityLog*` covers the activity-log UI tests, which are part of the same
+# control. A file that matches neither stays local.
+!tests/audit*.test.mjs
+!tests/activityLog*.test.mjs
+!scripts/audit-retention.mjs
 data/sample-profiles.json
 
 # generated / local-only (keep the file, hide it from the index)

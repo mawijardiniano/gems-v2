@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import ActivityLog from "@/models/activity_log";
+import { logActivity, redactActivityLog } from "@/lib/activityLog";
 import jwt from "jsonwebtoken";
 import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
 
@@ -91,6 +92,20 @@ export async function GET(req) {
   }
 }
 
+/* Redaction, not deletion.
+ *
+ * This endpoint used to call findByIdAndDelete. An audit trail that its own
+ * administrators can erase is not an audit trail: it cannot answer "who
+ * removed the record of what happened", which is the first question an
+ * investigation asks. NIST AU-9 requires that audit information be protected
+ * from unauthorised deletion, and an Admin holding this permission *is* the
+ * threat model.
+ *
+ * The replacement preserves the record's identity, actor, timestamp and hash
+ * chain, and nulls only the free-text detail. A lawful erasure request is
+ * therefore satisfiable without destroying the evidence that the act occurred.
+ * The redaction itself is audited, so a reader can see who blanked what.
+ */
 export async function DELETE(req) {
   try {
     await connectDB();
@@ -105,6 +120,7 @@ export async function DELETE(req) {
 
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
+    const reason = url.searchParams.get("reason") || "";
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { message: "Valid id is required" },
@@ -112,17 +128,53 @@ export async function DELETE(req) {
       );
     }
 
-    const result = await ActivityLog.findByIdAndDelete(id);
-    if (!result) {
+    const target = await ActivityLog.findById(id)
+      .select("_id action resource_type resource_id redacted")
+      .lean();
+    if (!target) {
       return NextResponse.json({ message: "Log not found" }, { status: 404 });
     }
+    if (target.redacted) {
+      return NextResponse.json(
+        { message: "Log entry is already redacted" },
+        { status: 409 },
+      );
+    }
+
+    await redactActivityLog({ id, reason, req });
+
+    /* The redaction is itself an auditable act — recorded after the redaction
+       so the hash chain covers the record in its final state. */
+    await logActivity({
+      actor: {
+        user_id: decoded.id,
+        username: decoded.username || null,
+        role: decoded.role,
+        auth_method: "session",
+      },
+      action: "AUDIT_REDACT",
+      description: `Redacted activity log entry ${id}${reason ? `: ${reason}` : ""}`,
+      severity: "critical",
+      resource_type: "activity_log",
+      resource_id: id,
+      module: "audit",
+      req,
+      metadata: {
+        target_action: target.action,
+        target_resource_type: target.resource_type,
+        reason: reason || null,
+      },
+    });
 
     // Invalidate cached activity lists so the next fetch is fresh.
     cacheDelPrefix("activity:");
 
-    return NextResponse.json({ message: "Deleted" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Redacted", id },
+      { status: 200 },
+    );
   } catch (err) {
-    console.error("Activity delete error:", err);
+    console.error("Activity redact error:", err);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 },

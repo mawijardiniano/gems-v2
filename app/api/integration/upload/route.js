@@ -3,6 +3,7 @@ import csv from "csvtojson";
 import { connectDB } from "@/lib/db";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { stageRows } from "@/app/api/integration/_utils/staging";
+import { logActivity } from "@/lib/activityLog";
 
 export async function POST(req) {
   try {
@@ -61,6 +62,30 @@ export async function POST(req) {
       defaults: {
         school_year: defaultSchoolYear,
         semester: defaultSemester,
+      },
+    });
+
+    /* An upload stages a batch of people for import. Logged here so the trail
+       shows who introduced the batch, not only who later approved it. */
+    await logActivity({
+      req,
+      actor: {
+        user_id: auth.user._id,
+        username: auth.user.username,
+        role: auth.user.role,
+        auth_method: "session",
+      },
+      action: "IMPORT_BATCH_UPLOAD",
+      description: `Uploaded import batch ${name} (${insertedCount} staged)`,
+      severity: "warning",
+      resource_type: "import_batch",
+      resource_id: batch._id,
+      module: "integration",
+      metadata: {
+        source_name: name,
+        fetched: rows.length,
+        staged: insertedCount,
+        duplicates_flagged: duplicateCount,
       },
     });
 

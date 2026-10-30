@@ -3,6 +3,7 @@ import SystemSetting from "@/models/systemSetting";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { requireAuth } from "@/lib/auth";
+import { logActivity, diffFields } from "@/lib/activityLog";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -98,11 +99,44 @@ export async function PUT(req) {
       }
     }
 
+    /* Snapshot the previous value before overwriting.
+     *
+     * `active_term` decides which academic year every later record is filed
+     * under, so changing it retroactively re-files nothing but prospectively
+     * mis-files everything. Reconstructing "when did we move to 2nd sem" from
+     * the current value alone is impossible; the old value has to be captured
+     * at the moment of the write. */
+    const previous = await SystemSetting.findOne({ key }).lean();
+
     const setting = await SystemSetting.findOneAndUpdate(
       { key },
       { key, value },
       { upsert: true, new: true, runValidators: true },
     );
+
+    const changes = diffFields(
+      { value: previous?.value ?? null },
+      { value: setting.value },
+      ["value"],
+    );
+
+    await logActivity({
+      req,
+      action: previous ? "SETTING_UPDATE" : "SETTING_CREATE",
+      description: previous
+        ? `Updated system setting "${key}"`
+        : `Created system setting "${key}"`,
+      severity: "warning",
+      resource_type: "system_setting",
+      resource_id: setting._id,
+      module: "settings",
+      changes,
+      metadata: {
+        key,
+        previous_value: previous?.value ?? null,
+        new_value: setting.value,
+      },
+    });
 
     return NextResponse.json({
       success: true,

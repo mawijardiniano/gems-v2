@@ -23,11 +23,12 @@ export async function POST(req, { params }) {
       return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
     }
 
-    members.push({
+    const added = {
       ...member,
       appointedAt: new Date(),
       isActive: true,
-    });
+    };
+    members.push(added);
 
     await gfps.save();
 
@@ -36,9 +37,18 @@ export async function POST(req, { params }) {
       action: "GFP_MEMBER_ADD",
       description: `Added member to GFPS section "${sectionKey}"`,
       resource_type: "gfps",
-      resource_id: params.id,
-      severity: "info",
-      metadata: { sectionKey },
+      resource_id: gfps._id,
+      /* Adding a seat-holder changes who may act for the agency, so it must be
+         awaited rather than fire-and-forget. */
+      severity: "warning",
+      metadata: {
+        sectionKey,
+        /* The identity added, captured here because the row's `_id` is not
+           authoritative once the member is later removed and re-added. */
+        member_name: added.official_text || null,
+        seat: added.position_title || null,
+        sort_order: added.sort_order ?? null,
+      },
     });
 
     return Response.json({ success: true, message: "Member added" });
