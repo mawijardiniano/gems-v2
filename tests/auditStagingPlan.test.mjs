@@ -77,7 +77,7 @@ test("the two groups do not overlap", (t) => {
   assert.deepEqual(shared, [], `a file cannot be committed in both groups:\n  ${shared.join("\n  ")}`);
 });
 
-test("the plan warns that tests and scripts are gitignored", () => {
+test("the plan warns that tests and scripts are gitignored", (t) => {
   if (!existsSync(PLAN)) return t.skip("no staging plan present");
   const body = readFileSync(PLAN, "utf8");
   assert.match(body, /gitignored/, "the plan must flag the gitignored directories");
