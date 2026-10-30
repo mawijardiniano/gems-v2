@@ -11,6 +11,7 @@ import {
 } from "../gender-statistics/components/employeeStats.js";
 import {
   REPORT_KINDS,
+  buildQuickReportSections,
   generateQuickReport,
   quickReportFilename,
 } from "../gender-statistics/components/quickReports.js";
@@ -20,6 +21,7 @@ import {
 } from "../gender-statistics/components/studentStats.js";
 import {
   STUDENT_REPORT_KINDS,
+  buildStudentReportSections,
   generateStudentQuickReport,
   studentReportFilename,
 } from "../gender-statistics/components/quickReportsStudents.js";
@@ -155,6 +157,30 @@ export function sampleReportData(source, filters = {}) {
   return source === "employees"
     ? computeEmployeeStats(records, SAMPLE_EMPLOYEE_RECORDS)
     : computeStudentStats(records, SAMPLE_STUDENT_RECORDS);
+}
+
+/* The report as plain section data — the same list the PDF renderer walks, so
+   the in-browser preview shows exactly what the download will contain. Shares
+   the data plumbing with generateSampleQuickReport so figures cannot differ. */
+export function sampleQuickReportSections(type, filters = {}) {
+  const entry = SAMPLE_QUICK_REPORTS[type];
+  if (!entry) throw new Error(`Unknown gender profile type: ${type}`);
+
+  const schoolYear = resolvedSampleSchoolYear(type, filters.schoolYear);
+  const semester = resolvedSampleSemester(type, filters.semester);
+  const options = { isSample: true };
+
+  return entry.source === "employees"
+    ? buildQuickReportSections(
+        entry.kind,
+        sampleReportData("employees", { schoolYear }),
+        options,
+      )
+    : buildStudentReportSections(
+        entry.kind,
+        sampleReportData("students", { schoolYear, semester }),
+        options,
+      );
 }
 
 function sampleReportFilename(entry) {

@@ -17,18 +17,19 @@ export const PROFILE_POPULATIONS = [
   { value: "employees", label: "Employees only" },
 ];
 
-/* Defaults give an aggregated breakdown; tick Name for the masterlist. */
+/* Defaults give an aggregated breakdown; tick Name for the masterlist.
+   The combined population splits by sex, since the student/employee Type
+   field is gone — use the Population selector to compare the two. */
 export const DEFAULT_PROFILE_FIELDS = {
   students: [],
   employees: [],
-  both: ["type"],
+  both: ["sex"],
 };
 
 export const isProfilePopulation = (population) =>
   PROFILE_POPULATIONS.some((p) => p.value === population);
 
 export function isAvailable(def, population) {
-  if (def.bothOnly) return population === "both";
   if (population === "both") {
     return def.sources.includes("students") && def.sources.includes("employees");
   }
@@ -36,22 +37,20 @@ export function isAvailable(def, population) {
 }
 
 function unavailableNote(def, population) {
-  if (population !== "both" || def.bothOnly) return "";
+  if (population !== "both") return "";
   return def.sources.includes("students") ? "Students only" : "Employees only";
 }
 
 /** Registry fields for the picker, in fixed column order. Fields the chosen
     population cannot supply stay listed but flagged unavailable. */
 export function profileFieldsFor(population) {
-  return FIELD_DEFS.filter((d) => !d.bothOnly || population === "both").map(
-    (d) => ({
-      value: d.value,
-      label: d.label,
-      available: isAvailable(d, population),
-      note: unavailableNote(d, population),
-      listOnly: Boolean(d.listOnly),
-    }),
-  );
+  return FIELD_DEFS.map((d) => ({
+    value: d.value,
+    label: d.label,
+    available: isAvailable(d, population),
+    note: unavailableNote(d, population),
+    listOnly: Boolean(d.listOnly),
+  }));
 }
 
 export const defaultProfileFields = (population) => [

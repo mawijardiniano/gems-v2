@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 /* Filter controls used inside the Gender Profile Report field picker. */
 
 export function FlagSelect({ selected, onChange }) {
@@ -32,7 +34,25 @@ export function FilterButton({ active, onClick }) {
   );
 }
 
+/* Long lists (College / Office, Program, Department run to ~60 entries) are
+   unusable as a flat checklist, so above that size the box gets a search
+   filter. Checked options always stay visible, so a selection can never
+   silently disappear behind the search text. */
+export const SEARCHABLE_AFTER = 12;
+
 export function FilterChecklist({ options, selected = [], onChange, onDone }) {
+  const [query, setQuery] = useState("");
+  const searchable = options.length > SEARCHABLE_AFTER;
+  const needle = query.trim().toLowerCase();
+
+  const visible = needle
+    ? options.filter(
+        (option) =>
+          selected.includes(option.value) ||
+          option.value.toLowerCase().includes(needle),
+      )
+    : options;
+
   const toggle = (option) =>
     onChange(
       selected.includes(option)
@@ -42,23 +62,38 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
   return (
     <div className="ml-7 mb-1 rounded border border-gray-100 bg-gray-50 p-2">
       <p className="text-[11px] text-gray-500 mb-1">Include only:</p>
-      {options.map((option) => (
-        <label
-          key={option.value}
-          className="flex items-center gap-2 py-1 text-xs text-gray-700 cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            checked={selected.includes(option.value)}
-            onChange={() => toggle(option.value)}
-            className="accent-secondary-600"
-          />
-          <span className="truncate">{option.value}</span>
-          <span className="ml-auto text-[11px] text-gray-500">
-            ({option.count.toLocaleString("en-US")})
-          </span>
-        </label>
-      ))}
+      {searchable && (
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${options.length} options…`}
+          aria-label="Search options"
+          className="mb-1 w-full rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:border-secondary-500 focus:outline-none"
+        />
+      )}
+      <div className="max-h-56 overflow-y-auto">
+        {visible.map((option) => (
+          <label
+            key={option.value}
+            className="flex items-center gap-2 py-1 text-xs text-gray-700 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(option.value)}
+              onChange={() => toggle(option.value)}
+              className="accent-secondary-600"
+            />
+            <span className="truncate">{option.value}</span>
+            <span className="ml-auto text-[11px] text-gray-500">
+              ({option.count.toLocaleString("en-US")})
+            </span>
+          </label>
+        ))}
+        {!visible.length && (
+          <p className="py-1 text-xs italic text-gray-500">No matches.</p>
+        )}
+      </div>
       <div className="mt-1 flex gap-3 text-xs">
         <button
           type="button"

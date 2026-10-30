@@ -1,5 +1,11 @@
 
 
+import {
+  SECTION,
+  section,
+  sectionRowCount,
+} from "./reportSections.js";
+
 export const REPORT_KINDS = {
   PROFILES: "personnel-profile",
   POSITION_LEVEL: "position-level",
@@ -270,6 +276,151 @@ export function buildGapFindings(entries = [], context = {}) {
   return findings;
 }
 
+/* ─ Report content ───────────────────────────────────────────────────────── */
+
+/* Every employee quick report as a flat list of sections (see
+   ./reportSections.js). The PDF renders this list and the preview renders the
+   same list as HTML, so the two can never disagree about what a report says.
+   Text is built here, not in the renderers, which keeps the wording testable. */
+export function buildQuickReportSections(kind, data, options = {}) {
+  const dataset = data || {};
+  const isSample = Boolean(options.isSample);
+  const totals = dataset.totals || { Female: 0, Male: 0, total: 0 };
+  const scopeLabel = isSample ? "the sample dataset" : "the current records";
+  const overallPctFemale =
+    totals.pctFemale != null
+      ? totals.pctFemale
+      : pctOf(totals.Female || 0, totals.total || 0);
+
+  /* Report 1: faculty and administrative personnel profile. */
+  if (kind === REPORT_KINDS.PROFILES) {
+    return [
+      section.heading("Personnel Summary"),
+      section.table("", buildSexSummaryTable(totals)),
+      section.heading("Gender Identity"),
+      section.table(
+        "",
+        buildGenderIdentityTable(dataset.byGenderIdentity),
+      ),
+      section.heading("Personnel Category and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byCategory, "category", "Personnel Category"),
+      ),
+      section.heading("Faculty by Academic Rank and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byAcademicRank, "rank", "Academic Rank"),
+      ),
+      section.heading("Personnel by Appointment Status and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byAppointment, "status", "Appointment Status"),
+      ),
+      section.heading("Personnel by College / Office and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byOffice, "office", "College / Office"),
+      ),
+      section.heading("Demographic Profile (Institutional Data)"),
+      section.table(
+        "",
+        buildSexTable(dataset.demographics, "label", "Demographic Group"),
+      ),
+    ];
+  }
+
+  /* Report 2: personnel by position level. */
+  if (kind === REPORT_KINDS.POSITION_LEVEL) {
+    const levels = buildGapEntries(dataset.byPositionLevel, "level");
+    const leadership = levels.filter((e) =>
+      /president|vice president|director|dean|chair/i.test(e.label),
+    );
+    const leadershipTotal = leadership.reduce((sum, e) => sum + e.total, 0);
+    const leadershipFemale = leadership.reduce((sum, e) => sum + e.Female, 0);
+
+    const observations = [];
+    if (leadershipTotal) {
+      observations.push(
+        `Leadership positions (president, vice presidents, directors, deans, department chairs) account for ${leadershipTotal.toLocaleString()} personnel, ${fmtPct(
+          pctOf(leadershipFemale, leadershipTotal),
+        )} of them women.`,
+      );
+    }
+    if (levels.length) {
+      const largest = [...levels].sort((a, b) => b.total - a.total)[0];
+      observations.push(
+        `Largest position level: ${largest.label} with ${largest.total.toLocaleString()} personnel (${fmtPct(largest.pctFemale)} female).`,
+      );
+      const widest = [...levels]
+        .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
+        .sort((a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp))[0];
+      if (widest) {
+        observations.push(
+          `Widest sex gap: ${widest.label} at ${fmtGap(widest.gapPp)} (${widest.interpretation.toLowerCase()}).`,
+        );
+      }
+      observations.push(
+        `University-wide, women hold ${fmtPct(
+          pctOf(totals.Female || 0, totals.total || 0),
+        )} of all personnel positions.`,
+      );
+    }
+
+    return [
+      section.heading("Personnel Summary"),
+      section.table("", buildSexSummaryTable(totals)),
+      section.heading("Personnel by Position Level and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byPositionLevel, "level", "Position Level"),
+      ),
+      section.heading("Observations"),
+      section.bullets(
+        observations.length ? observations : ["No breakdown data available."],
+      ),
+    ];
+  }
+
+  /* Report 3: gender gap analysis. */
+  const categoryEntries = buildGapEntries(dataset.byCategory, "category");
+  const levelEntries = buildGapEntries(dataset.byPositionLevel, "level");
+  const rankEntries = buildGapEntries(dataset.byAcademicRank, "rank");
+  const officeEntries = buildGapEntries(dataset.byOffice, "office")
+    .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
+    .sort((a, b) => b.gapPp - a.gapPp);
+
+  return [
+    section.paragraph(
+      "The gender gap is measured in percentage points (pp) as % Female minus % Male. " +
+        `A positive value means women are the larger group; a gap within ${PARITY_BAND} pp is treated as near parity. ` +
+        `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} personnel are listed but excluded from the findings below, since small groups swing wildly.`,
+    ),
+    section.heading("Gender Gap by Personnel Category"),
+    section.table(
+      "",
+      gapTableFromEntries(categoryEntries, "Personnel Category"),
+    ),
+    section.heading("Gender Gap by Position Level"),
+    section.table("", gapTableFromEntries(levelEntries, "Position Level")),
+    section.heading("Gender Gap by Academic Rank (Faculty)"),
+    section.table("", gapTableFromEntries(rankEntries, "Academic Rank")),
+    section.heading(
+      `Gender Gap by College / Office (${MIN_GROUP_FOR_FINDINGS}+ personnel, widest female gap first)`,
+    ),
+    section.table("", gapTableFromEntries(officeEntries, "College / Office")),
+    section.heading("Key Findings"),
+    section.bullets(
+      buildGapFindings(categoryEntries, {
+        overallPctFemale,
+        overallTotal: totals.total || 0,
+        scopeLabel,
+        categories: categoryEntries,
+      }),
+    ),
+  ];
+}
+
 /* ─ PDF rendering ─────────────────────────────────────────────────────────── */
 
 export function quickReportMeta(kind) {
@@ -497,146 +648,36 @@ export async function generateQuickReport(kind, data, options = {}) {
     y = (doc.lastAutoTable?.finalY || y) + 7;
   }
 
-  function drawSection(title, table) {
-    drawSectionHeading(title);
-    drawTable(table);
-  }
-
-  /* ─ Report 1: faculty and administrative personnel profile ─────────────── */
-  function drawProfilesReport() {
-    drawSectionHeading("Personnel Summary");
-    drawTable(buildSexSummaryTable(totals));
-
-    drawSection(
-      "Gender Identity",
-      buildGenderIdentityTable(dataset.byGenderIdentity),
-    );
-
-    drawSection(
-      "Personnel Category and Sex",
-      buildSexTable(dataset.byCategory, "category", "Personnel Category"),
-    );
-    drawSection(
-      "Faculty by Academic Rank and Sex",
-      buildSexTable(dataset.byAcademicRank, "rank", "Academic Rank"),
-    );
-    drawSection(
-      "Personnel by Appointment Status and Sex",
-      buildSexTable(dataset.byAppointment, "status", "Appointment Status"),
-    );
-    drawSection(
-      "Personnel by College / Office and Sex",
-      buildSexTable(dataset.byOffice, "office", "College / Office"),
-    );
-    drawSection(
-      "Demographic Profile (Institutional Data)",
-      buildSexTable(dataset.demographics, "label", "Demographic Group"),
-    );
-  }
-
-  /* ─ Report 2: personnel by position level ─────────────────────────────── */
-  function drawPositionLevelReport() {
-    const levels = buildGapEntries(dataset.byPositionLevel, "level");
-    const leadership = levels.filter((e) =>
-      /president|vice president|director|dean|chair/i.test(e.label),
-    );
-    const leadershipTotal = leadership.reduce((sum, e) => sum + e.total, 0);
-    const leadershipFemale = leadership.reduce((sum, e) => sum + e.Female, 0);
-
-    drawSectionHeading("Personnel Summary");
-    drawTable(buildSexSummaryTable(totals));
-
-    drawSection(
-      "Personnel by Position Level and Sex",
-      buildSexTable(dataset.byPositionLevel, "level", "Position Level"),
-    );
-
-    drawSectionHeading("Observations");
-    const observations = [];
-    if (leadershipTotal) {
-      observations.push(
-        `Leadership positions (president, vice presidents, directors, deans, department chairs) account for ${leadershipTotal.toLocaleString()} personnel, ${fmtPct(
-          pctOf(leadershipFemale, leadershipTotal),
-        )} of them women.`,
-      );
+  /* Renders one report section list. Both this loop and the in-browser
+     preview walk the same list, so the PDF and the preview cannot disagree. */
+  function renderSection(item) {
+    if (!item) return;
+    if (item.type === SECTION.HEADING) {
+      drawSectionHeading(item.text);
+      return;
     }
-    if (levels.length) {
-      const largest = [...levels].sort((a, b) => b.total - a.total)[0];
-      observations.push(
-        `Largest position level: ${largest.label} with ${largest.total.toLocaleString()} personnel (${fmtPct(largest.pctFemale)} female).`,
-      );
-      const widest = [...levels]
-        .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
-        .sort((a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp))[0];
-      if (widest) {
-        observations.push(
-          `Widest sex gap: ${widest.label} at ${fmtGap(widest.gapPp)} (${widest.interpretation.toLowerCase()}).`,
-        );
-      }
-      observations.push(
-        `University-wide, women hold ${fmtPct(
-          pctOf(totals.Female || 0, totals.total || 0),
-        )} of all personnel positions.`,
-      );
+    if (item.type === SECTION.PARAGRAPH) {
+      drawParagraph(item.text);
+      return;
     }
-    drawBullets(
-      observations.length ? observations : ["No breakdown data available."],
-    );
+    if (item.type === SECTION.BULLETS) {
+      drawBullets(item.items || []);
+      return;
+    }
+    if (item.type !== SECTION.TABLE) return;
+    /* A section table is titled in the PDF when it carries a title; the
+       summary tables sit under the heading above them. */
+    if (item.title) drawSectionHeading(item.title);
+    if (!sectionRowCount(item)) {
+      drawParagraph(item.emptyLabel || "No data available.");
+      return;
+    }
+    drawTable(item);
   }
 
-  /* ─ Report 3: gender gap analysis ─────────────────────────────────────── */
-  function drawGenderGapReport() {
-    const categoryEntries = buildGapEntries(dataset.byCategory, "category");
-    const levelEntries = buildGapEntries(dataset.byPositionLevel, "level");
-    const rankEntries = buildGapEntries(dataset.byAcademicRank, "rank");
-    const officeEntries = buildGapEntries(dataset.byOffice, "office")
-      .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
-      .sort((a, b) => b.gapPp - a.gapPp);
-
-    drawParagraph(
-      "The gender gap is measured in percentage points (pp) as % Female minus % Male. " +
-        `A positive value means women are the larger group; a gap within ${PARITY_BAND} pp is treated as near parity. ` +
-        `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} personnel are listed but excluded from the findings below, since small groups swing wildly.`,
-    );
-
-    drawSection(
-      "Gender Gap by Personnel Category",
-      gapTableFromEntries(categoryEntries, "Personnel Category"),
-    );
-    drawSection(
-      "Gender Gap by Position Level",
-      gapTableFromEntries(levelEntries, "Position Level"),
-    );
-    drawSection(
-      "Gender Gap by Academic Rank (Faculty)",
-      gapTableFromEntries(rankEntries, "Academic Rank"),
-    );
-    drawSection(
-      `Gender Gap by College / Office (${MIN_GROUP_FOR_FINDINGS}+ personnel, widest female gap first)`,
-      gapTableFromEntries(officeEntries, "College / Office"),
-    );
-
-    drawSectionHeading("Key Findings");
-    drawBullets(
-      buildGapFindings(categoryEntries, {
-        overallPctFemale:
-          totals.pctFemale != null
-            ? totals.pctFemale
-            : pctOf(totals.Female || 0, totals.total || 0),
-        overallTotal: totals.total || 0,
-        scopeLabel,
-        categories: categoryEntries,
-      }),
-    );
-  }
-
-  if (kind === REPORT_KINDS.PROFILES) {
-    drawProfilesReport();
-  } else if (kind === REPORT_KINDS.POSITION_LEVEL) {
-    drawPositionLevelReport();
-  } else {
-    drawGenderGapReport();
-  }
+  buildQuickReportSections(kind, dataset, { isSample }).forEach(
+    renderSection,
+  );
 
   /* ─ Page footers and continuation headers ─────────────────────────────── */
   const totalPages = doc.getNumberOfPages();

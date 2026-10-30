@@ -1,7 +1,6 @@
 /* Field registry for the Gender Profile Report, in fixed column order.
-   sources: which populations carry the field. bothOnly: exists only when
-   students and employees are combined. listOnly: identifying field that is
-   meaningless as a grouping key, so aggregated mode ignores it. */
+   sources: which populations carry the field. listOnly: identifying field
+   that is meaningless as a grouping key, so aggregated mode ignores it. */
 import {
   AGE_GROUP_ORDER,
   ageFromBirthday,
@@ -33,15 +32,6 @@ const flag = (value, label, sources, key, extra = {}) => ({
 
 export const FIELD_DEFS = [
   simple("name", "Name", BOTH, "fullName"),
-  {
-    value: "type",
-    label: "Type (Student / Employee)",
-    header: "Type",
-    sources: [],
-    bothOnly: true,
-    get: (r) => orDash(r.__type),
-    rank: (v) => (v === "Student" ? 0 : v === "Employee" ? 1 : 2),
-  },
   simple("sex", "Sex", BOTH, "sex"),
   {
     value: "age",

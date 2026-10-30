@@ -1,7 +1,10 @@
 /* Gender Profile Report filters. Model: { [fieldValue]: string[] } holding the
    values to INCLUDE. Flag fields use ["Yes"] or ["No"]. Pure, node-testable.
-   Only small-list fields are filterable; College/Program/Department and the
-   identifying fields (name, IDs, email, birthday) are deliberately excluded. */
+   College/Program/Department are filterable and can be long lists, so the UI
+   gives them a search box. `isAvailable` keeps each field tied to the
+   populations that actually carry it: Program is students-only, Department is
+   employees-only, and College / Office spans both. The identifying fields
+   (name, IDs, email, birthday) stay deliberately excluded. */
 import { FIELD_BY_VALUE, FIELD_DEFS, UNSPECIFIED } from "./profileFieldDefs.js";
 import { isAvailable } from "./profileReportFields.js";
 
@@ -14,6 +17,9 @@ export const PROFILE_FILTER_KINDS = {
   academicRank: "values",
   appointmentStatus: "values",
   campus: "values",
+  college: "values",
+  program: "values",
+  department: "values",
   civilStatus: "values",
   religion: "values",
   genderIdentity: "values",

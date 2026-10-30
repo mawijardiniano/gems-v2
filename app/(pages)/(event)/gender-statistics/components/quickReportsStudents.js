@@ -14,6 +14,7 @@ import {
   pctOf,
   resolveAutoTable,
 } from "./quickReports.js";
+import { SECTION, section, sectionRowCount } from "./reportSections.js";
 
 export const STUDENT_REPORT_KINDS = {
   STUDENT_PROFILE: "student-gender-profile",
@@ -206,6 +207,378 @@ export function buildYearOverYearTable(years) {
   return { head, body };
 }
 
+/* ─ Report content ───────────────────────────────────────────────────────── */
+
+/* Every student quick report as a flat list of sections (see
+   ./reportSections.js). The PDF and the in-browser preview both render this
+   list, so what the user previews is what the PDF prints. */
+export function buildStudentReportSections(kind, data, options = {}) {
+  const dataset = data || {};
+  const isSample = Boolean(options.isSample);
+  const totals = dataset.totals || { Female: 0, Male: 0, total: 0 };
+  const scopeLabel = isSample ? "the sample dataset" : "the current records";
+  const equity = equityRows(dataset);
+  const overallPctFemale =
+    totals.pctFemale != null
+      ? totals.pctFemale
+      : pctOf(totals.Female || 0, totals.total || 0);
+  const gapContext = {
+    overallPctFemale,
+    overallTotal: totals.total || 0,
+    scopeLabel,
+  };
+
+  /* Report 1: student gender profile. */
+  if (kind === STUDENT_REPORT_KINDS.STUDENT_PROFILE) {
+    const observations = [
+      `Women make up ${fmtPct(overallPctFemale)} of the ${(totals.total || 0).toLocaleString()} students in ${scopeLabel}.`,
+    ];
+    const colleges = rows(dataset.byCollege).filter(
+      (row) => rowTotal(row) >= MIN_GROUP_FOR_FINDINGS,
+    );
+    if (colleges.length) {
+      const largest = [...colleges].sort((a, b) => rowTotal(b) - rowTotal(a))[0];
+      observations.push(
+        `Largest college by enrollment: ${largest.college} with ${rowTotal(largest).toLocaleString()} students (${fmtPct(
+          largest.pctFemale != null
+            ? largest.pctFemale
+            : pctOf(largest.Female || 0, rowTotal(largest)),
+        )} female).`,
+      );
+      const mostFemale = [...colleges].sort(
+        (a, b) => b.pctFemale - a.pctFemale,
+      )[0];
+      const mostMale = [...colleges].sort(
+        (a, b) => a.pctFemale - b.pctFemale,
+      )[0];
+      observations.push(
+        `Highest female share: ${mostFemale.college} (${fmtPct(mostFemale.pctFemale)}).`,
+      );
+      observations.push(
+        `Lowest female share: ${mostMale.college} (${fmtPct(mostMale.pctFemale)}).`,
+      );
+    }
+    const programs = rows(dataset.byProgram);
+    if (programs.length) {
+      const biggest = [...programs].sort((a, b) => rowTotal(b) - rowTotal(a))[0];
+      observations.push(
+        `Largest program: ${biggest.program} with ${rowTotal(biggest).toLocaleString()} students (${fmtPct(
+          biggest.pctFemale != null
+            ? biggest.pctFemale
+            : pctOf(biggest.Female || 0, rowTotal(biggest)),
+        )} female).`,
+      );
+    }
+    if ((totals.lgbtqia || 0) > 0) {
+      observations.push(
+        `${(totals.lgbtqia || 0).toLocaleString()} student(s) (${fmtPct(
+          totals.pctLgbtqia != null
+            ? totals.pctLgbtqia
+            : pctOf(totals.lgbtqia || 0, totals.total || 0),
+        )}) identify as LGBTQIA+.`,
+      );
+    }
+
+    return [
+      section.heading("Student Population Summary"),
+      section.table("", buildSexSummaryTable(totals)),
+      section.heading("Gender Identity"),
+      section.table("", buildGenderIdentityTable(dataset.byGenderIdentity)),
+      section.heading("Students by Academic Level and Sex"),
+      section.table("", buildSexTable(dataset.byLevel, "level", "Academic Level")),
+      section.heading("Students by Year Level and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byYearLevel, "year_level", "Year Level"),
+      ),
+      section.heading("Students by College / Unit and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byCollege, "college", "College / Unit"),
+      ),
+      section.heading("Equity Group / Student Type Profile"),
+      section.table(
+        "",
+        buildSexTable(equity.items, equity.nameKey, "Equity Group"),
+      ),
+      section.heading("Key Observations"),
+      section.bullets(observations),
+    ];
+  }
+
+  /* Report 2: enrollment by program. */
+  if (kind === STUDENT_REPORT_KINDS.ENROLLMENT_PROGRAM) {
+    const programs = buildGapEntries(dataset.byProgram, "program");
+    const findings = [];
+    const substantive = programs.filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS);
+    if (substantive.length) {
+      const largest = [...substantive].sort((a, b) => b.total - a.total)[0];
+      findings.push(
+        `Largest program: ${largest.label} with ${largest.total.toLocaleString()} students (${fmtPct(largest.pctFemale)} female, ${fmtGap(largest.gapPp)}).`,
+      );
+      const widest = [...substantive].sort(
+        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
+      )[0];
+      findings.push(
+        `Most sex-segregated program: ${widest.label} at ${fmtGap(widest.gapPp)} (${widest.interpretation.toLowerCase()}).`,
+      );
+      const closest = [...substantive].sort(
+        (a, b) => Math.abs(a.gapPp) - Math.abs(b.gapPp),
+      )[0];
+      findings.push(
+        `Closest to parity: ${closest.label} at ${fmtGap(closest.gapPp)}.`,
+      );
+      const femalePrograms = substantive.filter((e) => e.pctFemale >= 60);
+      const malePrograms = substantive.filter((e) => e.pctFemale <= 40);
+      findings.push(
+        `Of the ${substantive.length} programs with ${MIN_GROUP_FOR_FINDINGS}+ students, ${femalePrograms.length} are at least 60% female and ${malePrograms.length} are at least 60% male.`,
+      );
+    }
+    const collegeEntries = buildGapEntries(dataset.byCollege, "college");
+    const collegeSpread = collegeEntries.filter(
+      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
+    );
+    if (collegeSpread.length > 1) {
+      const sorted = [...collegeSpread].sort((a, b) => b.pctFemale - a.pctFemale);
+      findings.push(
+        `Across colleges, the female share ranges from ${fmtPct(sorted[sorted.length - 1].pctFemale)} in ${sorted[sorted.length - 1].label} to ${fmtPct(sorted[0].pctFemale)} in ${sorted[0].label}.`,
+      );
+    }
+
+    return [
+      section.paragraph(
+        "Enrollment headcounts are disaggregated by sex. The programs table lists the ten largest programs in the current dataset; college and year-level tables give the full distribution.",
+      ),
+      section.heading("Student Population Summary"),
+      section.table("", buildSexSummaryTable(totals)),
+      section.heading("Enrollment by Program and Sex (top 10)"),
+      section.table("", buildSexTable(dataset.byProgram, "program", "Program")),
+      section.heading("Enrollment by College / Unit and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byCollege, "college", "College / Unit"),
+      ),
+      section.heading("Enrollment by Year Level and Sex"),
+      section.table(
+        "",
+        buildSexTable(dataset.byYearLevel, "year_level", "Year Level"),
+      ),
+      section.heading("Enrollment by Academic Level and Sex"),
+      section.table("", buildSexTable(dataset.byLevel, "level", "Academic Level")),
+      section.heading("Program Findings"),
+      section.bullets(
+        findings.length
+          ? findings
+          : ["No program breakdown available for this filter."],
+      ),
+    ];
+  }
+
+  /* Report 3: gender gap analysis. */
+  if (kind === STUDENT_REPORT_KINDS.GENDER_GAP) {
+    const collegeEntries = buildGapEntries(dataset.byCollege, "college");
+    const programEntries = buildGapEntries(dataset.byProgram, "program");
+    const yearEntries = buildGapEntries(dataset.byYearLevel, "year_level");
+    const equityEntries = buildGapEntries(equity.items, equity.nameKey);
+
+    const findings = buildGapFindings(collegeEntries, {
+      ...gapContext,
+      categories: collegeEntries,
+    });
+    const widestProgram = [...programEntries]
+      .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
+      .sort((a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp))[0];
+    if (widestProgram) {
+      findings.push(
+        `Most sex-segregated program: ${widestProgram.label} at ${fmtGap(widestProgram.gapPp)} (${widestProgram.interpretation.toLowerCase()}).`,
+      );
+    }
+    const gapsByCollege = collegeEntries.filter(
+      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
+    );
+    if (gapsByCollege.length) {
+      const widestCollege = [...gapsByCollege].sort(
+        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
+      )[0];
+      findings.push(
+        `Widest college-level gap: ${widestCollege.label} at ${fmtGap(widestCollege.gapPp)} (${widestCollege.interpretation.toLowerCase()}).`,
+      );
+    }
+
+    return [
+      section.paragraph(
+        "The gender gap is measured in percentage points (pp) as % Female minus % Male. " +
+          "A positive value means women are the larger group; a gap within 5 pp is treated as near parity. " +
+          `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} students are listed but excluded from the findings below, since small groups swing wildly.`,
+      ),
+      section.heading("Gender Gap by College / Unit"),
+      section.table("", gapTableFromEntries(collegeEntries, "College / Unit")),
+      section.heading("Gender Gap by Program (top 10)"),
+      section.table("", gapTableFromEntries(programEntries, "Program")),
+      section.heading("Gender Gap by Year Level"),
+      section.table("", gapTableFromEntries(yearEntries, "Year Level")),
+      section.heading("Gender Gap by Equity Group"),
+      section.table("", gapTableFromEntries(equityEntries, "Equity Group")),
+      section.heading("Key Findings"),
+      section.bullets(findings),
+    ];
+  }
+
+  /* Report 4: intersectional analysis. */
+  if (kind === STUDENT_REPORT_KINDS.INTERSECTIONAL) {
+    const equityEntries = buildGapEntries(equity.items, equity.nameKey).filter(
+      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
+    );
+    const findings = [];
+    if (equityEntries.length) {
+      const largest = [...equityEntries].sort((a, b) => b.total - a.total)[0];
+      findings.push(
+        `Largest equity group: ${largest.label}, ${largest.total.toLocaleString()} students (${fmtPct(largest.pctFemale)} female, ${fmtGap(largest.gapPp)}).`,
+      );
+      const mostFemale = [...equityEntries].sort(
+        (a, b) => b.pctFemale - a.pctFemale,
+      )[0];
+      const mostMale = [...equityEntries].sort(
+        (a, b) => a.pctFemale - b.pctFemale,
+      )[0];
+      findings.push(
+        `Most female-concentrated group: ${mostFemale.label} (${fmtPct(mostFemale.pctFemale)} female).`,
+      );
+      findings.push(
+        `Most male-concentrated group: ${mostMale.label} (${fmtPct(mostMale.pctFemale)} female).`,
+      );
+      const femaleShare = totals.Female
+        ? [...equityEntries].sort((a, b) => b.Female - a.Female)[0]
+        : null;
+      if (femaleShare) {
+        findings.push(
+          `Women are most numerous in ${femaleShare.label}: ${femaleShare.Female.toLocaleString()} female students, ${fmtPct(pctOf(femaleShare.Female, totals.Female))} of all female students in ${scopeLabel}.`,
+        );
+      }
+    } else {
+      findings.push("No equity-group breakdown available for this filter.");
+    }
+    const collegeEntries = buildGapEntries(dataset.byCollege, "college").filter(
+      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
+    );
+    if (collegeEntries.length) {
+      const widest = [...collegeEntries].sort(
+        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
+      )[0];
+      findings.push(
+        `Sex balance varies most between colleges in ${widest.label} (${fmtGap(widest.gapPp)}).`,
+      );
+    }
+    findings.push(
+      `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} students are excluded from these findings; treat every percentage on a very small group with caution.`,
+    );
+
+    return [
+      section.paragraph(
+        "This cross-tabulation reads each equity group (student type) across sex. " +
+          '"% Female in Group" is the within-group balance; "% of All Female Students" shows how large the group is among women, ' +
+          "which together reveal where particular groups of women are concentrated.",
+      ),
+      section.heading("Sex by Equity Group / Student Type"),
+      section.table(
+        "",
+        buildIntersectionTable(equity.items, totals, equity.nameKey),
+      ),
+      section.heading("Sex by College / Unit"),
+      section.table(
+        "",
+        buildIntersectionTable(dataset.byCollege, totals, "college"),
+      ),
+      section.heading("Sex by Academic Level"),
+      section.table("", buildIntersectionTable(dataset.byLevel, totals, "level")),
+      section.heading("Sex by Year Level"),
+      section.table(
+        "",
+        buildIntersectionTable(dataset.byYearLevel, totals, "year_level"),
+      ),
+      section.heading("Intersectional Findings"),
+      section.bullets(findings),
+    ];
+  }
+
+  /* Report 5: comparative multi-year enrollment. */
+  const years = rows(dataset.byAcademicYear);
+  if (!years.length) {
+    return [
+      section.paragraph(
+        "No academic-year history is available in the current dataset. Multi-year comparison needs term records (school years), so clear any academic-year or semester filter and try again.",
+      ),
+    ];
+  }
+
+  const ordered = [...years].sort((a, b) =>
+    String(a?.school_year || "").localeCompare(String(b?.school_year || "")),
+  );
+  const findings = [];
+  const first = ordered[0];
+  const last = ordered[ordered.length - 1];
+  const firstTotal = rowTotal(first);
+  const lastTotal = rowTotal(last);
+  const growth = lastTotal - firstTotal;
+  const growthPct = firstTotal ? Math.round((growth / firstTotal) * 1000) / 10 : 0;
+
+  findings.push(
+    `Enrollment moved from ${firstTotal.toLocaleString()} students in ${first.school_year} to ${lastTotal.toLocaleString()} in ${last.school_year} (${growth >= 0 ? "+" : ""}${growth.toLocaleString()} students, ${growth >= 0 ? "+" : ""}${growthPct}%).`,
+  );
+
+  const pctList = ordered.map((row) => ({
+    year: row.school_year,
+    pct:
+      row.pctFemale != null
+        ? row.pctFemale
+        : pctOf(row.Female || 0, rowTotal(row)),
+  }));
+  if (pctList.length > 1) {
+    const mostFemale = [...pctList].sort((a, b) => b.pct - a.pct)[0];
+    const leastFemale = [...pctList].sort((a, b) => a.pct - b.pct)[0];
+    findings.push(
+      `Highest female share: ${mostFemale.year} at ${fmtPct(mostFemale.pct)}.`,
+    );
+    findings.push(
+      `Lowest female share: ${leastFemale.year} at ${fmtPct(leastFemale.pct)}.`,
+    );
+    const shift =
+      Math.round((pctList[pctList.length - 1].pct - pctList[0].pct) * 10) / 10;
+    const direction =
+      Math.abs(shift) <= 5
+        ? "essentially stable"
+        : shift > 0
+          ? "moving toward more women"
+          : "moving toward more men";
+    findings.push(
+      `The female share has shifted ${fmtGap(shift)} between ${pctList[0].year} and ${pctList[pctList.length - 1].year} (${direction}).`,
+    );
+  }
+
+  let biggestJump = null;
+  for (let i = 1; i < ordered.length; i += 1) {
+    const delta = rowTotal(ordered[i]) - rowTotal(ordered[i - 1]);
+    if (!biggestJump || Math.abs(delta) > Math.abs(biggestJump.delta)) {
+      biggestJump = { year: ordered[i].school_year, delta };
+    }
+  }
+  if (biggestJump) {
+    findings.push(
+      `Largest single-year change: ${biggestJump.year} (${biggestJump.delta >= 0 ? "+" : ""}${biggestJump.delta.toLocaleString()} students).`,
+    );
+  }
+
+  return [
+    section.paragraph(
+      "Each row counts the students enrolled in that academic year; a student who enrolled in several years is counted in each of them, so the yearly figures overlap and are not additive.",
+    ),
+    section.heading("Enrollment by Academic Year and Sex"),
+    section.table("", buildYearOverYearTable(years)),
+    section.heading("Trend Findings"),
+    section.bullets(findings),
+  ];
+}
+
 /* ─ PDF rendering ─────────────────────────────────────────────────────────── */
 
 /**
@@ -382,376 +755,34 @@ export async function generateStudentQuickReport(kind, data, options = {}) {
     y = (doc.lastAutoTable?.finalY || y) + 7;
   }
 
-  function drawSection(title, table) {
-    drawSectionHeading(title);
-    drawTable(table);
-  }
-
-  const equity = equityRows(dataset);
-  const overallPctFemale =
-    totals.pctFemale != null
-      ? totals.pctFemale
-      : pctOf(totals.Female || 0, totals.total || 0);
-  const gapContext = {
-    overallPctFemale,
-    overallTotal: totals.total || 0,
-    scopeLabel,
-  };
-
-  /* ─ Report 1: student gender profile ──────────────────────────────────── */
-  function drawStudentProfileReport() {
-    drawSectionHeading("Student Population Summary");
-    drawTable(buildSexSummaryTable(totals));
-
-    drawSection(
-      "Gender Identity",
-      buildGenderIdentityTable(dataset.byGenderIdentity),
-    );
-
-    drawSection(
-      "Students by Academic Level and Sex",
-      buildSexTable(dataset.byLevel, "level", "Academic Level"),
-    );
-    drawSection(
-      "Students by Year Level and Sex",
-      buildSexTable(dataset.byYearLevel, "year_level", "Year Level"),
-    );
-    drawSection(
-      "Students by College / Unit and Sex",
-      buildSexTable(dataset.byCollege, "college", "College / Unit"),
-    );
-    drawSection(
-      "Equity Group / Student Type Profile",
-      buildSexTable(equity.items, equity.nameKey, "Equity Group"),
-    );
-
-    drawSectionHeading("Key Observations");
-    const observations = [
-      `Women make up ${fmtPct(overallPctFemale)} of the ${(totals.total || 0).toLocaleString()} students in ${scopeLabel}.`,
-    ];
-    const colleges = rows(dataset.byCollege).filter(
-      (row) => rowTotal(row) >= MIN_GROUP_FOR_FINDINGS,
-    );
-    if (colleges.length) {
-      const largest = [...colleges].sort((a, b) => rowTotal(b) - rowTotal(a))[0];
-      observations.push(
-        `Largest college by enrollment: ${largest.college} with ${rowTotal(largest).toLocaleString()} students (${fmtPct(largest.pctFemale != null ? largest.pctFemale : pctOf(largest.Female || 0, rowTotal(largest)))} female).`,
-      );
-      const mostFemale = [...colleges].sort((a, b) => b.pctFemale - a.pctFemale)[0];
-      const mostMale = [...colleges].sort((a, b) => a.pctFemale - b.pctFemale)[0];
-      observations.push(
-        `Highest female share: ${mostFemale.college} (${fmtPct(mostFemale.pctFemale)}).`,
-      );
-      observations.push(
-        `Lowest female share: ${mostMale.college} (${fmtPct(mostMale.pctFemale)}).`,
-      );
-    }
-    const programs = rows(dataset.byProgram);
-    if (programs.length) {
-      const biggest = [...programs].sort((a, b) => rowTotal(b) - rowTotal(a))[0];
-      observations.push(
-        `Largest program: ${biggest.program} with ${rowTotal(biggest).toLocaleString()} students (${fmtPct(biggest.pctFemale != null ? biggest.pctFemale : pctOf(biggest.Female || 0, rowTotal(biggest)))} female).`,
-      );
-    }
-    if ((totals.lgbtqia || 0) > 0) {
-      observations.push(
-        `${(totals.lgbtqia || 0).toLocaleString()} student(s) (${fmtPct(totals.pctLgbtqia != null ? totals.pctLgbtqia : pctOf(totals.lgbtqia || 0, totals.total || 0))}) identify as LGBTQIA+.`,
-      );
-    }
-    drawBullets(observations);
-  }
-
-  /* ─ Report 2: enrollment by program ───────────────────────────────────── */
-  function drawEnrollmentByProgramReport() {
-    drawParagraph(
-      "Enrollment headcounts are disaggregated by sex. The programs table lists the ten largest programs in the current dataset; college and year-level tables give the full distribution.",
-    );
-
-    drawSectionHeading("Student Population Summary");
-    drawTable(buildSexSummaryTable(totals));
-
-    drawSection(
-      "Enrollment by Program and Sex (top 10)",
-      buildSexTable(dataset.byProgram, "program", "Program"),
-    );
-    drawSection(
-      "Enrollment by College / Unit and Sex",
-      buildSexTable(dataset.byCollege, "college", "College / Unit"),
-    );
-    drawSection(
-      "Enrollment by Year Level and Sex",
-      buildSexTable(dataset.byYearLevel, "year_level", "Year Level"),
-    );
-    drawSection(
-      "Enrollment by Academic Level and Sex",
-      buildSexTable(dataset.byLevel, "level", "Academic Level"),
-    );
-
-    drawSectionHeading("Program Findings");
-    const programs = buildGapEntries(dataset.byProgram, "program");
-    const findings = [];
-    const substantive = programs.filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS);
-    if (substantive.length) {
-      const largest = [...substantive].sort((a, b) => b.total - a.total)[0];
-      findings.push(
-        `Largest program: ${largest.label} with ${largest.total.toLocaleString()} students (${fmtPct(largest.pctFemale)} female, ${fmtGap(largest.gapPp)}).`,
-      );
-      const widest = [...substantive].sort(
-        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
-      )[0];
-      findings.push(
-        `Most sex-segregated program: ${widest.label} at ${fmtGap(widest.gapPp)} (${widest.interpretation.toLowerCase()}).`,
-      );
-      const closest = [...substantive].sort(
-        (a, b) => Math.abs(a.gapPp) - Math.abs(b.gapPp),
-      )[0];
-      findings.push(
-        `Closest to parity: ${closest.label} at ${fmtGap(closest.gapPp)}.`,
-      );
-      const femalePrograms = substantive.filter((e) => e.pctFemale >= 60);
-      const malePrograms = substantive.filter((e) => e.pctFemale <= 40);
-      findings.push(
-        `Of the ${substantive.length} programs with ${MIN_GROUP_FOR_FINDINGS}+ students, ${femalePrograms.length} are at least 60% female and ${malePrograms.length} are at least 60% male.`,
-      );
-    }
-    const collegeEntries = buildGapEntries(dataset.byCollege, "college");
-    const collegeSpread = collegeEntries.filter(
-      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
-    );
-    if (collegeSpread.length > 1) {
-      const sorted = [...collegeSpread].sort((a, b) => b.pctFemale - a.pctFemale);
-      findings.push(
-        `Across colleges, the female share ranges from ${fmtPct(sorted[sorted.length - 1].pctFemale)} in ${sorted[sorted.length - 1].label} to ${fmtPct(sorted[0].pctFemale)} in ${sorted[0].label}.`,
-      );
-    }
-    drawBullets(
-      findings.length ? findings : ["No program breakdown available for this filter."],
-    );
-  }
-
-  /* ─ Report 3: gender gap analysis ─────────────────────────────────────── */
-  function drawGenderGapReport() {
-    const collegeEntries = buildGapEntries(dataset.byCollege, "college");
-    const programEntries = buildGapEntries(dataset.byProgram, "program");
-    const yearEntries = buildGapEntries(dataset.byYearLevel, "year_level");
-    const equityEntries = buildGapEntries(equity.items, equity.nameKey);
-
-    drawParagraph(
-      "The gender gap is measured in percentage points (pp) as % Female minus % Male. " +
-        "A positive value means women are the larger group; a gap within 5 pp is treated as near parity. " +
-        `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} students are listed but excluded from the findings below, since small groups swing wildly.`,
-    );
-
-    drawSection(
-      "Gender Gap by College / Unit",
-      gapTableFromEntries(collegeEntries, "College / Unit"),
-    );
-    drawSection(
-      "Gender Gap by Program (top 10)",
-      gapTableFromEntries(programEntries, "Program"),
-    );
-    drawSection(
-      "Gender Gap by Year Level",
-      gapTableFromEntries(yearEntries, "Year Level"),
-    );
-    drawSection(
-      "Gender Gap by Equity Group",
-      gapTableFromEntries(equityEntries, "Equity Group"),
-    );
-
-    drawSectionHeading("Key Findings");
-    const findings = buildGapFindings(collegeEntries, {
-      ...gapContext,
-      categories: collegeEntries,
-    });
-    const widestProgram = [...programEntries]
-      .filter((e) => e.total >= MIN_GROUP_FOR_FINDINGS)
-      .sort((a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp))[0];
-    if (widestProgram) {
-      findings.push(
-        `Most sex-segregated program: ${widestProgram.label} at ${fmtGap(widestProgram.gapPp)} (${widestProgram.interpretation.toLowerCase()}).`,
-      );
-    }
-    const gapsByCollege = collegeEntries.filter(
-      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
-    );
-    if (gapsByCollege.length) {
-      const widestCollege = [...gapsByCollege].sort(
-        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
-      )[0];
-      findings.push(
-        `Widest college-level gap: ${widestCollege.label} at ${fmtGap(widestCollege.gapPp)} (${widestCollege.interpretation.toLowerCase()}).`,
-      );
-    }
-    drawBullets(findings);
-  }
-
-  /* ─ Report 4: intersectional analysis ─────────────────────────────────── */
-  function drawIntersectionalReport() {
-    drawParagraph(
-      "This cross-tabulation reads each equity group (student type) across sex. " +
-        '"% Female in Group" is the within-group balance; "% of All Female Students" shows how large the group is among women, ' +
-        "which together reveal where particular groups of women are concentrated.",
-    );
-
-    drawSection(
-      "Sex by Equity Group / Student Type",
-      buildIntersectionTable(equity.items, totals, equity.nameKey),
-    );
-    drawSection(
-      "Sex by College / Unit",
-      buildIntersectionTable(dataset.byCollege, totals, "college"),
-    );
-    drawSection(
-      "Sex by Academic Level",
-      buildIntersectionTable(dataset.byLevel, totals, "level"),
-    );
-    drawSection(
-      "Sex by Year Level",
-      buildIntersectionTable(dataset.byYearLevel, totals, "year_level"),
-    );
-
-    drawSectionHeading("Intersectional Findings");
-    const equityEntries = buildGapEntries(equity.items, equity.nameKey).filter(
-      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
-    );
-    const findings = [];
-    if (equityEntries.length) {
-      const largest = [...equityEntries].sort((a, b) => b.total - a.total)[0];
-      findings.push(
-        `Largest equity group: ${largest.label}, ${largest.total.toLocaleString()} students (${fmtPct(largest.pctFemale)} female, ${fmtGap(largest.gapPp)}).`,
-      );
-      const mostFemale = [...equityEntries].sort(
-        (a, b) => b.pctFemale - a.pctFemale,
-      )[0];
-      const mostMale = [...equityEntries].sort(
-        (a, b) => a.pctFemale - b.pctFemale,
-      )[0];
-      findings.push(
-        `Most female-concentrated group: ${mostFemale.label} (${fmtPct(mostFemale.pctFemale)} female).`,
-      );
-      findings.push(
-        `Most male-concentrated group: ${mostMale.label} (${fmtPct(mostMale.pctFemale)} female).`,
-      );
-      const femaleShare = totals.Female
-        ? [...equityEntries].sort((a, b) => b.Female - a.Female)[0]
-        : null;
-      if (femaleShare) {
-        findings.push(
-          `Women are most numerous in ${femaleShare.label}: ${femaleShare.Female.toLocaleString()} female students, ${fmtPct(pctOf(femaleShare.Female, totals.Female))} of all female students in ${scopeLabel}.`,
-        );
-      }
-    } else {
-      findings.push("No equity-group breakdown available for this filter.");
-    }
-    const collegeEntries = buildGapEntries(dataset.byCollege, "college").filter(
-      (e) => e.total >= MIN_GROUP_FOR_FINDINGS,
-    );
-    if (collegeEntries.length) {
-      const widest = [...collegeEntries].sort(
-        (a, b) => Math.abs(b.gapPp) - Math.abs(a.gapPp),
-      )[0];
-      findings.push(
-        `Sex balance varies most between colleges in ${widest.label} (${fmtGap(widest.gapPp)}).`,
-      );
-    }
-    findings.push(
-      `Groups with fewer than ${MIN_GROUP_FOR_FINDINGS} students are excluded from these findings; treat every percentage on a very small group with caution.`,
-    );
-    drawBullets(findings);
-  }
-  /* ─ Report 5: comparative multi-year ──────────────────────────────────── */
-  function drawMultiYearReport() {
-    const years = rows(dataset.byAcademicYear);
-    if (!years.length) {
-      drawParagraph(
-        "No academic-year history is available in the current dataset. Multi-year comparison needs term records (school years), so clear any academic-year or semester filter and try again.",
-      );
+  /* Renders the report's section list. The in-browser preview walks the same
+     list, so the PDF and the preview cannot disagree about the content. */
+  function renderSection(item) {
+    if (!item) return;
+    if (item.type === SECTION.HEADING) {
+      drawSectionHeading(item.text);
       return;
     }
-
-    drawParagraph(
-      "Each row counts the students enrolled in that academic year; a student who enrolled in several years is counted in each of them, so the yearly figures overlap and are not additive.",
-    );
-
-    drawSection(
-      "Enrollment by Academic Year and Sex",
-      buildYearOverYearTable(years),
-    );
-
-    drawSectionHeading("Trend Findings");
-    const ordered = [...years].sort((a, b) =>
-      String(a?.school_year || "").localeCompare(String(b?.school_year || "")),
-    );
-    const findings = [];
-    const first = ordered[0];
-    const last = ordered[ordered.length - 1];
-    const firstTotal = rowTotal(first);
-    const lastTotal = rowTotal(last);
-    const growth = lastTotal - firstTotal;
-    const growthPct = firstTotal
-      ? Math.round((growth / firstTotal) * 1000) / 10
-      : 0;
-
-    findings.push(
-      `Enrollment moved from ${firstTotal.toLocaleString()} students in ${first.school_year} to ${lastTotal.toLocaleString()} in ${last.school_year} (${growth >= 0 ? "+" : ""}${growth.toLocaleString()} students, ${growth >= 0 ? "+" : ""}${growthPct}%).`,
-    );
-
-    const pctList = ordered.map((row) => ({
-      year: row.school_year,
-      pct:
-        row.pctFemale != null ? row.pctFemale : pctOf(row.Female || 0, rowTotal(row)),
-    }));
-    if (pctList.length > 1) {
-      const mostFemale = [...pctList].sort((a, b) => b.pct - a.pct)[0];
-      const leastFemale = [...pctList].sort((a, b) => a.pct - b.pct)[0];
-      findings.push(
-        `Highest female share: ${mostFemale.year} at ${fmtPct(mostFemale.pct)}.`,
-      );
-      findings.push(
-        `Lowest female share: ${leastFemale.year} at ${fmtPct(leastFemale.pct)}.`,
-      );
-      const shift =
-        Math.round((pctList[pctList.length - 1].pct - pctList[0].pct) * 10) / 10;
-      const direction =
-        Math.abs(shift) <= 5
-          ? "essentially stable"
-          : shift > 0
-            ? "moving toward more women"
-            : "moving toward more men";
-      findings.push(
-        `The female share has shifted ${fmtGap(shift)} between ${pctList[0].year} and ${pctList[pctList.length - 1].year} (${direction}).`,
-      );
+    if (item.type === SECTION.PARAGRAPH) {
+      drawParagraph(item.text);
+      return;
     }
-
-    let biggestJump = null;
-    for (let i = 1; i < ordered.length; i += 1) {
-      const delta = rowTotal(ordered[i]) - rowTotal(ordered[i - 1]);
-      if (!biggestJump || Math.abs(delta) > Math.abs(biggestJump.delta)) {
-        biggestJump = { year: ordered[i].school_year, delta };
-      }
+    if (item.type === SECTION.BULLETS) {
+      drawBullets(item.items || []);
+      return;
     }
-    if (biggestJump) {
-      findings.push(
-        `Largest single-year change: ${biggestJump.year} (${biggestJump.delta >= 0 ? "+" : ""}${biggestJump.delta.toLocaleString()} students).`,
-      );
+    if (item.type !== SECTION.TABLE) return;
+    if (item.title) drawSectionHeading(item.title);
+    if (!sectionRowCount(item)) {
+      drawParagraph(item.emptyLabel || "No data available.");
+      return;
     }
-    drawBullets(findings);
+    drawTable(item);
   }
 
-  if (kind === STUDENT_REPORT_KINDS.STUDENT_PROFILE) {
-    drawStudentProfileReport();
-  } else if (kind === STUDENT_REPORT_KINDS.ENROLLMENT_PROGRAM) {
-    drawEnrollmentByProgramReport();
-  } else if (kind === STUDENT_REPORT_KINDS.GENDER_GAP) {
-    drawGenderGapReport();
-  } else if (kind === STUDENT_REPORT_KINDS.INTERSECTIONAL) {
-    drawIntersectionalReport();
-  } else if (kind === STUDENT_REPORT_KINDS.MULTI_YEAR) {
-    drawMultiYearReport();
-  } else {
-    drawStudentProfileReport();
-  }
+  buildStudentReportSections(kind, dataset, { isSample }).forEach(
+    renderSection,
+  );
 
   /* ─ Page footers and continuation headers ─────────────────────────────── */
   const totalPages = doc.getNumberOfPages();

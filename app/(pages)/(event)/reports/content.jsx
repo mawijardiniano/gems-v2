@@ -18,9 +18,11 @@ import {
   downloadSampleQuickReport,
   isSampleAllYearsReport,
   isSampleQuickReport,
+  sampleQuickReportSections,
 } from "./sampleGenderProfiles";
 import FieldMultiSelect from "./FieldMultiSelect";
 import ReportTablePreview from "./ReportTablePreview";
+import ReportSectionsPreview from "./ReportSectionsPreview";
 import {
   PROFILE_POPULATIONS,
   buildProfileTable,
@@ -184,6 +186,8 @@ export default function ReportsContent() {
   const [readinessLoading, setReadinessLoading] = useState(false);
   /* Table preview of the Gender Profile Report; null means closed. */
   const [preview, setPreview] = useState(null);
+  /* Section preview of a sample quick report; null means closed. */
+  const [sectionPreview, setSectionPreview] = useState(null);
 
   /* Load available years from the GPB collection */
   useEffect(() => {
@@ -256,6 +260,41 @@ export default function ReportsContent() {
       table: buildProfileTable({ population, fields, records }),
       scope: profileScopeSummary(population, filters, records.length, valueFilters),
     });
+  };
+
+  /* Builds the sample quick report as section data, using the same filter
+     resolution as the download path above (all-years reports ignore the year,
+     employee reports ignore the semester) so preview and PDF agree. */
+  const handleSectionPreview = (type) => {
+    setError("");
+    setStatus("");
+    if (!isSampleQuickReport(type)) return;
+    const reportAllYears = isSampleAllYearsReport(type);
+    const reportSampleYear = reportAllYears ? "" : sampleYear;
+    const reportSemester =
+      reportAllYears || SAMPLE_QUICK_REPORTS[type].source !== "students"
+        ? ""
+        : sampleSemester;
+    try {
+      const sections = sampleQuickReportSections(type, {
+        schoolYear: reportSampleYear,
+        semester: reportSemester,
+      });
+      const scope = [
+        reportSampleYear ? `AY ${reportSampleYear}` : "All sample years",
+        reportSemester ? SEMESTER_LABEL[reportSemester] || reportSemester : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      setSectionPreview({
+        type,
+        title: SAMPLE_QUICK_REPORTS[type].label,
+        sections,
+        scope,
+      });
+    } catch {
+      setError("Could not build the report preview. Try again.");
+    }
   };
 
   const downloadReport = async (type) => {
@@ -531,7 +570,10 @@ export default function ReportsContent() {
                 <p className="text-xs text-gray-500 mt-1">
                   Name selected → one row per person (masterlist). Name not
                   selected → counts grouped by the selected fields, split by
-                  sex when Sex is selected.
+                  sex when Sex is selected. Use each field&apos;s Filter… to
+                  narrow by College / Office, Program or Department. To compare
+                  students against employees, run the report once per
+                  Population.
                 </p>
               </div>
             </>
@@ -668,6 +710,17 @@ export default function ReportsContent() {
               <button
                 type="button"
                 onClick={handlePreview}
+                disabled={generating}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-5 py-2.5 text-sm font-semibold text-secondary-700 transition-colors hover:bg-secondary-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                <FaEye size={13} />
+                Preview
+              </button>
+            )}
+            {isSampleQuickReport(reportType) && (
+              <button
+                type="button"
+                onClick={() => handleSectionPreview(reportType)}
                 disabled={generating}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-5 py-2.5 text-sm font-semibold text-secondary-700 transition-colors hover:bg-secondary-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
@@ -825,6 +878,17 @@ export default function ReportsContent() {
           </p>
         </div>
       </div>
+
+      {sectionPreview && (
+        <ReportSectionsPreview
+          title={sectionPreview.title}
+          sections={sectionPreview.sections}
+          scope={sectionPreview.scope}
+          downloading={generating}
+          onClose={() => setSectionPreview(null)}
+          onDownload={() => downloadReport(sectionPreview.type)}
+        />
+      )}
 
       {preview && (
         <ReportTablePreview
