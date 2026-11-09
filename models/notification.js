@@ -18,6 +18,10 @@ const NotificationSchema = new Schema(
       enum: [
         "project_comment",
         "project_updated",
+        /* A year's GPB was approved or disapproved. Recipients are role-based
+           (see GPB_STATUS_NOTIFY_ROLES in lib/notifications.js) and the bell
+           deep-links through metadata.year, since a GPB is not a Project. */
+        "gpb_status_updated",
         "profile_missing_fields",
         "password_not_changed",
       ],

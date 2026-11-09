@@ -2,7 +2,11 @@ import { connectDB } from "@/lib/db";
 import GPB from "@/models/gpb";
 import { logActivity } from "@/lib/activityLog";
  import { requireAuth } from "@/lib/auth";
-import { normalizeRole } from "@/lib/notifications";
+import {
+  createNotifications,
+  getGpbStatusRecipientIds,
+  normalizeRole,
+} from "@/lib/notifications";
 import { canSetGpbStatus } from "@/lib/gpbStatus";
 import {NextResponse} from "next/server"
 
@@ -66,6 +70,9 @@ export async function POST(req, { params }) {
        draft, however stale the client that posts the update. */
     const currentStatus = gpb.status_of_gpb?.status || "draft";
     const nextStatus = status || currentStatus;
+    /* Only a real transition is worth telling people about: re-saving the same
+       status with a new reason or scanned copy is not news. */
+    const statusChanged = currentStatus !== nextStatus;
 
     if (!canSetGpbStatus(currentStatus, nextStatus)) {
       return Response.json(
@@ -95,6 +102,32 @@ export async function POST(req, { params }) {
       resource_id: id,
       severity: "info",
     });
+
+    /* Tell the roles that own and review the plan. `metadata.year` is what
+       components/NotificationBell.jsx deep-links on (`/gpb/<year>`); projectId
+       is left alone because it refs a Project, not a GPB. The update itself is
+       already persisted, so a notification failure must not fail the request. */
+    if (statusChanged && user?._id) {
+      try {
+        const recipientIds = await getGpbStatusRecipientIds(user._id);
+
+        await createNotifications({
+          recipientIds,
+          senderId: user._id,
+          type: "gpb_status_updated",
+          title: `GPB ${gpb.year} ${nextStatus}`,
+          message: `The GPB for year ${gpb.year} was marked "${nextStatus}"${reason ? `: ${reason}` : "."}`,
+          metadata: {
+            year: gpb.year,
+            status: nextStatus,
+            previousStatus: currentStatus,
+            reason: reason || "",
+          },
+        });
+      } catch (notifyError) {
+        console.error("GPB status notification failed:", notifyError);
+      }
+    }
 
     return Response.json({
       success: true,
