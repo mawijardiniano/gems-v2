@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { logActivity, logPiiAccess } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { applyRowPii, resolvePii } from "@/lib/profileBroker";
 import { extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
 
@@ -251,8 +252,23 @@ export async function PUT(req, { params }) {
   }
 }
 
+/* Deleting a person destroys their profile row and their user account. It is
+ * therefore Admin-only, matching the two bulk-delete routes that already guard
+ * with requireAdmin (app/api/profile/route.js and profile/delete-bulk).
+ *
+ * It used to accept any authenticated session: `requireAuth` proves the caller
+ * is logged in, not that they may erase a person. The only trace of a deletion
+ * was a console.log, which rotates away and is queryable by nobody — so the act
+ * would have been invisible to the audit trail that exists to record exactly
+ * this kind of event.
+ *
+ * The audit entry is written *before* the response so the caller cannot receive
+ * a success it cannot be held to, and it carries the identifiers of the deleted
+ * records: once the rows are gone, the entry is the only description of what
+ * used to be there. No plaintext PII is copied in (see models/activity_log.js).
+ */
 export async function DELETE(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireAdmin(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -275,25 +291,36 @@ export async function DELETE(req, { params }) {
       );
     }
 
+    /* Hoisted so the audit entry can report whether a linked profile was
+       actually removed, rather than assuming one existed. */
+    let profileDeleted = false;
+
     if (user.personal_info_id) {
       const deletedProfile = await Profile.findByIdAndDelete(
         user.personal_info_id,
       );
-      if (deletedProfile) {
-        console.log(
-          "✅ Deleted linked profile:",
-          deletedProfile._id.toString(),
-        );
-      } else {
-        console.warn(
-          "⚠️ Profile not found for deletion:",
-          user.personal_info_id.toString(),
-        );
-      }
+      profileDeleted = Boolean(deletedProfile);
     }
 
     await UserAuth.findByIdAndDelete(id);
-    console.log("✅ Deleted user account:", id);
+
+    await logActivity({
+      req,
+      action: "PROFILE_DELETE",
+      description: `Deleted user account ${user.username || id}${
+        profileDeleted ? " and its linked profile" : ""
+      }`,
+      resource_type: "profile",
+      resource_id: user.personal_info_id || id,
+      severity: "critical",
+      metadata: {
+        user_id: String(id),
+        username: user.username || null,
+        role: user.role || null,
+        profile_id: user.personal_info_id ? String(user.personal_info_id) : null,
+        profile_deleted: profileDeleted,
+      },
+    });
 
     if (global.io) {
       global.io.emit("profile:deleted", {

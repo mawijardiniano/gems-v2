@@ -3,6 +3,7 @@ import GFPS from "@/models/gfps";
 import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { NextResponse } from "next/server";
 import {
   GFPS_SECTION_KEYS,
@@ -168,8 +169,18 @@ export async function POST(req) {
   return Response.json({ success: true, data: onDisk });
 }
 
+/* Wipes an entire academic year's GFPS committee.
+ *
+ * Admin-only, and audited. It previously required only a valid session, so any
+ * logged-in user could remove a whole year's committee and leave no record —
+ * the POST handler above logs, but one import in a file satisfied the coverage
+ * check while this handler wrote nothing.
+ *
+ * The count comes from `deleteMany`'s result rather than a prior `countDocuments`
+ * so the entry states what was actually removed, not what was expected.
+ */
 export async function DELETE(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireAdmin(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
@@ -183,6 +194,19 @@ export async function DELETE(req) {
   }
 
   // Scoped delete: never wipe other years' committees.
-  await GFPS.deleteMany({ academic_year: academicYear });
+  const result = await GFPS.deleteMany({ academic_year: academicYear });
+
+  await logActivity({
+    req,
+    action: "GFPS_YEAR_DELETE",
+    description: `Deleted GFPS committee for ${academicYear} (${result.deletedCount} record(s))`,
+    resource_type: "gfps",
+    severity: "critical",
+    metadata: {
+      academic_year: academicYear,
+      deleted_count: result.deletedCount,
+    },
+  });
+
   return Response.json({ success: true });
 }
