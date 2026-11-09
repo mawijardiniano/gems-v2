@@ -25,6 +25,13 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 import { OFFICE_OPTIONS, addTypedOffice, defaultOrganizingUnit } from "@/lib/colleges";
+import {
+  activityOptionValue,
+  projectPickerLabel,
+  resolveProjectActivities,
+  splitActivityOption,
+  truncateOptionLabel,
+} from "@/lib/projectActivities";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
@@ -263,8 +270,6 @@ export default function CreateEventsContent() {
     title: "",
     description: "",
     date: "",
-    start_time: "",
-    end_time: "",
     venue: "",
     type_of_activity: "GAD",
     organizing_office_unit: [],
@@ -306,14 +311,14 @@ export default function CreateEventsContent() {
     return now.toISOString().slice(0, 10);
   }, []);
 
+  /* Events are scheduled by date only, so the generator no longer waits on a
+     time, and a venue stays optional (the route already falls back to
+     "To be announced"). */
   const canGenerateDescription = useMemo(() => {
     const baseValid =
       formData.title.trim().length > 0 &&
-      formData.venue.trim().length > 0 &&
       formData.type_of_activity &&
-      formData.date &&
-      formData.start_time &&
-      formData.end_time;
+      formData.date;
 
     if (formData.event_source === "project") {
       return (
@@ -427,14 +432,7 @@ export default function CreateEventsContent() {
     setGenerating(true);
     setError("");
     try {
-      const {
-        title,
-        venue,
-        date,
-        start_time,
-        type_of_activity,
-        gad_activity,
-      } = formData;
+      const { title, venue, date, type_of_activity, gad_activity } = formData;
 
       const response = await fetch("/api/events/generate-description", {
         method: "POST",
@@ -442,14 +440,26 @@ export default function CreateEventsContent() {
         body: JSON.stringify({
           title,
           venue,
-          start_date:
-            date && start_time ? `${date}T${start_time}` : undefined,
+          start_date: date || undefined,
           type_of_activity,
           gad_activity,
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
+
+      /* A generated description only replaces what the user typed when the
+         request actually succeeded; error payloads carry no description and
+         used to blank the textarea silently. */
+      if (!response.ok) {
+        setError(data?.error || "Failed to generate description.");
+        return;
+      }
+      if (!data?.description) {
+        setError("The AI returned an empty description. Please try again.");
+        return;
+      }
+
       setFormData((prev) => ({ ...prev, description: data.description }));
     } catch (err) {
       setError("Failed to generate description.");
@@ -500,25 +510,18 @@ export default function CreateEventsContent() {
       setLoading(false);
       return;
     }
-    if (!formData.start_time || !formData.end_time) {
-      setError("Start time and end time are required");
-      setLoading(false);
-      return;
-    }
 
-    const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
-    const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+    /* Events are scheduled by date only: the day runs from local midnight to
+       local end-of-day so the stored instant keeps the calendar day the user
+       picked and end_date still sorts after start_date. */
+    const startDateTime = new Date(`${formData.date}T00:00`);
+    const endDateTime = new Date(`${formData.date}T23:59`);
 
     if (
       Number.isNaN(startDateTime.getTime()) ||
       Number.isNaN(endDateTime.getTime())
     ) {
-      setError("Invalid date or time values");
-      setLoading(false);
-      return;
-    }
-    if (endDateTime < startDateTime) {
-      setError("End time must be after start time");
+      setError("Invalid event date");
       setLoading(false);
       return;
     }
@@ -672,13 +675,13 @@ export default function CreateEventsContent() {
 
           {/* Project / GAD Activity — only for project-based events */}
           {isProjectBased && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 transition-all">
-              <label className="block text-sm font-semibold text-emerald-800 mb-2">
-                <FaProjectDiagram className="inline h-4 w-4 mr-1.5 -mt-0.5" />
+            <div>
+              <label className={labelClass}>
+                <FaProjectDiagram className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5" />
                 GAD Activity <span className="text-red-500">*</span>
               </label>
               {projects.length === 0 ? (
-                <p className="text-xs text-emerald-600/80 italic">
+                <p className="text-xs text-gray-400 italic">
                   No projects with GAD activities found. Please create a GPB
                   project first.
                 </p>
@@ -686,7 +689,10 @@ export default function CreateEventsContent() {
                 <select
                   value={
                     formData.project && formData.gad_activity
-                      ? `${formData.project}||||${formData.gad_activity}`
+                      ? activityOptionValue(
+                          formData.project,
+                          formData.gad_activity,
+                        )
                       : ""
                   }
                   onChange={(e) => {
@@ -699,7 +705,8 @@ export default function CreateEventsContent() {
                       }));
                       return;
                     }
-                    const [project, gad_activity] = val.split("||||");
+                    const { project, gad_activity } =
+                      splitActivityOption(val);
                     /* Picking an activity names the event after it and scopes
                        the event to the unit its creator belongs to: the GAD
                        Unit for a focal person, the college a coordinator is
@@ -728,40 +735,29 @@ export default function CreateEventsContent() {
                       };
                     });
                   }}
-                  className={`${inputClass} bg-white`}
+                  className={inputClass}
                 >
                   <option value="">Select a GAD activity...</option>
                   {projects.map((proj) => {
-                    const activities = (
-                      Array.isArray(proj.gad_activity)
-                        ? proj.gad_activity
-                        : [proj.gad_activity]
-                    )
-                      .filter(Boolean)
-                      .map((activity) =>
-                        typeof activity === "object"
-                          ? activity.value
-                          : activity,
-                      );
+                    const activities = resolveProjectActivities(proj);
                     if (activities.length === 0) return null;
-                    const projectLabel =
-                      typeof proj.project_type === "object"
-                        ? proj.project_type.value
-                        : proj.project_type;
                     return (
                       <optgroup
                         key={proj._id}
-                        label={`${projectLabel || "Project"} (${proj.year})`}
+                        label={projectPickerLabel(proj)}
                       >
                         {/* Only the activity title is offered here — the
                             GPB description would turn every option into a
-                            paragraph and the event stores the title only. */}
+                            paragraph and the event stores the title only. A
+                            GPB title can run to a full sentence, so the option
+                            is shortened while `title` keeps the full text. */}
                         {activities.map((activity, idx) => (
                           <option
                             key={`${proj._id}-${idx}`}
-                            value={`${proj._id}||||${activity}`}
+                            value={activityOptionValue(proj._id, activity)}
+                            title={activity}
                           >
-                            {activity}
+                            {truncateOptionLabel(activity)}
                           </option>
                         ))}
                       </optgroup>
@@ -769,7 +765,7 @@ export default function CreateEventsContent() {
                   })}
                 </select>
               )}
-              <p className="text-xs text-emerald-600/70 mt-2">
+              <p className="text-xs text-gray-400 mt-1.5">
                 This activity is required because the event type is GAD.
                 Selecting one fills in the event title and your office/unit.
               </p>
@@ -852,44 +848,20 @@ export default function CreateEventsContent() {
             icon={FaCalendarAlt}
             color="amber"
             title="Schedule"
-            subtitle="Set the event date and time"
+            subtitle="Set the event date"
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>
-                Event Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                min={todayLocal}
-                onChange={(e) => handleChange("date", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>
-                Start Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                value={formData.start_time}
-                onChange={(e) => handleChange("start_time", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>
-                End Time <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="time"
-                value={formData.end_time}
-                onChange={(e) => handleChange("end_time", e.target.value)}
-                className={inputClass}
-              />
-            </div>
+          <div>
+            <label className={labelClass}>
+              Event Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={formData.date}
+              min={todayLocal}
+              onChange={(e) => handleChange("date", e.target.value)}
+              className={inputClass}
+            />
           </div>
         </div>
 
@@ -924,9 +896,9 @@ export default function CreateEventsContent() {
               placeholder="Add a detailed event description..."
             />
             {!canGenerateDescription && (
-              <p className="text-xs text-gray-400 mt-1.5">
-                Fill in the title, venue, dates and GAD activity (if GAD) to
-                enable AI description generation.
+              <p className="text-xs text-gray-500 mt-1.5">
+                Fill in the event title, date and GAD activity (for GAD events)
+                to enable AI description generation.
               </p>
             )}
           </div>

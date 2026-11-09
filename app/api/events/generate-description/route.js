@@ -19,6 +19,14 @@ export async function POST(req) {
 
     const data = await req.json();
 
+    /* Events are scheduled by date only, so the prompt states the day rather
+       than parsing a time out of it. */
+    const eventDate = data.start_date
+      ? new Date(data.start_date).toLocaleDateString("en-US", {
+          dateStyle: "medium",
+        })
+      : "To be announced";
+
     const prompt = `
 You are an official event communications writer for a Philippine state university.
 
@@ -29,7 +37,7 @@ EVENT DETAILS
 - Type of Activity: ${data.type_of_activity}
 ${data.gad_activity ? `- GAD Activity: ${data.gad_activity}` : ""}
 - Venue: ${data.venue || "To be announced"}
-- Date and Time: ${data.start_date ? new Date(data.start_date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "To be announced"}${data.end_date ? ` - ${new Date(data.end_date).toLocaleString("en-US", { timeStyle: "short" })}` : ""}
+- Date: ${eventDate}
 - Target Participants: Open to all
 
 WRITING INSTRUCTIONS

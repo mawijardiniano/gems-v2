@@ -11,23 +11,23 @@ import GPB from "@/models/gpb";
    `Schema hasn't been registered for model "GAABudget"`. Importing the module
    is what registers it, so this line is load-bearing. */
 import "@/models/gaa_budget";
-import UniversityOfficial from "@/models/universityOfficials";
-import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
+import SystemSetting from "@/models/systemSetting";
+import {
+  SIGNATORIES_SETTING_KEY,
+  SIGNATORY_BLANK,
+  SIGNATORY_LABELS,
+  getSignatories,
+  signatoryYearFromGpbYear,
+} from "@/lib/signatories";
 import {
   PROJECT_EVENTS_POPULATE,
   resolveAccomplishmentText,
   hydrateProjectAttendanceSex,
 } from "@/lib/accomplishmentSummary";
-import { resolvePii, CAN_VIEW_PII_ROLES } from "@/lib/profileBroker";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const REPORT_CACHE_TTL = 60 * 1000;
-
-/* Signatures are published names on an official document, so they resolve with
-   the same privilege as the GAD Focal Person rather than the requesting role:
-   a Dean generating the report must still see the President's name printed. */
-const SIGNATORY_ROLE = CAN_VIEW_PII_ROLES[1];
 
 function fieldValue(field) {
   if (!field) return "";
@@ -80,64 +80,27 @@ function projectTypeLabel(project) {
   return "Uncategorized";
 }
 
-function extractName(userAuth) {
-  if (!userAuth) return "";
-  const first =
-    userAuth?.personal_info_id?.personal?.first_name ||
-    userAuth?.first_name ||
-    "";
-  const middle =
-    userAuth?.personal_info_id?.personal?.middle_name ||
-    userAuth?.middle_name ||
-    "";
-  const last =
-    userAuth?.personal_info_id?.personal?.last_name ||
-    userAuth?.last_name ||
-    "";
-  const mid = middle
-    ? `${middle.toString().trim().charAt(0).toUpperCase()}.`
-    : "";
-  return [first, mid, last].filter(Boolean).join(" ").trim();
-}
-
 /**
- * The signatory's real name, on an official document, for one populated
- * `UniversityOfficial.name` reference.
+ * The two names printed in the "Prepared By / Approved By" block, for one GPB
+ * fiscal year.
  *
- * The report populate reads `personal_info_id.personal.first_name` — a legacy
- * plaintext column that is being dropped. Once it is gone the naive read returns
- * "" and the signature line silently prints an underscore rule instead of the
- * official's name: a wrong official document, not an error.
+ * Read from the `report_signatories` system setting, typed by the GAD Focal
+ * Person in Admin Settings and keyed by academic year so an older report keeps
+ * the signatories that were in post then. This deliberately does NOT consult the
+ * officials roster: seats are hand-encoded and their wording drifts between
+ * years, so a seat-string lookup is either a miss or — with any fuzzy fallback
+ * — the wrong person on a signed document. See lib/signatories.js.
  *
- * So the identity is resolved through the broker first. Signatories are named
- * officials appearing on a published report, so a reveal is correct here. The
- * legacy read stays as the fallback for any row that has not been migrated yet,
- * and a typed `name_text` (an official with no user account) wins because there
- * is nothing to decrypt.
+ * An unset year yields "" for both, which the table prints as the underscore
+ * rule, so a never-configured year looks different from a crash.
  */
-export async function resolveSignatoryName(official) {
-  const person = official?.official ?? official?.name;
-  if (!person) return official?.official_text || official?.name_text || "";
-  if (typeof person === "string") return person;
-
-  const profile = person.personal_info_id;
-  const vaultRef = profile?.vaultRef;
-  if (vaultRef) {
-    const resolved = await resolvePii({ vaultRef, role: SIGNATORY_ROLE });
-    if (resolved?.raw) {
-      const first = resolved.raw.first_name || "";
-      const middle = resolved.raw.middle_name || "";
-      const last = resolved.raw.last_name || "";
-      const mid = middle
-        ? `${String(middle).trim().charAt(0).toUpperCase()}.`
-        : "";
-      const name = [first, mid, last].filter(Boolean).join(" ").trim();
-      if (name) return name;
-    }
-  }
-
-  /* Mid-migration fallback: the legacy columns still hold the name. */
-  return extractName(person) || person.personal_info_id?.displayName || "";
+export async function resolveReportSignatories(gpbYear) {
+  const academicYear = signatoryYearFromGpbYear(gpbYear);
+  if (!academicYear) return { prepared_by: "", approved_by: "" };
+  const setting = await SystemSetting.findOne({
+    key: SIGNATORIES_SETTING_KEY,
+  }).lean();
+  return getSignatories(setting?.value, academicYear);
 }
 
 const MAIN_TABLE_HEAD = [
@@ -191,21 +154,7 @@ export async function GET(req) {
            the vault here rather than from the legacy column. */
         await Promise.all(projects.map(hydrateProjectAttendanceSex));
 
-        const [gpb, officials] = await Promise.all([
-          GPB.findOne({ year }).populate("gaaBudgetId").lean(),
-          UniversityOfficial.find()
-            .populate({
-              path: "official",
-              model: "UserAuth",
-              /* No `select` here: the plaintext `personal` block is gone from
-                 the DB, so a narrow projection makes Mongoose drop the whole
-                 profile (and `vaultRef` with it) on serialization. The full
-                 document is safe — `resolveSignatoryName` reads only the name
-                 fields and the pointer, and the ref never reaches the client. */
-              populate: { path: "personal_info_id" },
-            })
-            .lean(),
-        ]);
+        const gpb = await GPB.findOne({ year }).populate("gaaBudgetId").lean();
 
         const orderedProjects = [...projects]
           .map((project, originalIndex) => ({ project, originalIndex }))
@@ -473,11 +422,7 @@ export async function GET(req) {
           margin: { left: M, right: M },
         });
 
-        const focalEntry = findGadFocalOfficial(officials);
-        const focalPointName = await resolveSignatoryName(focalEntry);
-        const presidentName = await resolveSignatoryName(
-          (officials || []).find((item) => item?.title === "University President"),
-        );
+        const { prepared_by, approved_by } = await resolveReportSignatories(year);
 
         let signY = doc.lastAutoTable.finalY + 10;
         if (signY > pageHeight - 70) {
@@ -514,18 +459,18 @@ export async function GET(req) {
             ["", "", ""],
             [
               {
-                content: focalPointName || "____________________________",
+                content: prepared_by || SIGNATORY_BLANK,
                 styles: { fontStyle: "bold" },
               },
               {
-                content: presidentName || "____________________________",
+                content: approved_by || SIGNATORY_BLANK,
                 styles: { fontStyle: "bold" },
               },
               "",
             ],
             [
-              { content: "GAD Focal Point/Person", styles: { fontStyle: "bold" } },
-              { content: "University President", styles: { fontStyle: "bold" } },
+              { content: SIGNATORY_LABELS.prepared_by, styles: { fontStyle: "bold" } },
+              { content: SIGNATORY_LABELS.approved_by, styles: { fontStyle: "bold" } },
               "",
             ],
           ],

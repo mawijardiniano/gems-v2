@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { toOfficeArray } from "@/lib/colleges";
-import { findGadFocalOfficial } from "@/lib/universityOfficialsMerge";
+import {
+  SIGNATORIES_SETTING_KEY,
+  SIGNATORY_BLANK,
+  getSignatories,
+  signatoryYearFromGpbYear,
+} from "@/lib/signatories";
 
 /* Plan fields are stored wrapped as `{ value }` in MongoDB; some callers pass
    the raw API documents while others pass pre-normalized projects. Unwrap both
@@ -53,71 +58,47 @@ export default function PrintGPB({
   className = "bg-secondary-600 hover:bg-secondary-700 text-white font-semibold px-6 py-2 rounded transition mb-2",
 }) {
   const [signatories, setSignatories] = useState({
-    focalPointName: "____________________________",
-    presidentName: "____________________________",
+    focalPointName: SIGNATORY_BLANK,
+    presidentName: SIGNATORY_BLANK,
   });
 
-  function toDisplayName(firstName, middleName, lastName, options = {}) {
-    const includeMiddleInitial = options.includeMiddleInitial !== false;
-    const middleInitial =
-      includeMiddleInitial && middleName
-        ? `${middleName.toString().trim().charAt(0).toUpperCase()}.`
-        : "";
-    return [firstName, middleInitial, lastName]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-  }
-
-  function extractNameFromUserAuth(userAuth, options = {}) {
-    if (!userAuth) return "";
-    const firstName =
-      userAuth?.personal_info_id?.personal?.first_name || userAuth?.first_name;
-    const middleName =
-      userAuth?.personal_info_id?.personal?.middle_name ||
-      userAuth?.middle_name;
-    const lastName =
-      userAuth?.personal_info_id?.personal?.last_name || userAuth?.last_name;
-    return toDisplayName(firstName, middleName, lastName, options);
-  }
-
+  /* Both names come from the `report_signatories` system setting, keyed by the
+     GPB's academic year. They are NOT read from the officials roster: seats are
+     hand-encoded and their wording drifts year to year, so a seat-string lookup
+     is either a miss or the wrong person on a signed document. The same helper
+     feeds the server PDF routes, so the printed page and the PDF agree. */
   useEffect(() => {
+    let cancelled = false;
+
     async function loadSignatories() {
+      const blank = { focalPointName: SIGNATORY_BLANK, presidentName: SIGNATORY_BLANK };
+      const ay = signatoryYearFromGpbYear(year);
+      if (!ay) {
+        if (!cancelled) setSignatories(blank);
+        return;
+      }
       try {
-        // GPB fiscal year (Number) -> AY string so old GPBs keep old signatories.
-        const y = Number(year);
-        const ay = Number.isInteger(y) ? `${y}-${y + 1}` : "";
-        const officialsRes = await fetch(
-          ay
-            ? `/api/university-officials?academic_year=${encodeURIComponent(ay)}`
-            : "/api/university-officials",
+        const res = await fetch(
+          `/api/settings?key=${encodeURIComponent(SIGNATORIES_SETTING_KEY)}`,
         );
-        const officialsJson = await officialsRes.json();
-        const officials = Array.isArray(officialsJson?.data)
-          ? officialsJson.data
-          : [];
-
-        const presidentName = extractNameFromUserAuth(
-          officials.find((o) => o?.title === "University President")?.name,
-          { includeMiddleInitial: true },
-        );
-
-        const focalEntry = findGadFocalOfficial(officials);
-        const focalName = extractNameFromUserAuth(focalEntry?.name);
-
-        setSignatories({
-          focalPointName: focalName || "____________________________",
-          presidentName: presidentName || "____________________________",
-        });
+        const json = await res.json();
+        const value = json?.success ? json.data?.value : null;
+        const { prepared_by, approved_by } = getSignatories(value, ay);
+        if (!cancelled) {
+          setSignatories({
+            focalPointName: prepared_by || SIGNATORY_BLANK,
+            presidentName: approved_by || SIGNATORY_BLANK,
+          });
+        }
       } catch {
-        setSignatories({
-          focalPointName: "____________________________",
-          presidentName: "____________________________",
-        });
+        if (!cancelled) setSignatories(blank);
       }
     }
 
     loadSignatories();
+    return () => {
+      cancelled = true;
+    };
   }, [year]);
 
   const handlePrintProjects = () => {

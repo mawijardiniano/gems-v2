@@ -1551,6 +1551,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           totalGAA={totalGAA}
           budgetYear={budgetYear}
           projects={projects}
+          /* The signatory block is keyed by the GPB's academic year. Without
+             this the component derived `""` and always printed the underscore
+             rule, which is why saved signatories never appeared on the GPB. */
+          year={budgetYear}
         />
       </div>
 

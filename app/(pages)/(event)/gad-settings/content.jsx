@@ -27,6 +27,8 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaHistory,
+  FaSave,
+  FaSpinner,
 } from "react-icons/fa";
 
 function timeAgo(date) {
@@ -86,6 +88,15 @@ export default function Settings() {
      reach the University Officials page reads. */
   const canManagePositions = canManageOffices;
 
+  /* Report signatories are the names printed on the GPB and the GAD-AR. The
+     rule is deliberately narrower than the office list: they are the Focal
+     Person's own signature, so the Focal Person and the admin may edit them and
+     nobody else. The API enforces the same list
+     (SETTING_WRITE_ROLES in app/api/settings/route.js), so a role that cannot
+     edit never even sees the card — no dead controls. */
+  const canEditSignatories =
+    role?.toLowerCase() === "gad focal person" || role?.toLowerCase() === "admin";
+
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -110,6 +121,25 @@ export default function Settings() {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  /* ── Report signatories (the GPB / GAD-AR signature block) ──
+     Stored as the `report_signatories` system setting, keyed by academic year,
+     so a GPB from an earlier year keeps the signatories in post then. Each slot
+     may be a person picked from the directory (`profile_id` set) or a name typed
+     by hand for someone with no GEMS profile — `name` is what prints either way.
+     See lib/signatories.js. */
+  const [sigYear, setSigYear] = useState("");
+  const [sigPreparedBy, setSigPreparedBy] = useState("");
+  const [sigApprovedBy, setSigApprovedBy] = useState("");
+  const [sigByYear, setSigByYear] = useState({});
+  const [sigLoading, setSigLoading] = useState(true);
+  const [sigSaving, setSigSaving] = useState(false);
+  const [sigMessage, setSigMessage] = useState(null);
+  /* Which slot's picker is open, and its query/results. */
+  const [sigOpenPicker, setSigOpenPicker] = useState("");
+  const [sigQuery, setSigQuery] = useState("");
+  const [sigResults, setSigResults] = useState([]);
+  const [sigSearching, setSigSearching] = useState(false);
 
   /* ── Offices & Groups (see lib/useUniversityOffices.js) ──
      The list is global, so it is loaded with the assigned-official counts for
@@ -202,6 +232,153 @@ export default function Settings() {
   }, [officesLoading]);
 
   const firstInputRef = useRef(null);
+
+  /* ── Report signatories: load, search, save ──────────────────────────────
+     Only fetched when the role may edit, so other roles never trigger a read
+     they cannot act on. */
+  useEffect(() => {
+    if (!canEditSignatories) {
+      setSigLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/settings?key=report_signatories");
+        const data = await res.json();
+        const value = data.success ? data.data?.value || {} : {};
+        const years = {};
+        for (const [year, entry] of Object.entries(value)) {
+          if (!/^\d{4}-\d{4}$/.test(year)) continue;
+          const nameOf = (v) =>
+            typeof v === "string" ? v : String(v?.name || "");
+          years[year] = {
+            name: nameOf(entry?.prepared_by),
+            approved: nameOf(entry?.approved_by),
+          };
+        }
+        if (cancelled) return;
+        setSigByYear(years);
+        const fallback =
+          Object.keys(years).sort((a, b) => b.localeCompare(a))[0] || "";
+        setSigYear(fallback);
+        setSigPreparedBy(years[fallback]?.name || "");
+        setSigApprovedBy(years[fallback]?.approved || "");
+      } catch (e) {
+        console.error("Failed to fetch report signatories:", e);
+      } finally {
+        if (!cancelled) setSigLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canEditSignatories]);
+
+  /* Debounced directory search for the name picker. Driven by the field's own
+     text, so there is a single value in play: what you type is both the search
+     term and, if you ignore the suggestions, the name that saves. The route
+     masks names by the caller's role, so a role without PII access simply sees
+     masked rows. */
+  useEffect(() => {
+    if (!sigOpenPicker) return;
+    const q = sigQuery.trim();
+    if (q.length < 2) {
+      setSigResults([]);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setSigSearching(true);
+      try {
+        const res = await fetch(`/api/profile/search?q=${encodeURIComponent(q)}&limit=10`);
+        const json = await res.json();
+        const rows = Array.isArray(json?.data) ? json.data : [];
+        if (cancelled) return;
+        setSigResults(
+          rows
+            .map((row) => {
+              const p = row?.personal_info_id?.personal || {};
+              /* First + last only. Signatories print without a middle name, and
+                 the picked value is what the report stores, so the middle name
+                 must not be composed here in the first place. */
+              const name = [p.first_name, p.last_name]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+              return name
+                ? { id: String(row.personal_info_id?._id || row._id || ""), name }
+                : null;
+            })
+            .filter(Boolean),
+        );
+      } catch {
+        if (!cancelled) setSigResults([]);
+      } finally {
+        if (!cancelled) setSigSearching(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [sigQuery, sigOpenPicker]);
+
+  /* Switching year loads that year's saved names, so editing one year never
+     silently overwrites another. */
+  function selectSigYear(year) {
+    setSigYear(year);
+    setSigPreparedBy(sigByYear[year]?.name || "");
+    setSigApprovedBy(sigByYear[year]?.approved || "");
+    setSigOpenPicker("");
+    setSigQuery("");
+    setSigMessage(null);
+  }
+
+  async function saveReportSignatories() {
+    if (!sigYear) {
+      setSigMessage({ type: "error", text: "Select an academic year first." });
+      return;
+    }
+    if (!sigPreparedBy.trim() && !sigApprovedBy.trim()) {
+      setSigMessage({
+        type: "error",
+        text: "Enter at least one name, or the reports will print a blank signature line.",
+      });
+      return;
+    }
+    setSigSaving(true);
+    setSigMessage(null);
+    try {
+      /* Send every year, not just the edited one: the setting is a single
+         document, so a partial write would drop the other years. A name is sent
+         as a plain string — the API normalizes it to the stored object shape. */
+      const value = {
+        ...sigByYear,
+        [sigYear]: {
+          prepared_by: sigPreparedBy.trim(),
+          approved_by: sigApprovedBy.trim(),
+        },
+      };
+      const res = await axios.put("/api/settings", {
+        key: "report_signatories",
+        value,
+      });
+      if (res.data.success) {
+        setSigByYear(value);
+        setSigMessage({ type: "success", text: "Report signatories saved." });
+      } else {
+        setSigMessage({ type: "error", text: res.data.error || "Failed to save." });
+      }
+    } catch (err) {
+      setSigMessage({
+        type: "error",
+        text: err?.response?.data?.error || "Server error.",
+      });
+    } finally {
+      setSigSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (passwordModalOpen && firstInputRef.current) {
@@ -499,6 +676,189 @@ export default function Settings() {
           />
         </div>
       </section>
+
+      {/* Report Signatories — the names printed on the GPB and the GAD-AR.
+          Hidden entirely for roles that may not edit: the API refuses their
+          writes, so showing a disabled form would only invite a 403. */}
+      {canEditSignatories && (
+        <section id="signatories" className="mb-8 scroll-mt-24">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
+                  <FaUserEdit />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Report Signatories
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Names printed on the GPB and GAD-AR signature block
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5">
+              {sigLoading ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <FaSpinner className="animate-spin" />
+                  Loading signatories...
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Academic Year
+                    </label>
+                    <select
+                      value={sigYear}
+                      onChange={(e) => selectSigYear(e.target.value)}
+                      className="w-full sm:w-64 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                    >
+                      <option value="">Select Academic Year</option>
+                      {["2024-2025", "2025-2026", "2026-2027", "2027-2028", ...Object.keys(sigByYear)]
+                        .filter((y, i, arr) => y && arr.indexOf(y) === i)
+                        .sort((a, b) => b.localeCompare(a))
+                        .map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {[
+                    { slot: "prepared_by", label: "Prepared By", role: "GAD Focal Point/Person", value: sigPreparedBy, setValue: setSigPreparedBy },
+                    { slot: "approved_by", label: "Approved By", role: "University President", value: sigApprovedBy, setValue: setSigApprovedBy },
+                  ].map((field) => (
+                    <div key={field.slot}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {field.label}
+                      </label>
+                      {/* ONE control, not two. The box holds the name you will
+                          save; typing in it also searches the directory, and the
+                          matches appear directly beneath it. Picking a match just
+                          fills the box. Whatever is in the box when you press
+                          Save is what is stored — so a name with no GEMS profile
+                          works by simply typing it and ignoring the suggestions. */}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={field.value}
+                          onChange={(e) => {
+                            field.setValue(e.target.value);
+                            setSigOpenPicker(field.slot);
+                            setSigQuery(e.target.value);
+                          }}
+                          onFocus={() => {
+                            setSigOpenPicker(field.slot);
+                            setSigQuery(field.value);
+                          }}
+                          onBlur={() => {
+                            /* Delay so a click on a suggestion registers first. */
+                            setTimeout(() => setSigOpenPicker(""), 150);
+                          }}
+                          placeholder="Type a name, or search the directory"
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2.5 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
+                          <FaSearch className="text-xs text-gray-400" aria-hidden />
+                          {field.value && (
+                            <button
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => field.setValue("")}
+                              aria-label={`Clear ${field.label}`}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            >
+                              <FaTimesCircle className="text-xs" />
+                            </button>
+                          )}
+                        </div>
+
+                        {sigOpenPicker === field.slot && sigQuery.trim().length >= 2 && (
+                          <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+                            <div className="max-h-56 overflow-y-auto">
+                              {sigSearching ? (
+                                <div className="px-3 py-2 text-xs text-gray-500 flex items-center gap-2">
+                                  <FaSpinner className="animate-spin" /> Searching...
+                                </div>
+                              ) : sigResults.length ? (
+                                sigResults.map((person) => (
+                                  <button
+                                    key={person.id || person.name}
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      field.setValue(person.name);
+                                      setSigOpenPicker("");
+                                      setSigQuery("");
+                                      setSigResults([]);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-secondary-50"
+                                  >
+                                    {person.name}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-xs text-gray-500">
+                                  No directory match — the typed name will be used as is.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {field.role} — pick from the directory or just type a name.
+                      </p>
+                    </div>
+                  ))}
+
+                  {sigMessage && (
+                    <div
+                      className={`p-3 rounded-lg text-sm ${
+                        sigMessage.type === "error"
+                          ? "bg-red-50 text-red-700 border border-red-100"
+                          : "bg-green-50 text-green-700 border border-green-100"
+                      }`}
+                    >
+                      {sigMessage.text}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Pick a person from the directory, or type a name for someone
+                    without a GEMS profile. A blank field prints an underscore
+                    rule. Names are stored per academic year, so an earlier GPB
+                    keeps the signatories in post then.
+                  </p>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={saveReportSignatories}
+                      disabled={sigSaving}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
+                    >
+                      {sigSaving ? (
+                        <>
+                          <FaSpinner className="animate-spin text-xs" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FaSave className="text-xs" />
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Activity Log Section */}
       <section className="mb-8">
