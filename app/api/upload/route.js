@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { NextResponse } from "next/server";
@@ -8,14 +8,9 @@ import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
+import { getS3Client, storageBucket, buildObjectUrl } from "@/lib/storage";
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const s3 = getS3Client;
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
@@ -186,16 +181,20 @@ export async function POST(req) {
 
     const key = `${folder}/${user._id}/${Date.now()}-${sanitizeFileName(file.name)}`;
 
-    await s3.send(
+    await s3().send(
       new PutObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: storageBucket(),
         Key: key,
         Body: buffer,
         ContentType: file.type,
       })
     );
 
-    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    /* The key is the durable identifier: reads resolve through
+       `getFileSourceUrl`, which prefers it. A URL is still stored for older
+       consumers, but it must not name the storage provider — that is how the
+       previous provider's hostname ended up frozen into every document. */
+    const fileUrl = buildObjectUrl(key);
 
     return Response.json({
       message: "Upload successful",
@@ -256,9 +255,9 @@ export async function DELETE(req) {
       );
     }
 
-    await s3.send(
+    await s3().send(
       new DeleteObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: storageBucket(),
         Key: normalizedKey,
       })
     );

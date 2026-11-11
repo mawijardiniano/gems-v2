@@ -465,8 +465,15 @@ export default function KnowledgeResourcesContent() {
 
                 <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 pt-1">
+                    {/* The bucket is private, so these go through the
+                        session-checked routes rather than to a stored URL:
+                        proxy to read inline, download to always save. */}
                     <a
-                      href={item.file?.url}
+                      href={
+                        item.file?.key
+                          ? `/api/files/proxy?key=${encodeURIComponent(item.file.key)}`
+                          : item.file?.url
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -474,8 +481,11 @@ export default function KnowledgeResourcesContent() {
                       <FaEye size={11} /> View
                     </a>
                     <a
-                      href={item.file?.url}
-                      download
+                      href={
+                        item.file?.key
+                          ? `/api/download?key=${encodeURIComponent(item.file.key)}&name=${encodeURIComponent(item.file.name || "document")}`
+                          : item.file?.url
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"

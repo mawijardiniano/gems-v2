@@ -1,15 +1,10 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 import { requireAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { getS3Client, storageBucket } from "@/lib/storage";
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const s3 = getS3Client;
 
 
 export async function GET(req) {
@@ -24,9 +19,9 @@ export async function GET(req) {
   }
 
   try {
-    const response = await s3.send(
+    const response = await s3().send(
       new GetObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: storageBucket(),
         Key: key,
       }),
     );

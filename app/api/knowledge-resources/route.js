@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
@@ -6,6 +6,7 @@ import { rateLimiters } from "@/lib/rateLimit";
 import { logActivity } from "@/lib/activityLog";
 import { normalizeRole } from "@/lib/notifications";
 import KnowledgeResource from "@/models/knowledgeResource";
+import { getS3Client, storageBucket, buildObjectUrl } from "@/lib/storage";
 import {
   KNOWLEDGE_CATEGORIES,
   KNOWLEDGE_ROLES,
@@ -16,13 +17,7 @@ import {
   validateKnowledgeFile,
 } from "@/lib/knowledgeResources";
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const s3 = getS3Client;
 
 export async function GET(req) {
   try {
@@ -126,9 +121,9 @@ export async function POST(req) {
       file.name
     )}`;
 
-    await s3.send(
+    await s3().send(
       new PutObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: storageBucket(),
         Key: key,
         Body: buffer,
         ContentType: file.type,
@@ -141,7 +136,7 @@ export async function POST(req) {
       title,
       category,
       file: {
-        url: `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${key}`,
+        url: buildObjectUrl(key),
         key,
         name: file.name,
         size: file.size,

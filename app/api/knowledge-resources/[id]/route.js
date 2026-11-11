@@ -1,22 +1,17 @@
-import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { logActivity } from "@/lib/activityLog";
 import { normalizeRole } from "@/lib/notifications";
 import KnowledgeResource from "@/models/knowledgeResource";
+import { getS3Client, storageBucket } from "@/lib/storage";
 import {
   DELETE_ANY_ROLES,
   KNOWLEDGE_ROLES,
 } from "@/lib/knowledgeResources";
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const s3 = getS3Client;
 
 export async function DELETE(req, { params }) {
   try {
@@ -52,9 +47,9 @@ export async function DELETE(req, { params }) {
     }
 
     try {
-      await s3.send(
+      await s3().send(
         new DeleteObjectCommand({
-          Bucket: process.env.AWS_BUCKET_NAME,
+          Bucket: storageBucket(),
           Key: resource.file?.key,
         })
       );

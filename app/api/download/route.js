@@ -1,14 +1,9 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { getS3Client, storageBucket } from "@/lib/storage";
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+const s3 = getS3Client;
 
 export async function GET(req) {
   try {
@@ -35,9 +30,9 @@ export async function GET(req) {
       return NextResponse.json({ error: "Invalid key" }, { status: 400 });
     }
 
-    const object = await s3.send(
+    const object = await s3().send(
       new GetObjectCommand({
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: storageBucket(),
         Key: key,
       })
     );
