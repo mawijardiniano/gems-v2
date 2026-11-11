@@ -89,7 +89,9 @@ export default function DashboardLayout({ children }) {
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="mt-16 px-4 sm:px-6 bg-gray-50">
+        <main
+          className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-gray-50"
+        >
           <PageBreadcrumbs role="event" />
           {children}
         </main>

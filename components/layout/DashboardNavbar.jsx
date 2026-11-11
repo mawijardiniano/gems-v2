@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import NotificationBell from "@/components/NotificationBell";
+import TextSizeMenu from "@/components/TextSizeMenu";
 import useMyProfile from "@/lib/useMyProfile";
+import useTextScale from "@/hooks/useTextScale";
 import { logout as reduxLogout } from "@/store/slices/authSlice";
 
 /**
@@ -22,6 +24,13 @@ export default function DashboardNavbar({
   fallbackName = "User",
 }) {
   const { profile, user } = useMyProfile();
+
+  /* Owned here, not in `TextSizeMenu`: this hook sets `<html>`'s font size, and
+     `DashboardNavbar` is only rendered by the authenticated role layouts. The
+     landing page and login never mount it, so they are never resized. The menu
+     receives the state as props so there is a single source of truth. */
+  const textScale = useTextScale();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
@@ -118,6 +127,12 @@ export default function DashboardNavbar({
       </div>
 
       <div className="flex items-center gap-3">
+        <TextSizeMenu
+          scaleId={textScale.scaleId}
+          percent={textScale.percent}
+          presets={textScale.presets}
+          onSelect={textScale.setScaleId}
+        />
         <NotificationBell />
 
         <div className="relative" ref={dropdownRef}>

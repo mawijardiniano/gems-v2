@@ -88,6 +88,12 @@ scripts/*
 # the cause. Kept for the same reason as the audit tests: a clone without
 # it has the hardening and none of the checks.
 !tests/storageEnv*.test.mjs
+# exception: the text-size preference is the app's only accessibility control.
+# Its ceiling (150%) exists so the fixed 20rem sidebar does not eat two thirds
+# of a tablet, and its storage readers swallow corrupt or blocked localStorage.
+# Both are rules a later edit could bend silently; kept for the same reason as
+# the storage tests - a clone without it has the control and none of the checks.
+!tests/textScale*.test.mjs
 !scripts/audit-retention.mjs
 data/sample-profiles.json
 
