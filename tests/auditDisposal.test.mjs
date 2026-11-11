@@ -1,4 +1,4 @@
-/* Retention disposal writes its own record, and refuses to destroy anything it
+﻿/* Retention disposal writes its own record, and refuses to destroy anything it
  * has not archived.
  *
  * applyRetention removes rows the verifier will never see again. Afterwards,
@@ -63,7 +63,7 @@ const MODEL_STUB = `
 
 
 /* Captures what was uploaded, so a test can assert the archive really contains
- * the disposed rows — the whole basis for deleting them. */
+ * the disposed rows â€” the whole basis for deleting them. */
 const S3_STUB = `
   export const __uploads = [];
   export class PutObjectCommand {
@@ -145,10 +145,14 @@ function withoutS3(fn) {
     AWS_REGION: process.env.AWS_REGION,
     AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
     STORAGE_ENDPOINT: process.env.STORAGE_ENDPOINT,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   };
   delete process.env.AWS_REGION;
   delete process.env.AWS_BUCKET_NAME;
   delete process.env.STORAGE_ENDPOINT;
+  delete process.env.AWS_ACCESS_KEY_ID;
+  delete process.env.AWS_SECRET_ACCESS_KEY;
   try {
     return fn();
   } finally {
@@ -202,8 +206,13 @@ test("a successful disposal archives first, records it, then deletes exactly wha
   process.env.AWS_REGION = "ap-southeast-1";
   process.env.AWS_BUCKET_NAME = "gems-audit-archive";
   /* The client refuses to be built without an endpoint rather than defaulting
-     to some provider's public host, so a successful archive needs one set. */
+     to some public host, so a successful archive needs one set. */
   process.env.STORAGE_ENDPOINT = "https://test.storage.supabase.co/storage/v1/s3";
+  /* lib/storage.js validates credential shape before building a client, so a
+     successful archive needs a well-formed key pair even though the S3 client
+     is stubbed and never signs anything. */
+  process.env.AWS_ACCESS_KEY_ID = "test000000000000000000000000000a";
+  process.env.AWS_SECRET_ACCESS_KEY = "s".repeat(64);
   let result;
   try {
     result = await applyRetention({ dryRun: false });
@@ -211,11 +220,13 @@ test("a successful disposal archives first, records it, then deletes exactly wha
     delete process.env.AWS_REGION;
     delete process.env.AWS_BUCKET_NAME;
     delete process.env.STORAGE_ENDPOINT;
+    delete process.env.AWS_ACCESS_KEY_ID;
+    delete process.env.AWS_SECRET_ACCESS_KEY;
   }
 
   assert.equal(result.disposed, 2);
 
-  /* 1. Everything deleted was archived — the archive is the record now. */
+  /* 1. Everything deleted was archived â€” the archive is the record now. */
   assert.equal(s3.__uploads.length, 1);
   const archivedLines = s3.__uploads[0].body.trim().split("\n").map((l) => JSON.parse(l));
   assert.deepEqual(
