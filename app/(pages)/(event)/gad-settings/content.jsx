@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import OfficesManager from "../components/offices/OfficesManager";
@@ -8,6 +8,11 @@ import useUniversityOffices from "@/lib/useUniversityOffices";
 import PositionsManager from "@/components/positions/PositionsManager";
 import useUniversityPositions from "@/lib/useUniversityPositions";
 import { pickResolvedAcademicYear } from "@/lib/academicYear";
+import {
+  SIGNATORY_SEED_YEARS,
+  getSignatories,
+  signatoryYearRows,
+} from "@/lib/signatories";
 import {
   FaSignInAlt,
   FaUserEdit,
@@ -67,6 +72,24 @@ const ACTION_CONFIG = {
   EVENT_UPDATE: { icon: <FaEdit />, color: "bg-yellow-100 text-yellow-600", label: "Event Updated" },
   CHANGE_PASSWORD: { icon: <FaEdit />, color: "bg-orange-100 text-orange-600", label: "Password Changed" },
 };
+
+/* A quiet label above a group of cards.
+ *
+ * The page carries four unrelated jobs — account security, the shared
+ * directory, the report signature block, and the activity log — and they used
+ * to sit in one flat column where a card's importance was implied only by its
+ * position in the file. A heading costs one line and states who the cards
+ * below it affect.
+ *
+ * Styled smaller and lighter than a card's own `h2` on purpose: the hierarchy
+ * reads group → card → content, never heading → heading. */
+function GroupHeading({ children }) {
+  return (
+    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+      {children}
+    </h3>
+  );
+}
 
 function ActivityIcon({ action }) {
   const cfg = ACTION_CONFIG[action] || { icon: <FaSignInAlt />, color: "bg-gray-100 text-gray-600" };
@@ -210,8 +233,21 @@ export default function Settings() {
      has rendered and flash it so the operator can see where they landed.
      The sections carry `scroll-mt-24` already, so only the allowlist below
      decides which hash is honoured — an unrecognised hash is ignored rather
-     than scrolled to. */
-  const DEEP_LINK_SECTIONS = ["offices", "positions"];
+     than scrolled to.
+
+     The group ids are listed too, so a link can target a whole group. Note the
+     `if (!target) return;` guard below is load-bearing: an id absent from this
+     list is silently ignored, so a hash that "does nothing" is usually a
+     missing entry here rather than a broken scroll. */
+  const DEEP_LINK_SECTIONS = [
+    "account",
+    "directory",
+    "report-output",
+    "activity",
+    "offices",
+    "positions",
+    "signatories",
+  ];
   const [highlightedSection, setHighlightedSection] = useState(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -244,26 +280,35 @@ export default function Settings() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/settings?key=report_signatories");
+        const res = await fetch("/api/settings?key=report_signatories", {
+          cache: "no-store",
+        });
         const data = await res.json();
         const value = data.success ? data.data?.value || {} : {};
+        /* Keep the STORED keys (`prepared_by` / `approved_by`) in state.
+           Renaming them here to `{ name, approved }` made the editor the only
+           consumer able to read its own state: `lib/signatories` looks for the
+           stored keys, so every reader that goes through it — the table first
+           among them — saw a well-formed entry with two blank slots and drew
+           "—" for names that were saved all along. One shape, read one way. */
         const years = {};
         for (const [year, entry] of Object.entries(value)) {
           if (!/^\d{4}-\d{4}$/.test(year)) continue;
-          const nameOf = (v) =>
-            typeof v === "string" ? v : String(v?.name || "");
           years[year] = {
-            name: nameOf(entry?.prepared_by),
-            approved: nameOf(entry?.approved_by),
+            prepared_by: entry?.prepared_by,
+            approved_by: entry?.approved_by,
           };
         }
         if (cancelled) return;
         setSigByYear(years);
-        const fallback =
-          Object.keys(years).sort((a, b) => b.localeCompare(a))[0] || "";
+        /* Newest year actually stored — a year nobody has configured is a bad
+           place to land the form, even though the table lists it. Rows are
+           newest-first, so the newest is the FIRST one, not the last. */
+        const fallback = signatoryYearRows(years, [])[0]?.year || "";
+        const initial = getSignatories(years, fallback);
         setSigYear(fallback);
-        setSigPreparedBy(years[fallback]?.name || "");
-        setSigApprovedBy(years[fallback]?.approved || "");
+        setSigPreparedBy(initial.prepared_by);
+        setSigApprovedBy(initial.approved_by);
       } catch (e) {
         console.error("Failed to fetch report signatories:", e);
       } finally {
@@ -324,12 +369,26 @@ export default function Settings() {
     };
   }, [sigQuery, sigOpenPicker]);
 
+  /* Every year the dropdown offers, newest first, with that year's printed
+     names. The union of the seed years and whatever is stored is computed here
+     once for BOTH the dropdown and the table below it, so the two can never
+     disagree about which years exist. Names come through `getSignatories`, the
+     same read path the PDF routes and the print components use, so the table
+     shows exactly what would print — middle name stripped, blank as "". */
+  const sigRows = useMemo(
+    () => signatoryYearRows(sigByYear, SIGNATORY_SEED_YEARS),
+    [sigByYear],
+  );
+
   /* Switching year loads that year's saved names, so editing one year never
-     silently overwrites another. */
+     silently overwrites another. Read through `getSignatories`, not by reaching
+     into the entry: the form and the table must agree about what a year holds,
+     and they only do if both ask the same function. */
   function selectSigYear(year) {
+    const { prepared_by, approved_by } = getSignatories(sigByYear, year);
     setSigYear(year);
-    setSigPreparedBy(sigByYear[year]?.name || "");
-    setSigApprovedBy(sigByYear[year]?.approved || "");
+    setSigPreparedBy(prepared_by);
+    setSigApprovedBy(approved_by);
     setSigOpenPicker("");
     setSigQuery("");
     setSigMessage(null);
@@ -551,13 +610,19 @@ export default function Settings() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Manage your account credentials, the university offices and their
-          positions, and your activity log
+          Your account security, the shared directory every report draws on, the
+          signature block those reports print, and your activity log
         </p>
       </div>
 
-      {/* Security Section */}
-      <section className="mb-8">
+      {/* Account security — yours alone. First because it is the one thing
+          people come here for under time pressure (a password they cannot
+          change blocks everything else). */}
+      <div id="account" className="mb-8 scroll-mt-24">
+        <GroupHeading>Account security</GroupHeading>
+
+        {/* Security Section */}
+        <section className="mb-0">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
@@ -629,6 +694,13 @@ export default function Settings() {
           </div>
         </div>
       </section>
+      </div>
+
+      {/* Shared directory — the org chart. Read by everyone, written by the
+          Focal Person. Stated in the heading because an office rename reaches
+          every later report, which is not obvious from the card alone. */}
+      <div id="directory" className="mb-8 scroll-mt-24">
+        <GroupHeading>Shared directory · every year, every report</GroupHeading>
 
       {/* Offices & Groups Section — the office list behind the
           "Office / Group" picker on the University Officials page. */}
@@ -676,12 +748,16 @@ export default function Settings() {
           />
         </div>
       </section>
+      </div>
 
-      {/* Report Signatories — the names printed on the GPB and the GAD-AR.
+      {/* Report output — the names that print on the GPB and GAD-AR.
           Hidden entirely for roles that may not edit: the API refuses their
-          writes, so showing a disabled form would only invite a 403. */}
+          writes, so showing a disabled form would only invite a 403. The whole
+          group goes, heading included, rather than leaving an empty label. */}
       {canEditSignatories && (
-        <section id="signatories" className="mb-8 scroll-mt-24">
+        <div id="report-output" className="mb-8 scroll-mt-24">
+          <GroupHeading>Report output · printed signature block</GroupHeading>
+          <section id="signatories" className="mb-0 scroll-mt-24">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-50">
               <div className="flex items-center gap-3">
@@ -705,36 +781,114 @@ export default function Settings() {
                   Loading signatories...
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
+                  {/* Every year at a glance, newest first. Read-only on
+                      purpose: editing stays in the form below, which keeps the
+                      directory picker and the "type any name" escape hatch.
+                      Edit only moves the form to that year and scrolls to it —
+                      there is one editor, not one per row, so a half-typed
+                      name can never be lost by opening a second row. */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Academic Year
-                    </label>
-                    <select
-                      value={sigYear}
-                      onChange={(e) => selectSigYear(e.target.value)}
-                      className="w-full sm:w-64 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
-                    >
-                      <option value="">Select Academic Year</option>
-                      {["2024-2025", "2025-2026", "2026-2027", "2027-2028", ...Object.keys(sigByYear)]
-                        .filter((y, i, arr) => y && arr.indexOf(y) === i)
-                        .sort((a, b) => b.localeCompare(a))
-                        .map((y) => (
-                          <option key={y} value={y}>
-                            {y}
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Configured years
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {sigRows.length} academic year{sigRows.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto rounded-lg border border-gray-100">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                          <tr>
+                            <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              Academic Year
+                            </th>
+                            <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              Prepared By
+                            </th>
+                            <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              Approved By
+                            </th>
+                            <th className="w-20 px-4 py-2.5" />
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {sigRows.map((row) => {
+                            /* The row being edited is tinted so the link between
+                               the table and the form below is visible without
+                               scrolling back up to read the dropdown. */
+                            const active = row.year === sigYear;
+                            return (
+                              <tr
+                                key={row.year}
+                                className={active ? "bg-secondary-50/50" : "hover:bg-gray-50"}
+                              >
+                                <td className={`px-4 py-2.5 whitespace-nowrap ${active ? "font-medium text-gray-900" : "text-gray-700"}`}>
+                                  {row.year}
+                                </td>
+                                {[row.prepared_by, row.approved_by].map((name, i) => (
+                                  <td key={i} className="px-4 py-2.5">
+                                    {name ? (
+                                      <span className="text-gray-900">{name}</span>
+                                    ) : (
+                                      /* Same meaning as the underscore rule the
+                                         reports print, in a form that reads as
+                                         "not set" rather than as a name. */
+                                      <span className="text-gray-400 italic">—</span>
+                                    )}
+                                  </td>
+                                ))}
+                                <td className="px-4 py-2.5 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      selectSigYear(row.year);
+                                      document
+                                        .getElementById("signatories-form")
+                                        ?.scrollIntoView({ block: "start", behavior: "smooth" });
+                                    }}
+                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
+                                  >
+                                    <FaEdit className="text-[10px]" />
+                                    Edit
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div id="signatories-form" className="space-y-4 scroll-mt-24">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Academic Year
+                      </label>
+                      <select
+                        value={sigYear}
+                        onChange={(e) => selectSigYear(e.target.value)}
+                        className="w-full sm:w-64 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                      >
+                        <option value="">Select Academic Year</option>
+                        {sigRows.map((row) => (
+                          <option key={row.year} value={row.year}>
+                            {row.year}
                           </option>
                         ))}
-                    </select>
-                  </div>
+                      </select>
+                    </div>
 
                   {[
                     { slot: "prepared_by", label: "Prepared By", role: "GAD Focal Point/Person", value: sigPreparedBy, setValue: setSigPreparedBy },
                     { slot: "approved_by", label: "Approved By", role: "University President", value: sigApprovedBy, setValue: setSigApprovedBy },
                   ].map((field) => (
-                    <div key={field.slot}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {field.label}
-                      </label>
+                      <div key={field.slot}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {field.label}
+                        </label>
                       {/* ONE control, not two. The box holds the name you will
                           save; typing in it also searches the directory, and the
                           matches appear directly beneath it. Picking a match just
@@ -809,59 +963,66 @@ export default function Settings() {
                           </div>
                         )}
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {field.role} — pick from the directory or just type a name.
-                      </p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {field.role} — pick from the directory or just type a name.
+                        </p>
+                      </div>
+                    ))}
+
+                    {sigMessage && (
+                      <div
+                        className={`p-3 rounded-lg text-sm ${
+                          sigMessage.type === "error"
+                            ? "bg-red-50 text-red-700 border border-red-100"
+                            : "bg-green-50 text-green-700 border border-green-100"
+                        }`}
+                      >
+                        {sigMessage.text}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500">
+                      Pick a person from the directory, or type a name for someone
+                      without a GEMS profile. A blank field prints an underscore
+                      rule. Names are stored per academic year, so an earlier GPB
+                      keeps the signatories in post then.
+                    </p>
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={saveReportSignatories}
+                        disabled={sigSaving}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
+                      >
+                        {sigSaving ? (
+                          <>
+                            <FaSpinner className="animate-spin text-xs" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaSave className="text-xs" />
+                            Save
+                          </>
+                        )}
+                      </button>
                     </div>
-                  ))}
-
-                  {sigMessage && (
-                    <div
-                      className={`p-3 rounded-lg text-sm ${
-                        sigMessage.type === "error"
-                          ? "bg-red-50 text-red-700 border border-red-100"
-                          : "bg-green-50 text-green-700 border border-green-100"
-                      }`}
-                    >
-                      {sigMessage.text}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500">
-                    Pick a person from the directory, or type a name for someone
-                    without a GEMS profile. A blank field prints an underscore
-                    rule. Names are stored per academic year, so an earlier GPB
-                    keeps the signatories in post then.
-                  </p>
-
-                  <div className="flex justify-end">
-                    <button
-                      onClick={saveReportSignatories}
-                      disabled={sigSaving}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
-                    >
-                      {sigSaving ? (
-                        <>
-                          <FaSpinner className="animate-spin text-xs" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <FaSave className="text-xs" />
-                          Save
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               )}
             </div>
           </div>
         </section>
+        </div>
       )}
 
-      {/* Activity Log Section */}
-      <section className="mb-8">
+      {/* Activity Log — the account's own audit trail. Last on purpose: it is
+          read after acting, not before, and it is the one card that grows
+          without limit (paginated), so putting it anywhere but the end would
+          push the configuration people came for below the fold. */}
+      <div id="activity" className="mb-8 scroll-mt-24">
+        <GroupHeading>Your activity</GroupHeading>
+        <section className="mb-0">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-50">
             <div className="flex items-center justify-between">
@@ -1051,7 +1212,8 @@ export default function Settings() {
             </div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* Password Change Modal */}
       {passwordModalOpen && (
