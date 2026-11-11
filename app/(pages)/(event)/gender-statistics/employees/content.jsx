@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaUserTie, FaLightbulb, FaFileDownload } from "react-icons/fa";
 import { AGE_GROUP_ORDER } from "../components/ageGroups";
 import { OFFICE_OPTIONS } from "@/lib/colleges";
@@ -83,8 +83,19 @@ function buildInsights(data) {
   return insights;
 }
 
+/* The page opens on the current academic year rather than every year, so the
+   headline figures describe the active term instead of a five-year rollup.
+   `BASELINE_EMPLOYEE_FILTERS` is what "Clear filters" restores, so clearing
+   returns to this default rather than to "All academic years". */
+const DEFAULT_EMPLOYEE_SCHOOL_YEAR = "2026-2027";
+
+const BASELINE_EMPLOYEE_FILTERS = {
+  ...EMPTY_EMPLOYEE_FILTERS,
+  schoolYear: [DEFAULT_EMPLOYEE_SCHOOL_YEAR],
+};
+
 export default function EmployeeGenderStatsContent() {
-  const [filters, setFilters] = useState(EMPTY_EMPLOYEE_FILTERS);
+  const [filters, setFilters] = useState(BASELINE_EMPLOYEE_FILTERS);
   const [useSample, setUseSample] = useState(true);
 
   const setFilter = (key) => (value) =>
@@ -174,7 +185,11 @@ export default function EmployeeGenderStatsContent() {
   const totals = activeData?.totals || { Female: 0, Male: 0, total: 0 };
   const insights = useMemo(() => buildInsights(activeData), [activeData]);
   const showContent = useSample || (!loading && !!data);
-  const filterCount = activeFilterCount(filters);
+  /* The default academic year is the page's resting state, not a filter the
+     reader applied, so it is subtracted out: "Clear filters" stays hidden on
+     load and counts only the dimensions the reader actually narrowed. */
+  const filterCount =
+    activeFilterCount(filters) - activeFilterCount(BASELINE_EMPLOYEE_FILTERS);
 
   /* Live profiles mostly have employment_information blank, so the API reports
      them under "Unspecified" â€” counted here for the coverage warning below. */
@@ -198,6 +213,20 @@ export default function EmployeeGenderStatsContent() {
      five sample years (2020-2021 to 2024-2025) and live mode lists none, since
      the employee API has no year dimension yet. */
   const schoolYearOptions = activeData?.schoolYears || [];
+
+  /* The default year only applies while the active dataset actually carries it.
+     Without this, a live response with no 2026-2027 rows (or a future rollover
+     to a new year) would leave the filter pointing at a value the dropdown
+     cannot show and the query cannot match - an empty page that looks broken. */
+  useEffect(() => {
+    if (schoolYearOptions.length === 0) return;
+    if (schoolYearOptions.includes(DEFAULT_EMPLOYEE_SCHOOL_YEAR)) return;
+    setFilters((prev) =>
+      (prev.schoolYear || []).includes(DEFAULT_EMPLOYEE_SCHOOL_YEAR)
+        ? { ...prev, schoolYear: [] }
+        : prev,
+    );
+  }, [schoolYearOptions.join(",")]);
 
   /* Printed on the quick-report PDFs so a filtered report is self-describing. */
   const filterSummary = useMemo(() => {
@@ -382,7 +411,7 @@ export default function EmployeeGenderStatsContent() {
           {filterCount > 0 && (
             <button
               type="button"
-              onClick={() => setFilters(EMPTY_EMPLOYEE_FILTERS)}
+              onClick={() => setFilters(BASELINE_EMPLOYEE_FILTERS)}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               Clear filters ({filterCount})
@@ -446,6 +475,12 @@ export default function EmployeeGenderStatsContent() {
                 height={320}
               />
               <YearGroupedBars
+                title="Personnel by Teaching Category"
+                perYear={perYear}
+                rowsOf={(s) => s.byTeaching}
+                nameKey="name"
+              />
+              <YearGroupedBars
                 title="Personnel by Category"
                 perYear={perYear}
                 rowsOf={(s) => s.byCategory}
@@ -489,6 +524,26 @@ export default function EmployeeGenderStatsContent() {
             <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
           </div>
 
+          {/* Teaching vs non-teaching is a two-bucket rollup of the three-way
+              Personnel Category below, so the two are kept apart by a heading:
+              the Faculty row appears in both with identical figures, and side
+              by side they read as a double count. */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Teaching vs Non-Teaching
+            </p>
+            <SexTable
+              title="Personnel by Teaching Category and Sex"
+              data={activeData.byTeaching || []}
+              nameKey="name"
+              nameHeader="Teaching Category"
+            />
+          </div>
+
+          <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Detailed Breakdown
+          </p>
+
           {Array.isArray(activeData.byCategory) &&
             activeData.byCategory.length > 0 && (
               <SexTable
@@ -514,10 +569,10 @@ export default function EmployeeGenderStatsContent() {
           {Array.isArray(activeData.byEmploymentStatus) &&
             activeData.byEmploymentStatus.length > 0 && (
               <SexTable
-                title="Personnel Type and Sex"
+                title="Personnel by Employment Type and Sex"
                 data={activeData.byEmploymentStatus}
                 nameKey="status"
-                nameHeader="Personnel Type"
+                nameHeader="Employment Type"
               />
             )}
 
@@ -548,6 +603,23 @@ export default function EmployeeGenderStatsContent() {
                 nameKey="age_group"
                 nameHeader="Age Group"
               />
+
+          {/* Civil status and religion are PII: the API returns them from the
+              vault, and the sample toggle returns the same row shape. Stacked
+              rather than side by side - religion has 9 rows and civil status 5,
+              so a two-column grid stretched the shorter card into whitespace. */}
+          <SexTable
+            title="Personnel by Civil Status and Sex"
+            data={activeData.civilData || []}
+            nameKey="name"
+            nameHeader="Civil Status"
+          />
+          <SexTable
+            title="Personnel by Religion and Sex"
+            data={activeData.religionData || []}
+            nameKey="name"
+            nameHeader="Religion"
+          />
 
           <SexTable
             title="Personnel by Appointment Status and Sex"

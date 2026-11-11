@@ -22,6 +22,15 @@ export const CATEGORY_ORDER = [
   "Job Order/Contractual",
 ];
 
+/* Teaching vs non-teaching: a two-bucket rollup of `personnelType`, which is
+   itself a three-way split. Shared by `computeEmployeeStats` and mirrored by
+   the live route in `byTeaching`, so the sample/live toggle cannot drift.
+   Mirrors the `personnel_type` filter vocabulary in LIVE_PERSONNEL_TYPES. */
+export const TEACHING_CATEGORY_ORDER = ["Faculty", "Non-Teaching Personnel"];
+
+export const teachingCategoryOf = (record) =>
+  record?.personnelType === "Faculty" ? "Faculty" : "Non-Teaching Personnel";
+
 export const POSITION_LEVEL_ORDER = [
   "University President",
   "Vice President",
@@ -306,6 +315,12 @@ export function computeEmployeeStats(records = [], allRecords = records) {
       "category",
       CATEGORY_ORDER,
     ).filter((row) => row.category !== "Unspecified"),
+    byTeaching: groupBy(
+      records,
+      teachingCategoryOf,
+      "name",
+      TEACHING_CATEGORY_ORDER,
+    ),
     byPositionLevel: groupBy(
       records,
       (r) => r.positionLevel,
@@ -336,6 +351,11 @@ export function computeEmployeeStats(records = [], allRecords = records) {
     byAcademicYear,
     schoolYears,
     byGenderIdentity: genderIdentityRows(records),
+    /* Civil status and religion are PII. The live route returns them from the
+       vault via `piiBreakdown`; this keeps the same row shape so the cards
+       render identically with the sample toggle on. */
+    civilData: groupBy(records, (r) => r.civilStatus, "name"),
+    religionData: groupBy(records, (r) => r.religion, "name"),
     demographics: DEMOGRAPHIC_ROWS.map((row) => {
       const counts = emptyCounts();
       records.forEach((record) => {

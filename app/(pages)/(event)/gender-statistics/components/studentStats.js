@@ -355,6 +355,11 @@ export function computeStudentStats(records = [], allRecords = records) {
       soloParentRow(records),
     ],
     byGenderIdentity: genderIdentityRows(records),
+    /* Civil status and religion are PII. The live route returns them from the
+       vault via `piiBreakdown`; this keeps the same row shape so the cards
+       render identically with the sample toggle on. */
+    civilData: groupBy(records, (r) => r.civilStatus, "name"),
+    religionData: groupBy(records, (r) => r.religion, "name"),
     byAcademicYear,
     schoolYears: sampleSchoolYears(allRecords),
     semesters: ["1st", "2nd", "Summer"].filter((s) => semesterSet.has(s)),

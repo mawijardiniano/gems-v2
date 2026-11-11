@@ -13,6 +13,7 @@ import {
   GenderIdentityDonut,
   StackedSexBar,
   StackedSexBarVertical,
+  SexTable,
   DemographicTable,
   useGenderStatsByYears,
   YearMultiSelect,
@@ -607,6 +608,23 @@ export default function StudentGenderStatsContent() {
                 data={activeData.byAgeGroup || []}
                 nameKey="age_group"
               />
+
+          {/* Civil status and religion are PII: the API returns them from the
+              vault, and the sample toggle returns the same row shape. Stacked
+              rather than side by side - religion has 9 rows and civil status 5,
+              so a two-column grid stretched the shorter card into whitespace. */}
+          <SexTable
+            title="Students by Civil Status and Sex"
+            data={activeData.civilData || []}
+            nameKey="name"
+            nameHeader="Civil Status"
+          />
+          <SexTable
+            title="Students by Religion and Sex"
+            data={activeData.religionData || []}
+            nameKey="name"
+            nameHeader="Religion"
+          />
 
           <StackedSexBar
             title="Students by College / Unit and Sex"

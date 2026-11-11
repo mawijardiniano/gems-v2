@@ -6,6 +6,7 @@ import { canViewPII, resolvePiiBatch, applyRowPii } from "@/lib/profileBroker";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import { AGE_GROUP_ORDER, ageGroupOf, parseListParam } from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
+import { TEACHING_CATEGORY_ORDER } from "@/app/(pages)/(event)/gender-statistics/components/employeeStats.js";
 
 const CACHE_TTL = 60 * 1000;
 
@@ -72,6 +73,24 @@ function toList(countsObj, nameKey) {
       pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
     }))
     .sort((a, b) => b.total - a.total);
+}
+
+/* Civil status and religion are PII, so they are absent from the GEMS document
+   once the legacy columns are stripped. `buildStats` is handed profiles that
+   have already been through `applyRowPii`, so both values are decrypted before
+   they arrive and counting them costs one more pass over the same array - no
+   extra vault read. Rows keep the same {name, Female, Male, Other, total}
+   shape the sample module produces, so the sample/live toggle cannot drift. */
+const PII_UNKNOWN = "Unknown";
+
+function piiBreakdown(profiles, read, sexOf) {
+  const counts = {};
+  profiles.forEach((p) => {
+    const key = read(p) || PII_UNKNOWN;
+    if (!counts[key]) counts[key] = emptyCounts();
+    addCounts(counts[key], sexOf(p));
+  });
+  return toList(counts, "name");
 }
 
 const STUDENT_TYPE_FILTERS = {
@@ -207,6 +226,7 @@ function buildStats(profiles, type) {
   let byStudentType = [];
   let byAppointment = [];
   let byEmploymentStatus = [];
+  let byTeaching = [];
 
   if (isStudent) {
     const programCounts = {};
@@ -273,6 +293,33 @@ function buildStats(profiles, type) {
       addCounts(statusCounts[key], sexOf(p));
     });
     byEmploymentStatus = toList(statusCounts, "status");
+
+    /* Teaching vs non-teaching: the same two-bucket rollup of
+       `employment_status` that `teachingCategoryOf` applies to the sample
+       records in employeeStats.js. `employment_status` is the field the
+       `personnel_type` filter queries, so both agree by construction. */
+    const teachingCounts = {};
+    profiles.forEach((p) => {
+      const key =
+        p?.affiliation?.employment_information?.employment_status === "Faculty"
+          ? "Faculty"
+          : "Non-Teaching Personnel";
+      if (!teachingCounts[key]) teachingCounts[key] = emptyCounts();
+      addCounts(teachingCounts[key], sexOf(p));
+    });
+    byTeaching = TEACHING_CATEGORY_ORDER.map((name) => {
+      const c = teachingCounts[name] || emptyCounts();
+      return {
+        name,
+        Female: c.Female || 0,
+        Male: c.Male || 0,
+        Other: c.Other || 0,
+        total: c.total || 0,
+        pctFemale: c.total
+          ? Math.round(((c.Female || 0) / c.total) * 1000) / 10
+          : 0,
+      };
+    });
   }
 
   const ageCounts = {};
@@ -311,9 +358,19 @@ function buildStats(profiles, type) {
     [isStudent ? "byCollege" : "byOffice"]: byGroup,
     ...(isStudent
       ? { byProgram, byLevel, byYearLevel, byStudentType }
-      : { byAppointment, byEmploymentStatus }),
+      : { byAppointment, byEmploymentStatus, byTeaching }),
     byGenderIdentity: genderIdentityRows(profiles),
     demographics: buildDemographics(profiles, sexOf),
+    civilData: piiBreakdown(
+      profiles,
+      (p) => p?.personal?.civil_status,
+      sexOf,
+    ),
+    religionData: piiBreakdown(
+      profiles,
+      (p) => p?.personal?.religion,
+      sexOf,
+    ),
   };
 }
 
