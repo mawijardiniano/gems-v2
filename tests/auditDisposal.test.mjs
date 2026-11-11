@@ -10,6 +10,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert";
+import { createHash } from "node:crypto";
 import { registerHooks } from "node:module";
 import { existsSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -143,9 +144,11 @@ function withoutS3(fn) {
   const saved = {
     AWS_REGION: process.env.AWS_REGION,
     AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
+    STORAGE_ENDPOINT: process.env.STORAGE_ENDPOINT,
   };
   delete process.env.AWS_REGION;
   delete process.env.AWS_BUCKET_NAME;
+  delete process.env.STORAGE_ENDPOINT;
   try {
     return fn();
   } finally {
@@ -198,12 +201,16 @@ test("a successful disposal archives first, records it, then deletes exactly wha
 
   process.env.AWS_REGION = "ap-southeast-1";
   process.env.AWS_BUCKET_NAME = "gems-audit-archive";
+  /* The client refuses to be built without an endpoint rather than defaulting
+     to some provider's public host, so a successful archive needs one set. */
+  process.env.STORAGE_ENDPOINT = "https://test.storage.supabase.co/storage/v1/s3";
   let result;
   try {
     result = await applyRetention({ dryRun: false });
   } finally {
     delete process.env.AWS_REGION;
     delete process.env.AWS_BUCKET_NAME;
+    delete process.env.STORAGE_ENDPOINT;
   }
 
   assert.equal(result.disposed, 2);
@@ -232,6 +239,23 @@ test("a successful disposal archives first, records it, then deletes exactly wha
   assert.equal(disposal.metadata.archive_key, s3.__uploads[0].key);
   assert.equal(disposal.metadata.archive_bucket, "gems-audit-archive");
   assert.equal(disposal.metadata.count, 2);
+
+  /* The store offers no object lock and no versioning, so the only evidence
+     that the archive object still holds what was written is this digest,
+     recorded in the chained audit entry at the time of the write. */
+  const expectedDigest = createHash("sha256").update(s3.__uploads[0].body).digest("hex");
+  assert.equal(
+    disposal.metadata.archive_sha256,
+    expectedDigest,
+    "the disposal must record the archive's hash",
+  );
+  assert.equal(
+    disposal.metadata.archive_bytes,
+    Buffer.byteLength(s3.__uploads[0].body),
+    "the disposal must record the archive's size",
+  );
+  assert.equal(result.archived.sha256, expectedDigest);
+
   assert.equal(
     disposal.metadata.disposed_through,
     expired[expired.length - 1].hash_self,
