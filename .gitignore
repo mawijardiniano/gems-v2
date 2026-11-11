@@ -1,4 +1,4 @@
-# Ignore scripts and data
+﻿# Ignore scripts and data
 app/scripts/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 app/data/
@@ -80,6 +80,14 @@ scripts/*
 # control. A file that matches neither stays local.
 !tests/audit*.test.mjs
 !tests/activityLog*.test.mjs
+
+# exception: storage env handling is the difference between a working
+# deployment and one that fails with a message that never mentions storage.
+# A trailing newline on a credential is signed into a request header, which
+# HTTP forbids, and the resulting TypeError names neither the variable nor
+# the cause. Kept for the same reason as the audit tests: a clone without
+# it has the hardening and none of the checks.
+!tests/storageEnv*.test.mjs
 !scripts/audit-retention.mjs
 data/sample-profiles.json
 
