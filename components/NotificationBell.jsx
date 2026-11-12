@@ -93,6 +93,15 @@ export default function NotificationBell() {
     await markRead(item._id);
     setOpen(false);
 
+    /* Events deep-link first: an event linked to a GPB carries a projectId, but
+       the recipient wants the event, not the plan. */
+    const eventId = item?.metadata?.event_id;
+
+    if (eventId) {
+      router.push(`/events-list/${eventId}`);
+      return;
+    }
+
     const year = item?.metadata?.year;
 
     if (year) {

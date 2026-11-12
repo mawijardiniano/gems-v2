@@ -22,6 +22,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EventCardSkeletonList } from "@/components/Skeleton";
+import { eventSpan, effectiveStatus, isEventOpen } from "@/lib/eventStatus";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -49,22 +50,19 @@ function formatDate(dateStr) {
 }
 
 function getEventDateSummary(event) {
-  const startDates = event.start_dates || [];
-  const endDates = event.end_dates || [];
+  /* eventSpan() owns the date resolution now: scalars first, legacy arrays as
+     the fallback, day-bounded. This used to read only the arrays. */
+  const { start, end } = eventSpan(event);
 
-  if (startDates.length === 0) return "No date";
+  if (start === null) return "No date";
 
-  const firstStart = formatDate(startDates[0]);
-  const lastEnd = endDates.length > 0 ? formatDate(endDates[endDates.length - 1]) : null;
+  const firstStart = formatDate(new Date(start));
+  const lastEnd = end !== null ? formatDate(new Date(end)) : null;
 
-  if (startDates.length === 1) {
-    if (lastEnd && lastEnd !== firstStart) {
-      return `${firstStart} - ${lastEnd}`;
-    }
-    return firstStart;
+  if (lastEnd && lastEnd !== firstStart) {
+    return `${firstStart} - ${lastEnd}`;
   }
-
-  return `${firstStart} - ${lastEnd || firstStart}`;
+  return firstStart;
 }
 
 function StatCard({ icon, label, value, color }) {
@@ -84,10 +82,10 @@ function StatCard({ icon, label, value, color }) {
 }
 
 function EventCard({ event, onClick, compact = false }) {
-  const eventDate = event.start_dates?.[0] || event.date;
-  const endDate = event.end_dates?.[event.end_dates?.length - 1] || null;
-  const isPast = eventDate ? new Date(endDate || eventDate).getTime() < Date.now() : false;
-  const isCancelled = event.status === "cancelled";
+  const span = eventSpan(event);
+  const eventDate = span.end ?? span.start;
+  const isPast = span.end !== null ? span.end < Date.now() : false;
+  const isCancelled = effectiveStatus(event) === "cancelled";
 
   return (
     <div
@@ -177,18 +175,15 @@ export default function DashboardContent({ profile, userId }) {
         setRegisteredIds(new Set(participated.map((evt) => evt._id)));
         setCreatedIds(new Set(created.map((evt) => evt._id)));
 
-        // Compute past events from participated: events whose end_date/start_dates are in the past, sorted newest first
+        // Past events: anything whose end has passed, newest first.
         const now = Date.now();
+        const endOf = (evt) => eventSpan(evt).end;
         const past = participated
           .filter((evt) => {
-            const end = evt.end_dates?.[evt.end_dates?.length - 1] || evt.start_dates?.[0] || evt.date;
-            return end && new Date(end).getTime() < now;
+            const end = endOf(evt);
+            return end !== null && end < now;
           })
-          .sort((a, b) => {
-            const aEnd = a.end_dates?.[a.end_dates?.length - 1] || a.start_dates?.[0] || a.date;
-            const bEnd = b.end_dates?.[b.end_dates?.length - 1] || b.start_dates?.[0] || b.date;
-            return new Date(bEnd).getTime() - new Date(aEnd).getTime();
-          })
+          .sort((a, b) => (endOf(b) ?? 0) - (endOf(a) ?? 0))
           .slice(0, 4);
         setPastEvents(past);
         setEventsLoading(false);
@@ -197,22 +192,17 @@ export default function DashboardContent({ profile, userId }) {
   }, [userId]);
 
   const isPast = (evt) => {
-    const end = evt.end_dates?.[evt.end_dates?.length - 1] || evt.start_dates?.[0] || evt.date;
-    if (!end) return false;
-    return new Date(end).getTime() < Date.now();
+    const end = eventSpan(evt).end;
+    return end !== null && end < Date.now();
   };
 
   const discoverEvents = useMemo(() => {
     return (allEvents || [])
-      .filter((evt) => evt.status !== "cancelled")
+      .filter((evt) => isEventOpen(evt))
       .filter((evt) => !isPast(evt))
       .filter((evt) => !registeredIds.has(evt._id))
       .filter((evt) => !createdIds.has(evt._id))
-      .sort(
-        (a, b) =>
-          new Date(a.start_dates?.[0] || a.date).getTime() -
-          new Date(b.start_dates?.[0] || b.date).getTime(),
-      )
+      .sort((a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0))
       .slice(0, 4);
   }, [allEvents, registeredIds, createdIds]);
 

@@ -12,8 +12,26 @@ import {
   eventYearFromDate,
   nextEventRefNumber,
 } from "@/lib/referenceNumber";
+import { EVENT_STATUSES } from "@/lib/eventStatus";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
+
+/* Hard ceiling on a single page, so ?limit=100000 cannot defeat pagination. */
+const MAX_PAGE_SIZE = 200;
+
+/* Keep in sync with the `type_of_activity` enum in models/event.js. */
+const EVENT_ACTIVITY_TYPES = [
+  "Academic",
+  "Administrative",
+  "GAD",
+  "Extension",
+  "Research",
+  "Students",
+  "Others",
+];
+
+/* Reuses the lifecycle module rather than repeating the list a third time. */
+const EVENT_STATUS_VALUES = EVENT_STATUSES.map((entry) => entry.value);
 
 const ALLOWED_CREATOR_ROLES = [
   "GAD Focal Person",
@@ -49,28 +67,121 @@ export async function GET(req) {
       }
     }
 
-    const filter = created_by ? { created_by } : {};
-    const cacheKey = `events:list:${created_by || "all"}`;
+    /* Filters are resolved on the server so the list page stops downloading
+       every event in the system and discarding most of it in the browser. The
+       old handler hydrated the whole collection (decrypting a vault identity per
+       row) for a page that renders a few dozen cards. */
+    const filter = {};
+    if (created_by) filter.created_by = created_by;
 
-    const events = await cacheOrSet(
+    const type = searchParams.get("type");
+    if (type) {
+      if (!EVENT_ACTIVITY_TYPES.includes(type)) {
+        return NextResponse.json(
+          { status: "error", message: `Unknown activity type: ${type}` },
+          { status: 400 },
+        );
+      }
+      filter.type_of_activity = type;
+    }
+
+    const statusFilter = searchParams.get("status");
+    if (statusFilter) {
+      const requested = statusFilter.split(",").map((s) => s.trim()).filter(Boolean);
+      if (requested.some((s) => !EVENT_STATUS_VALUES.includes(s))) {
+        return NextResponse.json(
+          { status: "error", message: `Unknown status: ${statusFilter}` },
+          { status: 400 },
+        );
+      }
+      filter.status = { $in: requested };
+    }
+
+    /* Year lives on the linked project, not the event, so it becomes an _id
+       lookup rather than a filter on this collection. */
+    const year = searchParams.get("year");
+    if (year) {
+      const yearNumber = Number(year);
+      if (!Number.isFinite(yearNumber)) {
+        return NextResponse.json(
+          { status: "error", message: "year must be a number" },
+          { status: 400 },
+        );
+      }
+      const projectIds = await Project.find({ year: yearNumber }).distinct("_id");
+      filter.project = { $in: projectIds };
+    }
+
+    const search = String(searchParams.get("q") || "").trim();
+    if (search) {
+      /* Escaped so a title containing a regex metacharacter cannot alter the
+         query. */
+      const safe = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(safe, "i");
+      filter.$or = [
+        { title: pattern },
+        { reference_number: pattern },
+        { venue: pattern },
+      ];
+    }
+
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const rawLimit = Number(searchParams.get("limit"));
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(Math.floor(rawLimit), MAX_PAGE_SIZE)
+        : 0;
+    const skip = limit ? (page - 1) * limit : 0;
+
+    /* The cache key must describe the query, not just the creator. Keying on
+       `created_by` alone let a type-filtered result be served to an unfiltered
+       request (and vice versa) for the whole TTL. */
+    const cacheKey = `events:list:${created_by || "all"}:${[
+      type || "",
+      statusFilter || "",
+      year || "",
+      search || "",
+      page,
+      limit,
+    ].join("|")}`;
+
+    const payload = await cacheOrSet(
       cacheKey,
       async () => {
-        const rows = await Event.find(filter)
+        const query = Event.find(filter)
+          .sort({ start_date: -1, createdAt: -1 })
+          .skip(skip);
+
+        /* An unbounded limit is only used by callers that genuinely need every
+           row (the calendar, the report builders). `?limit=` makes the list
+           page bounded. */
+        if (limit) query.limit(limit);
+
+        const rows = await query
           .populate({
             path: "created_by",
             ...USER_POPULATE_BASE,
           })
           .lean();
+
         /* The creator's name and birthday come from the vault now; without this
            the list renders blank names once the legacy columns are stripped.
            The role gate inside the hydrator decides who actually gets a
            decrypted identity. */
-        return hydrateUserPopulate(rows, user?.role);
+        const data = await hydrateUserPopulate(rows, user?.role);
+
+        const total = limit ? await Event.countDocuments(filter) : data.length;
+
+        return { data, total };
       },
       EVENTS_LIST_CACHE_TTL,
     );
 
-    return NextResponse.json({ status: "success", data: events });
+    return NextResponse.json({
+      status: "success",
+      data: payload.data,
+      meta: { page, limit: limit || payload.total, total: payload.total },
+    });
   } catch (error) {
     console.error("GET /api/events error:", error);
     return NextResponse.json(
@@ -204,10 +315,9 @@ export async function POST(req) {
       description,
       start_date: parsedStartDate,
       end_date: parsedEndDate,
-      // Legacy multi-date fields kept in sync during the transition
-      number_of_days: 1,
-      start_dates: [parsedStartDate],
-      end_dates: [parsedEndDate],
+      /* The legacy start_dates/end_dates/number_of_days fields are no longer
+         written. Every reader now asks eventSpan() in lib/eventStatus.js, which
+         falls back to the arrays for rows created before this change. */
       venue,
       type_of_activity,
       organizing_office_unit: officeUnits,

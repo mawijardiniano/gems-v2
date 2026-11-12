@@ -46,6 +46,19 @@ function InlineLegend({ data, colors }) {
   );
 }
 
+/* A series of only zeroes is not data. Charting it draws empty axes that read as
+   "everyone is missing" rather than "nothing recorded yet". */
+const hasValues = (data, total) =>
+  data.length > 0 && Number(total) > 0;
+
+function NoData() {
+  return (
+    <div className="flex h-[200px] items-center justify-center">
+      <NoData />
+    </div>
+  );
+}
+
 function ChartCard({ title, subtitle, total, height = 240, children }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -104,8 +117,8 @@ export function SexChart({ data }) {
 
   return (
     <ChartCard title="Sex Breakdown" subtitle="Distribution by sex at birth" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
+      {!hasValues(safeData, total) ? (
+        <NoData />
       ) : (
         <DonutChart data={safeData} />
       )}
@@ -119,8 +132,8 @@ export function StatusChart({ data }) {
 
   return (
     <ChartCard title="Status Breakdown" subtitle="Distribution by participant status" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
+      {!hasValues(safeData, total) ? (
+        <NoData />
       ) : (
         <DonutChart data={safeData} />
       )}
@@ -177,8 +190,8 @@ export function CollegeChart({ data }) {
 
   return (
     <ChartCard title="College" subtitle="Participants by college" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
+      {!hasValues(safeData, total) ? (
+        <NoData />
       ) : (
         <HorzBarChart data={safeData} height={280} yWidth={150} />
       )}
@@ -192,8 +205,8 @@ export function PerYearChart({ data }) {
 
   return (
     <ChartCard title="Per Year" subtitle="Participants by year level" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
+      {!hasValues(safeData, total) ? (
+        <NoData />
       ) : (
         <HorzBarChart data={safeData} height={280} yWidth={90} />
       )}
@@ -208,8 +221,8 @@ export function AgeChart({ data }) {
 
   return (
     <ChartCard title="Age Group" subtitle="Participants by age bracket" total={total}>
-      {safeData.length === 0 ? (
-        <p className="text-sm text-gray-400">No data available.</p>
+      {!hasValues(safeData, total) ? (
+        <NoData />
       ) : (
         <>
           <ResponsiveContainer width="100%" height={280}>

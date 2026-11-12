@@ -6,36 +6,15 @@ import mongoose from "mongoose";
 import { logActivity } from "@/lib/activityLog";
 import { cacheDelPrefix } from "@/lib/cache";
 import { optionalAuth } from "@/lib/auth";
+import { attendanceWindow } from "@/lib/eventStatus";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
 const PTYPE = ["Student", "Employee", "Stakeholder"];
 
-function windowOf(event) {
-  // Date-only events: attendance is open for the whole calendar day(s).
-  const dayStart = (d) => {
-    const t = new Date(d);
-    t.setHours(0, 0, 0, 0);
-    return t.getTime();
-  };
-  const dayEnd = (d) => {
-    const t = new Date(d);
-    t.setHours(23, 59, 59, 999);
-    return t.getTime();
-  };
-  const s = [
-    ...(event.start_date ? [dayStart(event.start_date)] : []),
-    ...(event.start_dates || []).filter(Boolean).map(dayStart),
-  ];
-  const e = [
-    ...(event.end_date ? [dayEnd(event.end_date)] : []),
-    ...(event.end_dates || []).filter(Boolean).map(dayEnd),
-  ];
-  return {
-    earliestStart: s.length ? Math.min(...s) : null,
-    latestEnd: e.length ? Math.max(...e) : null,
-  };
-}
+/* The open/close window comes from lib/eventStatus — this route used to carry
+   its own copy, subtly different from the one in the signed-in attendance route
+   and from the badge on the manage list. */
 
 /* UI sends program / year / section separately; combine into one sheet value. */
 function buildProgramYearSection(b) {
@@ -78,7 +57,7 @@ export async function POST(req) {
     if (event.status === "cancelled")
       return NextResponse.json({ message: "This event has been cancelled.", code: "EVENT_CANCELLED" }, { status: 400 });
     const now = Date.now();
-    const { earliestStart, latestEnd } = windowOf(event);
+    const { earliestStart, latestEnd } = attendanceWindow(event);
     if (earliestStart !== null && now < earliestStart)
       return NextResponse.json({ message: "Attendance is not yet open. The event has not started yet.", code: "EVENT_NOT_STARTED" }, { status: 400 });
     if (latestEnd !== null && now > latestEnd)

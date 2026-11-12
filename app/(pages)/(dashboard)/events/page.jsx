@@ -37,7 +37,6 @@ export default async function EventPage() {
     <EventContent
       createdEvents={data.createdEvents}
       participatedEvents={data.participatedEvents}
-      invitedEvents={data.invitedEvents}
     />
   );
 }

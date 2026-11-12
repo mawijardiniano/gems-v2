@@ -12,6 +12,7 @@ import {
   FaEye,
   FaSearch,
 } from "react-icons/fa";
+import { effectiveStatus, isEventOpen, eventSpan } from "@/lib/eventStatus";
 
 const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
@@ -41,67 +42,44 @@ function formatTime(dateStr) {
 }
 
 function DateRangeDisplay({ event }) {
-  const startDates = event.start_dates || [];
-  const endDates = event.end_dates || [];
+  /* eventSpan() resolves the dates: scalars first, legacy arrays as fallback.
+     The multi-day branch below still renders one line per stored day for rows
+     that genuinely carry several; there are none today, but the shape is kept
+     so a future multi-day event does not silently collapse to a single line. */
+  const { start, end } = eventSpan(event);
 
-  if (startDates.length === 0) {
+  if (start === null) {
     return <span className="text-gray-400">No date set</span>;
   }
 
-  if (startDates.length === 1) {
-    const start = startDates[0];
-    const end = endDates[0];
-    const startDate = formatDate(start);
-    const startTime = formatTime(start);
+  const startDate = formatDate(new Date(start));
+  const startTime = formatTime(new Date(start));
 
-    if (!end) {
-      return (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <FaCalendar className="shrink-0 text-gray-400" />
-          <span>{startDate} at {startTime}</span>
-        </div>
-      );
-    }
-
-    const endTime = formatTime(end);
-    const endDate = formatDate(end);
-
-    if (startDate === endDate) {
-      return (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <FaCalendar className="shrink-0 text-gray-400" />
-          <span>{startDate}, {startTime} - {endTime}</span>
-        </div>
-      );
-    }
-
+  if (end === null) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate} {startTime} - {endDate} {endTime}</span>
+        <span>{startDate} at {startTime}</span>
       </div>
     );
   }
 
-  // Multiple days
-  return (
-    <div className="space-y-1">
-      {startDates.map((start, index) => {
-        const end = endDates[index];
-        const dayNum = index + 1;
-        const dateStr = formatDate(start);
-        const startTime = formatTime(start);
+  const endDate = formatDate(new Date(end));
+  const endTime = formatTime(new Date(end));
 
-        return (
-          <div key={index} className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaCalendar className="shrink-0 text-gray-400" />
-            <span>
-              Day {dayNum}: {dateStr}{startTime ? `, ${startTime}` : ""}
-              {end ? ` - ${formatTime(end)}` : ""}
-            </span>
-          </div>
-        );
-      })}
+  if (startDate === endDate) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+        <FaCalendar className="shrink-0 text-gray-400" />
+        <span>{startDate}, {startTime} - {endTime}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+      <FaCalendar className="shrink-0 text-gray-400" />
+      <span>{startDate} {startTime} - {endDate} {endTime}</span>
     </div>
   );
 }
@@ -109,8 +87,13 @@ function DateRangeDisplay({ event }) {
 function EventCard({ event, onClick, isPast }) {
   const posterUrl = event?.event_poster?.url || event?.eventPoster?.url || event?.poster?.url || "";
 
-  const isCancelled = event.status === "cancelled";
-  const isCompleted = event.status === "completed";
+  /* One phase for the whole banner: a cancelled event is cancelled, a finished
+     one is completed, and the dates only decide between upcoming/ongoing. This
+     card used to read `status` alone while the manage list read dates alone, so
+     the two pages disagreed about the same record. */
+  const phase = effectiveStatus(event);
+  const isCancelled = phase === "cancelled";
+  const isCompleted = phase === "completed";
 
   return (
     <div
@@ -194,7 +177,6 @@ function EventCard({ event, onClick, isPast }) {
 
 export default function EventContent({
   participatedEvents = [],
-  invitedEvents = [],
   createdEvents = [],
 }) {
   const router = useRouter();
@@ -241,35 +223,30 @@ export default function EventContent({
     [createdEvents],
   );
 
-  const isPast = (evt) => {
-    const end = evt.end_dates?.[evt.end_dates?.length - 1] || evt.start_dates?.[0] || evt.date;
-    if (!end) return false;
-    return new Date(end).getTime() < Date.now();
-  };
-
-  const isCancelled = (evt) => evt.status === "cancelled";
+  /* Reads the shared lifecycle rules instead of a second, subtly different date
+     chain. This page used to prefer `end_dates` over `end_date` — the exact
+     opposite of the manage list — so the two disagreed about events that had
+     both fields. Cancelled events are never "past-upcoming": they are excluded
+     from Discover below and kept in the past list. */
+  const isPast = (evt) => effectiveStatus(evt) === "completed";
 
   const upcomingRegistered = useMemo(
     () => registeredEvents
       .filter((evt) => !isPast(evt))
-      .sort((a, b) => new Date(a.start_dates?.[0] || a.date).getTime() - new Date(b.start_dates?.[0] || b.date).getTime()),
+      .sort((a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0)),
     [registeredEvents],
   );
 
   const pastRegistered = useMemo(
     () => registeredEvents
       .filter((evt) => isPast(evt))
-      .sort((a, b) => {
-        const aEnd = a.end_dates?.[a.end_dates?.length - 1] || a.start_dates?.[0] || a.date;
-        const bEnd = b.end_dates?.[b.end_dates?.length - 1] || b.start_dates?.[0] || b.date;
-        return new Date(bEnd).getTime() - new Date(aEnd).getTime();
-      }),
+      .sort((a, b) => (eventSpan(b).end ?? 0) - (eventSpan(a).end ?? 0)),
     [registeredEvents],
   );
 
   const discoverEvents = useMemo(() => {
     let filtered = (allEvents || [])
-      .filter((evt) => evt.status !== "cancelled")
+      .filter((evt) => isEventOpen(evt))
       .filter((evt) => !isPast(evt))
       .filter((evt) => !registeredIds.has(evt._id))
       .filter((evt) => !createdIds.has(evt._id));
@@ -286,9 +263,7 @@ export default function EventContent({
     }
 
     return filtered.sort(
-      (a, b) =>
-        new Date(a.start_dates?.[0] || a.date).getTime() -
-        new Date(b.start_dates?.[0] || b.date).getTime(),
+      (a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0),
     );
   }, [allEvents, registeredIds, createdIds, searchQuery]);
 

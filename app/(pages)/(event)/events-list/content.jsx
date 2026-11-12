@@ -16,6 +16,7 @@ import {
   FaChevronDown,
   FaGlobeAsia,
 } from "react-icons/fa";
+import { eventPhaseStyle } from "@/lib/eventStatus";
 
 const ActivityTypeBadge = ({ type }) => {
   const colorMap = {
@@ -68,55 +69,25 @@ const ActivityTypeBadge = ({ type }) => {
   );
 };
 
+/* Phase comes from lib/eventStatus so this badge can never disagree with the
+   discover page or the attendance window. Before this, the badge read only the
+   dates and ignored `status`, so a cancelled event with a future date still
+   read "Upcoming" here while the discover page showed a red "Cancelled". */
 const EventStatusBadge = ({ event }) => {
-  const getStatus = () => {
-    let end =
-      event.end_date ||
-      (Array.isArray(event.end_dates)
-        ? event.end_dates[event.end_dates.length - 1]
-        : null) ||
-      event.start_date ||
-      event.date;
-    if (!end) return { label: "Unknown", classes: "bg-gray-100 text-gray-600" };
-
-    const now = new Date();
-    const endDate = new Date(end);
-
-    const start =
-      event.start_date ||
-      (Array.isArray(event.start_dates) ? event.start_dates[0] : null) ||
-      event.date;
-    const startDate = new Date(start);
-
-    if (endDate.getTime() < now.getTime()) {
-      return {
-        label: "Past",
-        classes: "bg-red-50 text-red-600 border border-red-200",
-      };
-    }
-    if (startDate.getTime() <= now.getTime() && endDate.getTime() >= now.getTime()) {
-      return {
-        label: "Ongoing",
-        classes: "bg-green-50 text-green-600 border border-green-200",
-      };
-    }
-    return {
-      label: "Upcoming",
-      classes: "bg-secondary-50 text-secondary-600 border border-secondary-200",
-    };
-  };
-
-  const status = getStatus();
+  const style = eventPhaseStyle(event);
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${status.classes}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${style.classes}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      {status.label}
+      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+      {style.label}
     </span>
   );
 };
+
+/* How many event cards one request returns. The API caps this server-side too. */
+const PAGE_SIZE = 60;
 
 const SkeletonCard = () => (
   <div className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse">
@@ -140,6 +111,8 @@ export default function EventsListContent() {
   const [error, setError] = useState("");
   const [activityType, setActivityType] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
 
   const activityTypes = [
     "Academic",
@@ -157,57 +130,78 @@ export default function EventsListContent() {
   };
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadProjects = async () => {
+      try {
+        const res = await axios.get("/api/project");
+        setProjects(res.data?.data || []);
+      } catch (err) {
+        setProjects([]);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  /* Filters are resolved by the API now. The page used to download every event
+     in the system (each with a decrypted creator identity) and throw almost all
+     of it away in `filteredEvents`. Re-runs whenever a filter changes, and the
+     AbortController drops a response that a newer filter has already replaced. */
+  useEffect(() => {
+    if (!userId) return;
+
+    const controller = new AbortController();
+
+    const loadEvents = async () => {
       try {
         setLoading(true);
-        const [eventsRes, projectsRes] = await Promise.all([
-          axios.get("/api/events"),
-          axios.get("/api/project"),
-        ]);
-        setEvents(eventsRes.data?.data || []);
-        setProjects(projectsRes.data?.data || []);
+        setError("");
+
+        const params = new URLSearchParams({
+          created_by: userId,
+          limit: String(PAGE_SIZE),
+          page: String(page),
+        });
+        if (activityType) params.set("type", activityType);
+        if (selectedYear) params.set("year", String(selectedYear));
+
+        const res = await axios.get(`/api/events?${params.toString()}`, {
+          signal: controller.signal,
+        });
+
+        setEvents(res.data?.data || []);
+        setTotal(res.data?.meta?.total ?? (res.data?.data || []).length);
       } catch (err) {
+        if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         setError(
           err.response?.data?.message || "Unable to load events. Please retry."
         );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
-    loadData();
-  }, []);
+    loadEvents();
+
+    return () => controller.abort();
+  }, [userId, activityType, selectedYear, page]);
+
+  /* A filter change can leave the view on a page that no longer exists — page 4
+     of a result that now has one page. Send the reader back to the top. */
+  useEffect(() => {
+    setPage(1);
+  }, [activityType, selectedYear]);
 
   const availableYears = useMemo(() => {
     const years = [...new Set(projects.map((p) => p.year))];
     return years.sort((a, b) => b - a);
   }, [projects]);
 
-  const filteredEvents = useMemo(() => {
-    return events.filter((evt) => {
-      const creatorId =
-        typeof evt.created_by === "object" && evt.created_by?._id
-          ? evt.created_by._id.toString()
-          : evt.created_by?.toString?.() || "";
+  /* The API applies the creator, type and year filters, so the response is
+     already what the organiser should see. This used to walk every event in the
+     system on the client and discard almost all of them. */
+  const filteredEvents = events;
 
-      const matchesCreator = userId ? creatorId === userId.toString() : true;
-
-      const matchesType =
-        !activityType ||
-        evt.type_of_activity?.toLowerCase() === activityType.toLowerCase();
-
-      let matchesYear = true;
-
-      if (selectedYear) {
-        const relatedProject = projects.find((p) => p._id === evt.project);
-        matchesYear =
-          relatedProject &&
-          Number(relatedProject.year) === Number(selectedYear);
-      }
-
-      return matchesCreator && matchesType && matchesYear;
-    });
-  }, [events, projects, activityType, selectedYear, userId]);
+  const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
 
   const formatRange = (evt) => {
     const start = evt.start_date || (evt.start_dates || [])[0];
@@ -338,7 +332,9 @@ export default function EventsListContent() {
             )}
 
             <span className="ml-auto text-sm text-gray-400">
-              {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
+              {total > filteredEvents.length
+                ? `Showing ${filteredEvents.length} of ${total} events`
+                : `${filteredEvents.length} event${filteredEvents.length !== 1 ? "s" : ""}`}
             </span>
           </div>
         </div>
@@ -456,6 +452,32 @@ export default function EventsListContent() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination. The API caps a page at PAGE_SIZE; without this the
+              reader could see "Showing 60 of 340" and never reach the other 280. */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || loading}
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-500">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages || loading}
+                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
           )}
         </section>

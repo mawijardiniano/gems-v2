@@ -55,19 +55,16 @@ export async function GET(req) {
       .sort(sort)
       .limit(limit);
 
-    const invitedEvents = await Event.find({
-      created_by: { $ne: user_id },
-      "attended_users.user_id": { $ne: user_id },
-    })
-      .sort(sort)
-      .limit(limit);
+    /* `invitedEvents` was removed: it matched every event the user had not
+       created and had not attended — a scan of the whole collection returning
+       events nobody invited them to, and no component ever rendered it. There is
+       no invitation concept in models/event.js to back such a list. */
 
     return NextResponse.json(
       {
         message: "User events fetched successfully",
         createdEvents,
         participatedEvents: attendedEvents,
-        invitedEvents,
       },
       { status: 200 },
     );

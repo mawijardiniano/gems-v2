@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Event from "@/models/event";
 import { cacheOrSet } from "@/lib/cache";
+import { effectiveStatus } from "@/lib/eventStatus";
 
 const UPCOMING_LIST_CACHE_TTL = 60 * 1000; // 60 seconds
 
@@ -30,11 +31,13 @@ export async function GET(req) {
           .lean();
 
         const now = Date.now();
+        /* Was `status:"active" AND end_date >= now`, which quietly depended on
+           `completed` never being written. Reading the phase directly keeps this
+           correct however the row is stored: cancelled events are excluded, and
+           a finished event drops out without anyone having to update it. */
         const upcoming = docs.filter((event) => {
-          const legacyEnds = event.end_dates || [];
-          const lastEnd =
-            event.end_date || legacyEnds[legacyEnds.length - 1];
-          return lastEnd ? new Date(lastEnd).getTime() >= now : false;
+          const phase = effectiveStatus(event, now);
+          return phase === "upcoming" || phase === "ongoing";
         });
 
         return limit ? upcoming.slice(0, limit) : upcoming;

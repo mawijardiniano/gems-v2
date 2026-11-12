@@ -216,13 +216,11 @@ export async function PUT(req, { params }) {
       event.set("reference_number", nextRef || null);
     }
 
-    if (body.start_date || body.end_date) {
-      const legacyStart = event.start_date || body.start_date;
-      const legacyEnd = event.end_date || body.end_date;
-      if (legacyStart) event.set("start_dates", [legacyStart]);
-      if (legacyEnd) event.set("end_dates", [legacyEnd]);
-      if (!event.number_of_days) event.set("number_of_days", 1);
-    }
+    /* The legacy start_dates/end_dates mirrors used to be rewritten here on
+       every edit. They are no longer maintained: eventSpan() in
+       lib/eventStatus.js reads the scalars first and falls back to the arrays
+       only for rows saved before the change. */
+
     event.updated_by = user._id;
 
     await event.save();

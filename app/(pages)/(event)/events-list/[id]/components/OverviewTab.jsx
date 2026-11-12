@@ -17,6 +17,21 @@ import {
 } from "react-icons/fa";
 import CheckboxDropdown from "./CheckboxDropdown";
 import { officeOptionList } from "@/lib/colleges";
+import { effectiveStatus, attendanceWindow, canTransition } from "@/lib/eventStatus";
+import CancelEventModal from "./CancelEventModal";
+
+/* Local to this card: the Overview only ever prints whole days, and the range
+   formatter in the parent returns React nodes rather than a string. */
+const formatDateOnly = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "an unknown date"
+    : date.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+};
 
 const EVENT_SOURCES = [
   {
@@ -54,6 +69,15 @@ export default function OverviewTab({
   deleteError,
   deleting,
   handleDeleteEvent,
+  showCancelModal,
+  setShowCancelModal,
+  cancelReason,
+  setCancelReason,
+  handleCancelEvent,
+  handleReinstateEvent,
+  cancelling,
+  reinstating,
+  cancelError,
   projects,
   formatForInput,
   formatRangeLines,
@@ -216,6 +240,73 @@ export default function OverviewTab({
     setIsEditing(false);
   };
 
+  /* Plain-language state of the QR window, from the same helper the attendance
+     APIs use — so what this banner says is exactly what a scanning guest gets. */
+
+  /* The danger-zone buttons are gated by the transition matrix, not by role or
+     by a hardcoded status comparison, so they appear exactly when the API would
+     accept the change.
+
+     `canTransition(s, s)` is true by design (re-applying the current value is a
+     harmless no-op), so asking the matrix "can this be cancelled?" answers true
+     for an already-cancelled event as well. That made `canCancel` win the
+     ternary below for every status and left the Reinstate button permanently
+     unreachable — an organiser saw "Cancel Event" on an event they had already
+     cancelled, with no way back. The stored phase decides *which* button to
+     show; the matrix only decides whether that button is legal. */
+  const isCancelled = effectiveStatus(event) === "cancelled";
+  const canCancel = !isCancelled && canTransition(event.status, "cancelled");
+  const canReinstate = canTransition(event.status, "active");
+
+  const checkInStatus = (() => {
+    const phase = effectiveStatus(event);
+    if (phase === "cancelled") {
+      return {
+        tone: "danger",
+        title: "Event cancelled",
+        detail: "Check-in is closed. No further attendance can be recorded.",
+        classes: "border-red-200 bg-red-50 text-red-700",
+      };
+    }
+    if (phase === "completed") {
+      return {
+        tone: "neutral",
+        title: "Event has ended",
+        detail: "The QR code has expired. Organisers can still add attendees manually.",
+        classes: "border-gray-200 bg-gray-50 text-gray-700",
+      };
+    }
+
+    const { earliestStart, latestEnd } = attendanceWindow(event);
+    const now = Date.now();
+
+    if (earliestStart !== null && now < earliestStart) {
+      return {
+        tone: "pending",
+        title: "Check-in not open yet",
+        detail: `Opens ${formatDateOnly(new Date(earliestStart))}. The QR code will not accept guests until then.`,
+        classes: "border-secondary-200 bg-secondary-50 text-secondary-700",
+      };
+    }
+    if (latestEnd !== null && now > latestEnd) {
+      return {
+        tone: "neutral",
+        title: "Check-in closed",
+        detail: `Closed ${formatDateOnly(new Date(latestEnd))}. Organisers can still add attendees manually.`,
+        classes: "border-gray-200 bg-gray-50 text-gray-700",
+      };
+    }
+    return {
+      tone: "open",
+      title: "Check-in is open",
+      detail:
+        latestEnd === null
+          ? "Guests can scan the QR code now."
+          : `Guests can scan the QR code until ${formatDateOnly(new Date(latestEnd))}.`,
+      classes: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    };
+  })();
+
   const metrics = [
     {
       label: "Date Range",
@@ -260,13 +351,37 @@ export default function OverviewTab({
       gradient: "from-secondary-600 to-secondary-400",
       iconBg: "bg-secondary-100",
       iconColor: "text-secondary-600",
-      /* QR check-ins waiting for organizer approval in the Attendance tab. */
+      /* QR check-ins waiting for organizer approval. This used to be a dead
+         number — the organiser could see 12 pending and had no way to reach
+         them from here. */
       value: pendingGuestCount || "\u2014",
+      action:
+        pendingGuestCount > 0
+          ? {
+              href: `/events-list/${eventId}?tab=attendance&validation=pending`,
+              label: "Review",
+            }
+          : null,
     },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Whether the QR code actually works right now. The window was already
+          enforced in two API routes but never shown here, so an organiser could
+          not tell if check-in was open until a guest failed. */}
+      {checkInStatus && checkInStatus.tone !== "neutral" && (
+        <div
+          className={`rounded-xl border p-4 flex items-start gap-3 ${checkInStatus.classes}`}
+        >
+          <FaQrcode className="mt-0.5 shrink-0" size={16} />
+          <div>
+            <p className="text-sm font-semibold">{checkInStatus.title}</p>
+            <p className="mt-0.5 text-sm opacity-80">{checkInStatus.detail}</p>
+          </div>
+        </div>
+      )}
+
       {isPast && (
         <div className="rounded-xl border border-secondary-200 bg-secondary-50 p-5 flex items-start gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-secondary-100 text-secondary-600">
@@ -363,6 +478,15 @@ export default function OverviewTab({
                         <div className="mt-2 text-2xl font-bold text-gray-900 leading-tight">
                           {m.value}
                         </div>
+                        {m.action && (
+                          <a
+                            href={m.action.href}
+                            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-secondary-600 hover:text-secondary-700"
+                          >
+                            {m.action.label}
+                            <FiExternalLink size={11} />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -780,6 +904,57 @@ export default function OverviewTab({
         </div>
       </div>
 
+      {/* ── Cancel / Reinstate ────────────────────────────────────── */}
+      {/* Driven by the lifecycle module rather than a role check, so the button
+          appears exactly when the API would accept the move. Before this there
+          was no way to cancel an event through any screen at all — the endpoint
+          existed and nothing called it. */}
+      {(canCancel || canReinstate) && (
+        <div className="rounded-xl border border-amber-100 bg-white p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <FiX size={18} />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">
+                  {isCancelled ? "Reinstate this event" : "Cancel this event"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {isCancelled
+                    ? "Reinstating puts the event back to active and reopens check-in."
+                    : "Cancelling stops check-in and hides the event from Discover. It can be reinstated later."}
+                </p>
+                {event.cancel_reason && (
+                  <p className="mt-1 text-xs text-gray-400">
+                    Cancelled because: {event.cancel_reason}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {canCancel ? (
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 shrink-0"
+                onClick={() => setShowCancelModal(true)}
+              >
+                <FiX size={13} />
+                Cancel Event
+              </button>
+            ) : (
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 shrink-0 disabled:opacity-50"
+                onClick={handleReinstateEvent}
+                disabled={reinstating}
+              >
+                <FiCheck size={13} />
+                {reinstating ? "Reinstating…" : "Reinstate"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Delete Event ──────────────────────────────────────────── */}
       <div className="rounded-xl border border-red-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -803,6 +978,17 @@ export default function OverviewTab({
           </button>
         </div>
       </div>
+
+      {/* ── Cancel Confirmation Modal ─────────────────────────────── */}
+      <CancelEventModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelEvent}
+        reason={cancelReason}
+        onReasonChange={setCancelReason}
+        loading={cancelling}
+        error={cancelError}
+      />
 
       {/* ── Delete Confirmation Modal ─────────────────────────────── */}
       {showDeleteModal && (

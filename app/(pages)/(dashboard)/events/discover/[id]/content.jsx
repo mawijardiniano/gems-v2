@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { eventSpan, attendanceWindow } from "@/lib/eventStatus";
 import { useParams, useRouter } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -43,33 +44,19 @@ export default function DiscoverEventContent() {
 
   const isPast = (evt) => {
     if (!evt) return false;
-    const endDates = Array.isArray(evt.end_dates)
-      ? evt.end_dates.filter(Boolean).map((d) => new Date(d).getTime())
-      : [];
-    const end = evt?.end_date || evt?.start_date || evt?.date;
-    const latestEnd =
-      endDates.length > 0
-        ? Math.max(...endDates)
-        : end
-          ? new Date(end).getTime()
-          : null;
-    if (latestEnd === null) return false;
-    return latestEnd < Date.now();
+    /* end is the latest instant the event occupies; null means no dates at all,
+       which is not "past". */
+    const end = eventSpan(evt).end;
+    return end !== null && end < Date.now();
   };
 
   const isAttendanceAllowed = (evt) => {
     if (!evt) return false;
+    /* This used to read only the legacy arrays, so once events stopped writing
+       them it would have reported "closed" for every new event. The shared
+       window reads scalars first. */
+    const { earliestStart, latestEnd } = attendanceWindow(evt);
     const now = Date.now();
-    const startDates = Array.isArray(evt.start_dates)
-      ? evt.start_dates.filter(Boolean).map((d) => new Date(d).getTime())
-      : [];
-    const endDates = Array.isArray(evt.end_dates)
-      ? evt.end_dates.filter(Boolean).map((d) => new Date(d).getTime())
-      : [];
-
-    const earliestStart =
-      startDates.length > 0 ? Math.min(...startDates) : null;
-    const latestEnd = endDates.length > 0 ? Math.max(...endDates) : null;
 
     if (earliestStart !== null && now < earliestStart) return false;
     if (latestEnd !== null && now > latestEnd) return false;
@@ -80,13 +67,31 @@ export default function DiscoverEventContent() {
     evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
 
   const formatRange = (evt) => {
-    let startDates = evt.start_dates || [];
-    let endDates = evt.end_dates || [];
+    /* One line per stored day, sourced from eventSpan so a single-date event
+       renders identically to before while a multi-date row still lists each
+       day. Keep the per-day readings straight from the raw arrays. */
+    const startDates = Array.isArray(evt.start_dates) ? evt.start_dates.filter(Boolean) : [];
+    const endDates = Array.isArray(evt.end_dates) ? evt.end_dates.filter(Boolean) : [];
+    const span = eventSpan(evt);
 
-    if (Array.isArray(startDates) && startDates.length > 0) {
-      return startDates.map((startDate, index) => {
+    /* No legacy arrays: fall back to the resolved span. */
+    const days =
+      startDates.length > 0
+        ? startDates
+        : span.start !== null
+          ? [new Date(span.start)]
+          : [];
+    const dayEnds =
+      startDates.length > 0
+        ? endDates
+        : span.end !== null
+          ? [new Date(span.end)]
+          : [];
+
+    if (days.length > 0) {
+      return days.map((startDate, index) => {
         const dayNumber = index + 1;
-        const endDate = endDates[index];
+        const endDate = dayEnds[index];
         const startStr = new Date(startDate).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",

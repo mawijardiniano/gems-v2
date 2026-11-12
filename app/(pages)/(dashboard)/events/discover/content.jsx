@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { eventSpan, effectiveStatus } from "@/lib/eventStatus";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -53,62 +54,40 @@ function formatTime(dateStr) {
 }
 
 function DateRangeDisplay({ event }) {
-  const startDates = event.start_dates || [];
-  const endDates = event.end_dates || [];
+  const { start, end } = eventSpan(event);
 
-  if (startDates.length === 0) {
+  if (start === null) {
     return <span className="text-gray-400 text-xs">No date set</span>;
   }
 
-  if (startDates.length === 1) {
-    const start = startDates[0];
-    const end = endDates[0];
-    const startDate = formatDate(start);
-    const startTime = formatTime(start);
+  const startDate = formatDate(new Date(start));
+  const startTime = formatTime(new Date(start));
 
-    if (!end) {
-      return (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <FaCalendar className="shrink-0 text-gray-400" />
-          <span>{startDate} at {startTime}</span>
-        </div>
-      );
-    }
-
-    const endTime = formatTime(end);
-    const endDate = formatDate(end);
-
-    if (startDate === endDate) {
-      return (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <FaCalendar className="shrink-0 text-gray-400" />
-          <span>{startDate}, {startTime} - {endTime}</span>
-        </div>
-      );
-    }
-
+  if (end === null) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate} {startTime} - {endDate} {endTime}</span>
+        <span>{startDate} at {startTime}</span>
+      </div>
+    );
+  }
+
+  const endDate = formatDate(new Date(end));
+  const endTime = formatTime(new Date(end));
+
+  if (startDate === endDate) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+        <FaCalendar className="shrink-0 text-gray-400" />
+        <span>{startDate}, {startTime} - {endTime}</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-0.5">
-      {startDates.map((start, index) => {
-        const end = endDates[index];
-        const dayNum = index + 1;
-        const dateStr = formatDate(start);
-        const startTime = formatTime(start);
-        return (
-          <div key={index} className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaCalendar className="shrink-0 text-gray-400" />
-            <span>Day {dayNum}: {dateStr}{startTime ? `, ${startTime}` : ""}{end ? ` - ${formatTime(end)}` : ""}</span>
-          </div>
-        );
-      })}
+    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+      <FaCalendar className="shrink-0 text-gray-400" />
+      <span>{startDate} {startTime} - {endDate} {endTime}</span>
     </div>
   );
 }
@@ -117,11 +96,11 @@ function EventCard({ event, onClick }) {
   const posterUrl = event?.event_poster?.url || event?.eventPoster?.url || event?.poster?.url || "";
 
   const isPast = (() => {
-    const end = event.end_dates?.[event.end_dates?.length - 1] || event.start_dates?.[0] || event.date;
-    return end ? new Date(end).getTime() < Date.now() : false;
+    const end = eventSpan(event).end;
+    return end !== null && end < Date.now();
   })();
 
-  const isCancelled = event.status === "cancelled";
+  const isCancelled = effectiveStatus(event) === "cancelled";
 
   return (
     <div
@@ -251,9 +230,7 @@ export default function DiscoverContent() {
     }
 
     return filtered.sort(
-      (a, b) =>
-        new Date(a.start_dates?.[0] || a.date).getTime() -
-        new Date(b.start_dates?.[0] || b.date).getTime(),
+      (a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0),
     );
   }, [allEvents, searchQuery, filterType]);
 

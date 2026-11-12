@@ -22,6 +22,11 @@ const NotificationSchema = new Schema(
            (see GPB_STATUS_NOTIFY_ROLES in lib/notifications.js) and the bell
            deep-links through metadata.year, since a GPB is not a Project. */
         "gpb_status_updated",
+        /* An event was cancelled, completed or reinstated. Recipients are
+           role-based (EVENT_STATUS_NOTIFY_ROLES in lib/notifications.js) and the
+           bell deep-links through metadata.event_id, because an event is not a
+           Project. */
+        "event_status_updated",
         "profile_missing_fields",
         "password_not_changed",
       ],

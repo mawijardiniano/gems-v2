@@ -28,6 +28,8 @@ export default function InsightTab({
   maleCount,
   femaleCount,
   avgAge,
+  ageSampleSize,
+  hasData,
   roleCounts,
   statusCounts,
   genderDataChart,
@@ -84,7 +86,15 @@ export default function InsightTab({
       gradient: "from-secondary-500 to-secondary-400",
       iconBg: "bg-secondary-100",
       iconColor: "text-secondary-600",
-      sub: avgAge == null ? "No age data" : "Years old",
+      /* Birthday-derived for account holders, self-reported for QR guests, so the
+         sample size is shown — a figure drawn from 3 of 40 people should not
+         read as if it covered everyone. */
+      sub:
+        avgAge == null
+          ? "No age data"
+          : ageSampleSize && attendedCount
+            ? `Years old · from ${ageSampleSize} of ${attendedCount}`
+            : "Years old",
     },
   ];
 
@@ -123,6 +133,25 @@ export default function InsightTab({
 
   return (
     <div className="space-y-6">
+      {/* A brand-new event has 0 attendance. The charts would happily draw a
+          donut of two zero slices and four zero-valued bars, which reads as
+          "everyone is missing" rather than "nobody has been recorded yet". */}
+      {hasData === false ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary-50 text-secondary-500">
+            <FiActivity className="text-xl" />
+          </div>
+          <p className="text-base font-semibold text-gray-900">
+            No attendance recorded yet
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+            Insights appear once participants check in. Share the event QR code
+            from the Overview tab, or encode attendees manually from the
+            Attendance tab.
+          </p>
+        </div>
+      ) : (
+        <>
       {/* Headline stats: Attended / Male / Female / Avg Age */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
         {headlineCards.map((card) => {
@@ -203,6 +232,8 @@ export default function InsightTab({
       <div className="grid grid-cols-1 gap-5">
         <PerYearChart data={perYearData} />
       </div>
+        </>
+      )}
     </div>
   );
 }

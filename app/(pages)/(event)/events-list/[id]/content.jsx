@@ -7,6 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/lib/colleges";
+import { computeInsights } from "@/lib/eventInsights";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -36,6 +37,11 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [baseUrl, setBaseUrl] = useState("");
   const [profileChecked, setProfileChecked] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const [reinstating, setReinstating] = useState(false);
+  const [cancelError, setCancelError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
@@ -60,11 +66,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
      re-fetched and every headcount / insight recomputes. */
   const [eventReloadKey, setEventReloadKey] = useState(0);
 
-  /* Always fetch every validation status into `guests` so the Attendance
-     table and every Insight number read the exact same records. The queue
-     filter is applied in the component instead of on the server: a server
-     side filter used to drop the row an organizer had just encoded, which
-     made Insights and Attendance disagree. */
+
   const loadGuests = async () => {
     if (!eventId) return;
     setGuestsLoading(true);
@@ -164,6 +166,57 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           details.programYearSection?.toLowerCase().includes(searchTerm)
         );
       });
+  };
+
+  /* Status changes go through the lifecycle endpoint, which now enforces the
+     transition matrix and requires a reason to cancel. Reuses eventReloadKey so
+     the badge, the Overview banner and the Insights refresh from one source. */
+  const handleCancelEvent = async () => {
+    if (!eventId || !cancelReason.trim()) return;
+
+    setCancelling(true);
+    setCancelError("");
+
+    try {
+      await axios.patch(`/api/events/${eventId}/status`, {
+        status: "cancelled",
+        cancelReason: cancelReason.trim(),
+      });
+
+      setShowCancelModal(false);
+      setCancelReason("");
+      setEventReloadKey((k) => k + 1);
+    } catch (err) {
+      /* Surfaces "A reason is required…" and "An event that is … cannot be
+         marked …" from the API rather than a generic failure. */
+      setCancelError(
+        err?.response?.data?.message || "Failed to cancel the event.",
+      );
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  /* Reinstating is the reverse move Phase 1 made legal. */
+  const handleReinstateEvent = async () => {
+    if (!eventId) return;
+
+    setReinstating(true);
+    setCancelError("");
+
+    try {
+      await axios.patch(`/api/events/${eventId}/status`, {
+        status: "active",
+        cancelReason: "",
+      });
+      setEventReloadKey((k) => k + 1);
+    } catch (err) {
+      setCancelError(
+        err?.response?.data?.message || "Failed to reinstate the event.",
+      );
+    } finally {
+      setReinstating(false);
+    }
   };
 
   const handleDeleteEvent = async () => {
@@ -539,128 +592,33 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     );
   }, [guests, checkinGuestRows]);
 
-/* Every insight below reads the same two sources: attendedProfiles
-   (users with accounts) + approvedGuests (QR check-ins). No filter —
-   the old All/Attended dropdown was a no-op. */
-  const roleCounts = useMemo(() => {
-    const counts = { Student: 0, Employee: 0, Stakeholder: 0, Unspecified: 0 };
-    attendedProfiles.forEach((p) => {
-      const status = p?.personal?.currentStatus;
-      if (status === "Student") counts.Student += 1;
-      else if (status === "Employee") counts.Employee += 1;
-      else counts.Unspecified += 1;
-    });
-    approvedGuests.forEach((g) => {
-      const type = g?.participant_type;
-      if (type === "Student") counts.Student += 1;
-      else if (type === "Employee") counts.Employee += 1;
-      else if (type === "Stakeholder") counts.Stakeholder += 1;
-      else counts.Unspecified += 1;
-    });
-    return counts;
-  }, [attendedProfiles, approvedGuests]);
+  /* Every insight reads the same two sources: attendedProfiles (users with
+     accounts) + approvedGuests (QR check-ins), de-duplicated above so one person
+     counts once. The arithmetic lives in lib/eventInsights so it can be tested —
+     it used to be ~160 lines of inline useMemo, which is how a stakeholder bucket,
+     a missing dependency, an `undefined` chart slice and a mixed-provenance
+     average all went unnoticed. */
+  const insights = useMemo(
+    () => computeInsights(attendedProfiles, approvedGuests),
+    [attendedProfiles, approvedGuests],
+  );
 
-  const genderData = useMemo(() => {
-    const counts = { Male: 0, Female: 0 };
-    attendedProfiles.forEach((p) => {
-      const g = p?.gadData?.sexAtBirth;
-      if (g && counts[g] !== undefined) counts[g] += 1;
-    });
-    approvedGuests.forEach((g) => {
-      const sex = g?.sex === "Male" || g?.sex === "Female" ? g.sex : null;
-      if (sex) counts[sex] += 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [attendedProfiles, approvedGuests]);
-  const genderDataChart = genderData;
+  const {
+    attendedCount,
+    maleCount,
+    femaleCount,
+    avgAge,
+    ageSampleSize,
+    roleCounts,
+    genderData: genderDataChart,
+    ageData,
+    collegeData,
+    perYearData,
+  } = insights;
 
-  const ageData = useMemo(() => {
-    const bins = {};
-    attendedProfiles.forEach((p) => {
-      const age = calculateAge(p?.personal?.birthday);
-      if (age === null || Number.isNaN(age)) return;
-      const bucket = Math.floor(age / 10) * 10;
-      const label = `${bucket}-${bucket + 9}`;
-      bins[label] = (bins[label] || 0) + 1;
-    });
-    approvedGuests.forEach((g) => {
-      const age = Number(g?.age);
-      if (!Number.isFinite(age) || age <= 0) return;
-      const bucket = Math.floor(age / 10) * 10;
-      const label = `${bucket}-${bucket + 9}`;
-      bins[label] = (bins[label] || 0) + 1;
-    });
-    return Object.keys(bins)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .map((age) => ({ name: age, value: bins[age] }));
-  }, [attendedProfiles, approvedGuests]);
-
-  const collegeData = useMemo(() => {
-    const counts = {};
-    attendedProfiles.forEach((p) => {
-      const departmentUnit =
-        p?.affiliation?.employment_information?.office ||
-        p?.affiliation?.academic_information?.college;
-      const college = departmentUnit;
-      counts[college] = (counts[college] || 0) + 1;
-    });
-    approvedGuests.forEach((g) => {
-      const college = String(g?.department_office_org || "").trim();
-      if (!college) return;
-      counts[college] = (counts[college] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, value]) => ({ name, value }));
-  }, [attendedProfiles, approvedGuests]);
-
-  const perYearData = useMemo(() => {
-    const counts = {};
-    attendedProfiles.forEach((p) => {
-      let year = p?.affiliation?.academic_information?.year_level;
-      if (!year || typeof year !== "string" || !year.trim()) return;
-      year = year.trim();
-      counts[year] = (counts[year] || 0) + 1;
-    });
-    /* Guest students store "Program Year Section" — take the first year token. */
-    approvedGuests.forEach((g) => {
-      if (g?.participant_type !== "Student") return;
-      const raw = String(g?.program_year_section || "");
-      const match = raw.match(
-        /\b([1-6](?:st|nd|rd|th)\s*Year|[1-6](?:st|nd|rd|th))\b/i,
-      );
-      if (!match) return;
-      const year = match[1].replace(/\s+/g, " ").trim();
-      counts[year] = (counts[year] || 0) + 1;
-    });
-
-    const yearOrder = [
-      "1st Year",
-      "2nd Year",
-      "3rd Year",
-      "4th Year",
-      "5th Year",
-      "6th Year",
-      "1st",
-      "2nd",
-      "3rd",
-      "4th",
-      "5th",
-      "6th",
-    ];
-    const getOrder = (label) => {
-      const idx = yearOrder.findIndex((y) =>
-        label.toLowerCase().startsWith(y.toLowerCase()),
-      );
-      if (idx !== -1) return idx;
-      const num = parseInt(label);
-      return Number.isNaN(num) ? 99 : num + 10;
-    };
-    return Object.entries(counts)
-      .filter(([name]) => name && name !== "null" && name !== "undefined")
-      .sort((a, b) => getOrder(a[0]) - getOrder(b[0]))
-      .map(([name, value]) => ({ name, value }));
-  }, [attendedProfiles]);
+  /* The donut reads 0/0 for a brand-new event; the tab uses this to show an
+     empty state instead of a chart made of two zero slices. */
+  const hasInsightData = attendedCount > 0;
 
   const statusCounts = useMemo(() => {
     const counts = {};
@@ -670,46 +628,23 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     });
     /* Approved guest check-ins join the breakdown by their participant type so
        Students, Employees and Stakeholders are all represented. */
-    (Array.isArray(guests) ? guests : [])
-      .filter((g) => !g?.validation_status || g.validation_status === "approved")
-      .forEach((g) => {
-        const status = g?.participant_type || "Unknown";
-        counts[status] = (counts[status] || 0) + 1;
-      });
+    approvedGuests.forEach((g) => {
+      const status = g?.participant_type || "Unknown";
+      counts[status] = (counts[status] || 0) + 1;
+    });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [attendedProfiles, guests]);
+  }, [attendedProfiles, approvedGuests]);
 
   const affiliationData = statusCounts;
 
-  const maleCount = genderData.find((d) => d.name === "Male")?.value || 0;
-  const femaleCount = genderData.find((d) => d.name === "Female")?.value || 0;
-  /* Strict validation: only approved guest check-ins count toward attendance.
-     Guest rows without a status (created before manual validation) count too.
-     `attendedProfiles` already excludes accounts the sheet covers, so a person
-     recorded by hand after scanning the QR is counted once, not twice. */
+  /* ReportTab wants the guest sheet size on its own, separate from the combined
+     headcount Insights reports. */
   const approvedGuestCount = approvedGuests.length;
-  const attendedCount = attendedProfiles.length + approvedGuestCount;
-
-  /* Mean age across every attended participant with a known age — profile
-     birthdays plus the age guests type into the QR form. */
-  const avgAge = useMemo(() => {
-    const ages = [];
-    attendedProfiles.forEach((p) => {
-      const age = calculateAge(p?.personal?.birthday);
-      if (age !== null && !Number.isNaN(age)) ages.push(age);
-    });
-    approvedGuests.forEach((g) => {
-      const age = Number(g?.age);
-      if (Number.isFinite(age) && age > 0) ages.push(age);
-    });
-    if (ages.length === 0) return null;
-    return Math.round((ages.reduce((s, a) => s + a, 0) / ages.length) * 10) / 10;
-  }, [attendedProfiles, approvedGuests]);
 
   const pendingGuestCount = (Array.isArray(guests) ? guests : []).filter(
     (g) => g?.validation_status === "pending",
   ).length;
-
+  
   const handleEditChange = (field, value) => {
     setEditData((prev) => ({ ...(prev || {}), [field]: value }));
   };
@@ -895,6 +830,15 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           deleteError={deleteError}
           deleting={deleting}
           handleDeleteEvent={handleDeleteEvent}
+          showCancelModal={showCancelModal}
+          setShowCancelModal={setShowCancelModal}
+          cancelReason={cancelReason}
+          setCancelReason={setCancelReason}
+          handleCancelEvent={handleCancelEvent}
+          handleReinstateEvent={handleReinstateEvent}
+          cancelling={cancelling}
+          reinstating={reinstating}
+          cancelError={cancelError}
           projects={projects}
           allEvents={allEvents}
           guests={attendanceGuests}
@@ -941,6 +885,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           maleCount={maleCount}
           femaleCount={femaleCount}
           avgAge={avgAge}
+          ageSampleSize={ageSampleSize}
+          hasData={hasInsightData}
           roleCounts={roleCounts}
           statusCounts={statusCounts}
           genderDataChart={genderDataChart}
