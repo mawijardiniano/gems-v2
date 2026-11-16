@@ -8,13 +8,24 @@ import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/lib/activityLog";
 import { requireAuth } from "@/lib/auth";
+import { canAccessGpb } from "@/lib/roleAccess";
 import { validateBudgetLink } from "@/lib/budgetLinking";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+
+    /* The /gpb page is gated by role in app/(pages)/(event)/layout.jsx; without
+       this the API handed the same plans, budgets and projects to every signed-in
+       user. Fail closed on an unknown role. */
+    if (!canAccessGpb(user?.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to view the GPB" },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 

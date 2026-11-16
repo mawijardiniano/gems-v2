@@ -7,14 +7,8 @@ import {
   getGpbStatusRecipientIds,
   normalizeRole,
 } from "@/lib/notifications";
-import { canSetGpbStatus } from "@/lib/gpbStatus";
+import { canSetGpbStatus, GPB_STATUS_ROLES } from "@/lib/gpbStatus";
 import {NextResponse} from "next/server"
-
-const GPB_STATUS_ROLES = [
-  "planning director",
-  "suc president",
-  "gad focal person",
-];
 
 
 export async function GET(req, { params }) {

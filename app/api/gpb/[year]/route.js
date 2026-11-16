@@ -9,13 +9,25 @@ import UserAuth from "@/models/user";
 import { logActivity } from "@/lib/activityLog";
  import { requireAuth } from "@/lib/auth";
 import { validateBudgetLink } from "@/lib/budgetLinking";
+import { canAccessGpb } from "@/lib/roleAccess";
 import { withGeneratedAccomplishment, hydrateProjectAttendanceSex } from "@/lib/accomplishmentSummary";
 import {NextResponse} from "next/server"
 
 
 export async function GET(req, { params }) {
-   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  const { error, status, user } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
+  /* Same gate as GET /api/gpb: this endpoint returns the fullest read of a plan
+     - every project, event, attendee and comment - so it may not be looser than
+     the page that shows it. Fails closed on a missing or unknown role. */
+  if (!canAccessGpb(user?.role)) {
+    return NextResponse.json(
+      { error: "You are not allowed to view the GPB" },
+      { status: 403 },
+    );
+  }
+
   await connectDB();
 
   const { year } = await params;
@@ -130,8 +142,20 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  const { error, status, user } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
+
+  /* Deleting a year removes the plan and its links outright, and there is no
+     soft-delete to fall back on, so it carries the same page gate as reading
+     one - the precedent set for destructive deletes across the API. */
+  if (!canAccessGpb(user?.role)) {
+    return NextResponse.json(
+      { error: "You are not allowed to delete the GPB" },
+      { status: 403 },
+    );
+  }
+
+
   await connectDB();
 
   const { year } = await params;
