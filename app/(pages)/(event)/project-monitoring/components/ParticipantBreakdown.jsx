@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { FaChartPie } from "react-icons/fa";
-import { getParticipantBreakdown } from "@/lib/accomplishmentSummary";
-import { aggregateIndicatorProgress } from "@/lib/performanceTracking";
+import { getParticipantBreakdown } from "@/data/lib/accomplishmentSummary";
+import { aggregateIndicatorProgress } from "@/data/lib/performanceTracking";
 import ParticipantTargetProgress from "./ParticipantTargetProgress";
 
 /* Fixed pixel size: ResponsiveContainer mis-measures inside flex rows and can both
@@ -48,10 +48,7 @@ const pct = (part, total) =>
 export default function ParticipantBreakdown({ project }) {
   const [tab, setTab] = useState("sex");
 
-  const breakdown = useMemo(
-    () => getParticipantBreakdown(project),
-    [project],
-  );
+  const breakdown = useMemo(() => getParticipantBreakdown(project), [project]);
 
   /* Target vs Actual comes from the project's Performance Indicator / Target. */
   const indicatorProgress = useMemo(

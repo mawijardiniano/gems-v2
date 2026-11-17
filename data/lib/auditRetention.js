@@ -23,8 +23,8 @@
  */
 import { createHash } from "node:crypto";
 import ActivityLog from "@/models/activity_log";
-import { logActivity } from "@/lib/activityLog";
-import { getS3Client } from "@/lib/storage";
+import { logActivity } from "@/data/lib/activityLog";
+import { getS3Client } from "@/data/lib/storage";
 
 export const DEFAULT_RETENTION_DAYS = 365 * 7;
 
@@ -117,7 +117,10 @@ function daysFromEnv(name, fallback) {
 }
 
 export function retentionPolicy() {
-  const longDays = daysFromEnv("AUDIT_RETENTION_DAYS_SECURITY", DEFAULT_RETENTION_DAYS);
+  const longDays = daysFromEnv(
+    "AUDIT_RETENTION_DAYS_SECURITY",
+    DEFAULT_RETENTION_DAYS,
+  );
   const shortDays = daysFromEnv("AUDIT_RETENTION_DAYS_ACTIVITY", longDays);
   return {
     security_days: longDays,
@@ -144,8 +147,14 @@ export function expiryFilter({ now = new Date() } = {}) {
       redacted: { $ne: true },
       severity: { $ne: "critical" },
       $or: [
-        { action: { $in: LONG_RETENTION_ACTIONS }, createdAt: { $lt: longCutoff } },
-        { action: { $nin: LONG_RETENTION_ACTIONS }, createdAt: { $lt: shortCutoff } },
+        {
+          action: { $in: LONG_RETENTION_ACTIONS },
+          createdAt: { $lt: longCutoff },
+        },
+        {
+          action: { $nin: LONG_RETENTION_ACTIONS },
+          createdAt: { $lt: shortCutoff },
+        },
       ],
     },
   };
@@ -216,7 +225,10 @@ function s3Config() {
 export async function archiveExpired({ now = new Date(), records }) {
   const config = s3Config();
   if (!config) {
-    return { archived: false, reason: "AWS_REGION or AWS_BUCKET_NAME is not set" };
+    return {
+      archived: false,
+      reason: "AWS_REGION or AWS_BUCKET_NAME is not set",
+    };
   }
 
   /* Imported lazily so the app and every other audit feature still work in a
@@ -239,7 +251,11 @@ export async function archiveExpired({ now = new Date(), records }) {
       Key: key,
       Body: body,
       ContentType: "application/x-ndjson",
-      Metadata: { "audit-archive": "true", "record-count": String(records.length), "content-sha256": digest },
+      Metadata: {
+        "audit-archive": "true",
+        "record-count": String(records.length),
+        "content-sha256": digest,
+      },
     }),
   );
 
@@ -269,7 +285,11 @@ export async function archiveExpired({ now = new Date(), records }) {
  * The disposal is itself recorded as an `AUDIT_RETENTION_DISPOSE` entry naming
  * the archive object, so the trail states where the removed material now lives.
  */
-export async function applyRetention({ now = new Date(), dryRun = true, batchSize = 5000 } = {}) {
+export async function applyRetention({
+  now = new Date(),
+  dryRun = true,
+  batchSize = 5000,
+} = {}) {
   const { policy, longCutoff, shortCutoff, filter } = expiryFilter({ now });
 
   if (dryRun) {
@@ -282,7 +302,12 @@ export async function applyRetention({ now = new Date(), dryRun = true, batchSiz
     .lean();
 
   if (records.length === 0) {
-    return { dryRun: false, disposed: 0, archived: null, reason: "nothing expired" };
+    return {
+      dryRun: false,
+      disposed: 0,
+      archived: null,
+      reason: "nothing expired",
+    };
   }
 
   const archive = await archiveExpired({ now, records });
@@ -316,9 +341,12 @@ export async function applyRetention({ now = new Date(), dryRun = true, batchSiz
     return {
       dryRun: false,
       disposed: 0,
-      archived: { key: archive.key, bucket: archive.bucket, count: archive.count },
-      blocking_reason:
-        `Refused to dispose: ${missing.length} record(s) did not appear in the archive object.`,
+      archived: {
+        key: archive.key,
+        bucket: archive.bucket,
+        count: archive.count,
+      },
+      blocking_reason: `Refused to dispose: ${missing.length} record(s) did not appear in the archive object.`,
     };
   }
 

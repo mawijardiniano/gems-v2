@@ -1,15 +1,15 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 
 export async function POST(req) {
   try {
     const { error, status, user } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+    if (error) return NextResponse.json({ error }, { status });
     await connectDB();
     const body = await req.json();
 
@@ -23,10 +23,7 @@ export async function POST(req) {
 
     const event = await Event.findById(event_id);
     if (!event) {
-      return NextResponse.json(
-        { message: "Event not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
     const existingReport = await AccomplishmentReport.findOne({ event_id });
@@ -64,17 +61,14 @@ export async function POST(req) {
 
     return NextResponse.json({ status: "success", data: report });
   } catch (err) {
-    return NextResponse.json(
-      { message: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }
 
 export async function GET(req) {
   try {
-     const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+    const { error, status } = await requireAuth(req);
+    if (error) return NextResponse.json({ error }, { status });
     await connectDB();
 
     const { searchParams } = new URL(req.url);
@@ -87,7 +81,10 @@ export async function GET(req) {
     }
 
     const reports = await AccomplishmentReport.find(query)
-      .populate("event_id", "title venue start_date end_date start_dates end_dates")
+      .populate(
+        "event_id",
+        "title venue start_date end_date start_dates end_dates",
+      )
       .sort({ createdAt: -1 });
 
     return NextResponse.json({
@@ -95,9 +92,6 @@ export async function GET(req) {
       data: reports,
     });
   } catch (err) {
-    return NextResponse.json(
-      { message: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }

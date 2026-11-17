@@ -1,26 +1,26 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
 import UserAuth from "@/models/user";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { findDuplicates } from "@/lib/duplicateDetection";
-import { normalizeRefNumber, nextRefNumber } from "@/lib/referenceNumber";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { findDuplicates } from "@/data/lib/duplicateDetection";
+import { normalizeRefNumber, nextRefNumber } from "@/data/lib/referenceNumber";
 import {
   PROJECT_EVENTS_POPULATE,
   withGeneratedAccomplishment,
   hydrateProjectAttendanceSex,
-} from "@/lib/accomplishmentSummary";
+} from "@/data/lib/accomplishmentSummary";
 import {
   NO_BUDGET_WARNING,
   OVER_BUDGET_WARNING,
   buildBudgetSummary,
-} from "@/lib/budgetLinking";
-import { deleteFileFromBucket } from "@/lib/delete";
-import { deleteEventCascade } from "@/lib/eventCascade";
+} from "@/data/lib/budgetLinking";
+import { deleteFileFromBucket } from "@/data/lib/delete";
+import { deleteEventCascade } from "@/data/lib/eventCascade";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -244,9 +244,15 @@ export async function POST(req) {
 
   let duplicateWarnings = [];
   try {
-    const existingProjects = await Project.find({ year, _id: { $ne: project._id } })
-      .select("gender_issue");
-    duplicateWarnings = findDuplicates(body.gender_issue, existingProjects, 0.7);
+    const existingProjects = await Project.find({
+      year,
+      _id: { $ne: project._id },
+    }).select("gender_issue");
+    duplicateWarnings = findDuplicates(
+      body.gender_issue,
+      existingProjects,
+      0.7,
+    );
   } catch (err) {
     console.error("Duplicate check error:", err);
   }
@@ -311,7 +317,11 @@ export async function DELETE(req) {
     description: `All GPB projects deleted (${result.deletedCount})`,
     resource_type: "project",
     severity: "critical",
-    metadata: { deletedCount: result.deletedCount, deletedEvents, deletedEvidenceFiles },
+    metadata: {
+      deletedCount: result.deletedCount,
+      deletedEvents,
+      deletedEvidenceFiles,
+    },
   });
 
   return Response.json({

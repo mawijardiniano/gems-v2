@@ -15,7 +15,7 @@ import {
   FaUsers,
   FaExclamationCircle,
 } from "react-icons/fa";
-import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/lib/colleges";
+import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 
 const EMPTY = {
   full_name: "",
@@ -152,7 +152,8 @@ export default function AttendContent() {
     if (!form.full_name.trim()) return setError("Full name is required.");
     if (!form.sex) return setError("Sex at birth is required.");
     if (!form.age || Number(form.age) < 1) return setError("Age is required.");
-    if (!form.participant_type) return setError("Participant type is required.");
+    if (!form.participant_type)
+      return setError("Participant type is required.");
     if (form.participant_type === "Student" && !form.program.trim())
       return setError("Program is required for students.");
     setSubmitting(true);
@@ -165,7 +166,10 @@ export default function AttendContent() {
         ...form,
         department_office_org: form.department_office_org.trim(),
         program_year_section: isStudent
-          ? [form.program, form.year, form.section].filter(Boolean).join(" ").trim()
+          ? [form.program, form.year, form.section]
+              .filter(Boolean)
+              .join(" ")
+              .trim()
           : "",
         program: isStudent ? form.program.trim() : "",
         year: isStudent ? form.year : "",
@@ -231,7 +235,11 @@ export default function AttendContent() {
           <div className="p-8">
             <div
               className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-                done.pending ? "bg-secondary-50" : done.already ? "bg-secondary-50" : "bg-emerald-50"
+                done.pending
+                  ? "bg-secondary-50"
+                  : done.already
+                    ? "bg-secondary-50"
+                    : "bg-emerald-50"
               }`}
             >
               {done.pending ? (
@@ -257,7 +265,8 @@ export default function AttendContent() {
                 : done.already
                   ? "You were already marked as attended for"
                   : "Your attendance has been recorded for"}{" "}
-              <span className="font-semibold text-gray-700">{event.title}</span>.
+              <span className="font-semibold text-gray-700">{event.title}</span>
+              .
             </p>
             {done.at && (
               <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
@@ -314,19 +323,28 @@ export default function AttendContent() {
               <div className="mt-3 space-y-1.5 text-sm text-white/85">
                 {eventDate && (
                   <p className="flex items-center gap-2">
-                    <FaCalendarAlt className="shrink-0 text-white/60" size={12} />
+                    <FaCalendarAlt
+                      className="shrink-0 text-white/60"
+                      size={12}
+                    />
                     <span>{formatDateTime(eventDate)}</span>
                   </p>
                 )}
                 {event.venue && (
                   <p className="flex items-center gap-2">
-                    <FaMapMarkerAlt className="shrink-0 text-white/60" size={12} />
+                    <FaMapMarkerAlt
+                      className="shrink-0 text-white/60"
+                      size={12}
+                    />
                     <span>{event.venue}</span>
                   </p>
                 )}
                 {offices && (
                   <p className="flex items-start gap-2">
-                    <FaBuilding className="mt-0.5 shrink-0 text-white/60" size={12} />
+                    <FaBuilding
+                      className="mt-0.5 shrink-0 text-white/60"
+                      size={12}
+                    />
                     <span>{offices}</span>
                   </p>
                 )}
@@ -334,7 +352,8 @@ export default function AttendContent() {
               {event.type_of_activity && (
                 <span
                   className={`badge mt-3 border bg-white/90 ${
-                    ACTIVITY_COLORS[event.type_of_activity] || ACTIVITY_COLORS.Others
+                    ACTIVITY_COLORS[event.type_of_activity] ||
+                    ACTIVITY_COLORS.Others
                   }`}
                 >
                   {event.type_of_activity}
@@ -485,7 +504,9 @@ export default function AttendContent() {
                           className="sr-only"
                         />
                         <Icon
-                          className={active ? "text-secondary-600" : "text-gray-400"}
+                          className={
+                            active ? "text-secondary-600" : "text-gray-400"
+                          }
                           size={16}
                         />
                         {label}
@@ -577,7 +598,9 @@ export default function AttendContent() {
                     name="position_designation"
                     className="input"
                     value={form.position_designation}
-                    onChange={(e) => set("position_designation", e.target.value)}
+                    onChange={(e) =>
+                      set("position_designation", e.target.value)
+                    }
                     placeholder="e.g. Instructor I"
                     aria-describedby="position_help"
                   />
@@ -607,7 +630,8 @@ export default function AttendContent() {
               )}
             </button>
             <p className="mt-3 text-center text-[11px] text-gray-400">
-              Your details are used only for this event&apos;s attendance report.
+              Your details are used only for this event&apos;s attendance
+              report.
             </p>
           </form>
         </div>

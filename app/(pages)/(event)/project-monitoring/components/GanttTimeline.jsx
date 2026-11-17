@@ -1,6 +1,10 @@
 "use client";
 
-import { TIMELINE_MONTHS, timelineLayout, timelineYears } from "@/lib/gantt";
+import {
+  TIMELINE_MONTHS,
+  timelineLayout,
+  timelineYears,
+} from "@/data/lib/gantt";
 
 const BAR_COLORS = [
   "bg-primary-400",

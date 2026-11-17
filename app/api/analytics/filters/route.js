@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
 
 const FILTERS_CACHE_TTL = 30 * 1000;
 
@@ -28,7 +28,6 @@ export async function GET(req) {
     const result = await cacheOrSet(
       "analytics:filters",
       async () => {
-
         const colleges = await Profile.distinct(
           "affiliation.academic_information.college",
         );
@@ -58,7 +57,9 @@ export async function GET(req) {
           "affiliation.employment_information.employment_appointment_status",
         );
 
-        const schoolYears = [...new Set(await ProfileTerm.distinct("school_year"))]
+        const schoolYears = [
+          ...new Set(await ProfileTerm.distinct("school_year")),
+        ]
           .filter(Boolean)
           .sort((a, b) => String(b).localeCompare(String(a)));
         const semesters = [...new Set(await ProfileTerm.distinct("semester"))]
@@ -69,7 +70,9 @@ export async function GET(req) {
           collegeOptions,
           academicCollegeOptions,
           officeOptions,
-          yearLevelOptions: yearLevels.filter(Boolean).sort((a, b) => String(a).localeCompare(String(b))),
+          yearLevelOptions: yearLevels
+            .filter(Boolean)
+            .sort((a, b) => String(a).localeCompare(String(b))),
           sexOptions: sexOptions.filter(Boolean),
           employmentStatuses: employmentStatuses.filter(Boolean),
           appointmentStatuses: appointmentStatuses.filter(Boolean),

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import jwt from "jsonwebtoken";
-import { logActivity } from "@/lib/activityLog";
-import { invalidateUserCache } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { invalidateUserCache } from "@/data/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -28,10 +28,7 @@ export async function PATCH(req, { params }) {
     const user = await UserAuth.findById(id);
 
     if (!user) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     const { action } = await req.json();
@@ -41,10 +38,7 @@ export async function PATCH(req, { params }) {
     } else if (action === "deactivate") {
       user.is_active = false;
     } else {
-      return NextResponse.json(
-        { message: "Invalid action" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Invalid action" }, { status: 400 });
     }
 
     await user.save();
@@ -67,7 +61,7 @@ export async function PATCH(req, { params }) {
   } catch (err) {
     return NextResponse.json(
       { message: "Server error", error: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

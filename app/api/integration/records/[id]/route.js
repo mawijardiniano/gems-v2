@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import StagingRecord from "@/models/stagingRecord";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import {
   buildIdentity,
   validateMappedPayload,
 } from "@/app/api/integration/_utils/mapping";
-import { logActivity, diffFields } from "@/lib/activityLog";
+import { logActivity, diffFields } from "@/data/lib/activityLog";
 
 /* Staging payloads contain the same personal data as the live profile, so the
    diff records *that* a field changed without copying its value into the log.
    The audit trail has weaker protection than the vault and must not become a
    second, unprotected copy of the roster. */
-const PERSONAL_PATH = /name|birth|sex|gender|address|contact|email|phone|mobile|citizen|religion|civil|disabilit|pwd|salary|tin|gsis|philhealth|pagibig|student_id|employee_id|account_number|password/i;
+const PERSONAL_PATH =
+  /name|birth|sex|gender|address|contact|email|phone|mobile|citizen|religion|civil|disabilit|pwd|salary|tin|gsis|philhealth|pagibig|student_id|employee_id|account_number|password/i;
 
 function personalKeys(payload, prefix = "") {
   const out = [];
@@ -102,7 +103,10 @@ export async function PATCH(req, { params }) {
       changes: diffFields(
         before.mapped_payload || {},
         record.mapped_payload || {},
-        Object.keys({ ...(before.mapped_payload || {}), ...(record.mapped_payload || {}) }),
+        Object.keys({
+          ...(before.mapped_payload || {}),
+          ...(record.mapped_payload || {}),
+        }),
         {
           /* Every personal key is withheld; the structural ones (school_year,
              semester) are recorded with their values. */

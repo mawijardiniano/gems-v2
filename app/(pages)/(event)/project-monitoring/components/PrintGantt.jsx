@@ -8,7 +8,7 @@ import {
   ganttRows,
   pickGanttYear,
   resolveAutoTable,
-} from "@/lib/ganttPdf";
+} from "@/data/lib/ganttPdf";
 
 /*
  * Downloadable Gantt chart (landscape A4 PDF) for a monitored project: the

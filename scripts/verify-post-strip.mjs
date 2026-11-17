@@ -32,10 +32,12 @@ const {
   maskEmail,
   calcAge,
   isVaultConfigured,
-} = await import("../lib/identityVault.js");
+} = await import("../data/lib/identityVault.js");
 
 await mongoose.connect(process.env.MONGODB_URI);
-const db = DB_NAME ? mongoose.connection.client.db(DB_NAME) : mongoose.connection.db;
+const db = DB_NAME
+  ? mongoose.connection.client.db(DB_NAME)
+  : mongoose.connection.db;
 const profiles = db.collection("gemsprofiles");
 const vault = db.collection("identityvaults");
 
@@ -68,14 +70,19 @@ for (const block of ["personal", "gadData", "contact"]) {
   const n = await profiles.countDocuments({ [block]: { $exists: true } });
   const ok = n === 0;
   if (!ok) failures++;
-  console.log(`  ${block.padEnd(10)} present on ${n} row(s)  ${ok ? "OK" : "FAIL"}`);
+  console.log(
+    `  ${block.padEnd(10)} present on ${n} row(s)  ${ok ? "OK" : "FAIL"}`,
+  );
 }
 console.log("");
 
 /* ---- 2. every row still resolves its identity ------------------------- */
 console.log("[post-strip] 2. identity resolves from the vault");
 const total = await profiles.countDocuments({});
-const sample = await profiles.find({ vaultRef: { $exists: true } }).limit(200).toArray();
+const sample = await profiles
+  .find({ vaultRef: { $exists: true } })
+  .limit(200)
+  .toArray();
 
 let resolved = 0;
 let withName = 0;
@@ -108,7 +115,9 @@ const maskedOk =
   !displayName.includes(first.first_name);
 if (!maskedOk) failures++;
 console.log(`  displayName masked : ${maskedOk ? "yes" : "no"}`);
-console.log(`  email masked       : ${maskEmail(first.email) || "(none on this row)"}`);
+console.log(
+  `  email masked       : ${maskEmail(first.email) || "(none on this row)"}`,
+);
 console.log(`  age computed       : ${calcAge(first.birthday) ?? "(none)"}`);
 console.log(`  ${maskedOk ? "OK" : "FAIL"}`);
 console.log("");
@@ -119,12 +128,12 @@ console.log("[post-strip] 4. reveal path rebuilds personal/gadData/contact");
    blocks the UI reads, so no component needed rewriting for the vault. This is
    what proves the shape survives even though the stored blocks are gone. */
 const revealOk =
-  first &&
-  typeof first.first_name === "string" &&
-  first.first_name.length > 0;
+  first && typeof first.first_name === "string" && first.first_name.length > 0;
 if (!revealOk) failures++;
 console.log(`  name from vault    : ${revealOk ? "present" : "MISSING"}`);
-console.log(`  personal.fields    : ${["first_name", "middle_name", "last_name"].filter((k) => first[k]).length}/3`);
+console.log(
+  `  personal.fields    : ${["first_name", "middle_name", "last_name"].filter((k) => first[k]).length}/3`,
+);
 console.log(`  ${revealOk ? "OK" : "FAIL"}`);
 console.log("");
 
@@ -138,24 +147,33 @@ if (withIndex !== total) failures++;
 
 /* Prove a real lookup works end to end: take a row's own name digests and
    confirm the index finds it back. This is the path registration uses. */
-const probe = sample.find((r) => Array.isArray(r.profileSearchIndex) && r.profileSearchIndex.length >= 2);
+const probe = sample.find(
+  (r) =>
+    Array.isArray(r.profileSearchIndex) && r.profileSearchIndex.length >= 2,
+);
 if (probe) {
   const p = await loadDecryptedPii(probe.vaultRef);
   const fn = blindIndex(p.first_name);
   const ln = blindIndex(p.last_name);
-  const found = await profiles.countDocuments({ profileSearchIndex: { $all: [fn, ln] } });
+  const found = await profiles.countDocuments({
+    profileSearchIndex: { $all: [fn, ln] },
+  });
   const dupOk = found >= 1;
   if (!dupOk) failures++;
-  console.log(`  name lookup matched ${found} row(s)  ${dupOk ? "OK" : "FAIL"}`);
+  console.log(
+    `  name lookup matched ${found} row(s)  ${dupOk ? "OK" : "FAIL"}`,
+  );
 } else {
   failures++;
   console.log("  no indexed row to probe  FAIL");
 }
 console.log("");
 
-console.log(failures === 0
-  ? "[post-strip] STATUS: OK - the app can serve identities from the vault alone"
-  : `[post-strip] STATUS: FAILED - ${failures} check(s) failed`);
+console.log(
+  failures === 0
+    ? "[post-strip] STATUS: OK - the app can serve identities from the vault alone"
+    : `[post-strip] STATUS: FAILED - ${failures} check(s) failed`,
+);
 
 await mongoose.disconnect();
 process.exit(failures === 0 ? 0 : 1);

@@ -1,14 +1,17 @@
 import jwt from "jsonwebtoken";
 import UserAuth from "@/models/user";
-import { rateLimiters } from "@/lib/rateLimit";
+import { rateLimiters } from "@/data/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function requireAdmin(req) {
-
   const rateLimitResult = await rateLimiters.integration(req);
   if (rateLimitResult.error) {
-    return { error: rateLimitResult.error, status: rateLimitResult.status, headers: rateLimitResult.headers };
+    return {
+      error: rateLimitResult.error,
+      status: rateLimitResult.status,
+      headers: rateLimitResult.headers,
+    };
   }
 
   const token = req.cookies.get("auth_token")?.value;
@@ -42,10 +45,13 @@ const INTEGRATION_ALLOWED_ROLES = ["Admin", "ICTU Director"];
  * which is responsible for data integration and manual uploads.
  */
 export async function requireIntegrationAccess(req) {
-
   const rateLimitResult = await rateLimiters.integration(req);
   if (rateLimitResult.error) {
-    return { error: rateLimitResult.error, status: rateLimitResult.status, headers: rateLimitResult.headers };
+    return {
+      error: rateLimitResult.error,
+      status: rateLimitResult.status,
+      headers: rateLimitResult.headers,
+    };
   }
 
   const token = req.cookies.get("auth_token")?.value;

@@ -4,7 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { FaDownload, FaEye, FaSyncAlt } from "react-icons/fa";
 import usePresidentOverview from "@/hooks/usePresidentOverview";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import { AnalyticsDashboardSkeleton } from "@/components/Skeleton";
 import {
   SampleDataNotice,
@@ -16,7 +16,17 @@ import GenderGlance from "./components/GenderGlance";
 import CollegeRanking from "./components/CollegeRanking";
 import EnrollmentTrend from "./components/EnrollmentTrend";
 
-function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefresh, refreshing, updatedAt, profileName, year }) {
+function HeaderBar({
+  useSample,
+  onToggleSample,
+  filters,
+  filtersLoading,
+  onRefresh,
+  refreshing,
+  updatedAt,
+  profileName,
+  year,
+}) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -32,8 +42,14 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
             {updatedAt ? ` · Updated ${updatedAt.toLocaleTimeString()}` : ""}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
-            <SampleToggle useSample={useSample} onToggle={onToggleSample} className="!px-2.5 !py-1.5 !text-xs" />
-            <span>Decide in 30 seconds — details live in the linked pages.</span>
+            <SampleToggle
+              useSample={useSample}
+              onToggle={onToggleSample}
+              className="!px-2.5 !py-1.5 !text-xs"
+            />
+            <span>
+              Decide in 30 seconds — details live in the linked pages.
+            </span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -42,12 +58,18 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
             <select
               value={filters.schoolYear}
               onChange={(e) => filters.setSchoolYear(e.target.value)}
-              disabled={filtersLoading || filters.schoolYearOptions.length === 0}
+              disabled={
+                filtersLoading || filters.schoolYearOptions.length === 0
+              }
               className="ml-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700"
             >
-              {filters.schoolYearOptions.length === 0 && <option value="">—</option>}
+              {filters.schoolYearOptions.length === 0 && (
+                <option value="">—</option>
+              )}
               {filters.schoolYearOptions.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
           </label>
@@ -61,7 +83,9 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
             >
               <option value="">All</option>
               {filters.semesterOptions.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </label>
@@ -98,10 +122,22 @@ function HeaderBar({ useSample, onToggleSample, filters, filtersLoading, onRefre
 
 function PresidentDashboardContent() {
   const { profile } = useMyProfile();
-  const { useSample, setUseSample, filters, filtersLoading, filtersReady, loading, extraError, overview, refresh, updatedAt } =
-    usePresidentOverview();
+  const {
+    useSample,
+    setUseSample,
+    filters,
+    filtersLoading,
+    filtersReady,
+    loading,
+    extraError,
+    overview,
+    refresh,
+    updatedAt,
+  } = usePresidentOverview();
   const profileName = profile?.personal
-    ? [profile.personal.first_name, profile.personal.last_name].filter(Boolean).join(" ")
+    ? [profile.personal.first_name, profile.personal.last_name]
+        .filter(Boolean)
+        .join(" ")
     : "";
   return (
     <div className="py-8 flex flex-col gap-4">
@@ -126,10 +162,19 @@ function PresidentDashboardContent() {
         <AnalyticsDashboardSkeleton />
       ) : (
         <>
-          <ExecutiveSnapshot snapshot={overview.snapshot} useSample={useSample} />
+          <ExecutiveSnapshot
+            snapshot={overview.snapshot}
+            useSample={useSample}
+          />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ComplianceTracker compliance={overview.compliance} useSample={useSample} />
-            <GenderGlance snapshot={overview.snapshot} parityGaps={overview.parityGaps} />
+            <ComplianceTracker
+              compliance={overview.compliance}
+              useSample={useSample}
+            />
+            <GenderGlance
+              snapshot={overview.snapshot}
+              parityGaps={overview.parityGaps}
+            />
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <CollegeRanking ranking={overview.collegeRanking} />
@@ -142,4 +187,3 @@ function PresidentDashboardContent() {
 }
 
 export default memo(PresidentDashboardContent);
-

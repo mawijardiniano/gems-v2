@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import Event from "@/models/event";
 import { jsPDF } from "jspdf";
@@ -15,7 +15,7 @@ import {
   drawReportTitle,
   fmtDate,
   toDate,
-} from "@/lib/reportQuarters";
+} from "@/data/lib/reportQuarters";
 
 const REPORT_CACHE_TTL = 60 * 1000;
 
@@ -123,8 +123,9 @@ function milestoneProgress(project) {
   const list = (
     Array.isArray(project?.milestones) ? project.milestones : []
   ).filter((milestone) => milestone && String(milestone.title || "").trim());
-  const completed = list.filter((milestone) => milestone.status === "completed")
-    .length;
+  const completed = list.filter(
+    (milestone) => milestone.status === "completed",
+  ).length;
   return {
     total: list.length,
     completed,
@@ -246,7 +247,11 @@ function drawSectionGroup(doc, { title, head, rows, columns, usableWidth, y }) {
 /* Projects & events status report: the projects section and the events section,
    each split into status sub-tables, filtered by the selected quarter. */
 function buildStatusReport({ projects, events, year, quarter }) {
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "legal" });
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "legal",
+  });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const usableWidth = pageWidth - 2 * M;
@@ -290,7 +295,8 @@ function buildStatusReport({ projects, events, year, quarter }) {
   const undatedEvents = eventRows.filter((row) => !row.date);
 
   const countProjects = (status) =>
-    scopedProjects.filter((row) => row.project.project_status === status).length;
+    scopedProjects.filter((row) => row.project.project_status === status)
+      .length;
   const countEvents = (status) =>
     scopedEvents.filter((row) => row.event.status === status).length;
 
@@ -351,7 +357,11 @@ function buildStatusReport({ projects, events, year, quarter }) {
       [
         {
           content: `PROJECTS — ${scopeLabel.toUpperCase()}`,
-          styles: { fontStyle: "bold", fontSize: 10, fillColor: [229, 231, 235] },
+          styles: {
+            fontStyle: "bold",
+            fontSize: 10,
+            fillColor: [229, 231, 235],
+          },
         },
       ],
     ],
@@ -404,7 +414,11 @@ function buildStatusReport({ projects, events, year, quarter }) {
       [
         {
           content: `EVENTS — ${scopeLabel.toUpperCase()}`,
-          styles: { fontStyle: "bold", fontSize: 10, fillColor: [229, 231, 235] },
+          styles: {
+            fontStyle: "bold",
+            fontSize: 10,
+            fillColor: [229, 231, 235],
+          },
         },
       ],
     ],
@@ -626,4 +640,3 @@ export async function GET(req) {
     );
   }
 }
-

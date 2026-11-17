@@ -1,10 +1,10 @@
 import User from "@/models/user";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
-import { SCOPED_ROLES } from "@/lib/colleges";
-import { logActivity } from "@/lib/activityLog";
+import { SCOPED_ROLES } from "@/data/lib/colleges";
+import { logActivity } from "@/data/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import { invalidateUserCache } from "@/lib/auth";
+import { invalidateUserCache } from "@/data/lib/auth";
 
 export async function GET(req, { params }) {
   try {

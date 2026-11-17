@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
@@ -80,10 +80,11 @@ export default function Sidebar({ open, setOpen, role }) {
 
   const isActive = useCallback(
     (href) => {
-      if (href === "/planning-director/dashboard") return pathname === "/planning-director/dashboard";
+      if (href === "/planning-director/dashboard")
+        return pathname === "/planning-director/dashboard";
       return pathname?.startsWith(href);
     },
-    [pathname]
+    [pathname],
   );
 
   const getInitials = useCallback(() => {
@@ -102,9 +103,10 @@ export default function Sidebar({ open, setOpen, role }) {
     return user?.username || "Planning Director";
   }, [profile, user]);
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   return (
     <>
@@ -219,7 +221,11 @@ export default function Sidebar({ open, setOpen, role }) {
           {links.map((link) => {
             const linkActive = isActive(link.href);
             return (
-              <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
+              <TooltipWrapper
+                key={link.key}
+                label={link.name}
+                collapsed={!open}
+              >
                 <Link
                   href={link.href}
                   onClick={handleMobileClose}

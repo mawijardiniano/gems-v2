@@ -1,13 +1,13 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Position from "@/models/position";
 import ActivityLog from "@/models/activity_log";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 import {
   seatHistoryPipeline,
   toHistoryEntry,
   academicYearsFromTermStarts,
-} from "@/lib/officialsTermsQuery";
+} from "@/data/lib/officialsTermsQuery";
 
 /**
  * GET /api/university-officials/history?header=&name=
@@ -59,7 +59,9 @@ export async function GET(req) {
     await Position.exists({ header: seat.header, name: seat.name }),
   );
 
-  const rows = pipeline ? await ActivityLog.db.collection("positions").aggregate(pipeline).toArray() : [];
+  const rows = pipeline
+    ? await ActivityLog.db.collection("positions").aggregate(pipeline).toArray()
+    : [];
   const trail = rows.map(toHistoryEntry).filter(Boolean);
 
   /* Mid-year reassigns recorded by the write path. A term's dates show the
@@ -99,4 +101,3 @@ export async function GET(req) {
     },
   });
 }
-

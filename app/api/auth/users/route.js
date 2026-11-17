@@ -1,9 +1,9 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
-import { logActivity } from "@/lib/activityLog";
+import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
+import { logActivity } from "@/data/lib/activityLog";
 
 const USERS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -29,7 +29,7 @@ export async function GET(req) {
     console.error("GET /api/users error:", error);
     return Response.json(
       { status: "error", message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -91,7 +91,7 @@ export async function DELETE(req) {
     console.error("Error deleting all profiles:", error);
     return NextResponse.json(
       { status: "error", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

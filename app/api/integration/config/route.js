@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
 const SENSITIVE_HEADER_KEYS = [
@@ -79,7 +79,8 @@ export async function PUT(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const endpoint = typeof body.endpoint === "string" ? body.endpoint.trim() : "";
+    const endpoint =
+      typeof body.endpoint === "string" ? body.endpoint.trim() : "";
     const headers =
       body.headers && typeof body.headers === "object" ? body.headers : {};
 

@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { storageEnv, storageConfigProblem, storageBucket } from "../lib/storage.js";
+import {
+  storageEnv,
+  storageConfigProblem,
+  storageBucket,
+} from "../data/lib/storage.js";
 
 /* A hosted dashboard stores the value it was given, while .env parsing
  * trims and unquotes. That difference is not academic: a trailing newline
@@ -30,7 +34,11 @@ test("a value with a trailing newline is read as the value without it", () => {
   env.AWS_ACCESS_KEY_ID = KEY + NL;
   assert.equal(storageEnv("AWS_ACCESS_KEY_ID", env), KEY);
   assert.equal(storageEnv("AWS_ACCESS_KEY_ID", env).length, 32);
-  assert.equal(storageConfigProblem(env), null, "a trailing newline must not block startup");
+  assert.equal(
+    storageConfigProblem(env),
+    null,
+    "a trailing newline must not block startup",
+  );
 });
 
 test("a trailing carriage return and space are stripped too", () => {
@@ -55,10 +63,20 @@ test("an interior newline is reported by variable name", () => {
 });
 
 test("each required variable is named when it is missing", () => {
-  for (const name of ["STORAGE_ENDPOINT", "AWS_REGION", "AWS_BUCKET_NAME", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]) {
+  for (const name of [
+    "STORAGE_ENDPOINT",
+    "AWS_REGION",
+    "AWS_BUCKET_NAME",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+  ]) {
     const env = good();
     delete env[name];
-    assert.match(storageConfigProblem(env), new RegExp(name), `${name} must be named`);
+    assert.match(
+      storageConfigProblem(env),
+      new RegExp(name),
+      `${name} must be named`,
+    );
   }
 });
 
@@ -69,5 +87,9 @@ test("an endpoint without a scheme is rejected", () => {
 });
 
 test("the documented five variables are the ones checked", () => {
-  assert.equal(storageConfigProblem(good()), null, "a complete config must be accepted");
+  assert.equal(
+    storageConfigProblem(good()),
+    null,
+    "a complete config must be accepted",
+  );
 });

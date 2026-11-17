@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FaCheck, FaTextHeight } from "react-icons/fa";
 
-import { textScaleTriggerLabel } from "@/lib/textScale";
+import { textScaleTriggerLabel } from "@/data/lib/textScale";
 
 /**
  * App-wide text-size control: Standard 100% / Large 112.5% / Larger 125% /

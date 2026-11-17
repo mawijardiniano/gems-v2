@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
-import { logActivity } from "@/lib/activityLog";
-import { rateLimiters } from "@/lib/rateLimit";
-import { invalidateUserCache } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { invalidateUserCache } from "@/data/lib/auth";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,7 +15,7 @@ export async function POST(req) {
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 

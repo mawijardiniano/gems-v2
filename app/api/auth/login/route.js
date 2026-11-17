@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 import Notification from "@/models/notification";
-import { rateLimiters } from "@/lib/rateLimit";
-import { usernameEqualsFilter } from "@/lib/usernames";
-import { resolvePii } from "@/lib/profileBroker";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { usernameEqualsFilter } from "@/data/lib/usernames";
+import { resolvePii } from "@/data/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -15,12 +15,11 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
 export async function POST(req) {
   try {
-
     const rateLimitResult = await rateLimiters.login(req);
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 
@@ -28,10 +27,14 @@ export async function POST(req) {
     const { username, password } = await req.json();
 
     const loginUsername = String(username || "").trim();
-    let user = await UserAuth.findOne({ username: loginUsername }).select("+password");
+    let user = await UserAuth.findOne({ username: loginUsername }).select(
+      "+password",
+    );
     // Fallback so pre-normalization logins (e.g. 24b0128) still work after fix (24B0128).
     if (!user && loginUsername) {
-      user = await UserAuth.findOne(usernameEqualsFilter(loginUsername)).select("+password");
+      user = await UserAuth.findOne(usernameEqualsFilter(loginUsername)).select(
+        "+password",
+      );
     }
 
     if (!user) {
@@ -48,7 +51,11 @@ export async function POST(req) {
         resource_type: "user",
         module: "auth",
         severity: "warning",
-        outcome: { result: "failure", status_code: 401, error_code: "INVALID_CREDENTIALS" },
+        outcome: {
+          result: "failure",
+          status_code: 401,
+          error_code: "INVALID_CREDENTIALS",
+        },
       });
 
       return NextResponse.json(
@@ -64,7 +71,12 @@ export async function POST(req) {
 
       await logActivity({
         user_id: user._id,
-        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
+        actor: {
+          user_id: user._id,
+          username: user.username,
+          role: user.role,
+          auth_method: "none",
+        },
         action: "LOGIN_FAILED",
         description: `Login blocked - account locked for ${lockTimeRemaining} minutes`,
         req,
@@ -73,7 +85,11 @@ export async function POST(req) {
         resource_id: user._id,
         module: "auth",
         severity: "warning",
-        outcome: { result: "failure", status_code: 429, error_code: "ACCOUNT_LOCKED" },
+        outcome: {
+          result: "failure",
+          status_code: 429,
+          error_code: "ACCOUNT_LOCKED",
+        },
       });
 
       return NextResponse.json(
@@ -87,7 +103,12 @@ export async function POST(req) {
     if (user.is_active === false) {
       await logActivity({
         user_id: user._id,
-        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
+        actor: {
+          user_id: user._id,
+          username: user.username,
+          role: user.role,
+          auth_method: "none",
+        },
         action: "LOGIN_FAILED",
         description: "Login blocked - account deactivated",
         req,
@@ -96,7 +117,11 @@ export async function POST(req) {
         resource_id: user._id,
         module: "auth",
         severity: "warning",
-        outcome: { result: "failure", status_code: 403, error_code: "ACCOUNT_DEACTIVATED" },
+        outcome: {
+          result: "failure",
+          status_code: 403,
+          error_code: "ACCOUNT_DEACTIVATED",
+        },
       });
 
       return NextResponse.json(
@@ -111,7 +136,12 @@ export async function POST(req) {
 
       await logActivity({
         user_id: user._id,
-        actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "none" },
+        actor: {
+          user_id: user._id,
+          username: user.username,
+          role: user.role,
+          auth_method: "none",
+        },
         action: "LOGIN_FAILED",
         description: `Login failed - invalid password (attempt ${user.loginAttempts})`,
         req,
@@ -122,7 +152,11 @@ export async function POST(req) {
         resource_id: user._id,
         module: "auth",
         severity: "warning",
-        outcome: { result: "failure", status_code: 401, error_code: "INVALID_CREDENTIALS" },
+        outcome: {
+          result: "failure",
+          status_code: 401,
+          error_code: "INVALID_CREDENTIALS",
+        },
       });
 
       return NextResponse.json(
@@ -135,7 +169,12 @@ export async function POST(req) {
 
     await logActivity({
       user_id: user._id,
-      actor: { user_id: user._id, username: user.username, role: user.role, auth_method: "password" },
+      actor: {
+        user_id: user._id,
+        username: user.username,
+        role: user.role,
+        auth_method: "password",
+      },
       action: "LOGIN",
       description: "Account logged in successfully",
       req,
@@ -178,9 +217,18 @@ export async function POST(req) {
         if (resolved?.raw) {
           identity = {
             ...profile,
-            personal: { ...(profile.personal || {}), ...(resolved.raw.personal || {}) },
-            gadData: { ...(profile.gadData || {}), ...(resolved.raw.gadData || {}) },
-            contact: { ...(profile.contact || {}), ...(resolved.raw.contact || {}) },
+            personal: {
+              ...(profile.personal || {}),
+              ...(resolved.raw.personal || {}),
+            },
+            gadData: {
+              ...(profile.gadData || {}),
+              ...(resolved.raw.gadData || {}),
+            },
+            contact: {
+              ...(profile.contact || {}),
+              ...(resolved.raw.contact || {}),
+            },
           };
         }
       }
@@ -197,7 +245,8 @@ export async function POST(req) {
         // Check required personal fields
         if (!personal.first_name) missingFields.push("First Name");
         if (!personal.last_name) missingFields.push("Last Name");
-        if (!personal.currentStatus) missingFields.push("Status (Student/Employee)");
+        if (!personal.currentStatus)
+          missingFields.push("Status (Student/Employee)");
         if (!personal.birthday) missingFields.push("Birthday");
         if (!personal.civil_status) missingFields.push("Civil Status");
         if (!gadData.sexAtBirth) missingFields.push("Sex at Birth");
@@ -215,8 +264,10 @@ export async function POST(req) {
           if (!academic.student_id) missingFields.push("Student ID");
         } else if (personal.currentStatus === "Employee") {
           if (!employment.office) missingFields.push("Office");
-          if (!employment.employment_status) missingFields.push("Employment Status");
-          if (!employment.employment_appointment_status) missingFields.push("Appointment Status");
+          if (!employment.employment_status)
+            missingFields.push("Employment Status");
+          if (!employment.employment_appointment_status)
+            missingFields.push("Appointment Status");
           if (!employment.employee_id) missingFields.push("Employee ID");
         }
       } else {
@@ -270,7 +321,8 @@ export async function POST(req) {
             senderId: user._id,
             type: "password_not_changed",
             title: "Change Your Password",
-            message: "For security purposes, please change your default password. Go to Settings to update your password.",
+            message:
+              "For security purposes, please change your default password. Go to Settings to update your password.",
             metadata: {},
           });
 
@@ -281,7 +333,8 @@ export async function POST(req) {
                 _id: "pending",
                 type: "password_not_changed",
                 title: "Change Your Password",
-                message: "For security purposes, please change your default password. Go to Settings to update your password.",
+                message:
+                  "For security purposes, please change your default password. Go to Settings to update your password.",
                 isRead: false,
                 createdAt: new Date().toISOString(),
               },

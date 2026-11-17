@@ -1,13 +1,13 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import OfficialTerm from "@/models/officialTerm";
 import SystemSetting from "@/models/systemSetting";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 import {
   normalizeAcademicYear,
   sortAcademicYearsDesc,
-} from "@/lib/academicYear";
-import { academicYearsFromTermStarts } from "@/lib/officialsTermsQuery";
+} from "@/data/lib/academicYear";
+import { academicYearsFromTermStarts } from "@/data/lib/officialsTermsQuery";
 
 /** GET /api/university-officials/years -> ["2026-2027", ...] + active year. */
 export async function GET(req) {

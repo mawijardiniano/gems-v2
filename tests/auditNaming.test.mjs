@@ -27,7 +27,7 @@ const SIDEBAR = readFileSync(
   "app/(pages)/(admin)/components/layout/sidebar.jsx",
   "utf8",
 );
-const BREADCRUMBS = readFileSync("lib/breadcrumbs.js", "utf8");
+const BREADCRUMBS = readFileSync("data/lib/breadcrumbs.js", "utf8");
 
 test("the sidebar calls it the audit trail", () => {
   assert.match(SIDEBAR, /name:\s*"Audit Trail"/);

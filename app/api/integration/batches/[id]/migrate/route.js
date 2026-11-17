@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 import {
   findExistingProfileForRecord,
   mergeProfile,
@@ -17,7 +17,7 @@ import {
   normalizeStudentUsername,
   normalizeEmployeeUsername,
   usernameEqualsFilter,
-} from "@/lib/usernames";
+} from "@/data/lib/usernames";
 
 function asDate(value) {
   if (!value) return undefined;
@@ -51,12 +51,18 @@ async function ensureUserAuthForProfile(profile, identity, mapped) {
     normalizeUsername(identity?.employee_id),
     normalizeUsername(emailLocal),
     normalizeUsername([first, last].filter(Boolean).join("")),
-    normalizeUsername([first, normalizeStudentIdUsername(identity?.student_id)].filter(Boolean).join("")),
+    normalizeUsername(
+      [first, normalizeStudentIdUsername(identity?.student_id)]
+        .filter(Boolean)
+        .join(""),
+    ),
   ].filter(Boolean);
 
   let chosenUsername = "";
   for (const candidate of candidates) {
-    const exists = await UserAuth.findOne(usernameEqualsFilter(candidate)).lean();
+    const exists = await UserAuth.findOne(
+      usernameEqualsFilter(candidate),
+    ).lean();
     if (!exists) {
       chosenUsername = candidate;
       break;
@@ -66,7 +72,9 @@ async function ensureUserAuthForProfile(profile, identity, mapped) {
   if (!chosenUsername) {
     chosenUsername = `user${String(profile._id).slice(-8).toLowerCase()}`;
     let counter = 1;
-    while (await UserAuth.findOne(usernameEqualsFilter(chosenUsername)).lean()) {
+    while (
+      await UserAuth.findOne(usernameEqualsFilter(chosenUsername)).lean()
+    ) {
       chosenUsername = `user${String(profile._id).slice(-8).toLowerCase()}${counter}`;
       counter += 1;
     }
@@ -326,7 +334,8 @@ export async function POST(req, { params }) {
         role: auth.user.role,
         auth_method: "session",
       },
-      action: failed > 0 ? "IMPORT_BATCH_MIGRATE_PARTIAL" : "IMPORT_BATCH_MIGRATE",
+      action:
+        failed > 0 ? "IMPORT_BATCH_MIGRATE_PARTIAL" : "IMPORT_BATCH_MIGRATE",
       description: `Migrated import batch ${batch.source_name || id}: ${created} created, ${updated} updated, ${failed} failed`,
       severity: failed > 0 ? "error" : "warning",
       resource_type: "import_batch",

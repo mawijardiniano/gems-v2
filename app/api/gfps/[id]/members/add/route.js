@@ -1,9 +1,9 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { getGFPSMemberList } from "@/lib/gfpsServer";
+import { getGFPSMemberList } from "@/data/lib/gfpsServer";
 
 export async function POST(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -20,7 +20,10 @@ export async function POST(req, { params }) {
     const members = getGFPSMemberList(gfps, sectionKey);
 
     if (!members) {
-      return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
+      return Response.json(
+        { success: false, message: "Invalid section" },
+        { status: 400 },
+      );
     }
 
     const added = {
@@ -53,6 +56,9 @@ export async function POST(req, { params }) {
 
     return Response.json({ success: true, message: "Member added" });
   } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    return Response.json(
+      { success: false, error: err.message },
+      { status: 500 },
+    );
   }
 }

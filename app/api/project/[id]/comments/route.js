@@ -1,14 +1,14 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import {
   createNotifications,
   getPlanningDirectorIds,
   normalizeRole,
-} from "@/lib/notifications";
+} from "@/data/lib/notifications";
 import Project from "@/models/projects";
 import UserAuth from "@/models/user";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import {NextResponse} from "next/server"
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { NextResponse } from "next/server";
 
 const ALLOWED_FIELDS = [
   "project_type",
@@ -27,8 +27,8 @@ const ALLOWED_FIELDS = [
 ];
 
 export async function GET(req, { params }) {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   try {
@@ -66,8 +66,8 @@ export async function GET(req, { params }) {
   }
 }
 export async function POST(req, { params }) {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   try {
@@ -168,8 +168,8 @@ export async function POST(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   try {

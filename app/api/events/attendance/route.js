@@ -1,11 +1,11 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { cacheDelPrefix } from "@/lib/cache";
-import { attendanceWindow } from "@/lib/eventStatus";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { attendanceWindow } from "@/data/lib/eventStatus";
 
 export async function POST(req) {
   try {
@@ -58,10 +58,9 @@ export async function POST(req) {
     }
 
     const now = Date.now();
-    const hasCapturedAt = captured_at && !isNaN(new Date(captured_at).getTime());
-    const referenceTime = hasCapturedAt
-      ? new Date(captured_at).getTime()
-      : now;
+    const hasCapturedAt =
+      captured_at && !isNaN(new Date(captured_at).getTime());
+    const referenceTime = hasCapturedAt ? new Date(captured_at).getTime() : now;
 
     /* Same day-bounded window the guest QR route and the manage-list badge use,
        from lib/eventStatus. This used to be a third hand-built copy that did not
@@ -74,7 +73,11 @@ export async function POST(req) {
     // time-window checks so staff can mark attendance before/after the event.
     const bypassTimeWindow = manual_add === true && isOrganizer;
 
-    if (earliestStart !== null && referenceTime < earliestStart && !bypassTimeWindow) {
+    if (
+      earliestStart !== null &&
+      referenceTime < earliestStart &&
+      !bypassTimeWindow
+    ) {
       return NextResponse.json(
         {
           message: "Attendance is not yet open. The event has not started yet.",

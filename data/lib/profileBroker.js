@@ -7,7 +7,7 @@ import {
   maskEmail,
   maskFullName,
   maskPhone,
-} from "@/lib/identityVault";
+} from "@/data/lib/identityVault";
 
 /*
  * Read-side of the Identity Vault — the single door between GEMS and the
@@ -232,7 +232,10 @@ export async function withResolvedAttendanceSex(entries = []) {
     if (!profile) return entry;
 
     /* Mirrors the legacy `gadData.sexAtBirth` location the consumers read. */
-    profile.gadData = { ...(profile.gadData || {}), sexAtBirth: pii.sexAtBirth };
+    profile.gadData = {
+      ...(profile.gadData || {}),
+      sexAtBirth: pii.sexAtBirth,
+    };
     return entry;
   });
 }
@@ -322,7 +325,9 @@ export function revealedRowPii(resolved) {
 /** Picks the row shape a resolved (role-decided) result implies. */
 export function rowPiiFor(resolved) {
   if (!resolved) return null;
-  return resolved.fullAccess ? revealedRowPii(resolved) : maskedRowPii(resolved);
+  return resolved.fullAccess
+    ? revealedRowPii(resolved)
+    : maskedRowPii(resolved);
 }
 
 /**

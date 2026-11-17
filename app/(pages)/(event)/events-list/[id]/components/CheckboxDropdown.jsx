@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { addTypedOffice, normalizeOffice } from "@/lib/colleges";
+import { addTypedOffice, normalizeOffice } from "@/data/lib/colleges";
 
 export default function CheckboxDropdown({
   label,

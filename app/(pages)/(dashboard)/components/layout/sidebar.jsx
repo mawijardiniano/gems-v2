@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaUser,
@@ -69,7 +69,7 @@ export default function Sidebar({ open, setOpen }) {
     setPersonType(
       profile?.personal?.currentStatus ||
         profile?.personal_information?.person_type ||
-        null
+        null,
     );
   }, [profile]);
 
@@ -121,9 +121,10 @@ export default function Sidebar({ open, setOpen }) {
     return "";
   }, [profile, user]);
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   const isOverviewActive = pathname.startsWith("/dashboard");
   const isEventsActive = pathname.startsWith("/events");
@@ -288,7 +289,9 @@ export default function Sidebar({ open, setOpen }) {
                   >
                     <FaHome
                       className={
-                        isOverviewActive ? "text-accent-300" : "text-secondary-200/85"
+                        isOverviewActive
+                          ? "text-accent-300"
+                          : "text-secondary-200/85"
                       }
                       size={16}
                     />
@@ -319,15 +322,15 @@ export default function Sidebar({ open, setOpen }) {
             {/* Sub-menu items */}
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isProfileOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                isProfileOpen && open
+                  ? "max-h-96 opacity-100"
+                  : "max-h-0 opacity-0"
               }`}
             >
               <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">
                 {[
                   "/dashboard/personal-information",
-                  ...(personType === "Student"
-                    ? ["/dashboard/academic"]
-                    : []),
+                  ...(personType === "Student" ? ["/dashboard/academic"] : []),
                   ...(personType === "Employee"
                     ? ["/dashboard/employment"]
                     : []),
@@ -417,15 +420,15 @@ export default function Sidebar({ open, setOpen }) {
                   >
                     <FaCalendar
                       className={
-                        isEventsActive ? "text-accent-300" : "text-secondary-200/85"
+                        isEventsActive
+                          ? "text-accent-300"
+                          : "text-secondary-200/85"
                       }
                       size={16}
                     />
                   </span>
                   {open && (
-                    <span className="text-sm font-medium truncate">
-                      Events
-                    </span>
+                    <span className="text-sm font-medium truncate">Events</span>
                   )}
                 </div>
                 {open && (
@@ -448,7 +451,9 @@ export default function Sidebar({ open, setOpen }) {
             {/* Sub-menu items */}
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                isEventOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                isEventOpen && open
+                  ? "max-h-96 opacity-100"
+                  : "max-h-0 opacity-0"
               }`}
             >
               <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">

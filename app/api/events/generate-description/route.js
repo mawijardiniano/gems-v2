@@ -1,7 +1,7 @@
-import ai from "@/lib/gemini";
+import ai from "@/data/lib/gemini";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { rateLimiters } from "@/lib/rateLimit";
+import { requireAuth } from "@/data/lib/auth";
+import { rateLimiters } from "@/data/lib/rateLimit";
 
 export async function POST(req) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req) {
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { buildSearchIndex } from "../lib/identityVault.js";
+import { buildSearchIndex } from "../data/lib/identityVault.js";
 
 /* Adds the email digest to `profileSearchIndex` for rows that predate it.
  *
@@ -27,9 +27,12 @@ const APPLY = process.argv.includes("--apply");
 await mongoose.connect(process.env.MONGODB_URI);
 const profiles = mongoose.connection.db.collection("gemsprofiles");
 const vault = mongoose.connection.db.collection("identityvaults");
-const { decryptFields, PII_FIELDS } = await import("../lib/identityVault.js");
+const { decryptFields, PII_FIELDS } =
+  await import("../data/lib/identityVault.js");
 
-console.log(`[email-index] mode: ${APPLY ? "APPLY (writing)" : "DRY RUN (read-only)"}`);
+console.log(
+  `[email-index] mode: ${APPLY ? "APPLY (writing)" : "DRY RUN (read-only)"}`,
+);
 console.log("");
 
 const total = await profiles.countDocuments({});
@@ -88,7 +91,9 @@ console.log(`[email-index] email unreadable/skipped: ${noEmail}`);
 
 if (!APPLY) {
   console.log("");
-  console.log("[email-index] dry run complete — nothing written. Re-run with --apply.");
+  console.log(
+    "[email-index] dry run complete — nothing written. Re-run with --apply.",
+  );
   await mongoose.disconnect();
   process.exit(0);
 }

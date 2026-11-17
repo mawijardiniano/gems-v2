@@ -1,11 +1,11 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import EventGuest from "@/models/eventGuest";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { requireAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLog";
-import { cacheDelPrefix } from "@/lib/cache";
+import { requireAuth } from "@/data/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { cacheDelPrefix } from "@/data/lib/cache";
 
 /* Organizers who may validate guest check-ins (same set that may record
    attendance for somebody else). The event creator is always allowed. */
@@ -40,7 +40,9 @@ export function legacySafeStatusFilter(status) {
 export function isEventOrganizer(user, event) {
   if (!user) return false;
   if (ORGANIZER_ROLES.includes(user.role)) return true;
-  return Boolean(event?.created_by) && String(event.created_by) === String(user._id);
+  return (
+    Boolean(event?.created_by) && String(event.created_by) === String(user._id)
+  );
 }
 
 export async function GET(req) {
@@ -51,16 +53,24 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const event_id = searchParams.get("event_id");
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id))
-      return NextResponse.json({ message: "Valid event_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Valid event_id is required" },
+        { status: 400 },
+      );
     const requested = searchParams.get("validation_status") || "all";
     if (requested !== "all" && !STATUSES.includes(requested))
       return NextResponse.json(
-        { message: "validation_status must be pending, approved, rejected, or all" },
+        {
+          message:
+            "validation_status must be pending, approved, rejected, or all",
+        },
         { status: 400 },
       );
     const statusFilter = legacySafeStatusFilter(requested);
     const query = statusFilter ? { event_id, ...statusFilter } : { event_id };
-    const guests = await EventGuest.find(query).sort({ attended_at: -1 }).lean();
+    const guests = await EventGuest.find(query)
+      .sort({ attended_at: -1 })
+      .lean();
     const counts = { pending: 0, approved: 0, rejected: 0 };
     const countAgg = await EventGuest.aggregate([
       { $match: { event_id: new mongoose.Types.ObjectId(event_id) } },
@@ -78,7 +88,10 @@ export async function GET(req) {
     });
     return NextResponse.json({ status: "success", data: guests, counts });
   } catch (err) {
-    return NextResponse.json({ message: "Unable to load guests." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Unable to load guests." },
+      { status: 500 },
+    );
   }
 }
 
@@ -90,7 +103,10 @@ export async function PATCH(req) {
     const body = await req.json();
     const event_id = body?.event_id;
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id))
-      return NextResponse.json({ message: "Valid event_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Valid event_id is required" },
+        { status: 400 },
+      );
 
     const action = body?.action;
     if (!["approve", "reject", "reset"].includes(action))
@@ -103,25 +119,40 @@ export async function PATCH(req) {
       ? body.guest_ids
       : [body?.guest_id ?? body?.guest_ids];
     const ids = [...new Set(rawIds.filter(Boolean).map(String))];
-    if (ids.length === 0 || ids.some((id) => !mongoose.Types.ObjectId.isValid(id)))
+    if (
+      ids.length === 0 ||
+      ids.some((id) => !mongoose.Types.ObjectId.isValid(id))
+    )
       return NextResponse.json(
         { message: "Valid guest_id or guest_ids is required" },
         { status: 400 },
       );
 
-    const event = await Event.findById(event_id).select("created_by title").lean();
-    if (!event) return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    const event = await Event.findById(event_id)
+      .select("created_by title")
+      .lean();
+    if (!event)
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
 
     const isCreator =
       event.created_by && String(event.created_by) === String(user._id);
     if (!ORGANIZER_ROLES.includes(user.role) && !isCreator)
       return NextResponse.json(
-        { message: "You are not allowed to validate guest check-ins for this event." },
+        {
+          message:
+            "You are not allowed to validate guest check-ins for this event.",
+        },
         { status: 403 },
       );
-    const note = String(body?.note || "").trim().slice(0, 500);
+    const note = String(body?.note || "")
+      .trim()
+      .slice(0, 500);
     const nextStatus =
-      action === "approve" ? "approved" : action === "reject" ? "rejected" : "pending";
+      action === "approve"
+        ? "approved"
+        : action === "reject"
+          ? "rejected"
+          : "pending";
 
     const update = {
       validation_status: nextStatus,

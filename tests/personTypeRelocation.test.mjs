@@ -25,7 +25,7 @@ function read(...parts) {
   return readFileSync(new URL(`../${parts.join("/")}`, import.meta.url), "utf8");
 }
 
-const BROKER = read("lib", "profileBroker.js");
+const BROKER = read("data", "lib", "profileBroker.js");
 
 /* Mirrors the status resolution in `applyRowPii`. */
 function resolvePersonType(row, legacy) {

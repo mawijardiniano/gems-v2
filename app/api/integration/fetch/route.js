@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { stageRows } from "@/app/api/integration/_utils/staging";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
 const FETCH_TIMEOUT_MS = 30000;
@@ -23,7 +23,11 @@ function safeHost(endpoint) {
 /* A refused or unreachable external system is a fact worth keeping: repeated
    failures here are how a misconfigured — or deliberately sabotaged — sync is
    recognised. Severity is `warning` so the write is awaited and visible. */
-async function logFetchFailure(req, auth, { endpoint, sourceName, errorCode, statusCode, message }) {
+async function logFetchFailure(
+  req,
+  auth,
+  { endpoint, sourceName, errorCode, statusCode, message },
+) {
   await logActivity({
     req,
     user_id: auth.user._id,
@@ -37,7 +41,12 @@ async function logFetchFailure(req, auth, { endpoint, sourceName, errorCode, sta
       endpoint_host: safeHost(endpoint),
       fetched: 0,
     },
-    outcome: { result: "failure", status_code: statusCode, error_code: errorCode, message },
+    outcome: {
+      result: "failure",
+      status_code: statusCode,
+      error_code: errorCode,
+      message,
+    },
   });
 }
 
@@ -67,12 +76,16 @@ export async function POST(req) {
         headers = storedConfig.headers;
       }
     }
-    const defaultSchoolYear = body.school_year || storedConfig?.school_year || "";
+    const defaultSchoolYear =
+      body.school_year || storedConfig?.school_year || "";
     const defaultSemester = body.semester || storedConfig?.semester || "";
 
     if (!endpoint) {
       return NextResponse.json(
-        { status: "error", message: "endpoint is required (no stored config found)" },
+        {
+          status: "error",
+          message: "endpoint is required (no stored config found)",
+        },
         { status: 400 },
       );
     }
@@ -112,7 +125,10 @@ export async function POST(req) {
         message: err.message,
       });
       return NextResponse.json(
-        { status: "error", message: `Failed to reach endpoint: ${err.message}` },
+        {
+          status: "error",
+          message: `Failed to reach endpoint: ${err.message}`,
+        },
         { status: 502 },
       );
     }

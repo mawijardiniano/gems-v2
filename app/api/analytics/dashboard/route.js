@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import ProfileTerm from "@/models/profileTerm";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
-import { applyRowPii, resolvePiiBatch } from "@/lib/profileBroker";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
+import { applyRowPii, resolvePiiBatch } from "@/data/lib/profileBroker";
 
 const DASHBOARD_CACHE_TTL = 15 * 1000;
 
@@ -281,9 +281,11 @@ export async function GET(req) {
             studentCollegeCounts[collegeName] =
               (studentCollegeCounts[collegeName] || 0) + 1;
             const campus = acad?.campus || UNKNOWN;
-            studentCampusCounts[campus] = (studentCampusCounts[campus] || 0) + 1;
+            studentCampusCounts[campus] =
+              (studentCampusCounts[campus] || 0) + 1;
             const year = acad?.year_level || UNKNOWN;
-            studentYearLevelCounts[year] = (studentYearLevelCounts[year] || 0) + 1;
+            studentYearLevelCounts[year] =
+              (studentYearLevelCounts[year] || 0) + 1;
 
             if (!studentYearGender[year])
               studentYearGender[year] = {
@@ -301,7 +303,8 @@ export async function GET(req) {
             studentProgramCounts[program] =
               (studentProgramCounts[program] || 0) + 1;
 
-            if (!studentYearCourse[year]) studentYearCourse[year] = { name: year };
+            if (!studentYearCourse[year])
+              studentYearCourse[year] = { name: year };
             studentYearCourse[year][program] =
               (studentYearCourse[year][program] || 0) + 1;
           }

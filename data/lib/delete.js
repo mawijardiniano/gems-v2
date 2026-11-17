@@ -1,5 +1,9 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getS3Client, storageBucket, storageConfigProblem } from "@/lib/storage";
+import {
+  getS3Client,
+  storageBucket,
+  storageConfigProblem,
+} from "@/data/lib/storage";
 
 export async function deleteFileFromBucket(key) {
   if (!key) return;
@@ -14,6 +18,6 @@ export async function deleteFileFromBucket(key) {
     new DeleteObjectCommand({
       Bucket: storageBucket(),
       Key: key,
-    })
+    }),
   );
 }

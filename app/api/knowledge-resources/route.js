@@ -1,12 +1,12 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { rateLimiters } from "@/lib/rateLimit";
-import { logActivity } from "@/lib/activityLog";
-import { normalizeRole } from "@/lib/notifications";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { logActivity } from "@/data/lib/activityLog";
+import { normalizeRole } from "@/data/lib/notifications";
 import KnowledgeResource from "@/models/knowledgeResource";
-import { getS3Client, storageBucket, buildObjectUrl } from "@/lib/storage";
+import { getS3Client, storageBucket, buildObjectUrl } from "@/data/lib/storage";
 import {
   KNOWLEDGE_CATEGORIES,
   KNOWLEDGE_ROLES,
@@ -15,7 +15,7 @@ import {
   escapeRegex,
   sanitizeFileName,
   validateKnowledgeFile,
-} from "@/lib/knowledgeResources";
+} from "@/data/lib/knowledgeResources";
 
 const s3 = getS3Client;
 
@@ -58,7 +58,7 @@ export async function GET(req) {
     console.error("KNOWLEDGE RESOURCES GET ERROR:", err);
     return NextResponse.json(
       { error: "Failed to load knowledge resources" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -69,7 +69,7 @@ export async function POST(req) {
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 
@@ -92,7 +92,7 @@ export async function POST(req) {
     if (title.length > 200) {
       return NextResponse.json(
         { error: "Title must be 200 characters or less" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -113,12 +113,12 @@ export async function POST(req) {
     if (buffer.length > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: "File exceeds the maximum allowed size (25MB)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const key = `${S3_FOLDER}/${user._id}/${Date.now()}-${sanitizeFileName(
-      file.name
+      file.name,
     )}`;
 
     await s3().send(
@@ -127,7 +127,7 @@ export async function POST(req) {
         Key: key,
         Body: buffer,
         ContentType: file.type,
-      })
+      }),
     );
 
     await connectDB();
@@ -156,12 +156,15 @@ export async function POST(req) {
       severity: "info",
     });
 
-    return NextResponse.json({ success: true, data: resource }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: resource },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("KNOWLEDGE RESOURCES POST ERROR:", err);
     return NextResponse.json(
       { error: "Upload failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

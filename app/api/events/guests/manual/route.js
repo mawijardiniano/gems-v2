@@ -1,14 +1,14 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import EventGuest from "@/models/eventGuest";
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { requireAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLog";
-import { cacheDelPrefix } from "@/lib/cache";
-import { loadDecryptedPii, revealProfilePii } from "@/lib/profileBroker";
+import { requireAuth } from "@/data/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { loadDecryptedPii, revealProfilePii } from "@/data/lib/profileBroker";
 import { isEventOrganizer } from "../route";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
@@ -101,7 +101,10 @@ async function adoptCheckedInGuest({
     const byAccount = await EventGuest.findOne({ event_id, user_id });
     if (byAccount) return await approve(byAccount);
     if (fullName) {
-      const byName = await EventGuest.findOne({ event_id, full_name: fullName });
+      const byName = await EventGuest.findOne({
+        event_id,
+        full_name: fullName,
+      });
       if (byName) return await approve(byName);
     }
     return await EventGuest.create({
@@ -124,7 +127,10 @@ async function adoptCheckedInGuest({
       const byAccount = await EventGuest.findOne({ event_id, user_id });
       if (byAccount) return await approve(byAccount);
       if (fullName) {
-        const byName = await EventGuest.findOne({ event_id, full_name: fullName });
+        const byName = await EventGuest.findOne({
+          event_id,
+          full_name: fullName,
+        });
         if (byName) return await approve(byName);
       }
       return null;
@@ -133,7 +139,6 @@ async function adoptCheckedInGuest({
     return null;
   }
 }
-
 
 export async function POST(req) {
   try {
@@ -198,7 +203,9 @@ export async function POST(req) {
        rather than masked, and the values are overlaid onto the profile so the
        helpers below read the same shape they always did. `affiliation` and
        `personal.currentStatus` are GEMS-owned and stay as they are. */
-    const pii = profile.vaultRef ? await loadDecryptedPii(profile.vaultRef) : null;
+    const pii = profile.vaultRef
+      ? await loadDecryptedPii(profile.vaultRef)
+      : null;
     const revealed = pii ? revealProfilePii(pii) : null;
     /* Only non-null vault values overlay the legacy ones, so a partially filled
        vault row cannot erase a value that is still present mid-migration. */
@@ -284,7 +291,6 @@ export async function POST(req) {
     };
     const note = VALIDATION_NOTE;
 
-
     /* The person may already have checked in through the QR flow, which writes
        Event.attended_users. Attendance counts that list plus approved guests,
        so we must NOT add a second row here — but returning a bare "already
@@ -314,7 +320,11 @@ export async function POST(req) {
           resource_type: "event",
           resource_id: event_id,
           severity: "info",
-          metadata: { guest_id: adopted._id, user_id, adopted_from: "qr-check-in" },
+          metadata: {
+            guest_id: adopted._id,
+            user_id,
+            adopted_from: "qr-check-in",
+          },
         });
         return NextResponse.json({
           message: "Already checked in — added to the attendance sheet",

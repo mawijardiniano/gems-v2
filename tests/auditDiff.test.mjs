@@ -29,7 +29,12 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier.startsWith("@/")) {
       const base = new URL(specifier.slice(2), ROOT);
-      for (const candidate of [base.href, `${base.href}.js`, `${base.href}.mjs`, `${base.href}/index.js`]) {
+      for (const candidate of [
+        base.href,
+        `${base.href}.js`,
+        `${base.href}.mjs`,
+        `${base.href}/index.js`,
+      ]) {
         if (existsSync(fileURLToPath(candidate))) {
           return nextResolve(candidate, context);
         }
@@ -39,10 +44,12 @@ registerHooks({
   },
 });
 
-const { diffFields } = await import("../lib/activityLog.js");
+const { diffFields } = await import("../data/lib/activityLog.js");
 
 test("records a changed field with before and after", () => {
-  const changes = diffFields({ budget: 500000 }, { budget: 800000 }, ["budget"]);
+  const changes = diffFields({ budget: 500000 }, { budget: 800000 }, [
+    "budget",
+  ]);
   assert.deepEqual(changes, [
     { field: "budget", before: 500000, after: 800000, redacted: false },
   ]);
@@ -65,7 +72,9 @@ test("records a field added from nothing", () => {
 });
 
 test("records a field cleared to null", () => {
-  const changes = diffFields({ status: "approved" }, { status: null }, ["status"]);
+  const changes = diffFields({ status: "approved" }, { status: null }, [
+    "status",
+  ]);
   assert.deepEqual(changes, [
     { field: "status", before: "approved", after: null, redacted: false },
   ]);
@@ -117,11 +126,9 @@ test("compares arrays by content", () => {
   const same = diffFields({ tags: ["a", "b"] }, { tags: ["a", "b"] }, ["tags"]);
   assert.deepEqual(same, []);
 
-  const changed = diffFields(
-    { tags: ["a", "b"] },
-    { tags: ["a", "c"] },
-    ["tags"],
-  );
+  const changed = diffFields({ tags: ["a", "b"] }, { tags: ["a", "c"] }, [
+    "tags",
+  ]);
   assert.equal(changed.length, 1);
   assert.deepEqual(changed[0].after, ["a", "c"]);
 });
@@ -134,7 +141,12 @@ test("withholds the value of a redacted (vaulted) field", () => {
     { redactedFields: ["birth_date"] },
   );
   assert.deepEqual(changes, [
-    { field: "birth_date", before: "[vaulted]", after: "[vaulted]", redacted: true },
+    {
+      field: "birth_date",
+      before: "[vaulted]",
+      after: "[vaulted]",
+      redacted: true,
+    },
   ]);
 
   /* The guarantee that matters: the real values appear nowhere in the record. */

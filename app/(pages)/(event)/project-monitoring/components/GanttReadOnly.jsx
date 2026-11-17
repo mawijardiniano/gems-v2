@@ -1,6 +1,6 @@
 "use client";
 
-import { calcDurationDays, toInputDate } from "@/lib/gantt";
+import { calcDurationDays, toInputDate } from "@/data/lib/gantt";
 import GanttTimeline from "./GanttTimeline";
 import PrintGantt from "./PrintGantt";
 
@@ -28,7 +28,9 @@ const pickYear = (project, activities) => {
 /** Read-only Gantt activities table + timeline for a project. */
 export default function GanttReadOnly({ project, compact = false }) {
   const activities = Array.isArray(project?.gantt_activities)
-    ? project.gantt_activities.filter((a) => a && String(a.activity || "").trim())
+    ? project.gantt_activities.filter(
+        (a) => a && String(a.activity || "").trim(),
+      )
     : [];
 
   return (
@@ -61,9 +63,7 @@ export default function GanttReadOnly({ project, compact = false }) {
                 <div className="text-gray-400">
                   {fmt(row.start_date)} → {fmt(row.end_date)} ·{" "}
                   {calcDurationDays(row.start_date, row.end_date)} days
-                  {row.person_responsible
-                    ? ` · ${row.person_responsible}`
-                    : ""}
+                  {row.person_responsible ? ` · ${row.person_responsible}` : ""}
                 </div>
               </li>
             ))}

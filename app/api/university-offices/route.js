@@ -1,15 +1,15 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOffice from "@/models/universityOffice";
 import OfficialTerm from "@/models/officialTerm";
 import SystemSetting from "@/models/systemSetting";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { canReadOffices, canWriteOffices } from "@/lib/officesAccess";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { canReadOffices, canWriteOffices } from "@/data/lib/officesAccess";
 import {
   academicYearRange,
   normalizeAcademicYear,
   resolveAcademicYear,
-} from "@/lib/academicYear";
+} from "@/data/lib/academicYear";
 import { NextResponse } from "next/server";
 import {
   buildDefaultOfficeRows,
@@ -18,7 +18,7 @@ import {
   isValidOfficeName,
   normalizeOfficeName,
   officeDuplicateMessage,
-} from "@/lib/universityOffices";
+} from "@/data/lib/universityOffices";
 
 const FORBIDDEN = {
   success: false,
@@ -162,7 +162,8 @@ export async function GET(req) {
     // What the deactivation guard will check — the whole history, not just the
     // selected year — so the confirm dialog can state it up front.
     body.occupied_total = data.reduce(
-      (sum, office) => sum + (isActiveOffice(office) ? office.occupied_all || 0 : 0),
+      (sum, office) =>
+        sum + (isActiveOffice(office) ? office.occupied_all || 0 : 0),
       0,
     );
   }
@@ -233,9 +234,7 @@ export async function POST(req) {
     return Response.json(
       {
         success: false,
-        error: isDuplicate
-          ? officeDuplicateMessage(header)
-          : err.message,
+        error: isDuplicate ? officeDuplicateMessage(header) : err.message,
       },
       { status: isDuplicate ? 409 : 400 },
     );

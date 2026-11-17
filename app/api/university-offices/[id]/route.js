@@ -1,12 +1,12 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOffice from "@/models/universityOffice";
 import UniversityOfficial from "@/models/universityOfficials";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { canWriteOffices } from "@/lib/officesAccess";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { canWriteOffices } from "@/data/lib/officesAccess";
 import { NextResponse } from "next/server";
-import { normalizeOfficeName, officeKey } from "@/lib/universityOffices";
-import { normalizeAcademicYear } from "@/lib/academicYear";
+import { normalizeOfficeName, officeKey } from "@/data/lib/universityOffices";
+import { normalizeAcademicYear } from "@/data/lib/academicYear";
 
 const FORBIDDEN = {
   success: false,
@@ -46,7 +46,9 @@ export async function PATCH(req, { params }) {
     }
     if (officeKey(nextHeader) !== officeKey(office.header)) {
       const others = await UniversityOffice.find({ _id: { $ne: id } }).lean();
-      if (others.some((row) => officeKey(row.header) === officeKey(nextHeader))) {
+      if (
+        others.some((row) => officeKey(row.header) === officeKey(nextHeader))
+      ) {
         return Response.json(
           { success: false, error: "Another office already uses that name" },
           { status: 409 },
@@ -112,7 +114,9 @@ export async function PATCH(req, { params }) {
     return Response.json(
       {
         success: false,
-        error: isDuplicate ? "Another office already uses that name" : err.message,
+        error: isDuplicate
+          ? "Another office already uses that name"
+          : err.message,
       },
       { status: isDuplicate ? 409 : 400 },
     );

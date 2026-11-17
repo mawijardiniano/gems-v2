@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
 import ActivityLog from "@/models/activity_log";
 import jwt from "jsonwebtoken";

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { blindIndexTokens } from "../lib/identityVault.js";
+import { blindIndexTokens } from "../data/lib/identityVault.js";
 
 /* Same digest list `searchIndexQuery` (lib/profileBroker.js) produces: every
    token of the term. Mirrored here so this script does not pull in the broker,
@@ -22,7 +22,8 @@ function searchIndexQuery(term) {
 await mongoose.connect(process.env.MONGODB_URI);
 const profiles = mongoose.connection.db.collection("gemsprofiles");
 const vault = mongoose.connection.db.collection("identityvaults");
-const { decryptFields, PII_FIELDS } = await import("../lib/identityVault.js");
+const { decryptFields, PII_FIELDS } =
+  await import("../data/lib/identityVault.js");
 
 /* Pick a profile that has both a name and an email to test against. An email
    is required: without one the email check would pass vacuously. */
@@ -57,15 +58,18 @@ function check(label, ok) {
 /* --- Name check, the shape used in POST --------------------------------- */
 const first = searchIndexQuery(pii.first_name);
 const last = searchIndexQuery(pii.last_name);
-console.log(`first_name digests: ${first?.length}, last_name digests: ${last?.length}`);
+console.log(
+  `first_name digests: ${first?.length}, last_name digests: ${last?.length}`,
+);
 
-const nameHits = first && last
-  ? await profiles
-      .find({
-        profileSearchIndex: { $all: [first[0], last[0]] },
-      })
-      .toArray()
-  : [];
+const nameHits =
+  first && last
+    ? await profiles
+        .find({
+          profileSearchIndex: { $all: [first[0], last[0]] },
+        })
+        .toArray()
+    : [];
 
 check(
   "the name filter finds the profile it was built from",
@@ -82,7 +86,9 @@ const emailHits = emailDigests
 
 check(
   "the email filter finds the profile it was built from",
-  emailDigests ? emailHits.some((h) => String(h._id) === String(target._id)) : false,
+  emailDigests
+    ? emailHits.some((h) => String(h._id) === String(target._id))
+    : false,
 );
 
 /* A digest for a name that does not exist must not match anything — the

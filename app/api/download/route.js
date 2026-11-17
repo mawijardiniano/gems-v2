@@ -1,7 +1,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { getS3Client, storageBucket } from "@/lib/storage";
+import { requireAuth } from "@/data/lib/auth";
+import { getS3Client, storageBucket } from "@/data/lib/storage";
 
 const s3 = getS3Client;
 
@@ -34,7 +34,7 @@ export async function GET(req) {
       new GetObjectCommand({
         Bucket: storageBucket(),
         Key: key,
-      })
+      }),
     );
 
     const body = await object.Body.transformToByteArray();
@@ -60,7 +60,7 @@ export async function GET(req) {
     console.error("DOWNLOAD ERROR:", err);
     return NextResponse.json(
       { error: "Download failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

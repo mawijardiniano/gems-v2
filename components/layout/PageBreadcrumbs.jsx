@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaChevronRight, FaHome } from "react-icons/fa";
-import { buildBreadcrumbs, BREADCRUMB_HOMES } from "@/lib/breadcrumbs";
+import { buildBreadcrumbs, BREADCRUMB_HOMES } from "@/data/lib/breadcrumbs";
 
 /**
  * Breadcrumbs for a role shell.
@@ -40,10 +40,7 @@ export default function PageBreadcrumbs({
   if (!crumbs.length) return null;
 
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className={`min-w-0 py-3 ${className}`}
-    >
+    <nav aria-label="Breadcrumb" className={`min-w-0 py-3 ${className}`}>
       <ol className="flex items-center gap-1.5 text-xs text-gray-500 sm:text-sm">
         {crumbs.map((crumb, index) => {
           const isFirst = index === 0;
@@ -69,7 +66,10 @@ export default function PageBreadcrumbs({
                   className="flex min-w-0 items-center gap-1.5 rounded font-medium text-gray-500 transition-colors hover:text-secondary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 focus-visible:ring-offset-1"
                 >
                   {showIcon && (
-                    <FaHome aria-hidden="true" className="flex-shrink-0 text-[11px]" />
+                    <FaHome
+                      aria-hidden="true"
+                      className="flex-shrink-0 text-[11px]"
+                    />
                   )}
                   <span className="truncate">{crumb.label}</span>
                 </Link>
@@ -83,7 +83,10 @@ export default function PageBreadcrumbs({
                   }`}
                 >
                   {showIcon && (
-                    <FaHome aria-hidden="true" className="flex-shrink-0 text-[11px]" />
+                    <FaHome
+                      aria-hidden="true"
+                      className="flex-shrink-0 text-[11px]"
+                    />
                   )}
                   <span className="truncate">{crumb.label}</span>
                 </span>

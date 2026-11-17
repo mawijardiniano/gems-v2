@@ -1,6 +1,9 @@
 "use client";
 
-import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
+import {
+  buildOrgChart,
+  getOfficialPersonName,
+} from "@/data/lib/universityOfficialsMerge";
 
 /**
  * Prints the assigned MarSU officials roster (assigned-only mode).

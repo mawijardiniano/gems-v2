@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
-import { cacheOrSet } from "@/lib/cache";
-import { effectiveStatus } from "@/lib/eventStatus";
+import { cacheOrSet } from "@/data/lib/cache";
+import { effectiveStatus } from "@/data/lib/eventStatus";
 
 const UPCOMING_LIST_CACHE_TTL = 60 * 1000; // 60 seconds
 

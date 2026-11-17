@@ -17,15 +17,14 @@ import {
   isMilestonesOutdated,
   mergeMilestones,
   toInputDate,
-} from "@/lib/gantt";
+} from "@/data/lib/gantt";
 import GanttEncodeTab from "./GanttEncodeTab";
 import GanttUploadTab from "./GanttUploadTab";
 import GanttTimeline from "./GanttTimeline";
 import PrintGantt from "./PrintGantt";
 
 const CARD = "rounded-xl border border-gray-200 bg-white p-4 min-w-0";
-const CARD_TITLE =
-  "mb-3 text-sm font-semibold text-gray-800";
+const CARD_TITLE = "mb-3 text-sm font-semibold text-gray-800";
 const CARD_HEADER = "mb-3 flex flex-wrap items-center justify-between gap-2";
 const CARD_TITLE_INLINE = "text-sm font-semibold text-gray-800";
 
@@ -111,7 +110,8 @@ export default function MilestonesModal({
   );
 
   const timelineYear = useMemo(() => {
-    const source = project?.start_date || activities.find((a) => a.start_date)?.start_date;
+    const source =
+      project?.start_date || activities.find((a) => a.start_date)?.start_date;
     const date = source ? new Date(source) : null;
     if (date && !Number.isNaN(date.getTime())) return date.getFullYear();
     return Number(project?.year) || new Date().getFullYear();
@@ -386,32 +386,32 @@ export default function MilestonesModal({
       >
         {/* Header */}
         {!inline && (
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
-          <div>
-            <h3 className="text-base font-bold text-gray-900">
-              Project Gantt Chart &amp; Milestones
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Encode or upload the Gantt chart; activities and timelines
-              generate the milestones. Completed milestones require at least
-              one proof file.
-            </p>
+          <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">
+                Project Gantt Chart &amp; Milestones
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Encode or upload the Gantt chart; activities and timelines
+                generate the milestones. Completed milestones require at least
+                one proof file.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <PrintGantt
+                project={{ ...project, gantt_activities: activities }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                onClick={closeAndCleanup}
+                className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+                aria-label="Close"
+              >
+                <FaTimes size={14} />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <PrintGantt
-              project={{ ...project, gantt_activities: activities }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <button
-              type="button"
-              onClick={closeAndCleanup}
-              className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
-              aria-label="Close"
-            >
-              <FaTimes size={14} />
-            </button>
-          </div>
-        </div>
         )}
 
         <div className={inline ? "space-y-4" : "p-5 space-y-4"}>
@@ -448,9 +448,7 @@ export default function MilestonesModal({
 
           {milestonesOutdated && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2 text-xs text-secondary-800">
-              <span>
-                The Gantt chart changed. Milestones are out of date.
-              </span>
+              <span>The Gantt chart changed. Milestones are out of date.</span>
               <button
                 type="button"
                 onClick={regenerateMilestones}
@@ -462,282 +460,292 @@ export default function MilestonesModal({
           )}
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-          <section className={CARD}>
-            <div className={CARD_HEADER}>
-              <h4 className={CARD_TITLE_INLINE}>Encode Gantt Chart</h4>
-              <div className="flex flex-wrap items-center gap-2">
+            <section className={CARD}>
+              <div className={CARD_HEADER}>
+                <h4 className={CARD_TITLE_INLINE}>Encode Gantt Chart</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <PrintGantt
+                    project={{ ...project, gantt_activities: activities }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <button
+                    type="button"
+                    onClick={addActivity}
+                    disabled={activities.length >= MAX_GANTT_ACTIVITIES}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaPlus size={10} />
+                    Add Activity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={regenerateMilestones}
+                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                  >
+                    Generate Milestones
+                  </button>
+                </div>
+              </div>
+              <GanttEncodeTab
+                activities={activities}
+                onChange={setActivities}
+                editingIndex={editingActivity}
+                onEditingChange={setEditingActivity}
+              />
+            </section>
+
+            <section className={CARD}>
+              <div className={CARD_HEADER}>
+                <h4 className={CARD_TITLE_INLINE}>Gantt Chart</h4>
                 <PrintGantt
                   project={{ ...project, gantt_activities: activities }}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <button
-                  type="button"
-                  onClick={addActivity}
-                  disabled={activities.length >= MAX_GANTT_ACTIVITIES}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FaPlus size={10} />
-                  Add Activity
-                </button>
-                <button
-                  type="button"
-                  onClick={regenerateMilestones}
-                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
-                >
-                  Generate Milestones
-                </button>
               </div>
-            </div>
-            <GanttEncodeTab
-              activities={activities}
-              onChange={setActivities}
-              editingIndex={editingActivity}
-              onEditingChange={setEditingActivity}
-            />
-          </section>
+              <GanttTimeline activities={activities} year={timelineYear} />
+            </section>
 
-          <section className={CARD}>
-            <div className={CARD_HEADER}>
-              <h4 className={CARD_TITLE_INLINE}>Gantt Chart</h4>
-              <PrintGantt
-                project={{ ...project, gantt_activities: activities }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <section className={CARD}>
+              <h4 className={CARD_TITLE}>Upload Gantt Chart</h4>
+              <GanttUploadTab
+                onApply={(parsed) => {
+                  setActivities(parsed);
+                }}
               />
-            </div>
-            <GanttTimeline activities={activities} year={timelineYear} />
-          </section>
+            </section>
 
-          <section className={CARD}>
-            <h4 className={CARD_TITLE}>Upload Gantt Chart</h4>
-            <GanttUploadTab
-              onApply={(parsed) => {
-                setActivities(parsed);
-              }}
-            />
-          </section>
+            <section className={CARD}>
+              <div className={CARD_HEADER}>
+                <h4 className={CARD_TITLE_INLINE}>
+                  Generated Milestones ({rows.filter((r) => r.title).length})
+                </h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={regenerateMilestones}
+                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                  >
+                    Regenerate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    disabled={rows.length >= MAX_MILESTONES}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaPlus size={10} />
+                    Add Milestone
+                  </button>
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-xs text-gray-500">
+                  Milestones are generated from the Gantt activities. You may
+                  edit them as needed.
+                </p>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <label className="text-xs font-medium text-gray-500">
+                    Milestones &amp; Activities
+                  </label>
+                  <span className="text-[11px] text-gray-400">
+                    {rows.length}/{MAX_MILESTONES}
+                  </span>
+                </div>
 
-          <section className={CARD}>
-          <div className={CARD_HEADER}>
-            <h4 className={CARD_TITLE_INLINE}>
-              Generated Milestones ({rows.filter((r) => r.title).length})
-            </h4>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={regenerateMilestones}
-                className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
-              >
-                Regenerate
-              </button>
-              <button
-                type="button"
-                onClick={addRow}
-                disabled={rows.length >= MAX_MILESTONES}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaPlus size={10} />
-                Add Milestone
-              </button>
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 text-xs text-gray-500">
-              Milestones are generated from the Gantt activities. You may edit
-              them as needed.
-            </p>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <label className="text-xs font-medium text-gray-500">
-                Milestones &amp; Activities
-              </label>
-              <span className="text-[11px] text-gray-400">
-                {rows.length}/{MAX_MILESTONES}
-              </span>
-            </div>
-
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
-                  <tr>
-                    <th className="px-2.5 py-1.5 font-semibold">
-                      Milestone / Activity
-                    </th>
-                    <th className="px-2.5 py-1.5 font-semibold w-40">
-                      Source Activity
-                    </th>
-                    <th className="px-2.5 py-1.5 font-semibold w-36">
-                      Target Date
-                    </th>
-                    <th className="px-2.5 py-1.5 font-semibold w-36">
-                      Actual Date
-                    </th>
-                    <th className="px-2.5 py-1.5 font-semibold w-32">Status</th>
-                    <th className="px-2.5 py-1.5 font-semibold w-48">Proof</th>
-                    <th className="px-2.5 py-1.5 w-10" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-2.5 py-5 text-center text-xs text-gray-400 italic"
-                      >
-                        No milestones yet — click “Add Milestone” to start.
-                      </td>
-                    </tr>
-                  ) : (
-                    rows.map((row, i) => (
-                      <tr
-                        key={i}
-                        className="border-t border-gray-100 align-top"
-                      >
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            type="text"
-                            value={row.title}
-                            placeholder="e.g. Conduct GAD orientation"
-                            onChange={(e) =>
-                              updateRow(i, { title: e.target.value })
-                            }
-                            className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
-                          />
-                        </td>
-                        <td className="px-2.5 py-2">
-                          {row.source_activity ? (
-                            <span
-                              className="block max-w-40 truncate text-xs text-gray-600"
-                              title={row.source_activity}
-                            >
-                              {row.source_activity}
-                            </span>
-                          ) : (
-                            <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-400">
-                              Manual
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            type="date"
-                            value={row.target_date}
-                            onChange={(e) =>
-                              updateRow(i, { target_date: e.target.value })
-                            }
-                            className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
-                          />
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            type="date"
-                            value={row.actual_date}
-                            onChange={(e) =>
-                              updateRow(i, { actual_date: e.target.value })
-                            }
-                            className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
-                          />
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <select
-                            value={row.status}
-                            onChange={(e) =>
-                              updateRow(i, { status: e.target.value })
-                            }
-                            className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
-                          >
-                            {MILESTONE_STATUSES.map((s) => (
-                              <option key={s} value={s}>
-                                {MILESTONE_STATUS_META[s].label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <div className="space-y-1.5">
-                            {(row.proofs || []).length > 0 && (
-                              <ul className="space-y-1">
-                                {(row.proofs || []).map((file, fileIndex) => (
-                                  <li
-                                    key={file.key || file.url || fileIndex}
-                                    className="flex items-center gap-1.5 text-[11px] text-gray-600"
-                                  >
-                                    <FaPaperclip
-                                      size={9}
-                                      className="shrink-0 text-gray-400"
-                                    />
-                                    <span
-                                      className="max-w-[120px] truncate"
-                                      title={file.name || file.key || ""}
-                                    >
-                                      {file.name || "Proof file"}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeProof(i, file)}
-                                      className="text-gray-400 hover:text-red-500 transition-colors"
-                                      title="Remove proof"
-                                    >
-                                      <FaTimes size={9} />
-                                    </button>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                            {row.status === "completed" ? (
-                              <>
-                                <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
-                                  {uploadingRow === i ? (
-                                    <FaSpinner
-                                      size={10}
-                                      className="animate-spin"
-                                    />
-                                  ) : (
-                                    <FaPaperclip size={10} />
-                                  )}
-                                  {uploadingRow === i
-                                    ? "Uploading…"
-                                    : "Upload proof"}
-                                  <input
-                                    type="file"
-                                    multiple
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    className="hidden"
-                                    disabled={uploadingRow !== null}
-                                    onChange={(e) => handleProofUpload(i, e)}
-                                  />
-                                </label>
-                                {(row.proofs || []).length === 0 && (
-                                  <p className="text-[10px] font-medium text-secondary-600">
-                                    Proof required
-                                  </p>
-                                )}
-                              </>
-                            ) : (
-                              (row.proofs || []).length === 0 && (
-                                <span className="text-[11px] text-gray-300">
-                                  —
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => removeRow(i)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                            title="Remove milestone"
-                          >
-                            <FaTrash size={12} />
-                          </button>
-                        </td>
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+                      <tr>
+                        <th className="px-2.5 py-1.5 font-semibold">
+                          Milestone / Activity
+                        </th>
+                        <th className="px-2.5 py-1.5 font-semibold w-40">
+                          Source Activity
+                        </th>
+                        <th className="px-2.5 py-1.5 font-semibold w-36">
+                          Target Date
+                        </th>
+                        <th className="px-2.5 py-1.5 font-semibold w-36">
+                          Actual Date
+                        </th>
+                        <th className="px-2.5 py-1.5 font-semibold w-32">
+                          Status
+                        </th>
+                        <th className="px-2.5 py-1.5 font-semibold w-48">
+                          Proof
+                        </th>
+                        <th className="px-2.5 py-1.5 w-10" />
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          </section>
+                    </thead>
+                    <tbody>
+                      {rows.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="px-2.5 py-5 text-center text-xs text-gray-400 italic"
+                          >
+                            No milestones yet — click “Add Milestone” to start.
+                          </td>
+                        </tr>
+                      ) : (
+                        rows.map((row, i) => (
+                          <tr
+                            key={i}
+                            className="border-t border-gray-100 align-top"
+                          >
+                            <td className="px-2.5 py-1.5">
+                              <input
+                                type="text"
+                                value={row.title}
+                                placeholder="e.g. Conduct GAD orientation"
+                                onChange={(e) =>
+                                  updateRow(i, { title: e.target.value })
+                                }
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                              />
+                            </td>
+                            <td className="px-2.5 py-2">
+                              {row.source_activity ? (
+                                <span
+                                  className="block max-w-40 truncate text-xs text-gray-600"
+                                  title={row.source_activity}
+                                >
+                                  {row.source_activity}
+                                </span>
+                              ) : (
+                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+                                  Manual
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-2.5 py-1.5">
+                              <input
+                                type="date"
+                                value={row.target_date}
+                                onChange={(e) =>
+                                  updateRow(i, { target_date: e.target.value })
+                                }
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                              />
+                            </td>
+                            <td className="px-2.5 py-1.5">
+                              <input
+                                type="date"
+                                value={row.actual_date}
+                                onChange={(e) =>
+                                  updateRow(i, { actual_date: e.target.value })
+                                }
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                              />
+                            </td>
+                            <td className="px-2.5 py-1.5">
+                              <select
+                                value={row.status}
+                                onChange={(e) =>
+                                  updateRow(i, { status: e.target.value })
+                                }
+                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                              >
+                                {MILESTONE_STATUSES.map((s) => (
+                                  <option key={s} value={s}>
+                                    {MILESTONE_STATUS_META[s].label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-2.5 py-1.5">
+                              <div className="space-y-1.5">
+                                {(row.proofs || []).length > 0 && (
+                                  <ul className="space-y-1">
+                                    {(row.proofs || []).map(
+                                      (file, fileIndex) => (
+                                        <li
+                                          key={
+                                            file.key || file.url || fileIndex
+                                          }
+                                          className="flex items-center gap-1.5 text-[11px] text-gray-600"
+                                        >
+                                          <FaPaperclip
+                                            size={9}
+                                            className="shrink-0 text-gray-400"
+                                          />
+                                          <span
+                                            className="max-w-[120px] truncate"
+                                            title={file.name || file.key || ""}
+                                          >
+                                            {file.name || "Proof file"}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => removeProof(i, file)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Remove proof"
+                                          >
+                                            <FaTimes size={9} />
+                                          </button>
+                                        </li>
+                                      ),
+                                    )}
+                                  </ul>
+                                )}
+                                {row.status === "completed" ? (
+                                  <>
+                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
+                                      {uploadingRow === i ? (
+                                        <FaSpinner
+                                          size={10}
+                                          className="animate-spin"
+                                        />
+                                      ) : (
+                                        <FaPaperclip size={10} />
+                                      )}
+                                      {uploadingRow === i
+                                        ? "Uploading…"
+                                        : "Upload proof"}
+                                      <input
+                                        type="file"
+                                        multiple
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        className="hidden"
+                                        disabled={uploadingRow !== null}
+                                        onChange={(e) =>
+                                          handleProofUpload(i, e)
+                                        }
+                                      />
+                                    </label>
+                                    {(row.proofs || []).length === 0 && (
+                                      <p className="text-[10px] font-medium text-secondary-600">
+                                        Proof required
+                                      </p>
+                                    )}
+                                  </>
+                                ) : (
+                                  (row.proofs || []).length === 0 && (
+                                    <span className="text-[11px] text-gray-300">
+                                      —
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-2.5 py-1.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => removeRow(i)}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                title="Remove milestone"
+                              >
+                                <FaTrash size={12} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { cacheOrSet } from "@/lib/cache";
-import { runAnalyticsAggregation } from "@/lib/analytics";
-import { requireAuth } from "@/lib/auth";
-import { SCOPED_ROLES } from "@/lib/colleges";
+import { connectDB } from "@/data/lib/db";
+import { cacheOrSet } from "@/data/lib/cache";
+import { runAnalyticsAggregation } from "@/data/lib/analytics";
+import { requireAuth } from "@/data/lib/auth";
+import { SCOPED_ROLES } from "@/data/lib/colleges";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { readFile } from "fs/promises";
@@ -173,7 +173,6 @@ export async function GET(req) {
             (employeeByOffice[office][status][sex] || 0) + 1;
         });
 
-
         const employeeOfficeSexTotals = {};
         Object.entries(employeeByOffice).forEach(([office, statuses]) => {
           const totals = { Male: 0, Female: 0, Unspecified: 0 };
@@ -184,7 +183,6 @@ export async function GET(req) {
           });
           employeeOfficeSexTotals[office] = totals;
         });
-
 
         const courseYearCounts = {};
         const studentByCollege = {};
@@ -275,9 +273,7 @@ export async function GET(req) {
             16,
           );
           titleX = 34;
-        } catch {
-         
-        }
+        } catch {}
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);

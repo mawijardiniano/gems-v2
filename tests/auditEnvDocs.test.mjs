@@ -28,8 +28,8 @@ function walk(dir, out = []) {
 
 function envVarsReadByAuditCode() {
   const files = [
-    "lib/activityLog.js",
-    "lib/auditRetention.js",
+    "data/lib/activityLog.js",
+    "data/lib/auditRetention.js",
     "scripts/audit-retention.mjs",
     ...walk("app/api/activity"),
   ];
@@ -76,7 +76,7 @@ test("the documentation says the retention period is provisional", () => {
      considered legal period rather than a safe placeholder nobody has ruled
      on. Both the code and the operator-facing doc must say so. */
   const example = readFileSync(EXAMPLE, "utf8");
-  const code = readFileSync("lib/auditRetention.js", "utf8");
+  const code = readFileSync("data/lib/auditRetention.js", "utf8");
 
   assert.match(example, /provisional/i, ".env.example must flag the period as provisional");
   assert.match(code, /provisional/i, "the retention module must flag it too");

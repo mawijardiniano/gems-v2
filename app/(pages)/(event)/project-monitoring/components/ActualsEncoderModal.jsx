@@ -15,13 +15,9 @@ import {
   generateAccomplishmentSummary,
   normalizeAccomplishmentLines,
   shouldUseAccomplishmentOverride,
-} from "@/lib/accomplishmentSummary";
+} from "@/data/lib/accomplishmentSummary";
 
-const ACCEPTED_EVIDENCE_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-];
+const ACCEPTED_EVIDENCE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024;
 
 const getFieldValue = (field) => {
@@ -354,7 +350,10 @@ export default function ActualsEncoderModal({
             </label>
             <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
               {evidenceUploading ? (
-                <FaSpinner className="animate-spin text-secondary-500" size={12} />
+                <FaSpinner
+                  className="animate-spin text-secondary-500"
+                  size={12}
+                />
               ) : (
                 <FaPaperclip size={12} />
               )}
@@ -450,8 +449,8 @@ export default function ActualsEncoderModal({
             />
             {!isOverride && (
               <p className="text-[11px] text-gray-400">
-                Updates automatically whenever a linked event is added, edited or
-                cancelled. Type in the box to keep a custom version instead.
+                Updates automatically whenever a linked event is added, edited
+                or cancelled. Type in the box to keep a custom version instead.
               </p>
             )}
           </div>
@@ -479,6 +478,3 @@ export default function ActualsEncoderModal({
     </div>
   );
 }
-
-
-

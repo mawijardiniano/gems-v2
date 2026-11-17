@@ -37,7 +37,7 @@ const MODEL_STUB = `
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === "next/server") return { url: "stub:next-server", shortCircuit: true };
-    if (specifier === "@/lib/db") return { url: "stub:db", shortCircuit: true };
+    if (specifier === "@/data/lib/db") return { url: "stub:db", shortCircuit: true };
     if (specifier === "@/models/activity_log") return { url: "stub:model", shortCircuit: true };
     return nextResolve(specifier, context);
   },
@@ -129,7 +129,7 @@ test("the writer records why a row could not be linked", async () => {
   /* The split depends on this marker existing. If the writer stops recording
      it, every degraded row silently becomes "legacy history" again. */
   const src = (await import("node:fs")).readFileSync(
-    "lib/activityLog.js",
+    "data/lib/activityLog.js",
     "utf8",
   );
   const catchBlock = src.slice(src.indexOf("async function linkHash"));

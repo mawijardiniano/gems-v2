@@ -10,8 +10,8 @@ import {
   FiHome,
 } from "react-icons/fi";
 import { FaBullseye } from "react-icons/fa";
-import { indicatorTargets } from "@/lib/performanceTracking";
-import { toOfficeArray } from "@/lib/colleges";
+import { indicatorTargets } from "@/data/lib/performanceTracking";
+import { toOfficeArray } from "@/data/lib/colleges";
 
 export default function ProjectContent() {
   const params = useParams();
@@ -126,8 +126,9 @@ export default function ProjectContent() {
     0,
   );
 
-
-  const indicatorProgress = indicatorTargets(project, { key: "attended_users" });
+  const indicatorProgress = indicatorTargets(project, {
+    key: "attended_users",
+  });
   const measurableCount = indicatorProgress.filter(
     (i) => i.hasParticipantTarget,
   ).length;
@@ -160,7 +161,6 @@ export default function ProjectContent() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-      
         <button
           onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-sm font-medium text-secondary-600 hover:text-secondary-700 hover:underline transition"
@@ -168,7 +168,6 @@ export default function ProjectContent() {
           <FiArrowLeft /> Back to Projects
         </button>
 
-      
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
@@ -237,11 +236,11 @@ export default function ProjectContent() {
         {indicatorProgress.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                <FaBullseye className="h-4 w-4 text-secondary-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Performance Targets vs. Actual
-                </h2>
-              </div>
+              <FaBullseye className="h-4 w-4 text-secondary-600" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Performance Targets vs. Actual
+              </h2>
+            </div>
 
             {measurableCount > 0 && (
               <div className="px-6 py-4 bg-gradient-to-br from-secondary-50/60 to-secondary-50/40">
@@ -268,22 +267,27 @@ export default function ProjectContent() {
                       aggregateExceeded ? "bg-emerald-500" : "bg-secondary-500"
                     }`}
                     style={{
-                      width: `${Math.min(
-                        100,
-                        Math.max(0, aggregatePercent),
-                      )}%`,
+                      width: `${Math.min(100, Math.max(0, aggregatePercent))}%`,
                     }}
                   />
                 </div>
                 <p
                   className={`mt-1.5 text-xs font-medium ${
-                    aggregateExceeded ? "text-emerald-600" : "text-secondary-600"
+                    aggregateExceeded
+                      ? "text-emerald-600"
+                      : "text-secondary-600"
                   }`}
                 >
                   {aggregateExceeded ? (
-                    <>Exceeded by {Math.abs(aggregateRemaining).toLocaleString()} ✓</>
+                    <>
+                      Exceeded by{" "}
+                      {Math.abs(aggregateRemaining).toLocaleString()} ✓
+                    </>
                   ) : aggregateRemaining > 0 ? (
-                    <>Remaining {aggregateRemaining.toLocaleString()} to hit target</>
+                    <>
+                      Remaining {aggregateRemaining.toLocaleString()} to hit
+                      target
+                    </>
                   ) : (
                     <>All targets reached ✓</>
                   )}
@@ -359,7 +363,10 @@ export default function ProjectContent() {
                             ? event.attended_users.length
                             : 0}
                         </span>
-                        <span className="ml-1 inline-flex items-center text-[11px] text-gray-400" title="Check-ins">
+                        <span
+                          className="ml-1 inline-flex items-center text-[11px] text-gray-400"
+                          title="Check-ins"
+                        >
                           attended
                         </span>
                       </td>

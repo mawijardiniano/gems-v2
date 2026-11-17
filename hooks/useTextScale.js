@@ -8,7 +8,7 @@ import {
   readStoredTextScale,
   resolveTextScale,
   writeStoredTextScale,
-} from "@/lib/textScale";
+} from "@/data/lib/textScale";
 
 /**
  * App-wide text-size preference.
@@ -22,8 +22,8 @@ import {
  * routes never render. `<html>` is restored to its original value on unmount.
  */
 export default function useTextScale() {
-  const [scaleId, setScaleId] = useState(() =>
-    resolveTextScale(readStoredTextScale()).id,
+  const [scaleId, setScaleId] = useState(
+    () => resolveTextScale(readStoredTextScale()).id,
   );
 
   const scale = resolveTextScale(scaleId);
@@ -56,4 +56,3 @@ export default function useTextScale() {
     setScaleId: selectScale,
   };
 }
-

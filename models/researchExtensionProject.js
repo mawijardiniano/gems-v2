@@ -4,7 +4,7 @@ import {
   RE_COMMENT_FIELDS,
   RE_FUNDING_SOURCES,
   RE_STATUSES,
-} from "../lib/projectModules.js";
+} from "../data/lib/projectModules.js";
 import {
   FieldSchema,
   MilestoneSchema,

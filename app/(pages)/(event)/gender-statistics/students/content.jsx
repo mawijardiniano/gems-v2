@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaUserGraduate, FaLightbulb, FaFileDownload } from "react-icons/fa";
 import { AGE_GROUP_ORDER } from "../components/ageGroups";
-import { COLLEGES, COLLEGE_TO_PROGRAMS } from "@/lib/colleges";
+import { COLLEGES, COLLEGE_TO_PROGRAMS } from "@/data/lib/colleges";
 import {
   useGenderStats,
   LoadingState,
@@ -84,7 +84,9 @@ function buildInsights(data) {
 
   const colleges = (data.byCollege || []).filter((c) => c.total >= 5);
   if (colleges.length > 1) {
-    const mostFemale = [...colleges].sort((a, b) => b.pctFemale - a.pctFemale)[0];
+    const mostFemale = [...colleges].sort(
+      (a, b) => b.pctFemale - a.pctFemale,
+    )[0];
     const mostMale = [...colleges].sort((a, b) => a.pctFemale - b.pctFemale)[0];
     insights.push(
       `${mostFemale.college} has the highest share of female students (${mostFemale.pctFemale}%).`,
@@ -141,10 +143,9 @@ export default function StudentGenderStatsContent() {
       ...(schoolYear ? { school_year: schoolYear } : {}),
       ...(semesters.length ? { semester: semesters.join(",") } : {}),
       ...(yearLevels.length ? { year_level: yearLevels.join(",") } : {}),
-      ...(studentType ? { student_type: studentType } : {}),
-      ...(demographics.length
-        ? { demographic: demographics.join(",") }
-        : {}),
+      ...(studentType ? { student_type: studentType } : {}),
+
+      ...(demographics.length ? { demographic: demographics.join(",") } : {}),
     }),
     [
       campuses,
@@ -418,7 +419,11 @@ export default function StudentGenderStatsContent() {
           <MultiSelect
             label="Age Group"
             allLabel="All Age Groups"
-            options={activeData?.ageGroups?.length ? activeData.ageGroups : AGE_GROUP_ORDER}
+            options={
+              activeData?.ageGroups?.length
+                ? activeData.ageGroups
+                : AGE_GROUP_ORDER
+            }
             value={ageGroups}
             onChange={setAgeGroups}
           />
@@ -473,10 +478,9 @@ export default function StudentGenderStatsContent() {
           Showing synthetic <strong>sample data</strong> for{" "}
           {SAMPLE_STUDENT_COUNT.toLocaleString()} students with a five-year
           enrollment history (2020-2021 to 2024-2025), expanded into individual
-          records from{" "}
-          <code className="mx-1">data/sample-profiles.json</code> so every
-          filter composes. Your database is not being read and nothing is saved
-          - turn the toggle off to return to live data.
+          records from <code className="mx-1">data/sample-profiles.json</code>{" "}
+          so every filter composes. Your database is not being read and nothing
+          is saved - turn the toggle off to return to live data.
         </div>
       )}
 
@@ -571,78 +575,78 @@ export default function StudentGenderStatsContent() {
             </>
           ) : (
             <>
-          <SummaryCards totals={totals} what="Students" deltas={deltas} />
+              <SummaryCards totals={totals} what="Students" deltas={deltas} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <SexDonut totals={totals} />
-            <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
-            <div className="xl:col-span-2">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <SexDonut totals={totals} />
+                <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
+                <div className="xl:col-span-2">
+                  <StackedSexBarVertical
+                    title="Students by Academic Level and Sex"
+                    data={activeData.byLevel || []}
+                    nameKey="level"
+                  />
+                </div>
+              </div>
+
+              {Array.isArray(activeData.byStudentType) &&
+                activeData.byStudentType.length > 0 && (
+                  <StackedSexBarVertical
+                    title="Students by Student Type and Sex"
+                    data={activeData.byStudentType}
+                    nameKey="type"
+                  />
+                )}
+
+              {Array.isArray(activeData.byYearLevel) &&
+                activeData.byYearLevel.length > 0 && (
+                  <StackedSexBarVertical
+                    title="Students by Year Level and Sex"
+                    data={activeData.byYearLevel}
+                    nameKey="year_level"
+                  />
+                )}
+
               <StackedSexBarVertical
-                title="Students by Academic Level and Sex"
-                data={activeData.byLevel || []}
-                nameKey="level"
-              />
-            </div>
-          </div>
-
-          {Array.isArray(activeData.byStudentType) &&
-            activeData.byStudentType.length > 0 && (
-              <StackedSexBarVertical
-                title="Students by Student Type and Sex"
-                data={activeData.byStudentType}
-                nameKey="type"
-              />
-            )}
-
-          {Array.isArray(activeData.byYearLevel) &&
-            activeData.byYearLevel.length > 0 && (
-              <StackedSexBarVertical
-                title="Students by Year Level and Sex"
-                data={activeData.byYearLevel}
-                nameKey="year_level"
-              />
-            )}
-
-          <StackedSexBarVertical
                 title="Students by Age Group and Sex"
                 data={activeData.byAgeGroup || []}
                 nameKey="age_group"
               />
 
-          {/* Civil status and religion are PII: the API returns them from the
+              {/* Civil status and religion are PII: the API returns them from the
               vault, and the sample toggle returns the same row shape. Stacked
               rather than side by side - religion has 9 rows and civil status 5,
               so a two-column grid stretched the shorter card into whitespace. */}
-          <SexTable
-            title="Students by Civil Status and Sex"
-            data={activeData.civilData || []}
-            nameKey="name"
-            nameHeader="Civil Status"
-          />
-          <SexTable
-            title="Students by Religion and Sex"
-            data={activeData.religionData || []}
-            nameKey="name"
-            nameHeader="Religion"
-          />
+              <SexTable
+                title="Students by Civil Status and Sex"
+                data={activeData.civilData || []}
+                nameKey="name"
+                nameHeader="Civil Status"
+              />
+              <SexTable
+                title="Students by Religion and Sex"
+                data={activeData.religionData || []}
+                nameKey="name"
+                nameHeader="Religion"
+              />
 
-          <StackedSexBar
-            title="Students by College / Unit and Sex"
-            data={activeData.byCollege || []}
-            nameKey="college"
-          />
+              <StackedSexBar
+                title="Students by College / Unit and Sex"
+                data={activeData.byCollege || []}
+                nameKey="college"
+              />
 
-          <StackedSexBarVertical
-            title="Enrollment by Academic Year and Sex"
-            data={activeData.byAcademicYear || []}
-            nameKey="school_year"
-          />
+              <StackedSexBarVertical
+                title="Enrollment by Academic Year and Sex"
+                data={activeData.byAcademicYear || []}
+                nameKey="school_year"
+              />
 
-          <TopProgramsTable rows={activeData.byProgram || []} />
-          <DemographicTable
-            rows={activeData.demographics || []}
-            total={totals.total}
-          />
+              <TopProgramsTable rows={activeData.byProgram || []} />
+              <DemographicTable
+                rows={activeData.demographics || []}
+                total={totals.total}
+              />
             </>
           )}
           <KeyInsightsCard insights={insights} />
@@ -716,7 +720,8 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" /> Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" />{" "}
+        Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -725,7 +730,10 @@ function KeyInsightsCard({ insights }) {
       ) : (
         <ul className="space-y-2">
           {list.map((line, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+            <li
+              key={i}
+              className="flex items-start gap-2 text-sm text-gray-700"
+            >
               <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-pink-500 shrink-0" />
               {line}
             </li>
@@ -766,11 +774,12 @@ function QuickReportsCard({ data, useSample = false, filters }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" /> Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" />{" "}
+        Quick Reports
       </h3>
       <p className="text-xs text-gray-500 mt-1 mb-4">
-        Each button generates its own separate PDF from the data currently
-        shown{useSample ? " (sample dataset)" : ""}.
+        Each button generates its own separate PDF from the data currently shown
+        {useSample ? " (sample dataset)" : ""}.
       </p>
       <div className="flex flex-wrap gap-3">
         {STUDENT_QUICK_REPORT_OPTIONS.map((option) => (
@@ -790,5 +799,3 @@ function QuickReportsCard({ data, useSample = false, filters }) {
     </div>
   );
 }
-
-

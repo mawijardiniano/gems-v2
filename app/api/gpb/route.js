@@ -1,15 +1,13 @@
-
-
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GPB from "@/models/gpb";
 import "@/models/event";
 import "@/models/gaa_budget";
 import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { canAccessGpb } from "@/lib/roleAccess";
-import { validateBudgetLink } from "@/lib/budgetLinking";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { canAccessGpb } from "@/data/lib/roleAccess";
+import { validateBudgetLink } from "@/data/lib/budgetLinking";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -52,7 +50,7 @@ export async function GET(req) {
         success: false,
         message: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -74,7 +72,7 @@ export async function POST(req) {
           success: false,
           message: "Year is required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,7 +84,7 @@ export async function POST(req) {
           success: false,
           message: `GPB for year ${year} already exists`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -101,7 +99,7 @@ export async function POST(req) {
             success: false,
             message: validation.message,
           },
-          { status: validation.status }
+          { status: validation.status },
         );
       }
     }
@@ -146,7 +144,7 @@ export async function POST(req) {
         success: false,
         message: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

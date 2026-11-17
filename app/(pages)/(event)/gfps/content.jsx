@@ -12,7 +12,7 @@ import {
   getSectionEditMembers,
   sectionHasData,
 } from "./gfps-config";
-import { resolveSaveRequest } from "@/lib/gfpsSaveRequest";
+import { resolveSaveRequest } from "@/data/lib/gfpsSaveRequest";
 import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
 
 /* Where the page-header "Add Member" button opens. The chair/head of agency is
@@ -21,7 +21,8 @@ import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
    point. This only chooses the selector's initial value — the operator is free
    to switch, and the list always starts empty. */
 const DEFAULT_ADD_SECTION =
-  SECTIONS.find((s) => !SECTION_BEHAVIOR[s.key]?.isSingle)?.key ?? SECTIONS[0].key;
+  SECTIONS.find((s) => !SECTION_BEHAVIOR[s.key]?.isSingle)?.key ??
+  SECTIONS[0].key;
 
 export default function GFPSManager() {
   const [section, setSection] = useState(SECTIONS[0].key);
@@ -49,7 +50,9 @@ export default function GFPSManager() {
   const [isLegacy, setIsLegacy] = useState(false);
   const role = useSelector((state) => state.auth.role);
 
-  const isArchived = Boolean(activeYear && academicYear && academicYear !== activeYear);
+  const isArchived = Boolean(
+    activeYear && academicYear && academicYear !== activeYear,
+  );
   const canEdit = role !== "gad coordinator" && !isArchived;
 
   useEffect(() => {
@@ -100,7 +103,11 @@ export default function GFPSManager() {
         setGfps(data.data && data.data[0] ? data.data[0] : {});
         setIsLegacy(Boolean(data.legacy));
         if (Array.isArray(data.years) && data.years.length) {
-          setYearOptions((prev) => [...new Set([...prev, ...data.years])].sort((a, b) => b.localeCompare(a)));
+          setYearOptions((prev) =>
+            [...new Set([...prev, ...data.years])].sort((a, b) =>
+              b.localeCompare(a),
+            ),
+          );
         }
         if (data.active_year) setActiveYear(data.active_year);
       } finally {
@@ -202,7 +209,9 @@ export default function GFPSManager() {
         setNotice(data.error || "Failed to copy GFPS");
         return;
       }
-      const carried = Array.isArray(data.data?.carried) ? data.data.carried : [];
+      const carried = Array.isArray(data.data?.carried)
+        ? data.data.carried
+        : [];
       const copied = Number(data.data?.copied) || 0;
 
       /* Report what actually landed. A copy that carried rows but resolved no
@@ -465,8 +474,18 @@ export default function GFPSManager() {
         <div>
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 text-white shadow-lg shadow-secondary-200">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
               </svg>
             </div>
             <div>
@@ -474,7 +493,8 @@ export default function GFPSManager() {
                 GFPS
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                Gender and Development Focal Point System — manage committee members and their roles per academic year
+                Gender and Development Focal Point System — manage committee
+                members and their roles per academic year
               </p>
               {academicYear && (
                 <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -512,7 +532,11 @@ export default function GFPSManager() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <PrintGFPS className="justify-center items-center flex" SECTIONS={SECTIONS} gfps={gfps} />
+          <PrintGFPS
+            className="justify-center items-center flex"
+            SECTIONS={SECTIONS}
+            gfps={gfps}
+          />
           {canEdit && !hasData && !loadingGfps && (
             <button
               onClick={handleCopyForward}
@@ -527,8 +551,18 @@ export default function GFPSManager() {
               onClick={openAddModal}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white rounded-xl hover:bg-secondary-700 transition-all font-medium text-sm shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Member
             </button>
@@ -539,7 +573,8 @@ export default function GFPSManager() {
       {isArchived && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm">
           <span>
-            Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
+            Viewing archived AY {academicYear} — read-only. Switch to AY{" "}
+            {activeYear} to make changes.
           </span>
         </div>
       )}
@@ -553,7 +588,8 @@ export default function GFPSManager() {
       {isLegacy && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
-            Showing untagged records from before the academic-year migration. Assign them to AY {academicYear} to keep them.
+            Showing untagged records from before the academic-year migration.
+            Assign them to AY {academicYear} to keep them.
           </span>
           <button
             onClick={handleAssignLegacy}
@@ -568,7 +604,8 @@ export default function GFPSManager() {
       {!loadingGfps && canEdit && !hasData && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
-            No GFPS for AY {academicYear} yet. Copy last year&apos;s committee or add members manually.
+            No GFPS for AY {academicYear} yet. Copy last year&apos;s committee
+            or add members manually.
           </span>
           <button
             onClick={handleCopyForward}

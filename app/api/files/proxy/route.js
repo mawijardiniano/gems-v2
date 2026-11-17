@@ -1,11 +1,10 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { getS3Client, storageBucket } from "@/lib/storage";
+import { getS3Client, storageBucket } from "@/data/lib/storage";
 
 const s3 = getS3Client;
-
 
 export async function GET(req) {
   const { error, status } = await requireAuth(req);
@@ -36,7 +35,6 @@ export async function GET(req) {
 
     return new NextResponse(Readable.toWeb(response.Body), { headers });
   } catch (err) {
-
     const isNotFound =
       err?.name === "NoSuchKey" ||
       err?.name === "NotFound" ||

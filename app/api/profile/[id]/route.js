@@ -1,13 +1,13 @@
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { logActivity, logPiiAccess } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity, logPiiAccess } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import { applyRowPii, resolvePii } from "@/lib/profileBroker";
-import { extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
+import { applyRowPii, resolvePii } from "@/data/lib/profileBroker";
+import { extractPiiFromProfile, savePii } from "@/data/lib/vaultWriter";
 
 /*
  * Re-writes the vaulted copy of a profile's PII after an update.
@@ -79,8 +79,11 @@ export async function GET(req, { params }) {
         /* `vaultRef` and `migrationStatus` are internal: the ref was used to
            resolve the identity above and must not reach the browser, and the
            migration state is exposed through the `vaulted` boolean instead. */
-        const { vaultRef: _vaultRef, migrationStatus: _migrationStatus, ...safeGem } =
-          gem;
+        const {
+          vaultRef: _vaultRef,
+          migrationStatus: _migrationStatus,
+          ...safeGem
+        } = gem;
         return {
           ...profile,
           /* `migrationStatus` records whether the row was migrated into the
@@ -177,7 +180,7 @@ export async function PUT(req, { params }) {
   }
   try {
     profile.data_version = (profile.data_version || 1) + 1;
-    
+
     try {
       const token = req.cookies.get("auth_token")?.value;
       if (token) {
@@ -229,7 +232,10 @@ export async function PUT(req, { params }) {
         action: "PROFILE_UPDATE",
         description: "User updated their profile",
         req,
-        metadata: { profile_id: profile._id, data_version: profile.data_version },
+        metadata: {
+          profile_id: profile._id,
+          data_version: profile.data_version,
+        },
         resource_type: "profile",
         resource_id: profile._id,
         severity: "info",
@@ -317,7 +323,9 @@ export async function DELETE(req, { params }) {
         user_id: String(id),
         username: user.username || null,
         role: user.role || null,
-        profile_id: user.personal_info_id ? String(user.personal_info_id) : null,
+        profile_id: user.personal_info_id
+          ? String(user.personal_info_id)
+          : null,
         profile_deleted: profileDeleted,
       },
     });

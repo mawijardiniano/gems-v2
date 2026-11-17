@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { cacheOrSet } from "@/lib/cache";
-import { runAnalyticsAggregation } from "@/lib/analytics";
-import { optionalAuth } from "@/lib/auth";
-import { SCOPED_ROLES } from "@/lib/colleges";
+import { connectDB } from "@/data/lib/db";
+import { cacheOrSet } from "@/data/lib/cache";
+import { runAnalyticsAggregation } from "@/data/lib/analytics";
+import { optionalAuth } from "@/data/lib/auth";
+import { SCOPED_ROLES } from "@/data/lib/colleges";
 
-const SUMMARY_CACHE_TTL = 60 * 1000; 
+const SUMMARY_CACHE_TTL = 60 * 1000;
 
 export async function GET(req) {
   try {
-
     const { error, status, headers, user } = await optionalAuth(req);
     if (error) {
       return NextResponse.json({ error }, { status, headers });
@@ -65,7 +64,8 @@ export async function GET(req) {
           const status =
             user.personal_info_id?.affiliation?.employment_information
               ?.employment_appointment_status || "Unspecified";
-          const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+          const sex =
+            user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
 
           if (!employeeCounts[status]) {
             employeeCounts[status] = { Male: 0, Female: 0, Unspecified: 0 };
@@ -95,9 +95,10 @@ export async function GET(req) {
             user.personal_info_id?.affiliation?.academic_information?.course ||
             "Unspecified";
           const yearLevel =
-            user.personal_info_id?.affiliation?.academic_information?.year_level ||
-            "Unspecified";
-          const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+            user.personal_info_id?.affiliation?.academic_information
+              ?.year_level || "Unspecified";
+          const sex =
+            user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
 
           if (!courseYearCounts[course]) {
             courseYearCounts[course] = {};
@@ -138,12 +139,14 @@ export async function GET(req) {
         const officeSexCounts = {};
         employees.forEach((user) => {
           const office =
-            user.personal_info_id?.affiliation?.employment_information?.office ||
-            "Unspecified";
-          const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+            user.personal_info_id?.affiliation?.employment_information
+              ?.office || "Unspecified";
+          const sex =
+            user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
           if (!officeSexCounts[office])
             officeSexCounts[office] = { Male: 0, Female: 0, Unspecified: 0 };
-          officeSexCounts[office][sex] = (officeSexCounts[office][sex] || 0) + 1;
+          officeSexCounts[office][sex] =
+            (officeSexCounts[office][sex] || 0) + 1;
         });
         const officeSexList = [];
         Object.entries(officeSexCounts).forEach(([office, counts]) => {
@@ -159,7 +162,8 @@ export async function GET(req) {
           const college =
             user.personal_info_id?.affiliation?.academic_information?.college ||
             "Unspecified";
-          const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+          const sex =
+            user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
           if (!collegeSexCounts[college])
             collegeSexCounts[college] = { Male: 0, Female: 0, Unspecified: 0 };
           collegeSexCounts[college][sex] =
@@ -171,17 +175,26 @@ export async function GET(req) {
           if (counts.Male > 0)
             collegeSexList.push({ college, sex: "Male", total: counts.Male });
           if (counts.Female > 0)
-            collegeSexList.push({ college, sex: "Female", total: counts.Female });
+            collegeSexList.push({
+              college,
+              sex: "Female",
+              total: counts.Female,
+            });
         });
 
         const yearLevelSexCounts = {};
         students.forEach((user) => {
           const yearLevel =
-            user.personal_info_id?.affiliation?.academic_information?.year_level ||
-            "Unspecified";
-          const sex = user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
+            user.personal_info_id?.affiliation?.academic_information
+              ?.year_level || "Unspecified";
+          const sex =
+            user.personal_info_id?.gadData?.sexAtBirth || "Unspecified";
           if (!yearLevelSexCounts[yearLevel])
-            yearLevelSexCounts[yearLevel] = { Male: 0, Female: 0, Unspecified: 0 };
+            yearLevelSexCounts[yearLevel] = {
+              Male: 0,
+              Female: 0,
+              Unspecified: 0,
+            };
           yearLevelSexCounts[yearLevel][sex] =
             (yearLevelSexCounts[yearLevel][sex] || 0) + 1;
         });
@@ -189,7 +202,11 @@ export async function GET(req) {
         Object.entries(yearLevelSexCounts).forEach(([yearLevel, counts]) => {
           if (yearLevel === "Unspecified") return;
           if (counts.Male > 0)
-            yearLevelSexList.push({ yearLevel, sex: "Male", total: counts.Male });
+            yearLevelSexList.push({
+              yearLevel,
+              sex: "Male",
+              total: counts.Male,
+            });
           if (counts.Female > 0)
             yearLevelSexList.push({
               yearLevel,
@@ -216,7 +233,10 @@ export async function GET(req) {
     );
 
     if (result?.error) {
-      return NextResponse.json({ message: result.message }, { status: result.status });
+      return NextResponse.json(
+        { message: result.message },
+        { status: result.status },
+      );
     }
 
     return NextResponse.json(result, { status: 200 });

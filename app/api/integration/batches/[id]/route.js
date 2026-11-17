@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import SyncLog from "@/models/syncLog";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 export async function DELETE(req, { params }) {
   try {

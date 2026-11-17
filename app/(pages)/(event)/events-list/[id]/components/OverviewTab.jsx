@@ -16,8 +16,12 @@ import {
   FaClipboardCheck,
 } from "react-icons/fa";
 import CheckboxDropdown from "./CheckboxDropdown";
-import { officeOptionList } from "@/lib/colleges";
-import { effectiveStatus, attendanceWindow, canTransition } from "@/lib/eventStatus";
+import { officeOptionList } from "@/data/lib/colleges";
+import {
+  effectiveStatus,
+  attendanceWindow,
+  canTransition,
+} from "@/data/lib/eventStatus";
 import CancelEventModal from "./CancelEventModal";
 
 /* Local to this card: the Overview only ever prints whole days, and the range
@@ -121,14 +125,8 @@ export default function OverviewTab({
   const generateDescription = async () => {
     setGenerating(true);
     try {
-      const {
-        title,
-        venue,
-        type_of_activity,
-        gad_activity,
-        date,
-        start_time,
-      } = editData || {};
+      const { title, venue, type_of_activity, gad_activity, date, start_time } =
+        editData || {};
 
       /* Time source of truth is the saved event: editData only carries a
          date-only string (the date input), but event.start_date/end_date
@@ -272,7 +270,8 @@ export default function OverviewTab({
       return {
         tone: "neutral",
         title: "Event has ended",
-        detail: "The QR code has expired. Organisers can still add attendees manually.",
+        detail:
+          "The QR code has expired. Organisers can still add attendees manually.",
         classes: "border-gray-200 bg-gray-50 text-gray-700",
       };
     }
@@ -705,9 +704,7 @@ export default function OverviewTab({
                       type="date"
                       className="input"
                       value={editData?.date || ""}
-                      onChange={(e) =>
-                        handleEditChange("date", e.target.value)
-                      }
+                      onChange={(e) => handleEditChange("date", e.target.value)}
                     />
                   </div>
                   <div>
@@ -779,7 +776,9 @@ export default function OverviewTab({
               <div className="md:col-span-2">
                 <CheckboxDropdown
                   label="Co Organizing Office/Unit"
-                  options={officeOptionList(editData?.co_organizing_office_unit)}
+                  options={officeOptionList(
+                    editData?.co_organizing_office_unit,
+                  )}
                   selected={editData?.co_organizing_office_unit || []}
                   onChange={(vals) =>
                     handleEditChange("co_organizing_office_unit", vals)
@@ -791,7 +790,10 @@ export default function OverviewTab({
             </div>
 
             <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
-              <button onClick={handleCancelEdit} className="btn-secondary !rounded-lg">
+              <button
+                onClick={handleCancelEdit}
+                className="btn-secondary !rounded-lg"
+              >
                 Cancel
               </button>
               <button
@@ -829,7 +831,8 @@ export default function OverviewTab({
                   Attendance QR
                 </h3>
                 <p className="mt-0.5 text-sm text-gray-500">
-                  Guests scan, fill the form, recorded as pending — validate to include in attendance
+                  Guests scan, fill the form, recorded as pending — validate to
+                  include in attendance
                 </p>
               </div>
             </div>
@@ -965,7 +968,8 @@ export default function OverviewTab({
             <div>
               <p className="font-semibold text-gray-900">Delete this event</p>
               <p className="text-sm text-gray-500">
-                This action cannot be undone. All event data will be permanently removed.
+                This action cannot be undone. All event data will be permanently
+                removed.
               </p>
             </div>
           </div>

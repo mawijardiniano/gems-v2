@@ -6,8 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
-import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/lib/colleges";
-import { computeInsights } from "@/lib/eventInsights";
+import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
+import { computeInsights } from "@/data/lib/eventInsights";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -66,7 +66,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
      re-fetched and every headcount / insight recomputes. */
   const [eventReloadKey, setEventReloadKey] = useState(0);
 
-
   const loadGuests = async () => {
     if (!eventId) return;
     setGuestsLoading(true);
@@ -98,7 +97,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   }, [activeTab, eventId, guestReloadKey]);
 
   const handleGuestValidation = async (guestIds, action, note) => {
-    const ids = (Array.isArray(guestIds) ? guestIds : [guestIds]).filter(Boolean);
+    const ids = (Array.isArray(guestIds) ? guestIds : [guestIds]).filter(
+      Boolean,
+    );
     if (ids.length === 0 || !eventId) return;
     await axios.patch("/api/events/guests", {
       event_id: eventId,
@@ -443,26 +444,23 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   /* Profiles of attendees with a system account that the guest sheet does not
      already cover — one per person, so a repeated scan cannot inflate a count.
      Guests handled below live in `approvedGuests`. */
-  const attendedProfiles = useMemo(
-    () => {
-      const seen = new Set();
-      return (event?.attended_users || [])
-        .filter((a) => {
-          const id = a?.user_id?._id ?? a?.user_id;
-          if (!id) return false;
-          return !guestUserIds.has(String(id));
-        })
-        .map((a) => a?.user_id?.personal_info_id)
-        .filter((p) => {
-          if (!p) return false;
-          const key = String(p?._id ?? p);
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-    },
-    [event, guestUserIds],
-  );
+  const attendedProfiles = useMemo(() => {
+    const seen = new Set();
+    return (event?.attended_users || [])
+      .filter((a) => {
+        const id = a?.user_id?._id ?? a?.user_id;
+        if (!id) return false;
+        return !guestUserIds.has(String(id));
+      })
+      .map((a) => a?.user_id?.personal_info_id)
+      .filter((p) => {
+        if (!p) return false;
+        const key = String(p?._id ?? p);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [event, guestUserIds]);
 
   const calculateAge = (birthday) => {
     if (!birthday) return null;
@@ -556,7 +554,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         const accountId = user?._id ?? user?.user_id;
         if (accountId && guestUserIds.has(String(accountId))) return false;
         if (user?.personal_info_id) {
-          const pid = String(user.personal_info_id?._id ?? user.personal_info_id);
+          const pid = String(
+            user.personal_info_id?._id ?? user.personal_info_id,
+          );
           if (guestUserIds.has(pid)) return false;
         }
         return true;
@@ -569,14 +569,16 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           sex: details.sex,
           age: details.age,
           participant_type: details.status,
-          department_office_org: details.department || details.college || details.office,
+          department_office_org:
+            details.department || details.college || details.office,
           program_year_section: details.programYearSection,
           position_designation: details.positionDesignation,
           contact: details.contact,
           attended_at: entry?.attended_at || null,
           validation_status: "approved",
           source: "account-check-in",
-          validation_note: "Recorded automatically from a signed-in QR check-in",
+          validation_note:
+            "Recorded automatically from a signed-in QR check-in",
         };
       });
   }, [event, guestUserIds]);
@@ -585,7 +587,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
      account check-ins, approved ones first so a freshly recorded row is
      visible on page one. */
   const attendanceGuests = useMemo(() => {
-    const score = (g) => (!g?.validation_status || g.validation_status === "approved" ? 0 : 1);
+    const score = (g) =>
+      !g?.validation_status || g.validation_status === "approved" ? 0 : 1;
     const time = (g) => new Date(g?.attended_at || 0).getTime() || 0;
     return [...(Array.isArray(guests) ? guests : []), ...checkinGuestRows].sort(
       (a, b) => score(a) - score(b) || time(b) - time(a),
@@ -644,7 +647,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const pendingGuestCount = (Array.isArray(guests) ? guests : []).filter(
     (g) => g?.validation_status === "pending",
   ).length;
-  
+
   const handleEditChange = (field, value) => {
     setEditData((prev) => ({ ...(prev || {}), [field]: value }));
   };
@@ -659,8 +662,12 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       const oldPoster = event.event_poster;
       const newPoster = editData.event_poster;
 
-      const startDateTime = editData.date ? new Date(`${editData.date}T00:00`) : null;
-      const endDateTime = editData.date ? new Date(`${editData.date}T23:59`) : null;
+      const startDateTime = editData.date
+        ? new Date(`${editData.date}T00:00`)
+        : null;
+      const endDateTime = editData.date
+        ? new Date(`${editData.date}T23:59`)
+        : null;
 
       if (
         !startDateTime ||
@@ -750,8 +757,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   }
 
   return (
-   <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
-
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
       <button
         onClick={() => router.push(backPath)}
         className="btn-ghost !px-3 !py-2 !rounded-lg"

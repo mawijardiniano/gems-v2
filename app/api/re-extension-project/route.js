@@ -1,10 +1,10 @@
 import ResearchExtensionProject from "@/models/researchExtensionProject";
-import { createCollectionHandlers } from "@/lib/simpleProjectApi";
+import { createCollectionHandlers } from "@/data/lib/simpleProjectApi";
 import {
   PROJECT_MODULE_PREFIXES,
   RE_CLASSIFICATIONS,
   RE_FUNDING_SOURCES,
-} from "@/lib/projectModules";
+} from "@/data/lib/projectModules";
 
 /* List + create endpoints for Research & Extension projects (RNE-<year>-<seq>). */
 

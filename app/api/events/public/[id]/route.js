@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -18,6 +18,9 @@ export async function GET(req, { params }) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     return NextResponse.json({ status: "success", data: event });
   } catch (err) {
-    return NextResponse.json({ message: "Unable to load event." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Unable to load event." },
+      { status: 500 },
+    );
   }
 }

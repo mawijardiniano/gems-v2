@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
-import { connectDB } from "@/lib/db";
-import { linkBudgetToMatchingGpb } from "@/lib/budgetLinking";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { connectDB } from "@/data/lib/db";
+import { linkBudgetToMatchingGpb } from "@/data/lib/budgetLinking";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {

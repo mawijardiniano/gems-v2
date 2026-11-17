@@ -1,11 +1,11 @@
 import AcademicProject from "@/models/academicProject";
-import { createItemHandlers } from "@/lib/simpleProjectApi";
-import { COLLEGES } from "@/lib/colleges";
+import { createItemHandlers } from "@/data/lib/simpleProjectApi";
+import { COLLEGES } from "@/data/lib/colleges";
 import {
   ACADEMIC_PROJECT_TYPES,
   ACADEMIC_STATUSES,
   SEMESTERS,
-} from "@/lib/projectModules";
+} from "@/data/lib/projectModules";
 
 /* Single Academic project: fetch, update and delete. */
 

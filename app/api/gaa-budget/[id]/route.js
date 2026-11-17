@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import GAABudget from "@/models/gaa_budget";
 import GPB from "@/models/gpb";
-import { connectDB } from "@/lib/db";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { connectDB } from "@/data/lib/db";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);

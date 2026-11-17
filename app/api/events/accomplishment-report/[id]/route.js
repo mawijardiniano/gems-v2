@@ -1,15 +1,19 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { deleteFileFromBucket } from "@/lib/delete";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { deleteFileFromBucket } from "@/data/lib/delete";
 
 const collectFileKeys = (report) => {
   const keys = [];
-  for (const field of ["office_memorandum", "activity_design", "attendance_sheet"]) {
+  for (const field of [
+    "office_memorandum",
+    "activity_design",
+    "attendance_sheet",
+  ]) {
     if (report?.[field]?.key) keys.push(report[field].key);
   }
   if (Array.isArray(report?.photos)) {
@@ -39,10 +43,7 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ data: report });
   } catch (err) {
-    return NextResponse.json(
-      { message: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }
 
@@ -56,27 +57,26 @@ export async function PUT(req, { params }) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Valid event id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const body = await req.json();
 
     const existing = await AccomplishmentReport.findOne({ event_id: id });
     if (!existing) {
-      return NextResponse.json(
-        { error: "Not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // Only the report submitter, the event creator, or an Admin may edit
     const event = await Event.findById(id).select("created_by");
-    const isSubmitter = existing.submitted_by?.toString() === user._id.toString();
-    const isEventCreator = event?.created_by?.toString() === user._id.toString();
+    const isSubmitter =
+      existing.submitted_by?.toString() === user._id.toString();
+    const isEventCreator =
+      event?.created_by?.toString() === user._id.toString();
     if (!isSubmitter && !isEventCreator && user.role !== "Admin") {
       return NextResponse.json(
         { error: "You are not allowed to update this report" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -93,14 +93,11 @@ export async function PUT(req, { params }) {
         other_attachments: body.other_attachments,
         updated_by: user._id,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
-      return NextResponse.json(
-        { error: "Not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const keptKeys = new Set(collectFileKeys(updated));
@@ -109,7 +106,11 @@ export async function PUT(req, { params }) {
         try {
           await deleteFileFromBucket(key);
         } catch (err) {
-          console.error("Failed to delete replaced report file:", key, err?.message);
+          console.error(
+            "Failed to delete replaced report file:",
+            key,
+            err?.message,
+          );
         }
       }
     }
@@ -129,9 +130,6 @@ export async function PUT(req, { params }) {
       data: updated,
     });
   } catch (err) {
-    return NextResponse.json(
-      { message: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }

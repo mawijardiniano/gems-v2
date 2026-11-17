@@ -24,19 +24,24 @@ import {
   FaTag,
   FaArrowLeft,
 } from "react-icons/fa";
-import { OFFICE_OPTIONS, addTypedOffice, defaultOrganizingUnit } from "@/lib/colleges";
+import {
+  OFFICE_OPTIONS,
+  addTypedOffice,
+  defaultOrganizingUnit,
+} from "@/data/lib/colleges";
 import {
   activityOptionValue,
   projectPickerLabel,
   resolveProjectActivities,
   splitActivityOption,
   truncateOptionLabel,
-} from "@/lib/projectActivities";
+} from "@/data/lib/projectActivities";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
 
-const labelClass = "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
+const labelClass =
+  "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
 
 const ACTIVITY_TYPES = [
   "Academic",
@@ -393,7 +398,8 @@ export default function CreateEventsContent() {
       setFormData((prev) => ({
         ...prev,
         event_source: "independent",
-        type_of_activity: prev.type_of_activity === "GAD" ? "" : prev.type_of_activity,
+        type_of_activity:
+          prev.type_of_activity === "GAD" ? "" : prev.type_of_activity,
         project: "",
         gad_activity: "",
       }));
@@ -494,7 +500,9 @@ export default function CreateEventsContent() {
       }
     } else {
       if (formData.type_of_activity === "GAD") {
-        setError("GAD events must be project-based. Select Project-based (GPB) or choose another activity type.");
+        setError(
+          "GAD events must be project-based. Select Project-based (GPB) or choose another activity type.",
+        );
         setLoading(false);
         return;
       }
@@ -555,7 +563,8 @@ export default function CreateEventsContent() {
       await axios.post("/api/events", payload);
       setSuccess("Event created successfully");
 
-      const redirectPath = userRole === "dean" ? "/dean/projects" : "/events-list";
+      const redirectPath =
+        userRole === "dean" ? "/dean/projects" : "/events-list";
       setTimeout(() => router.push(redirectPath), 1200);
     } catch (err) {
       setError(
@@ -649,7 +658,6 @@ export default function CreateEventsContent() {
             subtitle="Basic details about the activity"
           />
 
-   
           <div>
             <label className={labelClass}>
               <FaTag className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5" />
@@ -705,8 +713,7 @@ export default function CreateEventsContent() {
                       }));
                       return;
                     }
-                    const { project, gad_activity } =
-                      splitActivityOption(val);
+                    const { project, gad_activity } = splitActivityOption(val);
                     /* Picking an activity names the event after it and scopes
                        the event to the unit its creator belongs to: the GAD
                        Unit for a focal person, the college a coordinator is
@@ -742,10 +749,7 @@ export default function CreateEventsContent() {
                     const activities = resolveProjectActivities(proj);
                     if (activities.length === 0) return null;
                     return (
-                      <optgroup
-                        key={proj._id}
-                        label={projectPickerLabel(proj)}
-                      >
+                      <optgroup key={proj._id} label={projectPickerLabel(proj)}>
                         {/* Only the activity title is offered here — the
                             GPB description would turn every option into a
                             paragraph and the event stores the title only. A
@@ -961,7 +965,11 @@ export default function CreateEventsContent() {
         <div className="flex items-center justify-end gap-3 pt-2 pb-8">
           <button
             type="button"
-            onClick={() => router.push(userRole === "dean" ? "/dean/projects" : "/events-list")}
+            onClick={() =>
+              router.push(
+                userRole === "dean" ? "/dean/projects" : "/events-list",
+              )
+            }
             className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
           >
             Cancel

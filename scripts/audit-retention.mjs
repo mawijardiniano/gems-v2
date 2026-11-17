@@ -20,16 +20,16 @@ registerHooks({
         `${base.href}.mjs`,
         `${base.href}/index.js`,
       ]) {
-        if (existsSync(fileURLToPath(candidate))) return nextResolve(candidate, context);
+        if (existsSync(fileURLToPath(candidate)))
+          return nextResolve(candidate, context);
       }
     }
     return nextResolve(specifier, context);
   },
 });
 
-const { planRetention, applyRetention, retentionPolicy } = await import(
-  "../lib/auditRetention.js"
-);
+const { planRetention, applyRetention, retentionPolicy } =
+  await import("../data/lib/auditRetention.js");
 
 /**
  * Applies the audit-log retention policy (NIST AU-11).
@@ -72,7 +72,9 @@ function readNumberFlag(name, fallback) {
 
 function report(policy) {
   console.log("[audit-retention] policy");
-  console.log(`  security events : ${policy.security_days} days (${policy.source})`);
+  console.log(
+    `  security events : ${policy.security_days} days (${policy.source})`,
+  );
   console.log(`  other activity  : ${policy.activity_days} days`);
 }
 
@@ -88,7 +90,9 @@ async function main() {
     console.log(`  records total   : ${plan.total}`);
     console.log(`  expired         : ${plan.expired}`);
     console.log(`  would remain    : ${plan.kept}`);
-    console.log(`  oldest record   : ${plan.oldest ? new Date(plan.oldest).toISOString() : "none"}`);
+    console.log(
+      `  oldest record   : ${plan.oldest ? new Date(plan.oldest).toISOString() : "none"}`,
+    );
     console.log(`  cutoff (security): ${plan.cutoffs.security}`);
     console.log(`  cutoff (activity): ${plan.cutoffs.activity}`);
     console.log("[audit-retention] re-run with --apply to archive and dispose");
@@ -106,13 +110,17 @@ async function main() {
   }
 
   if (result.disposed === 0) {
-    console.log(`[audit-retention] nothing to dispose (${result.reason || "empty batch"})`);
+    console.log(
+      `[audit-retention] nothing to dispose (${result.reason || "empty batch"})`,
+    );
     return 0;
   }
 
   console.log("[audit-retention] disposed");
   console.log(`  records removed : ${result.disposed}`);
-  console.log(`  archived to     : s3://${result.archived.bucket}/${result.archived.key}`);
+  console.log(
+    `  archived to     : s3://${result.archived.bucket}/${result.archived.key}`,
+  );
   console.log(`  archived count  : ${result.archived.count}`);
   return 0;
 }

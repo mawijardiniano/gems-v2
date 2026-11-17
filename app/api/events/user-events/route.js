@@ -1,8 +1,8 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
 
 export async function GET(req) {
   try {

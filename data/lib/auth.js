@@ -1,20 +1,18 @@
 import jwt from "jsonwebtoken";
 import UserAuth from "@/models/user";
-import { connectDB } from "@/lib/db";
-import { rateLimiters } from "@/lib/rateLimit";
-import { cacheGet, cacheSet, cacheDel } from "@/lib/cache";
+import { connectDB } from "@/data/lib/db";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { cacheGet, cacheSet, cacheDel } from "@/data/lib/cache";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const USER_CACHE_TTL_MS = 15 * 1000; // 15 seconds
 const USER_CACHE_PREFIX = "user:";
 
-
 export function invalidateUserCache(userId) {
   if (!userId) return;
   cacheDel(`${USER_CACHE_PREFIX}${userId}`);
 }
-
 
 async function getCachedUser(userId) {
   const cacheKey = `${USER_CACHE_PREFIX}${userId}`;
@@ -32,7 +30,11 @@ async function getCachedUser(userId) {
 export async function requireAuth(req) {
   const rateLimitResult = await rateLimiters.api(req);
   if (rateLimitResult.error) {
-    return { error: rateLimitResult.error, status: rateLimitResult.status, headers: rateLimitResult.headers };
+    return {
+      error: rateLimitResult.error,
+      status: rateLimitResult.status,
+      headers: rateLimitResult.headers,
+    };
   }
 
   const token =
@@ -61,7 +63,6 @@ export async function requireAuth(req) {
 
   return { user };
 }
-
 
 export async function optionalAuth(req) {
   const rateLimitResult = await rateLimiters.api(req);

@@ -2,7 +2,11 @@
 
 import { useRef, useState } from "react";
 import { FaDownload, FaFileAlt, FaTimes, FaUpload } from "react-icons/fa";
-import { parseCsvTable, parseGanttTable, GANTT_TEMPLATE_CSV } from "@/lib/ganttParse";
+import {
+  parseCsvTable,
+  parseGanttTable,
+  GANTT_TEMPLATE_CSV,
+} from "@/data/lib/ganttParse";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 

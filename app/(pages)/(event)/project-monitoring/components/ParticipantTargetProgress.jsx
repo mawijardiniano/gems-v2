@@ -1,7 +1,7 @@
 "use client";
 
 import { FaBullseye } from "react-icons/fa";
-import { getTargetProgress } from "@/lib/accomplishmentSummary";
+import { getTargetProgress } from "@/data/lib/accomplishmentSummary";
 
 export default function ParticipantTargetProgress({
   actual,

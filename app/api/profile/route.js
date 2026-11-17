@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import SystemSetting from "@/models/systemSetting";
@@ -6,24 +6,28 @@ import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { toTitleCase } from "@/app/api/integration/_utils/mapping";
 import {
   normalizeStudentUsername,
   normalizeEmployeeUsername,
   usernameEqualsFilter,
-} from "@/lib/usernames";
-import { rateLimiters } from "@/lib/rateLimit";
-import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
-import { assignIdentifiers, extractPiiFromProfile, savePii } from "@/lib/vaultWriter";
+} from "@/data/lib/usernames";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
+import {
+  assignIdentifiers,
+  extractPiiFromProfile,
+  savePii,
+} from "@/data/lib/vaultWriter";
 import {
   resolvePiiBatch,
   applyRowPii,
   searchIndexQuery,
   loadDecryptedPiiBatch,
-} from "@/lib/profileBroker";
+} from "@/data/lib/profileBroker";
 
 const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -57,14 +61,18 @@ async function generateUniqueUsername(personal, affiliation, contact) {
       const trimmed = String(email).trim();
       // Keep full emails as-is so email login keeps working.
       // Only sanitize the local-part fallback (no @) per locked rule.
-      candidates.push(trimmed.includes("@") ? trimmed : normalizeEmployeeUsername(trimmed));
+      candidates.push(
+        trimmed.includes("@") ? trimmed : normalizeEmployeeUsername(trimmed),
+      );
     }
   }
 
   const uniqueCandidates = [...new Set(candidates.filter(Boolean))];
 
   for (const candidate of uniqueCandidates) {
-    const exists = await UserAuth.findOne(usernameEqualsFilter(candidate)).lean();
+    const exists = await UserAuth.findOne(
+      usernameEqualsFilter(candidate),
+    ).lean();
     if (!exists) {
       return candidate;
     }
@@ -255,7 +263,6 @@ export async function GET(req) {
     const usersNoPassword = await cacheOrSet(
       cacheKey,
       async () => {
-
         const match = {};
         if (assignedCollege) {
           match.$or = [
@@ -279,7 +286,12 @@ export async function GET(req) {
               as: "personal_info_id",
             },
           },
-          { $unwind: { path: "$personal_info_id", preserveNullAndEmptyArrays: true } },
+          {
+            $unwind: {
+              path: "$personal_info_id",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ];
 
         if (assignedCollege) {
@@ -338,7 +350,9 @@ export async function GET(req) {
         const filteredUsers = scopedUsers
           .map((user) => {
             const profileId = user.personal_info_id?._id;
-            const term = profileId ? termByProfileId.get(String(profileId)) : null;
+            const term = profileId
+              ? termByProfileId.get(String(profileId))
+              : null;
 
             return {
               ...user,
@@ -564,8 +578,7 @@ export async function POST(req) {
        now its only home. */
     const affiliationPayload = { ...(capitalizedBody.affiliation || {}) };
     if (!affiliationPayload.person_type) {
-      affiliationPayload.person_type =
-        personal.currentStatus || undefined;
+      affiliationPayload.person_type = personal.currentStatus || undefined;
     }
 
     const profilePayload = {

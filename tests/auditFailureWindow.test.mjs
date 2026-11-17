@@ -37,10 +37,10 @@ registerHooks({
     if (specifier === "@/models/activity_log") {
       return { url: "stub:activity_log", shortCircuit: true };
     }
-    if (specifier === "@/lib/db") {
+    if (specifier === "@/data/lib/db") {
       return { url: "stub:db", shortCircuit: true };
     }
-    if (specifier === "@/lib/profileBroker") {
+    if (specifier === "@/data/lib/profileBroker") {
       return { url: "stub:profileBroker", shortCircuit: true };
     }
     return nextResolve(specifier, context);
@@ -60,9 +60,8 @@ registerHooks({
 });
 
 const modelMod = await import("stub:activity_log");
-const { getAuditFailureStats, logActivity, AUDIT_FAILURE_WINDOW_MS } = await import(
-  "../lib/activityLog.js"
-);
+const { getAuditFailureStats, logActivity, AUDIT_FAILURE_WINDOW_MS } =
+  await import("../data/lib/activityLog.js");
 
 /* Each test starts from a known state. The module keeps its counters in
  * module scope, so fresh figures come from subtracting the baseline rather than
@@ -91,13 +90,21 @@ async function failOnce() {
   /* warning severity, so the write is awaited rather than left in the
      background — a failure that matters must be recorded before the caller
      continues. */
-  await logActivity({ action: "TEST_FAIL", description: "x", severity: "warning" });
+  await logActivity({
+    action: "TEST_FAIL",
+    description: "x",
+    severity: "warning",
+  });
   await settle();
 }
 
 async function succeedOnce() {
   modelMod.__setCreateImpl(async () => ({}));
-  await logActivity({ action: "TEST_OK", description: "x", severity: "warning" });
+  await logActivity({
+    action: "TEST_OK",
+    description: "x",
+    severity: "warning",
+  });
   await settle();
 }
 
@@ -145,7 +152,11 @@ test("a failure is still counted at the edge of the window", async () => {
   const atEdge = getAuditFailureStats({
     now: Date.now() + AUDIT_FAILURE_WINDOW_MS - 1000,
   });
-  assert.equal(atEdge.count - before.count, 1, "a failure just inside must still alarm");
+  assert.equal(
+    atEdge.count - before.count,
+    1,
+    "a failure just inside must still alarm",
+  );
 
   const past = getAuditFailureStats({
     now: Date.now() + AUDIT_FAILURE_WINDOW_MS + 1000,
@@ -165,7 +176,11 @@ test("pruning is real, not just filtered at read time", async () => {
      old failure: it has been dropped, not merely hidden. */
   const afterPrune = getAuditFailureStats();
   assert.equal(afterPrune.count, 0);
-  assert.equal(afterPrune.total - before.total, 1, "the total is unaffected by pruning");
+  assert.equal(
+    afterPrune.total - before.total,
+    1,
+    "the total is unaffected by pruning",
+  );
 });
 
 test("a successful write is counted as attempted and is not a failure", async () => {
@@ -174,7 +189,11 @@ test("a successful write is counted as attempted and is not a failure", async ()
 
   const after = getAuditFailureStats();
   assert.equal(after.attempted - before.attempted, 1);
-  assert.equal(after.total - before.total, 0, "a success must never look like a failure");
+  assert.equal(
+    after.total - before.total,
+    0,
+    "a success must never look like a failure",
+  );
   assert.equal(after.count, 0);
 });
 
@@ -200,7 +219,11 @@ test("stats are a copy, not a live handle", async () => {
   stats.last_error = "tampered";
 
   const again = getAuditFailureStats();
-  assert.equal(again.count, before, "zeroing the returned object must not clear the alarm");
+  assert.equal(
+    again.count,
+    before,
+    "zeroing the returned object must not clear the alarm",
+  );
   assert.notEqual(again.last_error, "tampered");
   assert.notEqual(again, stats, "each read returns a fresh object");
 });

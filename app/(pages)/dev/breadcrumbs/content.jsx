@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import PageBreadcrumbs from "@/components/layout/PageBreadcrumbs";
-import { BREADCRUMB_HOMES, buildBreadcrumbs } from "@/lib/breadcrumbs";
-import { BREADCRUMB_ROUTE_PREVIEW } from "@/lib/breadcrumbRoutes";
+import { BREADCRUMB_HOMES, buildBreadcrumbs } from "@/data/lib/breadcrumbs";
+import { BREADCRUMB_ROUTE_PREVIEW } from "@/data/lib/breadcrumbRoutes";
 
 /**
  * Dev-only preview: renders EVERY route's breadcrumb as the real component so
@@ -32,7 +32,7 @@ export default function BreadcrumbsPreview() {
       routes: BREADCRUMB_ROUTE_PREVIEW.filter(
         (route) =>
           route.role === role &&
-          (!normalized || route.path.toLowerCase().includes(normalized))
+          (!normalized || route.path.toLowerCase().includes(normalized)),
       ),
     })).filter((group) => group.routes.length > 0);
   }, [query]);
@@ -42,9 +42,7 @@ export default function BreadcrumbsPreview() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Breadcrumb preview
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Breadcrumb preview</h1>
         <p className="mt-1 text-sm text-gray-500">
           Every route rendered with the real{" "}
           <code className="rounded bg-gray-200 px-1 py-0.5 text-[11px]">

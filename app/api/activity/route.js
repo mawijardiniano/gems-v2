@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ActivityLog from "@/models/activity_log";
-import { logActivity, redactActivityLog } from "@/lib/activityLog";
+import { logActivity, redactActivityLog } from "@/data/lib/activityLog";
 import jwt from "jsonwebtoken";
-import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
+import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ACTIVITY_CACHE_TTL = 15 * 1000; // 15 seconds
@@ -25,10 +25,7 @@ export async function GET(req) {
 
     const decoded = authenticate(req);
     if (!decoded) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const url = new URL(req.url);
@@ -169,10 +166,7 @@ export async function DELETE(req) {
     // Invalidate cached activity lists so the next fetch is fresh.
     cacheDelPrefix("activity:");
 
-    return NextResponse.json(
-      { message: "Redacted", id },
-      { status: 200 },
-    );
+    return NextResponse.json({ message: "Redacted", id }, { status: 200 });
   } catch (err) {
     console.error("Activity redact error:", err);
     return NextResponse.json(

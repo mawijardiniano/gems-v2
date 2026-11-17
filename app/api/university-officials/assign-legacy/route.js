@@ -1,10 +1,10 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
 import GFPS from "@/models/gfps";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { normalizeAcademicYear } from "@/lib/academicYear";
+import { normalizeAcademicYear } from "@/data/lib/academicYear";
 
 const MISSING = {
   $or: [

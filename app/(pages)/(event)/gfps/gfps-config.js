@@ -6,7 +6,7 @@ export const SECTIONS = [
 ];
 
 // The officials picker groups seats by the MarSU chart headers.
-export { HEADERS as OFFICIAL_GROUPS_ORDER } from "@/lib/universityOfficialsConstants";
+export { HEADERS as OFFICIAL_GROUPS_ORDER } from "@/data/lib/universityOfficialsConstants";
 
 export const SECTION_STYLES = {
   chairOrHeadOfAgency: {

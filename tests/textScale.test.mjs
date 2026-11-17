@@ -11,7 +11,7 @@ import {
   resolveTextScale,
   textScaleFontSize,
   textScaleTriggerLabel,
-} from "../lib/textScale.js";
+} from "../data/lib/textScale.js";
 
 /** Minimal stand-in for `<html>` so the DOM helper runs outside a browser. */
 function fakeRoot() {

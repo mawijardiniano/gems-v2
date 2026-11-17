@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
 import PageBreadcrumbs from "@/components/layout/PageBreadcrumbs";
-import { EVENT_ROLE_PAGE_ACCESS } from "@/lib/roleAccess";
+import { EVENT_ROLE_PAGE_ACCESS } from "@/data/lib/roleAccess";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -89,9 +89,7 @@ export default function DashboardLayout({ children }) {
         }`}
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main
-          className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-gray-50"
-        >
+        <main className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-gray-50">
           <PageBreadcrumbs role="event" />
           {children}
         </main>

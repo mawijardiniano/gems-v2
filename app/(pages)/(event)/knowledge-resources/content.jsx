@@ -32,11 +32,12 @@ import {
   KNOWLEDGE_CATEGORIES,
   KNOWLEDGE_ALLOWED_EXTS,
   MAX_FILE_SIZE,
-} from "@/lib/knowledgeResources";
+} from "@/data/lib/knowledgeResources";
 
 // ─── Constants ──────────────────────────────────────────────────────
 const CATEGORY_STYLES = {
-  "Training Material": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
+  "Training Material":
+    "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Manual: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
   Research: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Other: "bg-gray-100 text-gray-700 ring-gray-500/20",
@@ -163,7 +164,7 @@ export default function KnowledgeResourcesContent() {
     (resource) =>
       canDeleteAny ||
       String(resource?.uploaded_by || "") === String(userId || ""),
-    [canDeleteAny, userId]
+    [canDeleteAny, userId],
   );
 
   // ── Auto-dismiss messages ────────────────────────────────────────
@@ -190,7 +191,7 @@ export default function KnowledgeResourcesContent() {
     } catch (err) {
       setResources([]);
       setError(
-        err.response?.data?.error || "Failed to load knowledge resources"
+        err.response?.data?.error || "Failed to load knowledge resources",
       );
     } finally {
       setLoading(false);
@@ -210,9 +211,15 @@ export default function KnowledgeResourcesContent() {
       }
       if (!term) return true;
       return (
-        String(item.title || "").toLowerCase().includes(term) ||
-        String(item.file?.name || "").toLowerCase().includes(term) ||
-        String(item.uploaded_by_name || "").toLowerCase().includes(term)
+        String(item.title || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(item.file?.name || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(item.uploaded_by_name || "")
+          .toLowerCase()
+          .includes(term)
       );
     });
   }, [resources, activeCategory, search]);
@@ -256,7 +263,9 @@ export default function KnowledgeResourcesContent() {
     }
     if (file.size > MAX_FILE_SIZE) {
       setFormFile(null);
-      setFormError(`File exceeds the maximum allowed size (${MAX_FILE_SIZE_LABEL})`);
+      setFormError(
+        `File exceeds the maximum allowed size (${MAX_FILE_SIZE_LABEL})`,
+      );
       return;
     }
     setFormFile(file);
@@ -295,7 +304,7 @@ export default function KnowledgeResourcesContent() {
       fetchResources();
     } catch (err) {
       setFormError(
-        err.response?.data?.error || "Upload failed. Please try again."
+        err.response?.data?.error || "Upload failed. Please try again.",
       );
     } finally {
       setUploading(false);
@@ -459,7 +468,8 @@ export default function KnowledgeResourcesContent() {
                       className="shrink-0 text-gray-400"
                       size={11}
                     />
-                    {formatDate(item.createdAt)} · {formatBytes(item.file?.size)}
+                    {formatDate(item.createdAt)} ·{" "}
+                    {formatBytes(item.file?.size)}
                   </p>
                 </div>
 
@@ -625,7 +635,8 @@ export default function KnowledgeResourcesContent() {
               >
                 {uploading ? (
                   <>
-                    <FaSpinner className="animate-spin" size={13} /> Uploading...
+                    <FaSpinner className="animate-spin" size={13} />{" "}
+                    Uploading...
                   </>
                 ) : (
                   <>
@@ -679,4 +690,3 @@ export default function KnowledgeResourcesContent() {
     </div>
   );
 }
-

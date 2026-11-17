@@ -1,15 +1,14 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GPB from "@/models/gpb";
-import { logActivity } from "@/lib/activityLog";
- import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import {
   createNotifications,
   getGpbStatusRecipientIds,
   normalizeRole,
-} from "@/lib/notifications";
-import { canSetGpbStatus, GPB_STATUS_ROLES } from "@/lib/gpbStatus";
-import {NextResponse} from "next/server"
-
+} from "@/data/lib/notifications";
+import { canSetGpbStatus, GPB_STATUS_ROLES } from "@/data/lib/gpbStatus";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -22,10 +21,7 @@ export async function GET(req, { params }) {
     const gpb = await GPB.findById(id);
 
     if (!gpb) {
-      return Response.json(
-        { error: "GPB Status not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "GPB Status not found" }, { status: 404 });
     }
 
     return Response.json({
@@ -44,7 +40,7 @@ export async function POST(req, { params }) {
   if (!GPB_STATUS_ROLES.includes(normalizeRole(user?.role))) {
     return NextResponse.json(
       { error: "You are not allowed to update the GPB status" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

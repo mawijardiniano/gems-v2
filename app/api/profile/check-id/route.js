@@ -1,7 +1,7 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import { NextResponse } from "next/server";
-import { rateLimiters } from "@/lib/rateLimit";
+import { rateLimiters } from "@/data/lib/rateLimit";
 
 /* ── Why this route has no audit record ─────────────────────────────────────
  *

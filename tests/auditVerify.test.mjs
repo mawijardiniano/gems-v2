@@ -71,7 +71,7 @@ registerHooks({
     if (specifier === "next/server") {
       return { url: "stub:next_server", shortCircuit: true };
     }
-    if (specifier === "@/lib/db") {
+    if (specifier === "@/data/lib/db") {
       return { url: "stub:db", shortCircuit: true };
     }
     if (specifier.startsWith("@/")) {

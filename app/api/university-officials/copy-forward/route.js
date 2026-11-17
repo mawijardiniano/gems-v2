@@ -1,9 +1,9 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { normalizeAcademicYear } from "@/lib/academicYear";
+import { normalizeAcademicYear } from "@/data/lib/academicYear";
 
 /**
  * POST /api/university-officials/copy-forward { from, to }
@@ -45,7 +45,10 @@ export async function POST(req) {
   }
   if (targetCount > 0) {
     return Response.json(
-      { success: false, error: `AY ${to} already has ${targetCount} assignment(s)` },
+      {
+        success: false,
+        error: `AY ${to} already has ${targetCount} assignment(s)`,
+      },
       { status: 409 },
     );
   }

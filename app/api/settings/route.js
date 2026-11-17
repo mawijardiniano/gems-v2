@@ -1,11 +1,11 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { requireAuth } from "@/lib/auth";
-import { logActivity, diffFields } from "@/lib/activityLog";
-import { normalizeAcademicYear } from "@/lib/academicYear";
-import { SIGNATORY_SLOTS, withoutMiddleName } from "@/lib/signatories";
+import { requireAuth } from "@/data/lib/auth";
+import { logActivity, diffFields } from "@/data/lib/activityLog";
+import { normalizeAcademicYear } from "@/data/lib/academicYear";
+import { SIGNATORY_SLOTS, withoutMiddleName } from "@/data/lib/signatories";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -114,14 +114,20 @@ export async function PUT(req) {
     if (key === "active_term") {
       if (!value.school_year || !value.semester) {
         return NextResponse.json(
-          { success: false, error: "active_term requires school_year and semester" },
+          {
+            success: false,
+            error: "active_term requires school_year and semester",
+          },
           { status: 400 },
         );
       }
       const validSemesters = ["1st", "2nd", "Summer"];
       if (!validSemesters.includes(value.semester)) {
         return NextResponse.json(
-          { success: false, error: `semester must be one of: ${validSemesters.join(", ")}` },
+          {
+            success: false,
+            error: `semester must be one of: ${validSemesters.join(", ")}`,
+          },
           { status: 400 },
         );
       }
@@ -149,11 +155,15 @@ export async function PUT(req) {
       }
 
       const entries = Object.entries(value).filter(
-        ([year]) => !["updated_by", "updated_by_username", "updated_at"].includes(year),
+        ([year]) =>
+          !["updated_by", "updated_by_username", "updated_at"].includes(year),
       );
       if (!entries.length) {
         return NextResponse.json(
-          { success: false, error: "report_signatories requires at least one academic year" },
+          {
+            success: false,
+            error: "report_signatories requires at least one academic year",
+          },
           { status: 400 },
         );
       }
@@ -161,7 +171,10 @@ export async function PUT(req) {
       for (const [year, entry] of entries) {
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
           return NextResponse.json(
-            { success: false, error: `report_signatories["${year}"] must be an object` },
+            {
+              success: false,
+              error: `report_signatories["${year}"] must be an object`,
+            },
             { status: 400 },
           );
         }
@@ -181,13 +194,19 @@ export async function PUT(req) {
           if (typeof person === "string") continue;
           if (!person || typeof person !== "object" || Array.isArray(person)) {
             return NextResponse.json(
-              { success: false, error: `${slot} in ${year} must be a name or a { name } object` },
+              {
+                success: false,
+                error: `${slot} in ${year} must be a name or a { name } object`,
+              },
               { status: 400 },
             );
           }
           if (typeof person.name !== "string" || !person.name.trim()) {
             return NextResponse.json(
-              { success: false, error: `${slot} in ${year} requires a non-empty name` },
+              {
+                success: false,
+                error: `${slot} in ${year} requires a non-empty name`,
+              },
               { status: 400 },
             );
           }
@@ -196,7 +215,10 @@ export async function PUT(req) {
             (person.profile_id != null && typeof person.profile_id !== "string")
           ) {
             return NextResponse.json(
-              { success: false, error: `${slot} in ${year} has an invalid name or profile_id` },
+              {
+                success: false,
+                error: `${slot} in ${year} has an invalid name or profile_id`,
+              },
               { status: 400 },
             );
           }

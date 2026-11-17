@@ -4,12 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   syncQueuedAttendance,
   hasQueuedAttendance,
-} from "@/lib/pwa/attendanceQueue";
+} from "@/data/lib/pwa/attendanceQueue";
 
 export default function AttendanceSyncToast() {
   const [toasts, setToasts] = useState([]);
   const syncingRef = useRef(false);
-
 
   const showToast = (message, type = "success") => {
     const id = Date.now() + Math.random();
@@ -47,7 +46,6 @@ export default function AttendanceSyncToast() {
     };
   };
 
-
   const handleServiceWorkerMessage = (event) => {
     const data = event?.data;
     if (!data) return;
@@ -58,7 +56,6 @@ export default function AttendanceSyncToast() {
       }
     }
   };
-
 
   const attemptSync = async () => {
     if (syncingRef.current) return false;
@@ -80,14 +77,14 @@ export default function AttendanceSyncToast() {
   };
 
   useEffect(() => {
-
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
+      navigator.serviceWorker.addEventListener(
+        "message",
+        handleServiceWorkerMessage,
+      );
     }
 
-
     window.addEventListener("online", attemptSync);
-
 
     const interval = setInterval(async () => {
       const hasQueued = await hasQueuedAttendance();
@@ -98,7 +95,10 @@ export default function AttendanceSyncToast() {
 
     return () => {
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
+        navigator.serviceWorker.removeEventListener(
+          "message",
+          handleServiceWorkerMessage,
+        );
       }
       window.removeEventListener("online", attemptSync);
       clearInterval(interval);
@@ -120,7 +120,11 @@ export default function AttendanceSyncToast() {
         >
           <div className="flex items-start gap-3">
             <span className="text-xl leading-none mt-0.5">
-              {toast.type === "success" ? "✅" : toast.type === "info" ? "📋" : "❌"}
+              {toast.type === "success"
+                ? "✅"
+                : toast.type === "info"
+                  ? "📋"
+                  : "❌"}
             </span>
             <span>{toast.message}</span>
           </div>

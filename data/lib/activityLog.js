@@ -1,7 +1,7 @@
 import ActivityLog from "@/models/activity_log";
 import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
-import { canViewPII } from "@/lib/profileBroker";
+import { canViewPII } from "@/data/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -38,12 +38,24 @@ async function resolveActor({ user_id, req, actor }) {
   }
 
   if (!req) {
-    return { user_id: null, username: null, role: null, name: null, auth_method: null };
+    return {
+      user_id: null,
+      username: null,
+      role: null,
+      name: null,
+      auth_method: null,
+    };
   }
 
   const token = req.cookies?.get?.("auth_token")?.value;
   if (!token) {
-    return { user_id: user_id || null, username: null, role: null, name: null, auth_method: null };
+    return {
+      user_id: user_id || null,
+      username: null,
+      role: null,
+      name: null,
+      auth_method: null,
+    };
   }
 
   try {
@@ -149,7 +161,9 @@ export function getAuditFailureStats({ now = Date.now() } = {}) {
     attempted,
     window_ms: AUDIT_FAILURE_WINDOW_MS,
     last_error: lastError,
-    last_failed_at: lastFailedAtMs ? new Date(lastFailedAtMs).toISOString() : null,
+    last_failed_at: lastFailedAtMs
+      ? new Date(lastFailedAtMs).toISOString()
+      : null,
     last_action: lastAction,
   };
 }
@@ -175,7 +189,6 @@ async function writeLog(entry) {
     return false;
   }
 }
-
 
 /* The hash is computed over a deliberately explicit projection rather than the
    raw document: `_id` and server-added fields differ between a dry run and the
@@ -317,10 +330,17 @@ function sameValue(a, b) {
 }
 
 function readPath(obj, path) {
-  return path.split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), obj);
+  return path
+    .split(".")
+    .reduce((acc, key) => (acc == null ? acc : acc[key]), obj);
 }
 
-export function diffFields(before, after, fields, { redactedFields = [] } = {}) {
+export function diffFields(
+  before,
+  after,
+  fields,
+  { redactedFields = [] } = {},
+) {
   const changes = [];
   for (const field of fields) {
     const prev = readPath(before, field);
@@ -331,7 +351,12 @@ export function diffFields(before, after, fields, { redactedFields = [] } = {}) 
     if (sameValue(prev, next)) continue;
 
     if (redactedFields.includes(field)) {
-      changes.push({ field, before: "[vaulted]", after: "[vaulted]", redacted: true });
+      changes.push({
+        field,
+        before: "[vaulted]",
+        after: "[vaulted]",
+        redacted: true,
+      });
     } else {
       changes.push({
         field,
@@ -418,4 +443,3 @@ export async function redactActivityLog({ id, reason, req = null }) {
     },
   );
 }
-

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toOfficeArray } from "@/lib/colleges";
+import { toOfficeArray } from "@/data/lib/colleges";
 import {
   SIGNATORIES_SETTING_KEY,
   SIGNATORY_BLANK,
   getSignatories,
   signatoryYearFromGpbYear,
-} from "@/lib/signatories";
+} from "@/data/lib/signatories";
 
 /* Plan fields are stored wrapped as `{ value }` in MongoDB; some callers pass
    the raw API documents while others pass pre-normalized projects. Unwrap both
@@ -71,7 +71,10 @@ export default function PrintGPB({
     let cancelled = false;
 
     async function loadSignatories() {
-      const blank = { focalPointName: SIGNATORY_BLANK, presidentName: SIGNATORY_BLANK };
+      const blank = {
+        focalPointName: SIGNATORY_BLANK,
+        presidentName: SIGNATORY_BLANK,
+      };
       const ay = signatoryYearFromGpbYear(year);
       if (!ay) {
         if (!cancelled) setSignatories(blank);

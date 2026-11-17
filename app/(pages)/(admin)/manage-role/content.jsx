@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { COLLEGES, SCOPED_ROLES } from "@/lib/colleges";
+import { COLLEGES, SCOPED_ROLES } from "@/data/lib/colleges";
 import {
   HiOutlineShieldCheck,
   HiOutlineUserGroup,
@@ -37,7 +37,8 @@ const ROLES = [
 
 const ROLE_COLORS = {
   "SUC President": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
-  "GAD Coordinator": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
+  "GAD Coordinator":
+    "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "GAD Focal Person": "bg-cyan-100 text-cyan-800 ring-cyan-600/20",
   "ICTU Director": "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "Planning Director": "bg-teal-100 text-teal-800 ring-teal-600/20",
@@ -59,7 +60,8 @@ const ROLE_ICONS = {
 
 function RoleBadge({ role }) {
   const Icon = ROLE_ICONS[role] || HiOutlineBadgeCheck;
-  const colorClass = ROLE_COLORS[role] || "bg-gray-100 text-gray-800 ring-gray-600/20";
+  const colorClass =
+    ROLE_COLORS[role] || "bg-gray-100 text-gray-800 ring-gray-600/20";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${colorClass}`}
@@ -181,7 +183,7 @@ export default function ManageRoleContent() {
 
   const specialRoleUsers = useMemo(
     () => users.filter((u) => ROLES.slice(1).includes(u.role)),
-    [users]
+    [users],
   );
 
   const filteredTableUsers = useMemo(() => {
@@ -197,7 +199,7 @@ export default function ManageRoleContent() {
             .toLowerCase()
             .includes(s) ||
           (u.role || "").toLowerCase().includes(s) ||
-          (u.assignedCollege || "").toLowerCase().includes(s)
+          (u.assignedCollege || "").toLowerCase().includes(s),
       );
     }
     return filtered;
@@ -206,7 +208,7 @@ export default function ManageRoleContent() {
   const totalPages = Math.ceil(filteredTableUsers.length / ITEMS_PER_PAGE);
   const paginatedUsers = filteredTableUsers.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   useEffect(() => {
@@ -261,7 +263,7 @@ export default function ManageRoleContent() {
           editingUser
             ? "Role updated successfully!"
             : "Role assigned successfully!",
-          "success"
+          "success",
         );
         setUsers((prev) =>
           prev.map((u) =>
@@ -273,8 +275,8 @@ export default function ManageRoleContent() {
                     ? assignedCollege
                     : u.assignedCollege,
                 }
-              : u
-          )
+              : u,
+          ),
         );
         closeModal();
       } else {
@@ -296,7 +298,6 @@ export default function ManageRoleContent() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-
       {toast && (
         <Toast
           message={toast.message}
@@ -304,7 +305,6 @@ export default function ManageRoleContent() {
           onClose={() => setToast(null)}
         />
       )}
-
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -401,9 +401,7 @@ export default function ManageRoleContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600">
-                          {college}
-                        </span>
+                        <span className="text-sm text-gray-600">{college}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <RoleBadge role={user.role} />
@@ -436,7 +434,7 @@ export default function ManageRoleContent() {
               <span className="font-medium">
                 {Math.min(
                   currentPage * ITEMS_PER_PAGE,
-                  filteredTableUsers.length
+                  filteredTableUsers.length,
                 )}
               </span>{" "}
               of{" "}
@@ -456,7 +454,7 @@ export default function ManageRoleContent() {
                   (p) =>
                     p === 1 ||
                     p === totalPages ||
-                    Math.abs(p - currentPage) <= 1
+                    Math.abs(p - currentPage) <= 1,
                 )
                 .map((p, idx, arr) => (
                   <React.Fragment key={p}>
@@ -543,10 +541,8 @@ export default function ManageRoleContent() {
                     </div>
                   ) : (
                     filteredModalUsers.map((u) => {
-                      const fn =
-                        u.personal_info_id?.personal?.first_name || "";
-                      const ln =
-                        u.personal_info_id?.personal?.last_name || "";
+                      const fn = u.personal_info_id?.personal?.first_name || "";
+                      const ln = u.personal_info_id?.personal?.last_name || "";
                       const isSelected = selectedUser?._id === u._id;
                       return (
                         <div

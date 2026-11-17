@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { cacheOrSet } from "@/lib/cache";
-import { optionalAuth } from "@/lib/auth";
-import { canViewPII, resolvePiiBatch, applyRowPii } from "@/lib/profileBroker";
+import { connectDB } from "@/data/lib/db";
+import { cacheOrSet } from "@/data/lib/cache";
+import { optionalAuth } from "@/data/lib/auth";
+import {
+  canViewPII,
+  resolvePiiBatch,
+  applyRowPii,
+} from "@/data/lib/profileBroker";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
-import { AGE_GROUP_ORDER, ageGroupOf, parseListParam } from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
+import {
+  AGE_GROUP_ORDER,
+  ageGroupOf,
+  parseListParam,
+} from "@/app/(pages)/(event)/gender-statistics/components/ageGroups.js";
 import { TEACHING_CATEGORY_ORDER } from "@/app/(pages)/(event)/gender-statistics/components/employeeStats.js";
 
 const CACHE_TTL = 60 * 1000;
@@ -70,7 +78,9 @@ function toList(countsObj, nameKey) {
       Male: c.Male || 0,
       Other: c.Other || 0,
       total: c.total || 0,
-      pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
+      pctFemale: c.total
+        ? Math.round(((c.Female || 0) / c.total) * 1000) / 10
+        : 0,
     }))
     .sort((a, b) => b.total - a.total);
 }
@@ -216,9 +226,10 @@ function buildStats(profiles, type) {
     if (!byGroupCounts[key]) byGroupCounts[key] = emptyCounts();
     addCounts(byGroupCounts[key], sexOf(p));
   });
-  const byGroup = toList(byGroupCounts, isStudent ? "college" : "office").filter(
-    (r) => (isStudent ? r.college : r.office) !== "Unspecified",
-  );
+  const byGroup = toList(
+    byGroupCounts,
+    isStudent ? "college" : "office",
+  ).filter((r) => (isStudent ? r.college : r.office) !== "Unspecified");
 
   let byProgram = [];
   let byLevel = [];
@@ -288,7 +299,8 @@ function buildStats(profiles, type) {
     const statusCounts = {};
     profiles.forEach((p) => {
       const key =
-        p?.affiliation?.employment_information?.employment_status || "Unspecified";
+        p?.affiliation?.employment_information?.employment_status ||
+        "Unspecified";
       if (!statusCounts[key]) statusCounts[key] = emptyCounts();
       addCounts(statusCounts[key], sexOf(p));
     });
@@ -347,9 +359,15 @@ function buildStats(profiles, type) {
          the Female/Male split understates them. Surfaced because a report
          built on it would otherwise look complete. */
       unresolvedSex,
-      pctFemale: totals.total ? Math.round((totals.Female / totals.total) * 1000) / 10 : 0,
-      pctMale: totals.total ? Math.round((totals.Male / totals.total) * 1000) / 10 : 0,
-      pctOther: totals.total ? Math.round((totals.Other / totals.total) * 1000) / 10 : 0,
+      pctFemale: totals.total
+        ? Math.round((totals.Female / totals.total) * 1000) / 10
+        : 0,
+      pctMale: totals.total
+        ? Math.round((totals.Male / totals.total) * 1000) / 10
+        : 0,
+      pctOther: totals.total
+        ? Math.round((totals.Other / totals.total) * 1000) / 10
+        : 0,
       lgbtqia,
       pctLgbtqia: totals.total
         ? Math.round((lgbtqia / totals.total) * 1000) / 10
@@ -361,24 +379,13 @@ function buildStats(profiles, type) {
       : { byAppointment, byEmploymentStatus, byTeaching }),
     byGenderIdentity: genderIdentityRows(profiles),
     demographics: buildDemographics(profiles, sexOf),
-    civilData: piiBreakdown(
-      profiles,
-      (p) => p?.personal?.civil_status,
-      sexOf,
-    ),
-    religionData: piiBreakdown(
-      profiles,
-      (p) => p?.personal?.religion,
-      sexOf,
-    ),
+    civilData: piiBreakdown(profiles, (p) => p?.personal?.civil_status, sexOf),
+    religionData: piiBreakdown(profiles, (p) => p?.personal?.religion, sexOf),
   };
 }
 
-
 async function buildByAcademicYear(baseProfiles, sexOf) {
-  const profilesById = new Map(
-    baseProfiles.map((p) => [String(p._id), p]),
-  );
+  const profilesById = new Map(baseProfiles.map((p) => [String(p._id), p]));
   const terms = await ProfileTerm.find(
     {},
     { profile_id: 1, school_year: 1 },
@@ -424,7 +431,9 @@ export async function GET(req) {
     const courses = parseListParam(url.searchParams.get("course"));
     const semesters = parseListParam(url.searchParams.get("semester"));
     const yearLevels = parseListParam(url.searchParams.get("year_level"));
-    const personnelTypes = parseListParam(url.searchParams.get("personnel_type"));
+    const personnelTypes = parseListParam(
+      url.searchParams.get("personnel_type"),
+    );
     const appointmentStatuses = parseListParam(
       url.searchParams.get("appointment_status"),
     );
@@ -471,7 +480,9 @@ export async function GET(req) {
         if (type === "students" && colleges.length)
           match["affiliation.academic_information.college"] = { $in: colleges };
         if (type === "employees" && colleges.length)
-          match["affiliation.employment_information.office"] = { $in: colleges };
+          match["affiliation.employment_information.office"] = {
+            $in: colleges,
+          };
         if (type === "employees" && personnelTypes.length)
           match["affiliation.employment_information.employment_status"] = {
             $in: personnelTypes,
@@ -487,7 +498,11 @@ export async function GET(req) {
             $in: yearLevels,
           };
         }
-        if (type === "students" && studentType && STUDENT_TYPE_FILTERS[studentType]) {
+        if (
+          type === "students" &&
+          studentType &&
+          STUDENT_TYPE_FILTERS[studentType]
+        ) {
           Object.assign(match, STUDENT_TYPE_FILTERS[studentType]);
         }
 
@@ -561,9 +576,10 @@ export async function GET(req) {
         }
 
         const stats = buildStats(profiles, type);
-        const schoolYears = (
-          await ProfileTerm.distinct("school_year")
-        ).filter(Boolean).sort().reverse();
+        const schoolYears = (await ProfileTerm.distinct("school_year"))
+          .filter(Boolean)
+          .sort()
+          .reverse();
 
         const semesterList = schoolYear
           ? await ProfileTerm.distinct("semester", { school_year: schoolYear })
@@ -611,4 +627,3 @@ export async function GET(req) {
     );
   }
 }
-

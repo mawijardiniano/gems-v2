@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 export async function POST(req, { params }) {
   try {

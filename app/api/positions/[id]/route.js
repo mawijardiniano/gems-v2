@@ -1,13 +1,13 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Position from "@/models/position";
 import OfficialTerm from "@/models/officialTerm";
 import UniversityOffice from "@/models/universityOffice";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { canWritePositions } from "@/lib/positionsAccess";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { canWritePositions } from "@/data/lib/positionsAccess";
 import { NextResponse } from "next/server";
-import { isActiveOffice } from "@/lib/universityOffices";
-import { cleanName, norm } from "@/lib/universityPositions";
+import { isActiveOffice } from "@/data/lib/universityOffices";
+import { cleanName, norm } from "@/data/lib/universityPositions";
 
 const FORBIDDEN = {
   success: false,
@@ -85,7 +85,10 @@ export async function PATCH(req, { params }) {
     );
     if (!office) {
       return Response.json(
-        { success: false, error: `Unknown office "${nextHeader}". Add it first.` },
+        {
+          success: false,
+          error: `Unknown office "${nextHeader}". Add it first.`,
+        },
         { status: 400 },
       );
     }
@@ -142,7 +145,9 @@ export async function PATCH(req, { params }) {
        official from the chart — refuse unless the caller forces it. The count
        is over ALL terms (history included), matching the message. */
     if (!nextActive && !force) {
-      const occupied = await OfficialTerm.countDocuments({ position: seat._id });
+      const occupied = await OfficialTerm.countDocuments({
+        position: seat._id,
+      });
       if (occupied > 0) {
         return Response.json(
           {

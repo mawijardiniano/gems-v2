@@ -1,11 +1,11 @@
 import AcademicProject from "@/models/academicProject";
-import { createCollectionHandlers } from "@/lib/simpleProjectApi";
-import { COLLEGES } from "@/lib/colleges";
+import { createCollectionHandlers } from "@/data/lib/simpleProjectApi";
+import { COLLEGES } from "@/data/lib/colleges";
 import {
   ACADEMIC_PROJECT_TYPES,
   PROJECT_MODULE_PREFIXES,
   SEMESTERS,
-} from "@/lib/projectModules";
+} from "@/data/lib/projectModules";
 
 /* List + create endpoints for Academic projects (ACD-<year>-<seq>). */
 

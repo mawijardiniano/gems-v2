@@ -1,14 +1,19 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
-import { logPiiAccess } from "@/lib/activityLog";
-import { canViewPII, resolvePiiBatch, searchIndexQuery, applyRowPii } from "@/lib/profileBroker";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
+import { logPiiAccess } from "@/data/lib/activityLog";
+import {
+  canViewPII,
+  resolvePiiBatch,
+  searchIndexQuery,
+  applyRowPii,
+} from "@/data/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const LIST_CACHE_TTL = 15 * 1000; // 15 seconds
@@ -185,7 +190,9 @@ export async function GET(req) {
           },
         ];
         if (hasMatch) {
-          countPipeline.push({ $match: { "personal_info_id._id": { $ne: null } } });
+          countPipeline.push({
+            $match: { "personal_info_id._id": { $ne: null } },
+          });
           countPipeline.push({ $match: match });
         }
         countPipeline.push({ $count: "total" });
@@ -210,7 +217,9 @@ export async function GET(req) {
           },
         ];
         if (hasMatch) {
-          dataPipeline.push({ $match: { "personal_info_id._id": { $ne: null } } });
+          dataPipeline.push({
+            $match: { "personal_info_id._id": { $ne: null } },
+          });
           dataPipeline.push({ $match: match });
         }
         /* The sex filter cannot run in the database (the value is encrypted in

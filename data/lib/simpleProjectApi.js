@@ -1,19 +1,19 @@
 import { parseGanttActivities } from "./ganttParse.js";
 
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLog";
-import { normalizeRole } from "@/lib/notifications";
+import { connectDB } from "@/data/lib/db.js";
+import { requireAuth } from "@/data/lib/auth.js";
+import { logActivity } from "@/data/lib/activityLog.js";
+import { normalizeRole } from "@/data/lib/notifications.js";
 import {
   normalizeRefNumber,
   nextProjectRefNumber,
-} from "@/lib/referenceNumber";
+} from "@/data/lib/referenceNumber.js";
 import {
   PROJECT_EVENTS_POPULATE,
   withGeneratedAccomplishment,
   hydrateProjectAttendanceSex,
-} from "@/lib/accomplishmentSummary";
+} from "@/data/lib/accomplishmentSummary.js";
 import UserAuth from "@/models/user";
 import "@/models/event";
 import "@/models/profile";
@@ -46,7 +46,10 @@ const parseDateInput = (value) => {
 
 /** Unwraps `{ value }` field shapes coming from the forms. */
 const unwrap = (value) =>
-  value && typeof value === "object" && !Array.isArray(value) && "value" in value
+  value &&
+  typeof value === "object" &&
+  !Array.isArray(value) &&
+  "value" in value
     ? value.value
     : value;
 
@@ -56,7 +59,9 @@ const parseMilestoneProofs = (input) => {
   if (!Array.isArray(input)) return { error: "invalid proof files" };
 
   const proofs = input
-    .filter((file) => file && typeof file === "object" && (file.url || file.key))
+    .filter(
+      (file) => file && typeof file === "object" && (file.url || file.key),
+    )
     .map((file) => ({
       url: file.url || "",
       key: file.key || "",
@@ -105,7 +110,9 @@ const parseMilestones = (input) => {
       return { error: `Invalid actual date for milestone "${title}"` };
     }
 
-    const status = String(raw.status ?? "pending").trim().toLowerCase();
+    const status = String(raw.status ?? "pending")
+      .trim()
+      .toLowerCase();
     if (!MILESTONE_STATUSES.includes(status)) {
       return { error: `Invalid status for milestone "${title}"` };
     }
@@ -355,7 +362,10 @@ export function createCollectionHandlers({
     if (body.start_date !== undefined) {
       const parsedStart = parseDateInput(body.start_date);
       if (parsedStart === undefined) {
-        return Response.json({ message: "Invalid start date" }, { status: 400 });
+        return Response.json(
+          { message: "Invalid start date" },
+          { status: 400 },
+        );
       }
       data.start_date = parsedStart;
     }
@@ -581,7 +591,10 @@ export function createItemHandlers({
         const nextStatus = String(body.project_status || "").trim();
 
         if (!statuses.includes(nextStatus)) {
-          return Response.json({ error: "Invalid project status" }, { status: 400 });
+          return Response.json(
+            { error: "Invalid project status" },
+            { status: 400 },
+          );
         }
 
         project.project_status = nextStatus;
@@ -591,7 +604,10 @@ export function createItemHandlers({
         const parsedMilestones = parseMilestones(body.milestones);
 
         if (parsedMilestones.error) {
-          return Response.json({ error: parsedMilestones.error }, { status: 400 });
+          return Response.json(
+            { error: parsedMilestones.error },
+            { status: 400 },
+          );
         }
 
         project.milestones = parsedMilestones.milestones;
@@ -616,7 +632,10 @@ export function createItemHandlers({
         const parsedStart = parseDateInput(body.start_date);
 
         if (parsedStart === undefined) {
-          return Response.json({ error: "Invalid start date" }, { status: 400 });
+          return Response.json(
+            { error: "Invalid start date" },
+            { status: 400 },
+          );
         }
 
         project.start_date = parsedStart;

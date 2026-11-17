@@ -25,8 +25,7 @@ import {
   normalizeAccomplishmentLines,
   resolveAccomplishmentText,
   usesAccomplishmentOverride,
-} from "@/lib/accomplishmentSummary";
-
+} from "@/data/lib/accomplishmentSummary";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -45,19 +44,16 @@ const getArrayValue = (field) => {
 
 const getProjectTypeLabel = (project) => {
   const rawType = project?.project_type;
-  const value = rawType && typeof rawType === "object" ? rawType.value : rawType;
+  const value =
+    rawType && typeof rawType === "object" ? rawType.value : rawType;
   if (value === "Client Focused") return "Client Focused";
   if (value === "Organization Focused") return "Organization Focused";
   if (value === "Attributed Program") return "Attributed Program";
   return "Uncategorized";
 };
 
-const ACCEPTED_EVIDENCE_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-];
-const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024; 
+const ACCEPTED_EVIDENCE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024;
 
 const getEvidenceFileType = (file) => {
   const name = `${file?.name || ""} ${file?.url || ""}`.toLowerCase();
@@ -121,10 +117,9 @@ export default function GADARContent() {
     if (!creator) return "the project creator";
     const profile = creator.personal_info_id;
     if (profile?.personal) {
-      const name =
-        `${profile.personal.first_name || ""} ${
-          profile.personal.last_name || ""
-        }`.trim();
+      const name = `${profile.personal.first_name || ""} ${
+        profile.personal.last_name || ""
+      }`.trim();
       return name || creator.username || "the project creator";
     }
     return creator.username || "the project creator";
@@ -214,7 +209,9 @@ export default function GADARContent() {
     setEditSuggestion(suggestion);
     setEditProject(project);
     setEditActual(
-      isOverride ? storedLines.join("\n") : suggestion || storedLines.join("\n"),
+      isOverride
+        ? storedLines.join("\n")
+        : suggestion || storedLines.join("\n"),
     );
     setEditExpenditures(project.actual_expenditures || "");
     const evidence = Array.isArray(project.expenditure_evidence)
@@ -423,7 +420,6 @@ export default function GADARContent() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-    
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -453,7 +449,6 @@ export default function GADARContent() {
           />
         </div>
       </div>
-
 
       {success && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm animate-slide-up">
@@ -591,7 +586,9 @@ export default function GADARContent() {
                   );
                   const actual = getActualForDisplay(project);
                   const actualEvents = Array.isArray(project.events)
-                    ? project.events.filter((ev) => ev && ev.status !== "cancelled")
+                    ? project.events.filter(
+                        (ev) => ev && ev.status !== "cancelled",
+                      )
                     : [];
 
                   return (
@@ -613,110 +610,112 @@ export default function GADARContent() {
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {getFieldValue(project.gender_issue) || "—"}
                         </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {causes.length > 0 ? (
-                          <ol className="list-decimal list-inside space-y-0.5">
-                            {causes.map((c, i) => (
-                              <li key={i}>{c}</li>
-                            ))}
-                          </ol>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {objectives.length > 0 ? (
-                          <ol className="list-decimal list-inside space-y-0.5">
-                            {objectives.map((o, i) => (
-                              <li key={i}>{o}</li>
-                            ))}
-                          </ol>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {getFieldValue(project.relevant_agency) || "—"}
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {activities.length > 0 ? (
-                          <ol className="list-decimal list-inside space-y-0.5">
-                            {activities.map((a, i) => (
-                              <li key={i}>{a}</li>
-                            ))}
-                          </ol>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {indicators.length > 0 ? (
-                          <ol className="list-decimal list-inside space-y-0.5">
-                            {indicators.map((ind, i) => (
-                              <li key={i}>{ind}</li>
-                            ))}
-                          </ol>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {actual ? (
-                          actual
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Encode actuals in Project Monitoring → GAD Projects
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-4 align-top text-right text-xs font-semibold text-gray-900">
-                        ₱ {fmt(getFieldValue(project.gad_budget))}
-                      </td>
-                      <td className="px-3 py-4 align-top text-right text-xs font-semibold text-emerald-600">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {project.actual_expenditures
-                            ? `₱ ${fmt(project.actual_expenditures)}`
-                            : "—"}
-                          {Array.isArray(project.expenditure_evidence) &&
-                            project.expenditure_evidence.length > 0 && (
-                              <button
-                                onClick={() =>
-                                  openEvidenceViewer(
-                                    project.expenditure_evidence,
-                                    0,
-                                    getProjectContextLabel(project),
-                                  )
-                                }
-                                title={`${project.expenditure_evidence.length} evidence file(s) attached`}
-                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
-                              >
-                                <FaPaperclip className="h-2.5 w-2.5" />
-                                {project.expenditure_evidence.length}
-                              </button>
-                            )}
-                        </div>
-                        <span className="block mt-1 text-[10px] font-normal text-gray-400">
-                          Variance: ₱{" "}
-                          {fmt(
-                            (Number(getFieldValue(project.gad_budget)) || 0) -
-                              (Number(project.actual_expenditures) || 0),
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {causes.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-0.5">
+                              {causes.map((c, i) => (
+                                <li key={i}>{c}</li>
+                              ))}
+                            </ol>
+                          ) : (
+                            "—"
                           )}
-                        </span>
-                      </td>
-                      <td className="px-3 py-4 align-top text-xs text-gray-800">
-                        {getArrayValue(project.responsible_office).join(", ") ||
-                          "—"}
-                      </td>
-                      <td className="px-3 py-4 align-top text-center">
-                        <span
-                          title="Actuals are now encoded in Project Monitoring → GAD Projects"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
-                        >
-                          <FaLock className="h-3 w-3" />
-                          View only
-                        </span>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {objectives.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-0.5">
+                              {objectives.map((o, i) => (
+                                <li key={i}>{o}</li>
+                              ))}
+                            </ol>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {getFieldValue(project.relevant_agency) || "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {activities.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-0.5">
+                              {activities.map((a, i) => (
+                                <li key={i}>{a}</li>
+                              ))}
+                            </ol>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {indicators.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-0.5">
+                              {indicators.map((ind, i) => (
+                                <li key={i}>{ind}</li>
+                              ))}
+                            </ol>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {actual ? (
+                            actual
+                          ) : (
+                            <span className="text-gray-400 italic">
+                              Encode actuals in Project Monitoring → GAD
+                              Projects
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-gray-900">
+                          ₱ {fmt(getFieldValue(project.gad_budget))}
+                        </td>
+                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-emerald-600">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {project.actual_expenditures
+                              ? `₱ ${fmt(project.actual_expenditures)}`
+                              : "—"}
+                            {Array.isArray(project.expenditure_evidence) &&
+                              project.expenditure_evidence.length > 0 && (
+                                <button
+                                  onClick={() =>
+                                    openEvidenceViewer(
+                                      project.expenditure_evidence,
+                                      0,
+                                      getProjectContextLabel(project),
+                                    )
+                                  }
+                                  title={`${project.expenditure_evidence.length} evidence file(s) attached`}
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
+                                >
+                                  <FaPaperclip className="h-2.5 w-2.5" />
+                                  {project.expenditure_evidence.length}
+                                </button>
+                              )}
+                          </div>
+                          <span className="block mt-1 text-[10px] font-normal text-gray-400">
+                            Variance: ₱{" "}
+                            {fmt(
+                              (Number(getFieldValue(project.gad_budget)) || 0) -
+                                (Number(project.actual_expenditures) || 0),
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                          {getArrayValue(project.responsible_office).join(
+                            ", ",
+                          ) || "—"}
+                        </td>
+                        <td className="px-3 py-4 align-top text-center">
+                          <span
+                            title="Actuals are now encoded in Project Monitoring → GAD Projects"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
+                          >
+                            <FaLock className="h-3 w-3" />
+                            View only
+                          </span>
+                        </td>
+                      </tr>
                     </React.Fragment>
                   );
                 })}

@@ -12,7 +12,11 @@ import {
   FaEye,
   FaSearch,
 } from "react-icons/fa";
-import { effectiveStatus, isEventOpen, eventSpan } from "@/lib/eventStatus";
+import {
+  effectiveStatus,
+  isEventOpen,
+  eventSpan,
+} from "@/data/lib/eventStatus";
 
 const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
@@ -59,7 +63,9 @@ function DateRangeDisplay({ event }) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate} at {startTime}</span>
+        <span>
+          {startDate} at {startTime}
+        </span>
       </div>
     );
   }
@@ -71,7 +77,9 @@ function DateRangeDisplay({ event }) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate}, {startTime} - {endTime}</span>
+        <span>
+          {startDate}, {startTime} - {endTime}
+        </span>
       </div>
     );
   }
@@ -79,13 +87,19 @@ function DateRangeDisplay({ event }) {
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>{startDate} {startTime} - {endDate} {endTime}</span>
+      <span>
+        {startDate} {startTime} - {endDate} {endTime}
+      </span>
     </div>
   );
 }
 
 function EventCard({ event, onClick, isPast }) {
-  const posterUrl = event?.event_poster?.url || event?.eventPoster?.url || event?.poster?.url || "";
+  const posterUrl =
+    event?.event_poster?.url ||
+    event?.eventPoster?.url ||
+    event?.poster?.url ||
+    "";
 
   /* One phase for the whole banner: a cancelled event is cancelled, a finished
      one is completed, and the dates only decide between upcoming/ongoing. This
@@ -140,7 +154,9 @@ function EventCard({ event, onClick, isPast }) {
             )}
           </div>
           {event.type_of_activity && (
-            <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ACTIVITY_COLORS[event.type_of_activity] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
+            <span
+              className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ACTIVITY_COLORS[event.type_of_activity] || "bg-gray-50 text-gray-700 border-gray-200"}`}
+            >
               {event.type_of_activity}
             </span>
           )}
@@ -231,16 +247,18 @@ export default function EventContent({
   const isPast = (evt) => effectiveStatus(evt) === "completed";
 
   const upcomingRegistered = useMemo(
-    () => registeredEvents
-      .filter((evt) => !isPast(evt))
-      .sort((a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0)),
+    () =>
+      registeredEvents
+        .filter((evt) => !isPast(evt))
+        .sort((a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0)),
     [registeredEvents],
   );
 
   const pastRegistered = useMemo(
-    () => registeredEvents
-      .filter((evt) => isPast(evt))
-      .sort((a, b) => (eventSpan(b).end ?? 0) - (eventSpan(a).end ?? 0)),
+    () =>
+      registeredEvents
+        .filter((evt) => isPast(evt))
+        .sort((a, b) => (eventSpan(b).end ?? 0) - (eventSpan(a).end ?? 0)),
     [registeredEvents],
   );
 
@@ -258,7 +276,7 @@ export default function EventContent({
           evt.title?.toLowerCase().includes(q) ||
           evt.description?.toLowerCase().includes(q) ||
           evt.venue?.toLowerCase().includes(q) ||
-          evt.type_of_activity?.toLowerCase().includes(q)
+          evt.type_of_activity?.toLowerCase().includes(q),
       );
     }
 
@@ -273,7 +291,9 @@ export default function EventContent({
         <div className="text-2xl text-gray-300">{icon}</div>
       </div>
       <p className="text-sm font-medium text-gray-500">{title}</p>
-      {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+      {description && (
+        <p className="text-xs text-gray-400 mt-1">{description}</p>
+      )}
     </div>
   );
 
@@ -296,7 +316,9 @@ export default function EventContent({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Your Events</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage your event registrations and discover new ones.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your event registrations and discover new ones.
+          </p>
         </div>
       </div>
 
@@ -305,7 +327,10 @@ export default function EventContent({
         <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center gap-2">
           <FaTimes className="shrink-0" />
           {error}
-          <button onClick={() => setError("")} className="ml-auto text-red-400 hover:text-red-600">
+          <button
+            onClick={() => setError("")}
+            className="ml-auto text-red-400 hover:text-red-600"
+          >
             <FaTimes className="text-xs" />
           </button>
         </div>
@@ -323,7 +348,9 @@ export default function EventContent({
             }`}
           >
             Upcoming
-            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">{upcomingRegistered.length}</span>
+            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">
+              {upcomingRegistered.length}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("past")}
@@ -334,7 +361,9 @@ export default function EventContent({
             }`}
           >
             Past
-            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">{pastRegistered.length}</span>
+            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">
+              {pastRegistered.length}
+            </span>
           </button>
         </div>
       </div>
@@ -390,8 +419,12 @@ export default function EventContent({
       <section className="space-y-5 pt-4 border-t border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Discover Events</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Find and register for upcoming events</p>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Discover Events
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Find and register for upcoming events
+            </p>
           </div>
           <button
             className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1 shrink-0"
@@ -427,8 +460,16 @@ export default function EventContent({
         ) : (
           <EmptyState
             icon={<FaEye />}
-            title={searchQuery ? "No events match your search" : "No available events to discover"}
-            description={searchQuery ? "Try a different search term or clear the filter." : "Check back later for new events."}
+            title={
+              searchQuery
+                ? "No events match your search"
+                : "No available events to discover"
+            }
+            description={
+              searchQuery
+                ? "Try a different search term or clear the filter."
+                : "Check back later for new events."
+            }
           />
         )}
       </section>

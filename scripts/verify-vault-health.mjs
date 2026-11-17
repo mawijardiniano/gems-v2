@@ -14,7 +14,7 @@ const {
   decryptFields,
   PII_FIELDS,
   CURRENT_KEY_VERSION,
-} = await import("../lib/identityVault.js");
+} = await import("../data/lib/identityVault.js");
 
 function keyFingerprint(raw) {
   if (!raw) return null;
@@ -41,7 +41,10 @@ await mongoose.connect(process.env.MONGODB_URI);
 const vault = mongoose.connection.db.collection("identityvaults");
 
 const rows = await vault
-  .find({ "fields.first_name.v": { $exists: true } }, { projection: { fields: 1, key_version: 1 } })
+  .find(
+    { "fields.first_name.v": { $exists: true } },
+    { projection: { fields: 1, key_version: 1 } },
+  )
   .limit(3)
   .toArray();
 
@@ -54,7 +57,8 @@ for (const row of rows) {
       dateFields: PII_FIELDS.dates,
       booleanFields: PII_FIELDS.booleans,
     });
-    if (pii && typeof pii.first_name === "string" && pii.first_name) readable += 1;
+    if (pii && typeof pii.first_name === "string" && pii.first_name)
+      readable += 1;
   } catch {
     /* counted by omission */
   }
@@ -63,11 +67,14 @@ for (const row of rows) {
 payload.canDecrypt = rows.length > 0 && readable === rows.length;
 payload.decrypted = readable;
 
-const ok = payload.configured && !payload.derived && payload.canDecrypt === true;
+const ok =
+  payload.configured && !payload.derived && payload.canDecrypt === true;
 
 console.log(JSON.stringify({ ok, ...payload }, null, 2));
 console.log("");
-console.log(ok ? "STATUS: OK — this process can read the vault." : "STATUS: NOT OK");
+console.log(
+  ok ? "STATUS: OK — this process can read the vault." : "STATUS: NOT OK",
+);
 
 await mongoose.disconnect();
 process.exit(ok ? 0 : 1);

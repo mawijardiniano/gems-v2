@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import GPB from "@/models/gpb";
 /* Side-effect import: `GPB.gaaBudgetId` refs the `GAABudget` model, and a
@@ -16,7 +16,7 @@ import {
   SIGNATORY_LABELS,
   getSignatories,
   signatoryYearFromGpbYear,
-} from "@/lib/signatories";
+} from "@/data/lib/signatories";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -319,7 +319,8 @@ export async function GET(req) {
           margin: { left: M, right: M },
         });
 
-        const { prepared_by, approved_by } = await resolveReportSignatories(year);
+        const { prepared_by, approved_by } =
+          await resolveReportSignatories(year);
 
         let signY = doc.lastAutoTable.finalY + 10;
         if (signY > pageHeight - 70) {
@@ -366,8 +367,14 @@ export async function GET(req) {
               "",
             ],
             [
-              { content: SIGNATORY_LABELS.prepared_by, styles: { fontStyle: "bold" } },
-              { content: SIGNATORY_LABELS.approved_by, styles: { fontStyle: "bold" } },
+              {
+                content: SIGNATORY_LABELS.prepared_by,
+                styles: { fontStyle: "bold" },
+              },
+              {
+                content: SIGNATORY_LABELS.approved_by,
+                styles: { fontStyle: "bold" },
+              },
               "",
             ],
           ],
@@ -391,12 +398,9 @@ export async function GET(req) {
             pageHeight - 2,
             { align: "right" },
           );
-          doc.text(
-            "System-generated via GEMS",
-            M,
-            pageHeight - 2,
-            { align: "left" },
-          );
+          doc.text("System-generated via GEMS", M, pageHeight - 2, {
+            align: "left",
+          });
         }
 
         const pdfArrayBuffer = doc.output("arraybuffer");
@@ -428,8 +432,3 @@ export async function GET(req) {
     );
   }
 }
-
-
-
-
-

@@ -34,7 +34,7 @@ const CENSUS = read("scripts", "census-strip-gap.mjs");
 const STRIP = read("scripts", "strip-plaintext-pii.mjs");
 const VERIFY = read("scripts", "verify-no-pii.mjs");
 const MODEL = read("models", "profile.js");
-const VAULT = read("lib", "identityVault.js");
+const VAULT = read("data", "lib", "identityVault.js");
 
 /*
  * Negative controls.

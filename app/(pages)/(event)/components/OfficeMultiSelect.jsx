@@ -7,7 +7,7 @@ import {
   normalizeOffice,
   officeOptionList,
   toOfficeArray,
-} from "@/lib/colleges";
+} from "@/data/lib/colleges";
 
 function useOutsideClose(onClose) {
   const ref = useRef(null);
@@ -28,10 +28,7 @@ export default function OfficeMultiSelect({
   disabled = false,
 }) {
   const selected = toOfficeArray(value);
-  const options = useMemo(
-    () => officeOptionList(selected),
-    [value],
-  );
+  const options = useMemo(() => officeOptionList(selected), [value]);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const boxRef = useOutsideClose(() => setOpen(false));
@@ -65,7 +62,9 @@ export default function OfficeMultiSelect({
         small ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
       }`}
     >
-      <span className={small ? "max-w-[9rem] truncate" : "max-w-[16rem] truncate"}>
+      <span
+        className={small ? "max-w-[9rem] truncate" : "max-w-[16rem] truncate"}
+      >
         {office}
       </span>
       {!disabled && (
@@ -223,9 +222,7 @@ export default function OfficeMultiSelect({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">
-            No office selected yet
-          </p>
+          <p className="text-xs text-gray-400 italic">No office selected yet</p>
         )}
         {selected.length > 0 && !disabled && (
           <button

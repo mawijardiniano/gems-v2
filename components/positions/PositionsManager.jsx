@@ -19,7 +19,7 @@ import {
   hasAmbiguousName,
   seatCountLabel,
   sortPositions,
-} from "@/lib/universityPositionsUi";
+} from "@/data/lib/universityPositionsUi";
 
 /**
  * The one place the university seat list ("positions") is edited.
@@ -253,7 +253,10 @@ function SeatRow({
               {assignedLabel(seat)}
             </span>
             <span aria-hidden="true">Â·</span>
-            <span>order {Number.isFinite(Number(seat.sort_order)) ? seat.sort_order : "—"}</span>
+            <span>
+              order{" "}
+              {Number.isFinite(Number(seat.sort_order)) ? seat.sort_order : "—"}
+            </span>
           </p>
         </div>
 
@@ -352,7 +355,8 @@ export default function PositionsManager({
 
   const canEdit = Boolean(onAdd || onUpdate || onDeactivate || onReactivate);
 
-  const activeTab = tab === "inactive" ? true : tab === "all" ? showInactive : false;
+  const activeTab =
+    tab === "inactive" ? true : tab === "all" ? showInactive : false;
   const rows = filterPositionsByTab(positions, tab).filter(
     (p) => activeTab || p.is_active !== false,
   );
@@ -440,7 +444,8 @@ export default function PositionsManager({
 
   const toggleAllGroups = () =>
     setOpenGroups((prev) => {
-      const openNow = groups.length > 0 && groups.every((g) => prev.has(g.header));
+      const openNow =
+        groups.length > 0 && groups.every((g) => prev.has(g.header));
       if (openNow) {
         // Close only the rendered columns, so a group hidden by the tab keeps
         // whichever state the operator left it in.
@@ -542,10 +547,14 @@ export default function PositionsManager({
             <p className="mt-0.5 max-w-2xl text-xs text-gray-500">
               An office is a column of the org chart; a position is one seat
               inside it — for example{" "}
-              <span className="font-medium text-gray-600">University President</span>{" "}
+              <span className="font-medium text-gray-600">
+                University President
+              </span>{" "}
               under{" "}
-              <span className="font-medium text-gray-600">EXECUTIVE OFFICIALS</span>.
-              Renaming a seat rewrites how every term in its history reads.
+              <span className="font-medium text-gray-600">
+                EXECUTIVE OFFICIALS
+              </span>
+              . Renaming a seat rewrites how every term in its history reads.
               Deactivating retires a seat from new assignments without touching
               the officials who held it.
               {academicYear ? (
@@ -625,7 +634,11 @@ export default function PositionsManager({
                   : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {t.label} ({t.key === "all" && !showInactive ? summary.active : summary[t.key]})
+              {t.label} (
+              {t.key === "all" && !showInactive
+                ? summary.active
+                : summary[t.key]}
+              )
             </button>
           );
         })}
@@ -670,7 +683,9 @@ export default function PositionsManager({
           No positions in this view.
         </div>
       ) : (
-        <div className="mt-3 space-y-4">{groups.map((group) => renderGroup(group))}</div>
+        <div className="mt-3 space-y-4">
+          {groups.map((group) => renderGroup(group))}
+        </div>
       )}
 
       <p className="mt-3 text-[11px] text-gray-400">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
@@ -26,7 +26,7 @@ import {
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { EVENT_ROLE_MENU_ACCESS } from "@/lib/roleAccess";
+import { EVENT_ROLE_MENU_ACCESS } from "@/data/lib/roleAccess";
 
 const BRAND_NAME = "GEMS";
 const BRAND_TAGLINE = "Gender Equality Management System";
@@ -111,9 +111,7 @@ export default function Sidebar({ open, setOpen, role }) {
     return links
       .map((link) => ({
         ...link,
-        children: link.children?.filter((child) =>
-          allowed.includes(child.key)
-        ),
+        children: link.children?.filter((child) => allowed.includes(child.key)),
       }))
       .filter((link) => {
         if (Array.isArray(link.children)) return link.children.length > 0;
@@ -123,28 +121,27 @@ export default function Sidebar({ open, setOpen, role }) {
 
   const structureLink = useMemo(
     () => filteredLinks.find((link) => link.key === "organizational-structure"),
-    [filteredLinks]
+    [filteredLinks],
   );
 
   const structureChildren = structureLink?.children || [];
 
-  const structureActive = structureChildren.some(
-    (child) => pathname?.startsWith(child.href)
+  const structureActive = structureChildren.some((child) =>
+    pathname?.startsWith(child.href),
   );
 
   const dashboardLinks = useMemo(
     () => filteredLinks.filter((link) => link.key.endsWith("dashboard")),
-    [filteredLinks]
+    [filteredLinks],
   );
 
   const mainLinks = useMemo(
     () =>
       filteredLinks.filter(
         (link) =>
-          !link.key.endsWith("dashboard") &&
-          !Array.isArray(link.children)
+          !link.key.endsWith("dashboard") && !Array.isArray(link.children),
       ),
-    [filteredLinks]
+    [filteredLinks],
   );
 
   const userAllowedPages = useMemo(() => {
@@ -193,10 +190,9 @@ export default function Sidebar({ open, setOpen, role }) {
       if (href === "/admin-dashboard") return pathname === "/admin-dashboard";
       return pathname?.startsWith(href);
     },
-    [pathname]
+    [pathname],
   );
 
- 
   useEffect(() => {
     if (
       pathname?.startsWith("/project-monitoring") ||
@@ -237,9 +233,10 @@ export default function Sidebar({ open, setOpen, role }) {
     return "";
   }, [profile, user]);
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   return (
     <>
@@ -340,7 +337,6 @@ export default function Sidebar({ open, setOpen, role }) {
           )}
         </div>
 
-   
         <nav
           className={`flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent ${
             open ? "px-3" : "px-0"
@@ -355,7 +351,11 @@ export default function Sidebar({ open, setOpen, role }) {
           {dashboardLinks.map((link) => {
             const linkActive = isActive(link.href);
             return (
-              <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
+              <TooltipWrapper
+                key={link.key}
+                label={link.name}
+                collapsed={!open}
+              >
                 <Link
                   href={link.href}
                   onClick={handleMobileClose}
@@ -387,17 +387,12 @@ export default function Sidebar({ open, setOpen, role }) {
             );
           })}
 
-      
-
-
           {canSeeProjectMonitoring && (
             <>
               {open ? (
                 <div>
                   <button
-                    onClick={() =>
-                      setShowProjectMonitoring((prev) => !prev)
-                    }
+                    onClick={() => setShowProjectMonitoring((prev) => !prev)}
                     className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
                       showProjectMonitoring ||
                       pathname?.startsWith("/project-monitoring") ||
@@ -426,30 +421,30 @@ export default function Sidebar({ open, setOpen, role }) {
                           label="GAD Projects/Activities"
                           collapsed={!open}
                         >
-                        <Link
-                          href="/project-monitoring/gad-projects"
-                          onClick={handleMobileClose}
-                          className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
-                            pathname?.startsWith(
+                          <Link
+                            href="/project-monitoring/gad-projects"
+                            onClick={handleMobileClose}
+                            className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
+                              pathname?.startsWith(
+                                "/project-monitoring/gad-projects",
+                              )
+                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
+                            }`}
+                          >
+                            <FaClipboardList
+                              size={14}
+                              className="flex-shrink-0 opacity-60"
+                            />
+                            <span className="text-sm font-medium truncate">
+                              GAD Projects/Activities
+                            </span>
+                            {pathname?.startsWith(
                               "/project-monitoring/gad-projects",
-                            )
-                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
-                              : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
-                          }`}
-                        >
-                          <FaClipboardList
-                            size={14}
-                            className="flex-shrink-0 opacity-60"
-                          />
-                          <span className="text-sm font-medium truncate">
-                            GAD Projects/Activities
-                          </span>
-                          {pathname?.startsWith(
-                            "/project-monitoring/gad-projects",
-                          ) && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
-                          )}
-                        </Link>
+                            ) && (
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            )}
+                          </Link>
                         </TooltipWrapper>
                       )}
 
@@ -543,10 +538,7 @@ export default function Sidebar({ open, setOpen, role }) {
                         </Link>
                       </TooltipWrapper>
 
-                      <TooltipWrapper
-                        label="Event Calendar"
-                        collapsed={!open}
-                      >
+                      <TooltipWrapper label="Event Calendar" collapsed={!open}>
                         <Link
                           href="/project-monitoring/event-calendar"
                           onClick={handleMobileClose}
@@ -599,9 +591,7 @@ export default function Sidebar({ open, setOpen, role }) {
               {open ? (
                 <div>
                   <button
-                    onClick={() =>
-                      setShowGenderStatistics((prev) => !prev)
-                    }
+                    onClick={() => setShowGenderStatistics((prev) => !prev)}
                     className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
                       showGenderStatistics ||
                       pathname?.startsWith("/gender-statistics")
@@ -629,9 +619,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           href="/gender-statistics/students"
                           onClick={handleMobileClose}
                           className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
-                            pathname?.startsWith(
-                              "/gender-statistics/students",
-                            )
+                            pathname?.startsWith("/gender-statistics/students")
                               ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
@@ -656,9 +644,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           href="/gender-statistics/employees"
                           onClick={handleMobileClose}
                           className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group p-2.5 ${
-                            pathname?.startsWith(
-                              "/gender-statistics/employees",
-                            )
+                            pathname?.startsWith("/gender-statistics/employees")
                               ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
@@ -701,7 +687,11 @@ export default function Sidebar({ open, setOpen, role }) {
           {mainLinks.map((link) => {
             const linkActive = isActive(link.href);
             return (
-              <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
+              <TooltipWrapper
+                key={link.key}
+                label={link.name}
+                collapsed={!open}
+              >
                 <Link
                   href={link.href}
                   onClick={handleMobileClose}
@@ -733,7 +723,7 @@ export default function Sidebar({ open, setOpen, role }) {
             );
           })}
 
-                    {structureChildren.length > 0 && (
+          {structureChildren.length > 0 && (
             <>
               {open ? (
                 <div>
@@ -794,7 +784,10 @@ export default function Sidebar({ open, setOpen, role }) {
                   )}
                 </div>
               ) : (
-                <TooltipWrapper label="Organizational Structure" collapsed={!open}>
+                <TooltipWrapper
+                  label="Organizational Structure"
+                  collapsed={!open}
+                >
                   <Link
                     href={structureChildren[0]?.href}
                     onClick={handleMobileClose}

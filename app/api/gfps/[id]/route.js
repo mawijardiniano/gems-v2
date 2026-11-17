@@ -1,12 +1,12 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 import {
   GFPS_SECTION_KEYS,
   normalizeSectionOfficials,
-} from "@/lib/gfpsServer";
+} from "@/data/lib/gfpsServer";
 
 /* Members are stored as typed `official_text` rows, so nothing here resolves a
    pointer at the retired `universityofficials` collection.

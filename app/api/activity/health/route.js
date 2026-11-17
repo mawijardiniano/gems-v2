@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { connectDB } from "@/lib/db";
-import { getAuditFailureStats } from "@/lib/activityLog";
-import { planRetention, retentionPolicy } from "@/lib/auditRetention";
+import { connectDB } from "@/data/lib/db";
+import { getAuditFailureStats } from "@/data/lib/activityLog";
+import { planRetention, retentionPolicy } from "@/data/lib/auditRetention";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

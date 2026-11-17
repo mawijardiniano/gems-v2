@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { eventSpan, attendanceWindow } from "@/lib/eventStatus";
+import { eventSpan, attendanceWindow } from "@/data/lib/eventStatus";
 import { useParams, useRouter } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -70,8 +70,12 @@ export default function DiscoverEventContent() {
     /* One line per stored day, sourced from eventSpan so a single-date event
        renders identically to before while a multi-date row still lists each
        day. Keep the per-day readings straight from the raw arrays. */
-    const startDates = Array.isArray(evt.start_dates) ? evt.start_dates.filter(Boolean) : [];
-    const endDates = Array.isArray(evt.end_dates) ? evt.end_dates.filter(Boolean) : [];
+    const startDates = Array.isArray(evt.start_dates)
+      ? evt.start_dates.filter(Boolean)
+      : [];
+    const endDates = Array.isArray(evt.end_dates)
+      ? evt.end_dates.filter(Boolean)
+      : [];
     const span = eventSpan(evt);
 
     /* No legacy arrays: fall back to the resolved span. */
@@ -161,72 +165,70 @@ export default function DiscoverEventContent() {
     <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
       {event ? (
         <>
-
-      <div className="relative rounded-xl overflow-hidden">
-        {posterUrl(event) && (
-          <img
-            src={posterUrl(event)}
-            alt={event.title}
-            className="w-full h-[400px] object-cover"
-          />
-        )}
-
-        <div className="absolute inset-0 bg-black/50" />
-
-        <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-          <button
-            onClick={() => router.push("/events/discover")}
-            className="self-start text-sm hover:underline"
-          >
-            ← Back to Discover
-          </button>
-
-          <div className="space-y-3">
-            <h1 className="text-4xl font-bold">{event.title}</h1>
-
-            <div className="flex flex-col gap-2">{formatRange(event)}</div>
-
-            {event.venue && (
-              <p className="flex items-center gap-2">
-                <FaLocationArrow />
-                {event.venue}
-              </p>
+          <div className="relative rounded-xl overflow-hidden">
+            {posterUrl(event) && (
+              <img
+                src={posterUrl(event)}
+                alt={event.title}
+                className="w-full h-[400px] object-cover"
+              />
             )}
 
-            {!isAttendanceAllowed(event) && (
-              <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
-                {isPast(event)
-                  ? "Attendance closed - Event has ended"
-                  : "Attendance opens when the event starts"}
-              </div>
-            )}
-            {isAttendanceAllowed(event) && !isPast(event) && (
-              <a
-                href={`/attend/${event._id}`}
-                className="inline-block mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
+            <div className="absolute inset-0 bg-black/50" />
+
+            <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
+              <button
+                onClick={() => router.push("/events/discover")}
+                className="self-start text-sm hover:underline"
               >
-                Mark Attendance (scan QR at venue)
-              </a>
+                ← Back to Discover
+              </button>
+
+              <div className="space-y-3">
+                <h1 className="text-4xl font-bold">{event.title}</h1>
+
+                <div className="flex flex-col gap-2">{formatRange(event)}</div>
+
+                {event.venue && (
+                  <p className="flex items-center gap-2">
+                    <FaLocationArrow />
+                    {event.venue}
+                  </p>
+                )}
+
+                {!isAttendanceAllowed(event) && (
+                  <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
+                    {isPast(event)
+                      ? "Attendance closed - Event has ended"
+                      : "Attendance opens when the event starts"}
+                  </div>
+                )}
+                {isAttendanceAllowed(event) && !isPast(event) && (
+                  <a
+                    href={`/attend/${event._id}`}
+                    className="inline-block mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
+                  >
+                    Mark Attendance (scan QR at venue)
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className=" space-y-3">
+            {isPast(event) && (
+              <p className="text-sm text-gray-500">This event has ended.</p>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className=" space-y-3">
-        {isPast(event) && (
-          <p className="text-sm text-gray-500">This event has ended.</p>
-        )}
-      </div>
-
-      {event.description && (
-        <div className="p-4 bg-white rounded border border-gray-200">
-          <h2 className="text-lg font-semibold mb-2">Description</h2>
-          <p className="text-gray-700 whitespace-pre-line">
-            {event.description}
-          </p>
-        </div>
-      )}
-
+          {event.description && (
+            <div className="p-4 bg-white rounded border border-gray-200">
+              <h2 className="text-lg font-semibold mb-2">Description</h2>
+              <p className="text-gray-700 whitespace-pre-line">
+                {event.description}
+              </p>
+            </div>
+          )}
         </>
       ) : (
         <div className="py-16 text-center">

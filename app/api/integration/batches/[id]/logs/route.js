@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import SyncLog from "@/models/syncLog";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 

@@ -25,14 +25,14 @@ import {
   budgetViewFor,
   canViewProjectBudget,
   summarizeBudget,
-} from "@/lib/budgetVisibility";
+} from "@/data/lib/budgetVisibility";
 import MilestonesModal from "./MilestonesModal";
 import GanttReadOnly from "./GanttReadOnly";
 
 import EditProjectModal from "./EditProjectModal";
 import ProjectDeleteModal from "./ProjectDeleteModal";
-import { getProjectModuleStatusMeta } from "@/lib/projectModules";
-import { resolveAccomplishmentText } from "@/lib/accomplishmentSummary";
+import { getProjectModuleStatusMeta } from "@/data/lib/projectModules";
+import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
 
 /*
  * Shared monitoring workspace for the office-managed project modules.
@@ -80,7 +80,8 @@ const ayLabel = (year) => `AY ${year}-${Number(year) + 1}`;
 
 const getEventStart = (ev) => {
   const value =
-    ev?.start_date || (Array.isArray(ev?.start_dates) ? ev.start_dates[0] : null);
+    ev?.start_date ||
+    (Array.isArray(ev?.start_dates) ? ev.start_dates[0] : null);
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -93,7 +94,9 @@ const getActiveEvents = (project) =>
   getProjectEvents(project).filter((ev) => ev?.status !== "cancelled");
 
 const getProjectStatus = (project, statuses) =>
-  statuses.includes(project?.project_status) ? project.project_status : statuses[0];
+  statuses.includes(project?.project_status)
+    ? project.project_status
+    : statuses[0];
 
 const isProjectCreator = (project, userId) => {
   if (!userId) return false;
@@ -103,7 +106,11 @@ const isProjectCreator = (project, userId) => {
 
 const canManageProject = (project, userId, role) => {
   if (isProjectCreator(project, userId)) return true;
-  return PROJECT_EDITOR_ROLES.includes(String(role || "").trim().toLowerCase());
+  return PROJECT_EDITOR_ROLES.includes(
+    String(role || "")
+      .trim()
+      .toLowerCase(),
+  );
 };
 
 const StatCard = ({ icon, iconClass, label, value, sub }) => (
@@ -190,9 +197,7 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
           style={{ width: `${capped}%` }}
         />
       </div>
-      {caption && (
-        <p className="text-[11px] text-gray-400 mt-1">{caption}</p>
-      )}
+      {caption && <p className="text-[11px] text-gray-400 mt-1">{caption}</p>}
     </div>
   );
 };
@@ -301,7 +306,8 @@ export default function ProjectWorkspace({ config }) {
 
     return projects.filter((project) => {
       if (year && String(project.year) !== String(year)) return false;
-      if (status && getProjectStatus(project, statuses) !== status) return false;
+      if (status && getProjectStatus(project, statuses) !== status)
+        return false;
 
       if (term) {
         const haystack = [
@@ -324,7 +330,16 @@ export default function ProjectWorkspace({ config }) {
 
       return true;
     });
-  }, [projects, year, status, search, filterState, filters, statuses, badgeField]);
+  }, [
+    projects,
+    year,
+    status,
+    search,
+    filterState,
+    filters,
+    statuses,
+    badgeField,
+  ]);
 
   const stats = useMemo(() => {
     const ongoing = filtered.filter(
@@ -351,7 +366,9 @@ export default function ProjectWorkspace({ config }) {
   );
 
   const canCreate = PROJECT_EDITOR_ROLES.includes(
-    String(userRole || "").trim().toLowerCase(),
+    String(userRole || "")
+      .trim()
+      .toLowerCase(),
   );
 
   const handleCreated = (created) => {
@@ -371,8 +388,7 @@ export default function ProjectWorkspace({ config }) {
     const titleValue = getFieldValue(project.title) || "(untitled project)";
     const budget = Number(getFieldValue(project[budgetField])) || 0;
     const spent = Number(project.actual_expenditures) || 0;
-    const utilization =
-      budget > 0 ? Math.round((spent / budget) * 100) : 0;
+    const utilization = budget > 0 ? Math.round((spent / budget) * 100) : 0;
     const events = [...getActiveEvents(project)].sort(
       (a, b) =>
         (getEventStart(a)?.getTime() || 0) - (getEventStart(b)?.getTime() || 0),
@@ -459,7 +475,11 @@ export default function ProjectWorkspace({ config }) {
             </div>
           </div>
           <span className="text-gray-400 mt-1">
-            {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+            {isExpanded ? (
+              <FaChevronUp size={12} />
+            ) : (
+              <FaChevronDown size={12} />
+            )}
           </span>
         </button>
 
@@ -487,35 +507,37 @@ export default function ProjectWorkspace({ config }) {
               <div className="animate-fade-in space-y-5" role="tabpanel">
                 {detailSections.map((section) => (
                   <DetailSection key={section.title} title={section.title}>
-                {section.fields
-                  .filter(
-                    (field) =>
-                      canSeeBudget ||
-                      (!BUDGET_DETAIL_KEYS.includes(field.key) &&
-                        field.key !== budgetField),
-                  )
-                  .map((field) => (
-                    <DetailRow
-                      key={field.key}
-                      label={field.label}
-                      value={renderDetailValue(field)}
-                    />
-                  ))}
-                {section.fields.some((field) => field.key === budgetField) &&
-                  canSeeBudget && (
-                  <DetailBarRow
-                    label="Budget Utilization"
-                    percent={budget > 0 ? utilization : 0}
-                    over={budget > 0 && spent > budget}
-                    caption={
-                      budget > 0
-                        ? `${fmtPeso(spent)} of ${fmtPeso(budget)}`
-                        : "No budget encoded"
-                    }
-                  />
-                )}
-              </DetailSection>
-            ))}
+                    {section.fields
+                      .filter(
+                        (field) =>
+                          canSeeBudget ||
+                          (!BUDGET_DETAIL_KEYS.includes(field.key) &&
+                            field.key !== budgetField),
+                      )
+                      .map((field) => (
+                        <DetailRow
+                          key={field.key}
+                          label={field.label}
+                          value={renderDetailValue(field)}
+                        />
+                      ))}
+                    {section.fields.some(
+                      (field) => field.key === budgetField,
+                    ) &&
+                      canSeeBudget && (
+                        <DetailBarRow
+                          label="Budget Utilization"
+                          percent={budget > 0 ? utilization : 0}
+                          over={budget > 0 && spent > budget}
+                          caption={
+                            budget > 0
+                              ? `${fmtPeso(spent)} of ${fmtPeso(budget)}`
+                              : "No budget encoded"
+                          }
+                        />
+                      )}
+                  </DetailSection>
+                ))}
               </div>
             )}
 
@@ -583,7 +605,6 @@ export default function ProjectWorkspace({ config }) {
                           from: {milestone.source_activity}
                         </span>
                       )}
-
                     </li>
                   ))}
                 </ul>
@@ -648,21 +669,21 @@ export default function ProjectWorkspace({ config }) {
                     </p>
                   )}
 
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Actual Accomplishment
-              </p>
-              <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
-                {accomplishment || "—"}
-              </p>
-              {canSeeBudget &&
-                Array.isArray(project.expenditure_evidence) &&
-                project.expenditure_evidence.length > 0 && (
-                  <p className="text-[11px] text-gray-400 mt-2 inline-flex items-center gap-1">
-                    <FaPaperclip size={9} />{" "}
-                    {project.expenditure_evidence.length} evidence file
-                    {project.expenditure_evidence.length === 1 ? "" : "s"}
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    Actual Accomplishment
                   </p>
-                )}
+                  <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
+                    {accomplishment || "—"}
+                  </p>
+                  {canSeeBudget &&
+                    Array.isArray(project.expenditure_evidence) &&
+                    project.expenditure_evidence.length > 0 && (
+                      <p className="text-[11px] text-gray-400 mt-2 inline-flex items-center gap-1">
+                        <FaPaperclip size={9} />{" "}
+                        {project.expenditure_evidence.length} evidence file
+                        {project.expenditure_evidence.length === 1 ? "" : "s"}
+                      </p>
+                    )}
                 </div>
               </div>
             )}
@@ -711,7 +732,9 @@ export default function ProjectWorkspace({ config }) {
     <div className="p-4 sm:p-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            {title}
+          </h1>
           <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
         </div>
         {canCreate && (
@@ -793,7 +816,10 @@ export default function ProjectWorkspace({ config }) {
             key={filter.key}
             value={filterState[filter.key] || ""}
             onChange={(e) =>
-              setFilterState((prev) => ({ ...prev, [filter.key]: e.target.value }))
+              setFilterState((prev) => ({
+                ...prev,
+                [filter.key]: e.target.value,
+              }))
             }
             className={toolbarSelect}
           >

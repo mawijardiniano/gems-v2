@@ -24,10 +24,16 @@ import {
   FaSitemap,
 } from "react-icons/fa";
 import Link from "next/link";
-import { HEADERS } from "@/lib/universityOfficialsConstants";
-import { buildOrgChart, getOfficialPersonName } from "@/lib/universityOfficialsMerge";
-import { normalizeOfficeName, selectableOffices } from "@/lib/universityOffices";
-import useUniversityOffices from "@/lib/useUniversityOffices";
+import { HEADERS } from "@/data/lib/universityOfficialsConstants";
+import {
+  buildOrgChart,
+  getOfficialPersonName,
+} from "@/data/lib/universityOfficialsMerge";
+import {
+  normalizeOfficeName,
+  selectableOffices,
+} from "@/data/lib/universityOffices";
+import useUniversityOffices from "@/data/lib/useUniversityOffices";
 import PrintUniversityOfficials from "../components/Print/PrintUniversityOfficials";
 import SeatHistoryPanel from "../components/SeatHistoryPanel";
 
@@ -51,7 +57,10 @@ const STATUS_BADGE = {
   substantive: { label: "Assigned", cls: "bg-emerald-50 text-emerald-600" },
   acting: { label: "Acting", cls: "bg-secondary-50 text-secondary-700" },
   interim: { label: "Interim", cls: "bg-secondary-50 text-secondary-700" },
-  concurrent: { label: "Concurrent", cls: "bg-secondary-50 text-secondary-700" },
+  concurrent: {
+    label: "Concurrent",
+    cls: "bg-secondary-50 text-secondary-700",
+  },
 };
 
 // ─── Header presentation ───────────────────────────────────────────
@@ -119,7 +128,13 @@ function getUserFullName(user) {
 }
 
 // ─── User Search Field + typed-name fallback ─────────────────────────
-function UserSearchField({ onChange, users, selectedUserId, selectedNameText, autoFocus }) {
+function UserSearchField({
+  onChange,
+  users,
+  selectedUserId,
+  selectedNameText,
+  autoFocus,
+}) {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -182,14 +197,18 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
             </button>
           )}
           {filteredUsers.length === 0 && !search.trim() ? (
-            <div className="px-3 py-2 text-sm text-gray-400">No users found</div>
+            <div className="px-3 py-2 text-sm text-gray-400">
+              No users found
+            </div>
           ) : (
             filteredUsers.map((u) => (
               <button
                 key={u._id}
                 type="button"
                 className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 ${
-                  selectedUserId === u._id ? "bg-secondary-50 text-secondary-700" : "text-gray-700"
+                  selectedUserId === u._id
+                    ? "bg-secondary-50 text-secondary-700"
+                    : "text-gray-700"
                 }`}
                 onClick={() => {
                   onChange({ userId: u._id, nameText: "" });
@@ -198,11 +217,17 @@ function UserSearchField({ onChange, users, selectedUserId, selectedNameText, au
                 }}
               >
                 <div className="h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600 shrink-0">
-                  {(u.personal_info_id?.personal?.first_name?.[0] || u.username?.[0] || "?").toUpperCase()}
+                  {(
+                    u.personal_info_id?.personal?.first_name?.[0] ||
+                    u.username?.[0] ||
+                    "?"
+                  ).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-medium">{getUserFullName(u)}</p>
-                  <p className="text-xs text-gray-400 truncate">@{u.username}</p>
+                  <p className="text-xs text-gray-400 truncate">
+                    @{u.username}
+                  </p>
                 </div>
               </button>
             ))
@@ -429,7 +454,9 @@ function OfficialModal({
                 {assignedCounts && form.header ? (
                   <p className="mt-1.5 text-xs text-gray-400">
                     {assignedCounts.map[form.header] || 0} assigned official
-                    {(assignedCounts.map[form.header] || 0) === 1 ? "" : "s"}{" "}
+                    {(assignedCounts.map[form.header] || 0) === 1
+                      ? ""
+                      : "s"}{" "}
                     already in this office.
                   </p>
                 ) : null}
@@ -491,7 +518,9 @@ function OfficialModal({
             >
               <option value="substantive">Substantive — regular holder</option>
               <option value="acting">Acting — temporary designation</option>
-              <option value="concurrent">Concurrent — holds a second seat</option>
+              <option value="concurrent">
+                Concurrent — holds a second seat
+              </option>
             </select>
           </div>
 
@@ -508,7 +537,11 @@ function OfficialModal({
               disabled={loading}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
             >
-              {loading ? "Saving..." : isEdit ? "Save Changes" : "Assign Official"}
+              {loading
+                ? "Saving..."
+                : isEdit
+                  ? "Save Changes"
+                  : "Assign Official"}
             </button>
           </div>
         </form>
@@ -548,7 +581,9 @@ function HeaderCard({
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition"
       >
         <div className="flex items-center gap-3">
-          <div className={`h-9 w-9 rounded-lg ${colorMap[color] || colorMap.blue} flex items-center justify-center`}>
+          <div
+            className={`h-9 w-9 rounded-lg ${colorMap[color] || colorMap.blue} flex items-center justify-center`}
+          >
             <Icon className="h-4 w-4" />
           </div>
           <div className="text-left">
@@ -595,7 +630,9 @@ function HeaderCard({
               {seats.map((seat) => {
                 const official = seat.official;
                 const person = official
-                  ? getOfficialPersonName(official.official_text || official.official)
+                  ? getOfficialPersonName(
+                      official.official_text || official.official,
+                    )
                   : "";
                 const historyOpen = !!historyFor[seat.name];
                 /* Vacant seats take the row without an `official`, so the badge
@@ -607,14 +644,18 @@ function HeaderCard({
                   <React.Fragment key={seat.key}>
                     <tr className="hover:bg-gray-50/80 transition-colors duration-150 group">
                       <td className="px-6 py-3.5">
-                        <span className="text-sm text-gray-700">{seat.name}</span>
+                        <span className="text-sm text-gray-700">
+                          {seat.name}
+                        </span>
                       </td>
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-secondary-50 to-secondary-100 border border-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700 shrink-0">
                             {(person[0] || "?").toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-gray-900">{person}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {person}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-3.5">
@@ -740,7 +781,9 @@ export default function UniversityOfficialsContent() {
   const [search, setSearch] = useState("");
   const [headerFilter, setHeaderFilter] = useState("all");
 
-  const isArchived = Boolean(activeYear && academicYear && academicYear !== activeYear);
+  const isArchived = Boolean(
+    activeYear && academicYear && academicYear !== activeYear,
+  );
   const canEdit = !isCoordinator && !isArchived;
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -982,15 +1025,18 @@ export default function UniversityOfficialsContent() {
       }
 
       if (modalMode === "edit") {
-        const res = await fetch(`/api/university-officials/${modalForm.editingId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            official: modalForm.official || null,
-            official_text: modalForm.official ? "" : personName,
-            academic_year: academicYear,
-          }),
-        });
+        const res = await fetch(
+          `/api/university-officials/${modalForm.editingId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              official: modalForm.official || null,
+              official_text: modalForm.official ? "" : personName,
+              academic_year: academicYear,
+            }),
+          },
+        );
         const data = await res.json();
         if (!res.ok || !data.success) {
           setModalError(data.error || "Failed to reassign official");
@@ -1070,7 +1116,8 @@ export default function UniversityOfficialsContent() {
               University Officials
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Manage the MarSU offices and administrative designations per academic year
+              Manage the MarSU offices and administrative designations per
+              academic year
             </p>
             {/* The Office / Group picker and the Seat picker in the assign modal
                 are both fed by the lists edited under Settings. These link there
@@ -1128,7 +1175,10 @@ export default function UniversityOfficialsContent() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <PrintUniversityOfficials officials={assignments} academicYear={academicYear} />
+          <PrintUniversityOfficials
+            officials={assignments}
+            academicYear={academicYear}
+          />
           {canEdit && assignments.length === 0 && !loading && (
             <button
               onClick={handleCopyForward}
@@ -1154,7 +1204,8 @@ export default function UniversityOfficialsContent() {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>
-            Viewing archived AY {academicYear} — read-only. Switch to AY {activeYear} to make changes.
+            Viewing archived AY {academicYear} — read-only. Switch to AY{" "}
+            {activeYear} to make changes.
           </span>
         </div>
       )}
@@ -1162,7 +1213,8 @@ export default function UniversityOfficialsContent() {
       {!loading && canEdit && assignments.length === 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
-            No roster for AY {academicYear} yet. Copy last year&apos;s assignments or assign seats manually.
+            No roster for AY {academicYear} yet. Copy last year&apos;s
+            assignments or assign seats manually.
           </span>
           <button
             onClick={handleCopyForward}
@@ -1228,7 +1280,9 @@ export default function UniversityOfficialsContent() {
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Assigned Officials
                 </p>
-                <p className="text-xl font-bold text-gray-900">{chart.stats.filled}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {chart.stats.filled}
+                </p>
               </div>
             </div>
           </div>
@@ -1241,7 +1295,9 @@ export default function UniversityOfficialsContent() {
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Offices Shown
                 </p>
-                <p className="text-xl font-bold text-gray-900">{chart.byHeader.length}</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {chart.byHeader.length}
+                </p>
               </div>
             </div>
           </div>
@@ -1300,8 +1356,3 @@ export default function UniversityOfficialsContent() {
     </div>
   );
 }
-
-
-
-
-

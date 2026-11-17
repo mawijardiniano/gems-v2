@@ -1,11 +1,15 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
-import { logPiiAccess } from "@/lib/activityLog";
-import { resolvePiiBatch, searchIndexQuery, applyRowPii } from "@/lib/profileBroker";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
+import { logPiiAccess } from "@/data/lib/activityLog";
+import {
+  resolvePiiBatch,
+  searchIndexQuery,
+  applyRowPii,
+} from "@/data/lib/profileBroker";
 
 const SEARCH_CACHE_TTL = 15 * 1000;
 
@@ -157,7 +161,10 @@ export async function GET(req) {
 
     /* A revealed page carries real names, so the read is recorded. One entry
        per request keeps the audit log useful rather than enormous. */
-    if (Array.isArray(data) && data.some((row) => row?.personal_info_id && !row.personal_info_id.masked)) {
+    if (
+      Array.isArray(data) &&
+      data.some((row) => row?.personal_info_id && !row.personal_info_id.masked)
+    ) {
       await logPiiAccess({
         req,
         user_id: user?._id || null,

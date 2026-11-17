@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { eventSpan, effectiveStatus } from "@/lib/eventStatus";
+import { eventSpan, effectiveStatus } from "@/data/lib/eventStatus";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -67,7 +67,9 @@ function DateRangeDisplay({ event }) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate} at {startTime}</span>
+        <span>
+          {startDate} at {startTime}
+        </span>
       </div>
     );
   }
@@ -79,7 +81,9 @@ function DateRangeDisplay({ event }) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
         <FaCalendar className="shrink-0 text-gray-400" />
-        <span>{startDate}, {startTime} - {endTime}</span>
+        <span>
+          {startDate}, {startTime} - {endTime}
+        </span>
       </div>
     );
   }
@@ -87,13 +91,19 @@ function DateRangeDisplay({ event }) {
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>{startDate} {startTime} - {endDate} {endTime}</span>
+      <span>
+        {startDate} {startTime} - {endDate} {endTime}
+      </span>
     </div>
   );
 }
 
 function EventCard({ event, onClick }) {
-  const posterUrl = event?.event_poster?.url || event?.eventPoster?.url || event?.poster?.url || "";
+  const posterUrl =
+    event?.event_poster?.url ||
+    event?.eventPoster?.url ||
+    event?.poster?.url ||
+    "";
 
   const isPast = (() => {
     const end = eventSpan(event).end;
@@ -117,11 +127,17 @@ function EventCard({ event, onClick }) {
       {/* Poster */}
       {posterUrl ? (
         <div className={`relative ${isCancelled ? "mt-7" : ""}`}>
-          <img src={posterUrl} alt={event.title} className="w-full h-44 object-cover" />
+          <img
+            src={posterUrl}
+            alt={event.title}
+            className="w-full h-44 object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       ) : (
-        <div className={`h-2 bg-gradient-to-r from-secondary-50 to-secondary-100/60 ${isCancelled ? "mt-7" : ""}`} />
+        <div
+          className={`h-2 bg-gradient-to-r from-secondary-50 to-secondary-100/60 ${isCancelled ? "mt-7" : ""}`}
+        />
       )}
 
       <div className="p-4 space-y-3">
@@ -138,9 +154,12 @@ function EventCard({ event, onClick }) {
             )}
           </div>
           {event.type_of_activity && (
-            <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-              ACTIVITY_COLORS[event.type_of_activity] || "bg-gray-50 text-gray-700 border-gray-200"
-            }`}>
+            <span
+              className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                ACTIVITY_COLORS[event.type_of_activity] ||
+                "bg-gray-50 text-gray-700 border-gray-200"
+              }`}
+            >
               {event.type_of_activity}
             </span>
           )}
@@ -159,7 +178,9 @@ function EventCard({ event, onClick }) {
 
         {/* Description */}
         {event.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{event.description}</p>
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+            {event.description}
+          </p>
         )}
 
         {/* Stats & View link */}
@@ -180,7 +201,9 @@ function EmptyState({ icon, title, description }) {
         <div className="text-2xl text-gray-300">{icon}</div>
       </div>
       <p className="text-sm font-medium text-gray-500">{title}</p>
-      {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+      {description && (
+        <p className="text-xs text-gray-400 mt-1">{description}</p>
+      )}
     </div>
   );
 }
@@ -199,7 +222,9 @@ export default function DiscoverContent() {
         const eventsRes = await axios.get("/api/events");
         setAllEvents(eventsRes.data?.data || []);
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load events. Please retry.");
+        setError(
+          err.response?.data?.message || "Unable to load events. Please retry.",
+        );
       } finally {
         setLoading(false);
       }
@@ -209,8 +234,9 @@ export default function DiscoverContent() {
   }, []);
 
   const discoverEvents = useMemo(() => {
-    let filtered = (allEvents || [])
-      .filter((evt) => evt.status !== "cancelled");
+    let filtered = (allEvents || []).filter(
+      (evt) => evt.status !== "cancelled",
+    );
 
     // Type filter
     if (filterType !== "All") {
@@ -225,7 +251,7 @@ export default function DiscoverContent() {
           evt.title?.toLowerCase().includes(q) ||
           evt.description?.toLowerCase().includes(q) ||
           evt.venue?.toLowerCase().includes(q) ||
-          evt.type_of_activity?.toLowerCase().includes(q)
+          evt.type_of_activity?.toLowerCase().includes(q),
       );
     }
 
@@ -258,7 +284,9 @@ export default function DiscoverContent() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Discover Events</h1>
-        <p className="text-sm text-gray-500 mt-1">Explore and register for upcoming events</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Explore and register for upcoming events
+        </p>
       </div>
 
       {/* Error */}
@@ -266,7 +294,10 @@ export default function DiscoverContent() {
         <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center gap-2">
           <FaTimes className="shrink-0" />
           {error}
-          <button onClick={() => setError("")} className="ml-auto text-red-400 hover:text-red-600">
+          <button
+            onClick={() => setError("")}
+            className="ml-auto text-red-400 hover:text-red-600"
+          >
             <FaTimes className="text-xs" />
           </button>
         </div>
@@ -292,7 +323,9 @@ export default function DiscoverContent() {
             className="appearance-none pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all cursor-pointer min-w-[140px]"
           >
             {ACTIVITY_TYPES.map((type) => (
-              <option key={type} value={type}>{type === "All" ? "All Activities" : type}</option>
+              <option key={type} value={type}>
+                {type === "All" ? "All Activities" : type}
+              </option>
             ))}
           </select>
           <FaChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] -rotate-90 pointer-events-none" />
@@ -301,7 +334,8 @@ export default function DiscoverContent() {
 
       {/* Results count */}
       <div className="text-sm text-gray-500">
-        {discoverEvents.length} event{discoverEvents.length !== 1 ? "s" : ""} available
+        {discoverEvents.length} event{discoverEvents.length !== 1 ? "s" : ""}{" "}
+        available
       </div>
 
       {/* Event Cards */}
@@ -318,8 +352,16 @@ export default function DiscoverContent() {
       ) : (
         <EmptyState
           icon={<FaEye />}
-          title={searchQuery || filterType !== "All" ? "No events match your filters" : "No available events to discover"}
-          description={searchQuery || filterType !== "All" ? "Try different search terms or clear the filters." : "Check back later for new events."}
+          title={
+            searchQuery || filterType !== "All"
+              ? "No events match your filters"
+              : "No available events to discover"
+          }
+          description={
+            searchQuery || filterType !== "All"
+              ? "Try different search terms or clear the filters."
+              : "Check back later for new events."
+          }
         />
       )}
     </div>

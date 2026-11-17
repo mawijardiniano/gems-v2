@@ -1,8 +1,8 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOfficial from "@/models/universityOfficials";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { resolvePiiBatch } from "@/lib/profileBroker";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { resolvePiiBatch } from "@/data/lib/profileBroker";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
@@ -98,7 +98,10 @@ export async function GET(req, { params }) {
     data.official = { ...data.official, personal_info_id: rest };
   }
 
-  return Response.json({ success: true, data: { ...data, display_name: displayName } });
+  return Response.json({
+    success: true,
+    data: { ...data, display_name: displayName },
+  });
 }
 
 /** Reassigns an existing seat to a different person (same academic year). */
@@ -111,11 +114,15 @@ export async function PATCH(req, { params }) {
   const { official, official_text = "", academic_year } = body || {};
 
   const personText = String(official_text || "").trim();
-  const personId = official && mongoose.isValidObjectId(official) ? official : null;
+  const personId =
+    official && mongoose.isValidObjectId(official) ? official : null;
 
   if (!personId && !personText) {
     return Response.json(
-      { success: false, error: "Missing official (pick a user or type a name)" },
+      {
+        success: false,
+        error: "Missing official (pick a user or type a name)",
+      },
       { status: 400 },
     );
   }
@@ -144,7 +151,9 @@ export async function PATCH(req, { params }) {
 
     const updated = await UniversityOfficial.findByIdAndUpdate(
       id,
-      { $set: { official: personId, official_text: personId ? "" : personText } },
+      {
+        $set: { official: personId, official_text: personId ? "" : personText },
+      },
       { new: true, runValidators: true },
     ).populate(POPULATE);
 

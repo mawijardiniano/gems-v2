@@ -12,21 +12,17 @@ import {
   FiDownload,
   FiFileText,
 } from "react-icons/fi";
-import {
-  FaPiggyBank,
-  FaClipboardList,
-} from "react-icons/fa";
+import { FaPiggyBank, FaClipboardList } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import axios from "axios";
 import PrintGPB from "../../components/Print/PrintGPB";
-import { findDuplicates } from "@/lib/duplicateDetection";
+import { findDuplicates } from "@/data/lib/duplicateDetection";
 import OfficeMultiSelect from "../../components/OfficeMultiSelect";
-import { toOfficeArray } from "@/lib/colleges";
-import { nextRefNumber } from "@/lib/referenceNumber";
-import { gpbStatusOptions } from "@/lib/gpbStatus";
+import { toOfficeArray } from "@/data/lib/colleges";
+import { nextRefNumber } from "@/data/lib/referenceNumber";
+import { gpbStatusOptions } from "@/data/lib/gpbStatus";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
-
 
 function describeBudgetRejection(data) {
   const remaining = data?.budgetSummary?.remainingBudget;
@@ -51,13 +47,23 @@ function describeBudgetWarning(data) {
 }
 
 function getScannedFileType(url) {
-  const clean = String(url || "").split("?")[0].toLowerCase();
+  const clean = String(url || "")
+    .split("?")[0]
+    .toLowerCase();
   if (clean.endsWith(".pdf")) return "pdf";
   if (/\.(jpe?g|png|webp|gif|bmp)$/.test(clean)) return "image";
   return "other";
 }
 
-function StatCard({ icon: Icon, label, value, sub, color = "blue", badge, danger = false }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  color = "blue",
+  badge,
+  danger = false,
+}) {
   const colorMap = {
     blue: "bg-secondary-50 text-secondary-600",
     green: "bg-emerald-50 text-emerald-600",
@@ -85,7 +91,9 @@ function StatCard({ icon: Icon, label, value, sub, color = "blue", badge, danger
             {label}
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-0.5">
-            <p className={`text-xl font-bold truncate ${danger ? "text-red-700" : "text-gray-900"}`}>
+            <p
+              className={`text-xl font-bold truncate ${danger ? "text-red-700" : "text-gray-900"}`}
+            >
               {value}
             </p>
             {badge}
@@ -611,7 +619,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     supporting_statistics_data: "",
     relevant_agency: "",
     gad_activity: [""],
-  gad_activity_description: [""],
+    gad_activity_description: [""],
     performance_indicator_target: [emptyIndicator()],
     gad_budget: "",
     source_budget: "",
@@ -635,9 +643,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
   const canEditDeleteProject = (project) => {
     if (isReviewerRole) return true;
-    const creatorId = String(
-      project.createdBy?._id || project.createdBy || "",
-    );
+    const creatorId = String(project.createdBy?._id || project.createdBy || "");
     return creatorId === String(userId);
   };
 
@@ -711,9 +717,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
      shown while filling in the "add project" wizard. */
   const nextRefPreview = nextRefNumber(
     year,
-    safeProjects
-      .map((project) => project.reference_number)
-      .filter(Boolean),
+    safeProjects.map((project) => project.reference_number).filter(Boolean),
   );
 
   const totalPages = Math.max(1, Math.ceil(orderedProjects.length / pageSize));
@@ -973,8 +977,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const updateEditActivities = (titles, descriptions) =>
     setEditRow((prev) => {
       if (!prev) return prev;
-      const nextTitles =
-        Array.isArray(titles) && titles.length ? titles : [""];
+      const nextTitles = Array.isArray(titles) && titles.length ? titles : [""];
       return {
         ...prev,
         gad_activity: nextTitles,
@@ -1004,13 +1007,16 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   };
 
   const handleAddEditActivityRow = () =>
-    updateEditActivities([...(editRow?.gad_activity || [""]), ""], [
-      ...alignActivityDescriptions(
-        editRow?.gad_activity,
-        editRow?.gad_activity_description,
-      ),
-      "",
-    ]);
+    updateEditActivities(
+      [...(editRow?.gad_activity || [""]), ""],
+      [
+        ...alignActivityDescriptions(
+          editRow?.gad_activity,
+          editRow?.gad_activity_description,
+        ),
+        "",
+      ],
+    );
 
   const handleRemoveEditActivityRow = (idx) => {
     const titles = [...(editRow?.gad_activity || [""])];
@@ -1574,7 +1580,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               </button>
             </div>
 
-            {(selectedGPBStatus?.status || selectedGPBStatus?.scanned_copy?.url) && (
+            {(selectedGPBStatus?.status ||
+              selectedGPBStatus?.scanned_copy?.url) && (
               <div className="mb-4 rounded-lg bg-gray-50 border border-gray-100 p-3 text-sm">
                 <p className="text-gray-600">
                   Current status:{" "}
@@ -1939,8 +1946,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       )}
 
       <div className="flex justify-end mb-4 gap-2">
-
-      
         {role !== "planning director" &&
           selectedGPBStatus?.status !== "approved" &&
           selectedGPBStatus?.status !== "disapproved" && (
@@ -2174,7 +2179,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           </p>
                           {editDuplicateWarnings.map((w, i) => (
                             <p key={i} className="pl-4">
-                              "{w.gender_issue}" ({Math.round(w.similarity * 100)}% match)
+                              "{w.gender_issue}" (
+                              {Math.round(w.similarity * 100)}% match)
                             </p>
                           ))}
                         </div>
@@ -2186,7 +2192,94 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         <span className="text-red-500">*</span>
                       </label>
                       <div className="space-y-2">
-                        {(editRow.cause_gender_issue || [""]).map((val, idx) => (
+                        {(editRow.cause_gender_issue || [""]).map(
+                          (val, idx) => (
+                            <div key={idx} className="flex gap-2 items-start">
+                              <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                                {idx + 1}.
+                              </span>
+                              <textarea
+                                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                                rows={2}
+                                value={val}
+                                onChange={(e) => {
+                                  const arr = [
+                                    ...(editRow.cause_gender_issue || [""]),
+                                  ];
+                                  arr[idx] = e.target.value;
+                                  handleEditRowChange(
+                                    "cause_gender_issue",
+                                    arr,
+                                  );
+                                }}
+                              />
+                              <div className="flex flex-col gap-1 mt-1 shrink-0">
+                                {(editRow.cause_gender_issue || []).length >
+                                  1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const arr = [
+                                        ...editRow.cause_gender_issue,
+                                      ];
+                                      arr.splice(idx, 1);
+                                      handleEditRowChange(
+                                        "cause_gender_issue",
+                                        arr,
+                                      );
+                                    }}
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                                  >
+                                    −
+                                  </button>
+                                )}
+                                {idx ===
+                                  (editRow.cause_gender_issue || []).length -
+                                    1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleEditRowChange(
+                                        "cause_gender_issue",
+                                        [
+                                          ...(editRow.cause_gender_issue || []),
+                                          "",
+                                        ],
+                                      )
+                                    }
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                                  >
+                                    +
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {!isAttributedProgram(editRow) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
+                      2
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-700">
+                      Objectives & Data
+                    </h3>
+                  </div>
+                  <div className="space-y-4 pl-8">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        GAD Result Statement / GAD Objective{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-2">
+                        {(editRow.gad_objective || [""]).map((val, idx) => (
                           <div key={idx} className="flex gap-2 items-start">
                             <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
                               {idx + 1}.
@@ -2197,23 +2290,20 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               value={val}
                               onChange={(e) => {
                                 const arr = [
-                                  ...(editRow.cause_gender_issue || [""]),
+                                  ...(editRow.gad_objective || [""]),
                                 ];
                                 arr[idx] = e.target.value;
-                                handleEditRowChange("cause_gender_issue", arr);
+                                handleEditRowChange("gad_objective", arr);
                               }}
                             />
                             <div className="flex flex-col gap-1 mt-1 shrink-0">
-                              {(editRow.cause_gender_issue || []).length > 1 && (
+                              {(editRow.gad_objective || []).length > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const arr = [...editRow.cause_gender_issue];
+                                    const arr = [...editRow.gad_objective];
                                     arr.splice(idx, 1);
-                                    handleEditRowChange(
-                                      "cause_gender_issue",
-                                      arr,
-                                    );
+                                    handleEditRowChange("gad_objective", arr);
                                   }}
                                   className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                                 >
@@ -2221,12 +2311,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                 </button>
                               )}
                               {idx ===
-                                (editRow.cause_gender_issue || []).length - 1 && (
+                                (editRow.gad_objective || []).length - 1 && (
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    handleEditRowChange("cause_gender_issue", [
-                                      ...(editRow.cause_gender_issue || []),
+                                    handleEditRowChange("gad_objective", [
+                                      ...(editRow.gad_objective || []),
                                       "",
                                     ])
                                   }
@@ -2240,108 +2330,38 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         ))}
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              {!isAttributedProgram(editRow) && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
-                    2
-                  </div>
-                  <h3 className="text-base font-semibold text-gray-700">
-                    Objectives & Data
-                  </h3>
-                </div>
-                <div className="space-y-4 pl-8">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      GAD Result Statement / GAD Objective{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {(editRow.gad_objective || [""]).map((val, idx) => (
-                        <div key={idx} className="flex gap-2 items-start">
-                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
-                            {idx + 1}.
-                          </span>
-                          <textarea
-                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
-                            rows={2}
-                            value={val}
-                            onChange={(e) => {
-                              const arr = [...(editRow.gad_objective || [""])];
-                              arr[idx] = e.target.value;
-                              handleEditRowChange("gad_objective", arr);
-                            }}
-                          />
-                          <div className="flex flex-col gap-1 mt-1 shrink-0">
-                            {(editRow.gad_objective || []).length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const arr = [...editRow.gad_objective];
-                                  arr.splice(idx, 1);
-                                  handleEditRowChange("gad_objective", arr);
-                                }}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
-                              >
-                                −
-                              </button>
-                            )}
-                            {idx ===
-                              (editRow.gad_objective || []).length - 1 && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleEditRowChange("gad_objective", [
-                                    ...(editRow.gad_objective || []),
-                                    "",
-                                  ])
-                                }
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
-                              >
-                                +
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Supporting Statistics / Data
+                      </label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                        rows={3}
+                        value={editRow.supporting_statistics_data || ""}
+                        onChange={(e) =>
+                          handleEditRowChange(
+                            "supporting_statistics_data",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Relevant Agency MFO/PAP{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                        rows={2}
+                        value={editRow.relevant_agency || ""}
+                        onChange={(e) =>
+                          handleEditRowChange("relevant_agency", e.target.value)
+                        }
+                      />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Supporting Statistics / Data
-                    </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
-                      rows={3}
-                      value={editRow.supporting_statistics_data || ""}
-                      onChange={(e) =>
-                        handleEditRowChange(
-                          "supporting_statistics_data",
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Relevant Agency MFO/PAP{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
-                      rows={2}
-                      value={editRow.relevant_agency || ""}
-                      onChange={(e) =>
-                        handleEditRowChange("relevant_agency", e.target.value)
-                      }
-                    />
-                  </div>
                 </div>
-              </div>
               )}
 
               {/* Section 3 */}
@@ -2413,7 +2433,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                 −
                               </button>
                             )}
-                            {idx === (editRow.gad_activity || []).length - 1 && (
+                            {idx ===
+                              (editRow.gad_activity || []).length - 1 && (
                               <button
                                 type="button"
                                 onClick={handleAddEditActivityRow}
@@ -2715,7 +2736,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           </p>
                           {duplicateWarnings.map((w, i) => (
                             <p key={i} className="pl-4">
-                              "{w.gender_issue}" ({Math.round(w.similarity * 100)}% match)
+                              "{w.gender_issue}" (
+                              {Math.round(w.similarity * 100)}% match)
                             </p>
                           ))}
                         </div>
@@ -2745,14 +2767,18 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  handleRemoveArrayField("cause_gender_issue", idx)
+                                  handleRemoveArrayField(
+                                    "cause_gender_issue",
+                                    idx,
+                                  )
                                 }
                                 className="px-2 py-1 bg-red-500 text-white rounded text-xs"
                               >
                                 -
                               </button>
                             )}
-                            {idx === newProject.cause_gender_issue.length - 1 && (
+                            {idx ===
+                              newProject.cause_gender_issue.length - 1 && (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -2915,61 +2941,62 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                   ))}
                 </div>
                 {!isAttributedProgram(newProject) && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Output Performance Indicators and Target
-                  </label>
-                  {newProject.performance_indicator_target.map((val, idx) => (
-                    <div key={idx} className="flex gap-2 mb-2 items-start">
-                      <div className="flex-1">
-                        <PerformanceIndicatorInput
-                          value={val}
-                          onChange={(updated) => {
-                            const arr = [
-                              ...newProject.performance_indicator_target,
-                            ];
-                            arr[idx] = updated;
-                            handleNewProjectChange(
-                              "performance_indicator_target",
-                              arr,
-                            );
-                          }}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1 mt-4">
-                        {newProject.performance_indicator_target.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleRemoveArrayField(
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Output Performance Indicators and Target
+                    </label>
+                    {newProject.performance_indicator_target.map((val, idx) => (
+                      <div key={idx} className="flex gap-2 mb-2 items-start">
+                        <div className="flex-1">
+                          <PerformanceIndicatorInput
+                            value={val}
+                            onChange={(updated) => {
+                              const arr = [
+                                ...newProject.performance_indicator_target,
+                              ];
+                              arr[idx] = updated;
+                              handleNewProjectChange(
                                 "performance_indicator_target",
-                                idx,
-                              )
-                            }
-                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                          >
-                            -
-                          </button>
-                        )}
-                        {idx ===
-                          newProject.performance_indicator_target.length -
+                                arr,
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 mt-4">
+                          {newProject.performance_indicator_target.length >
                             1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleAddArrayField(
-                                "performance_indicator_target",
-                              )
-                            }
-                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                          >
-                            +
-                          </button>
-                        )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveArrayField(
+                                  "performance_indicator_target",
+                                  idx,
+                                )
+                              }
+                              className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                            >
+                              -
+                            </button>
+                          )}
+                          {idx ===
+                            newProject.performance_indicator_target.length -
+                              1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleAddArrayField(
+                                  "performance_indicator_target",
+                                )
+                              }
+                              className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                            >
+                              +
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -3089,9 +3116,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                           <li key={i}>
                             {v}
                             {description ? (
-                              <span className="block pl-4">
-                                {description}
-                              </span>
+                              <span className="block pl-4">{description}</span>
                             ) : null}
                           </li>
                         );
@@ -3133,8 +3158,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       Responsible Office:
                     </span>
                     <p className="mt-0.5 text-gray-800">
-                      {toOfficeArray(newProject.responsible_office).join(", ") ||
-                        "—"}
+                      {toOfficeArray(newProject.responsible_office).join(
+                        ", ",
+                      ) || "—"}
                     </p>
                   </div>
                 </div>
@@ -3165,7 +3191,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         if (wizardStep === 1) {
                           setShowWizard(false);
                           setWizardStep(1);
-                        } else if (isAttributedProgram(newProject) && wizardStep === 3) {
+                        } else if (
+                          isAttributedProgram(newProject) &&
+                          wizardStep === 3
+                        ) {
                           setWizardStep(1);
                         } else {
                           setWizardStep(wizardStep - 1);
@@ -3179,7 +3208,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       <button
                         type="button"
                         onClick={() => {
-                          if (isAttributedProgram(newProject) && wizardStep === 1) {
+                          if (
+                            isAttributedProgram(newProject) &&
+                            wizardStep === 1
+                          ) {
                             setWizardStep(3);
                           } else {
                             setWizardStep(wizardStep + 1);
@@ -3344,7 +3376,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                             />
                             {duplicateWarnings.length > 0 && (
                               <div className="mt-1 p-2 rounded bg-secondary-50 border border-secondary-200 text-secondary-700 text-[10px]">
-                                ⚠️ Similar: "{duplicateWarnings[0].gender_issue}" ({Math.round(duplicateWarnings[0].similarity * 100)}%)
+                                ⚠️ Similar: "{duplicateWarnings[0].gender_issue}
+                                " (
+                                {Math.round(
+                                  duplicateWarnings[0].similarity * 100,
+                                )}
+                                %)
                               </div>
                             )}
                           </td>
@@ -3609,7 +3646,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                               variant="popover"
                               value={newProject.responsible_office}
                               onChange={(next) =>
-                                handleNewProjectChange("responsible_office", next)
+                                handleNewProjectChange(
+                                  "responsible_office",
+                                  next,
+                                )
                               }
                             />
                           </td>
@@ -4156,7 +4196,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                 <button
                                                   type="button"
                                                   className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={handleAddEditActivityRow}
+                                                  onClick={
+                                                    handleAddEditActivityRow
+                                                  }
                                                 >
                                                   +
                                                 </button>
@@ -4171,7 +4213,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                 <textarea
                                                   className="w-40 border rounded px-2 py-1"
                                                   placeholder="Activity title"
-                                                  value={editActArr[rowIdx] || ""}
+                                                  value={
+                                                    editActArr[rowIdx] || ""
+                                                  }
                                                   onChange={(e) =>
                                                     handleEditActivityTitleChange(
                                                       rowIdx,
@@ -4213,7 +4257,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                   <button
                                                     type="button"
                                                     className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={handleAddEditActivityRow}
+                                                    onClick={
+                                                      handleAddEditActivityRow
+                                                    }
                                                   >
                                                     +
                                                   </button>
@@ -4471,9 +4517,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
                                       >
-                                      
                                         <div className="flex items-center gap-2 w-16">
-                                          
                                           <div className="min-w-0">
                                             <p className="text-xs font-medium text-gray-900 truncate">
                                               {getCreatorName(project)}
@@ -4620,7 +4664,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                   >
                                                     View
                                                   </button>
-                                                  {canEditDeleteProject(project) &&
+                                                  {canEditDeleteProject(
+                                                    project,
+                                                  ) &&
                                                     selectedGPBStatus?.status !==
                                                       "approved" &&
                                                     selectedGPBStatus?.status !==
@@ -4635,7 +4681,9 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                                         Edit
                                                       </button>
                                                     )}
-                                                  {canEditDeleteProject(project) &&
+                                                  {canEditDeleteProject(
+                                                    project,
+                                                  ) &&
                                                     selectedGPBStatus?.status !==
                                                       "approved" &&
                                                     selectedGPBStatus?.status !==

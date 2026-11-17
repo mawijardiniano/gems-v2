@@ -5,7 +5,7 @@
  * all read from this module. scripts/generate-sample-profiles.mjs adds
  * addresses and validates the profiles before writing data/sample-profiles.json.
  */
-import { COLLEGE_TO_PROGRAMS } from "../../../../../lib/colleges.js";
+import { COLLEGE_TO_PROGRAMS } from "../../../../../data/lib/colleges.js";
 
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
@@ -44,111 +44,233 @@ const LGBTQIA_RATE = 0.04;
    academic_information has no separate field for them. Grade 11 (1st
    Trimester) is stored as a "1st" term: the term enum has no trimester. */
 const TARGET_GROUPS_A = [
-  ["Boac", "College of Allied Health Sciences", [
-    ["Bachelor of Science in Midwifery", 15, 156],
-    ["Bachelor of Science in Nursing", 119, 412],
-  ]],
-  ["Boac", "College of Arts and Social Sciences", [
-    ["Bachelor of Arts in Communication", 76, 174],
-    ["Bachelor of Arts in English Language Studies", 36, 119],
-    ["Bachelor of Arts in English Language Studies - English Language Studies", 6, 25],
-    ["Bachelor of Science in Social Work", 76, 263],
-  ]],
-  ["Boac", "College of Business and Accountancy", [
-    ["Bachelor of Science in Accountancy", 26, 105],
-    ["Bachelor of Science in Business Administration - Financial Management", 92, 337],
-    ["Bachelor of Science in Business Administration - Human Resource Management", 59, 299],
-    ["Bachelor of Science in Business Administration - Marketing Management", 131, 305],
-    ["Bachelor of Science in Entrepreneurship", 54, 66],
-    ["Bachelor of Science in Entrepreneurship - Entrepreneurial Management", 40, 75],
-  ]],
-  ["Boac", "College of Criminal Justice Education", [
-    ["Bachelor of Science in Criminology", 175, 111],
-    ["Bachelor of Science in Law Enforcement Administration", 14, 9],
-  ]],
-  ["Boac", "College of Education", [
-    ["Bachelor of Culture and Arts Education", 57, 77],
-    ["Bachelor of Secondary Education - English", 4, 14],
-    ["Bachelor of Secondary Education - Mathematics", 19, 44],
-    ["Bachelor of Secondary Education - Music, Arts, Physical & Health Education (MAPHE)", 1, 0],
-    ["Bachelor of Secondary Education - Science", 25, 87],
-    ["Bachelor of Secondary Education - Social Studies", 22, 81],
-    ["Bachelor of Technology and Livelihood Education", 1, 0],
-    ["Bachelor of Technology and Livelihood Education - Home Economics", 26, 111],
-  ]],
-  ["Boac", "College of Engineering", [
-    ["Bachelor of Science in Civil Engineering", 235, 254],
-    ["Bachelor of Science in Computer Engineering", 84, 121],
-    ["Bachelor of Science in Electrical Engineering", 119, 48],
-    ["Bachelor of Science in Electronics Engineering", 63, 61],
-    ["Bachelor of Science in Mechanical Engineering", 136, 40],
-  ]],
-  ["Boac", "College of Environmental Studies", [
-    ["Bachelor of Science in Environmental Science", 60, 81],
-  ]],
-  ["Boac", "College of Governance", [
-    ["Bachelor in Public Administration", 192, 216],
-  ]],
+  [
+    "Boac",
+    "College of Allied Health Sciences",
+    [
+      ["Bachelor of Science in Midwifery", 15, 156],
+      ["Bachelor of Science in Nursing", 119, 412],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Arts and Social Sciences",
+    [
+      ["Bachelor of Arts in Communication", 76, 174],
+      ["Bachelor of Arts in English Language Studies", 36, 119],
+      [
+        "Bachelor of Arts in English Language Studies - English Language Studies",
+        6,
+        25,
+      ],
+      ["Bachelor of Science in Social Work", 76, 263],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Business and Accountancy",
+    [
+      ["Bachelor of Science in Accountancy", 26, 105],
+      [
+        "Bachelor of Science in Business Administration - Financial Management",
+        92,
+        337,
+      ],
+      [
+        "Bachelor of Science in Business Administration - Human Resource Management",
+        59,
+        299,
+      ],
+      [
+        "Bachelor of Science in Business Administration - Marketing Management",
+        131,
+        305,
+      ],
+      ["Bachelor of Science in Entrepreneurship", 54, 66],
+      [
+        "Bachelor of Science in Entrepreneurship - Entrepreneurial Management",
+        40,
+        75,
+      ],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Criminal Justice Education",
+    [
+      ["Bachelor of Science in Criminology", 175, 111],
+      ["Bachelor of Science in Law Enforcement Administration", 14, 9],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Education",
+    [
+      ["Bachelor of Culture and Arts Education", 57, 77],
+      ["Bachelor of Secondary Education - English", 4, 14],
+      ["Bachelor of Secondary Education - Mathematics", 19, 44],
+      [
+        "Bachelor of Secondary Education - Music, Arts, Physical & Health Education (MAPHE)",
+        1,
+        0,
+      ],
+      ["Bachelor of Secondary Education - Science", 25, 87],
+      ["Bachelor of Secondary Education - Social Studies", 22, 81],
+      ["Bachelor of Technology and Livelihood Education", 1, 0],
+      [
+        "Bachelor of Technology and Livelihood Education - Home Economics",
+        26,
+        111,
+      ],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Engineering",
+    [
+      ["Bachelor of Science in Civil Engineering", 235, 254],
+      ["Bachelor of Science in Computer Engineering", 84, 121],
+      ["Bachelor of Science in Electrical Engineering", 119, 48],
+      ["Bachelor of Science in Electronics Engineering", 63, 61],
+      ["Bachelor of Science in Mechanical Engineering", 136, 40],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Environmental Studies",
+    [["Bachelor of Science in Environmental Science", 60, 81]],
+  ],
+  [
+    "Boac",
+    "College of Governance",
+    [["Bachelor in Public Administration", 192, 216]],
+  ],
 ];
 
 const TARGET_GROUPS_B = [
-  ["Boac", "College of Industrial Technology", [
-    ["Bachelor of Industrial Technology - Architectural Drafting Technology", 62, 41],
-    ["Bachelor of Industrial Technology - Automotive Technology", 47, 3],
-    ["Bachelor of Industrial Technology - Culinary Technology", 63, 102],
-    ["Bachelor of Industrial Technology - Electrical Technology", 155, 3],
-    ["Bachelor of Industrial Technology - Mechanical Technology", 50, 1],
-    ["Bachelor of Industrial Technology - Welding and Fabrication Technology", 35, 6],
-    ["Bachelor of Science in Industrial Technology - Automotive Technology", 135, 3],
-    ["Bachelor of Science in Industrial Technology - Drafting Technology", 140, 103],
-    ["Bachelor of Science in Industrial Technology - Electrical Technology", 242, 6],
-    ["Bachelor of Science in Industrial Technology - Food Technology", 99, 139],
-    ["Bachelor of Science in Industrial Technology - Mechanical Technology", 107, 2],
-    ["Bachelor of Science in Industrial Technology - Welding and Fabrication Technology", 81, 2],
-  ]],
-  ["Boac", "College of Information and Computing Sciences", [
-    ["Bachelor of Science in Information Systems", 250, 196],
-    ["Bachelor of Science in Information Technology", 457, 298],
-  ]],
-  ["Boac", "Laboratory School", [
-    ["Junior High School", 55, 104],
-    ["Senior-High School (Grade 12) - STEM Strand", 15, 21],
-    ["Senior-High School (Grade 11)", 41, 88],
-    ["Senior-High School (Grade 11) - HUMSS Strand", 0, 1],
-    ["Senior-High School (Grade 11) - STEM Strand", 3, 4],
-  ]],
-  ["Boac", "Graduate School", [
-    ["Master in Information Technology", 6, 6],
-    ["Master in Public Administration", 2, 5],
-    ["Master in Public Administration - Organization Studies", 25, 27],
-    ["Master of Arts in Education - Educational Management", 17, 27],
-    ["Master of Arts in Education - Language Teaching", 5, 18],
-    ["Master of Arts in Education - Mathematics Teaching", 3, 6],
-    ["Master of Arts in Education - Science (Biology) Teaching", 3, 4],
-    ["Master of Arts in Education - Science (Physics) Teaching", 0, 1],
-    ["Doctor of Education - Curriculum Development and Management", 7, 10],
-  ]],
-  ["Sta. Cruz", "College of Business and Accountancy", [
-    ["Bachelor of Science in Tourism Management", 88, 314],
-  ]],
-  ["Sta. Cruz", "College of Education", [
-    ["Bachelor of Elementary Education", 8, 48],
-    ["Bachelor of Elementary Education - General Education", 10, 54],
-  ]],
-  ["Sta. Cruz", "College of Governance", [
-    ["Bachelor of Arts in Political Science", 86, 67],
-  ]],
-  ["Sta. Cruz", "College of Information and Computing Sciences", [
-    ["Bachelor of Science in Information Systems", 79, 113],
-  ]],
-  ["Torrijos", "College of Agriculture", [
-    ["Bachelor of Science in Agriculture", 154, 116],
-    ["Bachelor of Science in Agriculture - Animal Science", 1, 0],
-  ]],
-  ["Gasan", "College of Fisheries and Aquatic Sciences", [
-    ["Bachelor of Science in Fisheries", 192, 156],
-    ["Bachelor of Science in Fisheries - Aquaculture", 1, 0],
-  ]],
+  [
+    "Boac",
+    "College of Industrial Technology",
+    [
+      [
+        "Bachelor of Industrial Technology - Architectural Drafting Technology",
+        62,
+        41,
+      ],
+      ["Bachelor of Industrial Technology - Automotive Technology", 47, 3],
+      ["Bachelor of Industrial Technology - Culinary Technology", 63, 102],
+      ["Bachelor of Industrial Technology - Electrical Technology", 155, 3],
+      ["Bachelor of Industrial Technology - Mechanical Technology", 50, 1],
+      [
+        "Bachelor of Industrial Technology - Welding and Fabrication Technology",
+        35,
+        6,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Automotive Technology",
+        135,
+        3,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Drafting Technology",
+        140,
+        103,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Electrical Technology",
+        242,
+        6,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Food Technology",
+        99,
+        139,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Mechanical Technology",
+        107,
+        2,
+      ],
+      [
+        "Bachelor of Science in Industrial Technology - Welding and Fabrication Technology",
+        81,
+        2,
+      ],
+    ],
+  ],
+  [
+    "Boac",
+    "College of Information and Computing Sciences",
+    [
+      ["Bachelor of Science in Information Systems", 250, 196],
+      ["Bachelor of Science in Information Technology", 457, 298],
+    ],
+  ],
+  [
+    "Boac",
+    "Laboratory School",
+    [
+      ["Junior High School", 55, 104],
+      ["Senior-High School (Grade 12) - STEM Strand", 15, 21],
+      ["Senior-High School (Grade 11)", 41, 88],
+      ["Senior-High School (Grade 11) - HUMSS Strand", 0, 1],
+      ["Senior-High School (Grade 11) - STEM Strand", 3, 4],
+    ],
+  ],
+  [
+    "Boac",
+    "Graduate School",
+    [
+      ["Master in Information Technology", 6, 6],
+      ["Master in Public Administration", 2, 5],
+      ["Master in Public Administration - Organization Studies", 25, 27],
+      ["Master of Arts in Education - Educational Management", 17, 27],
+      ["Master of Arts in Education - Language Teaching", 5, 18],
+      ["Master of Arts in Education - Mathematics Teaching", 3, 6],
+      ["Master of Arts in Education - Science (Biology) Teaching", 3, 4],
+      ["Master of Arts in Education - Science (Physics) Teaching", 0, 1],
+      ["Doctor of Education - Curriculum Development and Management", 7, 10],
+    ],
+  ],
+  [
+    "Sta. Cruz",
+    "College of Business and Accountancy",
+    [["Bachelor of Science in Tourism Management", 88, 314]],
+  ],
+  [
+    "Sta. Cruz",
+    "College of Education",
+    [
+      ["Bachelor of Elementary Education", 8, 48],
+      ["Bachelor of Elementary Education - General Education", 10, 54],
+    ],
+  ],
+  [
+    "Sta. Cruz",
+    "College of Governance",
+    [["Bachelor of Arts in Political Science", 86, 67]],
+  ],
+  [
+    "Sta. Cruz",
+    "College of Information and Computing Sciences",
+    [["Bachelor of Science in Information Systems", 79, 113]],
+  ],
+  [
+    "Torrijos",
+    "College of Agriculture",
+    [
+      ["Bachelor of Science in Agriculture", 154, 116],
+      ["Bachelor of Science in Agriculture - Animal Science", 1, 0],
+    ],
+  ],
+  [
+    "Gasan",
+    "College of Fisheries and Aquatic Sciences",
+    [
+      ["Bachelor of Science in Fisheries", 192, 156],
+      ["Bachelor of Science in Fisheries - Aquaculture", 1, 0],
+    ],
+  ],
 ];
 const STUDENT_TARGETS = [...TARGET_GROUPS_A, ...TARGET_GROUPS_B].flatMap(
   ([campus, college, rows]) =>
@@ -317,41 +439,221 @@ const PWD_TYPES = [
 ];
 
 const FEMALE_NAMES = [
-  "Maria", "Ana", "Angelica", "Jasmine", "Kristine", "Mary Grace", "Joanna",
-  "Rhea", "Michelle", "Carla", "Jenny", "Liza", "Cherry", "Rose Ann", "Maricel",
-  "Jessa", "Katrina", "Nicole", "Princess", "Shiela", "Aileen", "Bernadette",
-  "Camille", "Divina", "Elaine", "Faith", "Grace", "Hazel", "Irene", "Jocelyn",
-  "Kimberly", "Lea", "Mikaela", "Noemi", "Ofelia", "Patricia", "Queenie",
-  "Rowena", "Sheryl", "Trisha", "Vanessa", "Wendy", "Yvonne", "Zenaida",
-  "Alyssa", "Beatriz", "Charmaine", "Denise", "Erika", "Fe", "Gemma", "Hannah",
-  "Ivy", "Jhoanna", "Kyla", "Lorraine", "Marites", "Nerissa", "Precious",
+  "Maria",
+  "Ana",
+  "Angelica",
+  "Jasmine",
+  "Kristine",
+  "Mary Grace",
+  "Joanna",
+  "Rhea",
+  "Michelle",
+  "Carla",
+  "Jenny",
+  "Liza",
+  "Cherry",
+  "Rose Ann",
+  "Maricel",
+  "Jessa",
+  "Katrina",
+  "Nicole",
+  "Princess",
+  "Shiela",
+  "Aileen",
+  "Bernadette",
+  "Camille",
+  "Divina",
+  "Elaine",
+  "Faith",
+  "Grace",
+  "Hazel",
+  "Irene",
+  "Jocelyn",
+  "Kimberly",
+  "Lea",
+  "Mikaela",
+  "Noemi",
+  "Ofelia",
+  "Patricia",
+  "Queenie",
+  "Rowena",
+  "Sheryl",
+  "Trisha",
+  "Vanessa",
+  "Wendy",
+  "Yvonne",
+  "Zenaida",
+  "Alyssa",
+  "Beatriz",
+  "Charmaine",
+  "Denise",
+  "Erika",
+  "Fe",
+  "Gemma",
+  "Hannah",
+  "Ivy",
+  "Jhoanna",
+  "Kyla",
+  "Lorraine",
+  "Marites",
+  "Nerissa",
+  "Precious",
   "Rizza",
 ];
 const MALE_NAMES = [
-  "Juan", "Jose", "Mark", "John Paul", "Christian", "Jericho", "Kevin", "Rey",
-  "Carlo", "Angelo", "Michael", "Joshua", "Daniel", "Paolo", "Ramil", "Jun",
-  "Arnel", "Benjie", "Cedric", "Dennis", "Edgar", "Fernando", "Gilbert",
-  "Harold", "Ian", "Jayson", "Kenneth", "Lester", "Marvin", "Nathaniel",
-  "Oscar", "Patrick", "Rommel", "Sherwin", "Tristan", "Vincent", "Wilfredo",
-  "Xavier", "Yñigo", "Zandro", "Alvin", "Bryan", "Christopher", "Dominic",
-  "Emmanuel", "Francis", "Gerald", "Henry", "Ivan", "Jomar", "Karl", "Leo",
-  "Mico", "Noel", "Rodel", "Rolando", "Ronnie", "Samuel", "Teddy", "Victor",
+  "Juan",
+  "Jose",
+  "Mark",
+  "John Paul",
+  "Christian",
+  "Jericho",
+  "Kevin",
+  "Rey",
+  "Carlo",
+  "Angelo",
+  "Michael",
+  "Joshua",
+  "Daniel",
+  "Paolo",
+  "Ramil",
+  "Jun",
+  "Arnel",
+  "Benjie",
+  "Cedric",
+  "Dennis",
+  "Edgar",
+  "Fernando",
+  "Gilbert",
+  "Harold",
+  "Ian",
+  "Jayson",
+  "Kenneth",
+  "Lester",
+  "Marvin",
+  "Nathaniel",
+  "Oscar",
+  "Patrick",
+  "Rommel",
+  "Sherwin",
+  "Tristan",
+  "Vincent",
+  "Wilfredo",
+  "Xavier",
+  "Yñigo",
+  "Zandro",
+  "Alvin",
+  "Bryan",
+  "Christopher",
+  "Dominic",
+  "Emmanuel",
+  "Francis",
+  "Gerald",
+  "Henry",
+  "Ivan",
+  "Jomar",
+  "Karl",
+  "Leo",
+  "Mico",
+  "Noel",
+  "Rodel",
+  "Rolando",
+  "Ronnie",
+  "Samuel",
+  "Teddy",
+  "Victor",
 ];
 const SURNAMES = [
-  "Santos", "Reyes", "Cruz", "Bautista", "Ocampo", "Garcia", "Mendoza",
-  "Torres", "Tomas", "Andrada", "Castillo", "Aquino", "Villanueva", "Ramos",
-  "Dela Cruz", "Mercado", "Navarro", "Salazar", "Fernandez", "Lopez",
-  "Gonzales", "Flores", "Rivera", "Morales", "Domingo", "Soriano", "Valdez",
-  "Pascual", "Manalo", "Marasigan", "Magsino", "Lim", "Dela Peña", "Nuñez",
-  "Zapanta", "Sison", "Rosales", "Perez", "Alcantara", "Evangelista",
-  "Aguilar", "Buenaventura", "Calma", "Dimaano", "Españo", "Famisan",
-  "Galang", "Hernandez", "Ibañez", "Jimenez", "Lacson", "Macalintal",
-  "Natividad", "Obligacion", "Panganiban", "Quiambao", "Retuya", "Servando",
-  "Tolentino", "Umali", "Vergara", "Yap", "Zafra", "Angeles", "Bacolod",
-  "Catapang", "Dizon", "Estrella", "Fajardo", "Guevarra", "Hizon", "Inocencio",
-  "Javier", "Lucero", "Malabanan", "Nepomuceno", "Oliva", "Padilla", "Real",
-  "Silvestre", "Tabuena", "Urbano", "Velasco", "Zulueta", "Abad", "Basa",
-  "Capistrano", "Diaz", "Elepaño", "Fulgencio", "Gutierrez",
+  "Santos",
+  "Reyes",
+  "Cruz",
+  "Bautista",
+  "Ocampo",
+  "Garcia",
+  "Mendoza",
+  "Torres",
+  "Tomas",
+  "Andrada",
+  "Castillo",
+  "Aquino",
+  "Villanueva",
+  "Ramos",
+  "Dela Cruz",
+  "Mercado",
+  "Navarro",
+  "Salazar",
+  "Fernandez",
+  "Lopez",
+  "Gonzales",
+  "Flores",
+  "Rivera",
+  "Morales",
+  "Domingo",
+  "Soriano",
+  "Valdez",
+  "Pascual",
+  "Manalo",
+  "Marasigan",
+  "Magsino",
+  "Lim",
+  "Dela Peña",
+  "Nuñez",
+  "Zapanta",
+  "Sison",
+  "Rosales",
+  "Perez",
+  "Alcantara",
+  "Evangelista",
+  "Aguilar",
+  "Buenaventura",
+  "Calma",
+  "Dimaano",
+  "Españo",
+  "Famisan",
+  "Galang",
+  "Hernandez",
+  "Ibañez",
+  "Jimenez",
+  "Lacson",
+  "Macalintal",
+  "Natividad",
+  "Obligacion",
+  "Panganiban",
+  "Quiambao",
+  "Retuya",
+  "Servando",
+  "Tolentino",
+  "Umali",
+  "Vergara",
+  "Yap",
+  "Zafra",
+  "Angeles",
+  "Bacolod",
+  "Catapang",
+  "Dizon",
+  "Estrella",
+  "Fajardo",
+  "Guevarra",
+  "Hizon",
+  "Inocencio",
+  "Javier",
+  "Lucero",
+  "Malabanan",
+  "Nepomuceno",
+  "Oliva",
+  "Padilla",
+  "Real",
+  "Silvestre",
+  "Tabuena",
+  "Urbano",
+  "Velasco",
+  "Zulueta",
+  "Abad",
+  "Basa",
+  "Capistrano",
+  "Diaz",
+  "Elepaño",
+  "Fulgencio",
+  "Gutierrez",
 ];
 
 /* ------------------------------------------------------------------ */
@@ -416,7 +718,6 @@ const slug = (value) =>
     .replace(/[^a-z0-9]+/g, "");
 
 const objectId = (n) => `67f0a1b2c3d4${n.toString(16).padStart(12, "0")}`;
-
 
 /* ------------------------------------------------------------------ */
 /* Person builder (shared by students and employees)                   */
@@ -551,11 +852,21 @@ function buildStudents() {
        Laboratory School students carry no college year level. */
     const hasLevel = !graduate && !school;
     const currentLevel = hasLevel
-      ? weighted([[0, 30], [1, 25], [2, 25], [3, 20]])
+      ? weighted([
+          [0, 30],
+          [1, 25],
+          [2, 25],
+          [3, 20],
+        ])
       : 0;
     const back = hasLevel
       ? Math.min(LAST_IDX, currentLevel + (chance(0.1) ? 1 : 0))
-      : weighted([[0, 40], [1, 30], [2, 20], [3, 10]]);
+      : weighted([
+          [0, 40],
+          [1, 30],
+          [2, 20],
+          [3, 10],
+        ]);
     const startIdx = LAST_IDX - back;
     const student_id = `${SCHOOL_YEARS[startIdx].slice(0, 4)}-${pad(person.seq, 5)}`;
     const lateEntry = back > 0 && i % LATE_ENTRY_STEP === 7;
@@ -672,8 +983,13 @@ function buildEmployees() {
   regular.forEach((k, n) => startIdxOf.set(k, cohortYears[n]));
 
   return rolled.map((entry, i) => {
-    const { person, rolledStatus, rolledOffice, employeeId, rolledAppointment } =
-      entry;
+    const {
+      person,
+      rolledStatus,
+      rolledOffice,
+      employeeId,
+      rolledAppointment,
+    } = entry;
     const _id = objectId(person.seq);
     const official = officialAt.get(i) || null;
     const employment_status = official ? official.status : rolledStatus;
@@ -765,8 +1081,7 @@ export const SAMPLE_STUDENT_PROFILE_RECORDS = SAMPLE_STUDENT_PROFILES.map(
       scholar: info.isScholar === "Yes",
       pwd: profile.gadData.isPWD === true,
       indigenous: profile.gadData.isIndigenousPerson === true,
-      soloParent:
-        hasFamily(profile.personal.civil_status) && index % 6 === 0,
+      soloParent: hasFamily(profile.personal.civil_status) && index % 6 === 0,
       genderIdentity: profile.gadData.gender_preference,
       income: profile.gadData.socioEconomicStatus || null,
       civilStatus: profile.personal.civil_status,
@@ -817,8 +1132,7 @@ export const SAMPLE_EMPLOYEE_PROFILE_RECORDS = SAMPLE_EMPLOYEE_PROFILES.map(
       scholar: false,
       pwd: profile.gadData.isPWD === true,
       indigenous: profile.gadData.isIndigenousPerson === true,
-      soloParent:
-        hasFamily(profile.personal.civil_status) && index % 6 === 0,
+      soloParent: hasFamily(profile.personal.civil_status) && index % 6 === 0,
       genderIdentity: profile.gadData.gender_preference,
       income: profile.gadData.socioEconomicStatus || null,
       civilStatus: profile.personal.civil_status,
@@ -854,4 +1168,3 @@ export const SAMPLE_STUDENT_LIST_ROWS =
   SAMPLE_STUDENT_PROFILES.map(toSampleListRow);
 export const SAMPLE_EMPLOYEE_LIST_ROWS =
   SAMPLE_EMPLOYEE_PROFILES.map(toSampleListRow);
-

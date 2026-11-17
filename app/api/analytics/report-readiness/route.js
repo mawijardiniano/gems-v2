@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { cacheOrSet } from "@/lib/cache";
-import { optionalAuth } from "@/lib/auth";
+import { connectDB } from "@/data/lib/db";
+import { cacheOrSet } from "@/data/lib/cache";
+import { optionalAuth } from "@/data/lib/auth";
 import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
@@ -9,7 +9,7 @@ import GPB from "@/models/gpb";
 import {
   normalizeAccomplishmentLines,
   usesAccomplishmentOverride,
-} from "@/lib/accomplishmentSummary";
+} from "@/data/lib/accomplishmentSummary";
 
 const CACHE_TTL = 60 * 1000;
 

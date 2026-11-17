@@ -1,9 +1,9 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { getGFPSMemberList } from "@/lib/gfpsServer";
+import { getGFPSMemberList } from "@/data/lib/gfpsServer";
 
 export async function DELETE(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -19,18 +19,26 @@ export async function DELETE(req, { params }) {
     const members = getGFPSMemberList(gfps, sectionKey);
 
     if (!members) {
-      return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
+      return Response.json(
+        { success: false, message: "Invalid section" },
+        { status: 400 },
+      );
     }
 
     const removed = members[memberIndex];
     if (!removed) {
-      return Response.json({ success: false, message: "Invalid member" }, { status: 400 });
+      return Response.json(
+        { success: false, message: "Invalid member" },
+        { status: 400 },
+      );
     }
 
     /* Capture the removed row before splicing. Without this the record says
        only that *a* member left section X — it cannot answer "who", which is
        the whole question when a seat change is disputed months later. */
-    const removedSnapshot = removed.toObject ? removed.toObject() : { ...removed };
+    const removedSnapshot = removed.toObject
+      ? removed.toObject()
+      : { ...removed };
 
     members.splice(memberIndex, 1);
 
@@ -58,6 +66,9 @@ export async function DELETE(req, { params }) {
 
     return Response.json({ success: true, message: "Member removed" });
   } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    return Response.json(
+      { success: false, error: err.message },
+      { status: 500 },
+    );
   }
 }

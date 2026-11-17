@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 import axios from "axios";
 import NotificationBell from "@/components/NotificationBell";
 import TextSizeMenu from "@/components/TextSizeMenu";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import useTextScale from "@/hooks/useTextScale";
 import { logout as reduxLogout } from "@/store/slices/authSlice";
 

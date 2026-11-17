@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
@@ -102,7 +102,7 @@ export default function Sidebar({ open, setOpen, role }) {
         return pathname === "/president/dashboard";
       return pathname?.startsWith(href);
     },
-    [pathname]
+    [pathname],
   );
 
   const getInitials = useCallback(() => {
@@ -121,9 +121,10 @@ export default function Sidebar({ open, setOpen, role }) {
     return user?.username || "SUC President";
   }, [profile, user]);
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   return (
     <>
@@ -236,7 +237,11 @@ export default function Sidebar({ open, setOpen, role }) {
           {mainLinks.map((link) => {
             const linkActive = isActive(link.href);
             return (
-              <TooltipWrapper key={link.key} label={link.name} collapsed={!open}>
+              <TooltipWrapper
+                key={link.key}
+                label={link.name}
+                collapsed={!open}
+              >
                 <Link
                   href={link.href}
                   onClick={handleMobileClose}
@@ -273,7 +278,8 @@ export default function Sidebar({ open, setOpen, role }) {
               <button
                 onClick={() => setShowProjectMonitoring((prev) => !prev)}
                 className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
-                  showProjectMonitoring || pathname?.startsWith("/president/project-monitoring")
+                  showProjectMonitoring ||
+                  pathname?.startsWith("/president/project-monitoring")
                     ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
                     : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                 }`}
@@ -333,20 +339,14 @@ export default function Sidebar({ open, setOpen, role }) {
                           : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                       }`}
                     >
-                      <FaFlask
-                        size={14}
-                        className="flex-shrink-0 opacity-60"
-                      />
+                      <FaFlask size={14} className="flex-shrink-0 opacity-60" />
                       <span className="text-sm font-medium truncate">
                         Research &amp; Extension
                       </span>
                     </Link>
                   </TooltipWrapper>
 
-                  <TooltipWrapper
-                    label="Academic Projects"
-                    collapsed={!open}
-                  >
+                  <TooltipWrapper label="Academic Projects" collapsed={!open}>
                     <Link
                       href="/president/project-monitoring/academic-projects"
                       onClick={handleMobileClose}
@@ -413,7 +413,8 @@ export default function Sidebar({ open, setOpen, role }) {
               <button
                 onClick={() => setShowGenderStatistics((prev) => !prev)}
                 className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 w-full p-2.5 ${
-                  showGenderStatistics || pathname?.startsWith("/president/gender-statistics")
+                  showGenderStatistics ||
+                  pathname?.startsWith("/president/gender-statistics")
                     ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
                     : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                 }`}
@@ -494,7 +495,6 @@ export default function Sidebar({ open, setOpen, role }) {
               </Link>
             </TooltipWrapper>
           )}
-
         </nav>
 
         <div

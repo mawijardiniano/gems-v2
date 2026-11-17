@@ -1,9 +1,9 @@
 import GFPS from "@/models/gfps";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
-import { getGFPSMemberList } from "@/lib/gfpsServer";
-import { logActivity, diffFields } from "@/lib/activityLog";
+import { getGFPSMemberList } from "@/data/lib/gfpsServer";
+import { logActivity, diffFields } from "@/data/lib/activityLog";
 
 /* Fields a member row is compared on. Both sides of the diff are plain
    `toObject()` snapshots, so a Date compares against a Date and no field needs
@@ -29,19 +29,28 @@ export async function PATCH(req, { params }) {
     const gfps = await GFPS.findById(params.id);
 
     if (!gfps) {
-      return Response.json({ success: false, message: "Not found" }, { status: 404 });
+      return Response.json(
+        { success: false, message: "Not found" },
+        { status: 404 },
+      );
     }
 
     const members = getGFPSMemberList(gfps, sectionKey);
 
     if (!members) {
-      return Response.json({ success: false, message: "Invalid section" }, { status: 400 });
+      return Response.json(
+        { success: false, message: "Invalid section" },
+        { status: 400 },
+      );
     }
 
     const oldData = members[memberIndex];
 
     if (!oldData) {
-      return Response.json({ success: false, message: "Invalid member" }, { status: 400 });
+      return Response.json(
+        { success: false, message: "Invalid member" },
+        { status: 400 },
+      );
     }
 
     /* Snapshot before mutating. Editing a GFPS seat is the highest-consequence
@@ -56,7 +65,11 @@ export async function PATCH(req, { params }) {
 
     await gfps.save();
 
-    const changes = diffFields(before, members[memberIndex], MEMBER_DIFF_FIELDS);
+    const changes = diffFields(
+      before,
+      members[memberIndex],
+      MEMBER_DIFF_FIELDS,
+    );
 
     await logActivity({
       req,
@@ -82,6 +95,9 @@ export async function PATCH(req, { params }) {
       message: "Updated successfully",
     });
   } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    return Response.json(
+      { success: false, error: err.message },
+      { status: 500 },
+    );
   }
 }

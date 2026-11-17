@@ -7,7 +7,7 @@ import {
   decryptFields,
   extractPiiFromProfile,
   isVaultConfigured,
-} from "../lib/identityVault.js";
+} from "../data/lib/identityVault.js";
 
 /**
  * The gate that decides whether PII may be deleted from GemsProfile.

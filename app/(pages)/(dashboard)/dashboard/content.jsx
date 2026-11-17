@@ -22,7 +22,11 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EventCardSkeletonList } from "@/components/Skeleton";
-import { eventSpan, effectiveStatus, isEventOpen } from "@/lib/eventStatus";
+import {
+  eventSpan,
+  effectiveStatus,
+  isEventOpen,
+} from "@/data/lib/eventStatus";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -69,12 +73,18 @@ function StatCard({ icon, label, value, color }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg ${color}`}>
+        <div
+          className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg ${color}`}
+        >
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-          <p className="text-base font-semibold text-gray-900 truncate mt-0.5">{value || "—"}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            {label}
+          </p>
+          <p className="text-base font-semibold text-gray-900 truncate mt-0.5">
+            {value || "—"}
+          </p>
         </div>
       </div>
     </div>
@@ -126,8 +136,8 @@ function EventCard({ event, onClick, compact = false }) {
             isCancelled
               ? "bg-red-50 text-red-600"
               : isPast
-              ? "bg-gray-100 text-gray-500"
-              : "bg-emerald-50 text-emerald-700"
+                ? "bg-gray-100 text-gray-500"
+                : "bg-emerald-50 text-emerald-700"
           }`}
         >
           {isCancelled ? "Cancelled" : isPast ? "Past" : "Upcoming"}
@@ -153,7 +163,11 @@ export default function DashboardContent({ profile, userId }) {
   const contact = profile?.contact || {};
 
   const isStudent = personal.currentStatus === "Student";
-  const fullName = [personal.first_name, personal.middle_name, personal.last_name]
+  const fullName = [
+    personal.first_name,
+    personal.middle_name,
+    personal.last_name,
+  ]
     .filter(Boolean)
     .join(" ");
   const initials = [personal.first_name, personal.last_name]
@@ -166,7 +180,9 @@ export default function DashboardContent({ profile, userId }) {
     setEventsLoading(true);
     Promise.all([
       fetch("/api/events").then((res) => res.json()),
-      fetch(`/api/events/user-events?user_id=${userId}`).then((res) => res.json()),
+      fetch(`/api/events/user-events?user_id=${userId}`).then((res) =>
+        res.json(),
+      ),
     ])
       .then(([eventsRes, userEventsRes]) => {
         setAllEvents(eventsRes.data || []);
@@ -207,41 +223,100 @@ export default function DashboardContent({ profile, userId }) {
   }, [allEvents, registeredIds, createdIds]);
 
   const studentStats = [
-    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaUniversity />, label: "Campus", value: academic.campus, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaGraduationCap />, label: "College", value: academic.college, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaLayerGroup />, label: "Course", value: academic.course, color: "bg-teal-50 text-teal-600" },
-    { icon: <FaClock />, label: "Year Level", value: academic.year_level, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaIdBadge />, label: "Student ID", value: academic.student_id, color: "bg-rose-50 text-rose-600" },
+    {
+      icon: <FaUserGraduate />,
+      label: "Status",
+      value: personal.currentStatus,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaUniversity />,
+      label: "Campus",
+      value: academic.campus,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaGraduationCap />,
+      label: "College",
+      value: academic.college,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaLayerGroup />,
+      label: "Course",
+      value: academic.course,
+      color: "bg-teal-50 text-teal-600",
+    },
+    {
+      icon: <FaClock />,
+      label: "Year Level",
+      value: academic.year_level,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaIdBadge />,
+      label: "Student ID",
+      value: academic.student_id,
+      color: "bg-rose-50 text-rose-600",
+    },
   ];
 
   const employeeStats = [
-    { icon: <FaUserGraduate />, label: "Status", value: personal.currentStatus, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaBriefcase />, label: "Office", value: employment.office, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaClock />, label: "Employment Status", value: employment.employment_status, color: "bg-teal-50 text-teal-600" },
-    { icon: <FaIdBadge />, label: "Appointment", value: employment.employment_appointment_status, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaIdBadge />, label: "Employee ID", value: employment.employee_id, color: "bg-rose-50 text-rose-600" },
+    {
+      icon: <FaUserGraduate />,
+      label: "Status",
+      value: personal.currentStatus,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaBriefcase />,
+      label: "Office",
+      value: employment.office,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaClock />,
+      label: "Employment Status",
+      value: employment.employment_status,
+      color: "bg-teal-50 text-teal-600",
+    },
+    {
+      icon: <FaIdBadge />,
+      label: "Appointment",
+      value: employment.employment_appointment_status,
+      color: "bg-secondary-50 text-secondary-600",
+    },
+    {
+      icon: <FaIdBadge />,
+      label: "Employee ID",
+      value: employment.employee_id,
+      color: "bg-rose-50 text-rose-600",
+    },
   ];
 
   return (
     <div className="py-6 px-0 md:px-2 max-w-7xl mx-auto">
-   
       <div className="mb-8">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
             {initials || "U"}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back{fullName ? `, ${fullName.split(" ")[0]}` : ""}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Here's what's happening with your account today.</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome back{fullName ? `, ${fullName.split(" ")[0]}` : ""}
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Here's what's happening with your account today.
+            </p>
           </div>
         </div>
       </div>
 
-  
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Profile Overview</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Profile Overview
+          </h2>
           <button
             onClick={() => router.push("/dashboard/personal-information")}
             className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
@@ -262,7 +337,9 @@ export default function DashboardContent({ profile, userId }) {
           {/* Discover Events */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between p-5 border-b border-gray-50">
-              <h2 className="text-base font-semibold text-gray-900">Discover Events</h2>
+              <h2 className="text-base font-semibold text-gray-900">
+                Discover Events
+              </h2>
               <button
                 onClick={() => router.push("/events/discover")}
                 className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
@@ -275,7 +352,11 @@ export default function DashboardContent({ profile, userId }) {
                 <EventCardSkeletonList count={3} />
               ) : discoverEvents.length > 0 ? (
                 discoverEvents.map((evt) => (
-                  <EventCard key={evt._id} event={evt} onClick={(id) => router.push(`/events/discover/${id}`)} />
+                  <EventCard
+                    key={evt._id}
+                    event={evt}
+                    onClick={(id) => router.push(`/events/discover/${id}`)}
+                  />
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-400">
@@ -288,7 +369,9 @@ export default function DashboardContent({ profile, userId }) {
 
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between p-5 border-b border-gray-50">
-              <h2 className="text-base font-semibold text-gray-900">Your Events</h2>
+              <h2 className="text-base font-semibold text-gray-900">
+                Your Events
+              </h2>
               <button
                 onClick={() => router.push("/events")}
                 className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
@@ -301,7 +384,11 @@ export default function DashboardContent({ profile, userId }) {
                 <EventCardSkeletonList count={3} />
               ) : pastEvents.length > 0 ? (
                 pastEvents.map((evt) => (
-                  <EventCard key={evt._id} event={evt} onClick={(id) => router.push(`/events/discover/${id}`)} />
+                  <EventCard
+                    key={evt._id}
+                    event={evt}
+                    onClick={(id) => router.push(`/events/discover/${id}`)}
+                  />
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-400">

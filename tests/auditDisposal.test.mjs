@@ -61,7 +61,6 @@ const MODEL_STUB = `
   export default model;
 `;
 
-
 /* Captures what was uploaded, so a test can assert the archive really contains
  * the disposed rows â€” the whole basis for deleting them. */
 const S3_STUB = `
@@ -98,7 +97,8 @@ registerHooks({
         `${base.href}.mjs`,
         `${base.href}/index.js`,
       ]) {
-        if (existsSync(fileURLToPath(candidate))) return nextResolve(candidate, context);
+        if (existsSync(fileURLToPath(candidate)))
+          return nextResolve(candidate, context);
       }
     }
     return nextResolve(specifier, context);
@@ -115,7 +115,7 @@ registerHooks({
 });
 
 const modelMod = await import("stub:activity_log");
-const { applyRetention } = await import("../lib/auditRetention.js");
+const { applyRetention } = await import("../data/lib/auditRetention.js");
 
 /* An expired record: older than any plausible retention window, and not one of
  * the classes retention refuses to touch (never critical, never redacted). */
@@ -180,7 +180,11 @@ test("a dry run plans but never writes or deletes", async () => {
   const result = await applyRetention({ dryRun: true });
   assert.equal(result.dryRun, true);
   assert.equal(modelMod.__deleted(), null);
-  assert.equal(modelMod.__inserted().length, 0, "a dry run must not record a disposal");
+  assert.equal(
+    modelMod.__inserted().length,
+    0,
+    "a dry run must not record a disposal",
+  );
 });
 
 test("a disposal record is never written when disposal did not happen", async () => {
@@ -190,9 +194,9 @@ test("a disposal record is never written when disposal did not happen", async ()
 
   await withoutS3(() => applyRetention({ dryRun: false }));
 
-  const disposals = modelMod.__inserted().filter(
-    (e) => e.action === "AUDIT_RETENTION_DISPOSE",
-  );
+  const disposals = modelMod
+    .__inserted()
+    .filter((e) => e.action === "AUDIT_RETENTION_DISPOSE");
   assert.equal(disposals.length, 0);
 });
 
@@ -207,7 +211,8 @@ test("a successful disposal archives first, records it, then deletes exactly wha
   process.env.AWS_BUCKET_NAME = "gems-audit-archive";
   /* The client refuses to be built without an endpoint rather than defaulting
      to some public host, so a successful archive needs one set. */
-  process.env.STORAGE_ENDPOINT = "https://test.storage.supabase.co/storage/v1/s3";
+  process.env.STORAGE_ENDPOINT =
+    "https://test.storage.supabase.co/storage/v1/s3";
   /* lib/storage.js validates credential shape before building a client, so a
      successful archive needs a well-formed key pair even though the S3 client
      is stubbed and never signs anything. */
@@ -228,7 +233,10 @@ test("a successful disposal archives first, records it, then deletes exactly wha
 
   /* 1. Everything deleted was archived â€” the archive is the record now. */
   assert.equal(s3.__uploads.length, 1);
-  const archivedLines = s3.__uploads[0].body.trim().split("\n").map((l) => JSON.parse(l));
+  const archivedLines = s3.__uploads[0].body
+    .trim()
+    .split("\n")
+    .map((l) => JSON.parse(l));
   assert.deepEqual(
     archivedLines.map((r) => String(r._id)),
     expired.map((r) => String(r._id)),
@@ -242,9 +250,9 @@ test("a successful disposal archives first, records it, then deletes exactly wha
 
   /* 3. The disposal is recorded, and names the archive and the exact
         predecessor hash, which is what lets verify() excuse the resulting gap. */
-  const disposals = modelMod.__inserted().filter(
-    (e) => e.action === "AUDIT_RETENTION_DISPOSE",
-  );
+  const disposals = modelMod
+    .__inserted()
+    .filter((e) => e.action === "AUDIT_RETENTION_DISPOSE");
   assert.equal(disposals.length, 1, "disposal must leave a record");
   const [disposal] = disposals;
   assert.equal(disposal.metadata.archive_key, s3.__uploads[0].key);
@@ -254,7 +262,9 @@ test("a successful disposal archives first, records it, then deletes exactly wha
   /* The store offers no object lock and no versioning, so the only evidence
      that the archive object still holds what was written is this digest,
      recorded in the chained audit entry at the time of the write. */
-  const expectedDigest = createHash("sha256").update(s3.__uploads[0].body).digest("hex");
+  const expectedDigest = createHash("sha256")
+    .update(s3.__uploads[0].body)
+    .digest("hex");
   assert.equal(
     disposal.metadata.archive_sha256,
     expectedDigest,

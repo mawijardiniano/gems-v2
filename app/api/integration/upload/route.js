@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import csv from "csvtojson";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { stageRows } from "@/app/api/integration/_utils/staging";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 export async function POST(req) {
   try {

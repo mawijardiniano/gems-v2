@@ -1,6 +1,6 @@
 import AcademicProject from "@/models/academicProject";
-import { createCommentHandlers } from "@/lib/simpleProjectApi";
-import { ACADEMIC_COMMENT_FIELDS } from "@/lib/projectModules";
+import { createCommentHandlers } from "@/data/lib/simpleProjectApi";
+import { ACADEMIC_COMMENT_FIELDS } from "@/data/lib/projectModules";
 
 /* Field-targeted comments for an Academic project. */
 

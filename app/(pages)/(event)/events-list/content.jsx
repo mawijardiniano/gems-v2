@@ -16,11 +16,15 @@ import {
   FaChevronDown,
   FaGlobeAsia,
 } from "react-icons/fa";
-import { eventPhaseStyle } from "@/lib/eventStatus";
+import { eventPhaseStyle } from "@/data/lib/eventStatus";
 
 const ActivityTypeBadge = ({ type }) => {
   const colorMap = {
-    Academic: { bg: "bg-secondary-100", text: "text-secondary-700", dot: "bg-secondary-500" },
+    Academic: {
+      bg: "bg-secondary-100",
+      text: "text-secondary-700",
+      dot: "bg-secondary-500",
+    },
     Administrative: {
       bg: "bg-secondary-100",
       text: "text-secondary-700",
@@ -173,7 +177,7 @@ export default function EventsListContent() {
       } catch (err) {
         if (err.name === "CanceledError" || err.code === "ERR_CANCELED") return;
         setError(
-          err.response?.data?.message || "Unable to load events. Please retry."
+          err.response?.data?.message || "Unable to load events. Please retry.",
         );
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -300,7 +304,10 @@ export default function EventsListContent() {
                   </option>
                 ))}
               </select>
-              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
+              <FaChevronDown
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={12}
+              />
             </div>
 
             <div className="relative">
@@ -316,7 +323,10 @@ export default function EventsListContent() {
                   </option>
                 ))}
               </select>
-              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
+              <FaChevronDown
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={12}
+              />
             </div>
 
             {(activityType || selectedYear) && (
@@ -422,7 +432,9 @@ export default function EventsListContent() {
                         <span className="font-medium text-gray-700">
                           GAD Activity:
                         </span>{" "}
-                        <span className="text-gray-500">{evt.gad_activity}</span>
+                        <span className="text-gray-500">
+                          {evt.gad_activity}
+                        </span>
                       </div>
                     )}
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 export async function POST(req) {
   await logActivity({
@@ -11,6 +11,10 @@ export async function POST(req) {
   });
 
   const response = NextResponse.json({ message: "Logged out successfully" });
-  response.cookies.set("auth_token", "", { maxAge: 0, path: "/", httpOnly: true });
+  response.cookies.set("auth_token", "", {
+    maxAge: 0,
+    path: "/",
+    httpOnly: true,
+  });
   return response;
 }

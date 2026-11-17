@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet } from "@/lib/cache";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import {
   buildOverallReport,
@@ -9,7 +9,7 @@ import {
   buildQuarterBreakdownReport,
   buildQuarterlyReport,
   orderProjectsByType,
-} from "@/lib/gpbProgressPdf";
+} from "@/data/lib/gpbProgressPdf";
 
 const REPORT_CACHE_TTL = 60 * 1000;
 

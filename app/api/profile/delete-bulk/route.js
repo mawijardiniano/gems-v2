@@ -1,8 +1,8 @@
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 
 export async function DELETE(req) {
@@ -15,11 +15,14 @@ export async function DELETE(req) {
     await connectDB();
     const { ids } = await req.json();
     if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ status: "error", message: "No IDs provided" }, { status: 400 });
+      return NextResponse.json(
+        { status: "error", message: "No IDs provided" },
+        { status: 400 },
+      );
     }
 
     const users = await UserAuth.find({ _id: { $in: ids } });
-    const profileIds = users.map(u => u.personal_info_id).filter(Boolean);
+    const profileIds = users.map((u) => u.personal_info_id).filter(Boolean);
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ _id: { $in: ids } });
 
@@ -33,14 +36,20 @@ export async function DELETE(req) {
     });
 
     if (global.io) {
-      profileIds.forEach(pid => {
+      profileIds.forEach((pid) => {
         io.emit("profile:deleted", { id: pid.toString() });
       });
     }
 
-    return NextResponse.json({ status: "success", message: "Users and linked profiles deleted" });
+    return NextResponse.json({
+      status: "success",
+      message: "Users and linked profiles deleted",
+    });
   } catch (error) {
     console.error("BULK DELETE /api/profile/bulk error:", error);
-    return NextResponse.json({ status: "error", message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { status: "error", message: error.message },
+      { status: 500 },
+    );
   }
 }

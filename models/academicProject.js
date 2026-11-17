@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import { COLLEGES } from "../lib/colleges.js";
+import { COLLEGES } from "../data/lib/colleges.js";
 import {
   ACADEMIC_COMMENT_FIELDS,
   ACADEMIC_PROJECT_TYPES,
   ACADEMIC_STATUSES,
   SEMESTERS,
-} from "../lib/projectModules.js";
+} from "../data/lib/projectModules.js";
 import {
   FieldSchema,
   MilestoneSchema,

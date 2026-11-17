@@ -25,7 +25,8 @@ registerHooks({
         `${base.href}.mjs`,
         `${base.href}/index.js`,
       ]) {
-        if (existsSync(fileURLToPath(candidate))) return nextResolve(candidate, context);
+        if (existsSync(fileURLToPath(candidate)))
+          return nextResolve(candidate, context);
       }
     }
     return nextResolve(specifier, context);
@@ -38,7 +39,7 @@ const {
   retentionPolicy,
   expiryFilter,
   archiveKey,
-} = await import("../lib/auditRetention.js");
+} = await import("../data/lib/auditRetention.js");
 
 const NOW = new Date("2026-06-01T00:00:00.000Z");
 const DAY = 24 * 60 * 60 * 1000;
@@ -62,11 +63,17 @@ function withEnv(vars, fn) {
 
 test("the default period is seven years", () => {
   assert.equal(DEFAULT_RETENTION_DAYS, 2555);
-  withEnv({ AUDIT_RETENTION_DAYS_SECURITY: undefined, AUDIT_RETENTION_DAYS_ACTIVITY: undefined }, () => {
-    const policy = retentionPolicy();
-    assert.equal(policy.security_days, 2555);
-    assert.equal(policy.source, "default");
-  });
+  withEnv(
+    {
+      AUDIT_RETENTION_DAYS_SECURITY: undefined,
+      AUDIT_RETENTION_DAYS_ACTIVITY: undefined,
+    },
+    () => {
+      const policy = retentionPolicy();
+      assert.equal(policy.security_days, 2555);
+      assert.equal(policy.source, "default");
+    },
+  );
 });
 
 test("the period can be set by environment, and says so", () => {
@@ -82,29 +89,45 @@ test("a nonsensical period falls back instead of expiring everything", () => {
      and select the entire trail for disposal. Falling back is the safe move. */
   for (const bad of ["0", "-5", "abc", ""]) {
     withEnv({ AUDIT_RETENTION_DAYS_SECURITY: bad }, () => {
-      assert.equal(retentionPolicy().security_days, DEFAULT_RETENTION_DAYS, `input: ${bad}`);
+      assert.equal(
+        retentionPolicy().security_days,
+        DEFAULT_RETENTION_DAYS,
+        `input: ${bad}`,
+      );
     });
   }
 });
 
 test("cutoffs land the right number of days before now", () => {
-  withEnv({ AUDIT_RETENTION_DAYS_SECURITY: "3650", AUDIT_RETENTION_DAYS_ACTIVITY: "365" }, () => {
-    const { longCutoff, shortCutoff } = expiryFilter({ now: NOW });
-    assert.equal(longCutoff.getTime(), NOW.getTime() - 3650 * DAY);
-    assert.equal(shortCutoff.getTime(), NOW.getTime() - 365 * DAY);
-  });
+  withEnv(
+    {
+      AUDIT_RETENTION_DAYS_SECURITY: "3650",
+      AUDIT_RETENTION_DAYS_ACTIVITY: "365",
+    },
+    () => {
+      const { longCutoff, shortCutoff } = expiryFilter({ now: NOW });
+      assert.equal(longCutoff.getTime(), NOW.getTime() - 3650 * DAY);
+      assert.equal(shortCutoff.getTime(), NOW.getTime() - 365 * DAY);
+    },
+  );
 });
 
 test("the short band never outlives the long band", () => {
   /* Activity retention set longer than security retention would be a
      contradiction: routine activity outliving the logins that authorised it. */
-  withEnv({ AUDIT_RETENTION_DAYS_SECURITY: "365", AUDIT_RETENTION_DAYS_ACTIVITY: undefined }, () => {
-    const policy = retentionPolicy();
-    assert.ok(
-      policy.activity_days <= policy.security_days,
-      "activity retention should default to no more than security retention",
-    );
-  });
+  withEnv(
+    {
+      AUDIT_RETENTION_DAYS_SECURITY: "365",
+      AUDIT_RETENTION_DAYS_ACTIVITY: undefined,
+    },
+    () => {
+      const policy = retentionPolicy();
+      assert.ok(
+        policy.activity_days <= policy.security_days,
+        "activity retention should default to no more than security retention",
+      );
+    },
+  );
 });
 
 test("expiry never selects redacted or critical records", () => {
@@ -117,7 +140,10 @@ test("expiry never selects redacted or critical records", () => {
   const clauses = filter.$or;
   assert.equal(clauses.length, 2);
   for (const clause of clauses) {
-    assert.ok(clause.createdAt.$lt instanceof Date, "each band bounds by createdAt");
+    assert.ok(
+      clause.createdAt.$lt instanceof Date,
+      "each band bounds by createdAt",
+    );
   }
 });
 
@@ -135,19 +161,34 @@ test("security actions expire on the long band, everything else on the short one
 });
 
 test("the long-retention list has no duplicates and no blanks", () => {
-  assert.equal(new Set(LONG_RETENTION_ACTIONS).size, LONG_RETENTION_ACTIONS.length);
+  assert.equal(
+    new Set(LONG_RETENTION_ACTIONS).size,
+    LONG_RETENTION_ACTIONS.length,
+  );
   for (const action of LONG_RETENTION_ACTIONS) {
-    assert.match(action, /^[A-Z][A-Z0-9_]+$/, `malformed action name: ${action}`);
+    assert.match(
+      action,
+      /^[A-Z][A-Z0-9_]+$/,
+      `malformed action name: ${action}`,
+    );
   }
 });
 
 test("archive keys sort chronologically and carry the record count", () => {
-  const earlier = archiveKey({ now: new Date("2026-01-01T00:00:00Z"), count: 10 });
-  const later = archiveKey({ now: new Date("2026-02-01T00:00:00Z"), count: 10 });
+  const earlier = archiveKey({
+    now: new Date("2026-01-01T00:00:00Z"),
+    count: 10,
+  });
+  const later = archiveKey({
+    now: new Date("2026-02-01T00:00:00Z"),
+    count: 10,
+  });
 
-  assert.ok(earlier < later, "keys must sort in time order for lifecycle rules");
+  assert.ok(
+    earlier < later,
+    "keys must sort in time order for lifecycle rules",
+  );
   assert.match(earlier, /^audit-archive\/\d{4}-\d{2}-\d{2}T/);
   assert.ok(earlier.endsWith("-10.jsonl"));
   assert.ok(!earlier.includes(":"), "colons are awkward in object keys");
 });
-

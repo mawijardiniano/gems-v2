@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { requireRole } from "@/lib/auth";
+import { requireRole } from "@/data/lib/auth";
 import {
   CURRENT_KEY_VERSION,
   isVaultConfigured,
   isVaultKeyDerived,
   decryptFields,
   PII_FIELDS,
-} from "@/lib/identityVault";
-import { connectDB } from "@/lib/db";
+} from "@/data/lib/identityVault";
+import { connectDB } from "@/data/lib/db";
 import IdentityVault from "@/models/identityVault";
 
 /*
@@ -102,8 +102,5 @@ export async function GET(req) {
   /* `ok` is the gate the strip waits on: a real key, and rows that decrypt. */
   const ok = configured && !derived && payload.canDecrypt === true;
 
-  return NextResponse.json(
-    { ok, ...payload },
-    { status: ok ? 200 : 503 },
-  );
+  return NextResponse.json({ ok, ...payload }, { status: ok ? 200 : 503 });
 }

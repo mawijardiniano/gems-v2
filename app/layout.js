@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/provider";
-import { registerServiceWorker } from "@/lib/pwa/registerSW";
+import { registerServiceWorker } from "@/data/lib/pwa/registerSW";
 import AttendanceSyncToast from "@/components/AttendanceSyncToast";
 
 const geistSans = Geist({

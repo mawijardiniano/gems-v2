@@ -1,16 +1,19 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 import mongoose from "mongoose";
-import { requireAuth, optionalAuth } from "@/lib/auth";
-import { cacheDelPrefix } from "@/lib/cache";
-import { canonicalOfficeList } from "@/lib/colleges";
-import { deleteEventCascade } from "@/lib/eventCascade";
-import { USER_POPULATE_BASE, hydrateUserPopulate } from "@/lib/userPopulate";
-import { normalizeRefNumber } from "@/lib/referenceNumber";
+import { requireAuth, optionalAuth } from "@/data/lib/auth";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { canonicalOfficeList } from "@/data/lib/colleges";
+import { deleteEventCascade } from "@/data/lib/eventCascade";
+import {
+  USER_POPULATE_BASE,
+  hydrateUserPopulate,
+} from "@/data/lib/userPopulate";
+import { normalizeRefNumber } from "@/data/lib/referenceNumber";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -31,7 +34,6 @@ const EDITABLE_FIELDS = [
 const OFFICE_FIELDS = ["organizing_office_unit", "co_organizing_office_unit"];
 
 export async function GET(req, { params }) {
-
   const { user, error, status } = await optionalAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
@@ -111,10 +113,18 @@ export async function PUT(req, { params }) {
     await connectDB();
     const body = await req.json();
 
-    if (body.project === "" || body.project === null || body.project === undefined) {
+    if (
+      body.project === "" ||
+      body.project === null ||
+      body.project === undefined
+    ) {
       body.project = null;
     }
-    if (body.gad_activity === "" || body.gad_activity === null || body.gad_activity === undefined) {
+    if (
+      body.gad_activity === "" ||
+      body.gad_activity === null ||
+      body.gad_activity === undefined
+    ) {
       body.gad_activity = "";
     }
     // Legacy audience fields were removed — ignore them if an old client sends them.

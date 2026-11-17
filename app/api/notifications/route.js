@@ -1,6 +1,6 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Notification from "@/models/notification";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {

@@ -1,20 +1,20 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
 import SystemSetting from "@/models/systemSetting";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { NextResponse } from "next/server";
 import {
   GFPS_SECTION_KEYS,
   makeFilterHelpers,
   normalizeSectionOfficials,
-} from "@/lib/gfpsServer";
+} from "@/data/lib/gfpsServer";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
   sortAcademicYearsDesc,
-} from "@/lib/academicYear";
+} from "@/data/lib/academicYear";
 
 async function getActiveTermYear() {
   try {
@@ -92,7 +92,10 @@ export async function POST(req) {
 
   if (!academicYear) {
     return Response.json(
-      { success: false, error: "Missing or invalid academic_year (e.g. 2025-2026)" },
+      {
+        success: false,
+        error: "Missing or invalid academic_year (e.g. 2025-2026)",
+      },
       { status: 400 },
     );
   }

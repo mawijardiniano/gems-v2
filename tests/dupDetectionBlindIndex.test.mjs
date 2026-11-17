@@ -19,9 +19,8 @@ import { readFileSync } from "node:fs";
 const KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 process.env.PII_ENCRYPTION_KEY = KEY;
 
-const { buildSearchIndex, blindIndexTokens } = await import(
-  "../lib/identityVault.js"
-);
+const { buildSearchIndex, blindIndexTokens } =
+  await import("../data/lib/identityVault.js");
 
 /* Mirrors searchIndexQuery in lib/profileBroker.js. */
 function searchIndexQuery(term) {
@@ -30,7 +29,10 @@ function searchIndexQuery(term) {
 }
 
 function read(...parts) {
-  return readFileSync(new URL(`../${parts.join("/")}`, import.meta.url), "utf8");
+  return readFileSync(
+    new URL(`../${parts.join("/")}`, import.meta.url),
+    "utf8",
+  );
 }
 
 const ROUTE = read("app", "api", "profile", "route.js");

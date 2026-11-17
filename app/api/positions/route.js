@@ -1,15 +1,25 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Position from "@/models/position";
 import OfficialTerm from "@/models/officialTerm";
 import UniversityOffice from "@/models/universityOffice";
 import SystemSetting from "@/models/systemSetting";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { canReadPositions, canWritePositions } from "@/lib/positionsAccess";
-import { normalizeAcademicYear, resolveAcademicYear, academicYearRange } from "@/lib/academicYear";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import {
+  canReadPositions,
+  canWritePositions,
+} from "@/data/lib/positionsAccess";
+import {
+  normalizeAcademicYear,
+  resolveAcademicYear,
+  academicYearRange,
+} from "@/data/lib/academicYear";
 import { NextResponse } from "next/server";
-import { buildDefaultOfficeRows, isActiveOffice } from "@/lib/universityOffices";
-import { cleanName, norm } from "@/lib/universityPositions";
+import {
+  buildDefaultOfficeRows,
+  isActiveOffice,
+} from "@/data/lib/universityOffices";
+import { cleanName, norm } from "@/data/lib/universityPositions";
 
 /**
  * The seat list behind the org chart — one row per Position document.
@@ -130,7 +140,9 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const includeInactive = searchParams.get("include_inactive") === "true";
   const includeCounts = searchParams.get("include_counts") === "true";
-  const requestedYear = normalizeAcademicYear(searchParams.get("academic_year"));
+  const requestedYear = normalizeAcademicYear(
+    searchParams.get("academic_year"),
+  );
   const activeYear = includeCounts ? await getActiveTermYear() : null;
   const academicYear = includeCounts
     ? resolveAcademicYear({ query: requestedYear, activeTerm: activeYear })

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FaCheck, FaPen, FaTrash } from "react-icons/fa";
-import { calcDurationDays } from "@/lib/gantt";
+import { calcDurationDays } from "@/data/lib/gantt";
 
 const INPUT =
   "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-default";

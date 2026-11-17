@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import StagingRecord from "@/models/stagingRecord";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 

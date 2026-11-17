@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { cacheDelPrefix } from "@/lib/cache";
-import { canTransition, requiresCancelReason } from "@/lib/eventStatus";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { canTransition, requiresCancelReason } from "@/data/lib/eventStatus";
 import {
   createNotifications,
   getEventStatusRecipientIds,
-} from "@/lib/notifications";
+} from "@/data/lib/notifications";
 
 export async function PATCH(req, context) {
   try {
@@ -67,9 +67,15 @@ export async function PATCH(req, context) {
     }
 
     /* Cancelling is the one move that has to be explained. */
-    if (requiresCancelReason(event.status, status) && !String(cancelReason || "").trim()) {
+    if (
+      requiresCancelReason(event.status, status) &&
+      !String(cancelReason || "").trim()
+    ) {
       return NextResponse.json(
-        { message: "A reason is required to cancel an event.", code: "CANCEL_REASON_REQUIRED" },
+        {
+          message: "A reason is required to cancel an event.",
+          code: "CANCEL_REASON_REQUIRED",
+        },
         { status: 400 },
       );
     }

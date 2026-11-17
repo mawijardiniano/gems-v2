@@ -9,7 +9,10 @@ import {
   FaPlus,
   FaRedo,
 } from "react-icons/fa";
-import { filterOfficesByTab, officeCountsWithAssigned } from "@/lib/universityOffices";
+import {
+  filterOfficesByTab,
+  officeCountsWithAssigned,
+} from "@/data/lib/universityOffices";
 
 /**
  * The one place the university office list is edited.
@@ -130,7 +133,8 @@ export default function OfficesManager({
 
   const canEdit = Boolean(onAdd || onDeactivate || onReactivate);
   const summary = counts || officeCountsWithAssigned(offices);
-  const activeTab = tab === "inactive" ? true : tab === "all" ? showInactive : false;
+  const activeTab =
+    tab === "inactive" ? true : tab === "all" ? showInactive : false;
   const rows = filterOfficesByTab(offices, tab, { includeInactive: activeTab });
 
   const submit = async (event) => {
@@ -154,9 +158,7 @@ export default function OfficesManager({
             <h3 className="text-base font-semibold text-gray-900">{TITLE}</h3>
             <p className="mt-0.5 max-w-2xl text-xs text-gray-500">
               These offices appear in the{" "}
-              <span className="font-medium text-gray-600">
-                Office / Group
-              </span>{" "}
+              <span className="font-medium text-gray-600">Office / Group</span>{" "}
               picker on the University Officials page. They do not affect event
               offices (Organizing Office, Responsible Unit). Deactivating hides
               an office from new assignments but keeps past years intact.
@@ -169,7 +171,10 @@ export default function OfficesManager({
       </div>
 
       {canEdit ? (
-        <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <form
+          onSubmit={submit}
+          className="mt-4 flex flex-col gap-2 sm:flex-row"
+        >
           <input
             type="text"
             value={draft}
@@ -210,7 +215,11 @@ export default function OfficesManager({
                   : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {t.label} ({t.key === "all" && !showInactive ? summary.active : summary[t.key]})
+              {t.label} (
+              {t.key === "all" && !showInactive
+                ? summary.active
+                : summary[t.key]}
+              )
             </button>
           );
         })}
@@ -229,9 +238,9 @@ export default function OfficesManager({
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
         <p className="mt-2 text-[11px] text-gray-400">
-          {summary.inactive} inactive office(s) hidden. A name that is refused as
-          a duplicate may be one of them — tick “Show inactive offices” or open
-          the Inactive tab to reactivate it.
+          {summary.inactive} inactive office(s) hidden. A name that is refused
+          as a duplicate may be one of them — tick “Show inactive offices” or
+          open the Inactive tab to reactivate it.
         </p>
       )}
 

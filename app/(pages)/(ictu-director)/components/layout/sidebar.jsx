@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
@@ -77,7 +77,7 @@ export default function Sidebar({ open, setOpen }) {
 
   const isActive = useCallback(
     (href) => pathname?.startsWith(href),
-    [pathname]
+    [pathname],
   );
 
   const getInitials = useCallback(() => {
@@ -225,7 +225,9 @@ export default function Sidebar({ open, setOpen }) {
                 >
                   <span
                     className={`flex-shrink-0 transition-transform ${
-                      linkActive ? "scale-110 text-accent-300" : "group-hover:scale-110"
+                      linkActive
+                        ? "scale-110 text-accent-300"
+                        : "group-hover:scale-110"
                     }`}
                   >
                     {link.icon}

@@ -1,7 +1,7 @@
 import Event from "@/models/event";
 import Project from "@/models/projects";
 import AccomplishmentReport from "@/models/accomplishment_report";
-import { deleteFileFromBucket } from "@/lib/delete";
+import { deleteFileFromBucket } from "@/data/lib/delete";
 
 /**
  * Deletes an event together with everything attached to it:

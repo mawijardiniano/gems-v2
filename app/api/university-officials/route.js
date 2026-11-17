@@ -1,25 +1,28 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UniversityOffice from "@/models/universityOffice";
 import SystemSetting from "@/models/systemSetting";
 import OfficialTerm from "@/models/officialTerm";
 import Official from "@/models/official";
 import Position from "@/models/position";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { buildDefaultOfficeRows, isOfficeAssignable } from "@/lib/universityOffices";
+import {
+  buildDefaultOfficeRows,
+  isOfficeAssignable,
+} from "@/data/lib/universityOffices";
 import {
   normalizeAcademicYear,
   resolveAcademicYear,
   sortAcademicYearsDesc,
-} from "@/lib/academicYear";
+} from "@/data/lib/academicYear";
 import {
   rosterPipeline,
   toRosterRow,
   academicYearsFromTermStarts,
   termStartForAcademicYear,
-} from "@/lib/officialsTermsQuery";
+} from "@/data/lib/officialsTermsQuery";
 
 /**
  * The statuses a caller may file a term under.
@@ -81,9 +84,7 @@ export async function GET(req) {
     .sort({ sort_order: 1, header: 1 })
     .lean();
 
-  const years = sortAcademicYearsDesc(
-    await termAcademicYears(),
-  );
+  const years = sortAcademicYearsDesc(await termAcademicYears());
   if (!years.includes(academicYear)) years.unshift(academicYear);
 
   /* Tenure is a date range now, so the roster is an overlap query against the
@@ -92,7 +93,10 @@ export async function GET(req) {
      reason the snapshot model was retired. */
   const pipeline = rosterPipeline(academicYear);
   const rawRows = pipeline
-    ? await OfficialTerm.aggregate([...pipeline, { $sort: { header: 1, name: 1 } }])
+    ? await OfficialTerm.aggregate([
+        ...pipeline,
+        { $sort: { header: 1, name: 1 } },
+      ])
     : [];
   let officials = rawRows.map(toRosterRow).filter(Boolean);
 
@@ -150,7 +154,10 @@ export async function POST(req) {
 
   if (!header || !seatName || (!personId && !personText)) {
     return Response.json(
-      { success: false, error: "Missing office, seat, or official (pick a user or type a name)" },
+      {
+        success: false,
+        error: "Missing office, seat, or official (pick a user or type a name)",
+      },
       { status: 400 },
     );
   }
@@ -167,7 +174,10 @@ export async function POST(req) {
   }
   if (!isOfficeAssignable(officeRows, header)) {
     return Response.json(
-      { success: false, error: `Office "${header}" is deactivated and cannot take new assignments.` },
+      {
+        success: false,
+        error: `Office "${header}" is deactivated and cannot take new assignments.`,
+      },
       { status: 409 },
     );
   }
@@ -175,7 +185,10 @@ export async function POST(req) {
   const academicYear = normalizeAcademicYear(academic_year);
   if (!academicYear) {
     return Response.json(
-      { success: false, error: "Missing or invalid academic_year (e.g. 2025-2026)" },
+      {
+        success: false,
+        error: "Missing or invalid academic_year (e.g. 2025-2026)",
+      },
       { status: 400 },
     );
   }
@@ -199,7 +212,10 @@ export async function POST(req) {
      response is deliberately the same 409 the snapshot model returned for a
      duplicate year+seat, so the page's existing "already assigned" handling
      keeps working. */
-  const openTerm = await OfficialTerm.findOne({ position: position._id, isOpen: true });
+  const openTerm = await OfficialTerm.findOne({
+    position: position._id,
+    isOpen: true,
+  });
   if (openTerm) {
     // Naming the current holder is what makes the refusal actionable.
     const current = await Official.findById(openTerm.official).lean();
@@ -218,10 +234,14 @@ export async function POST(req) {
        enforces. `findOneAndUpdate` with `upsert` makes a re-typed name reuse the
        existing document instead of throwing E11000 — the typed-string nature of
        the source means the same person is routinely entered more than once. */
-    const effectiveName = personText || (personId ? await nameForUser(personId) : "");
+    const effectiveName =
+      personText || (personId ? await nameForUser(personId) : "");
     if (!effectiveName) {
       return Response.json(
-        { success: false, error: "Missing official (pick a user or type a name)" },
+        {
+          success: false,
+          error: "Missing official (pick a user or type a name)",
+        },
         { status: 400 },
       );
     }

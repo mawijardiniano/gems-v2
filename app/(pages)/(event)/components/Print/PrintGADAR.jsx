@@ -6,10 +6,10 @@ import {
   SIGNATORY_BLANK,
   getSignatories,
   signatoryYearFromGpbYear,
-} from "@/lib/signatories";
+} from "@/data/lib/signatories";
 import { FaPrint } from "react-icons/fa";
-import { renderPdfPagesToImages } from "@/lib/print/pdfRenderer";
-import { resolveAccomplishmentText } from "@/lib/accomplishmentSummary";
+import { renderPdfPagesToImages } from "@/data/lib/print/pdfRenderer";
+import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -133,7 +133,10 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     let cancelled = false;
 
     async function loadSignatories() {
-      const blank = { focalPointName: SIGNATORY_BLANK, presidentName: SIGNATORY_BLANK };
+      const blank = {
+        focalPointName: SIGNATORY_BLANK,
+        presidentName: SIGNATORY_BLANK,
+      };
       const ay = signatoryYearFromGpbYear(year);
       if (!ay) {
         if (!cancelled) setSignatories(blank);
@@ -269,7 +272,6 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     totalGAA > 0 ? ((totalExpenditures / totalGAA) * 100).toFixed(2) : "0.00";
 
   const handlePrint = async () => {
-
     const now = new Date();
     const reportDate = `${now.getMonth() + 1}-${now.getDate()}-${String(
       now.getFullYear(),
@@ -456,7 +458,6 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       }
       return `<div class="attachment-block${breakClass}">${officeNoteHtml(file)}</div>`;
     };
-
 
     let bodySections = "";
     const attendanceFiles = [];
@@ -894,9 +895,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     <button
       onClick={handlePrint}
       disabled={
-        projects.length === 0 ||
-        eventAttachments === null ||
-        renderingPdfs
+        projects.length === 0 || eventAttachments === null || renderingPdfs
       }
       className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >

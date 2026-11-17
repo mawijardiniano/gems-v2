@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
-import useMyProfile from "@/lib/useMyProfile";
+import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
@@ -156,12 +156,12 @@ export default function Sidebar({ open, setOpen, role }) {
       if (href === "/gpb") return pathname.startsWith("/gpb");
       return pathname?.startsWith(href);
     },
-    [pathname]
+    [pathname],
   );
 
   const isAnyChildActive = useCallback(
     (children) => children?.some((child) => isActive(child.href)),
-    [isActive]
+    [isActive],
   );
 
   useEffect(() => {
@@ -191,9 +191,10 @@ export default function Sidebar({ open, setOpen, role }) {
     return "";
   }, [profile, user]);
 
-  const avatarColor = getDisplayName()
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+  const avatarColor =
+    getDisplayName()
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
 
   return (
     <>
@@ -315,7 +316,8 @@ export default function Sidebar({ open, setOpen, role }) {
               : isReports
                 ? reportsOpen
                 : false;
-            const linkActive = isActive(link.href) || isAnyChildActive(link.children);
+            const linkActive =
+              isActive(link.href) || isAnyChildActive(link.children);
 
             if (!hasChildren) {
               return (
@@ -390,9 +392,7 @@ export default function Sidebar({ open, setOpen, role }) {
                       <span
                         className={`flex-shrink-0 transition-all duration-200 ${
                           isOpen ? "rotate-0" : "-rotate-90"
-                        } ${
-                          linkActive ? "text-accent-300" : "text-white/50"
-                        }`}
+                        } ${linkActive ? "text-accent-300" : "text-white/50"}`}
                       >
                         <FaChevronDown size={10} />
                       </span>
@@ -406,7 +406,9 @@ export default function Sidebar({ open, setOpen, role }) {
                 {/* Sub-menu items */}
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isOpen && open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    isOpen && open
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
                   }`}
                 >
                   <div className="ml-2 mt-0.5 space-y-0.5 border-l-2 border-white/10 pl-2">

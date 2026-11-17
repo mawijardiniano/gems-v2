@@ -1,12 +1,12 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import EventGuest from "@/models/eventGuest";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { logActivity } from "@/lib/activityLog";
-import { cacheDelPrefix } from "@/lib/cache";
-import { optionalAuth } from "@/lib/auth";
-import { attendanceWindow } from "@/lib/eventStatus";
+import { logActivity } from "@/data/lib/activityLog";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { optionalAuth } from "@/data/lib/auth";
+import { attendanceWindow } from "@/data/lib/eventStatus";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
@@ -19,7 +19,9 @@ const PTYPE = ["Student", "Employee", "Stakeholder"];
 /* UI sends program / year / section separately; combine into one sheet value. */
 function buildProgramYearSection(b) {
   if (b?.participant_type !== "Student") return "";
-  const programPart = String(b?.program || b?.program_year_section || "").trim();
+  const programPart = String(
+    b?.program || b?.program_year_section || "",
+  ).trim();
   const yearPart = String(b?.year || "").trim();
   const sectionPart = String(b?.section || "").trim();
   return [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
@@ -35,39 +37,79 @@ export async function POST(req) {
     const b = await req.json();
     const event_id = b?.event_id;
     if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-      return NextResponse.json({ message: "Valid event_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Valid event_id is required" },
+        { status: 400 },
+      );
     }
     const name = String(b?.full_name || "").trim();
-    if (!name) return NextResponse.json({ message: "Full name is required" }, { status: 400 });
+    if (!name)
+      return NextResponse.json(
+        { message: "Full name is required" },
+        { status: 400 },
+      );
     if (!SEX.includes(b?.sex))
-      return NextResponse.json({ message: "Sex must be Male or Female" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Sex must be Male or Female" },
+        { status: 400 },
+      );
     const genderIdentity = String(b?.gender_identity || "").trim();
     if (genderIdentity && !GENDER_IDENTITY.includes(genderIdentity))
-      return NextResponse.json({ message: "Gender identity must be Male, Female, or LGBTQIA+" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Gender identity must be Male, Female, or LGBTQIA+" },
+        { status: 400 },
+      );
     if (!PTYPE.includes(b?.participant_type))
-      return NextResponse.json({ message: "Participant type must be Student, Employee, or Stakeholder" }, { status: 400 });
+      return NextResponse.json(
+        {
+          message: "Participant type must be Student, Employee, or Stakeholder",
+        },
+        { status: 400 },
+      );
     let ageNum = null;
-    if (b?.age !== undefined && b?.age !== null && String(b.age).trim() !== "") {
+    if (
+      b?.age !== undefined &&
+      b?.age !== null &&
+      String(b.age).trim() !== ""
+    ) {
       ageNum = Number(b.age);
       if (!Number.isFinite(ageNum) || ageNum < 1 || ageNum > 120)
-        return NextResponse.json({ message: "Age must be between 1 and 120" }, { status: 400 });
+        return NextResponse.json(
+          { message: "Age must be between 1 and 120" },
+          { status: 400 },
+        );
     }
     const event = await Event.findById(event_id);
-    if (!event) return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    if (!event)
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
     if (event.status === "cancelled")
-      return NextResponse.json({ message: "This event has been cancelled.", code: "EVENT_CANCELLED" }, { status: 400 });
+      return NextResponse.json(
+        { message: "This event has been cancelled.", code: "EVENT_CANCELLED" },
+        { status: 400 },
+      );
     const now = Date.now();
     const { earliestStart, latestEnd } = attendanceWindow(event);
     if (earliestStart !== null && now < earliestStart)
-      return NextResponse.json({ message: "Attendance is not yet open. The event has not started yet.", code: "EVENT_NOT_STARTED" }, { status: 400 });
+      return NextResponse.json(
+        {
+          message: "Attendance is not yet open. The event has not started yet.",
+          code: "EVENT_NOT_STARTED",
+        },
+        { status: 400 },
+      );
     if (latestEnd !== null && now > latestEnd)
-      return NextResponse.json({ message: "The QR code has expired. This event has already ended.", code: "EVENT_EXPIRED" }, { status: 400 });
+      return NextResponse.json(
+        {
+          message: "The QR code has expired. This event has already ended.",
+          code: "EVENT_EXPIRED",
+        },
+        { status: 400 },
+      );
     const existing = await EventGuest.findOne({ event_id, full_name: name });
     if (existing) {
       if (existing.validation_status === "approved") {
         return NextResponse.json({
-          message:
-            "You are already marked as attended for this event.",
+          message: "You are already marked as attended for this event.",
           already_attended: true,
           validation_status: "approved",
           attended_at: existing.attended_at,
@@ -131,7 +173,10 @@ export async function POST(req) {
       contact: String(b?.contact || "").trim(),
       participant_type: b.participant_type,
       department_office_org: String(b?.department_office_org || "").trim(),
-      position_designation: b.participant_type === "Student" ? "" : String(b?.position_designation || "").trim(),
+      position_designation:
+        b.participant_type === "Student"
+          ? ""
+          : String(b?.position_designation || "").trim(),
       program_year_section: buildProgramYearSection(b),
       attended_at: new Date(),
       source: "qr-scan",
@@ -169,6 +214,9 @@ export async function POST(req) {
       });
     }
     console.error(err);
-    return NextResponse.json({ message: "Internal server error", error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal server error", error: err.message },
+      { status: 500 },
+    );
   }
 }

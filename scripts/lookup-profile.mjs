@@ -39,7 +39,9 @@ const terms =
     : args.filter((_, i) => i !== dbIndex && i !== dbIndex + 1);
 
 if (!terms.length) {
-  console.error("[lookup] usage: node scripts/lookup-profile.mjs <gemsPublicId|_id|username> [--db name]");
+  console.error(
+    "[lookup] usage: node scripts/lookup-profile.mjs <gemsPublicId|_id|username> [--db name]",
+  );
   process.exit(1);
 }
 const term = terms[0];
@@ -47,7 +49,9 @@ const term = terms[0];
 /* Broad sweep first: a single-row answer is only interpretable against the
    collection-wide picture. */
 await mongoose.connect(process.env.MONGODB_URI);
-const db = DB_NAME ? mongoose.connection.client.db(DB_NAME) : mongoose.connection.db;
+const db = DB_NAME
+  ? mongoose.connection.client.db(DB_NAME)
+  : mongoose.connection.db;
 const profiles = db.collection("gemsprofiles");
 const vault = db.collection("identityvaults");
 const users = db.collection("userauths");
@@ -59,30 +63,42 @@ console.log("");
 const LEGACY = ["personal", "gadData", "contact"];
 
 console.log("[lookup] collection-wide markers");
-console.log(`  gemsprofiles total       : ${await profiles.countDocuments({})}`);
+console.log(
+  `  gemsprofiles total       : ${await profiles.countDocuments({})}`,
+);
 for (const block of LEGACY) {
   const keyed = await profiles.countDocuments({ [block]: { $exists: true } });
-  const filled = await profiles.countDocuments({ [block]: { $exists: true, $ne: {} } });
-  console.log(`  ${block.padEnd(9)} key exists : ${keyed}   (non-empty: ${filled})`);
+  const filled = await profiles.countDocuments({
+    [block]: { $exists: true, $ne: {} },
+  });
+  console.log(
+    `  ${block.padEnd(9)} key exists : ${keyed}   (non-empty: ${filled})`,
+  );
 }
-console.log(`  vaultRef exists          : ${await profiles.countDocuments({ vaultRef: { $exists: true } })}`);
+console.log(
+  `  vaultRef exists          : ${await profiles.countDocuments({ vaultRef: { $exists: true } })}`,
+);
 console.log(`  vault rows               : ${await vault.countDocuments({})}`);
 
 console.log("");
 console.log("[lookup] migrationStatus distribution");
 const byStatus = await profiles
-  .aggregate([{ $group: { _id: "$migrationStatus", n: { $sum: 1 } } }, { $sort: { n: -1 } }])
+  .aggregate([
+    { $group: { _id: "$migrationStatus", n: { $sum: 1 } } },
+    { $sort: { n: -1 } },
+  ])
   .toArray();
 for (const row of byStatus) {
   console.log(`  ${String(row._id).padEnd(12)} : ${row.n}`);
 }
 
-
 /* --- the single record the response was about ------------------------------ */
 console.log("");
 async function findProfile() {
   if (/^[0-9a-fA-F]{24}$/.test(term)) {
-    const doc = await profiles.findOne({ _id: new mongoose.Types.ObjectId(term) });
+    const doc = await profiles.findOne({
+      _id: new mongoose.Types.ObjectId(term),
+    });
     if (doc) return { doc, via: "_id" };
   }
   const byPublic = await profiles.findOne({ gemsPublicId: term });
@@ -118,17 +134,27 @@ let dirty = 0;
 for (const block of LEGACY) {
   const present = Object.prototype.hasOwnProperty.call(doc, block);
   if (present) dirty++;
-  console.log(`  ${block.padEnd(11)} ${present ? "PRESENT  <-- should be absent" : "absent   OK"}`);
+  console.log(
+    `  ${block.padEnd(11)} ${present ? "PRESENT  <-- should be absent" : "absent   OK"}`,
+  );
 }
 
 console.log("");
 console.log("[lookup] lifecycle");
 console.log(`  gemsPublicId            : ${doc.gemsPublicId || "(missing)"}`);
-console.log(`  vaultRef                : ${doc.vaultRef ? "present" : "(MISSING)"}`);
+console.log(
+  `  vaultRef                : ${doc.vaultRef ? "present" : "(MISSING)"}`,
+);
 console.log(`  migrationStatus         : ${doc.migrationStatus || "(unset)"}`);
-console.log(`  affiliation.person_type : ${doc.affiliation?.person_type || "(unset)"}`);
-console.log(`  createdAt               : ${doc.createdAt?.toISOString?.() || doc.createdAt}`);
-console.log(`  updatedAt               : ${doc.updatedAt?.toISOString?.() || doc.updatedAt}`);
+console.log(
+  `  affiliation.person_type : ${doc.affiliation?.person_type || "(unset)"}`,
+);
+console.log(
+  `  createdAt               : ${doc.createdAt?.toISOString?.() || doc.createdAt}`,
+);
+console.log(
+  `  updatedAt               : ${doc.updatedAt?.toISOString?.() || doc.updatedAt}`,
+);
 
 console.log("");
 console.log("[lookup] vault row");
@@ -140,7 +166,7 @@ if (doc.vaultRef) {
       (k) => row.fields[k] !== undefined && row.fields[k] !== null,
     );
     console.log(`  encrypted fields        : ${populated.length}`);
-    const { isVaultConfigured } = await import("../lib/identityVault.js");
+    const { isVaultConfigured } = await import("../data/lib/identityVault.js");
     console.log(`  key configured locally  : ${isVaultConfigured()}`);
   }
 } else {
@@ -153,7 +179,9 @@ if (dirty === 0 && doc.vaultRef) {
   console.log("  CLEAN - this row matches the post-strip state.");
 } else if (dirty > 0) {
   console.log(`  DIRTY - ${dirty} stripped block(s) present on disk.`);
-  console.log("  Compare updatedAt against the strip time: newer means a writer");
+  console.log(
+    "  Compare updatedAt against the strip time: newer means a writer",
+  );
   console.log("  put plaintext back AFTER the strip.");
 } else {
   console.log("  UNEXPECTED - no blocks, but vault linkage is missing.");

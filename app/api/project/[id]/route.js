@@ -1,23 +1,26 @@
-import { parseGanttActivities } from "@/lib/ganttParse.js";
+import { parseGanttActivities } from "@/data/lib/ganttParse.js";
 
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import {
   createNotifications,
   getPlanningDirectorIds,
   normalizeRole,
-} from "@/lib/notifications";
+} from "@/data/lib/notifications";
 import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { findDuplicates } from "@/lib/duplicateDetection";
-import { withGeneratedAccomplishment, hydrateProjectAttendanceSex } from "@/lib/accomplishmentSummary";
-import { normalizeRefNumber } from "@/lib/referenceNumber";
-import { deleteFileFromBucket } from "@/lib/delete";
-import { deleteEventCascade } from "@/lib/eventCascade";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { findDuplicates } from "@/data/lib/duplicateDetection";
+import {
+  withGeneratedAccomplishment,
+  hydrateProjectAttendanceSex,
+} from "@/data/lib/accomplishmentSummary";
+import { normalizeRefNumber } from "@/data/lib/referenceNumber";
+import { deleteFileFromBucket } from "@/data/lib/delete";
+import { deleteEventCascade } from "@/data/lib/eventCascade";
 import GPB from "@/models/gpb";
-import {NextResponse} from "next/server"
+import { NextResponse } from "next/server";
 
 const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
 
@@ -48,7 +51,9 @@ const parseMilestoneProofs = (input) => {
   if (!Array.isArray(input)) return { error: "invalid proof files" };
 
   const proofs = input
-    .filter((file) => file && typeof file === "object" && (file.url || file.key))
+    .filter(
+      (file) => file && typeof file === "object" && (file.url || file.key),
+    )
     .map((file) => ({
       url: file.url || "",
       key: file.key || "",
@@ -97,7 +102,9 @@ const parseMilestones = (input) => {
       return { error: `Invalid actual date for milestone "${title}"` };
     }
 
-    const status = String(raw.status ?? "pending").trim().toLowerCase();
+    const status = String(raw.status ?? "pending")
+      .trim()
+      .toLowerCase();
     if (!MILESTONE_STATUSES.includes(status)) {
       return { error: `Invalid status for milestone "${title}"` };
     }
@@ -130,8 +137,8 @@ const parseMilestones = (input) => {
 };
 
 export async function PUT(req, { params }) {
-    const { error, status, user } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status, user } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const { id } = await params;
@@ -151,7 +158,6 @@ export async function PUT(req, { params }) {
       body.expenditure_evidence !== undefined;
 
     if (touchesActuals) {
-
       const creatorId = project.createdBy ? String(project.createdBy) : "";
 
       if (!user || creatorId !== String(user._id)) {
@@ -203,7 +209,7 @@ export async function PUT(req, { params }) {
       };
     };
 
-mergeField("project_type");
+    mergeField("project_type");
     mergeField("gender_issue");
     mergeField("cause_gender_issue");
     mergeField("gad_objective");
@@ -217,7 +223,9 @@ mergeField("project_type");
     if (body.responsible_office !== undefined) {
       const raw = body.responsible_office?.value ?? body.responsible_office;
       project.responsible_office = {
-        value: Array.isArray(raw) ? raw.filter(Boolean) : [raw || ""].filter(Boolean),
+        value: Array.isArray(raw)
+          ? raw.filter(Boolean)
+          : [raw || ""].filter(Boolean),
       };
     }
 
@@ -279,10 +287,7 @@ mergeField("project_type");
     if (body.start_date !== undefined) {
       const parsedStart = parseDateInput(body.start_date);
       if (parsedStart === undefined) {
-        return Response.json(
-          { error: "Invalid start date" },
-          { status: 400 },
-        );
+        return Response.json({ error: "Invalid start date" }, { status: 400 });
       }
       project.start_date = parsedStart;
     }
@@ -414,7 +419,11 @@ mergeField("project_type");
         year: project.year,
         _id: { $ne: id },
       }).select("gender_issue");
-      duplicateWarnings = findDuplicates(body.gender_issue, existingProjects, 0.7);
+      duplicateWarnings = findDuplicates(
+        body.gender_issue,
+        existingProjects,
+        0.7,
+      );
     } catch (err) {
       console.error("Duplicate check error:", err);
     }
@@ -430,8 +439,8 @@ mergeField("project_type");
 }
 
 export async function GET(req, { params }) {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const projects = await Project.findById(id).populate({
@@ -458,8 +467,8 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
   const projects = await Project.findByIdAndDelete(id);

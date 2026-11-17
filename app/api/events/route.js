@@ -1,18 +1,21 @@
-import { connectDB } from "@/lib/db";
-import { canonicalOfficeList } from "@/lib/colleges";
+import { connectDB } from "@/data/lib/db";
+import { canonicalOfficeList } from "@/data/lib/colleges";
 import Event from "@/models/event";
 import Project from "@/models/projects";
 import "@/models/profile";
 import { NextResponse } from "next/server";
-import { logActivity } from "@/lib/activityLog";
-import { requireAuth } from "@/lib/auth";
-import { cacheOrSet, cacheDelPrefix } from "@/lib/cache";
-import { USER_POPULATE_BASE, hydrateUserPopulate } from "@/lib/userPopulate";
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
+import {
+  USER_POPULATE_BASE,
+  hydrateUserPopulate,
+} from "@/data/lib/userPopulate";
 import {
   eventYearFromDate,
   nextEventRefNumber,
-} from "@/lib/referenceNumber";
-import { EVENT_STATUSES } from "@/lib/eventStatus";
+} from "@/data/lib/referenceNumber";
+import { EVENT_STATUSES } from "@/data/lib/eventStatus";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -33,11 +36,7 @@ const EVENT_ACTIVITY_TYPES = [
 /* Reuses the lifecycle module rather than repeating the list a third time. */
 const EVENT_STATUS_VALUES = EVENT_STATUSES.map((entry) => entry.value);
 
-const ALLOWED_CREATOR_ROLES = [
-  "GAD Focal Person",
-  "GAD Coordinator",
-  "Dean",
-];
+const ALLOWED_CREATOR_ROLES = ["GAD Focal Person", "GAD Coordinator", "Dean"];
 
 export async function GET(req) {
   try {
@@ -61,7 +60,10 @@ export async function GET(req) {
         !ORGANIZER_ROLES.includes(user.role)
       ) {
         return NextResponse.json(
-          { status: "error", message: "You can only filter by your own events." },
+          {
+            status: "error",
+            message: "You can only filter by your own events.",
+          },
           { status: 403 },
         );
       }
@@ -87,7 +89,10 @@ export async function GET(req) {
 
     const statusFilter = searchParams.get("status");
     if (statusFilter) {
-      const requested = statusFilter.split(",").map((s) => s.trim()).filter(Boolean);
+      const requested = statusFilter
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (requested.some((s) => !EVENT_STATUS_VALUES.includes(s))) {
         return NextResponse.json(
           { status: "error", message: `Unknown status: ${statusFilter}` },
@@ -108,7 +113,9 @@ export async function GET(req) {
           { status: 400 },
         );
       }
-      const projectIds = await Project.find({ year: yearNumber }).distinct("_id");
+      const projectIds = await Project.find({ year: yearNumber }).distinct(
+        "_id",
+      );
       filter.project = { $in: projectIds };
     }
 
@@ -193,7 +200,6 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-
     const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 

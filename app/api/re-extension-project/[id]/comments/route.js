@@ -1,6 +1,6 @@
 import ResearchExtensionProject from "@/models/researchExtensionProject";
-import { createCommentHandlers } from "@/lib/simpleProjectApi";
-import { RE_COMMENT_FIELDS } from "@/lib/projectModules";
+import { createCommentHandlers } from "@/data/lib/simpleProjectApi";
+import { RE_COMMENT_FIELDS } from "@/data/lib/projectModules";
 
 /* Field-targeted comments for a Research & Extension project. */
 

@@ -5,12 +5,12 @@ import {
   encryptFields,
   generatePublicId,
   generateVaultRef,
-} from "@/lib/identityVault";
+} from "@/data/lib/identityVault";
 
 /* Re-exported so the API routes need one import for the write side: the
    extractor belongs to the vault's field contract, which lives in
    lib/identityVault.js, but callers reach for it next to `savePii`. */
-export { extractPiiFromProfile } from "@/lib/identityVault";
+export { extractPiiFromProfile } from "@/data/lib/identityVault";
 
 /*
  * Write-side of the Identity Vault.

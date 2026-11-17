@@ -1,13 +1,13 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GAABudget from "@/models/gaa_budget";
 import Project from "@/models/projects";
-import { requireAuth } from "@/lib/auth";
-import { buildBudgetSummary } from "@/lib/budgetLinking";
-import {NextResponse} from "next/server"
+import { requireAuth } from "@/data/lib/auth";
+import { buildBudgetSummary } from "@/data/lib/budgetLinking";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-   const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
+  const { error, status } = await requireAuth(req);
+  if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
   const { year } = await params;

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { FaHistory, FaSpinner, FaUserTie } from "react-icons/fa";
-import { getOfficialPersonName } from "@/lib/universityOfficialsMerge";
+import { getOfficialPersonName } from "@/data/lib/universityOfficialsMerge";
 
 /**
  * The tenure trail of one seat, expanded beneath its row in the roster table.
@@ -25,7 +25,9 @@ export default function SeatHistoryPanel({ header, name }) {
   const [state, setState] = useState({ status: "idle", data: null, error: "" });
 
   const load = useCallback(async () => {
-    setState((prev) => (prev.status === "loading" ? prev : { ...prev, status: "loading" }));
+    setState((prev) =>
+      prev.status === "loading" ? prev : { ...prev, status: "loading" },
+    );
     try {
       const res = await fetch(
         `/api/university-officials/history?header=${encodeURIComponent(header)}&name=${encodeURIComponent(name)}`,
@@ -36,7 +38,11 @@ export default function SeatHistoryPanel({ header, name }) {
       }
       setState({ status: "done", data: body.data, error: "" });
     } catch (err) {
-      setState({ status: "error", data: null, error: err.message || "Failed to load history" });
+      setState({
+        status: "error",
+        data: null,
+        error: err.message || "Failed to load history",
+      });
     }
   }, [header, name]);
 
@@ -96,13 +102,18 @@ export default function SeatHistoryPanel({ header, name }) {
           <ul className="space-y-1.5">
             {turnover.map((event) => (
               <li key={String(event._id)} className="text-xs text-gray-600">
-                <span className="text-gray-400">{formatDate(event.createdAt)}</span>
+                <span className="text-gray-400">
+                  {formatDate(event.createdAt)}
+                </span>
                 {" — "}
                 {event.prev_name && event.new_name
                   ? `${event.prev_name} → ${event.new_name}`
                   : event.description || event.action}
                 {event.academic_year ? (
-                  <span className="text-gray-400"> (AY {event.academic_year})</span>
+                  <span className="text-gray-400">
+                    {" "}
+                    (AY {event.academic_year})
+                  </span>
                 ) : null}
               </li>
             ))}
@@ -131,7 +142,9 @@ function HistoryRow({ entry }) {
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`text-sm ${
-              entry.official_text ? "font-medium text-gray-900" : "text-gray-500 italic"
+              entry.official_text
+                ? "font-medium text-gray-900"
+                : "text-gray-500 italic"
             }`}
           >
             {person}
@@ -148,7 +161,8 @@ function HistoryRow({ entry }) {
           ) : null}
         </div>
         <p className="text-xs text-gray-500 mt-0.5">
-          {formatDate(entry.startDate)} → {entry.isOpen ? "present" : formatDate(entry.endDate)}
+          {formatDate(entry.startDate)} →{" "}
+          {entry.isOpen ? "present" : formatDate(entry.endDate)}
           {entry.academic_year ? ` · AY ${entry.academic_year}` : ""}
         </p>
       </div>

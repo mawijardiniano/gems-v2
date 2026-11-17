@@ -1,10 +1,10 @@
 import ResearchExtensionProject from "@/models/researchExtensionProject";
-import { createItemHandlers } from "@/lib/simpleProjectApi";
+import { createItemHandlers } from "@/data/lib/simpleProjectApi";
 import {
   RE_CLASSIFICATIONS,
   RE_FUNDING_SOURCES,
   RE_STATUSES,
-} from "@/lib/projectModules";
+} from "@/data/lib/projectModules";
 
 /* Single Research & Extension project: fetch, update and delete. */
 

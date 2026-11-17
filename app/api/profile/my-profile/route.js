@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import GemsProfile from "@/models/profile";
-import { loadDecryptedPii, revealProfilePii } from "@/lib/profileBroker";
+import { loadDecryptedPii, revealProfilePii } from "@/data/lib/profileBroker";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -16,17 +16,22 @@ export async function GET(req) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
 
-
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
     } catch (err) {
-      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 },
+      );
     }
 
     const userId = decoded.id;
     if (!userId) {
-      return NextResponse.json({ error: "Invalid token payload" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid token payload" },
+        { status: 400 },
+      );
     }
 
     const user = await UserAuth.findById(userId).select("-password").lean();
@@ -36,12 +41,15 @@ export async function GET(req) {
 
     const profile = await GemsProfile.findById(user.personal_info_id).lean();
     if (!profile) {
-      return NextResponse.json({
-        success: true,
-        hasProfile: false,
-        user,
-        data: null,
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: true,
+          hasProfile: false,
+          user,
+          data: null,
+        },
+        { status: 200 },
+      );
     }
 
     /* Owner read: the caller is looking at their own record, so the full
@@ -79,15 +87,20 @@ export async function GET(req) {
       masked: false,
     };
 
-    return NextResponse.json({
-      success: true,
-      hasProfile: true,
-      user,
-      data,
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        hasProfile: true,
+        user,
+        data,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("GET /api/profile/me error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

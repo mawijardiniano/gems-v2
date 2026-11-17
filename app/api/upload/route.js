@@ -1,14 +1,14 @@
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { requireAuth } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
-import { rateLimiters } from "@/lib/rateLimit";
-import { normalizeRole } from "@/lib/notifications";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { normalizeRole } from "@/data/lib/notifications";
 import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
-import { getS3Client, storageBucket, buildObjectUrl } from "@/lib/storage";
+import { getS3Client, storageBucket, buildObjectUrl } from "@/data/lib/storage";
 
 const s3 = getS3Client;
 
@@ -31,7 +31,11 @@ const FOLDER_RULES = {
   "milestone-proof": [".pdf", ".jpg", ".jpeg", ".png"],
 };
 
-const BLOCKED_MIME_TYPES = ["text/html", "application/xhtml+xml", "image/svg+xml"];
+const BLOCKED_MIME_TYPES = [
+  "text/html",
+  "application/xhtml+xml",
+  "image/svg+xml",
+];
 
 function getFileExtension(name) {
   const idx = String(name || "").lastIndexOf(".");
@@ -61,14 +65,12 @@ function validateUploadTarget(file, folder) {
   return null;
 }
 
-
 const GPB_MANAGEMENT_ROLES = [
   "admin",
   "planning director",
   "suc president",
   "gad focal person",
 ];
-
 
 async function canDeleteLegacyKey(key, userId, canManageGPB) {
   await connectDB();
@@ -151,7 +153,7 @@ export async function POST(req) {
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 
@@ -175,7 +177,7 @@ export async function POST(req) {
     if (buffer.length > MAX_FILE_SIZE) {
       return Response.json(
         { error: "File exceeds the maximum allowed size (25MB)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -187,7 +189,7 @@ export async function POST(req) {
         Key: key,
         Body: buffer,
         ContentType: file.type,
-      })
+      }),
     );
 
     /* The key is the durable identifier: reads resolve through
@@ -205,7 +207,7 @@ export async function POST(req) {
     console.error("UPLOAD ERROR:", err);
     return Response.json(
       { error: "Upload failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -216,7 +218,7 @@ export async function DELETE(req) {
     if (rateLimitResult.error) {
       return NextResponse.json(
         { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers }
+        { status: rateLimitResult.status, headers: rateLimitResult.headers },
       );
     }
 
@@ -232,7 +234,6 @@ export async function DELETE(req) {
     if (!isSafeKey(normalizedKey)) {
       return Response.json({ error: "Invalid key" }, { status: 400 });
     }
-
 
     let allowed = isKeyOwnedByCaller(normalizedKey, user);
 
@@ -259,7 +260,7 @@ export async function DELETE(req) {
       new DeleteObjectCommand({
         Bucket: storageBucket(),
         Key: normalizedKey,
-      })
+      }),
     );
 
     return Response.json({
@@ -269,7 +270,7 @@ export async function DELETE(req) {
     console.error("DELETE ERROR:", err);
     return Response.json(
       { error: "Delete failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

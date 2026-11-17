@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { KNOWLEDGE_CATEGORIES } from "@/lib/knowledgeResources";
+import { KNOWLEDGE_CATEGORIES } from "@/data/lib/knowledgeResources";
 
 const knowledgeFileSchema = new Schema(
   {
@@ -9,7 +9,7 @@ const knowledgeFileSchema = new Schema(
     size: { type: Number, default: 0 },
     mimeType: { type: String, default: "" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const knowledgeResourceSchema = new Schema(
@@ -47,7 +47,7 @@ const knowledgeResourceSchema = new Schema(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 knowledgeResourceSchema.index({ category: 1 });

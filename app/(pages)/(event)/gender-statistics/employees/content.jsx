@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaUserTie, FaLightbulb, FaFileDownload } from "react-icons/fa";
 import { AGE_GROUP_ORDER } from "../components/ageGroups";
-import { OFFICE_OPTIONS } from "@/lib/colleges";
+import { OFFICE_OPTIONS } from "@/data/lib/colleges";
 import {
   useGenderStats,
   LoadingState,
@@ -54,7 +54,9 @@ function buildInsights(data) {
 
   const offices = (data.byOffice || []).filter((o) => o.total >= 3);
   if (offices.length > 1) {
-    const mostFemale = [...offices].sort((a, b) => b.pctFemale - a.pctFemale)[0];
+    const mostFemale = [...offices].sort(
+      (a, b) => b.pctFemale - a.pctFemale,
+    )[0];
     const mostMale = [...offices].sort((a, b) => a.pctFemale - b.pctFemale)[0];
     insights.push(
       `${mostFemale.office} has the highest share of female employees (${mostFemale.pctFemale}%).`,
@@ -200,7 +202,9 @@ export default function EmployeeGenderStatsContent() {
     return row?.total || 0;
   }, [data]);
 
-  const personnelTypeOptions = useSample ? CATEGORY_ORDER : LIVE_PERSONNEL_TYPES;
+  const personnelTypeOptions = useSample
+    ? CATEGORY_ORDER
+    : LIVE_PERSONNEL_TYPES;
   const appointmentOptions = useSample
     ? APPOINTMENT_ORDER
     : LIVE_APPOINTMENT_STATUSES;
@@ -238,9 +242,7 @@ export default function EmployeeGenderStatsContent() {
     if (filters.department.length)
       parts.push(`Department: ${filters.department.join(", ")}`);
     if (filters.appointmentStatus.length) {
-      parts.push(
-        `Employment Status: ${filters.appointmentStatus.join(", ")}`,
-      );
+      parts.push(`Employment Status: ${filters.appointmentStatus.join(", ")}`);
     }
     if (filters.positionLevel.length) {
       parts.push(`Position Level: ${filters.positionLevel.join(", ")}`);
@@ -369,7 +371,11 @@ export default function EmployeeGenderStatsContent() {
             <MultiSelect
               label="Age Group"
               allLabel="All age groups"
-              options={activeData?.ageGroups?.length ? activeData.ageGroups : AGE_GROUP_ORDER}
+              options={
+                activeData?.ageGroups?.length
+                  ? activeData.ageGroups
+                  : AGE_GROUP_ORDER
+              }
               value={filters.ageGroups}
               onChange={setFilter("ageGroups")}
             />
@@ -428,17 +434,16 @@ export default function EmployeeGenderStatsContent() {
       {useSample && (
         <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
           Showing synthetic <strong>sample data</strong> built from
-          <code className="mx-1">data/sample-profiles.json</code>
-          ({SAMPLE_EMPLOYEE_COUNT.toLocaleString()} named employees · 413 female / 272 male / 26 LGBTQIA+), expanded into
-          individual records with a five-year appointment history (2020-2021 to
-          2024-2025) so the filters compose. Your database is not being read and
-          nothing is saved â€” turn the toggle off to return to live data.
+          <code className="mx-1">data/sample-profiles.json</code>(
+          {SAMPLE_EMPLOYEE_COUNT.toLocaleString()} named employees · 413 female
+          / 272 male / 26 LGBTQIA+), expanded into individual records with a
+          five-year appointment history (2020-2021 to 2024-2025) so the filters
+          compose. Your database is not being read and nothing is saved â€” turn
+          the toggle off to return to live data.
         </div>
       )}
 
-      {!useSample && error && (
-        <ErrorState message={error} onRetry={refetch} />
-      )}
+      {!useSample && error && <ErrorState message={error} onRetry={refetch} />}
       {!useSample && loading && <LoadingState />}
 
       {!useSample &&
@@ -511,134 +516,133 @@ export default function EmployeeGenderStatsContent() {
                 nameKey="label"
               />
               <p className="text-xs text-gray-400">
-                Insights and quick reports below describe the combined
-                selection ({selectedYears.join(", ")}).
+                Insights and quick reports below describe the combined selection
+                ({selectedYears.join(", ")}).
               </p>
             </>
           ) : (
             <>
-          <SummaryCards totals={totals} what="Employees" />
+              <SummaryCards totals={totals} what="Employees" />
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <SexDonut totals={totals} />
-            <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
-          </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <SexDonut totals={totals} />
+                <GenderIdentityDonut rows={activeData.byGenderIdentity || []} />
+              </div>
 
-          {/* Teaching vs non-teaching is a two-bucket rollup of the three-way
+              {/* Teaching vs non-teaching is a two-bucket rollup of the three-way
               Personnel Category below, so the two are kept apart by a heading:
               the Faculty row appears in both with identical figures, and side
               by side they read as a double count. */}
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Teaching vs Non-Teaching
-            </p>
-            <SexTable
-              title="Personnel by Teaching Category and Sex"
-              data={activeData.byTeaching || []}
-              nameKey="name"
-              nameHeader="Teaching Category"
-            />
-          </div>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  Teaching vs Non-Teaching
+                </p>
+                <SexTable
+                  title="Personnel by Teaching Category and Sex"
+                  data={activeData.byTeaching || []}
+                  nameKey="name"
+                  nameHeader="Teaching Category"
+                />
+              </div>
 
-          <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Detailed Breakdown
-          </p>
+              <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Detailed Breakdown
+              </p>
 
-          {Array.isArray(activeData.byCategory) &&
-            activeData.byCategory.length > 0 && (
+              {Array.isArray(activeData.byCategory) &&
+                activeData.byCategory.length > 0 && (
+                  <SexTable
+                    title="Personnel Category and Sex"
+                    data={activeData.byCategory}
+                    nameKey="category"
+                    nameHeader="Personnel Category"
+                  />
+                )}
+
+              {Array.isArray(activeData.byAcademicYear) &&
+                activeData.byAcademicYear.length > 0 && (
+                  <SexTable
+                    title="Personnel by Academic Year and Sex"
+                    subtitle="Headcount on board each sample year"
+                    data={activeData.byAcademicYear}
+                    nameKey="school_year"
+                    nameHeader="Academic Year"
+                  />
+                )}
+
+              {Array.isArray(activeData.byEmploymentStatus) &&
+                activeData.byEmploymentStatus.length > 0 && (
+                  <SexTable
+                    title="Personnel by Employment Type and Sex"
+                    data={activeData.byEmploymentStatus}
+                    nameKey="status"
+                    nameHeader="Employment Type"
+                  />
+                )}
+
+              {Array.isArray(activeData.byPositionLevel) &&
+                activeData.byPositionLevel.length > 0 && (
+                  <SexTable
+                    title="Personnel by Position Level and Sex"
+                    data={activeData.byPositionLevel}
+                    nameKey="level"
+                    nameHeader="Position Level"
+                  />
+                )}
+
+              {Array.isArray(activeData.byAcademicRank) &&
+                activeData.byAcademicRank.length > 0 && (
+                  <SexTable
+                    title="Personnel by Academic Rank and Sex"
+                    subtitle="Faculty only"
+                    data={activeData.byAcademicRank}
+                    nameKey="rank"
+                    nameHeader="Academic Rank"
+                  />
+                )}
+
               <SexTable
-                title="Personnel Category and Sex"
-                data={activeData.byCategory}
-                nameKey="category"
-                nameHeader="Personnel Category"
-              />
-            )}
-
-          {Array.isArray(activeData.byAcademicYear) &&
-            activeData.byAcademicYear.length > 0 && (
-              <SexTable
-                title="Personnel by Academic Year and Sex"
-                subtitle="Headcount on board each sample year"
-                data={activeData.byAcademicYear}
-                nameKey="school_year"
-                nameHeader="Academic Year"
-              />
-            )}
-
-
-          {Array.isArray(activeData.byEmploymentStatus) &&
-            activeData.byEmploymentStatus.length > 0 && (
-              <SexTable
-                title="Personnel by Employment Type and Sex"
-                data={activeData.byEmploymentStatus}
-                nameKey="status"
-                nameHeader="Employment Type"
-              />
-            )}
-
-          {Array.isArray(activeData.byPositionLevel) &&
-            activeData.byPositionLevel.length > 0 && (
-              <SexTable
-                title="Personnel by Position Level and Sex"
-                data={activeData.byPositionLevel}
-                nameKey="level"
-                nameHeader="Position Level"
-              />
-            )}
-
-          {Array.isArray(activeData.byAcademicRank) &&
-            activeData.byAcademicRank.length > 0 && (
-              <SexTable
-                title="Personnel by Academic Rank and Sex"
-                subtitle="Faculty only"
-                data={activeData.byAcademicRank}
-                nameKey="rank"
-                nameHeader="Academic Rank"
-              />
-            )}
-
-          <SexTable
                 title="Personnel by Age Group and Sex"
                 data={activeData.byAgeGroup || []}
                 nameKey="age_group"
                 nameHeader="Age Group"
               />
 
-          {/* Civil status and religion are PII: the API returns them from the
+              {/* Civil status and religion are PII: the API returns them from the
               vault, and the sample toggle returns the same row shape. Stacked
               rather than side by side - religion has 9 rows and civil status 5,
               so a two-column grid stretched the shorter card into whitespace. */}
-          <SexTable
-            title="Personnel by Civil Status and Sex"
-            data={activeData.civilData || []}
-            nameKey="name"
-            nameHeader="Civil Status"
-          />
-          <SexTable
-            title="Personnel by Religion and Sex"
-            data={activeData.religionData || []}
-            nameKey="name"
-            nameHeader="Religion"
-          />
+              <SexTable
+                title="Personnel by Civil Status and Sex"
+                data={activeData.civilData || []}
+                nameKey="name"
+                nameHeader="Civil Status"
+              />
+              <SexTable
+                title="Personnel by Religion and Sex"
+                data={activeData.religionData || []}
+                nameKey="name"
+                nameHeader="Religion"
+              />
 
-          <SexTable
-            title="Personnel by Appointment Status and Sex"
-            data={activeData.byAppointment || []}
-            nameKey="status"
-            nameHeader="Appointment Status"
-          />
+              <SexTable
+                title="Personnel by Appointment Status and Sex"
+                data={activeData.byAppointment || []}
+                nameKey="status"
+                nameHeader="Appointment Status"
+              />
 
-          <SexTable
-            title="Personnel by College / Office and Sex"
-            data={activeData.byOffice || []}
-            nameKey="office"
-            nameHeader="College / Office"
-          />
+              <SexTable
+                title="Personnel by College / Office and Sex"
+                data={activeData.byOffice || []}
+                nameKey="office"
+                nameHeader="College / Office"
+              />
 
-          <DemographicTable
-            rows={activeData.demographics || []}
-            total={totals.total}
-          />
+              <DemographicTable
+                rows={activeData.demographics || []}
+                total={totals.total}
+              />
             </>
           )}
           <KeyInsightsCard insights={insights} />
@@ -724,7 +728,8 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" /> Quick Reports
+        <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" />{" "}
+        Quick Reports
       </h3>
       <div className="flex flex-wrap gap-3">
         {useSample ? (
@@ -755,8 +760,8 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
       </div>
       {useSample && (
         <p className="text-[11px] text-gray-400 mt-2">
-          Generated in your browser from the sample dataset â€” no database reads
-          or writes.
+          Generated in your browser from the sample dataset â€” no database
+          reads or writes.
         </p>
       )}
       {status && <p className="text-xs text-gray-500 mt-2">{status}</p>}
@@ -769,7 +774,8 @@ function KeyInsightsCard({ insights }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" /> Key Insights
+        <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" />{" "}
+        Key Insights
       </h3>
       {list.length === 0 ? (
         <p className="text-xs text-gray-400 italic">
@@ -778,7 +784,10 @@ function KeyInsightsCard({ insights }) {
       ) : (
         <ul className="space-y-2">
           {list.map((line, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+            <li
+              key={i}
+              className="flex items-start gap-2 text-sm text-gray-700"
+            >
               <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-secondary-500 shrink-0" />
               {line}
             </li>
@@ -788,4 +797,3 @@ function KeyInsightsCard({ insights }) {
     </div>
   );
 }
-

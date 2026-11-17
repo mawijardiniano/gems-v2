@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { validateMappedPayload, buildIdentityDedupeKey } from "@/app/api/integration/_utils/mapping";
+import {
+  validateMappedPayload,
+  buildIdentityDedupeKey,
+} from "@/app/api/integration/_utils/mapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
-import { logActivity } from "@/lib/activityLog";
+import { logActivity } from "@/data/lib/activityLog";
 
 export async function POST(req, { params }) {
   try {
@@ -47,11 +50,14 @@ export async function POST(req, { params }) {
 
     const orClauses = [];
     if (studentIds.length)
-      orClauses.push({ "affiliation.academic_information.student_id": { $in: studentIds } });
+      orClauses.push({
+        "affiliation.academic_information.student_id": { $in: studentIds },
+      });
     if (employeeIds.length)
-      orClauses.push({ "affiliation.employment_information.employee_id": { $in: employeeIds } });
-    if (emails.length)
-      orClauses.push({ "contact.email": { $in: emails } });
+      orClauses.push({
+        "affiliation.employment_information.employee_id": { $in: employeeIds },
+      });
+    if (emails.length) orClauses.push({ "contact.email": { $in: emails } });
 
     const existingProfiles = orClauses.length
       ? await GemsProfile.find({ $or: orClauses })
@@ -133,7 +139,8 @@ export async function POST(req, { params }) {
       if (errors.length === 0) {
         const profile =
           (identity.student_id && profileByStudent.get(identity.student_id)) ||
-          (identity.employee_id && profileByEmployee.get(identity.employee_id)) ||
+          (identity.employee_id &&
+            profileByEmployee.get(identity.employee_id)) ||
           (identity.email && profileByEmail.get(identity.email)) ||
           null;
 
@@ -184,9 +191,7 @@ export async function POST(req, { params }) {
         stagingRecordId: record._id,
         level: blocking ? "warn" : "info",
         action: "validate",
-        message: blocking
-          ? "Row checked — has problems"
-          : "Row checked — OK",
+        message: blocking ? "Row checked — has problems" : "Row checked — OK",
         details: { errors },
         executedBy: auth.user._id,
         executedByUsername: auth.user.username,
@@ -228,10 +233,30 @@ export async function POST(req, { params }) {
         existing: existingCount,
       },
       changes: [
-        { field: "status", before: "validating", after: batch.status, redacted: false },
-        { field: "totals.valid", before: totalsBefore.valid, after: valid, redacted: false },
-        { field: "totals.invalid", before: totalsBefore.invalid, after: invalid, redacted: false },
-        { field: "totals.existing", before: totalsBefore.existing, after: existingCount, redacted: false },
+        {
+          field: "status",
+          before: "validating",
+          after: batch.status,
+          redacted: false,
+        },
+        {
+          field: "totals.valid",
+          before: totalsBefore.valid,
+          after: valid,
+          redacted: false,
+        },
+        {
+          field: "totals.invalid",
+          before: totalsBefore.invalid,
+          after: invalid,
+          redacted: false,
+        },
+        {
+          field: "totals.existing",
+          before: totalsBefore.existing,
+          after: existingCount,
+          redacted: false,
+        },
       ],
       outcome: { result: valid > 0 ? "success" : "failure", status_code: 200 },
     });

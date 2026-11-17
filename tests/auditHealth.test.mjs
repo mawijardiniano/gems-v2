@@ -50,13 +50,13 @@ registerHooks({
     if (specifier === "next/server") {
       return { url: "stub:next-server", shortCircuit: true };
     }
-    if (specifier === "@/lib/db") {
+    if (specifier === "@/data/lib/db") {
       return { url: "stub:db", shortCircuit: true };
     }
-    if (specifier === "@/lib/activityLog") {
+    if (specifier === "@/data/lib/activityLog") {
       return { url: "stub:activityLog", shortCircuit: true };
     }
-    if (specifier === "@/lib/auditRetention") {
+    if (specifier === "@/data/lib/auditRetention") {
       return { url: "stub:auditRetention", shortCircuit: true };
     }
     return nextResolve(specifier, context);

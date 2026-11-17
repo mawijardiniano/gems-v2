@@ -1,15 +1,15 @@
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/activityLog";
-import { normalizeRole } from "@/lib/notifications";
+import { connectDB } from "@/data/lib/db";
+import { requireAuth } from "@/data/lib/auth";
+import { logActivity } from "@/data/lib/activityLog";
+import { normalizeRole } from "@/data/lib/notifications";
 import KnowledgeResource from "@/models/knowledgeResource";
-import { getS3Client, storageBucket } from "@/lib/storage";
+import { getS3Client, storageBucket } from "@/data/lib/storage";
 import {
   DELETE_ANY_ROLES,
   KNOWLEDGE_ROLES,
-} from "@/lib/knowledgeResources";
+} from "@/data/lib/knowledgeResources";
 
 const s3 = getS3Client;
 
@@ -31,7 +31,7 @@ export async function DELETE(req, { params }) {
     if (!resource || !resource.is_active) {
       return NextResponse.json(
         { error: "Document not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function DELETE(req, { params }) {
     if (!isOwner && !canDeleteAny) {
       return NextResponse.json(
         { error: "You can only delete documents you uploaded" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -51,7 +51,7 @@ export async function DELETE(req, { params }) {
         new DeleteObjectCommand({
           Bucket: storageBucket(),
           Key: resource.file?.key,
-        })
+        }),
       );
     } catch (s3Err) {
       console.error("KNOWLEDGE RESOURCE S3 DELETE ERROR:", s3Err);
@@ -73,7 +73,7 @@ export async function DELETE(req, { params }) {
     console.error("KNOWLEDGE RESOURCES DELETE ERROR:", err);
     return NextResponse.json(
       { error: "Delete failed", details: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

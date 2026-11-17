@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ActivityLog from "@/models/activity_log";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -131,7 +131,8 @@ export async function GET(req) {
       }
 
       if ((record.hash_prev || null) !== prevHash) {
-        const boundary = record.hash_prev && disposedThrough.has(record.hash_prev);
+        const boundary =
+          record.hash_prev && disposedThrough.has(record.hash_prev);
         if (boundary) {
           archived += 1;
         } else {

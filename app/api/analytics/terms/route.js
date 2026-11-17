@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import ProfileTerm from "@/models/profileTerm";
-import { cacheOrSet } from "@/lib/cache";
+import { cacheOrSet } from "@/data/lib/cache";
 
 const TERMS_CACHE_TTL = 60 * 1000; // 60 seconds
 

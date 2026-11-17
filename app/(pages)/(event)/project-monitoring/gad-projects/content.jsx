@@ -1,7 +1,13 @@
 "use client";
 
 import axios from "axios";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import {
   FaSearch,
@@ -34,16 +40,16 @@ import {
   generateAccomplishmentSummary,
   resolveAccomplishmentLines,
   usesAccomplishmentOverride,
-} from "@/lib/accomplishmentSummary";
-import { OFFICE_OPTIONS, normalizeOffice } from "@/lib/colleges";
+} from "@/data/lib/accomplishmentSummary";
+import { OFFICE_OPTIONS, normalizeOffice } from "@/data/lib/colleges";
 import {
   BUDGET_VIEW,
   budgetProjectsFor,
   budgetViewFor,
   canViewProjectBudget,
   summarizeBudget,
-} from "@/lib/budgetVisibility";
-import { aggregateIndicatorProgress } from "@/lib/performanceTracking";
+} from "@/data/lib/budgetVisibility";
+import { aggregateIndicatorProgress } from "@/data/lib/performanceTracking";
 const getFieldValue = (field) => {
   if (!field) return "";
   if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
@@ -97,7 +103,8 @@ const getActiveEvents = (project) =>
 
 const getSortedEvents = (project) =>
   [...getActiveEvents(project)].sort(
-    (a, b) => (getEventStart(a)?.getTime() || 0) - (getEventStart(b)?.getTime() || 0),
+    (a, b) =>
+      (getEventStart(a)?.getTime() || 0) - (getEventStart(b)?.getTime() || 0),
   );
 
 const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
@@ -133,7 +140,9 @@ const canManageProject = (project, userId, userRole) => {
   const creatorId = String(project?.createdBy?._id || project?.createdBy || "");
   if (creatorId && creatorId === String(userId)) return true;
   return PROJECT_EDITOR_ROLES.includes(
-    String(userRole || "").trim().toLowerCase(),
+    String(userRole || "")
+      .trim()
+      .toLowerCase(),
   );
 };
 
@@ -242,9 +251,7 @@ function DetailList({ label, items, descriptions }) {
             <li key={i}>
               {it}
               {notes[i] ? (
-                <span className="mt-0.5 block">
-                  {notes[i]}
-                </span>
+                <span className="mt-0.5 block">{notes[i]}</span>
               ) : null}
             </li>
           ))}
@@ -512,7 +519,11 @@ export default function GADProjectsMonitoringContent() {
     setExpandedId(null);
   };
 
-  const handleMilestonesSaved = (projectId, savedMilestones, savedActivities) => {
+  const handleMilestonesSaved = (
+    projectId,
+    savedMilestones,
+    savedActivities,
+  ) => {
     setProjects((prev) =>
       prev.map((p) =>
         String(p._id) === String(projectId)
@@ -730,8 +741,8 @@ export default function GADProjectsMonitoringContent() {
             GAD Projects/Activities Monitoring
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Monitor GAD projects and activities across academic years —
-            update actuals as activities are conducted
+            Monitor GAD projects and activities across academic years — update
+            actuals as activities are conducted
           </p>
         </div>
         <p className="text-xs text-gray-400">
@@ -1035,9 +1046,9 @@ export default function GADProjectsMonitoringContent() {
                   const activityDescriptions = getArrayValue(
                     project.gad_activity_description,
                   );
-                  const office = getArrayValue(
-                    project.responsible_office,
-                  ).join(", ");
+                  const office = getArrayValue(project.responsible_office).join(
+                    ", ",
+                  );
                   const mandate = getFieldValue(project.gender_issue);
                   const projectStatus = getProjectStatus(project);
                   const statusMeta = PROJECT_STATUS_META[projectStatus];
@@ -1050,11 +1061,15 @@ export default function GADProjectsMonitoringContent() {
                      outside his budget scope (e.g. his own office list names
                      another college). */
                   const isOwnProject =
-                    String(project.createdBy?._id || project.createdBy || "") ===
-                    String(userId);
+                    String(
+                      project.createdBy?._id || project.createdBy || "",
+                    ) === String(userId);
                   const canSeeThisBudget =
-                    canViewProjectBudget(budgetView, project, assignedCollege) ||
-                    isOwnProject;
+                    canViewProjectBudget(
+                      budgetView,
+                      project,
+                      assignedCollege,
+                    ) || isOwnProject;
                   const progress = getMilestoneProgress(project);
                   const milestones = getMilestones(project);
                   const isScheduleEditing =
@@ -1093,9 +1108,7 @@ export default function GADProjectsMonitoringContent() {
                         }`}
                       >
                         <td className="px-3 py-4 text-center text-xs font-medium text-gray-800 align-top">
-                          <div>
-                            {displayIndex > 0 ? displayIndex : idx + 1}
-                          </div>
+                          <div>{displayIndex > 0 ? displayIndex : idx + 1}</div>
                           {project.reference_number && (
                             <div
                               className="mt-1 font-mono text-[10px] font-normal text-gray-500 whitespace-nowrap"
@@ -1179,9 +1192,7 @@ export default function GADProjectsMonitoringContent() {
                               e.stopPropagation();
                               toggleExpand(project._id);
                             }}
-                            title={
-                              isExpanded ? "Hide details" : "View details"
-                            }
+                            title={isExpanded ? "Hide details" : "View details"}
                             className={`inline-flex items-center justify-center h-8 w-8 rounded-lg border transition ${
                               isExpanded
                                 ? "bg-rose-600 border-rose-600 text-white hover:bg-rose-700"
@@ -1195,7 +1206,10 @@ export default function GADProjectsMonitoringContent() {
 
                       {isExpanded && (
                         <tr>
-                          <td colSpan={budgetView === BUDGET_VIEW.NONE ? 9 : 10} className="p-0 bg-gray-50/60">
+                          <td
+                            colSpan={budgetView === BUDGET_VIEW.NONE ? 9 : 10}
+                            className="p-0 bg-gray-50/60"
+                          >
                             <div className="p-4 sm:p-5 animate-fade-in space-y-4">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -1232,40 +1246,45 @@ export default function GADProjectsMonitoringContent() {
                                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                                       Project Information
                                     </p>
-                                  <DetailRow
-                                    label="Academic Year"
-                                    value={
-                                      project.year ? ayLabel(project.year) : "—"
-                                    }
-                                  />
-                                  <DetailRow
-                                    label="Project Type"
-                                    value={getFieldValue(project.project_type)}
-                                  />
-                                  <DetailRow
-                                    label="GAD Mandate (Gender Issue)"
-                                    value={mandate}
-                                  />
-                                  <DetailList
-                                    label="GAD Objective"
-                                    items={getArrayValue(project.gad_objective)}
-                                  />
-                                  <DetailList
-                                    label="GAD Activity"
-                                    items={activities}
-                                    descriptions={activityDescriptions}
-                                  />
-                                  <DetailRow
-                                    label="Responsible Office/Unit"
-                                    value={office}
-                                  />
-                                  <DetailList
-                                    label="Performance Indicator / Target"
-                                    items={getArrayValue(
-                                      project.performance_indicator_target,
-                                    )}
-                                  />
-
+                                    <DetailRow
+                                      label="Academic Year"
+                                      value={
+                                        project.year
+                                          ? ayLabel(project.year)
+                                          : "—"
+                                      }
+                                    />
+                                    <DetailRow
+                                      label="Project Type"
+                                      value={getFieldValue(
+                                        project.project_type,
+                                      )}
+                                    />
+                                    <DetailRow
+                                      label="GAD Mandate (Gender Issue)"
+                                      value={mandate}
+                                    />
+                                    <DetailList
+                                      label="GAD Objective"
+                                      items={getArrayValue(
+                                        project.gad_objective,
+                                      )}
+                                    />
+                                    <DetailList
+                                      label="GAD Activity"
+                                      items={activities}
+                                      descriptions={activityDescriptions}
+                                    />
+                                    <DetailRow
+                                      label="Responsible Office/Unit"
+                                      value={office}
+                                    />
+                                    <DetailList
+                                      label="Performance Indicator / Target"
+                                      items={getArrayValue(
+                                        project.performance_indicator_target,
+                                      )}
+                                    />
                                   </section>
 
                                   <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
@@ -1283,7 +1302,8 @@ export default function GADProjectsMonitoringContent() {
                                           className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
                                         >
                                           <FaPen size={10} />
-                                          {project.start_date || project.end_date
+                                          {project.start_date ||
+                                          project.end_date
                                             ? "Update"
                                             : "Set Schedule"}
                                         </button>
@@ -1364,11 +1384,15 @@ export default function GADProjectsMonitoringContent() {
                                           </button>
                                           <button
                                             type="button"
-                                            onClick={() => saveSchedule(project)}
+                                            onClick={() =>
+                                              saveSchedule(project)
+                                            }
                                             disabled={scheduleSaving}
                                             className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           >
-                                            {scheduleSaving ? "Saving…" : "Save"}
+                                            {scheduleSaving
+                                              ? "Saving…"
+                                              : "Save"}
                                           </button>
                                         </div>
                                       </div>
@@ -1395,8 +1419,8 @@ export default function GADProjectsMonitoringContent() {
                                         {!canManage && (
                                           <p className="text-[11px] text-gray-400 italic">
                                             Only the project creator or a GAD
-                                            Focal Person can set the schedule and
-                                            status.
+                                            Focal Person can set the schedule
+                                            and status.
                                           </p>
                                         )}
                                       </>
@@ -1467,8 +1491,7 @@ export default function GADProjectsMonitoringContent() {
 
                                         <div>
                                           <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 block mb-1">
-                                            Others (Other Details /
-                                            Information)
+                                            Others (Other Details / Information)
                                           </label>
                                           <textarea
                                             value={approvalDraft.other_details}
@@ -1502,7 +1525,9 @@ export default function GADProjectsMonitoringContent() {
                                             disabled={approvalSaving}
                                             className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                           >
-                                            {approvalSaving ? "Saving…" : "Save"}
+                                            {approvalSaving
+                                              ? "Saving…"
+                                              : "Save"}
                                           </button>
                                         </div>
                                       </div>
@@ -1557,7 +1582,10 @@ export default function GADProjectsMonitoringContent() {
                                         key={`${project._id}-${(project.gantt_activities || []).length}-${milestones.length}`}
                                         project={project}
                                         userId={userId}
-                                        onSaved={(savedMilestones, savedActivities) =>
+                                        onSaved={(
+                                          savedMilestones,
+                                          savedActivities,
+                                        ) =>
                                           handleMilestonesSaved(
                                             project._id,
                                             savedMilestones,
@@ -1569,169 +1597,163 @@ export default function GADProjectsMonitoringContent() {
                                       <GanttReadOnly project={project} />
                                     )}
 
-                                    
-
-
-
-
-
-                                        
-                                      <div
-                                        className={
-                                          canManage ? "hidden" : "space-y-2"
-                                        }
-                                      >
-                                        {milestones.length > 0 ? (
-                                          <>
-                                            <div className="overflow-x-auto rounded-lg border border-gray-100">
-                                              <table className="w-full text-left">
-                                                <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
-                                                  <tr>
-                                                    <th className="px-2 py-1.5 font-semibold">
-                                                      Milestone / Activity
-                                                    </th>
-                                                    <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
-                                                      Target Date
-                                                    </th>
-                                                    <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
-                                                      Actual Date
-                                                    </th>
-                                                    <th className="px-2 py-1.5 font-semibold">
-                                                      Status
-                                                    </th>
-                                                    <th className="px-2 py-1.5 font-semibold">
-                                                      Proof
-                                                    </th>
-                                                    <th className="px-2 py-1.5 font-semibold">
-                                                      Source Activity
-                                                    </th>
-
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {milestones.map((m, i) => {
-                                                    const meta =
-                                                      MILESTONE_STATUS_META[
-                                                        m.status
-                                                      ] ||
-                                                      MILESTONE_STATUS_META.pending;
-                                                    const proofs = (
-                                                      Array.isArray(m.proofs)
-                                                        ? m.proofs
-                                                        : []
-                                                    ).filter(
-                                                      (file) =>
-                                                        file &&
-                                                        (file.url || file.key),
-                                                    );
-                                                    return (
-                                                      <tr
-                                                        key={m._id || i}
-                                                        className="border-t border-gray-100"
-                                                      >
-                                                        <td className="px-2 py-2 text-xs text-gray-700">
-                                                          {m.title}
-                                                        </td>
-                                                        <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
-                                                          {formatDate(
-                                                            m.target_date,
-                                                          ) || "—"}
-                                                        </td>
-                                                        <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
-                                                          {formatDate(
-                                                            m.actual_date,
-                                                          ) || "—"}
-                                                        </td>
-                                                        <td className="px-2 py-2">
-                                                          <span
-                                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border whitespace-nowrap ${meta.classes}`}
-                                                          >
-                                                            {meta.label}
-                                                          </span>
-                                                        </td>
-                                                        <td className="px-2 py-2">
-                                                          {proofs.length > 0 ? (
-                                                            <ul className="flex flex-wrap gap-1">
-                                                              {proofs.map(
-                                                                (file, fi) => {
-                                                                  const url =
-                                                                    getEvidenceProxyUrl(
-                                                                      file,
-                                                                    );
-                                                                  return (
-                                                                    <li
-                                                                      key={
-                                                                        file.key ||
-                                                                        file.url ||
-                                                                        fi
-                                                                      }
-                                                                    >
-                                                                      {url ? (
-                                                                        <a
-                                                                          href={url}
-                                                                          target="_blank"
-                                                                          rel="noopener noreferrer"
-                                                                          title={
-                                                                            file.name ||
-                                                                            "View proof"
-                                                                          }
-                                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
-                                                                        >
-                                                                          <FaPaperclip className="h-2.5 w-2.5" />
-                                                                          <span className="max-w-[120px] truncate">
-                                                                            {file.name ||
-                                                                              "Proof file"}
-                                                                          </span>
-                                                                        </a>
-                                                                      ) : (
-                                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
-                                                                          <FaPaperclip className="h-2.5 w-2.5" />
+                                    <div
+                                      className={
+                                        canManage ? "hidden" : "space-y-2"
+                                      }
+                                    >
+                                      {milestones.length > 0 ? (
+                                        <>
+                                          <div className="overflow-x-auto rounded-lg border border-gray-100">
+                                            <table className="w-full text-left">
+                                              <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+                                                <tr>
+                                                  <th className="px-2 py-1.5 font-semibold">
+                                                    Milestone / Activity
+                                                  </th>
+                                                  <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
+                                                    Target Date
+                                                  </th>
+                                                  <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
+                                                    Actual Date
+                                                  </th>
+                                                  <th className="px-2 py-1.5 font-semibold">
+                                                    Status
+                                                  </th>
+                                                  <th className="px-2 py-1.5 font-semibold">
+                                                    Proof
+                                                  </th>
+                                                  <th className="px-2 py-1.5 font-semibold">
+                                                    Source Activity
+                                                  </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {milestones.map((m, i) => {
+                                                  const meta =
+                                                    MILESTONE_STATUS_META[
+                                                      m.status
+                                                    ] ||
+                                                    MILESTONE_STATUS_META.pending;
+                                                  const proofs = (
+                                                    Array.isArray(m.proofs)
+                                                      ? m.proofs
+                                                      : []
+                                                  ).filter(
+                                                    (file) =>
+                                                      file &&
+                                                      (file.url || file.key),
+                                                  );
+                                                  return (
+                                                    <tr
+                                                      key={m._id || i}
+                                                      className="border-t border-gray-100"
+                                                    >
+                                                      <td className="px-2 py-2 text-xs text-gray-700">
+                                                        {m.title}
+                                                      </td>
+                                                      <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                                                        {formatDate(
+                                                          m.target_date,
+                                                        ) || "—"}
+                                                      </td>
+                                                      <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                                                        {formatDate(
+                                                          m.actual_date,
+                                                        ) || "—"}
+                                                      </td>
+                                                      <td className="px-2 py-2">
+                                                        <span
+                                                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border whitespace-nowrap ${meta.classes}`}
+                                                        >
+                                                          {meta.label}
+                                                        </span>
+                                                      </td>
+                                                      <td className="px-2 py-2">
+                                                        {proofs.length > 0 ? (
+                                                          <ul className="flex flex-wrap gap-1">
+                                                            {proofs.map(
+                                                              (file, fi) => {
+                                                                const url =
+                                                                  getEvidenceProxyUrl(
+                                                                    file,
+                                                                  );
+                                                                return (
+                                                                  <li
+                                                                    key={
+                                                                      file.key ||
+                                                                      file.url ||
+                                                                      fi
+                                                                    }
+                                                                  >
+                                                                    {url ? (
+                                                                      <a
+                                                                        href={
+                                                                          url
+                                                                        }
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        title={
+                                                                          file.name ||
+                                                                          "View proof"
+                                                                        }
+                                                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
+                                                                      >
+                                                                        <FaPaperclip className="h-2.5 w-2.5" />
+                                                                        <span className="max-w-[120px] truncate">
                                                                           {file.name ||
                                                                             "Proof file"}
                                                                         </span>
-                                                                      )}
-                                                                    </li>
-                                                                  );
-                                                                },
-                                                              )}
-                                                            </ul>
-                                                          ) : m.status ===
-                                                            "completed" ? (
-                                                            <span className="text-[10px] font-medium text-secondary-600">
-                                                              Missing proof
-                                                            </span>
-                                                          ) : (
-                                                            <span className="text-[10px] text-gray-400">
-                                                              —
-                                                            </span>
-                                                          )}
-                                                        </td>
-                                                        <td className="px-2 py-2 text-xs text-gray-600">
-                                                          {m.source_activity || "—"}
-                                                        </td>
-
-                                                      </tr>
-                                                    );
-                                                  })}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                            <p className="text-[11px] text-gray-500">
-                                              Progress:{" "}
-                                              <span className="font-medium text-gray-700">
-                                                {progress.done}/{progress.total} (
-                                                {progress.percent}%)
-                                              </span>
-                                            </p>
-                                          </>
-                                        ) : (
-                                          <p className="text-xs text-gray-400 italic">
-                                            No milestones recorded yet.
-                                            {!canManage &&
-                                              " Only the project creator or a GAD Focal Person can add milestones."}
+                                                                      </a>
+                                                                    ) : (
+                                                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+                                                                        <FaPaperclip className="h-2.5 w-2.5" />
+                                                                        {file.name ||
+                                                                          "Proof file"}
+                                                                      </span>
+                                                                    )}
+                                                                  </li>
+                                                                );
+                                                              },
+                                                            )}
+                                                          </ul>
+                                                        ) : m.status ===
+                                                          "completed" ? (
+                                                          <span className="text-[10px] font-medium text-secondary-600">
+                                                            Missing proof
+                                                          </span>
+                                                        ) : (
+                                                          <span className="text-[10px] text-gray-400">
+                                                            —
+                                                          </span>
+                                                        )}
+                                                      </td>
+                                                      <td className="px-2 py-2 text-xs text-gray-600">
+                                                        {m.source_activity ||
+                                                          "—"}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                })}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                          <p className="text-[11px] text-gray-500">
+                                            Progress:{" "}
+                                            <span className="font-medium text-gray-700">
+                                              {progress.done}/{progress.total} (
+                                              {progress.percent}%)
+                                            </span>
                                           </p>
-                                        )}
-                                      </div>
+                                        </>
+                                      ) : (
+                                        <p className="text-xs text-gray-400 italic">
+                                          No milestones recorded yet.
+                                          {!canManage &&
+                                            " Only the project creator or a GAD Focal Person can add milestones."}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
 
                                   {/* Actual Accomplishments sub-section */}
@@ -1872,216 +1894,224 @@ export default function GADProjectsMonitoringContent() {
                                   {canSeeThisBudget && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                       <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                        Budget Utilization
-                                      </p>
-                                      {String(
-                                        project.createdBy?._id ||
-                                          project.createdBy ||
-                                          "",
-                                      ) === String(userId) && (
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingProject(project);
-                                          }}
-                                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
-                                        >
-                                          <FaPen size={10} />
-                                          Update
-                                        </button>
-                                      )}
-                                    </div>
-                                    {(() => {
-                                      const budget = Number(
-                                        getFieldValue(project.gad_budget) || 0,
-                                      );
-                                      const spent = Number(
-                                        project.actual_expenditures || 0,
-                                      );
-                                      const pct =
-                                        budget > 0 ? (spent / budget) * 100 : 0;
-                                      const isOver = pct > 100;
-                                      return (
-                                        <>
-                                          <div className="flex items-center justify-between text-sm">
-                                            <span className="font-semibold text-gray-900">
-                                              {fmtPeso(spent)}
-                                            </span>
-                                            <span className="text-gray-500">
-                                              of {fmtPeso(budget)}
-                                            </span>
-                                            <span
-                                              className={`font-bold ${
-                                                isOver
-                                                  ? "text-red-600"
-                                                  : "text-emerald-600"
-                                              }`}
-                                            >
-                                              {Math.round(pct)}%
-                                            </span>
-                                          </div>
-                                          <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                                            <div
-                                              className={`h-full rounded-full ${
-                                                isOver
-                                                  ? "bg-red-500"
-                                                  : "bg-emerald-500"
-                                              }`}
-                                              style={{
-                                                width: `${Math.min(
-                                                  Math.max(pct, 0),
-                                                  100,
-                                                )}%`,
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                            Budget Utilization
+                                          </p>
+                                          {String(
+                                            project.createdBy?._id ||
+                                              project.createdBy ||
+                                              "",
+                                          ) === String(userId) && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingProject(project);
                                               }}
-                                            />
-                                          </div>
-                                          {budget === 0 && (
-                                            <p className="text-xs text-gray-400 italic">
-                                              No GAD budget set for this
-                                              project.
-                                            </p>
+                                              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+                                            >
+                                              <FaPen size={10} />
+                                              Update
+                                            </button>
                                           )}
-                                        </>
-                                      );
-                                    })()}
-                                  </section>
+                                        </div>
+                                        {(() => {
+                                          const budget = Number(
+                                            getFieldValue(project.gad_budget) ||
+                                              0,
+                                          );
+                                          const spent = Number(
+                                            project.actual_expenditures || 0,
+                                          );
+                                          const pct =
+                                            budget > 0
+                                              ? (spent / budget) * 100
+                                              : 0;
+                                          const isOver = pct > 100;
+                                          return (
+                                            <>
+                                              <div className="flex items-center justify-between text-sm">
+                                                <span className="font-semibold text-gray-900">
+                                                  {fmtPeso(spent)}
+                                                </span>
+                                                <span className="text-gray-500">
+                                                  of {fmtPeso(budget)}
+                                                </span>
+                                                <span
+                                                  className={`font-bold ${
+                                                    isOver
+                                                      ? "text-red-600"
+                                                      : "text-emerald-600"
+                                                  }`}
+                                                >
+                                                  {Math.round(pct)}%
+                                                </span>
+                                              </div>
+                                              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                                                <div
+                                                  className={`h-full rounded-full ${
+                                                    isOver
+                                                      ? "bg-red-500"
+                                                      : "bg-emerald-500"
+                                                  }`}
+                                                  style={{
+                                                    width: `${Math.min(
+                                                      Math.max(pct, 0),
+                                                      100,
+                                                    )}%`,
+                                                  }}
+                                                />
+                                              </div>
+                                              {budget === 0 && (
+                                                <p className="text-xs text-gray-400 italic">
+                                                  No GAD budget set for this
+                                                  project.
+                                                </p>
+                                              )}
+                                            </>
+                                          );
+                                        })()}
+                                      </section>
 
-                                  <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                                      <FaPaperclip className="h-3 w-3" />
-                                      Expenditure Evidence
-                                    </p>
-                                    {Array.isArray(
-                                      project.expenditure_evidence,
-                                    ) &&
-                                    project.expenditure_evidence.length >
-                                      0 ? (
-                                      <ul className="flex flex-wrap gap-2">
-                                        {project.expenditure_evidence.map(
-                                          (file, i) => {
-                                            const url =
-                                              getEvidenceProxyUrl(file);
-                                            return (
-                                              <li key={i}>
-                                                {url ? (
-                                                  <a
-                                                    href={url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
-                                                  >
-                                                    <FaPaperclip className="h-3 w-3" />
-                                                    <span className="max-w-[160px] truncate">
-                                                      {file?.name ||
-                                                        "Evidence file"}
-                                                    </span>
-                                                  </a>
-                                                ) : (
-                                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
-                                                    <FaPaperclip className="h-3 w-3" />
-                                                    <span className="max-w-[160px] truncate">
-                                                      {file?.name ||
-                                                        "Evidence file"}
-                                                    </span>
-                                                  </span>
-                                                )}
-                                              </li>
-                                            );
-                                          },
+                                      <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+                                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                          <FaPaperclip className="h-3 w-3" />
+                                          Expenditure Evidence
+                                        </p>
+                                        {Array.isArray(
+                                          project.expenditure_evidence,
+                                        ) &&
+                                        project.expenditure_evidence.length >
+                                          0 ? (
+                                          <ul className="flex flex-wrap gap-2">
+                                            {project.expenditure_evidence.map(
+                                              (file, i) => {
+                                                const url =
+                                                  getEvidenceProxyUrl(file);
+                                                return (
+                                                  <li key={i}>
+                                                    {url ? (
+                                                      <a
+                                                        href={url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-md hover:bg-secondary-100 transition"
+                                                      >
+                                                        <FaPaperclip className="h-3 w-3" />
+                                                        <span className="max-w-[160px] truncate">
+                                                          {file?.name ||
+                                                            "Evidence file"}
+                                                        </span>
+                                                      </a>
+                                                    ) : (
+                                                      <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+                                                        <FaPaperclip className="h-3 w-3" />
+                                                        <span className="max-w-[160px] truncate">
+                                                          {file?.name ||
+                                                            "Evidence file"}
+                                                        </span>
+                                                      </span>
+                                                    )}
+                                                  </li>
+                                                );
+                                              },
+                                            )}
+                                          </ul>
+                                        ) : (
+                                          <p className="text-xs text-gray-400 italic">
+                                            No expenditure evidence uploaded.
+                                          </p>
                                         )}
-                                      </ul>
-                                    ) : (
-                                      <p className="text-xs text-gray-400 italic">
-                                        No expenditure evidence uploaded.
-                                      </p>
-                                    )}
                                       </section>
                                     </div>
                                   )}
 
                                   {/* Aggregated participation across every linked event */}
                                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                  <ParticipantBreakdown project={project} />
+                                    <ParticipantBreakdown project={project} />
 
-                                  <section className="rounded-xl bg-white border border-gray-100 p-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
-                                      <FaUsers className="h-3 w-3" />
-                                      Participants per Event
-                                    </p>
-                                    {(() => {
-                                      const events = getSortedEvents(project);
-                                      if (events.length === 0) {
+                                    <section className="rounded-xl bg-white border border-gray-100 p-4">
+                                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
+                                        <FaUsers className="h-3 w-3" />
+                                        Participants per Event
+                                      </p>
+                                      {(() => {
+                                        const events = getSortedEvents(project);
+                                        if (events.length === 0) {
+                                          return (
+                                            <p className="text-xs text-gray-400 italic">
+                                              No linked events yet.
+                                            </p>
+                                          );
+                                        }
+                                        /* Target vs Actual is based on the project's Performance Indicator / Target. */
+                                        const indicatorProgress =
+                                          aggregateIndicatorProgress(project);
                                         return (
-                                          <p className="text-xs text-gray-400 italic">
-                                            No linked events yet.
-                                          </p>
-                                        );
-                                      }
-                                      /* Target vs Actual is based on the project's Performance Indicator / Target. */
-                                      const indicatorProgress =
-                                        aggregateIndicatorProgress(project);
-                                      return (
-                                        <div className="overflow-x-auto">
-                                          <table className="w-full text-xs">
-                                            <thead>
-                                              <tr className="text-[10px] uppercase tracking-wider text-gray-400">
-                                                <th className="text-left py-1.5 font-semibold">
-                                                  Event
-                                                </th>
-                                                <th className="text-center py-1.5 font-semibold w-16">
-                                                  Target
-                                                </th>
-                                                <th className="text-center py-1.5 font-semibold w-16">
-                                                  Attended
-                                                </th>
-                                              </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-50">
-                                              {events.map((ev, i) => (
-                                                <tr key={ev?._id || i}>
-                                                  <td className="py-2 pr-2 text-gray-800">
-                                                    <span className="line-clamp-2">
-                                                      {ev?.title ||
-                                                        "Untitled event"}
-                                                    </span>
-                                                  </td>
-                                                  <td className="py-2 text-center text-gray-800">
-                                                    {Array.isArray(
-                                                      ev?.attended_users,
-                                                    )
-                                                      ? ev.attended_users.length
-                                                      : "—"}
-                                                  </td>
-                                                  <td className="py-2 text-center text-gray-800">
-                                                    {Array.isArray(
-                                                      ev?.attended_users,
-                                                    )
-                                                      ? ev.attended_users.length
-                                                      : "—"}
-                                                  </td>
+                                          <div className="overflow-x-auto">
+                                            <table className="w-full text-xs">
+                                              <thead>
+                                                <tr className="text-[10px] uppercase tracking-wider text-gray-400">
+                                                  <th className="text-left py-1.5 font-semibold">
+                                                    Event
+                                                  </th>
+                                                  <th className="text-center py-1.5 font-semibold w-16">
+                                                    Target
+                                                  </th>
+                                                  <th className="text-center py-1.5 font-semibold w-16">
+                                                    Attended
+                                                  </th>
                                                 </tr>
-                                              ))}
-                                            </tbody>
-                                          </table>
+                                              </thead>
+                                              <tbody className="divide-y divide-gray-50">
+                                                {events.map((ev, i) => (
+                                                  <tr key={ev?._id || i}>
+                                                    <td className="py-2 pr-2 text-gray-800">
+                                                      <span className="line-clamp-2">
+                                                        {ev?.title ||
+                                                          "Untitled event"}
+                                                      </span>
+                                                    </td>
+                                                    <td className="py-2 text-center text-gray-800">
+                                                      {Array.isArray(
+                                                        ev?.attended_users,
+                                                      )
+                                                        ? ev.attended_users
+                                                            .length
+                                                        : "—"}
+                                                    </td>
+                                                    <td className="py-2 text-center text-gray-800">
+                                                      {Array.isArray(
+                                                        ev?.attended_users,
+                                                      )
+                                                        ? ev.attended_users
+                                                            .length
+                                                        : "—"}
+                                                    </td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
 
-                                          {/* Overall target indicator — actual attendance vs the Performance Indicator target */}
-                                          <ParticipantTargetProgress
-                                            className="mt-4 border-t border-gray-100 pt-3"
-                                            actual={indicatorProgress.actualTotal}
-                                            target={indicatorProgress.targetTotal}
-                                            emptyMessage="No participant target found in the Performance Indicator / Target."
-                                          />
-                                        </div>
-                                      );
-                                    })()}
-                                  </section>
+                                            {/* Overall target indicator — actual attendance vs the Performance Indicator target */}
+                                            <ParticipantTargetProgress
+                                              className="mt-4 border-t border-gray-100 pt-3"
+                                              actual={
+                                                indicatorProgress.actualTotal
+                                              }
+                                              target={
+                                                indicatorProgress.targetTotal
+                                              }
+                                              emptyMessage="No participant target found in the Performance Indicator / Target."
+                                            />
+                                          </div>
+                                        );
+                                      })()}
+                                    </section>
                                   </div>
                                 </div>
                               )}
-
                             </div>
                           </td>
                         </tr>
@@ -2096,9 +2126,8 @@ export default function GADProjectsMonitoringContent() {
             <p className="text-xs text-gray-500">
               {expandedId ? (
                 <>
-                  Viewing{" "}
-                  <span className="font-medium text-gray-700">1</span> of{" "}
-                  {filteredProjects.length} project
+                  Viewing <span className="font-medium text-gray-700">1</span>{" "}
+                  of {filteredProjects.length} project
                   {filteredProjects.length !== 1 ? "s" : ""}
                   {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — close the
                   details to show the rest
@@ -2111,8 +2140,8 @@ export default function GADProjectsMonitoringContent() {
                   </span>{" "}
                   of {filteredProjects.length} project
                   {filteredProjects.length !== 1 ? "s" : ""}
-                  {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — click a row
-                  to view its details
+                  {yearFilter ? ` for ${ayLabel(yearFilter)}` : ""} — click a
+                  row to view its details
                 </>
               )}
             </p>
@@ -2173,11 +2202,3 @@ export default function GADProjectsMonitoringContent() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

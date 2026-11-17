@@ -20,6 +20,6 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   /* Imported lazily so the Edge runtime never evaluates the module at all. */
-  const { assertJwtSecret } = await import("@/lib/configGuards");
+  const { assertJwtSecret } = await import("@/data/lib/configGuards");
   assertJwtSecret();
 }

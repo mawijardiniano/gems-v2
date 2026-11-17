@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/data/lib/db";
 import GPB from "@/models/gpb";
 import mongoose from "mongoose";
 import "@/models/event";
@@ -6,13 +6,15 @@ import GAABudget from "@/models/gaa_budget";
 import Project from "@/models/projects";
 import "@/models/profile";
 import UserAuth from "@/models/user";
-import { logActivity } from "@/lib/activityLog";
- import { requireAuth } from "@/lib/auth";
-import { validateBudgetLink } from "@/lib/budgetLinking";
-import { canAccessGpb } from "@/lib/roleAccess";
-import { withGeneratedAccomplishment, hydrateProjectAttendanceSex } from "@/lib/accomplishmentSummary";
-import {NextResponse} from "next/server"
-
+import { logActivity } from "@/data/lib/activityLog";
+import { requireAuth } from "@/data/lib/auth";
+import { validateBudgetLink } from "@/data/lib/budgetLinking";
+import { canAccessGpb } from "@/data/lib/roleAccess";
+import {
+  withGeneratedAccomplishment,
+  hydrateProjectAttendanceSex,
+} from "@/data/lib/accomplishmentSummary";
+import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   const { error, status, user } = await requireAuth(req);
@@ -155,7 +157,6 @@ export async function DELETE(req, { params }) {
     );
   }
 
-
   await connectDB();
 
   const { year } = await params;
@@ -188,7 +189,6 @@ export async function DELETE(req, { params }) {
   });
 }
 
-
 export async function PATCH(req, { params }) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
@@ -210,7 +210,6 @@ export async function PATCH(req, { params }) {
       return Response.json({ message: "GPB not found" }, { status: 404 });
     }
 
-  
     if (gaaBudgetId === null || gaaBudgetId === "") {
       gpb.gaaBudgetId = null;
       await gpb.save();
@@ -232,7 +231,6 @@ export async function PATCH(req, { params }) {
       });
     }
 
- 
     if (!mongoose.Types.ObjectId.isValid(gaaBudgetId)) {
       return Response.json(
         { success: false, message: "Invalid budget id" },
@@ -274,7 +272,7 @@ export async function PATCH(req, { params }) {
         success: false,
         message: err.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

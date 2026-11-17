@@ -422,7 +422,7 @@ test("the revealed row shape returns every field the single-row shape does", () 
   /* `revealProfilePii` is the single-profile path; `revealedRowPii` is the
      roster path. They must agree, or a role-gated screen loses fields on one
      and not the other. */
-  const BROKER = read("lib", "profileBroker.js");
+  const BROKER = read("data", "lib", "profileBroker.js");
   const shape = (name) =>
     BROKER.match(new RegExp(`export function ${name}[\\s\\S]*?\\n\\}`))?.[0] || "";
 
@@ -440,7 +440,7 @@ test("the revealed row shape returns every field the single-row shape does", () 
 });
 
 test("Option B keeps reveal limited to the two authorized roles", () => {
-  const BROKER = read("lib", "profileBroker.js");
+  const BROKER = read("data", "lib", "profileBroker.js");
   assert.match(
     BROKER,
     /export const CAN_VIEW_PII_ROLES = \["Admin", "GAD Focal Person"\]/,
