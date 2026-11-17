@@ -20,14 +20,24 @@ import { normalizeRefNumber } from "@/data/lib/referenceNumber";
 import { deleteFileFromBucket } from "@/data/lib/delete";
 import { deleteEventCascade } from "@/data/lib/eventCascade";
 import GPB from "@/models/gpb";
+import Event from "@/models/event";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import {
+  GPB_LOCKED_MESSAGE,
+  canManageProject,
+  canViewProjectDetails,
+  isGpbLocked,
+  planFieldsTouched,
+} from "@/data/lib/projectAccess";
+import {
+  collectProjectFileKeys,
+  findForeignProjectKey,
+} from "@/data/lib/projectFileKeys";
 
 const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
-
-/* Roles (besides the creator) allowed to manage schedule, status and milestones */
-const PROJECT_EDITOR_ROLES = ["gad focal person", "admin"];
 
 const MAX_MILESTONES = 50;
 
@@ -142,7 +152,13 @@ export async function PUT(req, { params }) {
   await connectDB();
 
   const { id } = await params;
-  const body = await req.json();
+  if (!mongoose.isValidObjectId(id)) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return Response.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   try {
     const project = await Project.findById(id);
@@ -151,53 +167,56 @@ export async function PUT(req, { params }) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
 
-    const touchesActuals =
-      body.actual_accomplishment !== undefined ||
-      body.actual_accomplishment_override !== undefined ||
-      body.actual_expenditures !== undefined ||
-      body.expenditure_evidence !== undefined;
+    /* Every change — plan fields, actuals, schedule, milestones, Gantt,
+       approval details — needs the project's creator, a GAD Focal Person or
+       an Admin. Only some of those used to be checked; the rest (budget,
+       gender issue, offices, Gantt) were open to any signed-in account. */
+    if (!canManageProject(user, project)) {
+      return Response.json(
+        {
+          error:
+            "Only the project's creator, a GAD Focal Person or an Admin can change this project",
+        },
+        { status: 403 },
+      );
+    }
 
-    if (touchesActuals) {
-      const creatorId = project.createdBy ? String(project.createdBy) : "";
-
-      if (!user || creatorId !== String(user._id)) {
-        return Response.json(
-          { error: "Only the project creator can edit actuals" },
-          { status: 403 },
-        );
+    /* An approved GPB freezes the plan itself. Implementation records
+       (actuals, milestones, schedule and status, Gantt) stay editable. */
+    if (planFieldsTouched(body).length > 0) {
+      const gpb = await GPB.findOne({ year: project.year })
+        .select("status_of_gpb.status")
+        .lean();
+      if (isGpbLocked(gpb)) {
+        return Response.json({ error: GPB_LOCKED_MESSAGE }, { status: 409 });
       }
     }
 
-    const scheduleTouched =
-      body.start_date !== undefined ||
-      body.end_date !== undefined ||
-      body.project_status !== undefined;
-    const milestonesTouched = body.milestones !== undefined;
-    /* Approval metadata is saved on its own — never part of the schedule form */
-    const approvalTouched =
-      body.approved_resolution_no !== undefined ||
-      body.other_details !== undefined;
-
-    if (scheduleTouched || milestonesTouched || approvalTouched) {
-      const creatorId = project.createdBy ? String(project.createdBy) : "";
-      const isCreator = !!user && creatorId === String(user._id);
-      const isProjectEditorRole = PROJECT_EDITOR_ROLES.includes(
-        normalizeRole(user?.role),
+    /* Evidence and proof keys are deleted with the project, so they must be
+       the caller's own uploads or already on this project. */
+    if (findForeignProjectKey(body, { userId: user._id, existing: project })) {
+      return Response.json(
+        { error: "One of the attached files was not uploaded by you." },
+        { status: 400 },
       );
+    }
 
-      if (!isCreator && !isProjectEditorRole) {
-        let message =
-          "Only the project creator or a GAD Focal Person can set the schedule and status";
-
-        if (approvalTouched && !scheduleTouched && !milestonesTouched) {
-          message =
-            "Only the project creator or a GAD Focal Person can update the approval details";
-        } else if (milestonesTouched && !scheduleTouched) {
-          message =
-            "Only the project creator or a GAD Focal Person can manage milestones";
-        }
-
-        return Response.json({ error: message }, { status: 403 });
+    if (body.gad_budget !== undefined) {
+      const amount = Number(body.gad_budget?.value ?? body.gad_budget);
+      if (!Number.isFinite(amount) || amount < 0) {
+        return Response.json(
+          { error: "GAD budget must be zero or a positive amount" },
+          { status: 400 },
+        );
+      }
+    }
+    if (body.actual_expenditures !== undefined) {
+      const spent = Number(body.actual_expenditures);
+      if (!Number.isFinite(spent) || spent < 0) {
+        return Response.json(
+          { error: "Actual expenditures must be zero or a positive amount" },
+          { status: 400 },
+        );
       }
     }
 
@@ -376,10 +395,7 @@ export async function PUT(req, { params }) {
     }
 
     const actor = user;
-
-    if (actor) {
-      project.lastUpdatedBy = actor._id;
-    }
+    project.lastUpdatedBy = actor._id;
 
     await project.save();
 
@@ -431,18 +447,34 @@ export async function PUT(req, { params }) {
     return Response.json({ data: project, duplicateWarnings });
   } catch (err) {
     console.error("PUT error:", err);
+    /* Bad input is the caller's (400); anything else must not leak internals. */
+    const clientError =
+      err?.name === "ValidationError" || err?.name === "CastError";
     return Response.json(
-      { error: "Update failed", details: err.message },
-      { status: 500 },
+      { error: clientError ? "Invalid project data" : "Update failed" },
+      { status: clientError ? 400 : 500 },
     );
   }
 }
 
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
+  if (!mongoose.isValidObjectId(id)) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+  /* Attendance, budgets and actuals are for roles with the GPB or project
+     pages, and for the people who may manage this project. */
+  const basic = await Project.findById(id).select("createdBy").lean();
+  if (!basic) return Response.json({ error: "Not found" }, { status: 404 });
+  if (!canViewProjectDetails(user.role) && !canManageProject(user, basic)) {
+    return Response.json(
+      { error: "You are not allowed to view this project." },
+      { status: 403 },
+    );
+  }
   const projects = await Project.findById(id).populate({
     path: "events",
     model: "Event",
@@ -467,41 +499,66 @@ export async function GET(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
   const { id } = await params;
-  const projects = await Project.findByIdAndDelete(id);
-  if (!projects) return Response.json({ error: "Not found" }, { status: 404 });
+  if (!mongoose.isValidObjectId(id)) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
 
-  /* Deleting a project must not leave orphaned records behind — unlink it from
-     every GPB, remove the events it owned (with their files + reports) and
-     delete the evidence + milestone proof files it stored in the bucket. */
-  await GPB.updateMany({}, { $pull: { projects: projects._id } });
+  const project = await Project.findById(id);
+  if (!project) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const eventIds = Array.isArray(projects.events) ? projects.events : [];
+  /* Deleting cascades to events, reports and files, so it needs the
+     project's creator, a GAD Focal Person or an Admin — it used to need only
+     a signed-in account. */
+  if (!canManageProject(user, project)) {
+    return Response.json(
+      {
+        error:
+          "Only the project's creator, a GAD Focal Person or an Admin can delete this project",
+      },
+      { status: 403 },
+    );
+  }
+
+  const gpb = await GPB.findOne({ year: project.year })
+    .select("status_of_gpb.status")
+    .lean();
+  if (isGpbLocked(gpb)) {
+    return Response.json({ error: GPB_LOCKED_MESSAGE }, { status: 409 });
+  }
+
+  await Project.deleteOne({ _id: project._id });
+
+  /* Unlink it from every GPB, remove the events it owns (with their files and
+     reports) and delete the evidence + milestone proof files it stored. */
+  await GPB.updateMany({}, { $pull: { projects: project._id } });
+
+  /* Only events that point back at this project are its own. An id that
+     merely sits in `project.events` (older data, or a client-supplied list)
+     may be somebody else's event and is unlinked, not deleted. */
+  const linkedIds = Array.isArray(project.events) ? project.events : [];
+  const ownedEvents = await Event.find({
+    _id: { $in: linkedIds },
+    project: project._id,
+  })
+    .select("_id")
+    .lean();
   let deletedEvents = 0;
-  for (const eventId of eventIds) {
+  for (const { _id: eventId } of ownedEvents) {
     const result = await deleteEventCascade(eventId);
     if (result.deleted) deletedEvents += 1;
   }
 
-  const evidenceFiles = [
-    ...(Array.isArray(projects.expenditure_evidence)
-      ? projects.expenditure_evidence
-      : []),
-    ...(Array.isArray(projects.milestones) ? projects.milestones : []).flatMap(
-      (m) => (Array.isArray(m?.proofs) ? m.proofs : []),
-    ),
-  ];
   let deletedEvidenceFiles = 0;
-  for (const file of evidenceFiles) {
-    if (!file?.key) continue;
+  for (const key of collectProjectFileKeys(project)) {
     try {
-      await deleteFileFromBucket(file.key);
+      await deleteFileFromBucket(key);
       deletedEvidenceFiles += 1;
     } catch (err) {
-      console.error(`Failed to delete project file ${file.key}:`, err);
+      console.error(`Failed to delete project file ${key}:`, err);
     }
   }
 
@@ -519,7 +576,7 @@ export async function DELETE(req, { params }) {
   });
 
   return Response.json({
-    data: projects,
+    data: project,
     deletedEvents,
     deletedEvidenceFiles,
   });

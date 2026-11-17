@@ -4,7 +4,6 @@ import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
 import GAABudget from "@/models/gaa_budget";
-import UserAuth from "@/models/user";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { findDuplicates } from "@/data/lib/duplicateDetection";
@@ -19,15 +18,29 @@ import {
   OVER_BUDGET_WARNING,
   buildBudgetSummary,
 } from "@/data/lib/budgetLinking";
-import { deleteFileFromBucket } from "@/data/lib/delete";
-import { deleteEventCascade } from "@/data/lib/eventCascade";
+import {
+  PROJECT_PICKER_FIELDS,
+  canViewProjectDetails,
+  isGpbLocked,
+  isProjectCreatorRole,
+  GPB_LOCKED_MESSAGE,
+} from "@/data/lib/projectAccess";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   await connectDB();
+
+  /* Roles without the GPB or project pages (a Dean picking a project for an
+     event) get picker fields only: budgets and the attendance of linked
+     events used to reach every signed-in account through this list. */
+  if (!canViewProjectDetails(user.role)) {
+    const picker = await Project.find().select(PROJECT_PICKER_FIELDS).lean();
+    return Response.json({ data: picker });
+  }
+
   /* Events are deep-populated so the actual accomplishment can be derived live
      from linked events + attendance instead of a stale saved snapshot. */
   const projects = await Project.find().populate(PROJECT_EVENTS_POPULATE);
@@ -37,22 +50,43 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+
+  if (!isProjectCreatorRole(user.role)) {
+    return Response.json(
+      { message: "You are not allowed to add GPB projects." },
+      { status: 403 },
+    );
+  }
 
   await connectDB();
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return Response.json({ message: "Invalid request body" }, { status: 400 });
+  }
   const year = Number(body.year);
   const requestedBudget = Number(body.gad_budget || 0);
-  const actorId = body.userId || null;
+  /* The creator is whoever is signed in — never a userId from the body, which
+     let anyone create projects in another person's name. */
+  const actorId = user._id;
 
-  if (Number.isNaN(year)) {
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     return Response.json({ message: "Invalid year" }, { status: 400 });
   }
 
-  if (Number.isNaN(requestedBudget)) {
-    return Response.json({ message: "Invalid GAD budget" }, { status: 400 });
+  if (!Number.isFinite(requestedBudget) || requestedBudget < 0) {
+    return Response.json(
+      { message: "GAD budget must be zero or a positive amount" },
+      { status: 400 },
+    );
+  }
+
+  /* An approved GPB is final: no projects are added until it is disapproved. */
+  const yearGpb = await GPB.findOne({ year }).select("status_of_gpb.status").lean();
+  if (isGpbLocked(yearGpb)) {
+    return Response.json({ message: GPB_LOCKED_MESSAGE }, { status: 409 });
   }
 
   const budget = await GAABudget.findOne({ year });
@@ -162,16 +196,11 @@ export async function POST(req) {
     createdBy: actorId,
     lastUpdatedBy: actorId,
 
-    events: body.events || [],
+    /* Events are linked from the event side (POST/PUT /api/events checks
+       that link); a client-supplied list let a project claim, and on delete
+       destroy, somebody else's events. */
+    events: [],
   };
-
-  if (actorId) {
-    const actorExists = await UserAuth.exists({ _id: actorId });
-    if (!actorExists) {
-      projectData.createdBy = null;
-      projectData.lastUpdatedBy = null;
-    }
-  }
 
   /* Auto-assigned numbers can collide when two projects are created at the same
      moment; the unique index rejects the loser and we retry with the next one. */
@@ -263,71 +292,5 @@ export async function POST(req) {
     duplicateWarnings,
     ...(budget ? {} : { warning: NO_BUDGET_WARNING }),
     ...(overBudgetWarning ? { warning: overBudgetWarning, budgetSummary } : {}),
-  });
-}
-
-export async function DELETE(req) {
-  const { error, status } = await requireAuth(req);
-  if (error) return NextResponse.json({ error }, { status });
-
-  await connectDB();
-
-  /* Capture the linked events and evidence keys before wiping the projects so
-     the bulk delete does not leave orphaned events in the calendar or orphaned
-     files in the bucket. */
-  const doomed = await Project.find({}).select(
-    "events expenditure_evidence milestones",
-  );
-  const eventIds = doomed.flatMap((p) =>
-    Array.isArray(p.events) ? p.events : [],
-  );
-  const evidenceKeys = doomed
-    .flatMap((p) => [
-      ...(Array.isArray(p.expenditure_evidence) ? p.expenditure_evidence : []),
-      ...(Array.isArray(p.milestones) ? p.milestones : []).flatMap((m) =>
-        Array.isArray(m?.proofs) ? m.proofs : [],
-      ),
-    ])
-    .map((file) => file?.key)
-    .filter(Boolean);
-
-  await GPB.updateMany({}, { $set: { projects: [] } });
-
-  const result = await Project.deleteMany({});
-
-  let deletedEvents = 0;
-  for (const eventId of eventIds) {
-    const cascade = await deleteEventCascade(eventId);
-    if (cascade.deleted) deletedEvents += 1;
-  }
-
-  let deletedEvidenceFiles = 0;
-  for (const key of evidenceKeys) {
-    try {
-      await deleteFileFromBucket(key);
-      deletedEvidenceFiles += 1;
-    } catch (err) {
-      console.error(`Failed to delete evidence file ${key}:`, err);
-    }
-  }
-
-  await logActivity({
-    req,
-    action: "PROJECT_BULK_DELETE",
-    description: `All GPB projects deleted (${result.deletedCount})`,
-    resource_type: "project",
-    severity: "critical",
-    metadata: {
-      deletedCount: result.deletedCount,
-      deletedEvents,
-      deletedEvidenceFiles,
-    },
-  });
-
-  return Response.json({
-    message: "All projects deleted successfully",
-    deletedCount: result.deletedCount,
-    deletedEvents,
-    deletedEvidenceFiles,
   });
 }

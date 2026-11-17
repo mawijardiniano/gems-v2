@@ -21,6 +21,7 @@ import OfficeMultiSelect from "../../components/OfficeMultiSelect";
 import { toOfficeArray } from "@/data/lib/colleges";
 import { nextRefNumber } from "@/data/lib/referenceNumber";
 import { gpbStatusOptions } from "@/data/lib/gpbStatus";
+import { canManageProject } from "@/data/lib/projectAccess";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -628,24 +629,23 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
   const [newProject, setNewProject] = useState(emptyNewProject());
 
+  /* The modal opens with the saved reason: the API now replaces the reason
+     with whatever is sent (so it can be cleared), and an empty field would
+     silently wipe it on every status update. */
   const handleUpdateStatusModal = () => {
+    setReasonField(selectedGPBStatus?.reason || "");
     setUpdateStatusModal(true);
   };
 
   const userId = useSelector((state) => state.auth.userId);
   const role = useSelector((state) => state.auth.role);
 
-  // ── Creator-only permission helpers ─────────────────────
-  const isReviewerRole =
-    role === "planning director" ||
-    role === "suc president" ||
-    role === "admin";
-
-  const canEditDeleteProject = (project) => {
-    if (isReviewerRole) return true;
-    const creatorId = String(project.createdBy?._id || project.createdBy || "");
-    return creatorId === String(userId);
-  };
+  // ── Permission helpers ───────────────────────────────────
+  /* The same rule the API enforces (data/lib/projectAccess.js): the project's
+     creator, a GAD Focal Person or an Admin. Reviewers (Planning Director,
+     SUC President) comment and set the GPB status; they do not edit projects. */
+  const canEditDeleteProject = (project) =>
+    canManageProject({ _id: userId, role }, project);
 
   // ── Creator name display helpers ────────────────────────
   const getCreatorName = (project) => {

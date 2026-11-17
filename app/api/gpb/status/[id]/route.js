@@ -9,6 +9,12 @@ import {
 } from "@/data/lib/notifications";
 import { canSetGpbStatus, GPB_STATUS_ROLES } from "@/data/lib/gpbStatus";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { buildObjectUrl } from "@/data/lib/storage";
+import { isAcceptableKey } from "@/data/lib/eventFileKeys";
+
+const SCANNED_FOLDER = "status/scanned";
+const MAX_REASON_LENGTH = 500;
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -29,7 +35,11 @@ export async function GET(req, { params }) {
       data: gpb.status_of_gpb,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("GPB status route failed:", error);
+    return Response.json(
+      { error: "Unable to process the GPB status." },
+      { status: 500 },
+    );
   }
 }
 
@@ -48,7 +58,11 @@ export async function POST(req, { params }) {
 
   try {
     const { id } = await params;
-    const { status, reason, scanned_copy } = await req.json();
+    if (!mongoose.isValidObjectId(id)) {
+      return Response.json({ error: "GPB not found" }, { status: 404 });
+    }
+    const { status, reason, scanned_copy } =
+      (await req.json().catch(() => null)) || {};
 
     const gpb = await GPB.findById(id);
 
@@ -59,26 +73,58 @@ export async function POST(req, { params }) {
     /* An approved plan is final: it may be disapproved, but never sent back to
        draft, however stale the client that posts the update. */
     const currentStatus = gpb.status_of_gpb?.status || "draft";
-    const nextStatus = status || currentStatus;
+    /* Stored lower case: "APPROVED" passed the transition check and then
+       failed the schema enum. */
+    const nextStatus = status
+      ? String(status).trim().toLowerCase()
+      : currentStatus;
     /* Only a real transition is worth telling people about: re-saving the same
        status with a new reason or scanned copy is not news. */
     const statusChanged = currentStatus !== nextStatus;
 
     if (!canSetGpbStatus(currentStatus, nextStatus)) {
       return Response.json(
-        { error: "An approved GPB cannot be set back to draft." },
+        {
+          error: ["draft", "approved", "disapproved"].includes(nextStatus)
+            ? "An approved GPB cannot be set back to draft."
+            : "Unknown GPB status.",
+        },
+        { status: 400 },
+      );
+    }
+
+    /* A reason that is sent replaces the old one — sending "" clears it, so
+       an approved plan no longer shows the reason it was once disapproved. */
+    const nextReason =
+      reason === undefined
+        ? gpb.status_of_gpb?.reason || ""
+        : String(reason ?? "").trim().slice(0, MAX_REASON_LENGTH);
+
+    /* The scanned copy must be the caller's own upload (or the file already
+       attached), and its link is built here from the key: a client-supplied
+       URL could be `javascript:`, which ran for every viewer who clicked
+       Download. */
+    const existingKey = gpb.status_of_gpb?.scanned_copy?.key || "";
+    const nextKey = scanned_copy?.key ? String(scanned_copy.key) : existingKey;
+    if (
+      !isAcceptableKey(nextKey, {
+        folder: SCANNED_FOLDER,
+        userId: user._id,
+        existingKeys: new Set(existingKey ? [existingKey] : []),
+      })
+    ) {
+      return Response.json(
+        { error: "The scanned copy was not uploaded by you." },
         { status: 400 },
       );
     }
 
     gpb.status_of_gpb = {
       status: nextStatus,
-      reason: reason || gpb.status_of_gpb?.reason || "",
+      reason: nextReason,
       scanned_copy: {
-        // Fall back to the existing scanned copy so an update without a new
-        // file never wipes the previously attached one.
-        url: scanned_copy?.url || gpb.status_of_gpb?.scanned_copy?.url || "",
-        key: scanned_copy?.key || gpb.status_of_gpb?.scanned_copy?.key || "",
+        url: nextKey ? buildObjectUrl(nextKey) : "",
+        key: nextKey,
       },
     };
 
@@ -124,6 +170,10 @@ export async function POST(req, { params }) {
       data: gpb.status_of_gpb,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("GPB status route failed:", error);
+    return Response.json(
+      { error: "Unable to process the GPB status." },
+      { status: 500 },
+    );
   }
 }

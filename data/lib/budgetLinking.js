@@ -54,6 +54,13 @@ export async function linkBudgetToMatchingGpb(GPBModel, budget) {
   if (!budget) return null;
   const gpb = await GPBModel.findOne({ year: Number(budget.year) });
   if (!gpb) return null;
+  /* An approved GPB is locked: its budget is never swapped out from under it.
+     A GPB that already has a budget keeps it — re-linking is an explicit
+     "Change Budget" on the GPB page, not a side effect of saving a budget. */
+  if (gpb.status_of_gpb?.status === "approved") return null;
+  if (gpb.gaaBudgetId && String(gpb.gaaBudgetId) !== String(budget._id)) {
+    return null;
+  }
   gpb.gaaBudgetId = budget._id;
   await gpb.save();
   return gpb;

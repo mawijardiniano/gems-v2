@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toOfficeArray } from "@/data/lib/colleges";
+import { escapeHtml } from "@/data/lib/escapeHtml";
 import {
   SIGNATORIES_SETTING_KEY,
   SIGNATORY_BLANK,
@@ -118,27 +119,36 @@ export default function PrintGPB({
       totalGAAFormatted = "To follow";
     }
 
+    /* Every text field is HTML-escaped here, once, because the rows below are
+       interpolated into an HTML string written into a same-origin iframe. A
+       gender issue like `<img src=x onerror=…>` used to run in the session of
+       whoever printed the plan. project_type stays raw: it only feeds the
+       fixed type labels, and gad_budget is printed as a formatted number. */
+    const esc = escapeHtml;
+    const escList = (list) => list.map((item) => esc(item));
     const safeProjects = (Array.isArray(projects) ? projects : []).map(
       (project) => ({
         ...project,
         project_type: getFieldValue(project?.project_type),
-        gender_issue: getFieldValue(project?.gender_issue),
-        cause_gender_issue: getArrayValue(project?.cause_gender_issue),
-        gad_objective: getArrayValue(project?.gad_objective),
-        gad_activity: getArrayValue(project?.gad_activity),
-        gad_activity_description: getArrayValue(
-          project?.gad_activity_description,
+        gender_issue: esc(getFieldValue(project?.gender_issue)),
+        cause_gender_issue: escList(getArrayValue(project?.cause_gender_issue)),
+        gad_objective: escList(getArrayValue(project?.gad_objective)),
+        gad_activity: escList(getArrayValue(project?.gad_activity)),
+        gad_activity_description: escList(
+          getArrayValue(project?.gad_activity_description),
         ),
-        performance_indicator_target: getArrayValue(
-          project?.performance_indicator_target,
+        performance_indicator_target: escList(
+          getArrayValue(project?.performance_indicator_target),
         ),
-        supporting_statistics_data: getFieldValue(
-          project?.supporting_statistics_data,
+        supporting_statistics_data: esc(
+          getFieldValue(project?.supporting_statistics_data),
         ),
-        relevant_agency: getFieldValue(project?.relevant_agency),
+        relevant_agency: esc(getFieldValue(project?.relevant_agency)),
         gad_budget: getFieldValue(project?.gad_budget),
-        source_budget: getFieldValue(project?.source_budget),
-        responsible_office: getFieldValue(project?.responsible_office),
+        source_budget: esc(getFieldValue(project?.source_budget)),
+        responsible_office: toOfficeArray(
+          getFieldValue(project?.responsible_office),
+        ).map((office) => esc(office)),
       }),
     );
 
@@ -204,7 +214,7 @@ export default function PrintGPB({
       </style></head><body>
       <div class="gad-report-header">
         <h4>ANNUAL GENDER AND DEVELOPMENT (GAD) PLAN AND BUDGET</h4>
-        <h4>FY ${budgetYear}</h4>
+        <h4>FY ${escapeHtml(budgetYear)}</h4>
       </div>
       <div class="agency">
         <h4><span style="font-weight:200;">Agency/Bureau/Office:</span> Marinduque State University</h4>
@@ -342,8 +352,8 @@ export default function PrintGPB({
 <td class="blank-space-3"></td>
       </tr>
       <tr>
-        <td style="font-weight: bold">${signatories.focalPointName}</td>
-    <td style="font-weight: bold">${signatories.presidentName}</td>
+        <td style="font-weight: bold">${escapeHtml(signatories.focalPointName)}</td>
+    <td style="font-weight: bold">${escapeHtml(signatories.presidentName)}</td>
 <td class="date-border-1"></td>
       </tr>
             <tr>
