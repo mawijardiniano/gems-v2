@@ -16,6 +16,8 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
+import { formatEventWhen } from "@/data/lib/eventDates";
+import { attendanceWindow } from "@/data/lib/eventStatus";
 
 const EMPTY = {
   full_name: "",
@@ -227,6 +229,32 @@ export default function AttendContent() {
     );
   }
 
+  /* Same window the check-in API enforces, checked before the guest fills
+     in the whole form only to be told the QR is not open (or has expired). */
+  if (!done) {
+    const { earliestStart, latestEnd } = attendanceWindow(event);
+    const now = Date.now();
+    if (earliestStart !== null && now < earliestStart) {
+      return (
+        <StateCard
+          icon={<FaExclamationCircle size={22} />}
+          title="Attendance not open yet"
+          message={`Check-in opens on ${formatEventWhen(event) || "the event day"}. Please scan again then.`}
+        />
+      );
+    }
+    if (latestEnd !== null && now > latestEnd) {
+      return (
+        <StateCard
+          tone="red"
+          icon={<FaExclamationCircle size={22} />}
+          title="Attendance closed"
+          message="This event has already ended, so check-in is closed."
+        />
+      );
+    }
+  }
+
   if (done) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
@@ -327,7 +355,7 @@ export default function AttendContent() {
                       className="shrink-0 text-white/60"
                       size={12}
                     />
-                    <span>{formatDateTime(eventDate)}</span>
+                    <span>{formatEventWhen(event)}</span>
                   </p>
                 )}
                 {event.venue && (

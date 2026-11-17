@@ -174,6 +174,15 @@ export async function POST(req) {
         { status: 403 },
       );
 
+    if (event.status === "cancelled")
+      return NextResponse.json(
+        {
+          message: "This event has been cancelled, so attendance is closed.",
+          code: "EVENT_CANCELLED",
+        },
+        { status: 400 },
+      );
+
     const account = await UserAuth.findById(user_id)
       .select("username personal_info_id")
       .lean();

@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { FiEdit2, FiTrash2, FiDownload, FiX } from "react-icons/fi";
 import { FiCopy, FiCheck, FiExternalLink } from "react-icons/fi";
 import {
@@ -23,6 +24,13 @@ import {
   canTransition,
 } from "@/data/lib/eventStatus";
 import CancelEventModal from "./CancelEventModal";
+import {
+  resolveProjectActivities,
+  projectPickerLabel,
+  splitActivityOption,
+  activityOptionValue,
+  truncateOptionLabel,
+} from "@/data/lib/projectActivities";
 
 /* Local to this card: the Overview only ever prints whole days, and the range
    formatter in the parent returns React nodes rather than a string. */
@@ -60,7 +68,9 @@ export default function OverviewTab({
   handleEditChange,
   handleSave,
   saving,
-  error,
+  saveError,
+  setSaveError,
+  buildEditData,
   baseUrl,
   eventId,
   attendanceQrDataUrl,
@@ -151,14 +161,17 @@ export default function OverviewTab({
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate description.");
+      }
 
       if (data.description) {
         handleEditChange("description", data.description);
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to generate description.");
+      setSaveError(err.message || "Failed to generate description.");
     } finally {
       setGenerating(false);
     }
@@ -189,37 +202,15 @@ export default function OverviewTab({
   };
 
   const resetEditData = () => {
-    const startValue =
-      event.start_date ||
-      (Array.isArray(event.start_dates) ? event.start_dates[0] : null) ||
-      event.date;
-    const endValue =
-      event.end_date ||
-      (Array.isArray(event.end_dates)
-        ? event.end_dates[event.end_dates.length - 1]
-        : null) ||
-      startValue;
-    const startInput = formatForInput(startValue);
-    const endInput = formatForInput(endValue);
+    const base = buildEditData(event);
     setEditData({
-      event_source: event.project ? "project" : "independent",
+      ...base,
       type_of_activity:
         isDeanRoute && event.type_of_activity === "GAD"
           ? "Academic"
-          : event.type_of_activity,
-      project: event.project,
-      gad_activity: event.gad_activity,
-      title: event.title || "",
-      description: event.description || "",
-      date: startInput ? startInput.slice(0, 10) : "",
-      start_time: startInput ? startInput.slice(11, 16) : "",
-      end_time: endInput ? endInput.slice(11, 16) : "",
-      venue: event.venue || "",
-      status: event.status || "active",
-      organizing_office_unit: event.organizing_office_unit,
-      co_organizing_office_unit: event.co_organizing_office_unit,
-      event_poster: event.event_poster || null,
+          : base.type_of_activity,
     });
+    setSaveError("");
   };
 
   const handleCancelEdit = async () => {
@@ -358,7 +349,9 @@ export default function OverviewTab({
       action:
         pendingGuestCount > 0
           ? {
-              href: `/events-list/${eventId}?tab=attendance&validation=pending`,
+              /* The current path, so the Dean's copy of this page links to
+                 itself rather than to /events-list. */
+              href: `${pathname}?tab=attendance&validation=pending`,
               label: "Review",
             }
           : null,
@@ -479,13 +472,14 @@ export default function OverviewTab({
                           {m.value}
                         </div>
                         {m.action && (
-                          <a
+                          <Link
                             href={m.action.href}
+                            scroll={false}
                             className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-secondary-600 hover:text-secondary-700"
                           >
                             {m.action.label}
                             <FiExternalLink size={11} />
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -634,42 +628,38 @@ export default function OverviewTab({
                         : ""
                     }
                     onChange={(e) => {
-                      const val = e.target.value;
-                      if (!val) {
-                        handleEditChange("project", "");
-                        handleEditChange("gad_activity", "");
-                        return;
-                      }
-                      const [project, gad_activity] = val.split("||||");
-                      handleEditChange("project", project);
-                      handleEditChange("gad_activity", gad_activity);
+                      /* Same helpers as the create page: projects store
+                         activities as { value: [...] }, and an activity title
+                         may itself contain the separator. */
+                      const { project, gad_activity } = splitActivityOption(
+                        e.target.value,
+                      );
+                      setEditData((prev) => ({
+                        ...(prev || {}),
+                        project,
+                        gad_activity,
+                      }));
                     }}
                     className="input"
                     required
                   >
                     <option value="">Select a GAD activity...</option>
-                    {projects.flatMap((proj) =>
-                      (Array.isArray(proj.gad_activity)
-                        ? proj.gad_activity
-                        : [proj.gad_activity]
-                      )
-                        .filter(Boolean)
-                        .map((activity, idx) => {
-                          const label =
-                            typeof activity === "object"
-                              ? activity.value
-                              : activity;
-
-                          return (
-                            <option
-                              key={proj._id + "-" + idx}
-                              value={proj._id + "||||" + label}
-                            >
-                              {label}
-                            </option>
-                          );
-                        }),
-                    )}
+                    {projects.map((proj) => (
+                      <optgroup
+                        key={proj._id}
+                        label={projectPickerLabel(proj)}
+                      >
+                        {resolveProjectActivities(proj).map((activity) => (
+                          <option
+                            key={`${proj._id}-${activity}`}
+                            value={activityOptionValue(proj._id, activity)}
+                            title={activity}
+                          >
+                            {truncateOptionLabel(activity)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
               )}
@@ -694,47 +684,19 @@ export default function OverviewTab({
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="label">Event Schedule</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      className="input"
-                      value={editData?.date || ""}
-                      onChange={(e) => handleEditChange("date", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      className="input"
-                      value={editData?.start_time || ""}
-                      onChange={(e) =>
-                        handleEditChange("start_time", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      className="input"
-                      value={editData?.end_time || ""}
-                      onChange={(e) =>
-                        handleEditChange("end_time", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
+              {/* Date only, as on the create page: events run the whole day,
+                  and the time inputs that used to sit here were never saved. */}
+              <div>
+                <label className="label" htmlFor="edit-event-date">
+                  Event Date
+                </label>
+                <input
+                  id="edit-event-date"
+                  type="date"
+                  className="input"
+                  value={editData?.date || ""}
+                  onChange={(e) => handleEditChange("date", e.target.value)}
+                />
               </div>
 
               <div className="md:col-span-2">
@@ -790,6 +752,11 @@ export default function OverviewTab({
               </div>
             </div>
 
+            {saveError && (
+              <p className="alert-error mt-6" role="alert">
+                {saveError}
+              </p>
+            )}
             <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
               <button
                 onClick={handleCancelEdit}
@@ -799,8 +766,9 @@ export default function OverviewTab({
               </button>
               <button
                 onClick={async () => {
-                  await handleSave();
-                  setIsEditing(false);
+                  /* Stay in the form when the save fails, so the edits and
+                     the error message are not thrown away. */
+                  if (await handleSave()) setIsEditing(false);
                 }}
                 disabled={saving}
                 className="btn-primary !rounded-lg"

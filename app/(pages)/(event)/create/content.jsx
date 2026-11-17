@@ -565,13 +565,15 @@ export default function CreateEventsContent() {
 
       const redirectPath =
         userRole === "dean" ? "/dean/projects" : "/events-list";
+      /* `loading` stays true until the redirect: clearing it here re-enabled
+         the button for the 1.2s the success message shows, and a second
+         click created a duplicate event with its own reference number. */
       setTimeout(() => router.push(redirectPath), 1200);
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Error creating event. Please try again.",
       );
-    } finally {
       setLoading(false);
     }
   };

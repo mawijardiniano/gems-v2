@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { eventSpan, effectiveStatus } from "@/data/lib/eventStatus";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,64 +37,17 @@ const ACTIVITY_TYPES = [
   "Others",
 ];
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
+/* Dates only for whole-day events (the normal case); legacy rows with real
+   times keep them. See data/lib/eventDates.js. */
 function DateRangeDisplay({ event }) {
-  const { start, end } = eventSpan(event);
-
-  if (start === null) {
+  const when = formatEventWhen(event);
+  if (!when) {
     return <span className="text-gray-400 text-xs">No date set</span>;
   }
-
-  const startDate = formatDate(new Date(start));
-  const startTime = formatTime(new Date(start));
-
-  if (end === null) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate} at {startTime}
-        </span>
-      </div>
-    );
-  }
-
-  const endDate = formatDate(new Date(end));
-  const endTime = formatTime(new Date(end));
-
-  if (startDate === endDate) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate}, {startTime} - {endTime}
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>
-        {startDate} {startTime} - {endDate} {endTime}
-      </span>
+      <span>{when}</span>
     </div>
   );
 }
@@ -234,8 +188,11 @@ export default function DiscoverContent() {
   }, []);
 
   const discoverEvents = useMemo(() => {
+    /* "Upcoming events": finished ones used to be listed too, oldest first,
+       pushing what is actually coming up to the bottom. */
     let filtered = (allEvents || []).filter(
-      (evt) => evt.status !== "cancelled",
+      (evt) =>
+        evt.status !== "cancelled" && effectiveStatus(evt) !== "completed",
     );
 
     // Type filter

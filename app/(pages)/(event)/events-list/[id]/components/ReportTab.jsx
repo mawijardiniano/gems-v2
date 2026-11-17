@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FiEdit2,
   FiUpload,
@@ -17,19 +17,47 @@ import {
 import { FaMagic } from "react-icons/fa";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
 
+const EMPTY_FILES = {
+  office_memorandum: null,
+  activity_design: null,
+  attendance_sheet: null,
+  photos: [],
+  other_attachments: [],
+};
+
+/* Memorandum, activity design and attendance sheet accept PDFs too; those
+   cannot be previewed with <img>. */
+const isPdfFile = (file) =>
+  /\.pdf($|\?)/i.test(String(file?.key || file?.name || file?.url || ""));
+
+function FileThumb({ file, className, alt }) {
+  if (isPdfFile(file)) {
+    return (
+      <a
+        href={file.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} flex flex-col items-center justify-center gap-1 bg-slate-50 text-gray-500 text-xs font-medium`}
+      >
+        <FiFileText size={22} aria-hidden="true" />
+        PDF
+      </a>
+    );
+  }
+  return <img src={file.url} alt={alt} className={className} />;
+}
+
 export default function ReportTab({
   event,
   approvedGuestCount = 0,
   attendedCount = 0,
 }) {
   const [form, setForm] = useState({ narrative: "" });
-  const [files, setFiles] = useState({
-    office_memorandum: null,
-    activity_design: null,
-    attendance_sheet: null,
-    photos: [],
-    other_attachments: [],
-  });
+  const [files, setFilesState] = useState(EMPTY_FILES);
+  /* Uploads finish asynchronously, so each one must build on the latest file
+     list, not the one captured when it started; otherwise two uploads in
+     flight overwrite each other and one file is lost (but left in storage). */
+  const filesRef = useRef(EMPTY_FILES);
   const [generating, setGenerating] = useState(false);
   const [uploading, setUploading] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -40,6 +68,20 @@ export default function ReportTab({
   const [previewImg, setPreviewImg] = useState(null);
 
   const fileLifecycle = useFileLifecycle();
+
+  /* Replace the file list outright (start/end of an edit session). */
+  const setFiles = (next) => {
+    filesRef.current = next;
+    setFilesState(next);
+  };
+  /* Apply a change to the latest list and keep the lifecycle in step. */
+  const updateFiles = (change) => {
+    const next = change(filesRef.current);
+    setFiles(next);
+    fileLifecycle.syncCurrent(keysOf(next));
+    return next;
+  };
+  const isUploading = Object.values(uploading).some(Boolean);
 
   const keysOf = (f) =>
     [
@@ -71,7 +113,12 @@ export default function ReportTab({
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
+      /* A failed request used to set the narrative to undefined and wipe
+         whatever the user had typed. */
+      if (!response.ok || typeof data.description !== "string") {
+        throw new Error(data.message || "Failed to generate narrative.");
+      }
       setForm((prev) => ({ ...prev, narrative: data.description }));
     } catch (err) {
       setError("Failed to generate narrative.");
@@ -130,13 +177,11 @@ export default function ReportTab({
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const oldFile = files[field];
-      const next = {
-        ...files,
-        [field]: { url: res.data.url, key: res.data.key },
-      };
-      setFiles(next);
-      fileLifecycle.syncCurrent(keysOf(next));
+      const oldFile = filesRef.current[field];
+      updateFiles((prev) => ({
+        ...prev,
+        [field]: { url: res.data.url, key: res.data.key, name: file.name },
+      }));
       if (oldFile?.key && !fileLifecycle.hasOriginal(oldFile.key)) {
         deleteFileByKey(oldFile.key);
       }
@@ -161,12 +206,10 @@ export default function ReportTab({
           return { url: res.data.url, key: res.data.key };
         }),
       );
-      const next = {
-        ...files,
-        photos: isEditing ? [...files.photos, ...uploaded] : uploaded,
-      };
-      setFiles(next);
-      fileLifecycle.syncCurrent(keysOf(next));
+      updateFiles((prev) => ({
+        ...prev,
+        photos: [...prev.photos, ...uploaded],
+      }));
     } catch {
       setError("Failed to upload photos");
     } finally {
@@ -188,12 +231,10 @@ export default function ReportTab({
           return { url: res.data.url, key: res.data.key, name: file.name };
         }),
       );
-      const next = {
-        ...files,
-        other_attachments: [...files.other_attachments, ...uploaded],
-      };
-      setFiles(next);
-      fileLifecycle.syncCurrent(keysOf(next));
+      updateFiles((prev) => ({
+        ...prev,
+        other_attachments: [...prev.other_attachments, ...uploaded],
+      }));
     } catch {
       setError("Failed to upload attachments");
     } finally {
@@ -202,23 +243,22 @@ export default function ReportTab({
   };
 
   const removePhoto = (idx) => {
-    const photo = files.photos[idx];
-    const next = { ...files, photos: files.photos.filter((_, i) => i !== idx) };
-    setFiles(next);
-    fileLifecycle.syncCurrent(keysOf(next));
+    const photo = filesRef.current.photos[idx];
+    updateFiles((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== idx),
+    }));
     if (photo?.key && !fileLifecycle.hasOriginal(photo.key)) {
       deleteFileByKey(photo.key);
     }
   };
 
   const removeOtherAttachment = (idx) => {
-    const attachment = files.other_attachments[idx];
-    const next = {
-      ...files,
-      other_attachments: files.other_attachments.filter((_, i) => i !== idx),
-    };
-    setFiles(next);
-    fileLifecycle.syncCurrent(keysOf(next));
+    const attachment = filesRef.current.other_attachments[idx];
+    updateFiles((prev) => ({
+      ...prev,
+      other_attachments: prev.other_attachments.filter((_, i) => i !== idx),
+    }));
     if (attachment?.key && !fileLifecycle.hasOriginal(attachment.key)) {
       deleteFileByKey(attachment.key);
     }
@@ -261,9 +301,27 @@ export default function ReportTab({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
     setSuccess("");
+
+    if (isUploading) {
+      setError("Please wait for the uploads to finish.");
+      return;
+    }
+    /* The fields marked * on the form; Other Attachments is optional. */
+    const missing = [
+      !form.narrative?.trim() && "Narrative Report",
+      ...singleFileFields
+        .filter((field) => !files[field.key]?.url)
+        .map((field) => field.label),
+      files.photos.length === 0 && "Event Photos",
+    ].filter(Boolean);
+    if (missing.length) {
+      setError(`Please complete: ${missing.join(", ")}.`);
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       const url = isEditing
@@ -305,13 +363,7 @@ export default function ReportTab({
           : "Report submitted successfully.",
       );
       setForm({ narrative: "" });
-      setFiles({
-        office_memorandum: null,
-        activity_design: null,
-        attendance_sheet: null,
-        photos: [],
-        other_attachments: [],
-      });
+      setFiles(EMPTY_FILES);
       fileLifecycle.resetSession();
       setIsEditing(false);
     } catch (err) {
@@ -350,11 +402,23 @@ export default function ReportTab({
           >
             <img
               src={previewImg}
+              alt="Preview"
               className="max-w-[90%] max-h-[90%] rounded-2xl shadow-2xl"
             />
           </div>
         )}
 
+        {/* The read-only view replaces the form on success, so the
+            confirmation has to be shown here or it is never seen. */}
+        {success && (
+          <div
+            className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-center gap-3"
+            role="status"
+          >
+            <FiCheckCircle size={16} className="shrink-0" />
+            {success}
+          </div>
+        )}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -371,7 +435,10 @@ export default function ReportTab({
               </div>
             </div>
             <button
-              onClick={handleEdit}
+              onClick={() => {
+                setSuccess("");
+                handleEdit();
+              }}
               className="btn-secondary !py-2 !px-4 !rounded-lg !text-xs shrink-0"
             >
               <FiEdit2 size={13} />
@@ -397,14 +464,19 @@ export default function ReportTab({
                   </h4>
                   {showReport[field.key]?.url ? (
                     <div className="group relative">
-                      <img
-                        src={showReport[field.key].url}
+                      <FileThumb
+                        file={showReport[field.key]}
+                        alt={field.label}
                         className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setPreviewImg(showReport[field.key].url)}
+                            onClick={() =>
+                              isPdfFile(showReport[field.key])
+                                ? window.open(showReport[field.key].url, "_blank", "noopener")
+                                : setPreviewImg(showReport[field.key].url)
+                            }
                             className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-white"
                           >
                             <FiEye size={12} />
@@ -439,6 +511,7 @@ export default function ReportTab({
                     <div key={i} className="group relative">
                       <img
                         src={p.url}
+                        alt={`Event photo ${i + 1}`}
                         className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
@@ -604,16 +677,22 @@ export default function ReportTab({
                 )}
                 {files[field.key]?.url && (
                   <div className="relative mt-3 inline-block">
-                    <img
-                      src={files[field.key].url}
+                    <FileThumb
+                      file={files[field.key]}
+                      alt={field.label}
                       className="w-24 h-24 object-cover rounded-xl border border-gray-200 shadow-sm"
                     />
                     <button
                       type="button"
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
-                      onClick={() =>
-                        setFiles((prev) => ({ ...prev, [field.key]: null }))
-                      }
+                      aria-label={`Remove ${field.label}`}
+                      onClick={() => {
+                        const old = filesRef.current[field.key];
+                        updateFiles((prev) => ({ ...prev, [field.key]: null }));
+                        if (old?.key && !fileLifecycle.hasOriginal(old.key)) {
+                          deleteFileByKey(old.key);
+                        }
+                      }}
                     >
                       <FiX size={10} />
                     </button>
@@ -653,6 +732,7 @@ export default function ReportTab({
                   <button
                     type="button"
                     className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+                    aria-label={`Remove photo ${i + 1}`}
                     onClick={() => removePhoto(i)}
                   >
                     <FiX size={10} />
@@ -664,7 +744,8 @@ export default function ReportTab({
         </div>
         <div>
           <label className="label">
-            Other Attachments <span className="text-red-500">*</span>
+            Other Attachments{" "}
+            <span className="text-gray-400 font-normal">(optional)</span>
           </label>
           <div className="file-input">
             <input
@@ -719,13 +800,8 @@ export default function ReportTab({
                 fileLifecycle.resetSession();
                 setIsEditing(false);
                 setForm({ narrative: "" });
-                setFiles({
-                  office_memorandum: null,
-                  activity_design: null,
-                  attendance_sheet: null,
-                  photos: [],
-                  other_attachments: [],
-                });
+                setFiles(EMPTY_FILES);
+                setError("");
               }}
               className="btn-secondary !rounded-lg"
             >
@@ -734,7 +810,7 @@ export default function ReportTab({
           )}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || isUploading}
             className="btn-primary !rounded-lg"
           >
             {submitting ? (

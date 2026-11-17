@@ -1,6 +1,7 @@
 import Event from "@/models/event";
 import Project from "@/models/projects";
 import AccomplishmentReport from "@/models/accomplishment_report";
+import EventGuest from "@/models/eventGuest";
 import { deleteFileFromBucket } from "@/data/lib/delete";
 import { collectReportFileKeys } from "@/data/lib/eventFileKeys";
 
@@ -39,6 +40,9 @@ export async function deleteEventCascade(eventOrId) {
   }
 
   await AccomplishmentReport.deleteMany({ event_id: id });
+  /* Walk-in check-ins carry contact numbers and ages; without this they
+     outlived the event, linked to nothing. */
+  await EventGuest.deleteMany({ event_id: event._id });
   await Project.updateMany(
     { events: event._id },
     { $pull: { events: event._id } },

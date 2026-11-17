@@ -45,15 +45,21 @@ export async function GET(req) {
 
     const sort = { start_date: -1, createdAt: -1 };
 
+    /* The attendee list is left out: callers only need the events, and it
+       would hand every other attendee's id to whoever asks. */
     const createdEvents = await Event.find({ created_by: user_id })
+      .select("-attended_users")
       .sort(sort)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const attendedEvents = await Event.find({
       "attended_users.user_id": user_id,
     })
+      .select("-attended_users")
       .sort(sort)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     /* `invitedEvents` was removed: it matched every event the user had not
        created and had not attended — a scan of the whole collection returning

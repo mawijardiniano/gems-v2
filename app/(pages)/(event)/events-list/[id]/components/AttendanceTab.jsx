@@ -119,7 +119,10 @@ export default function AttendanceTab(props) {
   const activeRoleLabel =
     ROLES.find((r) => r.key === guestTypeFilter)?.label || "All";
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+  /* Approving or rejecting rows shrinks the list; clamp so the table never
+     sits on an empty page past the end while earlier pages still have rows. */
+  const currentPage = Math.min(page, totalPages);
+  const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const fmtTime = (t) => {
     if (!t) return "-";
     const d = new Date(t);
@@ -228,13 +231,13 @@ export default function AttendanceTab(props) {
             <option value="approved">Approved</option>
             <option value="rejected">Not approved</option>
           </select>
-          <button onClick={() => props.handleDownloadGuestsPdf(rows)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          <button onClick={() => props.handleDownloadGuestsPdf(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             <FiDownload size={14} /> Download
           </button>
           <button onClick={() => props.handleDownloadBlankGuestsPdf()} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             Blank Sheet
           </button>
-          <button onClick={() => props.handlePrintGuests(rows)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          <button onClick={() => props.handlePrintGuests(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             <FiPrinter size={14} /> Print
           </button>
         </div>
@@ -492,12 +495,12 @@ export default function AttendanceTab(props) {
           </div>
         )}
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
+          <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
           <div className="flex items-center gap-2">
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
               <FiChevronLeft size={14} />
             </button>
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
               <FiChevronRight size={14} />
             </button>
           </div>

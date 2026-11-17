@@ -34,9 +34,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [guestTab, setGuestTab] = useState("going");
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [baseUrl, setBaseUrl] = useState("");
-  const [profileChecked, setProfileChecked] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -52,7 +52,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [guestYearFilter, setGuestYearFilter] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
   const [projects, setProjects] = useState([]);
-  const [allEvents, setAllEvents] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
   const [guests, setGuests] = useState([]);
   const [guestsLoading, setGuestsLoading] = useState(false);
@@ -127,17 +126,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     fetchProjects();
   }, [userId]);
 
-  useEffect(() => {
-    const fetchAllEvents = async () => {
-      try {
-        const res = await axios.get("/api/events");
-        setAllEvents(res.data?.data || []);
-      } catch (err) {
-        setAllEvents([]);
-      }
-    };
-    fetchAllEvents();
-  }, []);
 
   const getFilteredGuests = (guests) => {
     return guests
@@ -226,12 +214,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     setDeleteError("");
 
     try {
-      if (event?.event_poster?.key) {
-        await axios.delete("/api/upload", {
-          data: { key: event.event_poster.key },
-        });
-      }
-
+      /* The server's delete cascade removes the poster file too; deleting it
+         from here first lost the poster whenever the DELETE then failed. */
       await axios.delete(`/api/events/${eventId}`);
 
       setShowDeleteModal(false);
@@ -244,9 +228,15 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   };
 
   useEffect(() => {
+    /* After a manual encode the event is re-fetched in the background: going
+       back to the full-page spinner would unmount the Attendance tab and the
+       encode modal along with its "Recorded" confirmation. */
+    const isRefresh = eventReloadKey > 0;
     const load = async () => {
-      setLoading(true);
-      setError("");
+      if (!isRefresh) {
+        setLoading(true);
+        setError("");
+      }
       try {
         try {
           const profileRes = await axios.get("/api/profile/my-profile");
@@ -266,46 +256,31 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         const res = await axios.get(`/api/events/${eventId}`);
         const evt = res.data?.data || null;
         setEvent(evt);
-        if (evt) {
-          const startValue =
-            evt.start_date ||
-            (Array.isArray(evt.start_dates) ? evt.start_dates[0] : null) ||
-            evt.date;
-          const endValue =
-            evt.end_date ||
-            (Array.isArray(evt.end_dates)
-              ? evt.end_dates[evt.end_dates.length - 1]
-              : null) ||
-            startValue;
-          const startInput = formatForInput(startValue);
-          const endInput = formatForInput(endValue);
-          setEditData({
-            event_source: evt.project ? "project" : "independent",
-            type_of_activity: evt.type_of_activity,
-            project: evt.project,
-            gad_activity: evt.gad_activity,
-            title: evt.title || "",
-            description: evt.description || "",
-            date: startInput || "",
-            start_time: "",
-            end_time: "",
-            venue: evt.venue || "",
-            status: evt.status || "active",
-            organizing_office_unit: evt.organizing_office_unit,
-            co_organizing_office_unit: evt.co_organizing_office_unit,
-            event_poster: evt.event_poster || "",
-          });
-        }
+        if (evt) setEditData(buildEditData(evt));
       } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event.");
+        /* A failed background refresh keeps the page that is already on
+           screen; only the first load swaps it for an error. */
+        if (!isRefresh)
+          setError(err.response?.data?.message || "Unable to load event.");
       } finally {
         setLoading(false);
-        setProfileChecked(true);
       }
     };
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId, eventReloadKey]);
+
+  /* Deep links such as the Overview's "Review" button
+     (?tab=attendance&validation=pending) open the right tab and filter. */
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+    if (["overview", "attendance", "insights", "reports"].includes(tab))
+      setActiveTab(tab);
+    const validation = searchParams?.get("validation");
+    if (["all", "pending", "approved", "rejected"].includes(validation))
+      setGuestValidationFilter(validation);
+  }, [searchParams]);
 
   useEffect(() => {
     const envQrPublic = process.env.NEXT_PUBLIC_QR_BASE_URL;
@@ -406,6 +381,30 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     const pad = (n) => `${n}`.padStart(2, "0");
     // Date-only events: edit with YYYY-MM-DD, no time.
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  /* The one place the edit form's state is built from an event — on load,
+     after a save, and when an edit is cancelled. Building it in three places
+     is how a save used to drop `date` and break the next save. */
+  const buildEditData = (evt) => {
+    const startValue =
+      evt.start_date ||
+      (Array.isArray(evt.start_dates) ? evt.start_dates[0] : null) ||
+      evt.date;
+    return {
+      event_source: evt.project ? "project" : "independent",
+      type_of_activity: evt.type_of_activity,
+      project: evt.project?._id || evt.project || "",
+      gad_activity: evt.gad_activity || "",
+      title: evt.title || "",
+      description: evt.description || "",
+      date: formatForInput(startValue),
+      venue: evt.venue || "",
+      status: evt.status || "active",
+      organizing_office_unit: evt.organizing_office_unit || [],
+      co_organizing_office_unit: evt.co_organizing_office_unit || [],
+      event_poster: evt.event_poster || null,
+    };
   };
 
   const toAcronym = (value) => {
@@ -654,40 +653,49 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     setEditData((prev) => ({ ...(prev || {}), [field]: value }));
   };
 
+  /* Returns true on success so the form only closes when the change stuck.
+     Errors go to `saveError`, shown inside the form: the page-level `error`
+     replaces the whole page and would throw the edit away. */
   const handleSave = async () => {
-    if (!event?._id || !userId || !editData) return;
+    if (!event?._id || !userId || !editData) return false;
 
     setSaving(true);
-    setError("");
+    setSaveError("");
 
     try {
       const oldPoster = event.event_poster;
       const newPoster = editData.event_poster;
 
-      const startDateTime = editData.date
-        ? new Date(`${editData.date}T00:00`)
-        : null;
-      const endDateTime = editData.date
-        ? new Date(`${editData.date}T23:59`)
-        : null;
+      if (!editData.date) {
+        setSaveError("Please pick the event date.");
+        return false;
+      }
 
-      if (
-        !startDateTime ||
-        !endDateTime ||
-        Number.isNaN(startDateTime.getTime()) ||
-        Number.isNaN(endDateTime.getTime())
-      ) {
-        setError("Invalid event date value.");
-        setSaving(false);
-        return;
+      /* Events are scheduled by date only (local midnight to end of day), as
+         on the create page. When the date is left alone the stored range is
+         not re-sent, so a legacy multi-day event keeps its span. */
+      const dateChanged = editData.date !== buildEditData(event).date;
+      const dates = {};
+      if (dateChanged) {
+        const startDateTime = new Date(`${editData.date}T00:00`);
+        const endDateTime = new Date(`${editData.date}T23:59`);
+        if (
+          Number.isNaN(startDateTime.getTime()) ||
+          Number.isNaN(endDateTime.getTime())
+        ) {
+          setSaveError("Invalid event date value.");
+          return false;
+        }
+        dates.start_date = startDateTime.toISOString();
+        dates.end_date = endDateTime.toISOString();
       }
 
       const payload = {
         ...editData,
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
+        ...dates,
         updated_by: userId,
       };
+      delete payload.date;
       // Never send the removed audience fields or the UI-only source flag.
       delete payload.eligibility_criteria;
       delete payload.target_number_of_participants;
@@ -698,23 +706,32 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
       const res = await axios.put(`/api/events/${event._id}`, payload);
       const updated = res.data?.data || event;
-      if (oldPoster?.key && newPoster?.key && oldPoster.key !== newPoster.key) {
-        await axios.delete("/api/upload", {
-          data: { key: oldPoster.key },
-        });
+
+      /* The old poster is gone from the record once it is replaced or
+         removed, so its file is cleaned up either way. A failed cleanup only
+         leaves an orphan file; the save itself already succeeded. */
+      if (oldPoster?.key && oldPoster.key !== newPoster?.key) {
+        try {
+          await axios.delete("/api/upload", { data: { key: oldPoster.key } });
+        } catch (cleanupErr) {
+          console.error("Failed to delete replaced poster:", cleanupErr);
+        }
       }
 
-      setEvent({
+      /* The PUT response carries a raw creator reference; keep the hydrated
+         one already on screen. */
+      const merged = {
+        ...event,
         ...updated,
+        created_by: event.created_by,
         event_poster: updated.event_poster ?? editData.event_poster,
-      });
-
-      setEditData({
-        ...updated,
-        event_poster: updated.event_poster || editData.event_poster || "",
-      });
+      };
+      setEvent(merged);
+      setEditData(buildEditData(merged));
+      return true;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save changes.");
+      setSaveError(err.response?.data?.message || "Failed to save changes.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -825,7 +842,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           handleEditChange={handleEditChange}
           handleSave={handleSave}
           saving={saving}
-          error={error}
+          saveError={saveError}
+          setSaveError={setSaveError}
+          buildEditData={buildEditData}
           baseUrl={baseUrl}
           eventId={eventId}
           attendanceQrDataUrl={attendanceQrDataUrl}
@@ -855,7 +874,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           reinstating={reinstating}
           cancelError={cancelError}
           projects={projects}
-          allEvents={allEvents}
           guests={attendanceGuests}
           formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}

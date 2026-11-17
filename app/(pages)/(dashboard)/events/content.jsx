@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -29,68 +30,17 @@ const ACTIVITY_COLORS = {
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
+/* Dates only for whole-day events (the normal case); legacy rows with real
+   times keep them. See data/lib/eventDates.js. */
 function DateRangeDisplay({ event }) {
-  /* eventSpan() resolves the dates: scalars first, legacy arrays as fallback.
-     The multi-day branch below still renders one line per stored day for rows
-     that genuinely carry several; there are none today, but the shape is kept
-     so a future multi-day event does not silently collapse to a single line. */
-  const { start, end } = eventSpan(event);
-
-  if (start === null) {
-    return <span className="text-gray-400">No date set</span>;
+  const when = formatEventWhen(event);
+  if (!when) {
+    return <span className="text-gray-400 text-xs">No date set</span>;
   }
-
-  const startDate = formatDate(new Date(start));
-  const startTime = formatTime(new Date(start));
-
-  if (end === null) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate} at {startTime}
-        </span>
-      </div>
-    );
-  }
-
-  const endDate = formatDate(new Date(end));
-  const endTime = formatTime(new Date(end));
-
-  if (startDate === endDate) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate}, {startTime} - {endTime}
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>
-        {startDate} {startTime} - {endDate} {endTime}
-      </span>
+      <span>{when}</span>
     </div>
   );
 }
@@ -202,12 +152,11 @@ export default function EventContent({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [registeredEvents, setRegisteredEvents] = useState([]);
+  /* Events this user has attended, loaded by the server component from
+     /api/events/user-events. This used to be reset to [] on mount, which left
+     both the Upcoming and Past tabs permanently empty. */
+  const registeredEvents = participatedEvents || [];
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    setRegisteredEvents([]);
-  }, []);
 
   useEffect(() => {
     const load = async () => {
