@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
-import { canManageEvent } from "@/data/lib/eventAccess";
+import { canManageEvent, isEventOrganizer } from "@/data/lib/eventAccess";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -56,6 +56,19 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const record = useEventRecord(eventId);
   const { event, userId, userRole, loading, error } = record;
 
+  /* The same rules the API applies. Organizers (the creator, or an oversight
+     role) get the attendance tabs; Deans and GAD Coordinators only for their
+     own events. Managers (creator or Admin) may edit, cancel and delete. */
+  const viewer = { _id: userId, role: userRole };
+  const canOrganize = Boolean(event) && isEventOrganizer(viewer, event);
+  const canManage = Boolean(event) && canManageEvent(viewer, event);
+  const visibleTabs = canOrganize
+    ? TABS
+    : TABS.filter((t) => t.key === "overview");
+  const currentTab = visibleTabs.some((t) => t.key === activeTab)
+    ? activeTab
+    : "overview";
+
   const editor = useEventEditor({
     event,
     setEvent: record.setEvent,
@@ -67,7 +80,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     onDeleted: () => router.push(backPath),
   });
   const guestSheet = useEventGuests(eventId, {
-    active: GUEST_TABS.includes(activeTab),
+    active: canOrganize && GUEST_TABS.includes(currentTab),
   });
   const attendance = useEventAttendance(event, guestSheet.guests);
   const qr = useAttendanceQr(eventId);
@@ -164,14 +177,14 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         role="tablist"
         aria-label="Event sections"
       >
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             role="tab"
-            aria-selected={activeTab === tab.key}
+            aria-selected={currentTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`whitespace-nowrap px-4 py-2.5 -mb-px border-b-2 text-sm font-medium transition-all duration-200 ${
-              activeTab === tab.key
+              currentTab === tab.key
                 ? "border-secondary-600 text-secondary-700"
                 : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
             }`}
@@ -181,7 +194,18 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         ))}
       </div>
 
-      {activeTab === "overview" && (
+      {!canOrganize && (
+        <div
+          className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600"
+          role="status"
+        >
+          You are viewing an event organized by someone else. Attendance,
+          insights and the post-activity report are available to its creator
+          and to GAD Focal Persons.
+        </div>
+      )}
+
+      {currentTab === "overview" && (
         <OverviewTab
           isPast={isPast}
           event={event}
@@ -200,8 +224,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           handleDownloadAttendanceQr={() => qr.download(event.title)}
           attendedCount={insights.attendedCount}
           pendingGuestCount={attendance.pendingGuestCount}
-          /* Mirrors the DELETE route: creator or Admin only. */
-          canDelete={canManageEvent({ _id: userId, role: userRole }, event)}
+          /* Mirror the API: creator or Admin may edit, cancel and delete. */
+          canEdit={canManage}
+          canDelete={canManage}
           showDeleteModal={lifecycle.showDeleteModal}
           setShowDeleteModal={lifecycle.setShowDeleteModal}
           deleteError={lifecycle.deleteError}
@@ -221,7 +246,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         />
       )}
 
-      {activeTab === "attendance" && (
+      {currentTab === "attendance" && (
         <AttendanceTab
           event={event}
           guests={attendance.attendanceGuests}
@@ -254,7 +279,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         />
       )}
 
-      {activeTab === "insights" && (
+      {currentTab === "insights" && (
         <InsightTab
           attendedCount={insights.attendedCount}
           maleCount={insights.maleCount}
@@ -272,7 +297,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         />
       )}
 
-      {activeTab === "reports" && (
+      {currentTab === "reports" && (
         <ReportTab
           event={event}
           approvedGuestCount={attendance.approvedGuestCount}

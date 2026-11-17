@@ -3,7 +3,7 @@ import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
-import { isOrganizerRole } from "@/data/lib/eventAccess";
+import { hasEventOversight } from "@/data/lib/eventAccess";
 
 export async function GET(req) {
   try {
@@ -22,7 +22,8 @@ export async function GET(req) {
       );
     }
 
-    if (user_id !== user._id.toString() && !isOrganizerRole(user.role)) {
+    /* Another user's created/attended events: oversight roles only. */
+    if (user_id !== user._id.toString() && !hasEventOversight(user.role)) {
       return NextResponse.json(
         { message: "You can only view your own events." },
         { status: 403 },

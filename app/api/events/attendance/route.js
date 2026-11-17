@@ -6,7 +6,7 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
-import { isOrganizerRole } from "@/data/lib/eventAccess";
+import { isEventOrganizer } from "@/data/lib/eventAccess";
 
 /* How old an offline-queued scan may be when it is replayed. */
 const OFFLINE_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -51,20 +51,23 @@ export async function POST(req) {
     }
     const targetIds = [...new Set(rawIds.map((uid) => uid.toString()))];
 
+    /* Only what the permission, status and time-window checks read. */
+    const event = await Event.findById(event_id)
+      .select("created_by status start_date end_date start_dates end_dates date")
+      .lean();
+    if (!event) {
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    }
+
+    /* Recording someone else, or bypassing the time window, is for this
+       event's organizers: its creator or an oversight role. */
+    const isOrganizer = isEventOrganizer(user, event);
     const selfId = user._id.toString();
-    if (targetIds.some((uid) => uid !== selfId) && !isOrganizerRole(user.role)) {
+    if (targetIds.some((uid) => uid !== selfId) && !isOrganizer) {
       return NextResponse.json(
         { message: "You can only record your own attendance." },
         { status: 403 },
       );
-    }
-
-    /* Only what the status and time-window checks read. */
-    const event = await Event.findById(event_id)
-      .select("status start_date end_date start_dates end_dates date")
-      .lean();
-    if (!event) {
-      return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
     if (event.status === "cancelled") {
@@ -92,7 +95,6 @@ export async function POST(req) {
        different answers at the same moment. */
     const { earliestStart, latestEnd } = attendanceWindow(event);
 
-    const isOrganizer = isOrganizerRole(user.role);
     // Organizer manual adds (Manual Add Attendee button) bypass the QR
     // time-window checks so staff can mark attendance before/after the event.
     const bypassTimeWindow = manual_add === true && isOrganizer;

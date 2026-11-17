@@ -31,6 +31,7 @@ export default function OverviewTab({
   handleDownloadAttendanceQr,
   attendedCount,
   pendingGuestCount,
+  canEdit = false,
   canDelete = false,
   showDeleteModal,
   setShowDeleteModal,
@@ -132,6 +133,7 @@ export default function OverviewTab({
               </p>
             </div>
           </div>
+          {canEdit && (
           <button
             onClick={async () => {
               if (isEditing) {
@@ -145,9 +147,10 @@ export default function OverviewTab({
             <FiEdit2 size={13} aria-hidden="true" />
             {isEditing ? "Cancel" : "Edit"}
           </button>
+          )}
         </div>
 
-        {isEditing ? (
+        {isEditing && canEdit ? (
           <EventEditForm
             editData={editData}
             setEditData={setEditData}
@@ -176,6 +179,7 @@ export default function OverviewTab({
 
       <EventDangerZone
         event={event}
+        canChangeStatus={canEdit}
         canDelete={canDelete}
         showCancelModal={showCancelModal}
         setShowCancelModal={setShowCancelModal}

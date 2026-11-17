@@ -5,10 +5,15 @@
 /** Roles that may create events. */
 export const EVENT_CREATOR_ROLES = ["GAD Focal Person", "GAD Coordinator", "Dean"];
 
-/** Roles that may manage any event's attendance and use the AI generators. */
+/** Roles that organize events: they may use the AI generators. */
 export const EVENT_ORGANIZER_ROLES = ["Admin", ...EVENT_CREATOR_ROLES];
 
-export const isOrganizerRole = (role) => EVENT_ORGANIZER_ROLES.includes(role);
+/** Roles whose event access covers *every* event (university-wide oversight).
+    Deans and GAD Coordinators manage only the events they created. */
+export const EVENT_OVERSIGHT_ROLES = ["Admin", "GAD Focal Person"];
+
+/** True for a role that may act on any event or any user's event list. */
+export const hasEventOversight = (role) => EVENT_OVERSIGHT_ROLES.includes(role);
 
 /** True when `user` created `event` (`created_by` may be an id or populated). */
 export function isEventCreator(user, event) {
@@ -18,12 +23,14 @@ export function isEventCreator(user, event) {
 }
 
 /**
- * An organizer role, or the person who created the event, may record and
- * validate attendance for somebody else and read the guest sheet.
+ * Who may record and validate attendance for somebody else and read the
+ * guest sheet: the event's creator, or an oversight role. A Dean or GAD
+ * Coordinator used to qualify for every event in the university, so one
+ * college could approve or edit another college's attendance.
  */
 export function isEventOrganizer(user, event) {
   if (!user) return false;
-  return isOrganizerRole(user.role) || isEventCreator(user, event);
+  return hasEventOversight(user.role) || isEventCreator(user, event);
 }
 
 /** Creator or Admin: who may edit, delete or file the report for an event. */

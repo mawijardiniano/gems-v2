@@ -20,7 +20,7 @@ import { EVENT_STATUSES, notEndedFilter } from "@/data/lib/eventStatus";
 import { canViewPII } from "@/data/lib/profileBroker";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
-import { EVENT_CREATOR_ROLES, isOrganizerRole } from "@/data/lib/eventAccess";
+import { EVENT_CREATOR_ROLES, hasEventOversight } from "@/data/lib/eventAccess";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -52,7 +52,8 @@ export async function GET(req) {
     }
 
     if (created_by) {
-      if (created_by !== user._id.toString() && !isOrganizerRole(user.role)) {
+      /* Another user's events: oversight roles only. */
+      if (created_by !== user._id.toString() && !hasEventOversight(user.role)) {
         return NextResponse.json(
           {
             status: "error",

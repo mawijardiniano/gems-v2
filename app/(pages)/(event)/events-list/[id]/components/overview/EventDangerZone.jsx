@@ -19,6 +19,7 @@ import CancelEventModal from "../CancelEventModal";
    button to show; the matrix only decides whether that button is legal. */
 export default function EventDangerZone({
   event,
+  canChangeStatus = false,
   canDelete,
   showCancelModal,
   setShowCancelModal,
@@ -38,8 +39,11 @@ export default function EventDangerZone({
   useEscapeKey(showDeleteModal && !deleting, () => setShowDeleteModal(false));
 
   const isCancelled = effectiveStatus(event) === "cancelled";
-  const canCancel = !isCancelled && canTransition(event.status, "cancelled");
-  const canReinstate = canTransition(event.status, "active");
+  /* The matrix says which move is legal; the status API also requires the
+     creator or an Admin, so others see neither button. */
+  const canCancel =
+    canChangeStatus && !isCancelled && canTransition(event.status, "cancelled");
+  const canReinstate = canChangeStatus && canTransition(event.status, "active");
 
   return (
     <>
