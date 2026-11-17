@@ -793,7 +793,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           handleDownloadAttendanceQr={handleDownloadAttendanceQr}
           attendedCount={attendedCount}
           pendingGuestCount={pendingGuestCount}
-          userId={userId}
           /* Mirrors the DELETE route: creator or Admin only. */
           canDelete={
             userRole === "Admin" ||
@@ -817,7 +816,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           cancelError={cancelError}
           projects={projects}
           guests={attendanceGuests}
-          formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}
         />
       )}
