@@ -10,6 +10,7 @@ import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { loadDecryptedPii, revealProfilePii } from "@/data/lib/profileBroker";
 import { isEventOrganizer } from "@/data/lib/eventAccess";
+import { guestDedupeKey, pickAdoptableWalkIn } from "@/data/lib/guestIdentity";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
    is written straight to EventGuest as APPROVED so it lands in the same table,
@@ -72,6 +73,9 @@ function approveGuestRow(rowId, { payload, user_id, organizerId, note, extra }) 
       $set: {
         ...payload,
         user_id,
+        /* $set skips the model's save hook, so the identity is set here: the
+           row now belongs to this account. */
+        dedupe_key: guestDedupeKey({ user_id }),
         source: "manual-encode",
         validation_status: "approved",
         validated_by: organizerId,
@@ -82,6 +86,19 @@ function approveGuestRow(rowId, { payload, user_id, organizerId, note, extra }) 
     },
     { new: true },
   );
+}
+
+/* A QR walk-in the account being encoded may take over: only when exactly
+   one unlinked row in the event carries that name (compared case-
+   insensitively) and its sex at birth agrees. Taking over any same-name row
+   used to overwrite a different person's check-in — two "Maria Santos" at one
+   event became one record linked to the wrong account. */
+async function findAdoptableWalkIn(event_id, fullName, sex) {
+  if (!fullName) return null;
+  const rows = await EventGuest.find({ event_id, full_name: fullName })
+    .collation({ locale: "en", strength: 2 })
+    .limit(5);
+  return pickAdoptableWalkIn(rows, { sex });
 }
 
 /* A person who already scanned the QR lives only in Event.attended_users, which
@@ -108,13 +125,8 @@ async function adoptCheckedInGuest({
   try {
     const byAccount = await EventGuest.findOne({ event_id, user_id });
     if (byAccount) return await approve(byAccount);
-    if (fullName) {
-      const byName = await EventGuest.findOne({
-        event_id,
-        full_name: fullName,
-      });
-      if (byName) return await approve(byName);
-    }
+    const walkIn = await findAdoptableWalkIn(event_id, fullName, payload.sex);
+    if (walkIn) return await approve(walkIn);
     return await EventGuest.create({
       ...payload,
       user_id,
@@ -126,21 +138,14 @@ async function adoptCheckedInGuest({
       validation_note: "Adopted from QR check-in by organizer",
     });
   } catch (err) {
-    /* A row already holds this name or this account. Either unique index can
-       raise 11000 — the account index when the organizer records the same
-       person twice, the name index when a QR walk-in shares the name. Fetch
-       whichever row exists and promote it, so the caller can report it as
-       already attended *and* the row is visible in the attendance table. */
+    /* A row already holds this account (the organizer recorded the same
+       person twice, or two requests raced). Promote it, so the caller can
+       report it as already attended *and* the row is visible in the table. */
     if (err?.code === 11000) {
       const byAccount = await EventGuest.findOne({ event_id, user_id });
       if (byAccount) return await approve(byAccount);
-      if (fullName) {
-        const byName = await EventGuest.findOne({
-          event_id,
-          full_name: fullName,
-        });
-        if (byName) return await approve(byName);
-      }
+      const walkIn = await findAdoptableWalkIn(event_id, fullName, payload.sex);
+      if (walkIn) return await approve(walkIn);
       return null;
     }
     console.error("adoptCheckedInGuest error:", err);
@@ -382,12 +387,11 @@ export async function POST(req) {
       });
     }
 
-    /* A QR walk-in may already hold this name. Attach the account to that row
-       and approve it so the person the organizer picked is the one the table
-       shows, rather than creating a duplicate the name index would reject. */
-    const nameRow = fullName
-      ? await EventGuest.findOne({ event_id, full_name: fullName })
-      : null;
+    /* This person may already have checked in through the QR form as a
+       walk-in. When that row is unambiguously theirs, attach the account to it
+       and approve it instead of counting them twice; otherwise a new row is
+       recorded below and any same-name walk-in is left untouched. */
+    const nameRow = await findAdoptableWalkIn(event_id, fullName, sexAtBirth);
     if (nameRow) {
       /* The adopted row is still a manual record: it keeps the provenance the
          table reads, not the QR row's original note. */
@@ -430,12 +434,13 @@ export async function POST(req) {
         source: "manual-encode",
       });
     } catch (err) {
-      /* A QR walk-in with the same name already covers this event. */
+      /* The account already has a row (a concurrent request), or — before
+         scripts/migrate-guest-dedupe-key.mjs drops the old name index — a
+         same-name row blocks the insert. */
       if (err?.code === 11000) {
-        const clash = await EventGuest.findOne({
-          event_id,
-          full_name: fullName,
-        });
+        const clash =
+          (await EventGuest.findOne({ event_id, user_id })) ||
+          (await findAdoptableWalkIn(event_id, fullName, sexAtBirth));
         if (clash?.validation_status === "approved") {
           return NextResponse.json({
             message: "Already marked as attended",

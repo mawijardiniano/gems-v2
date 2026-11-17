@@ -8,6 +8,7 @@ import { cacheDelPrefix } from "@/data/lib/cache";
 import { optionalAuth } from "@/data/lib/auth";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 import { rateLimiters } from "@/data/lib/rateLimit";
+import { guestDedupeKey } from "@/data/lib/guestIdentity";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
@@ -32,8 +33,8 @@ const clean = (value, max) =>
     .trim()
     .slice(0, max);
 
-/* Names are compared case-insensitively ("juan dela cruz" and
-   "Juan  Dela Cruz" are the same check-in). */
+/* Only used for rows saved before dedupe_key existed: their names are
+   compared case-insensitively ("juan dela cruz" = "Juan  Dela Cruz"). */
 const NAME_COLLATION = { locale: "en", strength: 2 };
 
 /* UI sends program / year / section separately; combine into one sheet value. */
@@ -140,9 +141,37 @@ export async function POST(req) {
         },
         { status: 400 },
       );
+    /* Everything the guest typed that ends up on the sheet. */
+    const details = {
+      full_name: name,
+      sex: b.sex,
+      gender_identity: genderIdentity || undefined,
+      age: ageNum,
+      contact: clean(b?.contact, MAX_LEN.contact),
+      participant_type: b.participant_type,
+      department_office_org: clean(
+        b?.department_office_org,
+        MAX_LEN.department_office_org,
+      ),
+      position_designation:
+        b.participant_type === "Student"
+          ? ""
+          : clean(b?.position_designation, MAX_LEN.position_designation),
+      program_year_section: buildProgramYearSection(b),
+    };
+
+    /* The same check-in is the same name *and* contact, participant type and
+       department (data/lib/guestIdentity.js). Matching on the name alone
+       stopped the second of two people who share a name from checking in.
+       Rows saved before dedupe_key existed have none and are still matched by
+       name until scripts/migrate-guest-dedupe-key.mjs backfills them. */
+    const dedupeKey = guestDedupeKey(details);
     const existing = await EventGuest.findOne({
       event_id,
-      full_name: name,
+      $or: [
+        { dedupe_key: dedupeKey },
+        { dedupe_key: null, full_name: name },
+      ],
     }).collation(NAME_COLLATION);
     if (existing) {
       if (existing.validation_status === "approved") {
@@ -155,22 +184,10 @@ export async function POST(req) {
         });
       }
       if (existing.validation_status === "rejected") {
-        /* Not approved last time — let the guest resubmit on the same row so
-           the unique event_id + full_name index still holds. */
-        existing.sex = b.sex;
-        existing.gender_identity = genderIdentity || undefined;
-        existing.age = ageNum;
-        existing.contact = clean(b?.contact, MAX_LEN.contact);
-        existing.participant_type = b.participant_type;
-        existing.department_office_org = clean(
-          b?.department_office_org,
-          MAX_LEN.department_office_org,
-        );
-        existing.position_designation =
-          b.participant_type === "Student"
-            ? ""
-            : clean(b?.position_designation, MAX_LEN.position_designation);
-        existing.program_year_section = buildProgramYearSection(b);
+        /* Not approved last time — the guest resubmits on the same row, which
+           keeps the rejection in its history. The save hook refreshes the
+           row's dedupe_key from the new details. */
+        existing.set(details);
         existing.attended_at = new Date();
         existing.source = "qr-scan";
         existing.validation_status = "pending";
@@ -205,21 +222,7 @@ export async function POST(req) {
     }
     const guest = await EventGuest.create({
       event_id,
-      full_name: name,
-      sex: b.sex,
-      gender_identity: genderIdentity || undefined,
-      age: ageNum,
-      contact: clean(b?.contact, MAX_LEN.contact),
-      participant_type: b.participant_type,
-      department_office_org: clean(
-        b?.department_office_org,
-        MAX_LEN.department_office_org,
-      ),
-      position_designation:
-        b.participant_type === "Student"
-          ? ""
-          : clean(b?.position_designation, MAX_LEN.position_designation),
-      program_year_section: buildProgramYearSection(b),
+      ...details,
       attended_at: new Date(),
       source: "qr-scan",
       validation_status: "pending",

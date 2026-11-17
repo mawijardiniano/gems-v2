@@ -170,15 +170,16 @@ export default function ManualEncodeModal({
      report "already recorded", which reads like a failure to the organizer even
      though the person is already counted. The check is advisory: the request
      still goes out when the loaded list is stale. */
+  /* Matched on the account only. A name match used to say "already counted"
+     for a *different* person who shares the name, so they were never sent;
+     same-name QR walk-ins are reconciled by the API, which links one only when
+     it is unambiguously this person. */
   const alreadyInSheet = (person, sheet = []) => {
-    if (!person) return false;
     const id = String(person?._id || "");
-    const name = fullNameOf(person).toLowerCase();
-    return (Array.isArray(sheet) ? sheet : []).some((g) => {
-      if (id && String(g?.user_id || "") === id) return true;
-      const rowName = String(g?.full_name || "").trim().toLowerCase();
-      return Boolean(name) && rowName === name;
-    });
+    if (!id) return false;
+    return (Array.isArray(sheet) ? sheet : []).some(
+      (g) => String(g?.user_id || "") === id,
+    );
   };
 
   const handleEncode = async () => {
