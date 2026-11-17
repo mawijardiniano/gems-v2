@@ -3,6 +3,7 @@
 import { appDateInput, APP_TIME_ZONE } from "@/data/lib/appTime";
 import axios from "axios";
 import { formatPeso } from "@/data/lib/money";
+import { canManageProject as canManageProjectRule } from "@/data/lib/projectAccess";
 import React, {
   useCallback,
   useEffect,
@@ -136,19 +137,10 @@ const PROJECT_STATUS_META = {
   },
 };
 
-/* Roles (besides the creator) allowed to manage schedule, status + milestones */
-const PROJECT_EDITOR_ROLES = ["gad focal person", "admin"];
-
-const canManageProject = (project, userId, userRole) => {
-  if (!userId) return false;
-  const creatorId = String(project?.createdBy?._id || project?.createdBy || "");
-  if (creatorId && creatorId === String(userId)) return true;
-  return PROJECT_EDITOR_ROLES.includes(
-    String(userRole || "")
-      .trim()
-      .toLowerCase(),
-  );
-};
+/* The same rule the API enforces (data/lib/projectAccess.js): the creator,
+   a GAD Focal Person or an Admin. */
+const canManageProject = (project, userId, userRole) =>
+  Boolean(userId) && canManageProjectRule({ _id: userId, role: userRole }, project);
 
 /* The Manila day of a stored date — the browser's local day showed the
    previous day west of UTC+8, and saving unchanged moved it back a day. */
@@ -1766,11 +1758,7 @@ export default function GADProjectsMonitoringContent() {
                                     <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                                       Actual Accomplishments
                                     </p>
-                                    {String(
-                                      project.createdBy?._id ||
-                                        project.createdBy ||
-                                        "",
-                                    ) === String(userId) && (
+                                    {canManageProject(project, userId, userRole) && (
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -1903,11 +1891,7 @@ export default function GADProjectsMonitoringContent() {
                                           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                                             Budget Utilization
                                           </p>
-                                          {String(
-                                            project.createdBy?._id ||
-                                              project.createdBy ||
-                                              "",
-                                          ) === String(userId) && (
+                                          {canManageProject(project, userId, userRole) && (
                                             <button
                                               type="button"
                                               onClick={(e) => {

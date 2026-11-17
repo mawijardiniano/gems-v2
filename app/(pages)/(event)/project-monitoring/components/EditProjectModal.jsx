@@ -2,6 +2,7 @@
 
 import { appDateInput } from "@/data/lib/appTime";
 import { useMemo, useState } from "react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { FaExclamationTriangle, FaSpinner, FaTimes } from "react-icons/fa";
 import {
   FieldRenderer,
@@ -95,6 +96,8 @@ export default function EditProjectModal({
     buildProjectValues(buildEditFields(config), project),
   );
   const [saving, setSaving] = useState(false);
+
+  useEscapeKey(!saving, onClose);
   const [error, setError] = useState("");
 
   const sections = useMemo(() => {
@@ -203,13 +206,20 @@ export default function EditProjectModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50"
-        onClick={onClose}
+        onClick={() => !saving && onClose()}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl">
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-edit-title"
+      >
         <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-2xl">
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-gray-900">Edit Project</h3>
+            <h3 id="project-edit-title" className="text-base font-bold text-gray-900">
+              Edit Project
+            </h3>
             <p className="text-[11px] text-gray-400 mt-0.5 truncate">
               {project?.reference_number ? `${project.reference_number} · ` : ""}
               {getFieldValue(project?.title) || "(untitled project)"}

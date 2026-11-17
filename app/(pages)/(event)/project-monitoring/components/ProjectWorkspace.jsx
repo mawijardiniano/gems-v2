@@ -3,6 +3,7 @@
 import { APP_TIME_ZONE } from "@/data/lib/appTime";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPeso } from "@/data/lib/money";
+import { MODULE_EDITOR_ROLES } from "@/data/lib/projectAccess";
 import {
   FaChevronDown,
   FaChevronUp,
@@ -43,7 +44,8 @@ import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
  */
 
 /* Roles (besides the creator) allowed to manage schedule, status + milestones */
-const PROJECT_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
+/* Shared with the module API and the upload route (data/lib/projectAccess.js). */
+const PROJECT_EDITOR_ROLES = MODULE_EDITOR_ROLES;
 
 /* Detail fields that hold budget amounts — hidden with the rest of the budget
    figures when the project falls outside the viewer's budget scope. */

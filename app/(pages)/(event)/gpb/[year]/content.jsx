@@ -5,7 +5,6 @@ import { useSelector } from "react-redux";
 import { useRef } from "react";
 import {
   FiArrowLeft,
-  FiEdit2,
   FiInfo,
   FiEye,
   FiX,
@@ -23,542 +22,25 @@ import { nextRefNumber } from "@/data/lib/referenceNumber";
 import { gpbStatusOptions } from "@/data/lib/gpbStatus";
 import { canManageProject } from "@/data/lib/projectAccess";
 import { formatAmount } from "@/data/lib/money";
-
-const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
-
-function describeBudgetRejection(data) {
-  const remaining = data?.budgetSummary?.remainingBudget;
-  const base = data.message || data.error || "Failed to add project";
-  return remaining !== null &&
-    remaining !== undefined &&
-    Number.isFinite(Number(remaining))
-    ? `${base}. Remaining Budget: ₱${Number(remaining).toLocaleString()}`
-    : base;
-}
-
-function describeBudgetWarning(data) {
-  const base = data.warning;
-  const overBy = data?.budgetSummary?.overBy;
-  return base &&
-    overBy !== null &&
-    overBy !== undefined &&
-    Number.isFinite(Number(overBy)) &&
-    Number(overBy) > 0
-    ? `${base} Exceeds budget by ₱${Number(overBy).toLocaleString()}.`
-    : base;
-}
-
-function getScannedFileType(url) {
-  const clean = String(url || "")
-    .split("?")[0]
-    .toLowerCase();
-  if (clean.endsWith(".pdf")) return "pdf";
-  if (/\.(jpe?g|png|webp|gif|bmp)$/.test(clean)) return "image";
-  return "other";
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  color = "blue",
-  badge,
-  danger = false,
-}) {
-  const colorMap = {
-    blue: "bg-secondary-50 text-secondary-600",
-    green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-secondary-50 text-secondary-600",
-    violet: "bg-secondary-50 text-secondary-600",
-    red: "bg-red-50 text-red-600",
-  };
-
-  return (
-    <div
-      className={`rounded-2xl border shadow-sm p-5 transition-all duration-200 ${
-        danger
-          ? "border-red-200 bg-red-50/50 hover:shadow-md"
-          : "bg-white border-gray-100 hover:shadow-md"
-      }`}
-    >
-      <div className="flex items-start gap-4">
-        <div
-          className={`h-12 w-12 rounded-xl ${colorMap[color] || colorMap.blue} flex items-center justify-center shrink-0`}
-        >
-          <Icon className="h-6 w-6" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-            {label}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 mt-0.5">
-            <p
-              className={`text-xl font-bold truncate ${danger ? "text-red-700" : "text-gray-900"}`}
-            >
-              {value}
-            </p>
-            {badge}
-          </div>
-          {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function emptyIndicator() {
-  return {
-    activityType: "",
-    totalActivities: "",
-    totalMale: "",
-    totalFemale: "",
-  };
-}
-
-function formatPerformanceIndicator({
-  activityType,
-  totalActivities,
-  totalMale,
-  totalFemale,
-}) {
-  const a = activityType || "activity";
-  const s = Number(totalActivities) || 0;
-  const m = Number(totalMale) || 0;
-  const f = Number(totalFemale) || 0;
-  const total = m + f;
-  const hasActivities = s > 0;
-  const hasParticipants = total > 0;
-
-  if (hasActivities && hasParticipants) {
-    return `At least ${s} ${a.toLowerCase()}${s !== 1 ? "s" : ""} conducted with ${total} participants (${f} Female, ${m} Male)`;
-  } else if (hasActivities && !hasParticipants) {
-    return `No. of ${a.toLowerCase()}s conducted - at least ${s}`;
-  } else if (!hasActivities && hasParticipants) {
-    return `At least ${total} participants trained. (${f} Female, ${m} Male)`;
-  }
-  return "";
-}
-
-const ACTIVITY_ALTERNATION = ACTIVITY_TYPE.join("|");
-
-function parsePerformanceIndicator(str) {
-  if (!str || typeof str !== "string") return emptyIndicator();
-
-  const bothMatch = str.match(
-    new RegExp(
-      `At least (\\d+) (${ACTIVITY_ALTERNATION})s? conducted with \\d+ participants \\((\\d+) Female, (\\d+) Male\\)`,
-      "i",
-    ),
-  );
-  if (bothMatch) {
-    const matchedType =
-      ACTIVITY_TYPE.find(
-        (t) => t.toLowerCase() === bothMatch[2].toLowerCase(),
-      ) || bothMatch[2];
-    return {
-      activityType: matchedType,
-      totalActivities: bothMatch[1],
-      totalFemale: bothMatch[3],
-      totalMale: bothMatch[4],
-    };
-  }
-
-  const activitiesOnly = str.match(
-    new RegExp(
-      `No\\. of (${ACTIVITY_ALTERNATION})s conducted - at least (\\d+)`,
-      "i",
-    ),
-  );
-  if (activitiesOnly) {
-    const matchedType =
-      ACTIVITY_TYPE.find(
-        (t) => t.toLowerCase() === activitiesOnly[1].toLowerCase(),
-      ) || activitiesOnly[1];
-    return {
-      activityType: matchedType,
-      totalActivities: activitiesOnly[2],
-      totalMale: "",
-      totalFemale: "",
-    };
-  }
-
-  const participantsOnly = str.match(
-    /At least \d+ participants trained\. \((\d+) Female, (\d+) Male\)/,
-  );
-  if (participantsOnly) {
-    return {
-      activityType: "",
-      totalActivities: "",
-      totalFemale: participantsOnly[1],
-      totalMale: participantsOnly[2],
-    };
-  }
-
-  return { _raw: str };
-}
-
-function serializeIndicators(arr) {
-  return (arr || [])
-    .map((p) => {
-      if (typeof p === "string") return p;
-      if (p?._raw !== undefined) return p._raw;
-      return formatPerformanceIndicator(p);
-    })
-    .filter(Boolean);
-}
-
-/* GAD activity titles and their descriptions are stored as two index-paired
-   arrays (`gad_activity` / `gad_activity_description`) because the API, the
-   reports and the printed form already treat the title list as the source of
-   rows. Every editing surface funnels through this helper so the pair can
-   never drift: legacy projects that only have titles simply get an empty
-   description for each row. */
-function alignActivityDescriptions(titles, descriptions) {
-  const list = Array.isArray(descriptions) ? [...descriptions] : [];
-  const count = Array.isArray(titles) ? titles.length : 0;
-  while (list.length < count) list.push("");
-  return list.slice(0, count);
-}
-
-/* Read-only GAD activity cell: the title with its description underneath, so
-   the table, the print view and the reports all keep the single "GAD Activity"
-   column the official GPB form uses. */
-function GADActivityCell({ title, description }) {
-  if (!title && !description) return null;
-  return (
-    <div>
-      <div className="text-xs text-gray-900">{title}</div>
-      {description ? (
-        <div className="mt-1 text-xs text-gray-900">{description}</div>
-      ) : null}
-    </div>
-  );
-}
-
-function PerformanceIndicatorInput({ value, onChange }) {
-  const isRawText = value?._raw !== undefined;
-  const v = isRawText
-    ? { _raw: value._raw || "" }
-    : { ...emptyIndicator(), ...(value || {}) };
-
-  // ── FREE TEXT MODE ─────────────────────────────────────
-  if (isRawText) {
-    return (
-      <div className="flex flex-col gap-2 w-full">
-        {/* Format toggle */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-400">Format:</span>
-          <button
-            type="button"
-            onClick={() => onChange(emptyIndicator())}
-            className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
-          >
-            ○ Structured
-          </button>
-          <button
-            type="button"
-            className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
-          >
-            ● Free Text
-          </button>
-        </div>
-        <textarea
-          rows={3}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
-          placeholder="Type any performance indicator... (e.g. At least 50% increase in male scholarship applicants)"
-          value={value._raw || ""}
-          onChange={(e) => onChange({ _raw: e.target.value })}
-        />
-      </div>
-    );
-  }
-
-  const preview = formatPerformanceIndicator(v);
-
-  const hasActivityType = !!v.activityType;
-  const hasActivityCount =
-    v.totalActivities !== "" && Number(v.totalActivities) > 0;
-
-  const activityTypeMissing = hasActivityCount && !hasActivityType;
-  const activityCountMissing = hasActivityType && !hasActivityCount;
-
-  return (
-    <div className="flex flex-col gap-2 w-full">
-      {/* Format toggle */}
-      <div className="flex items-center gap-2 text-xs">
-        <span className="text-gray-400">Format:</span>
-        <button
-          type="button"
-          className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
-        >
-          ● Structured
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange({ _raw: preview || "" })}
-          className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
-        >
-          ○ Free Text
-        </button>
-      </div>
-
-      <div className="flex gap-3">
-        <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">
-            Type of Activity{" "}
-            {hasActivityCount && <span className="text-red-500">*</span>}
-          </label>
-          <select
-            className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
-              activityTypeMissing
-                ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-secondary-400"
-            }`}
-            value={v.activityType}
-            onChange={(e) => onChange({ ...v, activityType: e.target.value })}
-          >
-            <option value="">Select</option>
-            {ACTIVITY_TYPE.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">
-            No. of Activity{" "}
-            {hasActivityType && <span className="text-red-500">*</span>}
-          </label>
-          <input
-            type="number"
-            min={0}
-            className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
-              activityCountMissing
-                ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-secondary-400"
-            }`}
-            value={v.totalActivities}
-            onChange={(e) =>
-              onChange({ ...v, totalActivities: e.target.value })
-            }
-            placeholder="0"
-          />
-        </div>
-        <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">Male</label>
-          <input
-            type="number"
-            min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
-            value={v.totalMale}
-            onChange={(e) => onChange({ ...v, totalMale: e.target.value })}
-            placeholder="0"
-          />
-        </div>
-        <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">Female</label>
-          <input
-            type="number"
-            min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
-            value={v.totalFemale}
-            onChange={(e) => onChange({ ...v, totalFemale: e.target.value })}
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      {activityTypeMissing && (
-        <div className="text-xs text-red-500 px-1">
-          Type of Activity is required when No. of Activity is filled in.
-        </div>
-      )}
-      {activityCountMissing && (
-        <div className="text-xs text-red-500 px-1">
-          No. of Activity is required when a Type of Activity is selected.
-        </div>
-      )}
-
-      {preview && (
-        <div className="text-xs text-secondary-600 bg-secondary-50 rounded-lg px-2 py-1.5 italic">
-          {preview}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function isIndicatorValid(ind) {
-  if (!ind || ind._raw !== undefined) return true;
-  const hasType = !!ind.activityType;
-  const hasCount =
-    ind.totalActivities !== "" && Number(ind.totalActivities) > 0;
-  return hasType === hasCount;
-}
-
-function isIndicatorComplete(ind) {
-  if (!ind || ind._raw !== undefined) return true;
-  const hasType = !!ind.activityType;
-  const hasCount =
-    ind.totalActivities !== "" && Number(ind.totalActivities) > 0;
-  return hasType && hasCount;
-}
-
-function indicatorsValid(arr) {
-  return Array.isArray(arr) && arr.length > 0 && arr.every(isIndicatorComplete);
-}
-
-function isNonEmptyArrayFilled(arr) {
-  return (
-    Array.isArray(arr) &&
-    arr.length > 0 &&
-    arr.every((v) => typeof v === "string" && v.trim() !== "")
-  );
-}
-
-function isAttributedProgram(p) {
-  return p?.project_type === "Attributed Program";
-}
-
-function isStep1Valid(p) {
-  if (isAttributedProgram(p)) {
-    return p.project_type?.trim() !== "";
-  }
-  return (
-    p.project_type?.trim() !== "" &&
-    p.gender_issue.trim() !== "" &&
-    isNonEmptyArrayFilled(p.cause_gender_issue)
-  );
-}
-
-function isStep2Valid(p) {
-  if (isAttributedProgram(p)) {
-    return true;
-  }
-  return (
-    isNonEmptyArrayFilled(p.gad_objective) && p.relevant_agency.trim() !== ""
-  );
-}
-
-function isStep3Valid(p) {
-  if (isAttributedProgram(p)) {
-    return (
-      isNonEmptyArrayFilled(p.gad_activity) &&
-      Number(p.gad_budget) > 0 &&
-      p.source_budget.trim() !== "" &&
-      isNonEmptyArrayFilled(p.responsible_office)
-    );
-  }
-  return (
-    isNonEmptyArrayFilled(p.gad_activity) &&
-    Number(p.gad_budget) > 0 &&
-    p.source_budget.trim() !== "" &&
-    isNonEmptyArrayFilled(p.responsible_office) &&
-    indicatorsValid(p.performance_indicator_target)
-  );
-}
-
-function isEditRowValid(row) {
-  if (!row) return false;
-  if (isAttributedProgram(row)) {
-    return (
-      row.project_type?.trim() &&
-      isNonEmptyArrayFilled(row.gad_activity) &&
-      Number(row.gad_budget) > 0 &&
-      row.source_budget?.trim() &&
-      isNonEmptyArrayFilled(row.responsible_office)
-    );
-  }
-  return (
-    row.project_type?.trim() &&
-    row.gender_issue?.trim() &&
-    isNonEmptyArrayFilled(row.cause_gender_issue) &&
-    isNonEmptyArrayFilled(row.gad_objective) &&
-    row.relevant_agency?.trim() &&
-    isNonEmptyArrayFilled(row.gad_activity) &&
-    Number(row.gad_budget) > 0 &&
-    row.source_budget?.trim() &&
-    isNonEmptyArrayFilled(row.responsible_office) &&
-    indicatorsValid(row.performance_indicator_target)
-  );
-}
-
-const CommentBox = ({
-  fieldComments,
-  onComment,
-  showAddButton,
-  onDeleteComment,
-  projectId,
-  role,
-  fieldName,
-}) => {
-  const getTags = (comment) => {
-    if (Array.isArray(comment?.fields) && comment.fields.length > 0) {
-      return comment.fields;
-    }
-
-    return comment?.field ? [comment.field] : [fieldName || "general"];
-  };
-
-  return (
-    <div className="mt-1">
-      {showAddButton && (
-        <button
-          type="button"
-          onClick={onComment}
-          className="text-xs text-secondary-500 hover:underline mt-1"
-        >
-          + Comment
-        </button>
-      )}
-
-      {Array.isArray(fieldComments) && fieldComments.length > 0 && (
-        <div className="mt-1 text-xs text-gray-600">
-          <div className="font-semibold">Comments:</div>
-
-          {fieldComments.map((c) => {
-            const tags = getTags(c);
-
-            return (
-              <div key={c._id} className="relative border-l pl-2 mt-2 pr-4">
-                {role === "planning director" && (
-                  <button
-                    onClick={() => onDeleteComment(projectId, fieldName, c._id)}
-                    className="absolute top-0 right-0 text-red-500 hover:text-red-700 text-xs"
-                    title="Delete comment"
-                  >
-                    ✕
-                  </button>
-                )}
-
-                <div className="text-xs">
-                  <span
-                    className={`font-medium ${
-                      c.type === "revision" ? "text-red-500" : "text-green-600"
-                    }`}
-                  >
-                    {tags
-                      .map((t) => `[${String(t).replace(/_/g, " ")}]`)
-                      .join(", ")}
-                    :
-                  </span>
-                  <span>{c.message}</span>
-                </div>
-
-                <div className="text-gray-400">
-                  {new Date(c.createdAt).toLocaleString()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import {
+  describeBudgetRejection,
+  describeBudgetWarning,
+  getScannedFileType,
+  emptyIndicator,
+  parsePerformanceIndicator,
+  serializeIndicators,
+  alignActivityDescriptions,
+  isNonEmptyArrayFilled,
+  isAttributedProgram,
+  isStep1Valid,
+  isStep2Valid,
+  isStep3Valid,
+  isEditRowValid,
+} from "./lib/projectForm";
+import StatCard from "./components/StatCard";
+import GADActivityCell from "./components/GADActivityCell";
+import PerformanceIndicatorInput from "./components/PerformanceIndicatorInput";
 
 export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [addLoading, setAddLoading] = useState(false);
@@ -574,21 +56,17 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     open: false,
     project: null,
   });
-  const [editingId, setEditingId] = useState(null);
   const [editRow, setEditRow] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [pageSizeInput, setPageSizeInput] = useState("10");
-  const [annualBudget, setAnnualBudget] = useState(null);
   const [totalGAA, setTotalGAA] = useState(null);
-  const [projectlist, setProjectList] = useState(null);
   const [status, setStatus] = useState("");
   const [budgetSummary, setBudgetSummary] = useState(null);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [comment, setComment] = useState("");
-  const [comments, setComments] = useState("");
   const [commentType, setCommentType] = useState("approval");
   const [commentField, setCommentField] = useState([]);
   const [commentProjectId, setCommentProjectId] = useState(null);
@@ -597,7 +75,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [reasonField, setReasonField] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedGPBId, setSelectedGPBId] = useState(null);
-  const [selectedGPBKey, setSelectedGPBKey] = useState(null);
   const [selectedGPBStatus, setSelectedGPBStatus] = useState(null);
 
   const [scannedViewerOpen, setScannedViewerOpen] = useState(false);
@@ -670,12 +147,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     return project.createdBy?.role || "";
   };
 
-  const getCreatorInitials = (project) => {
-    const name = getCreatorName(project);
-    const parts = name.split(" ").filter(Boolean);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase() || "?";
-  };
 
   const topScrollRef = useRef(null);
   const tableScrollRef = useRef(null);
@@ -744,7 +215,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
          empty plan on screen with no message and a working "+ Add Project". */
       if (!res.ok || !data?.data) {
         setProjects([]);
-        setProjectList([]);
         setLoadError(
           res.status === 404
             ? `There is no GPB for ${year} yet.`
@@ -757,34 +227,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       const projects = data?.data?.projects || [];
 
-      const normalizeField = (field) => {
-        if (!field) {
-          return { value: "", comments: [] };
-        }
-
-        if (
-          typeof field === "object" &&
-          !Array.isArray(field) &&
-          "value" in field
-        ) {
-          return {
-            value: field.value ?? "",
-            comments: field.comments ?? [],
-          };
-        }
-
-        if (Array.isArray(field)) {
-          return {
-            value: field,
-            comments: [],
-          };
-        }
-
-        return {
-          value: field,
-          comments: [],
-        };
-      };
 
       const normalized = projects.map((p) => ({
         ...p,
@@ -830,7 +272,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         comments: Array.isArray(p.comments) ? p.comments : [],
       }));
 
-      setProjectList(normalized);
       setStatus(data.data.status_of_gpb?.status);
       setProjects(normalized);
       setSelectedGPBId(data.data._id);
@@ -1065,23 +506,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
   };
 
-  const handleEditIndicatorChange = (idx, value) => {
-    const arr = [...(editRow.performance_indicator_target || [])];
-    arr[idx] = value;
-    handleEditRowChange("performance_indicator_target", arr);
-  };
 
-  const handleAddEditIndicator = () => {
-    const arr = [...(editRow.performance_indicator_target || [])];
-    arr.push(emptyIndicator());
-    handleEditRowChange("performance_indicator_target", arr);
-  };
 
-  const handleRemoveEditIndicator = (idx) => {
-    const arr = [...(editRow.performance_indicator_target || [])];
-    if (arr.length > 1) arr.splice(idx, 1);
-    handleEditRowChange("performance_indicator_target", arr);
-  };
 
   const handleAddProject = async (e) => {
     e.preventDefault();
@@ -1267,24 +693,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       setDeletingProject(false);
     }
   };
-
-  const fetchComments = async () => {
-    if (!projectlist?._id) return;
-    try {
-      const res = await fetch(`/api/project/${projectlist._id}/comments`);
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Failed");
-
-      setComments(data.data ?? []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchComments();
-  }, []);
 
   const handleSubmitComment = async () => {
     const fields =
@@ -1500,6 +908,36 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [scannedViewerOpen]);
 
+  /* Escape closes whichever modal is open (the topmost first), the same way
+     its own close button does — and never while that modal is saving. Only
+     the scanned-copy viewer had Escape before. */
+  useEscapeKey(
+    showWizard ||
+      showEditModal ||
+      deleteModal.open ||
+      showCommentForm ||
+      updateStatusModal,
+    () => {
+      if (showWizard) {
+        if (addLoading) return;
+        setShowWizard(false);
+        setWizardStep(1);
+      } else if (showEditModal) {
+        if (!editLoading) cancelEdit();
+      } else if (deleteModal.open) {
+        if (deletingProject) return;
+        setDeleteError("");
+        setDeleteModal({ open: false, project: null });
+      } else if (showCommentForm) {
+        if (commentSaving) return;
+        setShowCommentForm(false);
+        setCommentField([]);
+      } else if (updateStatusModal) {
+        setUpdateStatusModal(false);
+      }
+    },
+  );
+
   const TABLE_WIDTH = sidebarOpen ? 1400 : 1000;
 
   const overBudget = Boolean(
@@ -1578,7 +1016,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       {updateStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Update GPB status"
+          >
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-semibold text-gray-800">
                 Update GPB Status
@@ -1839,7 +1282,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       {showCommentForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+          <div
+            className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add comment"
+          >
             <h3 className="text-xl font-semibold mb-3">Add Comment</h3>
 
             <div className="mb-3">
@@ -2070,28 +1518,14 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         )}
       </div>
 
-      <div className="mt-4 space-y-3 mb-2">
-        {Array.isArray(comments) &&
-          comments.map((c) => (
-            <div key={c._id} className="border p-2 mb-2">
-              <p className="font-semibold">
-                {c.userId?.personal_info_id?.personal.first_name}{" "}
-                {c.userId?.personal_info_id?.personal.last_name} •{" "}
-                {c.userId?.role}
-              </p>
-
-              <p className="text-xs text-gray-500 capitalize">
-                {c.type} {new Date(c.createdAt).toLocaleString()}
-              </p>
-
-              <p>{c.message}</p>
-            </div>
-          ))}
-      </div>
-
       {deleteModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+          <div
+            className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Delete project"
+          >
             <button
               className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
               onClick={() => setDeleteModal({ open: false, project: null })}
@@ -2135,7 +1569,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       {showEditModal && editRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative flex flex-col max-h-[92vh]">
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative flex flex-col max-h-[92vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit project"
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <div>
@@ -2651,7 +2090,12 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       {showWizard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add project"
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
                 Add Project — Year {year}
@@ -3399,316 +2843,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                       )}
                     </tr>
 
-                    {false &&
-                      role !== "planning director" &&
-                      selectedGPBStatus?.status !== "approved" &&
-                      selectedGPBStatus?.status !== "disapproved" && (
-                        <tr className="bg-gray-100 sticky top-[41px] z-10">
-                          <td className="py-2 px-4 border-b">--</td>
-
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-10 border rounded px-2 py-1"
-                              value={newProject.gender_issue}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "gender_issue",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                            {duplicateWarnings.length > 0 && (
-                              <div className="mt-1 p-2 rounded bg-secondary-50 border border-secondary-200 text-secondary-700 text-[10px]">
-                                ⚠️ Similar: "{duplicateWarnings[0].gender_issue}
-                                " (
-                                {Math.round(
-                                  duplicateWarnings[0].similarity * 100,
-                                )}
-                                %)
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.cause_gender_issue.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-10 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
-                                      "cause_gender_issue",
-                                      idx,
-                                      e.target.value,
-                                    )
-                                  }
-                                  required
-                                />
-                                {newProject.cause_gender_issue.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "cause_gender_issue",
-                                        idx,
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx ===
-                                  newProject.cause_gender_issue.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("cause_gender_issue")
-                                    }
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.gad_objective.map((val, idx) => (
-                              <div key={idx} className="flex items-center mb-1">
-                                <textarea
-                                  className="w-10 border rounded px-2 py-1"
-                                  value={val}
-                                  onChange={(e) =>
-                                    handleArrayFieldChange(
-                                      "gad_objective",
-                                      idx,
-                                      e.target.value,
-                                    )
-                                  }
-                                  required
-                                />
-                                {newProject.gad_objective.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() =>
-                                      handleRemoveArrayField(
-                                        "gad_objective",
-                                        idx,
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx ===
-                                  newProject.gad_objective.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={() =>
-                                      handleAddArrayField("gad_objective")
-                                    }
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-10 border rounded px-2 py-1"
-                              value={newProject.supporting_statistics_data}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "supporting_statistics_data",
-                                  e.target.value,
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-10 border rounded px-2 py-1"
-                              value={newProject.relevant_agency}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "relevant_agency",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.gad_activity.map((val, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-start gap-1 mb-1"
-                              >
-                                <div className="flex flex-col gap-1">
-                                  <textarea
-                                    className="w-10 border rounded px-2 py-1"
-                                    placeholder="Title"
-                                    value={val}
-                                    onChange={(e) =>
-                                      handleActivityTitleChange(
-                                        idx,
-                                        e.target.value,
-                                      )
-                                    }
-                                    required
-                                  />
-                                  <textarea
-                                    className="w-10 border rounded px-2 py-1 text-[11px] text-gray-600"
-                                    rows={2}
-                                    placeholder="Description"
-                                    value={
-                                      alignActivityDescriptions(
-                                        newProject.gad_activity,
-                                        newProject.gad_activity_description,
-                                      )[idx] || ""
-                                    }
-                                    onChange={(e) =>
-                                      handleActivityDescriptionChange(
-                                        idx,
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                {newProject.gad_activity.length > 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-red-500 text-white rounded"
-                                    onClick={() => handleRemoveActivityRow(idx)}
-                                  >
-                                    -
-                                  </button>
-                                )}
-                                {idx === newProject.gad_activity.length - 1 && (
-                                  <button
-                                    type="button"
-                                    className="ml-1 px-2 py-1 bg-green-500 text-white rounded"
-                                    onClick={handleAddActivityRow}
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {newProject.performance_indicator_target.map(
-                              (val, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-1 mb-2"
-                                >
-                                  <PerformanceIndicatorInput
-                                    value={val}
-                                    onChange={(updated) => {
-                                      const arr = [
-                                        ...newProject.performance_indicator_target,
-                                      ];
-                                      arr[idx] = updated;
-                                      handleNewProjectChange(
-                                        "performance_indicator_target",
-                                        arr,
-                                      );
-                                    }}
-                                  />
-                                  <div className="flex flex-col gap-1 mt-4">
-                                    {newProject.performance_indicator_target
-                                      .length > 1 && (
-                                      <button
-                                        type="button"
-                                        className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                        onClick={() =>
-                                          handleRemoveArrayField(
-                                            "performance_indicator_target",
-                                            idx,
-                                          )
-                                        }
-                                      >
-                                        -
-                                      </button>
-                                    )}
-                                    {idx ===
-                                      newProject.performance_indicator_target
-                                        .length -
-                                        1 && (
-                                      <button
-                                        type="button"
-                                        className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                        onClick={() =>
-                                          handleAddArrayField(
-                                            "performance_indicator_target",
-                                          )
-                                        }
-                                      >
-                                        +
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ),
-                            )}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <input
-                              type="number"
-                              min="0"
-                              className="w-20 border rounded px-2 py-1"
-                              value={newProject.gad_budget}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "gad_budget",
-                                  Number(e.target.value),
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <textarea
-                              className="w-10 border rounded px-2 py-1"
-                              value={newProject.source_budget}
-                              onChange={(e) =>
-                                handleNewProjectChange(
-                                  "source_budget",
-                                  e.target.value,
-                                )
-                              }
-                              required
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <OfficeMultiSelect
-                              variant="popover"
-                              value={newProject.responsible_office}
-                              onChange={(next) =>
-                                handleNewProjectChange(
-                                  "responsible_office",
-                                  next,
-                                )
-                              }
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b text-center">—</td>
-                          <td className="py-2 px-4 border-b">
-                            <button
-                              type="submit"
-                              className="px-3 py-1 bg-secondary-600 text-white rounded hover:bg-secondary-700 transition"
-                              disabled={addLoading}
-                            >
-                              {addLoading ? "Adding..." : "Add"}
-                            </button>
-                          </td>
-                        </tr>
-                      )}
+                    
                   </thead>
 
                   <tbody>
@@ -3751,41 +2886,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                         perfArr.length,
                       );
 
-                      const editCauseArr =
-                        editingId === project._id &&
-                        Array.isArray(editRow?.cause_gender_issue)
-                          ? editRow.cause_gender_issue
-                          : causeArr;
-                      const editObjArr =
-                        editingId === project._id &&
-                        Array.isArray(editRow?.gad_objective)
-                          ? editRow.gad_objective
-                          : objArr;
-                      const editActArr =
-                        editingId === project._id &&
-                        Array.isArray(editRow?.gad_activity)
-                          ? editRow.gad_activity
-                          : actArr;
-                      const editDescArr = alignActivityDescriptions(
-                        editActArr,
-                        editingId === project._id
-                          ? editRow?.gad_activity_description
-                          : project.gad_activity_description,
-                      );
-                      const editPerfArr =
-                        editingId === project._id &&
-                        Array.isArray(editRow?.performance_indicator_target)
-                          ? editRow.performance_indicator_target
-                          : perfArr;
-                      const editMaxRows =
-                        editingId === project._id
-                          ? Math.max(
-                              editCauseArr.length,
-                              editObjArr.length,
-                              editActArr.length,
-                              editPerfArr.length,
-                            )
-                          : maxRows;
+                      const editMaxRows = maxRows;
 
                       return (
                         <React.Fragment key={project._id}>
@@ -3823,24 +2924,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         </div>
                                       )}
                                     </td>
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <textarea
-                                          className="w-40 border rounded px-2 py-1"
-                                          value={editRow.gender_issue}
-                                          onChange={(e) =>
-                                            handleEditRowChange(
-                                              "gender_issue",
-                                              e.target.value,
-                                            )
-                                          }
-                                          required
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
@@ -3853,252 +2937,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                     )}
                                   </>
                                 )}
-                                {editingId === project._id ? (
-                                  <>
-                                    {editCauseArr.length === 1
-                                      ? rowIdx === 0 && (
-                                          <td
-                                            className="py-2 px-4 border text-xs"
-                                            rowSpan={editMaxRows}
-                                          >
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={editCauseArr[0] || ""}
-                                                onChange={(e) =>
-                                                  handleEditRowChange(
-                                                    "cause_gender_issue",
-                                                    [e.target.value],
-                                                  )
-                                                }
-                                              />
-                                              <div className="flex flex-col gap-1">
-                                                {editCauseArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      handleEditRowChange(
-                                                        "cause_gender_issue",
-                                                        [""],
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={() =>
-                                                    handleEditRowChange(
-                                                      "cause_gender_issue",
-                                                      [...editCauseArr, ""],
-                                                    )
-                                                  }
-                                                >
-                                                  +
-                                                </button>
-                                              </div>
-                                            </div>
-
-                                            <CommentBox
-                                              fieldComments={
-                                                project.comments?.filter((c) =>
-                                                  Array.isArray(c.fields)
-                                                    ? c.fields.includes(
-                                                        "cause_gender_issue",
-                                                      )
-                                                    : c.field ===
-                                                      "cause_gender_issue",
-                                                ) ?? []
-                                              }
-                                              fieldName="cause_gender_issue"
-                                              projectId={project._id}
-                                              role={role}
-                                              showAddButton={
-                                                role === "planning director"
-                                              }
-                                              onComment={() => {
-                                                if (!project?._id) {
-                                                  console.error(
-                                                    "Missing project ID",
-                                                    project,
-                                                  );
-                                                  return;
-                                                }
-
-                                                setCommentField(
-                                                  "cause_gender_issue",
-                                                );
-                                                setCommentProjectId(
-                                                  project._id,
-                                                );
-                                                setShowCommentForm(true);
-                                              }}
-                                              onDeleteComment={
-                                                handleDeleteComment
-                                              }
-                                            />
-                                          </td>
-                                        )
-                                      : rowIdx < editCauseArr.length && (
-                                          <td className="py-2 px-4 border">
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={
-                                                  editCauseArr[rowIdx] || ""
-                                                }
-                                                onChange={(e) => {
-                                                  const arr = [...editCauseArr];
-                                                  arr[rowIdx] = e.target.value;
-                                                  handleEditRowChange(
-                                                    "cause_gender_issue",
-                                                    arr,
-                                                  );
-                                                }}
-                                              />
-                                              <div className="flex flex-col gap-1">
-                                                {editCauseArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() => {
-                                                      const arr = [
-                                                        ...editCauseArr,
-                                                      ];
-                                                      arr.splice(rowIdx, 1);
-                                                      handleEditRowChange(
-                                                        "cause_gender_issue",
-                                                        arr,
-                                                      );
-                                                    }}
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                {rowIdx ===
-                                                  editCauseArr.length - 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleEditRowChange(
-                                                        "cause_gender_issue",
-                                                        [...editCauseArr, ""],
-                                                      )
-                                                    }
-                                                  >
-                                                    +
-                                                  </button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )}
-
-                                    {editObjArr.length === 1
-                                      ? rowIdx === 0 && (
-                                          <td
-                                            className="py-2 px-4 border text-xs"
-                                            rowSpan={editMaxRows}
-                                          >
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={editObjArr[0] || ""}
-                                                onChange={(e) =>
-                                                  handleEditRowChange(
-                                                    "gad_objective",
-                                                    [e.target.value],
-                                                  )
-                                                }
-                                              />
-                                              <div className="flex flex-col gap-1">
-                                                {editObjArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      handleEditRowChange(
-                                                        "gad_objective",
-                                                        [""],
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={() =>
-                                                    handleEditRowChange(
-                                                      "gad_objective",
-                                                      [...editObjArr, ""],
-                                                    )
-                                                  }
-                                                >
-                                                  +
-                                                </button>
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )
-                                      : rowIdx < editObjArr.length && (
-                                          <td className="py-2 px-4 border">
-                                            <div className="flex items-center gap-1">
-                                              <textarea
-                                                className="w-40 border rounded px-2 py-1"
-                                                value={editObjArr[rowIdx] || ""}
-                                                onChange={(e) => {
-                                                  const arr = [...editObjArr];
-                                                  arr[rowIdx] = e.target.value;
-                                                  handleEditRowChange(
-                                                    "gad_objective",
-                                                    arr,
-                                                  );
-                                                }}
-                                              />
-                                              <div className="flex flex-col gap-1">
-                                                {editObjArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() => {
-                                                      const arr = [
-                                                        ...editObjArr,
-                                                      ];
-                                                      arr.splice(rowIdx, 1);
-                                                      handleEditRowChange(
-                                                        "gad_objective",
-                                                        arr,
-                                                      );
-                                                    }}
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                {rowIdx ===
-                                                  editObjArr.length - 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleEditRowChange(
-                                                        "gad_objective",
-                                                        [...editObjArr, ""],
-                                                      )
-                                                    }
-                                                  >
-                                                    +
-                                                  </button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )}
-                                  </>
-                                ) : (
+                                {(
                                   <>
                                     {/* causeArr */}
                                     {causeArr.length === 1 ? (
@@ -4134,25 +2973,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                 )}
                                 {rowIdx === 0 && (
                                   <>
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border text-xs"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <textarea
-                                          className="w-40 border rounded px-2 py-1"
-                                          value={
-                                            editRow.supporting_statistics_data
-                                          }
-                                          onChange={(e) =>
-                                            handleEditRowChange(
-                                              "supporting_statistics_data",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
@@ -4161,24 +2982,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                       </td>
                                     )}
 
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border text-xs"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <textarea
-                                          className="w-40 border rounded px-2 py-1"
-                                          value={editRow.relevant_agency}
-                                          onChange={(e) =>
-                                            handleEditRowChange(
-                                              "relevant_agency",
-                                              e.target.value,
-                                            )
-                                          }
-                                          required
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
@@ -4189,250 +2993,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                   </>
                                 )}
 
-                                {editingId === project._id ? (
-                                  <>
-                                    {editActArr.length === 1
-                                      ? rowIdx === 0 && (
-                                          <td
-                                            className="py-2 px-4 border text-xs"
-                                            rowSpan={editMaxRows}
-                                          >
-                                            <div className="flex items-start gap-1">
-                                              <div className="flex flex-col gap-1">
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1"
-                                                  placeholder="Activity title"
-                                                  value={editActArr[0] || ""}
-                                                  onChange={(e) =>
-                                                    handleEditActivityTitleChange(
-                                                      0,
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                />
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1 text-[11px] text-gray-600"
-                                                  rows={2}
-                                                  placeholder="Description (optional)"
-                                                  value={editDescArr[0] || ""}
-                                                  onChange={(e) =>
-                                                    handleEditActivityDescriptionChange(
-                                                      0,
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-                                              <div className="flex flex-col gap-1">
-                                                {editActArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleRemoveEditActivityRow(
-                                                        0,
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={
-                                                    handleAddEditActivityRow
-                                                  }
-                                                >
-                                                  +
-                                                </button>
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )
-                                      : rowIdx < editActArr.length && (
-                                          <td className="py-2 px-4 border">
-                                            <div className="flex items-start gap-1">
-                                              <div className="flex flex-col gap-1">
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1"
-                                                  placeholder="Activity title"
-                                                  value={
-                                                    editActArr[rowIdx] || ""
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleEditActivityTitleChange(
-                                                      rowIdx,
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                />
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1 text-[11px] text-gray-600"
-                                                  rows={2}
-                                                  placeholder="Description (optional)"
-                                                  value={
-                                                    editDescArr[rowIdx] || ""
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleEditActivityDescriptionChange(
-                                                      rowIdx,
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-                                              <div className="flex flex-col gap-1">
-                                                {editActArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleRemoveEditActivityRow(
-                                                        rowIdx,
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                {rowIdx ===
-                                                  editActArr.length - 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={
-                                                      handleAddEditActivityRow
-                                                    }
-                                                  >
-                                                    +
-                                                  </button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )}
-
-                                    {editPerfArr.length === 1
-                                      ? rowIdx === 0 && (
-                                          <td
-                                            className="py-2 px-4 border text-xs"
-                                            rowSpan={editMaxRows}
-                                          >
-                                            <div className="flex items-start gap-1">
-                                              {editPerfArr[0]?._raw !==
-                                              undefined ? (
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1"
-                                                  value={editPerfArr[0]._raw}
-                                                  onChange={(e) =>
-                                                    handleEditIndicatorChange(
-                                                      0,
-                                                      {
-                                                        _raw: e.target.value,
-                                                      },
-                                                    )
-                                                  }
-                                                />
-                                              ) : (
-                                                <PerformanceIndicatorInput
-                                                  value={editPerfArr[0]}
-                                                  onChange={(updated) =>
-                                                    handleEditIndicatorChange(
-                                                      0,
-                                                      updated,
-                                                    )
-                                                  }
-                                                />
-                                              )}
-                                              <div className="flex flex-col gap-1 mt-4">
-                                                {editPerfArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      handleRemoveEditIndicator(
-                                                        0,
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                  onClick={
-                                                    handleAddEditIndicator
-                                                  }
-                                                >
-                                                  +
-                                                </button>
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )
-                                      : rowIdx < editPerfArr.length && (
-                                          <td className="py-2 px-4 border">
-                                            <div className="flex items-start gap-1">
-                                              {editPerfArr[rowIdx]?._raw !==
-                                              undefined ? (
-                                                <textarea
-                                                  className="w-40 border rounded px-2 py-1"
-                                                  value={
-                                                    editPerfArr[rowIdx]._raw
-                                                  }
-                                                  onChange={(e) =>
-                                                    handleEditIndicatorChange(
-                                                      rowIdx,
-                                                      {
-                                                        _raw: e.target.value,
-                                                      },
-                                                    )
-                                                  }
-                                                />
-                                              ) : (
-                                                <PerformanceIndicatorInput
-                                                  value={editPerfArr[rowIdx]}
-                                                  onChange={(updated) =>
-                                                    handleEditIndicatorChange(
-                                                      rowIdx,
-                                                      updated,
-                                                    )
-                                                  }
-                                                />
-                                              )}
-                                              <div className="flex flex-col gap-1 mt-4">
-                                                {editPerfArr.length > 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-red-500 text-white rounded text-xs"
-                                                    onClick={() =>
-                                                      handleRemoveEditIndicator(
-                                                        rowIdx,
-                                                      )
-                                                    }
-                                                  >
-                                                    -
-                                                  </button>
-                                                )}
-                                                {rowIdx ===
-                                                  editPerfArr.length - 1 && (
-                                                  <button
-                                                    type="button"
-                                                    className="px-2 py-1 bg-green-500 text-white rounded text-xs"
-                                                    onClick={
-                                                      handleAddEditIndicator
-                                                    }
-                                                  >
-                                                    +
-                                                  </button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </td>
-                                        )}
-                                  </>
-                                ) : (
+                                {(
                                   <>
                                     {actArr.length === 1 ? (
                                       rowIdx === 0 && (
@@ -4474,26 +3035,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
                                 {rowIdx === 0 && (
                                   <>
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border text-center text-xs"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          className="w-32 border rounded px-2 py-1"
-                                          value={editRow.gad_budget}
-                                          onChange={(e) =>
-                                            handleEditRowChange(
-                                              "gad_budget",
-                                              Number(e.target.value),
-                                            )
-                                          }
-                                          required
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-center text-xs"
                                         rowSpan={maxRows}
@@ -4501,24 +3043,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         {formatAmount(project.gad_budget, "—")}
                                       </td>
                                     )}
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border text-center text-xs"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <textarea
-                                          className="w-32 border rounded px-2 py-1"
-                                          value={editRow.source_budget}
-                                          onChange={(e) =>
-                                            handleEditRowChange(
-                                              "source_budget",
-                                              e.target.value,
-                                            )
-                                          }
-                                          required
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-center text-xs"
                                         rowSpan={maxRows}
@@ -4526,23 +3051,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         {project.source_budget}
                                       </td>
                                     )}
-                                    {editingId === project._id ? (
-                                      <td
-                                        className="py-2 px-4 border text-xs"
-                                        rowSpan={editMaxRows}
-                                      >
-                                        <OfficeMultiSelect
-                                          variant="popover"
-                                          value={editRow.responsible_office}
-                                          onChange={(next) =>
-                                            handleEditRowChange(
-                                              "responsible_office",
-                                              next,
-                                            )
-                                          }
-                                        />
-                                      </td>
-                                    ) : (
+                                    {(
                                       <td
                                         className="py-2 px-4 border text-xs"
                                         rowSpan={maxRows}
@@ -4662,34 +3171,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                           className="py-2 px-4 border text-sm"
                                           rowSpan={editMaxRows}
                                         >
-                                          {editingId === project._id ? (
-                                            <>
-                                              <button
-                                                type="button"
-                                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                                onClick={(e) => {
-                                                  e.preventDefault();
-                                                  saveEdit();
-                                                }}
-                                                disabled={editLoading}
-                                              >
-                                                {editLoading
-                                                  ? "Saving..."
-                                                  : "Save"}
-                                              </button>
-                                              <button
-                                                type="button"
-                                                className="px-3 py-1 bg-gray-400 text-black rounded hover:bg-gray-500 transition"
-                                                onClick={(e) => {
-                                                  e.preventDefault();
-                                                  cancelEdit();
-                                                }}
-                                                disabled={editLoading}
-                                              >
-                                                Cancel
-                                              </button>
-                                            </>
-                                          ) : (
+                                          {(
                                             <>
                                               {role !== "planning director" && (
                                                 <div className="flex flex-col items-center gap-2">

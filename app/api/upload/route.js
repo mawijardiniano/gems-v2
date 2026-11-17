@@ -10,7 +10,10 @@ import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
 import AcademicProject from "@/models/academicProject";
 import ResearchExtensionProject from "@/models/researchExtensionProject";
-import { isProjectManagerRole } from "@/data/lib/projectAccess";
+import {
+  MODULE_EDITOR_ROLES,
+  isProjectManagerRole,
+} from "@/data/lib/projectAccess";
 import { getS3Client, storageBucket, buildObjectUrl } from "@/data/lib/storage";
 
 const s3 = getS3Client;
@@ -74,10 +77,6 @@ const GPB_MANAGEMENT_ROLES = [
   "suc president",
   "gad focal person",
 ];
-
-/* Module projects (Academic, Research & Extension) let these roles edit any
-   project, as in data/lib/simpleProjectApi.js. */
-const MODULE_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
 
 /**
  * Whether `user` may delete a stored file that is not in their own upload

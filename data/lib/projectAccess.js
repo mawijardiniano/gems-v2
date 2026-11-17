@@ -19,6 +19,17 @@ const normalizeRole = (role) =>
 /** Besides a project's creator, these roles may edit or delete any project. */
 export const PROJECT_MANAGER_ROLES = ["gad focal person", "admin"];
 
+/** Academic and Research & Extension projects are office-managed: besides
+    the creator, these roles may create and edit any of them. */
+export const MODULE_EDITOR_ROLES = [
+  "gad focal person",
+  "gad coordinator",
+  "admin",
+];
+
+export const isModuleEditorRole = (role) =>
+  MODULE_EDITOR_ROLES.includes(normalizeRole(role));
+
 /** Roles that may create, attach budgets to, or delete a whole GPB, and
     create, edit or delete GAA budgets. Matches the pages: coordinators and
     the planning director see GPBs and budgets read-only. */

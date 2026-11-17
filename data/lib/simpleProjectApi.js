@@ -20,7 +20,10 @@ import Event from "@/models/event";
 import "@/models/profile";
 import mongoose from "mongoose";
 import { deleteFileFromBucket } from "@/data/lib/delete.js";
-import { canViewProjectDetails } from "@/data/lib/projectAccess.js";
+import {
+  MODULE_EDITOR_ROLES,
+  canViewProjectDetails,
+} from "@/data/lib/projectAccess.js";
 import {
   collectProjectFileKeys,
   findForeignProjectKey,
@@ -43,7 +46,7 @@ const MAX_REF_ATTEMPTS = 3;
 
 /* Roles (besides the creator) allowed to manage schedule, status, milestones
    and approval details on a module project. */
-const DEFAULT_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
+const DEFAULT_EDITOR_ROLES = MODULE_EDITOR_ROLES;
 
 const MAX_COMMENT_LENGTH = 2000;
 

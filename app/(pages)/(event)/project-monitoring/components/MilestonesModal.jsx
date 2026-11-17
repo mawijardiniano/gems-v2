@@ -11,6 +11,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   MAX_GANTT_ACTIVITIES,
   emptyActivity,
@@ -346,6 +347,8 @@ export default function MilestonesModal({
       }).catch(() => {});
     }
   };
+
+  useEscapeKey(!inline && !saving, () => closeAndCleanup());
 
   const closeAndCleanup = () => {
     /* Closing mid-save would delete files the save is still linking. */
