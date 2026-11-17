@@ -20,7 +20,6 @@ export default function OverviewTab({
   setIsEditing,
   editData,
   setEditData,
-  handleEditChange,
   handleSave,
   saving,
   saveError,
@@ -150,10 +149,8 @@ export default function OverviewTab({
 
         {isEditing ? (
           <EventEditForm
-            event={event}
             editData={editData}
             setEditData={setEditData}
-            handleEditChange={handleEditChange}
             projects={projects}
             saving={saving}
             saveError={saveError}

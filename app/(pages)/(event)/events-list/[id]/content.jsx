@@ -596,9 +596,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     (g) => g?.validation_status === "pending",
   ).length;
 
-  const handleEditChange = (field, value) => {
-    setEditData((prev) => ({ ...(prev || {}), [field]: value }));
-  };
 
   /* Returns true on success so the form only closes when the change stuck.
      Errors go to `saveError`, shown inside the form: the page-level `error`
@@ -615,6 +612,16 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
       if (!editData.date) {
         setSaveError("Please pick the event date.");
+        return false;
+      }
+      /* Switching an event to Independent clears a GAD type on purpose, so
+         the organizer must choose one. */
+      if (!editData.type_of_activity) {
+        setSaveError("Please select a type of activity.");
+        return false;
+      }
+      if (editData.event_source === "project" && !editData.gad_activity) {
+        setSaveError("Please select the GAD activity for this project-based event.");
         return false;
       }
 
@@ -781,7 +788,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setIsEditing={setIsEditing}
           editData={editData}
           setEditData={setEditData}
-          handleEditChange={handleEditChange}
           handleSave={handleSave}
           saving={saving}
           saveError={saveError}
