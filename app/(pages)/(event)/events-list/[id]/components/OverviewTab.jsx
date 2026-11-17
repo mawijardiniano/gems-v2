@@ -68,6 +68,7 @@ export default function OverviewTab({
   attendedCount,
   pendingGuestCount,
   userId,
+  canDelete = false,
   showDeleteModal,
   setShowDeleteModal,
   deleteError,
@@ -959,6 +960,7 @@ export default function OverviewTab({
       )}
 
       {/* ── Delete Event ──────────────────────────────────────────── */}
+      {canDelete && (
       <div className="rounded-xl border border-red-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -982,6 +984,7 @@ export default function OverviewTab({
           </button>
         </div>
       </div>
+      )}
 
       {/* ── Cancel Confirmation Modal ─────────────────────────────── */}
       <CancelEventModal

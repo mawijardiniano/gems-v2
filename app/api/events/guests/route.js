@@ -46,7 +46,7 @@ export function isEventOrganizer(user, event) {
 }
 
 export async function GET(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   try {
     await connectDB();
@@ -56,6 +56,16 @@ export async function GET(req) {
       return NextResponse.json(
         { message: "Valid event_id is required" },
         { status: 400 },
+      );
+    /* The sheet carries contact numbers, ages and sex/gender identity, so
+       only the event's organizers may read it — the same gate as PATCH. */
+    const event = await Event.findById(event_id).select("created_by").lean();
+    if (!event)
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    if (!isEventOrganizer(user, event))
+      return NextResponse.json(
+        { message: "Only the event's organizers can view its guest list." },
+        { status: 403 },
       );
     const requested = searchParams.get("validation_status") || "all";
     if (requested !== "all" && !STATUSES.includes(requested))
@@ -88,6 +98,7 @@ export async function GET(req) {
     });
     return NextResponse.json({ status: "success", data: guests, counts });
   } catch (err) {
+    console.error("GET /api/events/guests failed:", err);
     return NextResponse.json(
       { message: "Unable to load guests." },
       { status: 500 },

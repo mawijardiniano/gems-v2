@@ -16,6 +16,8 @@ import {
   nextEventRefNumber,
 } from "@/data/lib/referenceNumber";
 import { EVENT_STATUSES } from "@/data/lib/eventStatus";
+import { canViewPII } from "@/data/lib/profileBroker";
+import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -143,7 +145,11 @@ export async function GET(req) {
     /* The cache key must describe the query, not just the creator. Keying on
        `created_by` alone let a type-filtered result be served to an unfiltered
        request (and vice versa) for the whole TTL. */
-    const cacheKey = `events:list:${created_by || "all"}:${[
+    /* The hydrator decrypts creator identities only for PII-cleared roles, so
+       the key must separate those callers or a cleared user's response would
+       be served (decrypted) to everyone else for the TTL. */
+    const piiScope = canViewPII(user?.role) ? "pii" : "masked";
+    const cacheKey = `events:list:${piiScope}:${created_by || "all"}:${[
       type || "",
       statusFilter || "",
       year || "",
@@ -239,6 +245,15 @@ export async function POST(req) {
           message:
             "All fields are required, including start date/time and end date/time.",
         },
+        { status: 400 },
+      );
+    }
+
+    /* The poster key is deleted with the event, so it must be the caller's
+       own upload. */
+    if (!isAcceptablePosterKey(event_poster?.key, { userId: user._id })) {
+      return NextResponse.json(
+        { message: "The poster file was not uploaded by you." },
         { status: 400 },
       );
     }

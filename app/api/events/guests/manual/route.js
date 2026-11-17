@@ -285,7 +285,7 @@ export async function POST(req) {
       /* Set for an adopted / created row so the Attendance table can say where
          the row came from and who signed it off. */
       validation_status: "approved",
-      validated_by: organizerId,
+      validated_by: user._id,
       validated_at: new Date(),
       validation_note: VALIDATION_NOTE,
     };

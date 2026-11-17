@@ -6,24 +6,10 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { deleteFileFromBucket } from "@/data/lib/delete";
-
-const collectFileKeys = (report) => {
-  const keys = [];
-  for (const field of [
-    "office_memorandum",
-    "activity_design",
-    "attendance_sheet",
-  ]) {
-    if (report?.[field]?.key) keys.push(report[field].key);
-  }
-  if (Array.isArray(report?.photos)) {
-    report.photos.forEach((p) => p?.key && keys.push(p.key));
-  }
-  if (Array.isArray(report?.other_attachments)) {
-    report.other_attachments.forEach((p) => p?.key && keys.push(p.key));
-  }
-  return keys;
-};
+import {
+  collectReportFileKeys as collectFileKeys,
+  findForeignReportKey,
+} from "@/data/lib/eventFileKeys";
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
@@ -77,6 +63,15 @@ export async function PUT(req, { params }) {
       return NextResponse.json(
         { error: "You are not allowed to update this report" },
         { status: 403 },
+      );
+    }
+
+    /* Files already on the report may be kept; anything new must come from
+       the caller's own uploads, since replaced keys get deleted below. */
+    if (findForeignReportKey(body, { userId: user._id, existing })) {
+      return NextResponse.json(
+        { error: "One of the attached files was not uploaded by you." },
+        { status: 400 },
       );
     }
 

@@ -1,5 +1,34 @@
 ﻿"use client";
 
+/* Guest fields come from the public, no-login /attend form, so everything
+   interpolated into the print/PDF HTML is escaped to keep it as text. */
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* The paper form has one shared "Extension / Research" box, so either type
+   ticks it. */
+const ACTIVITY_TYPE_BOXES = [
+  { label: "Academic", values: ["Academic"] },
+  { label: "Administrative", values: ["Administrative"] },
+  { label: "GAD", values: ["GAD"] },
+  { label: "Extension / Research", values: ["Extension", "Research"] },
+  { label: "Students", values: ["Students"] },
+  { label: "Others", values: ["Others"] },
+];
+
+function activityTypeBoxes(selectedType) {
+  return ACTIVITY_TYPE_BOXES.map((box) => ({
+    label: box.label,
+    checked: box.values.includes(selectedType),
+  }));
+}
+
 export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
   const toDetails = (g) => {
     // New no-login QR guests are already sheet-shaped EventGuest docs.
@@ -64,12 +93,12 @@ export function handlePrintGuests(guests, event, buildRows) {
   const rows = buildRows(guests)
     .map((row) => {
       if (row.isDepartmentHeader) {
-        return `<tr><td colspan="12" style="background:#e6f0fa;font-weight:bold;text-align:left;padding:6px 10px;font-size:13px;border:1px solid #ccc;">${row.department}</td></tr>`;
+        return `<tr><td colspan="12" style="background:#e6f0fa;font-weight:bold;text-align:left;padding:6px 10px;font-size:13px;border:1px solid #ccc;">${escapeHtml(row.department)}</td></tr>`;
       } else {
         return `<tr>${row.data
           .map(
             (cell) =>
-              `<td style="border: 1px solid #ccc; padding:5px 6px; text-align: center; font-size: 11px; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${cell === undefined ? "" : cell}</td>`,
+              `<td style="border: 1px solid #ccc; padding:5px 6px; text-align: center; font-size: 11px; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">${escapeHtml(cell)}</td>`,
           )
           .join("")}</tr>`;
       }
@@ -101,26 +130,18 @@ export function handlePrintGuests(guests, event, buildRows) {
       : startStr;
   })();
 
-  const ACTIVITY_TYPES = [
-    "Academic",
-    "Administrative",
-    "GAD",
-    "Extension Research",
-    "Students",
-    "Others",
-  ];
 
-  const selectedType = event.type_of_activity;
-
-  const typeOfActivityHTML = ACTIVITY_TYPES.map((type) => {
-    const checked = type === selectedType ? "â˜‘" : "â˜";
-    return `<span class="checkbox-item">${checked} ${type}</span>`;
-  }).join("");
+  const typeOfActivityHTML = activityTypeBoxes(event.type_of_activity)
+    .map(
+      ({ label, checked }) =>
+        `<span class="checkbox-item">${checked ? "&#9745;" : "&#9744;"} ${label}</span>`,
+    )
+    .join(" ");
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>${event.title || "Guest List"}</title>
+  <title>${escapeHtml(event.title || "Guest List")}</title>
   <style>
     @page { size: landscape; margin: 8mm; }
     body {
@@ -151,11 +172,11 @@ export function handlePrintGuests(guests, event, buildRows) {
   <div style="margin-left: 30px; margin-top: 4px;">
     <h4 style="font-weight: bold; font-size:12px;">I.<b style="margin-left: 20px;">Activity Information</b></h4>
     <div style="margin-left: 20px;">
-      <h4 style="font-size:11px;"><span style="font-weight: bold;">Activity Title:</span> ${event.title || "Guest List"}</h4>
+      <h4 style="font-size:11px;"><span style="font-weight: bold;">Activity Title:</span> ${escapeHtml(event.title || "Guest List")}</h4>
       <h4 style="font-size:11px;"><span style="font-weight: bold;">Type of Activity:</span> ${typeOfActivityHTML}</h4>
       <h4 style="font-size:11px;"><span style="font-weight: bold;">Date:</span>${dateLabel}</h4>
-      <h4 style="font-size:11px;"><span style="font-weight: bold;">Venue:</span> ${event.venue || ""}</h4>
-      <h4 style="font-size:11px;"><span style="font-weight: bold;">Organizing Office/Unit:</span> ${event.organizing_office_unit || ""}</h4>
+      <h4 style="font-size:11px;"><span style="font-weight: bold;">Venue:</span> ${escapeHtml(event.venue || "")}</h4>
+      <h4 style="font-size:11px;"><span style="font-weight: bold;">Organizing Office/Unit:</span> ${escapeHtml([].concat(event.organizing_office_unit || []).join(", "))}</h4>
     </div>
     <h4 style="margin:8px 0px 10px 0px; font-weight: bold; font-size:12px;">II.<b style="margin-left: 20px;">Participating Attendance</b></h4>
   </div>
@@ -255,23 +276,11 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
       : startStr;
   })();
 
-  const ACTIVITY_TYPES = [
-    "Academic",
-    "Administrative",
-    "GAD",
-    "Extension Research",
-    "Students",
-    "Others",
-  ];
 
-  const selectedType = event.type_of_activity;
-
-  // Use [X]/[ ] instead of â˜‘/â˜ because jsPDF's built-in WinAnsi
-  // fonts cannot render â˜‘/â˜ characters.
-  const typeOfActivityText = ACTIVITY_TYPES.map((type) => {
-    const checked = type === selectedType ? "[X]" : "[ ]";
-    return `${checked} ${type}`;
-  }).join("   ");
+  // [X]/[ ] because jsPDF's built-in WinAnsi fonts cannot render ballot boxes.
+  const typeOfActivityText = activityTypeBoxes(event.type_of_activity)
+    .map(({ label, checked }) => `${checked ? "[X]" : "[ ]"} ${label}`)
+    .join("   ");
 
   // Preload the university logo as a data URL so it can be embedded.
   const logoPromise = new Promise((resolve) => {
@@ -495,21 +504,13 @@ export function handleDownloadBlankGuestsPdf(event) {
       : startStr;
   })();
 
-  const ACTIVITY_TYPES = [
-    "Academic",
-    "Administrative",
-    "GAD",
-    "Extension Research",
-    "Students",
-    "Others",
-  ];
 
-  const selectedType = event.type_of_activity;
-
-  const typeOfActivityHTML = ACTIVITY_TYPES.map((type) => {
-    const checked = type === selectedType ? "â˜‘" : "â˜";
-    return `<span class="checkbox-item">${checked} ${type}</span>`;
-  }).join("");
+  const typeOfActivityHTML = activityTypeBoxes(event.type_of_activity)
+    .map(
+      ({ label, checked }) =>
+        `<span class="checkbox-item">${checked ? "&#9745;" : "&#9744;"} ${label}</span>`,
+    )
+    .join(" ");
 
   let tablesHtml = "";
   tablesHtml += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc; page-break-after: always;">${tableHeader}<tbody>${blankRowsFirst}</tbody></table>`;
@@ -518,7 +519,7 @@ export function handleDownloadBlankGuestsPdf(event) {
   const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>${event.title || "Guest List"}</title>
+  <title>${escapeHtml(event.title || "Guest List")}</title>
   <style>
     @page { size: landscape; }
     body { font-family: Arial, sans-serif; padding: 24px; margin: 0; color: #111; }
@@ -542,11 +543,11 @@ export function handleDownloadBlankGuestsPdf(event) {
   <div style="margin-left: 50px;">
     <h4 style="font-weight: bold;">I.<b style="margin-left: 20px;">Activity Information</b></h4>
     <div style="margin-left: 30px;">
-      <h4><span style="font-weight: bold;">Activity Title:</span> ${event.title || "Guest List"}</h4>
+      <h4><span style="font-weight: bold;">Activity Title:</span> ${escapeHtml(event.title || "Guest List")}</h4>
       <h4><span style="font-weight: bold;">Type of Activity:</span> ${typeOfActivityHTML}</h4>
       <h4><span style="font-weight: bold;">Date:</span>${dateLabel}</h4>
-      <h4><span style="font-weight: bold;">Venue:</span> ${event.venue || ""}</h4>
-      <h4><span style="font-weight: bold;">Organizing Office/Unit:</span> ${event.organizing_office_unit || ""}</h4>
+      <h4><span style="font-weight: bold;">Venue:</span> ${escapeHtml(event.venue || "")}</h4>
+      <h4><span style="font-weight: bold;">Organizing Office/Unit:</span> ${escapeHtml([].concat(event.organizing_office_unit || []).join(", "))}</h4>
     </div>
     <h4 style="margin:12px 0px 24px 0px; font-weight: bold;">II.<b style="margin-left: 20px;">Participating Attendance</b></h4>
   </div>

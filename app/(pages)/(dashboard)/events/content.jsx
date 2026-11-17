@@ -11,6 +11,7 @@ import {
   FaChevronRight,
   FaEye,
   FaSearch,
+  FaTimes,
 } from "react-icons/fa";
 import {
   effectiveStatus,

@@ -14,6 +14,7 @@ import {
   hydrateUserPopulate,
 } from "@/data/lib/userPopulate";
 import { normalizeRefNumber } from "@/data/lib/referenceNumber";
+import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -146,6 +147,19 @@ export async function PUT(req, { params }) {
       return NextResponse.json(
         { status: "error", message: "You are not allowed to edit this event" },
         { status: 403 },
+      );
+    }
+
+    if (
+      body.event_poster !== undefined &&
+      !isAcceptablePosterKey(body.event_poster?.key, {
+        userId: user._id,
+        existingKey: event.event_poster?.key,
+      })
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "The poster file was not uploaded by you." },
+        { status: 400 },
       );
     }
 
@@ -288,11 +302,7 @@ export async function DELETE(req, { params }) {
     );
   }
 
-  await connectDB();
-
-  const event = await Event.findById(id);
-
-  if (!event) {
+  if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
       { status: "error", message: "Event not found" },
       { status: 404 },
@@ -300,6 +310,32 @@ export async function DELETE(req, { params }) {
   }
 
   try {
+    await connectDB();
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return NextResponse.json(
+        { status: "error", message: "Event not found" },
+        { status: 404 },
+      );
+    }
+
+    /* Same rule as PUT: only the creator or an Admin may remove an event,
+       since the cascade also deletes its report and stored files. */
+    if (
+      String(event.created_by) !== String(user._id) &&
+      user.role !== "Admin"
+    ) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "You are not allowed to delete this event",
+        },
+        { status: 403 },
+      );
+    }
+
     const { title } = await deleteEventCascade(event);
 
     // Event deleted - invalidate cached event lists.
@@ -321,8 +357,8 @@ export async function DELETE(req, { params }) {
     console.error("Delete failed:", error);
 
     return NextResponse.json(
-      { status: "error", message: error.message },
-      { status: 400 },
+      { status: "error", message: "Unable to delete event." },
+      { status: 500 },
     );
   }
 }

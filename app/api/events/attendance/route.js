@@ -7,6 +7,11 @@ import { requireAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 
+/* How old an offline-queued scan may be when it is replayed. */
+const OFFLINE_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000;
+/* Tolerance for a device clock running slightly ahead of the server. */
+const CLOCK_SKEW_MS = 5 * 60 * 1000;
+
 export async function POST(req) {
   try {
     const { error, status, user } = await requireAuth(req);
@@ -57,10 +62,24 @@ export async function POST(req) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
+    if (event.status === "cancelled") {
+      return NextResponse.json(
+        { message: "This event has been cancelled.", code: "EVENT_CANCELLED" },
+        { status: 400 },
+      );
+    }
+
+    /* `captured_at` exists for the offline PWA queue (public/sw.js), which
+       replays scans taken without a connection. It is client-supplied, so it
+       is only trusted within a short replay window; otherwise a student could
+       back-date a check-in to any past event. */
     const now = Date.now();
+    const capturedMs = captured_at ? new Date(captured_at).getTime() : NaN;
     const hasCapturedAt =
-      captured_at && !isNaN(new Date(captured_at).getTime());
-    const referenceTime = hasCapturedAt ? new Date(captured_at).getTime() : now;
+      Number.isFinite(capturedMs) &&
+      capturedMs <= now + CLOCK_SKEW_MS &&
+      capturedMs >= now - OFFLINE_REPLAY_WINDOW_MS;
+    const referenceTime = hasCapturedAt ? Math.min(capturedMs, now) : now;
 
     /* Same day-bounded window the guest QR route and the manage-list badge use,
        from lib/eventStatus. This used to be a third hand-built copy that did not
@@ -97,7 +116,7 @@ export async function POST(req) {
       );
     }
 
-    const attendedAt = hasCapturedAt ? new Date(captured_at) : new Date();
+    const attendedAt = new Date(referenceTime);
 
     const results = [];
     let anyAdded = false;

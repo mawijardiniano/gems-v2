@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
+import { findForeignReportKey } from "@/data/lib/eventFileKeys";
 
 export async function POST(req) {
   try {
@@ -21,9 +22,29 @@ export async function POST(req) {
       );
     }
 
-    const event = await Event.findById(event_id);
+    const event = await Event.findById(event_id).select("created_by");
     if (!event) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    }
+
+    /* Same owners as PUT: without this, anyone could file the report first
+       and lock the real organizer out with a 409. */
+    if (
+      String(event.created_by) !== String(user._id) &&
+      user.role !== "Admin"
+    ) {
+      return NextResponse.json(
+        { message: "Only the event's creator can submit its report." },
+        { status: 403 },
+      );
+    }
+
+    const foreignKey = findForeignReportKey(body, { userId: user._id });
+    if (foreignKey) {
+      return NextResponse.json(
+        { message: "One of the attached files was not uploaded by you." },
+        { status: 400 },
+      );
     }
 
     const existingReport = await AccomplishmentReport.findOne({ event_id });
@@ -61,7 +82,22 @@ export async function POST(req) {
 
     return NextResponse.json({ status: "success", data: report });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    /* Two submits racing past the findOne both reach create; the unique
+       event_id index rejects the second. */
+    if (err?.code === 11000) {
+      return NextResponse.json(
+        {
+          message:
+            "A report already exists for this event. Update the existing report instead.",
+        },
+        { status: 409 },
+      );
+    }
+    console.error("POST /api/events/accomplishment-report failed:", err);
+    return NextResponse.json(
+      { message: "Unable to create report." },
+      { status: 500 },
+    );
   }
 }
 

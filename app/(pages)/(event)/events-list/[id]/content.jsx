@@ -27,6 +27,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   const [event, setEvent] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
@@ -250,6 +251,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         try {
           const profileRes = await axios.get("/api/profile/my-profile");
           setUserId(profileRes.data?.user?._id || null);
+          setUserRole(profileRes.data?.user?.role || null);
         } catch (profileErr) {
           const status = profileErr?.response?.status;
           if (status !== 401 && status !== 403) throw profileErr;
@@ -831,6 +833,13 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           attendedCount={attendedCount}
           pendingGuestCount={pendingGuestCount}
           userId={userId}
+          /* Mirrors the DELETE route: creator or Admin only. */
+          canDelete={
+            userRole === "Admin" ||
+            (Boolean(userId) &&
+              String(event?.created_by?._id || event?.created_by || "") ===
+                String(userId))
+          }
           showDeleteModal={showDeleteModal}
           setShowDeleteModal={setShowDeleteModal}
           deleteError={deleteError}

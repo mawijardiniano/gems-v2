@@ -2,6 +2,7 @@ import Event from "@/models/event";
 import Project from "@/models/projects";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import { deleteFileFromBucket } from "@/data/lib/delete";
+import { collectReportFileKeys } from "@/data/lib/eventFileKeys";
 
 /**
  * Deletes an event together with everything attached to it:
@@ -25,19 +26,8 @@ export async function deleteEventCascade(eventOrId) {
   const keys = [];
   if (event.event_poster?.key) keys.push(event.event_poster.key);
 
-  const report = await AccomplishmentReport.findOne({ event_id: id });
-  if (report) {
-    if (report.office_memorandum?.key) keys.push(report.office_memorandum.key);
-    if (report.activity_design?.key) keys.push(report.activity_design.key);
-    if (report.attendance_sheet?.key) keys.push(report.attendance_sheet.key);
-
-    if (Array.isArray(report.photos)) {
-      report.photos.forEach((p) => p?.key && keys.push(p.key));
-    }
-    if (Array.isArray(report.other_attachments)) {
-      report.other_attachments.forEach((p) => p?.key && keys.push(p.key));
-    }
-  }
+  const reports = await AccomplishmentReport.find({ event_id: id });
+  for (const report of reports) keys.push(...collectReportFileKeys(report));
 
   /* A missing/broken object must not stop the record cleanup. */
   for (const key of keys) {
