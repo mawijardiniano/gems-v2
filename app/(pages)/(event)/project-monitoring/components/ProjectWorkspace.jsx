@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatPeso } from "@/data/lib/money";
 import {
   FaChevronDown,
   FaChevronUp,
@@ -62,8 +63,7 @@ const getArrayValue = (field) => {
   return [];
 };
 
-const fmtPeso = (n) =>
-  `₱ ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const fmtPeso = (n) => formatPeso(n);
 
 const formatDate = (d) => {
   if (!d) return null;

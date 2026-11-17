@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatPeso } from "@/data/lib/money";
 import React, {
   useCallback,
   useEffect,
@@ -65,7 +66,7 @@ const getArrayValue = (field) => {
   return [];
 };
 
-const fmtPeso = (n) => `₱ ${Number(n || 0).toLocaleString()}`;
+const fmtPeso = (n) => formatPeso(n);
 
 const formatDate = (d) => {
   if (!d) return null;
@@ -361,12 +362,18 @@ export default function GADProjectsMonitoringContent() {
   const searchParams = useSearchParams();
   const focusParam = searchParams?.get("focus");
 
+  /* Runs once per ?focus= value. It used to re-run on every `projects` or
+     page change, so saving anything snapped the view back to the focused
+     project's Details tab and overrode the year the user had picked. */
+  const focusAppliedRef = useRef(null);
   useEffect(() => {
     if (loading || !focusParam) return;
+    if (focusAppliedRef.current === focusParam) return;
     const focusProject = projects.find(
       (p) => String(p._id) === String(focusParam),
     );
     if (!focusProject) return;
+    focusAppliedRef.current = focusParam;
     if (focusProject.year) setYearFilter(String(focusProject.year));
     setDetailTab("details");
     setExpandedId(focusProject._id);
@@ -376,7 +383,7 @@ export default function GADProjectsMonitoringContent() {
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 200);
     return () => clearTimeout(timer);
-  }, [loading, projects, focusParam, currentPage]);
+  }, [loading, projects, focusParam]);
 
   const filteredProjects = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -2057,9 +2064,6 @@ export default function GADProjectsMonitoringContent() {
                                                     Event
                                                   </th>
                                                   <th className="text-center py-1.5 font-semibold w-16">
-                                                    Target
-                                                  </th>
-                                                  <th className="text-center py-1.5 font-semibold w-16">
                                                     Attended
                                                   </th>
                                                 </tr>
@@ -2073,14 +2077,9 @@ export default function GADProjectsMonitoringContent() {
                                                           "Untitled event"}
                                                       </span>
                                                     </td>
-                                                    <td className="py-2 text-center text-gray-800">
-                                                      {Array.isArray(
-                                                        ev?.attended_users,
-                                                      )
-                                                        ? ev.attended_users
-                                                            .length
-                                                        : "—"}
-                                                    </td>
+                                                    {/* There used to be a "Target" cell here that
+                                                        repeated the attendance count (events have no
+                                                        per-event target), so every event read 100%. */}
                                                     <td className="py-2 text-center text-gray-800">
                                                       {Array.isArray(
                                                         ev?.attended_users,

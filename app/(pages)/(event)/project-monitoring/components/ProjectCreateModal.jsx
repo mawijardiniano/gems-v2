@@ -10,7 +10,12 @@ import {
   FaSpinner,
   FaTimes,
 } from "react-icons/fa";
-import { FieldRenderer, resolveOptions } from "./ProjectFormFields";
+import {
+  FieldRenderer,
+  listToText,
+  resolveOptions,
+  textToList,
+} from "./ProjectFormFields";
 
 /*
  * Multi-step "New Project" wizard for the office-managed project modules.
@@ -281,10 +286,7 @@ export default function ProjectCreateModal({
       const raw = values[field.key];
 
       if (field.type === "list") {
-        payload[field.key] = String(raw ?? "")
-          .split(/[,\n]/)
-          .map((item) => item.trim())
-          .filter(Boolean);
+        payload[field.key] = textToList(raw);
         continue;
       }
 

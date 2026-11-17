@@ -22,6 +22,7 @@ import { toOfficeArray } from "@/data/lib/colleges";
 import { nextRefNumber } from "@/data/lib/referenceNumber";
 import { gpbStatusOptions } from "@/data/lib/gpbStatus";
 import { canManageProject } from "@/data/lib/projectAccess";
+import { formatAmount } from "@/data/lib/money";
 
 const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
@@ -564,6 +565,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const [addError, setAddError] = useState("");
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [deletingProject, setDeletingProject] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [commentSaving, setCommentSaving] = useState(false);
+  const [commentError, setCommentError] = useState("");
   const [deleteModal, setDeleteModal] = useState({
     open: false,
     project: null,
@@ -726,11 +732,28 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     page * pageSize,
   );
 
-  const fetchProjects = async () => {
-    setLoading(true);
+  /* `quiet` refreshes in the background: after a delete or a comment the
+     table used to be replaced by "Loading projects..." and lose its place. */
+  const fetchProjects = async ({ quiet = false } = {}) => {
+    if (!quiet) setLoading(true);
+    setLoadError("");
     try {
       const res = await fetch(`/api/gpb/${year}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      /* A 403/404 used to throw on `data.data` further down and leave an
+         empty plan on screen with no message and a working "+ Add Project". */
+      if (!res.ok || !data?.data) {
+        setProjects([]);
+        setProjectList([]);
+        setLoadError(
+          res.status === 404
+            ? `There is no GPB for ${year} yet.`
+            : res.status === 403
+              ? "You are not allowed to view this GPB."
+              : data?.message || data?.error || "Unable to load this GPB.",
+        );
+        return;
+      }
 
       const projects = data?.data?.projects || [];
 
@@ -809,18 +832,23 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       setProjectList(normalized);
       setStatus(data.data.status_of_gpb?.status);
-      console.log("Comments", data.data.projects);
       setProjects(normalized);
-      console.log("Normalized", normalized);
       setSelectedGPBId(data.data._id);
       setSelectedGPBStatus(data.data.status_of_gpb);
-      console.log("Key", data.data.status_of_gpb);
-      console.log("GPBId", data.data._id);
+      /* "Total GAA" is the budget attached to this GPB — the one the dashboard
+         and the matrix PDF show — not a separate lookup by year. */
+      const linkedBudget = data.data.gaaBudgetId;
+      setTotalGAA(
+        linkedBudget && typeof linkedBudget === "object"
+          ? linkedBudget.totalGAA
+          : null,
+      );
     } catch (err) {
       console.error(err);
       setProjects([]);
+      setLoadError("Unable to load this GPB. Check your connection and retry.");
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   };
   useEffect(() => {
@@ -832,27 +860,14 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     setPageSizeInput(String(pageSize));
   }, [page, totalPages, pageSize]);
 
-  useEffect(() => {
-    if (!year) return;
-    fetch(`/api/gaa-budget?year=${year}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.data.length > 0) {
-          setTotalGAA(data.data[0].totalGAA);
-        } else {
-          setTotalGAA(null);
-        }
-      });
-  }, [year]);
-
   const fetchBudgetSummary = async () => {
     if (!year) return;
 
     try {
       const res = await fetch(`/api/project/budget/summary/${year}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      setBudgetSummary(data?.budgetSummary || null);
+      setBudgetSummary(res.ok ? data?.budgetSummary || null : null);
     } catch (err) {
       console.error(err);
       setBudgetSummary(null);
@@ -862,20 +877,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   useEffect(() => {
     if (!year) return;
     fetchBudgetSummary();
-  }, [year]);
-
-  useEffect(() => {
-    if (!year) return;
-    fetch(`/api/project/budget/summary/${year}`)
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("Budget", data.budgetSummary);
-        if (data.budgetSummary) {
-          setBudgetSummary(data.budgetSummary);
-        } else {
-          setBudgetSummary(null);
-        }
-      });
   }, [year]);
 
   const handleNewProjectChange = (field, value) => {
@@ -1240,17 +1241,31 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
   };
 
+  /* Guarded against double clicks, and a refusal (e.g. the GPB was approved
+     meanwhile) is shown instead of leaving the modal open in silence. */
   const handleDelete = async (projectId) => {
+    if (deletingProject) return;
+    setDeletingProject(true);
+    setDeleteError("");
     try {
       const res = await fetch(`/api/project/${projectId}`, {
         method: "DELETE",
       });
-      if (res.ok) {
-        setDeleteModal({ open: false, project: null });
-        fetchProjects();
-        fetchBudgetSummary();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDeleteError(
+          data.error || data.message || "Unable to delete the project.",
+        );
+        return;
       }
-    } catch {}
+      setDeleteModal({ open: false, project: null });
+      fetchProjects({ quiet: true });
+      fetchBudgetSummary();
+    } catch {
+      setDeleteError("Unable to delete the project. Check your connection.");
+    } finally {
+      setDeletingProject(false);
+    }
   };
 
   const fetchComments = async () => {
@@ -1285,7 +1300,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     }
 
     try {
-      setLoading(true);
+      setCommentSaving(true);
+      setCommentError("");
 
       const res = await fetch(`/api/project/${commentProjectId}/comments`, {
         method: "POST",
@@ -1300,10 +1316,10 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to save comment");
+        throw new Error(data.message || data.error || "Failed to save comment");
       }
 
       setComment("");
@@ -1311,11 +1327,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       setCommentField([]);
       setCommentProjectId(null);
 
-      fetchProjects();
+      fetchProjects({ quiet: true });
     } catch (err) {
-      console.error("❌ COMMENT ERROR:", err.message);
+      setCommentError(err.message || "Failed to save comment");
     } finally {
-      setLoading(false);
+      setCommentSaving(false);
     }
   };
 
@@ -1325,7 +1341,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
     maybeCommentId,
   ) => {
     try {
-      setLoading(true);
+      setCommentError("");
       const commentId = maybeCommentId || fieldOrCommentId;
 
       const res = await fetch(
@@ -1335,16 +1351,15 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         },
       );
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) throw new Error(data.message || "Delete failed");
 
-      setComments(data.data ?? []);
-      await fetchProjects();
+      /* The page-level comment list is not this project's; refreshing the
+         projects is what updates the row. */
+      await fetchProjects({ quiet: true });
     } catch (err) {
-      console.error("Delete comment error:", err);
-    } finally {
-      setLoading(false);
+      setCommentError(err.message || "Unable to delete the comment.");
     }
   };
 
@@ -1490,10 +1505,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const overBudget = Boolean(
     budgetSummary?.hasBudget && budgetSummary.overBudget,
   );
-  const fmtMoney = (n) =>
-    n === null || n === undefined
-      ? ""
-      : Number(n).toLocaleString(undefined, { minimumFractionDigits: 2 });
+  const fmtMoney = (n) => formatAmount(n);
 
   return (
     <div className="p-6">
@@ -1922,13 +1934,18 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               <option value="approval">Approval</option>
               <option value="revision">Needs Revision</option>
             </select>
+            {commentError && (
+              <p className="mb-2 text-sm text-red-700" role="alert">
+                {commentError}
+              </p>
+            )}
             <div className="flex gap-2 justify-end">
               <button
                 onClick={handleSubmitComment}
-                disabled={loading}
-                className="bg-green-600 text-white px-4 py-2 rounded"
+                disabled={commentSaving}
+                className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
               >
-                {loading ? "Saving..." : "Submit"}
+                {commentSaving ? "Saving..." : "Submit"}
               </button>
               <button
                 onClick={() => {
@@ -1945,8 +1962,25 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         </div>
       )}
 
+      {loadError && (
+        <div
+          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={fetchProjects}
+            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-end mb-4 gap-2">
-        {role !== "planning director" &&
+        {!loadError &&
+          role !== "planning director" &&
           selectedGPBStatus?.status !== "approved" &&
           selectedGPBStatus?.status !== "disapproved" && (
             <button
@@ -2071,18 +2105,28 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
               (including their posters and accomplishment reports) and the
               uploaded evidence files. This cannot be undone.
             </p>
+            {deleteError && (
+              <p className="mt-3 text-sm text-red-700" role="alert">
+                {deleteError}
+              </p>
+            )}
             <div className="flex justify-end gap-2 mt-6">
               <button
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                onClick={() => setDeleteModal({ open: false, project: null })}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                disabled={deletingProject}
+                onClick={() => {
+                  setDeleteError("");
+                  setDeleteModal({ open: false, project: null });
+                }}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                disabled={deletingProject}
                 onClick={() => handleDelete(deleteModal.project._id)}
               >
-                Delete
+                {deletingProject ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>
@@ -4454,11 +4498,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
                                         className="py-2 px-4 border text-center text-xs"
                                         rowSpan={maxRows}
                                       >
-                                        {Number(
-                                          project.gad_budget,
-                                        ).toLocaleString(undefined, {
-                                          minimumFractionDigits: 2,
-                                        })}
+                                        {formatAmount(project.gad_budget, "—")}
                                       </td>
                                     )}
                                     {editingId === project._id ? (

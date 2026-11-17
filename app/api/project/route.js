@@ -3,7 +3,6 @@ import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
-import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { findDuplicates } from "@/data/lib/duplicateDetection";
@@ -16,8 +15,8 @@ import {
 import {
   NO_BUDGET_WARNING,
   OVER_BUDGET_WARNING,
-  buildBudgetSummary,
 } from "@/data/lib/budgetLinking";
+import { computeYearBudgetSummary } from "@/data/lib/yearBudgetSummary";
 import {
   PROJECT_PICKER_FIELDS,
   canViewProjectDetails,
@@ -89,27 +88,19 @@ export async function POST(req) {
     return Response.json({ message: GPB_LOCKED_MESSAGE }, { status: 409 });
   }
 
-  const budget = await GAABudget.findOne({ year });
+  /* The same figures the GPB page shows (data/lib/yearBudgetSummary.js):
+     the budget attached to the year's GPB and the projects in it. */
+  const { summary: afterAdding, budget } = await computeYearBudgetSummary(
+    year,
+    { extraUsed: requestedBudget },
+  );
 
   let overBudgetWarning = null;
   let budgetSummary = null;
 
-  if (budget) {
-    const used = await Project.aggregate([
-      { $match: { year } },
-      { $group: { _id: null, total: { $sum: "$gad_budget.value" } } },
-    ]);
-
-    const usedBudget = used[0]?.total || 0;
-    const remainingBudget = budget.gadAnnualBudget - usedBudget;
-
-    if (requestedBudget > remainingBudget) {
-      overBudgetWarning = OVER_BUDGET_WARNING;
-      budgetSummary = buildBudgetSummary({
-        budget,
-        usedBudget: usedBudget + requestedBudget,
-      });
-    }
+  if (afterAdding.hasBudget && afterAdding.overBudget) {
+    overBudgetWarning = OVER_BUDGET_WARNING;
+    budgetSummary = afterAdding;
   }
 
   /* Callers may supply their own reference number (e.g. copied from a printed

@@ -1,7 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { formatPeso } from "@/data/lib/money";
+
+/* Reads a JSON body without throwing on an empty or HTML error page. */
+const readJson = async (res) => {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
+};
 import {
   FaPaperclip,
   FaSpinner,
@@ -28,11 +39,7 @@ const getFieldValue = (field) => {
   return field;
 };
 
-const fmtPeso = (n) =>
-  `₱ ${Number(n || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+const fmtPeso = (n) => formatPeso(n);
 
 /**
  * Suggested accomplishment text built from the events linked to the project.
@@ -71,6 +78,18 @@ export default function ActualsEncoderModal({
   const [evidenceUploading, setEvidenceUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* The latest evidence list, for uploads that finish after a render. */
+  const evidenceRef = useRef(evidence);
+  evidenceRef.current = evidence;
+  const commitEvidence = (change) => {
+    const next = change(evidenceRef.current);
+    evidenceRef.current = next;
+    setEvidence(next);
+    fileLifecycle.syncCurrent(next.map((f) => f?.key));
+  };
+
+  useEscapeKey(true, () => closeAndCleanup());
 
   useEffect(() => {
     if (!project) return;
@@ -120,8 +139,8 @@ export default function ActualsEncoderModal({
     }
 
     setEvidenceUploading(true);
+    const uploaded = [];
     try {
-      const uploaded = [];
       for (const file of fileList) {
         const formData = new FormData();
         formData.append("file", file);
@@ -130,16 +149,25 @@ export default function ActualsEncoderModal({
           method: "POST",
           body: formData,
         });
-        const data = await res.json();
+        const data = await readJson(res);
         if (!res.ok) {
           throw new Error(data.error || data.message || "Upload failed");
         }
         uploaded.push({ url: data.url, key: data.key, name: file.name });
       }
-      const next = [...evidence, ...uploaded];
-      setEvidence(next);
-      fileLifecycle.syncCurrent(next.map((f) => f?.key));
+      /* Appended to the latest list, not the one captured when the upload
+         started, so a file removed meanwhile does not come back. */
+      commitEvidence((prev) => [...prev, ...uploaded]);
     } catch (err) {
+      /* Files uploaded before the failure are on no record: delete them. */
+      uploaded.forEach((file) => {
+        if (!file?.key) return;
+        fetch("/api/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: file.key }),
+        }).catch(() => {});
+      });
       setError(err.message || "Failed to upload evidence files");
     } finally {
       setEvidenceUploading(false);
@@ -151,9 +179,7 @@ export default function ActualsEncoderModal({
       setEvidence((prev) => prev.filter((f) => f !== file));
       return;
     }
-    const next = evidence.filter((f) => f.key !== file.key);
-    setEvidence(next);
-    fileLifecycle.syncCurrent(next.map((f) => f?.key));
+    commitEvidence((prev) => prev.filter((f) => f.key !== file.key));
     if (!fileLifecycle.hasOriginal(file.key)) {
       fetch("/api/upload", {
         method: "DELETE",
@@ -164,6 +190,8 @@ export default function ActualsEncoderModal({
   };
 
   const closeAndCleanup = () => {
+    /* Closing mid-save would delete evidence the save is still linking. */
+    if (saving) return;
     fileLifecycle.rollback();
     fileLifecycle.resetSession();
     onClose();
@@ -177,6 +205,14 @@ export default function ActualsEncoderModal({
 
   const saveActuals = async () => {
     if (!project) return;
+    if (evidenceUploading) {
+      setError("Please wait for the evidence upload to finish.");
+      return;
+    }
+    if (!Number.isFinite(Number(expenditures || 0)) || spent < 0) {
+      setError("Actual expenditures must be zero or a positive amount.");
+      return;
+    }
     if (spent > 0 && evidence.length === 0) {
       setError(
         "Actual expenditures require at least one evidence file (receipt, voucher, or financial report).",
@@ -205,7 +241,7 @@ export default function ActualsEncoderModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to save");
       }
@@ -227,10 +263,17 @@ export default function ActualsEncoderModal({
         onClick={closeAndCleanup}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in">
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="actuals-modal-title"
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h3 className="text-base font-bold text-gray-900">Update Actuals</h3>
+          <h3 id="actuals-modal-title" className="text-base font-bold text-gray-900">
+            Update Actuals
+          </h3>
           <button
             type="button"
             onClick={closeAndCleanup}

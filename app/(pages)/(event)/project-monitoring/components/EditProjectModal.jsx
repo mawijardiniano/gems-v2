@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { FaExclamationTriangle, FaSpinner, FaTimes } from "react-icons/fa";
-import { FieldRenderer, resolveOptions } from "./ProjectFormFields";
+import {
+  FieldRenderer,
+  listToText,
+  resolveOptions,
+  textToList,
+} from "./ProjectFormFields";
 
 /*
  * Single-form "Edit Project" modal shared by the Research & Extension and
@@ -68,7 +73,7 @@ const buildProjectValues = (fields, project) =>
         : getFieldValue(project?.[field.key]);
 
     if (field.type === "list") {
-      raw = Array.isArray(raw) ? raw.join(", ") : (raw ?? "");
+      raw = listToText(raw);
     } else if (field.type === "date") {
       raw = toDateInputValue(raw);
     } else if (raw === null || raw === undefined) {
@@ -158,10 +163,7 @@ export default function EditProjectModal({
       }
 
       if (field.type === "list") {
-        payload[field.key] = String(raw ?? "")
-          .split(/[,\n]/)
-          .map((item) => item.trim())
-          .filter(Boolean);
+        payload[field.key] = textToList(raw);
         continue;
       }
 

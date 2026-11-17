@@ -81,6 +81,12 @@ const AcademicProjectSchema = new Schema({
     default: "for-review",
   },
 
+  /* Optional approval metadata encoded from the monitoring page. The routes
+     already accepted these fields, but without them in the schema strict mode
+     dropped the values silently, so Academic approval details never saved. */
+  approved_resolution_no: FieldSchema(String),
+  other_details: FieldSchema(String),
+
   milestones: {
     type: [MilestoneSchema],
     default: [],
