@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { appParts } from "@/data/lib/appTime";
 import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
@@ -380,8 +381,10 @@ export async function GET(req) {
           ],
         });
 
-        const reportDate = `${generatedAt.getMonth() + 1}-${generatedAt.getDate()}-${String(
-          generatedAt.getFullYear(),
+        /* Manila's date, not the server's. */
+        const generated = appParts(generatedAt);
+        const reportDate = `${generated.month}-${generated.day}-${String(
+          generated.year,
         ).slice(-2)}`;
         const pageCount = doc.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {

@@ -52,13 +52,22 @@ export async function requireAuth(req) {
     return { error: "Invalid or expired token", status: 401 };
   }
 
+  /* 401 for every "this token does not identify an active user" case: a bad
+     payload used to be 400 and a deleted account 404. */
   if (!decoded.id) {
-    return { error: "Invalid token payload", status: 400 };
+    return { error: "Invalid token payload", status: 401 };
   }
 
   const user = await getCachedUser(decoded.id);
   if (!user) {
-    return { error: "User not found", status: 404 };
+    return { error: "User not found", status: 401 };
+  }
+
+  /* Only login checked is_active, so a deactivated account's existing token
+     kept working against every API until it expired. The user cache (15s)
+     bounds how long a deactivation takes to apply. */
+  if (user.is_active === false) {
+    return { error: "This account has been deactivated", status: 401 };
   }
 
   return { user };

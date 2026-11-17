@@ -12,6 +12,11 @@ import {
   FaUserTag,
   FaUsers,
 } from "react-icons/fa";
+import {
+  calendarStatus,
+  eventDateRangeLabel,
+  eventTimeLabel,
+} from "../calendarDates";
 
 const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
@@ -23,98 +28,9 @@ const ACTIVITY_COLORS = {
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
 
-const getEventStart = (e) =>
-  e?.start_date ||
-  (Array.isArray(e?.start_dates) ? e.start_dates[0] : null) ||
-  e?.date ||
-  null;
-
-const getEventEnd = (e) =>
-  e?.end_date ||
-  (Array.isArray(e?.end_dates) ? e.end_dates[e.end_dates.length - 1] : null) ||
-  getEventStart(e);
-
-function getStatusBadge(event) {
-  if (event?.status === "cancelled")
-    return {
-      label: "Cancelled",
-      dot: "bg-red-500",
-      cls: "bg-red-50 text-red-700 border-red-200",
-    };
-  if (event?.status === "completed")
-    return {
-      label: "Completed",
-      dot: "bg-emerald-500",
-      cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    };
-
-  const start = getEventStart(event);
-  const end = getEventEnd(event);
-  const startT = start ? new Date(start).getTime() : NaN;
-  const endT = end ? new Date(end).getTime() : NaN;
-  if (Number.isNaN(startT) || Number.isNaN(endT))
-    return {
-      label: "Unknown",
-      dot: "bg-gray-400",
-      cls: "bg-gray-50 text-gray-600 border-gray-200",
-    };
-
-  const now = Date.now();
-  if (endT < now)
-    return {
-      label: "Past",
-      dot: "bg-gray-400",
-      cls: "bg-gray-50 text-gray-600 border-gray-200",
-    };
-  if (startT <= now)
-    return {
-      label: "Ongoing",
-      dot: "bg-green-500",
-      cls: "bg-green-50 text-green-700 border-green-200",
-    };
-  return {
-    label: "Upcoming",
-    dot: "bg-secondary-500",
-    cls: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  };
-}
-
-const fmtTime = (value) => {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
-const hasTimeComponent = (value) => {
-  if (!value) return false;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return false;
-  return d.getHours() !== 0 || d.getMinutes() !== 0;
-};
-
-function getTimeLabel(event) {
-  const start = getEventStart(event);
-  const end = getEventEnd(event);
-  if (!start) return "";
-  if (!hasTimeComponent(start) && !hasTimeComponent(end)) return "All day";
-  return `${fmtTime(start)} – ${fmtTime(end)}`;
-}
-
-const fmtDateRange = (event) => {
-  const start = getEventStart(event);
-  const end = getEventEnd(event);
-  if (!start) return "";
-  const opts = { month: "short", day: "numeric", year: "numeric" };
-  const startStr = new Date(start).toLocaleDateString("en-US", opts);
-  if (!end) return startStr;
-  const endStr = new Date(end).toLocaleDateString("en-US", opts);
-  return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
-};
+const getStatusBadge = calendarStatus;
+const getTimeLabel = eventTimeLabel;
+const fmtDateRange = eventDateRangeLabel;
 
 function getOrganizerName(event) {
   const creator = event?.created_by;

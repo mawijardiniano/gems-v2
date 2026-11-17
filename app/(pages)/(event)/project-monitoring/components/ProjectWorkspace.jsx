@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIME_ZONE } from "@/data/lib/appTime";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPeso } from "@/data/lib/money";
 import {
@@ -73,6 +74,8 @@ const formatDate = (d) => {
     year: "numeric",
     month: "short",
     day: "numeric",
+    /* Event and project dates are Manila days. */
+    timeZone: APP_TIME_ZONE,
   });
 };
 

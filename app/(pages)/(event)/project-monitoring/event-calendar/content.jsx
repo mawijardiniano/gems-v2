@@ -10,6 +10,7 @@ import {
   FaSpinner,
 } from "react-icons/fa";
 import DayDetailsPanel from "./components/DayDetailsPanel";
+import { calendarStatus, eventDayKeys, manilaToday } from "./calendarDates";
 
 const MONTH_LABELS = [
   "January", "February", "March", "April", "May", "June",
@@ -17,14 +18,6 @@ const MONTH_LABELS = [
 ];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MAX_SPAN_DAYS = 62;
-
-const getEventStart = (e) =>
-  e.start_date || (Array.isArray(e.start_dates) ? e.start_dates[0] : null) || e.date || null;
-
-const getEventEnd = (e) =>
-  e.end_date ||
-  (Array.isArray(e.end_dates) ? e.end_dates[e.end_dates.length - 1] : null) ||
-  getEventStart(e);
 
 /* created_by can be a populated object or a raw ObjectId */
 const getCreatorId = (e) => {
@@ -43,52 +36,37 @@ const dateKey = (d) =>
     d.getDate(),
   ).padStart(2, "0")}`;
 
-const sameDay = (a, b) =>
-  a && b &&
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
 
-function getEventStatus(e) {
-  if (e.status === "cancelled")
-    return { label: "Cancelled", dot: "bg-red-500", chip: "bg-red-50 text-red-700 hover:bg-red-100" };
-  if (e.status === "completed")
-    return { label: "Completed", dot: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" };
-
-  const start = getEventStart(e);
-  const end = getEventEnd(e);
-  if (!start)
-    return { label: "Unknown", dot: "bg-gray-400", chip: "bg-gray-50 text-gray-600 hover:bg-gray-100" };
-
-  const now = Date.now();
-  const startT = new Date(start).getTime();
-  const endT = new Date(end).getTime();
-
-  if (endT < now)
-    return { label: "Past", dot: "bg-gray-400", chip: "bg-gray-50 text-gray-600 hover:bg-gray-100" };
-  if (startT <= now)
-    return { label: "Ongoing", dot: "bg-green-500", chip: "bg-green-50 text-green-700 hover:bg-green-100" };
-  return { label: "Upcoming", dot: "bg-secondary-500", chip: "bg-secondary-50 text-secondary-700 hover:bg-secondary-100" };
-}
+const getEventStatus = calendarStatus;
 
 export default function EventCalendarContent() {
   const router = useRouter();
-  const today = useMemo(() => new Date(), []);
+  /* Manila's today, so the highlighted day is the university's day. */
+  const today = useMemo(() => manilaToday(), []);
 
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-11
+  const [viewYear, setViewYear] = useState(today.year);
+  const [viewMonth, setViewMonth] = useState(today.month); // 0-11
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedKey, setSelectedKey] = useState(() => dateKey(today));
+  const [selectedKey, setSelectedKey] = useState(() => today.key);
   const [currentUser, setCurrentUser] = useState(null);
   const [expandedEventId, setExpandedEventId] = useState("");
 
+  /* Only the weeks the grid shows (plus a margin for multi-day events),
+     instead of every event in the system on every visit. */
   const loadEvents = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get("/api/events");
+      const pad = (n) => String(n).padStart(2, "0");
+      const from = new Date(Date.UTC(viewYear, viewMonth - 1, 1));
+      const to = new Date(Date.UTC(viewYear, viewMonth + 2, 0));
+      const iso = (d) =>
+        `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+      const res = await axios.get("/api/events", {
+        params: { from: iso(from), to: iso(to) },
+      });
       setEvents(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
       setError(
@@ -97,7 +75,7 @@ export default function EventCalendarContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [viewYear, viewMonth]);
 
   useEffect(() => {
     loadEvents();
@@ -146,18 +124,8 @@ export default function EventCalendarContent() {
   const eventsByDay = useMemo(() => {
     const map = {};
     for (const event of events) {
-      const start = new Date(getEventStart(event) || 0);
-      const end = new Date(getEventEnd(event) || 0);
-      if (Number.isNaN(start.getTime())) continue;
-      const safeEnd = Number.isNaN(end.getTime()) || end < start ? start : end;
-      const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-      const last = new Date(safeEnd.getFullYear(), safeEnd.getMonth(), safeEnd.getDate());
-      let steps = 0;
-      while (cursor <= last && steps < MAX_SPAN_DAYS) {
-        const key = dateKey(cursor);
+      for (const key of eventDayKeys(event, MAX_SPAN_DAYS)) {
         (map[key] ||= []).push(event);
-        cursor.setDate(cursor.getDate() + 1);
-        steps += 1;
       }
     }
     return map;
@@ -197,9 +165,9 @@ export default function EventCalendarContent() {
     else setViewMonth(m);
   };
   const goToday = () => {
-    setViewYear(today.getFullYear());
-    setViewMonth(today.getMonth());
-    selectDate(dateKey(today));
+    setViewYear(today.year);
+    setViewMonth(today.month);
+    selectDate(today.key);
   };
 
   return (
@@ -298,7 +266,7 @@ export default function EventCalendarContent() {
           <div className="grid grid-cols-7">
             {cells.map((cell) => {
               const dayEvents = eventsByDay[cell.key] || [];
-              const isToday = sameDay(cell.date, today);
+              const isToday = cell.key === today.key;
               const isSelected = cell.key === selectedKey;
               return (
                 <button

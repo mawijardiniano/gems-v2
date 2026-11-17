@@ -56,6 +56,22 @@ export function appDateInput(value) {
 }
 
 /**
+ * Parses a date sent by a form. A bare "YYYY-MM-DD" means that Manila day
+ * (stored as Manila midnight); `new Date("YYYY-MM-DD")` would store UTC
+ * midnight, which some views then showed as the previous day. Anything else
+ * (an ISO timestamp) is parsed as given.
+ * @returns {Date|null|undefined} Date, null for empty input, undefined when invalid
+ */
+export function parseAppDate(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const text = String(value).trim();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? new Date(`${text}T00:00:00+08:00`)
+    : new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+/**
  * The stored range for a date-only event picked as "YYYY-MM-DD": Manila
  * 00:00 to 23:59, as ISO strings. Null when the input is not a date.
  */

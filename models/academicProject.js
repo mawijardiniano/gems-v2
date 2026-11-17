@@ -134,6 +134,9 @@ const AcademicProjectSchema = new Schema({
 
 applyReferenceNumberIndex(AcademicProjectSchema);
 AcademicProjectSchema.index({ college: 1, year: -1 });
+/* Reference numbering reads every project of a year; the compound index
+   above starts with college, so it cannot serve that. */
+AcademicProjectSchema.index({ year: 1 });
 AcademicProjectSchema.index({ project_type: 1 });
 AcademicProjectSchema.index({ project_status: 1 });
 

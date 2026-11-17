@@ -1,5 +1,6 @@
 "use client";
 
+import { appDateInput } from "@/data/lib/appTime";
 import { useMemo, useState } from "react";
 import { FaExclamationTriangle, FaSpinner, FaTimes } from "react-icons/fa";
 import {
@@ -27,14 +28,9 @@ const getFieldValue = (field) => {
   return field;
 };
 
-const toDateInputValue = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-};
+/* The Manila day of a stored date — the browser's local day showed the
+   previous day west of UTC+8, and saving unchanged moved it back a day. */
+const toDateInputValue = (value) => appDateInput(value);
 
 const isEmptyValue = (value) =>
   value === null || value === undefined || String(value).trim() === "";

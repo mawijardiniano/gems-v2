@@ -14,6 +14,7 @@ import {
   quarterEndDate,
   toDate,
 } from "./reportQuarters.js";
+import { appParts } from "./appTime.js";
 
 /* jspdf-autotable ships as a UMD/CJS bundle: depending on the runtime the
    exported table function can arrive as the namespace itself, as `default`, or
@@ -156,7 +157,7 @@ function milestoneDueDate(milestone) {
   const date = milestoneDate(milestone);
   const quarter = dateQuarter(date);
   if (!date || !quarter) return null;
-  return quarterEndDate(date.getUTCFullYear(), quarter);
+  return quarterEndDate(appParts(date).year, quarter);
 }
 
 const MILESTONE_STATUS_COLORS = {

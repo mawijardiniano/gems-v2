@@ -1,5 +1,7 @@
 import Event from "@/models/event";
 import Project from "@/models/projects";
+import AcademicProject from "@/models/academicProject";
+import ResearchExtensionProject from "@/models/researchExtensionProject";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import EventGuest from "@/models/eventGuest";
 import { deleteFileFromBucket } from "@/data/lib/delete";
@@ -43,10 +45,13 @@ export async function deleteEventCascade(eventOrId) {
   /* Walk-in check-ins carry contact numbers and ages; without this they
      outlived the event, linked to nothing. */
   await EventGuest.deleteMany({ event_id: event._id });
-  await Project.updateMany(
-    { events: event._id },
-    { $pull: { events: event._id } },
-  );
+  /* Academic and R&E projects link events too; they kept dead references. */
+  const unlink = [{ events: event._id }, { $pull: { events: event._id } }];
+  await Promise.all([
+    Project.updateMany(...unlink),
+    AcademicProject.updateMany(...unlink),
+    ResearchExtensionProject.updateMany(...unlink),
+  ]);
   await Event.deleteOne({ _id: event._id });
 
   return { deleted: true, title: event.title, keys };

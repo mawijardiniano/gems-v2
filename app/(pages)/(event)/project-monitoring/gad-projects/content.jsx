@@ -1,5 +1,6 @@
 "use client";
 
+import { appDateInput, APP_TIME_ZONE } from "@/data/lib/appTime";
 import axios from "axios";
 import { formatPeso } from "@/data/lib/money";
 import React, {
@@ -76,6 +77,8 @@ const formatDate = (d) => {
     year: "numeric",
     month: "short",
     day: "numeric",
+    /* Event and project dates are Manila days. */
+    timeZone: APP_TIME_ZONE,
   });
 };
 
@@ -147,14 +150,9 @@ const canManageProject = (project, userId, userRole) => {
   );
 };
 
-const toDateInputValue = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-};
+/* The Manila day of a stored date — the browser's local day showed the
+   previous day west of UTC+8, and saving unchanged moved it back a day. */
+const toDateInputValue = (value) => appDateInput(value);
 
 const MILESTONE_STATUS_META = {
   pending: {

@@ -1,6 +1,7 @@
 import { parseGanttActivities } from "./ganttParse.js";
 
 import { NextResponse } from "next/server";
+import { parseAppDate } from "@/data/lib/appTime.js";
 import { connectDB } from "@/data/lib/db.js";
 import { requireAuth } from "@/data/lib/auth.js";
 import { logActivity } from "@/data/lib/activityLog.js";
@@ -80,11 +81,9 @@ async function validateEventLinks(input, user, isEditor) {
 }
 
 /** Returns the Date for a valid input, null for empty input, or undefined when invalid. */
-const parseDateInput = (value) => {
-  if (value === null || value === undefined || value === "") return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date;
-};
+/* "YYYY-MM-DD" from a form is that Manila day (data/lib/appTime.js); it used
+   to be stored as UTC midnight. */
+const parseDateInput = parseAppDate;
 
 /** Unwraps `{ value }` field shapes coming from the forms. */
 const unwrap = (value) =>
