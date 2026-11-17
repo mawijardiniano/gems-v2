@@ -162,7 +162,7 @@ export default function EventContent({
     const load = async () => {
       try {
         const [eventsRes, profileRes] = await Promise.all([
-          axios.get("/api/events"),
+          axios.get("/api/events?upcoming=1"),
           axios.get("/api/profile/my-profile"),
         ]);
         setAllEvents(eventsRes.data?.data || []);

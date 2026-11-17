@@ -7,6 +7,7 @@ import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { optionalAuth } from "@/data/lib/auth";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { rateLimiters } from "@/data/lib/rateLimit";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
@@ -16,19 +17,48 @@ const PTYPE = ["Student", "Employee", "Stakeholder"];
    its own copy, subtly different from the one in the signed-in attendance route
    and from the badge on the manage list. */
 
+/* This form is public and its values end up on the printed attendance sheet,
+   so every free-text field is bounded and whitespace is collapsed. */
+const MAX_LEN = {
+  full_name: 120,
+  contact: 30,
+  department_office_org: 200,
+  position_designation: 200,
+  program_year_section: 200,
+};
+const clean = (value, max) =>
+  String(value ?? "")
+    .replace(/s+/g, " ")
+    .trim()
+    .slice(0, max);
+
+/* Names are compared case-insensitively ("juan dela cruz" and
+   "Juan  Dela Cruz" are the same check-in). */
+const NAME_COLLATION = { locale: "en", strength: 2 };
+
 /* UI sends program / year / section separately; combine into one sheet value. */
 function buildProgramYearSection(b) {
   if (b?.participant_type !== "Student") return "";
-  const programPart = String(
-    b?.program || b?.program_year_section || "",
-  ).trim();
-  const yearPart = String(b?.year || "").trim();
-  const sectionPart = String(b?.section || "").trim();
-  return [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
+  const programPart = clean(b?.program || b?.program_year_section, 120);
+  const yearPart = clean(b?.year, 20);
+  const sectionPart = clean(b?.section, 40);
+  return clean(
+    [programPart, yearPart, sectionPart].filter(Boolean).join(" "),
+    MAX_LEN.program_year_section,
+  );
 }
+
+const tooMany = (limited) =>
+  NextResponse.json(
+    { message: "Too many check-ins right now. Please try again in a minute." },
+    { status: 429, headers: limited.headers },
+  );
 
 export async function POST(req) {
   try {
+    const ipLimited = await rateLimiters.guestCheckinIp(req);
+    if (ipLimited.error) return tooMany(ipLimited);
+
     await connectDB();
     /* Optional: a logged-in student scanning the same QR still goes through
        the pending flow — the identity is recorded for review only. */
@@ -42,7 +72,10 @@ export async function POST(req) {
         { status: 400 },
       );
     }
-    const name = String(b?.full_name || "").trim();
+    const eventLimited = await rateLimiters.guestCheckinEvent(req, event_id);
+    if (eventLimited.error) return tooMany(eventLimited);
+
+    const name = clean(b?.full_name, MAX_LEN.full_name);
     if (!name)
       return NextResponse.json(
         { message: "Full name is required" },
@@ -79,7 +112,9 @@ export async function POST(req) {
           { status: 400 },
         );
     }
-    const event = await Event.findById(event_id);
+    const event = await Event.findById(event_id)
+      .select("status start_date end_date start_dates end_dates date")
+      .lean();
     if (!event)
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     if (event.status === "cancelled")
@@ -105,14 +140,18 @@ export async function POST(req) {
         },
         { status: 400 },
       );
-    const existing = await EventGuest.findOne({ event_id, full_name: name });
+    const existing = await EventGuest.findOne({
+      event_id,
+      full_name: name,
+    }).collation(NAME_COLLATION);
     if (existing) {
       if (existing.validation_status === "approved") {
         return NextResponse.json({
           message: "You are already marked as attended for this event.",
           already_attended: true,
           validation_status: "approved",
-          attended_at: existing.attended_at,
+          /* No timestamp: this endpoint is anonymous, and echoing when a
+             named person checked in let anyone look that up. */
         });
       }
       if (existing.validation_status === "rejected") {
@@ -121,15 +160,16 @@ export async function POST(req) {
         existing.sex = b.sex;
         existing.gender_identity = genderIdentity || undefined;
         existing.age = ageNum;
-        existing.contact = String(b?.contact || "").trim();
+        existing.contact = clean(b?.contact, MAX_LEN.contact);
         existing.participant_type = b.participant_type;
-        existing.department_office_org = String(
-          b?.department_office_org || "",
-        ).trim();
+        existing.department_office_org = clean(
+          b?.department_office_org,
+          MAX_LEN.department_office_org,
+        );
         existing.position_designation =
           b.participant_type === "Student"
             ? ""
-            : String(b?.position_designation || "").trim();
+            : clean(b?.position_designation, MAX_LEN.position_designation);
         existing.program_year_section = buildProgramYearSection(b);
         existing.attended_at = new Date();
         existing.source = "qr-scan";
@@ -161,7 +201,6 @@ export async function POST(req) {
           "You have already submitted a check-in for this event. Please wait for the organizer to validate it.",
         already_submitted: true,
         validation_status: "pending",
-        submitted_at: existing.attended_at,
       });
     }
     const guest = await EventGuest.create({
@@ -170,13 +209,16 @@ export async function POST(req) {
       sex: b.sex,
       gender_identity: genderIdentity || undefined,
       age: ageNum,
-      contact: String(b?.contact || "").trim(),
+      contact: clean(b?.contact, MAX_LEN.contact),
       participant_type: b.participant_type,
-      department_office_org: String(b?.department_office_org || "").trim(),
+      department_office_org: clean(
+        b?.department_office_org,
+        MAX_LEN.department_office_org,
+      ),
       position_designation:
         b.participant_type === "Student"
           ? ""
-          : String(b?.position_designation || "").trim(),
+          : clean(b?.position_designation, MAX_LEN.position_designation),
       program_year_section: buildProgramYearSection(b),
       attended_at: new Date(),
       source: "qr-scan",
@@ -215,7 +257,7 @@ export async function POST(req) {
     }
     console.error(err);
     return NextResponse.json(
-      { message: "Internal server error", error: err.message },
+      { message: "Internal server error" },
       { status: 500 },
     );
   }

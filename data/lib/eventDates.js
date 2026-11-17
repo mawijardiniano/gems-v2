@@ -1,16 +1,22 @@
 import { eventSpan } from "./eventStatus.js";
+import { APP_TIME_ZONE, appParts } from "./appTime.js";
 
 /* Display text for when an event happens.
  *
  * Events are scheduled by date only and stored as local midnight to 23:59, so
  * printing their times showed "12:00 AM – 11:59 PM" on every card. A range
  * that covers whole days is shown as dates alone; a range with real times
- * (legacy rows) keeps them. Runs in the viewer's local time zone, the same
- * zone the create form used to build the range.
+ * (legacy rows) keeps them. Always read in Manila time (data/lib/appTime.js),
+ * the zone event days are defined in, whatever the viewer's device says.
  */
 
-const DATE_OPTS = { month: "short", day: "numeric", year: "numeric" };
-const TIME_OPTS = { hour: "numeric", minute: "2-digit" };
+const DATE_OPTS = {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: APP_TIME_ZONE,
+};
+const TIME_OPTS = { hour: "numeric", minute: "2-digit", timeZone: APP_TIME_ZONE };
 
 const toDate = (value) => {
   if (value === null || value === undefined) return null;
@@ -18,13 +24,13 @@ const toDate = (value) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-/** True when start is local midnight and end (if any) is local 23:59. */
+/** True when start is Manila midnight and end (if any) is Manila 23:59. */
 export function isWholeDayRange(start, end) {
-  const s = toDate(start);
-  if (!s || s.getHours() !== 0 || s.getMinutes() !== 0) return false;
-  const e = toDate(end);
+  const s = appParts(toDate(start));
+  if (!s || s.hours !== 0 || s.minutes !== 0) return false;
+  const e = appParts(toDate(end));
   if (!e) return true;
-  return e.getHours() === 23 && e.getMinutes() === 59;
+  return e.hours === 23 && e.minutes === 59;
 }
 
 /**

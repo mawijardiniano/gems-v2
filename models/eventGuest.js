@@ -17,7 +17,8 @@ const EventGuestSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Event",
       required: true,
-      index: true,
+      /* No single-field index: every compound index below starts with
+         event_id, so it already serves event_id lookups. */
     },
     full_name: { type: String, required: true, trim: true },
     sex: {

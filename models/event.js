@@ -173,6 +173,13 @@ EventSchema.index({ status: 1, createdAt: -1 });
 EventSchema.index({ created_by: 1 });
 EventSchema.index({ project: 1 });
 EventSchema.index({ start_date: 1 });
+/* "Events I attended" (user-events) matches on this array; without an index
+   every call scanned the whole collection. */
+EventSchema.index({ "attended_users.user_id": 1 });
+/* Upcoming lists filter on status and the end of the event. */
+EventSchema.index({ status: 1, end_date: 1 });
+/* The next-reference-number lookup reads every reference of one type. */
+EventSchema.index({ type_of_activity: 1, reference_number: 1 });
 
 /* Reference numbers already embed the activity type and year, so a single
    unique field is enough. Events created before the feature (null) are excluded

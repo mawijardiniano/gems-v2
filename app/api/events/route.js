@@ -15,9 +15,11 @@ import {
   eventYearFromDate,
   nextEventRefNumber,
 } from "@/data/lib/referenceNumber";
-import { EVENT_STATUSES } from "@/data/lib/eventStatus";
+import mongoose from "mongoose";
+import { EVENT_STATUSES, notEndedFilter } from "@/data/lib/eventStatus";
 import { canViewPII } from "@/data/lib/profileBroker";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
+import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -49,6 +51,13 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const created_by = searchParams.get("created_by");
+
+    if (created_by && !mongoose.isValidObjectId(created_by)) {
+      return NextResponse.json(
+        { status: "error", message: "Invalid created_by" },
+        { status: 400 },
+      );
+    }
 
     if (created_by) {
       const ORGANIZER_ROLES = [
@@ -134,12 +143,22 @@ export async function GET(req) {
       ];
     }
 
+    /* ?upcoming=1 — only events that have not ended, soonest first, for the
+       discover/dashboard lists that used to download every event and hide the
+       finished ones in the browser. Always bounded. */
+    const upcomingOnly = searchParams.get("upcoming") === "1";
+    if (upcomingOnly) {
+      filter.$and = [...(filter.$and || []), notEndedFilter()];
+    }
+
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const rawLimit = Number(searchParams.get("limit"));
     const limit =
       Number.isFinite(rawLimit) && rawLimit > 0
         ? Math.min(Math.floor(rawLimit), MAX_PAGE_SIZE)
-        : 0;
+        : upcomingOnly
+          ? MAX_PAGE_SIZE
+          : 0;
     const skip = limit ? (page - 1) * limit : 0;
 
     /* The cache key must describe the query, not just the creator. Keying on
@@ -154,6 +173,7 @@ export async function GET(req) {
       statusFilter || "",
       year || "",
       search || "",
+      upcomingOnly ? "upcoming" : "",
       page,
       limit,
     ].join("|")}`;
@@ -162,7 +182,11 @@ export async function GET(req) {
       cacheKey,
       async () => {
         const query = Event.find(filter)
-          .sort({ start_date: -1, createdAt: -1 })
+          .sort(
+            upcomingOnly
+              ? { start_date: 1, createdAt: 1 }
+              : { start_date: -1, createdAt: -1 },
+          )
           .skip(skip);
 
         /* An unbounded limit is only used by callers that genuinely need every
@@ -310,6 +334,14 @@ export async function POST(req) {
           { status: 400 },
         );
       }
+      const linkError = await checkEventProjectLink({
+        projectId: project,
+        gadActivity: gad_activity,
+        user,
+      });
+      if (linkError) {
+        return NextResponse.json({ message: linkError }, { status: 400 });
+      }
     } else {
       if (type_of_activity === "GAD") {
         return NextResponse.json(
@@ -328,8 +360,6 @@ export async function POST(req) {
       }
     }
 
-    // Event created - invalidate cached event lists.
-    cacheDelPrefix("events:list:");
 
     const eventData = {
       title,
@@ -393,6 +423,10 @@ export async function POST(req) {
         { new: true },
       );
     }
+
+    /* Invalidated after the write: clearing it before the create let a GET
+       in between re-cache the old list for the whole TTL. */
+    cacheDelPrefix("events:list:");
 
     await logActivity({
       user_id: user._id,

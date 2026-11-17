@@ -29,6 +29,7 @@ import {
   addTypedOffice,
   defaultOrganizingUnit,
 } from "@/data/lib/colleges";
+import { appDateInput, appDayRange } from "@/data/lib/appTime";
 import {
   activityOptionValue,
   projectPickerLabel,
@@ -310,11 +311,8 @@ export default function CreateEventsContent() {
     return ACTIVITY_TYPES.filter((type) => type !== "GAD");
   }, [userRole, isDeanRoute, isProjectBased]);
 
-  const todayLocal = useMemo(() => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 10);
-  }, []);
+  /* Today's Manila date, the earliest an event may be scheduled. */
+  const todayLocal = useMemo(() => appDateInput(new Date()), []);
 
   /* Events are scheduled by date only, so the generator no longer waits on a
      time, and a venue stays optional (the route already falls back to
@@ -519,16 +517,11 @@ export default function CreateEventsContent() {
       return;
     }
 
-    /* Events are scheduled by date only: the day runs from local midnight to
-       local end-of-day so the stored instant keeps the calendar day the user
-       picked and end_date still sorts after start_date. */
-    const startDateTime = new Date(`${formData.date}T00:00`);
-    const endDateTime = new Date(`${formData.date}T23:59`);
-
-    if (
-      Number.isNaN(startDateTime.getTime()) ||
-      Number.isNaN(endDateTime.getTime())
-    ) {
+    /* Events are scheduled by date only: the day runs from Manila midnight to
+       23:59 (data/lib/appTime.js), so the stored instant keeps the calendar day
+       the user picked even from a browser set to another time zone. */
+    const dayRange = appDayRange(formData.date);
+    if (!dayRange) {
       setError("Invalid event date");
       setLoading(false);
       return;
@@ -544,8 +537,8 @@ export default function CreateEventsContent() {
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
+        start_date: dayRange.start_date,
+        end_date: dayRange.end_date,
         venue: formData.venue.trim(),
         type_of_activity: formData.type_of_activity,
         organizing_office_unit: formData.organizing_office_unit,

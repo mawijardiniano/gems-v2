@@ -20,6 +20,9 @@ setInterval(() => {
  * @param {number} options.windowMs - Time window in milliseconds
  * @param {string} [options.keyPrefix] - Prefix for the rate limit key (e.g., 'login', 'api')
  * @param {boolean} [options.bypassAuth] - If true, rate limit by IP only (for public endpoints)
+ * @param {string} [options.key] - Explicit bucket identifier (e.g. an event id) used
+ *   instead of the user/IP. Client headers cannot change it, so it caps a resource
+ *   even when the IP headers are spoofed.
  * @returns {Promise<{error: string|null, status: number|null, headers: Object}>}
  */
 export async function rateLimit(req, {
@@ -27,6 +30,7 @@ export async function rateLimit(req, {
   windowMs = 60 * 1000,
   keyPrefix = "api",
   bypassAuth = false,
+  key: explicitKey = null,
 } = {}) {
 
   const forwardedFor = req.headers.get("x-forwarded-for");
@@ -37,7 +41,7 @@ export async function rateLimit(req, {
 
   
   let userId = null;
-  if (!bypassAuth) {
+  if (!bypassAuth && !explicitKey) {
     const token = req.cookies?.get?.("auth_token")?.value || 
                   req.headers.get("authorization")?.replace("Bearer ", "");
     if (token) {
@@ -54,7 +58,7 @@ export async function rateLimit(req, {
   }
 
   
-  const identifier = userId || ip;
+  const identifier = explicitKey || userId || ip;
   const key = `${keyPrefix}:${identifier}`;
 
   const now = Date.now();
@@ -126,4 +130,10 @@ export const rateLimiters = {
   
   // AI generation (Gemini): 10 per minute per user
   ai: (req) => rateLimit(req, { limit: 10, windowMs: 60 * 1000, keyPrefix: "ai" }),
+
+  /* Public QR check-in. Per IP it is generous, because a whole venue on campus
+     Wi-Fi can share one address; the per-event cap is keyed on the event id,
+     which a client cannot rotate, so spoofed IP headers cannot flood one event. */
+  guestCheckinIp: (req) => rateLimit(req, { limit: 60, windowMs: 60 * 1000, keyPrefix: "guest-ip", bypassAuth: true }),
+  guestCheckinEvent: (req, eventId) => rateLimit(req, { limit: 300, windowMs: 60 * 1000, keyPrefix: "guest-event", key: String(eventId) }),
 };

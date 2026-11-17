@@ -15,21 +15,28 @@ export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
-  await connectDB();
-
   const { id } = await params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ message: "Invalid event id" }, { status: 400 });
+  }
 
   try {
+    await connectDB();
+    /* `data: null` (200) still means "no report yet" — ReportTab relies on it
+       to show the empty form rather than an error. */
     const report = await AccomplishmentReport.findOne({
       event_id: id,
-    }).populate(
-      "event_id",
-      "title venue start_date end_date start_dates end_dates",
-    );
+    })
+      .populate("event_id", "title venue start_date end_date start_dates end_dates")
+      .lean();
 
     return NextResponse.json({ data: report });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    console.error("GET /api/events/accomplishment-report/[id] failed:", err);
+    return NextResponse.json(
+      { message: "Unable to load report." },
+      { status: 500 },
+    );
   }
 }
 

@@ -9,6 +9,8 @@
  * projects that were created before this feature existed.
  */
 
+import { appParts } from "./appTime.js";
+
 export const REF_NUMBER_PREFIX = "GPB";
 
 export const REF_NUMBER_PATTERN = /^GPB-(\d{4})-(\d+)$/i;
@@ -82,11 +84,9 @@ export const EVENT_TYPE_PREFIXES = {
 
 export const EVENT_REF_NUMBER_PATTERN = /^([A-Z]{2,4})-(\d{4})-(\d+)$/;
 
-/** Fiscal year an event belongs to — taken from its start date. */
-export const eventYearFromDate = (date) => {
-  const parsed = date instanceof Date ? date : new Date(date);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.getFullYear();
-};
+/** Fiscal year an event belongs to — the Manila year of its start date, so a
+    Jan 1 event is not numbered in the previous year on a UTC server. */
+export const eventYearFromDate = (date) => appParts(date)?.year ?? null;
 
 /** Builds an event reference number, e.g. `formatEventRefNumber("GAD", 2025, 1)`. */
 export const formatEventRefNumber = (type, year, sequence) => {

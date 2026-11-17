@@ -7,6 +7,8 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { findForeignReportKey } from "@/data/lib/eventFileKeys";
 
+const MAX_REPORTS = 1000;
+
 export async function POST(req) {
   try {
     const { error, status, user } = await requireAuth(req);
@@ -113,21 +115,35 @@ export async function GET(req) {
     let query = {};
 
     if (eventId) {
+      if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        return NextResponse.json(
+          { message: "Invalid event_id" },
+          { status: 400 },
+        );
+      }
       query.event_id = eventId;
     }
 
+    /* Bounded: the GAD-AR print builder reads this list, and an unbounded,
+       non-lean read of every report grew with the collection. */
     const reports = await AccomplishmentReport.find(query)
       .populate(
         "event_id",
         "title venue start_date end_date start_dates end_dates",
       )
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(MAX_REPORTS)
+      .lean();
 
     return NextResponse.json({
       status: "success",
       data: reports,
     });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    console.error("GET /api/events/accomplishment-report failed:", err);
+    return NextResponse.json(
+      { message: "Unable to load reports." },
+      { status: 500 },
+    );
   }
 }

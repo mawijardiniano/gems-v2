@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import { cacheOrSet } from "@/data/lib/cache";
-import { effectiveStatus } from "@/data/lib/eventStatus";
+import { effectiveStatus, notEndedFilter } from "@/data/lib/eventStatus";
 
 const UPCOMING_LIST_CACHE_TTL = 60 * 1000; // 60 seconds
+const MAX_UNLIMITED = 100;
 
 const PUBLIC_FIELDS =
   "_id title description reference_number number_of_days start_dates end_dates start_date end_date venue type_of_activity organizing_office_unit event_poster.url";
@@ -14,20 +15,24 @@ export async function GET(req) {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
+    /* Public and unauthenticated, so even "all" is capped. */
     const limitParam = Number(searchParams.get("limit"));
     const limit =
       Number.isFinite(limitParam) && limitParam > 0
         ? Math.min(Math.floor(limitParam), 24)
-        : null;
+        : MAX_UNLIMITED;
 
-    const cacheKey = `events:list:upcoming:${limit ?? "all"}`;
+    const cacheKey = `events:list:upcoming:${limit}`;
 
     const events = await cacheOrSet(
       cacheKey,
       async () => {
-        const docs = await Event.find({ status: "active" })
+        /* Finished events are excluded by the database rather than loaded
+           and thrown away; effectiveStatus below still has the last word. */
+        const docs = await Event.find({ status: "active", ...notEndedFilter() })
           .select(PUBLIC_FIELDS)
           .sort({ start_date: 1 })
+          .limit(limit)
           .lean();
 
         const now = Date.now();
@@ -40,7 +45,7 @@ export async function GET(req) {
           return phase === "upcoming" || phase === "ongoing";
         });
 
-        return limit ? upcoming.slice(0, limit) : upcoming;
+        return upcoming;
       },
       UPCOMING_LIST_CACHE_TTL,
     );
@@ -49,7 +54,7 @@ export async function GET(req) {
   } catch (error) {
     console.error("GET /api/events/upcoming error:", error);
     return NextResponse.json(
-      { status: "error", message: error.message },
+      { status: "error", message: "Unable to load upcoming events." },
       { status: 500 },
     );
   }

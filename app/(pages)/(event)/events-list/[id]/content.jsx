@@ -8,6 +8,7 @@ import { FiArrowLeft, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 import { computeInsights } from "@/data/lib/eventInsights";
+import { appDateInput, appDayRange } from "@/data/lib/appTime";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -378,9 +379,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     if (!value) return "";
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return "";
-    const pad = (n) => `${n}`.padStart(2, "0");
-    // Date-only events: edit with YYYY-MM-DD, no time.
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    // Date-only events: edit with the Manila YYYY-MM-DD, no time.
+    return appDateInput(d);
   };
 
   /* The one place the edit form's state is built from an event — on load,
@@ -677,17 +677,12 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       const dateChanged = editData.date !== buildEditData(event).date;
       const dates = {};
       if (dateChanged) {
-        const startDateTime = new Date(`${editData.date}T00:00`);
-        const endDateTime = new Date(`${editData.date}T23:59`);
-        if (
-          Number.isNaN(startDateTime.getTime()) ||
-          Number.isNaN(endDateTime.getTime())
-        ) {
+        const dayRange = appDayRange(editData.date);
+        if (!dayRange) {
           setSaveError("Invalid event date value.");
           return false;
         }
-        dates.start_date = startDateTime.toISOString();
-        dates.end_date = endDateTime.toISOString();
+        Object.assign(dates, dayRange);
       }
 
       const payload = {

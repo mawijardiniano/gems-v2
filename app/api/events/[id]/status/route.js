@@ -30,7 +30,11 @@ export async function PATCH(req, context) {
 
     const userId = user._id;
 
-    const { status, cancelReason } = await req.json();
+    const { status, cancelReason: rawReason } = await req.json();
+    /* The reason goes into notifications and the activity log, so it is
+       coerced to a bounded string. */
+    const cancelReason =
+      typeof rawReason === "string" ? rawReason.trim().slice(0, 500) : "";
     const allowedStatus = ["active", "cancelled", "completed"];
 
     if (!allowedStatus.includes(status)) {

@@ -173,7 +173,7 @@ export default function DiscoverContent() {
   useEffect(() => {
     const load = async () => {
       try {
-        const eventsRes = await axios.get("/api/events");
+        const eventsRes = await axios.get("/api/events?upcoming=1");
         setAllEvents(eventsRes.data?.data || []);
       } catch (err) {
         setError(

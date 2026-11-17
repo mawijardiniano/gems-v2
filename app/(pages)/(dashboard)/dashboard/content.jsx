@@ -179,7 +179,7 @@ export default function DashboardContent({ profile, userId }) {
     if (!userId) return;
     setEventsLoading(true);
     Promise.all([
-      fetch("/api/events").then((res) => res.json()),
+      fetch("/api/events?upcoming=1").then((res) => res.json()),
       fetch(`/api/events/user-events?user_id=${userId}`).then((res) =>
         res.json(),
       ),
