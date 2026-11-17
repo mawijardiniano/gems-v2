@@ -276,6 +276,7 @@ export default function EventsListContent() {
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
+                aria-label="Filter by year"
               >
                 <option value="">All GPB Years</option>
                 {availableYears.map((year) => (
@@ -295,6 +296,7 @@ export default function EventsListContent() {
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
+                aria-label="Filter by activity type"
               >
                 <option value="">All Types</option>
                 {activityTypes.map((type) => (

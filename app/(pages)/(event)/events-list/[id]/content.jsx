@@ -4,9 +4,8 @@ import axios from "axios";
 import QRCode from "qrcode";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FiArrowLeft, FiX } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
-import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 import { computeInsights } from "@/data/lib/eventInsights";
 import { appDateInput, appDayRange } from "@/data/lib/appTime";
 import OverviewTab from "./components/OverviewTab";
@@ -32,7 +31,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [guestTab, setGuestTab] = useState("going");
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -48,9 +46,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
   const [guestSexFilter, setGuestSexFilter] = useState("all");
-  const [guestCollegeFilter, setGuestCollegeFilter] = useState("");
-  const [guestCourseFilter, setGuestCourseFilter] = useState("");
-  const [guestYearFilter, setGuestYearFilter] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
   const [projects, setProjects] = useState([]);
   const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
@@ -128,36 +123,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   }, [userId]);
 
 
-  const getFilteredGuests = (guests) => {
-    return guests
-      .filter((guest) => {
-        const details = extractGuestDetails(guest);
-        if (guestTypeFilter === "student") return details.status === "Student";
-        if (guestTypeFilter === "employee")
-          return details.status === "Employee";
-        if (guestTypeFilter === "stakeholder")
-          return details.status === "Stakeholder";
-        return true;
-      })
-      .filter((guest) => {
-        const details = extractGuestDetails(guest);
-        if (guestCollegeFilter && details.college !== guestCollegeFilter)
-          return false;
-        if (guestCourseFilter && details.course !== guestCourseFilter)
-          return false;
-        if (guestYearFilter && details.yearLevel !== guestYearFilter)
-          return false;
-        if (!guestSearch) return true;
-        const searchTerm = guestSearch.toLowerCase();
-        return (
-          details.name?.toLowerCase().includes(searchTerm) ||
-          details.course?.toLowerCase().includes(searchTerm) ||
-          details.college?.toLowerCase().includes(searchTerm) ||
-          details.department?.toLowerCase().includes(searchTerm) ||
-          details.programYearSection?.toLowerCase().includes(searchTerm)
-        );
-      });
-  };
 
   /* Status changes go through the lifecycle endpoint, which now enforces the
      transition matrix and requires a reason to cancel. Reuses eventReloadKey so
@@ -321,20 +286,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     return new Date(end).getTime() < Date.now();
   }, [event]);
 
-  const formatDate = (value) => {
-    const opts = {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    };
-    const d = new Date(value);
-    return Number.isNaN(d.getTime())
-      ? "Invalid date"
-      : d.toLocaleString(undefined, opts);
-  };
-
   const formatDateOnly = (value) => {
     const opts = {
       month: "long",
@@ -425,10 +376,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
   };
-
-  const goingProfiles = [];
-  const interestedProfiles = [];
-  const notInterestedProfiles = [];
 
   /* Ids of accounts already present in the guest sheet. A manual encode writes
      an EventGuest row, so the same person can sit in both attended_users (their

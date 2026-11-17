@@ -81,8 +81,6 @@ export default function DiscoverEventContent() {
     );
   };
 
-  const requirements = [];
-
   if (loading) {
     return (
       <div className="p-6 text-center text-gray-500">Loading event...</div>
@@ -114,8 +112,9 @@ export default function DiscoverEventContent() {
 
   return (
     <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
-      {event ? (
-        <>
+      {/* `event` is always set here: the loading, error and not-found states
+          return above. */}
+      <>
           {/* Without a poster the overlay used to collapse to zero height and hide
               the title, dates and buttons; the minimum height and backdrop keep
               the header visible either way. */}
@@ -185,18 +184,7 @@ export default function DiscoverEventContent() {
               </p>
             </div>
           )}
-        </>
-      ) : (
-        <div className="py-16 text-center">
-          <p className="font-medium text-gray-600">
-            Sign in to view this event.
-          </p>
-          <p className="mt-1 text-sm text-gray-400">
-            Event details will appear here once you sign in or create an
-            account.
-          </p>
-        </div>
-      )}
+      </>
 
       <PWAInstallPrompt />
     </div>

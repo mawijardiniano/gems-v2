@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   FiAlertCircle,
   FiBriefcase,
@@ -257,6 +258,8 @@ export default function ManualEncodeModal({
     }
   };
 
+  useEscapeKey(open, onClose);
+
   if (!open) return null;
 
   const chosenName = picked ? fullNameOf(picked) || "Selected record" : "";
@@ -266,16 +269,24 @@ export default function ManualEncodeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="manual-encode-title"
+      >
         <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
               <FiUserPlus size={16} />
             </span>
             <div>
-              <p className="text-sm font-semibold text-gray-900">
+              <h2
+                id="manual-encode-title"
+                className="text-sm font-semibold text-gray-900"
+              >
                 Manual Encode
-              </p>
+              </h2>
               <p className="text-xs text-gray-400">
                 Record attendance without a QR scan
                 {eventTitle ? ` for ${eventTitle}` : ""}.
@@ -333,6 +344,7 @@ export default function ManualEncodeModal({
               className="input !pl-9 !rounded-lg"
               type="text"
               placeholder="Type a name, ID or username..."
+              aria-label="Search for a person by name, ID or username"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);

@@ -16,6 +16,7 @@ import {
 import { normalizeRefNumber } from "@/data/lib/referenceNumber";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
+import { canManageEvent } from "@/data/lib/eventAccess";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -154,10 +155,7 @@ export async function PUT(req, { params }) {
       );
     }
 
-    if (
-      event.created_by.toString() !== user._id.toString() &&
-      user.role !== "Admin"
-    ) {
+    if (!canManageEvent(user, event)) {
       return NextResponse.json(
         { status: "error", message: "You are not allowed to edit this event" },
         { status: 403 },
@@ -366,10 +364,7 @@ export async function DELETE(req, { params }) {
 
     /* Same rule as PUT: only the creator or an Admin may remove an event,
        since the cascade also deletes its report and stored files. */
-    if (
-      String(event.created_by) !== String(user._id) &&
-      user.role !== "Admin"
-    ) {
+    if (!canManageEvent(user, event)) {
       return NextResponse.json(
         {
           status: "error",

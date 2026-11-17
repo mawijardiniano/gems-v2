@@ -70,6 +70,15 @@ function EventCard({ event, onClick }) {
     <div
       className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details: ${event.title || "event"}`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(event._id);
+        }
+      }}
     >
       {/* Status banners */}
       {isCancelled && (
@@ -139,7 +148,7 @@ function EventCard({ event, onClick }) {
 
         {/* Stats & View link */}
         <div className="flex items-center justify-end pt-1 border-t border-gray-50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[8px]" />
           </span>
         </div>
@@ -217,12 +226,6 @@ export default function DiscoverContent() {
     );
   }, [allEvents, searchQuery, filterType]);
 
-  const updateEventInLists = (updated) => {
-    setAllEvents((prev) =>
-      prev.map((e) => (e._id === updated._id ? updated : e)),
-    );
-  };
-
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-5">
@@ -267,6 +270,7 @@ export default function DiscoverContent() {
           <input
             type="text"
             placeholder="Search events by title, description, venue..."
+            aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"

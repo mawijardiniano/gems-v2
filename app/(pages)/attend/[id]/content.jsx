@@ -577,6 +577,14 @@ export default function AttendContent() {
                       list="program_options"
                       aria-describedby="program_help"
                     />
+                    {/* The input pointed at this list but it was never
+                        rendered, so no program suggestions appeared and
+                        students typed free text the reports could not group. */}
+                    <datalist id="program_options">
+                      {programOptions.map((program) => (
+                        <option key={program} value={program} />
+                      ))}
+                    </datalist>
                     <p id="program_help" className={helperCls}>
                       Your degree program.
                     </p>

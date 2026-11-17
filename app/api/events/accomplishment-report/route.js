@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { findForeignReportKey } from "@/data/lib/eventFileKeys";
+import { canManageEvent } from "@/data/lib/eventAccess";
 
 const MAX_REPORTS = 1000;
 
@@ -31,10 +32,7 @@ export async function POST(req) {
 
     /* Same owners as PUT: without this, anyone could file the report first
        and lock the real organizer out with a 409. */
-    if (
-      String(event.created_by) !== String(user._id) &&
-      user.role !== "Admin"
-    ) {
+    if (!canManageEvent(user, event)) {
       return NextResponse.json(
         { message: "Only the event's creator can submit its report." },
         { status: 403 },

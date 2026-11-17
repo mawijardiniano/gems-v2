@@ -16,7 +16,8 @@ import {
   FaUserCheck,
   FaClipboardCheck,
 } from "react-icons/fa";
-import CheckboxDropdown from "./CheckboxDropdown";
+import EventOfficeDropdown from "../../../components/EventOfficeDropdown";
+import { EVENT_SOURCES } from "../../../components/eventFormOptions";
 import { officeOptionList } from "@/data/lib/colleges";
 import {
   effectiveStatus,
@@ -24,6 +25,7 @@ import {
   canTransition,
 } from "@/data/lib/eventStatus";
 import CancelEventModal from "./CancelEventModal";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   resolveProjectActivities,
   projectPickerLabel,
@@ -44,19 +46,6 @@ const formatDateOnly = (value) => {
         year: "numeric",
       });
 };
-
-const EVENT_SOURCES = [
-  {
-    value: "project",
-    label: "Project-based (GPB)",
-    description: "Linked to a GPB project + GAD activity",
-  },
-  {
-    value: "independent",
-    label: "Independent",
-    description: "Not based on any project. Standalone event.",
-  },
-];
 
 export default function OverviewTab({
   isPast,
@@ -103,6 +92,8 @@ export default function OverviewTab({
   const [posterError, setPosterError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+
+  useEscapeKey(showDeleteModal && !deleting, () => setShowDeleteModal(false));
 
   /* The exact deep link the QR encodes — guests open it with no login. */
   const attendanceUrl =
@@ -492,10 +483,14 @@ export default function OverviewTab({
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="label">
+                <p className="label" id="edit-event-source-label">
                   Event Source <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                </p>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                  role="group"
+                  aria-labelledby="edit-event-source-label"
+                >
                   {EVENT_SOURCES.map((source) => {
                     const active =
                       (editData?.event_source ||
@@ -537,7 +532,9 @@ export default function OverviewTab({
               </div>
 
               <div className="md:col-span-2">
-                <label className="label">Event Poster</label>
+                <label className="label" htmlFor="edit-event-poster">
+                  Event Poster
+                </label>
                 {editData?.event_poster && (
                   <div className="mb-3">
                     <div className="relative inline-block">
@@ -560,6 +557,7 @@ export default function OverviewTab({
 
                 <div className="file-input">
                   <input
+                    id="edit-event-poster"
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
@@ -580,20 +578,21 @@ export default function OverviewTab({
               </div>
 
               <div>
-                <label className="label">
+                <label className="label" htmlFor="edit-event-type">
                   Type of Activity <span className="text-red-500">*</span>
                 </label>
                 {(editData?.event_source ||
                   (event?.project ? "project" : "independent")) ===
                 "project" ? (
                   <input
+                    id="edit-event-type"
                     value="GAD"
                     disabled
                     className="input bg-gray-50"
-                    aria-label="Type of Activity"
                   />
                 ) : (
                   <select
+                    id="edit-event-type"
                     value={editData?.type_of_activity}
                     onChange={(e) => {
                       handleEditChange("type_of_activity", e.target.value);
@@ -618,10 +617,11 @@ export default function OverviewTab({
               {(editData?.event_source ||
                 (event?.project ? "project" : "independent")) === "project" && (
                 <div>
-                  <label className="label">
+                  <label className="label" htmlFor="edit-event-gad-activity">
                     GAD Activity <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="edit-event-gad-activity"
                     value={
                       editData?.project && editData?.gad_activity
                         ? `${editData.project}||||${editData.gad_activity}`
@@ -665,8 +665,11 @@ export default function OverviewTab({
               )}
 
               <div>
-                <label className="label">Title</label>
+                <label className="label" htmlFor="edit-event-title">
+                  Title
+                </label>
                 <input
+                  id="edit-event-title"
                   type="text"
                   className="input"
                   value={editData?.title || ""}
@@ -675,8 +678,11 @@ export default function OverviewTab({
               </div>
 
               <div>
-                <label className="label">Venue</label>
+                <label className="label" htmlFor="edit-event-venue">
+                  Venue
+                </label>
                 <input
+                  id="edit-event-venue"
                   type="text"
                   className="input"
                   value={editData?.venue || ""}
@@ -701,7 +707,9 @@ export default function OverviewTab({
 
               <div className="md:col-span-2">
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="label !mb-0">Description</label>
+                  <label className="label !mb-0" htmlFor="edit-event-description">
+                    Description
+                  </label>
                   <button
                     type="button"
                     onClick={generateDescription}
@@ -713,6 +721,7 @@ export default function OverviewTab({
                   </button>
                 </div>
                 <textarea
+                  id="edit-event-description"
                   rows={4}
                   className="input resize-y"
                   value={editData?.description || ""}
@@ -726,7 +735,7 @@ export default function OverviewTab({
                 {/* Saved offices that are not on the canonical list — a freely
                     typed one, or a legacy "&" college — are offered too, so
                     they stay visible and can be unticked. */}
-                <CheckboxDropdown
+                <EventOfficeDropdown
                   label="Organizing Office/Unit"
                   options={officeOptionList(editData?.organizing_office_unit)}
                   selected={editData?.organizing_office_unit || []}
@@ -737,7 +746,7 @@ export default function OverviewTab({
                 />
               </div>
               <div className="md:col-span-2">
-                <CheckboxDropdown
+                <EventOfficeDropdown
                   label="Co Organizing Office/Unit"
                   options={officeOptionList(
                     editData?.co_organizing_office_unit,
@@ -968,9 +977,16 @@ export default function OverviewTab({
       {/* ── Delete Confirmation Modal ─────────────────────────────── */}
       {showDeleteModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-event-title"
+          >
             <div className="modal-header">
-              <h2 className="text-lg font-bold text-gray-900">Delete Event</h2>
+              <h2 id="delete-event-title" className="text-lg font-bold text-gray-900">
+                Delete Event
+              </h2>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="btn-ghost !p-2"

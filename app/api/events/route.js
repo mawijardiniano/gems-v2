@@ -20,27 +20,19 @@ import { EVENT_STATUSES, notEndedFilter } from "@/data/lib/eventStatus";
 import { canViewPII } from "@/data/lib/profileBroker";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
+import { EVENT_CREATOR_ROLES, isOrganizerRole } from "@/data/lib/eventAccess";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 /* Hard ceiling on a single page, so ?limit=100000 cannot defeat pagination. */
 const MAX_PAGE_SIZE = 200;
 
-/* Keep in sync with the `type_of_activity` enum in models/event.js. */
-const EVENT_ACTIVITY_TYPES = [
-  "Academic",
-  "Administrative",
-  "GAD",
-  "Extension",
-  "Research",
-  "Students",
-  "Others",
-];
+/* Read from the model so the filter and the schema enum cannot drift. */
+const EVENT_ACTIVITY_TYPES = Event.schema.path("type_of_activity").enumValues;
 
 /* Reuses the lifecycle module rather than repeating the list a third time. */
 const EVENT_STATUS_VALUES = EVENT_STATUSES.map((entry) => entry.value);
 
-const ALLOWED_CREATOR_ROLES = ["GAD Focal Person", "GAD Coordinator", "Dean"];
 
 export async function GET(req) {
   try {
@@ -60,16 +52,7 @@ export async function GET(req) {
     }
 
     if (created_by) {
-      const ORGANIZER_ROLES = [
-        "Admin",
-        "GAD Focal Person",
-        "GAD Coordinator",
-        "Dean",
-      ];
-      if (
-        created_by !== user._id.toString() &&
-        !ORGANIZER_ROLES.includes(user.role)
-      ) {
+      if (created_by !== user._id.toString() && !isOrganizerRole(user.role)) {
         return NextResponse.json(
           {
             status: "error",
@@ -299,7 +282,7 @@ export async function POST(req) {
       );
     }
 
-    if (!ALLOWED_CREATOR_ROLES.includes(user.role)) {
+    if (!EVENT_CREATOR_ROLES.includes(user.role)) {
       console.error(
         "POST /api/events: Forbidden - user is not allowed to create events",
         {
@@ -310,7 +293,7 @@ export async function POST(req) {
       );
       return NextResponse.json(
         {
-          message: `Only ${ALLOWED_CREATOR_ROLES.join(", ")} can create events.`,
+          message: `Only ${EVENT_CREATOR_ROLES.join(", ")} can create events.`,
         },
         { status: 403 },
       );

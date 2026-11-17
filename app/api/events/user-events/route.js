@@ -3,6 +3,7 @@ import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
+import { isOrganizerRole } from "@/data/lib/eventAccess";
 
 export async function GET(req) {
   try {
@@ -21,16 +22,7 @@ export async function GET(req) {
       );
     }
 
-    const ORGANIZER_ROLES = [
-      "Admin",
-      "GAD Focal Person",
-      "GAD Coordinator",
-      "Dean",
-    ];
-    if (
-      user_id !== user._id.toString() &&
-      !ORGANIZER_ROLES.includes(user.role)
-    ) {
+    if (user_id !== user._id.toString() && !isOrganizerRole(user.role)) {
       return NextResponse.json(
         { message: "You can only view your own events." },
         { status: 403 },

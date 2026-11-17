@@ -6,6 +6,7 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { isOrganizerRole } from "@/data/lib/eventAccess";
 
 /* How old an offline-queued scan may be when it is replayed. */
 const OFFLINE_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -50,17 +51,8 @@ export async function POST(req) {
     }
     const targetIds = [...new Set(rawIds.map((uid) => uid.toString()))];
 
-    const ORGANIZER_ROLES = [
-      "Admin",
-      "GAD Focal Person",
-      "GAD Coordinator",
-      "Dean",
-    ];
     const selfId = user._id.toString();
-    if (
-      targetIds.some((uid) => uid !== selfId) &&
-      !ORGANIZER_ROLES.includes(user.role)
-    ) {
+    if (targetIds.some((uid) => uid !== selfId) && !isOrganizerRole(user.role)) {
       return NextResponse.json(
         { message: "You can only record your own attendance." },
         { status: 403 },
@@ -100,7 +92,7 @@ export async function POST(req) {
        different answers at the same moment. */
     const { earliestStart, latestEnd } = attendanceWindow(event);
 
-    const isOrganizer = ORGANIZER_ROLES.includes(user.role);
+    const isOrganizer = isOrganizerRole(user.role);
     // Organizer manual adds (Manual Add Attendee button) bypass the QR
     // time-window checks so staff can mark attendance before/after the event.
     const bypassTimeWindow = manual_add === true && isOrganizer;

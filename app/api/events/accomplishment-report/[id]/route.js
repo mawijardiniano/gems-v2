@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { deleteFileFromBucket } from "@/data/lib/delete";
+import { canManageEvent } from "@/data/lib/eventAccess";
 import {
   collectReportFileKeys as collectFileKeys,
   findForeignReportKey,
@@ -64,9 +65,7 @@ export async function PUT(req, { params }) {
     const event = await Event.findById(id).select("created_by");
     const isSubmitter =
       existing.submitted_by?.toString() === user._id.toString();
-    const isEventCreator =
-      event?.created_by?.toString() === user._id.toString();
-    if (!isSubmitter && !isEventCreator && user.role !== "Admin") {
+    if (!isSubmitter && !canManageEvent(user, event)) {
       return NextResponse.json(
         { error: "You are not allowed to update this report" },
         { status: 403 },

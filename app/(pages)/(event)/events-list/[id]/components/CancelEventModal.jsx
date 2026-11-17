@@ -11,6 +11,8 @@
  * (`requiresCancelReason`), and a cancellation trail with no reason is weak
  * evidence on a GAD accomplishment report.
  */
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+
 export default function CancelEventModal({
   isOpen,
   onClose,
@@ -20,15 +22,24 @@ export default function CancelEventModal({
   loading = false,
   error = "",
 }) {
+  useEscapeKey(isOpen && !loading, onClose);
+
   if (!isOpen) return null;
 
   const canSubmit = reason.trim().length > 0 && !loading;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+      <div
+        className="bg-white rounded-lg shadow-lg w-full max-w-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-event-title"
+      >
         <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-red-600">Cancel Event</h2>
+          <h2 id="cancel-event-title" className="text-lg font-semibold text-red-600">
+            Cancel Event
+          </h2>
         </div>
 
         <div className="px-6 py-4 text-sm text-gray-700">

@@ -9,7 +9,7 @@ import { requireAuth } from "@/data/lib/auth";
 import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { loadDecryptedPii, revealProfilePii } from "@/data/lib/profileBroker";
-import { isEventOrganizer } from "../route";
+import { isEventOrganizer } from "@/data/lib/eventAccess";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
    is written straight to EventGuest as APPROVED so it lands in the same table,
@@ -60,6 +60,30 @@ function positionOf(profile, participantType) {
   ).trim();
 }
 
+/* Promotes an existing guest row to an approved manual record for `user_id`.
+   The organizer is recording this person right now, so the row must end up
+   approved whatever its previous status (a pending / rejected row left as-is
+   kept the person hidden from the attendance table). `extra` overrides
+   fields such as attended_at. */
+function approveGuestRow(rowId, { payload, user_id, organizerId, note, extra }) {
+  return EventGuest.findByIdAndUpdate(
+    rowId,
+    {
+      $set: {
+        ...payload,
+        user_id,
+        source: "manual-encode",
+        validation_status: "approved",
+        validated_by: organizerId,
+        validated_at: new Date(),
+        validation_note: note,
+        ...(extra || {}),
+      },
+    },
+    { new: true },
+  );
+}
+
 /* A person who already scanned the QR lives only in Event.attended_users, which
    the Attendance table never renders. When an organizer re-records them we copy
    their profile into an approved EventGuest row so they finally appear in the
@@ -74,28 +98,12 @@ async function adoptCheckedInGuest({
   organizerId,
   noteOverride,
 }) {
-  /* The organizer is recording this person right now, so the row must end up
-     approved whether it already existed or is created here. Returning an
-     existing pending / rejected row untouched was the bug that left the
-     attendance table looking empty while Insights had already counted the
-     check-in in Event.attended_users. */
+  /* Returning an existing pending / rejected row untouched was the bug that
+     left the attendance table looking empty while Insights had already
+     counted the check-in in Event.attended_users. */
   const note = noteOverride || VALIDATION_NOTE;
   const approve = (doc) =>
-    EventGuest.findByIdAndUpdate(
-      doc._id,
-      {
-        $set: {
-          ...payload,
-          user_id,
-          source: "manual-encode",
-          validation_status: "approved",
-          validated_by: organizerId,
-          validated_at: new Date(),
-          validation_note: note,
-        },
-      },
-      { new: true },
-    );
+    approveGuestRow(doc._id, { payload, user_id, organizerId, note });
 
   try {
     const byAccount = await EventGuest.findOne({ event_id, user_id });
@@ -298,7 +306,6 @@ export async function POST(req) {
       validated_at: new Date(),
       validation_note: VALIDATION_NOTE,
     };
-    const note = VALIDATION_NOTE;
 
     /* The person may already have checked in through the QR flow, which writes
        Event.attended_users. Attendance counts that list plus approved guests,
@@ -359,23 +366,12 @@ export async function POST(req) {
        and the attendance table (approved queue) keeps hiding them. */
     const existing = await EventGuest.findOne({ event_id, user_id });
     if (existing) {
-      const promoted = await EventGuest.findByIdAndUpdate(
-        existing._id,
-        {
-          $set: {
-            ...payload,
-            user_id,
-            source: "manual-encode",
-            /* Forced, not inherited: a pending / rejected row must become
-               approved, otherwise the organizer's own write stays hidden. */
-            validation_status: "approved",
-            validated_by: user._id,
-            validated_at: new Date(),
-            validation_note: note,
-          },
-        },
-        { new: true },
-      );
+      const promoted = await approveGuestRow(existing._id, {
+        payload,
+        user_id,
+        organizerId: user._id,
+        note: VALIDATION_NOTE,
+      });
       return NextResponse.json({
         message: "Attendance recorded successfully",
         already_attended: promoted.validation_status === "approved",
@@ -395,21 +391,13 @@ export async function POST(req) {
     if (nameRow) {
       /* The adopted row is still a manual record: it keeps the provenance the
          table reads, not the QR row's original note. */
-      const promoted = await EventGuest.findByIdAndUpdate(
-        nameRow._id,
-        {
-          $set: {
-            ...payload,
-            user_id,
-            attended_at: nameRow.attended_at || new Date(),
-            source: "manual-encode",
-            validated_by: user._id,
-            validated_at: new Date(),
-            validation_note: "Linked to a profile by organizer",
-          },
-        },
-        { new: true },
-      );
+      const promoted = await approveGuestRow(nameRow._id, {
+        payload,
+        user_id,
+        organizerId: user._id,
+        note: "Linked to a profile by organizer",
+        extra: { attended_at: nameRow.attended_at || new Date() },
+      });
       if (promoted) {
         cacheDelPrefix("events:list:");
         await logActivity({
@@ -459,18 +447,13 @@ export async function POST(req) {
           });
         }
         const promoted = clash
-          ? await EventGuest.findByIdAndUpdate(
-              clash._id,
-              {
-                $set: {
-                  ...payload,
-                  user_id,
-                  attended_at: new Date(),
-                  source: "manual-encode",
-                },
-              },
-              { new: true },
-            )
+          ? await approveGuestRow(clash._id, {
+              payload,
+              user_id,
+              organizerId: user._id,
+              note: VALIDATION_NOTE,
+              extra: { attended_at: new Date() },
+            })
           : null;
         if (promoted) {
           cacheDelPrefix("events:list:");
@@ -519,7 +502,7 @@ export async function POST(req) {
   } catch (err) {
     console.error("POST /api/events/guests/manual failed:", err);
     return NextResponse.json(
-      { message: "Unable to record attendance.", error: err.message },
+      { message: "Unable to record attendance." },
       { status: 500 },
     );
   }

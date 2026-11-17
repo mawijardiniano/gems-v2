@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 import { FaMagic } from "react-icons/fa";
 import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const EMPTY_FILES = {
   office_memorandum: null,
@@ -68,6 +69,7 @@ export default function ReportTab({
   const [previewImg, setPreviewImg] = useState(null);
 
   const fileLifecycle = useFileLifecycle();
+  useEscapeKey(Boolean(previewImg), () => setPreviewImg(null));
 
   /* Replace the file list outright (start/end of an edit session). */
   const setFiles = (next) => {
@@ -399,6 +401,9 @@ export default function ReportTab({
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
             onClick={() => setPreviewImg(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image preview (press Escape to close)"
           >
             <img
               src={previewImg}

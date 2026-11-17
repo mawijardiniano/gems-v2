@@ -2,11 +2,12 @@ import ai from "@/data/lib/gemini";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/data/lib/auth";
 import { cleanAiEventInput } from "@/data/lib/aiEventInput";
+import { EVENT_ORGANIZER_ROLES } from "@/data/lib/eventAccess";
 
 /* Only people who create or manage events use the generators (create page,
    event edit form, post-activity report); anyone else was free to spend the
    model quota. */
-const AI_ROLES = ["Admin", "GAD Focal Person", "GAD Coordinator", "Dean"];
+const AI_ROLES = EVENT_ORGANIZER_ROLES;
 import { rateLimiters } from "@/data/lib/rateLimit";
 
 export async function POST(req) {
