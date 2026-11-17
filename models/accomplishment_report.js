@@ -60,7 +60,9 @@ const accomplishmentReportSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-accomplishmentReportSchema.index({ event_id: 1 });
+/* One report per event. If the build fails on an existing database, look for
+   duplicate event_id rows first. */
+accomplishmentReportSchema.index({ event_id: 1 }, { unique: true });
 accomplishmentReportSchema.index({ submitted_by: 1 });
 
 export default mongoose.models.AccomplishmentReport ||

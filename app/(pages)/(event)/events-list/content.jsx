@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -207,35 +208,14 @@ export default function EventsListContent() {
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
 
+  /* Whole-day events show dates only (no "12:00 AM – 11:59 PM"). */
   const formatRange = (evt) => {
-    const start = evt.start_date || (evt.start_dates || [])[0];
-    const end = evt.end_date || (evt.end_dates || []).slice(-1).pop() || start;
-
-    if (!start) return null;
-
-    const startStr = new Date(start).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-    const timeStart = new Date(start).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const timeEnd =
-      end && new Date(end).getTime() !== new Date(start).getTime()
-        ? new Date(end).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : null;
-
+    const when = formatEventWhen(evt);
+    if (!when) return null;
     return (
       <div className="flex items-center gap-2 text-gray-600">
         <FaCalendar className="text-gray-400 shrink-0" size={12} />
-        <span>
-          {startStr} at {timeStart}
-          {timeEnd ? ` – ${timeEnd}` : ""}
-        </span>
+        <span>{when}</span>
       </div>
     );
   };
@@ -296,6 +276,7 @@ export default function EventsListContent() {
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
+                aria-label="Filter by year"
               >
                 <option value="">All GPB Years</option>
                 {availableYears.map((year) => (
@@ -315,6 +296,7 @@ export default function EventsListContent() {
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
+                aria-label="Filter by activity type"
               >
                 <option value="">All Types</option>
                 {activityTypes.map((type) => (

@@ -14,6 +14,9 @@ import {
   hydrateUserPopulate,
 } from "@/data/lib/userPopulate";
 import { normalizeRefNumber } from "@/data/lib/referenceNumber";
+import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
+import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
+import { canManageEvent } from "@/data/lib/eventAccess";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -28,6 +31,10 @@ const EDITABLE_FIELDS = [
   "gad_activity",
   "event_poster",
 ];
+
+/* Mirrors app/api/events/public/[id]/route.js. */
+const PUBLIC_EVENT_FIELDS =
+  "_id title description start_date end_date start_dates end_dates venue type_of_activity organizing_office_unit status event_poster.url";
 
 /* Office arrays this route stores in their canonical spelling — colleges always
    use "and", so a stale client cannot put the legacy "&" form back on a record. */
@@ -54,13 +61,22 @@ export async function GET(req, { params }) {
   try {
     await connectDB();
 
-    let query = Event.findById(id);
-
+    /* Anonymous callers get the same whitelist as /api/events/public/[id]:
+       excluding only the attendee list still exposed the cancel reason, who
+       cancelled it and the creator's account. */
     if (!user) {
-      query = query.select("-attended_users");
+      const publicEvent = await Event.findById(id)
+        .select(PUBLIC_EVENT_FIELDS)
+        .lean();
+      if (!publicEvent)
+        return NextResponse.json(
+          { status: "error", message: "Event not found" },
+          { status: 404 },
+        );
+      return NextResponse.json({ status: "success", data: publicEvent });
     }
 
-    const event = await query
+    const event = await Event.findById(id)
       .populate({
         path: "created_by",
         ...USER_POPULATE_BASE,
@@ -139,18 +155,39 @@ export async function PUT(req, { params }) {
       );
     }
 
-    if (
-      event.created_by.toString() !== user._id.toString() &&
-      user.role !== "Admin"
-    ) {
+    if (!canManageEvent(user, event)) {
       return NextResponse.json(
         { status: "error", message: "You are not allowed to edit this event" },
         { status: 403 },
       );
     }
 
+    if (
+      body.event_poster !== undefined &&
+      !isAcceptablePosterKey(body.event_poster?.key, {
+        userId: user._id,
+        existingKey: event.event_poster?.key,
+      })
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "The poster file was not uploaded by you." },
+        { status: 400 },
+      );
+    }
+
     const oldProjectId = event.project ? event.project.toString() : null;
-    const newProjectId = body.project ?? null;
+    if (
+      body.project !== null &&
+      body.project !== undefined &&
+      !mongoose.isValidObjectId(body.project)
+    ) {
+      return NextResponse.json(
+        { status: "error", message: "Invalid project." },
+        { status: 400 },
+      );
+    }
+    const newProjectId =
+      body.project === undefined ? oldProjectId : body.project;
 
     for (const field of EDITABLE_FIELDS) {
       if (body[field] === undefined) continue;
@@ -168,6 +205,18 @@ export async function PUT(req, { params }) {
     const nextGadActivity = String(event.gad_activity || "").trim();
     const nextType = event.type_of_activity;
     if (nextProjectId) {
+      const linkError = await checkEventProjectLink({
+        projectId: nextProjectId,
+        gadActivity: nextGadActivity,
+        user,
+        existingProjectId: oldProjectId,
+      });
+      if (linkError) {
+        return NextResponse.json(
+          { status: "error", message: linkError },
+          { status: 400 },
+        );
+      }
       if (nextType !== "GAD" || !nextGadActivity) {
         return NextResponse.json(
           {
@@ -248,14 +297,13 @@ export async function PUT(req, { params }) {
 
     cacheDelPrefix("events:list:");
 
+    /* Same populate + vault hydration as GET: the hand-written populate here
+       returned the whole GemsProfile (including its vaultRef) and a blank
+       creator name. */
     const populated = await Event.findById(id)
-      .populate({
-        path: "created_by",
-        model: "UserAuth",
-        select: "username role personal_info_id",
-        populate: { path: "personal_info_id", model: "GemsProfile" },
-      })
+      .populate({ path: "created_by", ...USER_POPULATE_BASE })
       .lean();
+    await hydrateUserPopulate(populated?.created_by, user?.role);
 
     await logActivity({
       user_id: event.updated_by,
@@ -268,9 +316,16 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ status: "success", data: populated });
   } catch (error) {
     console.error("Validation failed:", error);
+    /* Schema validation and bad casts are the caller's fault (400); anything
+       else is ours and must not leak internals. */
+    const clientError =
+      error?.name === "ValidationError" || error?.name === "CastError";
     return NextResponse.json(
-      { status: "error", message: error.message },
-      { status: 400 },
+      {
+        status: "error",
+        message: clientError ? error.message : "Unable to update event.",
+      },
+      { status: clientError ? 400 : 500 },
     );
   }
 }
@@ -288,11 +343,7 @@ export async function DELETE(req, { params }) {
     );
   }
 
-  await connectDB();
-
-  const event = await Event.findById(id);
-
-  if (!event) {
+  if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
       { status: "error", message: "Event not found" },
       { status: 404 },
@@ -300,6 +351,29 @@ export async function DELETE(req, { params }) {
   }
 
   try {
+    await connectDB();
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return NextResponse.json(
+        { status: "error", message: "Event not found" },
+        { status: 404 },
+      );
+    }
+
+    /* Same rule as PUT: only the creator or an Admin may remove an event,
+       since the cascade also deletes its report and stored files. */
+    if (!canManageEvent(user, event)) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "You are not allowed to delete this event",
+        },
+        { status: 403 },
+      );
+    }
+
     const { title } = await deleteEventCascade(event);
 
     // Event deleted - invalidate cached event lists.
@@ -321,8 +395,8 @@ export async function DELETE(req, { params }) {
     console.error("Delete failed:", error);
 
     return NextResponse.json(
-      { status: "error", message: error.message },
-      { status: 400 },
+      { status: "error", message: "Unable to delete event." },
+      { status: 500 },
     );
   }
 }

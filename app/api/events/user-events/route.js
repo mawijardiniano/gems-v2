@@ -3,6 +3,7 @@ import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
+import { hasEventOversight } from "@/data/lib/eventAccess";
 
 export async function GET(req) {
   try {
@@ -21,16 +22,8 @@ export async function GET(req) {
       );
     }
 
-    const ORGANIZER_ROLES = [
-      "Admin",
-      "GAD Focal Person",
-      "GAD Coordinator",
-      "Dean",
-    ];
-    if (
-      user_id !== user._id.toString() &&
-      !ORGANIZER_ROLES.includes(user.role)
-    ) {
+    /* Another user's created/attended events: oversight roles only. */
+    if (user_id !== user._id.toString() && !hasEventOversight(user.role)) {
       return NextResponse.json(
         { message: "You can only view your own events." },
         { status: 403 },
@@ -45,15 +38,21 @@ export async function GET(req) {
 
     const sort = { start_date: -1, createdAt: -1 };
 
+    /* The attendee list is left out: callers only need the events, and it
+       would hand every other attendee's id to whoever asks. */
     const createdEvents = await Event.find({ created_by: user_id })
+      .select("-attended_users")
       .sort(sort)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const attendedEvents = await Event.find({
       "attended_users.user_id": user_id,
     })
+      .select("-attended_users")
       .sort(sort)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     /* `invitedEvents` was removed: it matched every event the user had not
        created and had not attended — a scan of the whole collection returning

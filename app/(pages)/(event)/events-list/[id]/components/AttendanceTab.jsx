@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import ManualEncodeModal from "./ManualEncodeModal";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const STATUS_META = {
   pending: {
@@ -65,6 +66,12 @@ export default function AttendanceTab(props) {
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectNote, setRejectNote] = useState("");
   const [showManualEncode, setShowManualEncode] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+
+  useEscapeKey(Boolean(rejectTarget) && !rejecting, () => {
+    setRejectTarget(null);
+    setRejectNote("");
+  });
   const q = String(guestSearch || "").toLowerCase();
 
   /* The parent always fetches every validation status, so the queue filter is
@@ -119,7 +126,10 @@ export default function AttendanceTab(props) {
   const activeRoleLabel =
     ROLES.find((r) => r.key === guestTypeFilter)?.label || "All";
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+  /* Approving or rejecting rows shrinks the list; clamp so the table never
+     sits on an empty page past the end while earlier pages still have rows. */
+  const currentPage = Math.min(page, totalPages);
+  const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const fmtTime = (t) => {
     if (!t) return "-";
     const d = new Date(t);
@@ -202,6 +212,7 @@ export default function AttendanceTab(props) {
             className="input !pl-9 !rounded-lg"
             type="text"
             placeholder="Search by name, department or program..."
+            aria-label="Search attendance"
             value={guestSearch}
             onChange={(e) => { setGuestSearch(e.target.value); setPage(1); }}
           />
@@ -228,13 +239,13 @@ export default function AttendanceTab(props) {
             <option value="approved">Approved</option>
             <option value="rejected">Not approved</option>
           </select>
-          <button onClick={() => props.handleDownloadGuestsPdf(rows)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          <button onClick={() => props.handleDownloadGuestsPdf(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             <FiDownload size={14} /> Download
           </button>
           <button onClick={() => props.handleDownloadBlankGuestsPdf()} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             Blank Sheet
           </button>
-          <button onClick={() => props.handlePrintGuests(rows)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          <button onClick={() => props.handlePrintGuests(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
             <FiPrinter size={14} /> Print
           </button>
         </div>
@@ -492,12 +503,12 @@ export default function AttendanceTab(props) {
           </div>
         )}
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
+          <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
           <div className="flex items-center gap-2">
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
               <FiChevronLeft size={14} />
             </button>
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
               <FiChevronRight size={14} />
             </button>
           </div>
@@ -507,8 +518,13 @@ export default function AttendanceTab(props) {
       {/* Reject reason dialog (single or bulk) */}
       {rejectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reject-guest-title"
+          >
+            <h3 id="reject-guest-title" className="text-lg font-semibold text-gray-900">
               Not approve {rejectTarget.length === 1 ? "this check-in" : `${rejectTarget.length} check-ins`}?
             </h3>
             <p className="mt-1 text-sm text-gray-500">
@@ -518,6 +534,8 @@ export default function AttendanceTab(props) {
               className="input mt-4 !rounded-lg w-full"
               rows={3}
               placeholder="Reason (optional)"
+              aria-label="Reason (optional)"
+              autoFocus
               value={rejectNote}
               onChange={(e) => setRejectNote(e.target.value)}
             />
@@ -530,16 +548,23 @@ export default function AttendanceTab(props) {
               </button>
               <button
                 className="btn-primary !rounded-lg !bg-rose-600"
+                disabled={rejecting}
                 onClick={async () => {
+                  if (rejecting) return;
+                  setRejecting(true);
                   const ids = rejectTarget;
                   const note = rejectNote;
                   setRejectTarget(null);
                   setBusyId(ids.length === 1 ? ids[0] : null);
                   setBulkBusy(ids.length > 1);
-                  await runValidate(ids, "reject", note);
-                  setBusyId(null);
-                  setBulkBusy(false);
-                  setRejectNote("");
+                  try {
+                    await runValidate(ids, "reject", note);
+                  } finally {
+                    setBusyId(null);
+                    setBulkBusy(false);
+                    setRejectNote("");
+                    setRejecting(false);
+                  }
                 }}
               >
                 <FiX size={13} /> Reject

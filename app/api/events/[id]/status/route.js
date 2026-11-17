@@ -4,6 +4,7 @@ import { connectDB } from "@/data/lib/db";
 import Event from "@/models/event";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
+import { canManageEvent } from "@/data/lib/eventAccess";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { canTransition, requiresCancelReason } from "@/data/lib/eventStatus";
 import {
@@ -30,7 +31,11 @@ export async function PATCH(req, context) {
 
     const userId = user._id;
 
-    const { status, cancelReason } = await req.json();
+    const { status, cancelReason: rawReason } = await req.json();
+    /* The reason goes into notifications and the activity log, so it is
+       coerced to a bounded string. */
+    const cancelReason =
+      typeof rawReason === "string" ? rawReason.trim().slice(0, 500) : "";
     const allowedStatus = ["active", "cancelled", "completed"];
 
     if (!allowedStatus.includes(status)) {
@@ -44,10 +49,7 @@ export async function PATCH(req, context) {
     if (!event) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
-    if (
-      event.created_by.toString() !== userId.toString() &&
-      user.role !== "Admin"
-    ) {
+    if (!canManageEvent(user, event)) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 

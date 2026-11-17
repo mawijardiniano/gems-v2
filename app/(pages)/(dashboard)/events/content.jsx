@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +12,7 @@ import {
   FaChevronRight,
   FaEye,
   FaSearch,
+  FaTimes,
 } from "react-icons/fa";
 import {
   effectiveStatus,
@@ -28,68 +30,17 @@ const ACTIVITY_COLORS = {
   Others: "bg-gray-50 text-gray-700 border-gray-200",
 };
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
+/* Dates only for whole-day events (the normal case); legacy rows with real
+   times keep them. See data/lib/eventDates.js. */
 function DateRangeDisplay({ event }) {
-  /* eventSpan() resolves the dates: scalars first, legacy arrays as fallback.
-     The multi-day branch below still renders one line per stored day for rows
-     that genuinely carry several; there are none today, but the shape is kept
-     so a future multi-day event does not silently collapse to a single line. */
-  const { start, end } = eventSpan(event);
-
-  if (start === null) {
-    return <span className="text-gray-400">No date set</span>;
+  const when = formatEventWhen(event);
+  if (!when) {
+    return <span className="text-gray-400 text-xs">No date set</span>;
   }
-
-  const startDate = formatDate(new Date(start));
-  const startTime = formatTime(new Date(start));
-
-  if (end === null) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate} at {startTime}
-        </span>
-      </div>
-    );
-  }
-
-  const endDate = formatDate(new Date(end));
-  const endTime = formatTime(new Date(end));
-
-  if (startDate === endDate) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate}, {startTime} - {endTime}
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>
-        {startDate} {startTime} - {endDate} {endTime}
-      </span>
+      <span>{when}</span>
     </div>
   );
 }
@@ -113,6 +64,15 @@ function EventCard({ event, onClick, isPast }) {
     <div
       className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details: ${event.title || "event"}`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(event._id);
+        }
+      }}
     >
       {/* Status banner */}
       {isCancelled && (
@@ -182,7 +142,7 @@ function EventCard({ event, onClick, isPast }) {
 
         {/* View details link */}
         <div className="flex items-center justify-end pt-1 border-t border-gray-50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[8px]" />
           </span>
         </div>
@@ -201,18 +161,17 @@ export default function EventContent({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [registeredEvents, setRegisteredEvents] = useState([]);
+  /* Events this user has attended, loaded by the server component from
+     /api/events/user-events. This used to be reset to [] on mount, which left
+     both the Upcoming and Past tabs permanently empty. */
+  const registeredEvents = participatedEvents || [];
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    setRegisteredEvents([]);
-  }, []);
 
   useEffect(() => {
     const load = async () => {
       try {
         const [eventsRes, profileRes] = await Promise.all([
-          axios.get("/api/events"),
+          axios.get("/api/events?upcoming=1"),
           axios.get("/api/profile/my-profile"),
         ]);
         setAllEvents(eventsRes.data?.data || []);
@@ -440,6 +399,7 @@ export default function EventContent({
           <input
             type="text"
             placeholder="Search events by title, description, venue..."
+            aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"

@@ -1,4 +1,5 @@
 import { Schema, model, models } from "mongoose";
+import { guestDedupeKey } from "../data/lib/guestIdentity.js";
 
 /* Walk-in guest attendance captured via the public QR form.
    No login required — short check-in form: full name, sex, gender identity,
@@ -9,7 +10,11 @@ import { Schema, model, models } from "mongoose";
    Manual validation (strict mode): a QR submission lands as PENDING and only
    counts toward attendance/reports once an organizer approves it. Rejected
    rows are kept for the audit trail and may be resubmitted (the same doc is
-   flipped back to pending so the unique event_id + full_name index holds). */
+   flipped back to pending).
+
+   Row identity is `dedupe_key` (data/lib/guestIdentity.js), not the name:
+   rows used to be unique on (event_id, full_name), which stopped the second
+   of two people who share a name from checking in at all. */
 
 const EventGuestSchema = new Schema(
   {
@@ -17,9 +22,14 @@ const EventGuestSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Event",
       required: true,
-      index: true,
+      /* No single-field index: every compound index below starts with
+         event_id, so it already serves event_id lookups. */
     },
     full_name: { type: String, required: true, trim: true },
+    /* "account:<user id>" for manual rows, else the normalised name, contact,
+       participant type and department the guest typed. Set on create/save by
+       the hook below; routes that update with $set set it themselves. */
+    dedupe_key: { type: String, default: null },
     sex: {
       type: String,
       required: true,
@@ -73,10 +83,23 @@ const EventGuestSchema = new Schema(
   { timestamps: true },
 );
 
-/* Guests check in per event — dedupe on name within the same event. */
-EventGuestSchema.index({ event_id: 1, full_name: 1 }, { unique: true });
+/* Synchronous hook (no `next`), which Mongoose 8 and 9 both accept. */
+EventGuestSchema.pre("validate", function setDedupeKey() {
+  this.dedupe_key = guestDedupeKey(this);
+});
+
+/* One row per check-in per event. Partial so rows written before the field
+   existed (until scripts/migrate-guest-dedupe-key.mjs backfills them) do not
+   collide on a missing key. */
+EventGuestSchema.index(
+  { event_id: 1, dedupe_key: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { dedupe_key: { $type: "string" } },
+  },
+);
 EventGuestSchema.index({ event_id: 1, attended_at: -1 });
-/* One manual row per account per event — QR rows keep the name-based index. */
+/* One manual row per account per event. */
 EventGuestSchema.index(
   { event_id: 1, user_id: 1 },
   {

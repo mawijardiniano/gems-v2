@@ -1,13 +1,10 @@
 "use client";
 
-import axios from "axios";
-import QRCode from "qrcode";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FiArrowLeft, FiX } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
-import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
-import { computeInsights } from "@/data/lib/eventInsights";
+import { canManageEvent, isEventOrganizer } from "@/data/lib/eventAccess";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -18,320 +15,86 @@ import {
   handleDownloadGuestsPdf,
   handleDownloadBlankGuestsPdf,
 } from "./components/PrintUtils";
+import { buildEditData, formatRangeLines } from "./lib/eventEditData";
+import { capitalizeName, extractGuestDetails } from "./lib/guestDetails";
+import { useEventRecord } from "./hooks/useEventRecord";
+import { useEventEditor } from "./hooks/useEventEditor";
+import { useEventLifecycle } from "./hooks/useEventLifecycle";
+import { useEventGuests } from "./hooks/useEventGuests";
+import { useEventAttendance } from "./hooks/useEventAttendance";
+import { useAttendanceQr } from "./hooks/useAttendanceQr";
+import { useMyProjects } from "./hooks/useMyProjects";
 
+const TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "attendance", label: "Attendance" },
+  { key: "insights", label: "Insights" },
+  { key: "reports", label: "Post-Activity Report" },
+];
+
+/* Tabs that read the guest sheet: Overview (pending badge), Attendance, and
+   Insights (approved guests join every headcount). */
+const GUEST_TABS = ["overview", "attendance", "insights"];
+
+const buildRows = (list) =>
+  buildGuestRows(list, extractGuestDetails, capitalizeName);
+
+/* The event manage page. Data and actions live in ./hooks; this component
+   wires them to the tabs. */
 export default function EventManageContent({ backPath = "/events-list" }) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const eventId = params?.id;
 
-  const [event, setEvent] = useState(null);
-  const [userId, setUserId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [guestTab, setGuestTab] = useState("going");
-  const [editData, setEditData] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [baseUrl, setBaseUrl] = useState("");
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
-  const [cancelling, setCancelling] = useState(false);
-  const [reinstating, setReinstating] = useState(false);
-  const [cancelError, setCancelError] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
   const [guestTypeFilter, setGuestTypeFilter] = useState("all");
   const [guestSexFilter, setGuestSexFilter] = useState("all");
-  const [guestCollegeFilter, setGuestCollegeFilter] = useState("");
-  const [guestCourseFilter, setGuestCourseFilter] = useState("");
-  const [guestYearFilter, setGuestYearFilter] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
-  const [projects, setProjects] = useState([]);
-  const [allEvents, setAllEvents] = useState([]);
-  const [attendanceQrDataUrl, setAttendanceQrDataUrl] = useState("");
-  const [guests, setGuests] = useState([]);
-  const [guestsLoading, setGuestsLoading] = useState(false);
   const [guestValidationFilter, setGuestValidationFilter] = useState("all");
-  const [guestCounts, setGuestCounts] = useState({
-    pending: 0,
-    approved: 0,
-    rejected: 0,
+
+  const record = useEventRecord(eventId);
+  const { event, userId, userRole, loading, error } = record;
+
+  /* The same rules the API applies. Organizers (the creator, or an oversight
+     role) get the attendance tabs; Deans and GAD Coordinators only for their
+     own events. Managers (creator or Admin) may edit, cancel and delete. */
+  const viewer = { _id: userId, role: userRole };
+  const canOrganize = Boolean(event) && isEventOrganizer(viewer, event);
+  const canManage = Boolean(event) && canManageEvent(viewer, event);
+  const visibleTabs = canOrganize
+    ? TABS
+    : TABS.filter((t) => t.key === "overview");
+  const currentTab = visibleTabs.some((t) => t.key === activeTab)
+    ? activeTab
+    : "overview";
+
+  const editor = useEventEditor({
+    event,
+    setEvent: record.setEvent,
+    userId,
   });
-  const [guestReloadKey, setGuestReloadKey] = useState(0);
-  /* Bumped after a manual encode so the event and the attendance table are
-     re-fetched and every headcount / insight recomputes. */
-  const [eventReloadKey, setEventReloadKey] = useState(0);
+  const lifecycle = useEventLifecycle({
+    eventId,
+    reload: record.reload,
+    onDeleted: () => router.push(backPath),
+  });
+  const guestSheet = useEventGuests(eventId, {
+    active: canOrganize && GUEST_TABS.includes(currentTab),
+  });
+  const attendance = useEventAttendance(event, guestSheet.guests);
+  const qr = useAttendanceQr(eventId);
+  const projects = useMyProjects(userId);
 
-  const loadGuests = async () => {
-    if (!eventId) return;
-    setGuestsLoading(true);
-    try {
-      const res = await axios.get(
-        `/api/events/guests?event_id=${eventId}&validation_status=all`,
-      );
-      setGuests(res.data?.data || []);
-      if (res.data?.counts) setGuestCounts(res.data.counts);
-    } catch (err) {
-      setGuests([]);
-    } finally {
-      setGuestsLoading(false);
-    }
-  };
-
+  /* Deep links such as the Overview's "Review" button
+     (?tab=attendance&validation=pending) open the right tab and filter. */
   useEffect(() => {
-    /* Overview and Insights both read guests: approved ones join every
-       headcount, pending ones drive the validation badge. */
-    if (
-      (activeTab !== "attendance" &&
-        activeTab !== "overview" &&
-        activeTab !== "insights") ||
-      !eventId
-    )
-      return;
-    loadGuests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, eventId, guestReloadKey]);
-
-  const handleGuestValidation = async (guestIds, action, note) => {
-    const ids = (Array.isArray(guestIds) ? guestIds : [guestIds]).filter(
-      Boolean,
-    );
-    if (ids.length === 0 || !eventId) return;
-    await axios.patch("/api/events/guests", {
-      event_id: eventId,
-      guest_ids: ids,
-      action,
-      note: note || "",
-    });
-    setGuestReloadKey((k) => k + 1);
-  };
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await axios.get("/api/project");
-        const allProjects = res.data?.data || [];
-        const myProjects = allProjects.filter(
-          (p) => p.createdBy?.toString() === userId?.toString(),
-        );
-        setProjects(myProjects);
-      } catch (err) {
-        setProjects([]);
-      }
-    };
-    fetchProjects();
-  }, [userId]);
-
-  useEffect(() => {
-    const fetchAllEvents = async () => {
-      try {
-        const res = await axios.get("/api/events");
-        setAllEvents(res.data?.data || []);
-      } catch (err) {
-        setAllEvents([]);
-      }
-    };
-    fetchAllEvents();
-  }, []);
-
-  const getFilteredGuests = (guests) => {
-    return guests
-      .filter((guest) => {
-        const details = extractGuestDetails(guest);
-        if (guestTypeFilter === "student") return details.status === "Student";
-        if (guestTypeFilter === "employee")
-          return details.status === "Employee";
-        if (guestTypeFilter === "stakeholder")
-          return details.status === "Stakeholder";
-        return true;
-      })
-      .filter((guest) => {
-        const details = extractGuestDetails(guest);
-        if (guestCollegeFilter && details.college !== guestCollegeFilter)
-          return false;
-        if (guestCourseFilter && details.course !== guestCourseFilter)
-          return false;
-        if (guestYearFilter && details.yearLevel !== guestYearFilter)
-          return false;
-        if (!guestSearch) return true;
-        const searchTerm = guestSearch.toLowerCase();
-        return (
-          details.name?.toLowerCase().includes(searchTerm) ||
-          details.course?.toLowerCase().includes(searchTerm) ||
-          details.college?.toLowerCase().includes(searchTerm) ||
-          details.department?.toLowerCase().includes(searchTerm) ||
-          details.programYearSection?.toLowerCase().includes(searchTerm)
-        );
-      });
-  };
-
-  /* Status changes go through the lifecycle endpoint, which now enforces the
-     transition matrix and requires a reason to cancel. Reuses eventReloadKey so
-     the badge, the Overview banner and the Insights refresh from one source. */
-  const handleCancelEvent = async () => {
-    if (!eventId || !cancelReason.trim()) return;
-
-    setCancelling(true);
-    setCancelError("");
-
-    try {
-      await axios.patch(`/api/events/${eventId}/status`, {
-        status: "cancelled",
-        cancelReason: cancelReason.trim(),
-      });
-
-      setShowCancelModal(false);
-      setCancelReason("");
-      setEventReloadKey((k) => k + 1);
-    } catch (err) {
-      /* Surfaces "A reason is required…" and "An event that is … cannot be
-         marked …" from the API rather than a generic failure. */
-      setCancelError(
-        err?.response?.data?.message || "Failed to cancel the event.",
-      );
-    } finally {
-      setCancelling(false);
-    }
-  };
-
-  /* Reinstating is the reverse move Phase 1 made legal. */
-  const handleReinstateEvent = async () => {
-    if (!eventId) return;
-
-    setReinstating(true);
-    setCancelError("");
-
-    try {
-      await axios.patch(`/api/events/${eventId}/status`, {
-        status: "active",
-        cancelReason: "",
-      });
-      setEventReloadKey((k) => k + 1);
-    } catch (err) {
-      setCancelError(
-        err?.response?.data?.message || "Failed to reinstate the event.",
-      );
-    } finally {
-      setReinstating(false);
-    }
-  };
-
-  const handleDeleteEvent = async () => {
-    setDeleting(true);
-    setDeleteError("");
-
-    try {
-      if (event?.event_poster?.key) {
-        await axios.delete("/api/upload", {
-          data: { key: event.event_poster.key },
-        });
-      }
-
-      await axios.delete(`/api/events/${eventId}`);
-
-      setShowDeleteModal(false);
-      router.push(backPath);
-    } catch (err) {
-      setDeleteError(err?.response?.data?.message || "Failed to delete event.");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        try {
-          const profileRes = await axios.get("/api/profile/my-profile");
-          setUserId(profileRes.data?.user?._id || null);
-        } catch (profileErr) {
-          const status = profileErr?.response?.status;
-          if (status !== 401 && status !== 403) throw profileErr;
-          setUserId(null);
-        }
-
-        if (!eventId) {
-          setError("Event id is missing.");
-          return;
-        }
-
-        const res = await axios.get(`/api/events/${eventId}`);
-        const evt = res.data?.data || null;
-        setEvent(evt);
-        if (evt) {
-          const startValue =
-            evt.start_date ||
-            (Array.isArray(evt.start_dates) ? evt.start_dates[0] : null) ||
-            evt.date;
-          const endValue =
-            evt.end_date ||
-            (Array.isArray(evt.end_dates)
-              ? evt.end_dates[evt.end_dates.length - 1]
-              : null) ||
-            startValue;
-          const startInput = formatForInput(startValue);
-          const endInput = formatForInput(endValue);
-          setEditData({
-            event_source: evt.project ? "project" : "independent",
-            type_of_activity: evt.type_of_activity,
-            project: evt.project,
-            gad_activity: evt.gad_activity,
-            title: evt.title || "",
-            description: evt.description || "",
-            date: startInput || "",
-            start_time: "",
-            end_time: "",
-            venue: evt.venue || "",
-            status: evt.status || "active",
-            organizing_office_unit: evt.organizing_office_unit,
-            co_organizing_office_unit: evt.co_organizing_office_unit,
-            event_poster: evt.event_poster || "",
-          });
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || "Unable to load event.");
-      } finally {
-        setLoading(false);
-        setProfileChecked(true);
-      }
-    };
-
-    load();
-  }, [eventId, eventReloadKey]);
-
-  useEffect(() => {
-    const envQrPublic = process.env.NEXT_PUBLIC_QR_BASE_URL;
-    const envQr = process.env.NEXT_QR_BASE_URL;
-    const envPublic = process.env.NEXT_PUBLIC_BASE_URL;
-    const picked = envQrPublic || envQr || envPublic;
-    if (picked) {
-      setBaseUrl(picked.replace(/\/$/, ""));
-      return;
-    }
-    if (typeof window !== "undefined") {
-      setBaseUrl(window.location.origin);
-    }
-  }, []);
-
-  useEffect(() => {
-    const buildAttendanceQr = async () => {
-      if (!baseUrl || !eventId) return;
-      try {
-        const deepLink = `${baseUrl}/attend/${eventId}`;
-        const dataUrl = await QRCode.toDataURL(deepLink, { width: 220 });
-        setAttendanceQrDataUrl(dataUrl);
-      } catch (e) {
-        setAttendanceQrDataUrl("");
-      }
-    };
-    buildAttendanceQr();
-  }, [baseUrl, eventId]);
+    const tab = searchParams?.get("tab");
+    if (TABS.some((t) => t.key === tab)) setActiveTab(tab);
+    const validation = searchParams?.get("validation");
+    if (["all", "pending", "approved", "rejected"].includes(validation))
+      setGuestValidationFilter(validation);
+  }, [searchParams]);
 
   const isPast = useMemo(() => {
     if (!event) return false;
@@ -342,389 +105,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     if (!end) return false;
     return new Date(end).getTime() < Date.now();
   }, [event]);
-
-  const formatDate = (value) => {
-    const opts = {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    };
-    const d = new Date(value);
-    return Number.isNaN(d.getTime())
-      ? "Invalid date"
-      : d.toLocaleString(undefined, opts);
-  };
-
-  const formatDateOnly = (value) => {
-    const opts = {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    };
-    const d = new Date(value);
-    return Number.isNaN(d.getTime())
-      ? "Invalid date"
-      : d.toLocaleString(undefined, opts);
-  };
-
-  const getDateRangeLines = (start, end, evt) => {
-    const startValue =
-      (evt && evt.start_date) ||
-      start ||
-      (evt && Array.isArray(evt.start_dates) ? evt.start_dates[0] : null);
-    const endValue =
-      (evt && evt.end_date) ||
-      end ||
-      (evt && Array.isArray(evt.end_dates)
-        ? evt.end_dates[evt.end_dates.length - 1]
-        : null);
-
-    if (!startValue) return ["No date"];
-
-    /* Date-only overview card: the time of day is noise here, and a
-       same-day event should read as one date, not "X - X". */
-    const startStr = formatDateOnly(startValue);
-    if (!endValue) return [startStr];
-
-    const endStr = formatDateOnly(endValue);
-    if (startStr === endStr) return [startStr];
-    return [`${startStr} - ${endStr}`];
-  };
-
-  const formatRangeLines = (start, end, evt) => {
-    return getDateRangeLines(start, end, evt);
-  };
-
-  const formatForInput = (value) => {
-    if (!value) return "";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "";
-    const pad = (n) => `${n}`.padStart(2, "0");
-    // Date-only events: edit with YYYY-MM-DD, no time.
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  };
-
-  const toAcronym = (value) => {
-    if (!value || typeof value !== "string") return "";
-    const cleaned = value
-      .replace(/\b(of|and|the|&)\b/gi, " ")
-      .replace(/[()]/g, " ");
-    const matches = cleaned.match(/\b[A-Za-z0-9]/g);
-    if (!matches) return value.trim();
-    return matches.join("").toUpperCase();
-  };
-
-  const capitalizeName = (value) => {
-    if (!value || typeof value !== "string") return value;
-    return value
-      .trim()
-      .split(/\s+/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(" ");
-  };
-
-  const goingProfiles = [];
-  const interestedProfiles = [];
-  const notInterestedProfiles = [];
-
-  /* Ids of accounts already present in the guest sheet. A manual encode writes
-     an EventGuest row, so the same person can sit in both attended_users (their
-     QR check-in) and approvedGuests (the organizer's record). Insights must
-     count them once, and the Attendance table must not list them twice. */
-  const guestUserIds = useMemo(() => {
-    const ids = new Set();
-    (Array.isArray(guests) ? guests : []).forEach((g) => {
-      if (g?.user_id) ids.add(String(g.user_id));
-    });
-    return ids;
-  }, [guests]);
-
-  /* Profiles of attendees with a system account that the guest sheet does not
-     already cover — one per person, so a repeated scan cannot inflate a count.
-     Guests handled below live in `approvedGuests`. */
-  const attendedProfiles = useMemo(() => {
-    const seen = new Set();
-    return (event?.attended_users || [])
-      .filter((a) => {
-        const id = a?.user_id?._id ?? a?.user_id;
-        if (!id) return false;
-        return !guestUserIds.has(String(id));
-      })
-      .map((a) => a?.user_id?.personal_info_id)
-      .filter((p) => {
-        if (!p) return false;
-        const key = String(p?._id ?? p);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-  }, [event, guestUserIds]);
-
-  const calculateAge = (birthday) => {
-    if (!birthday) return null;
-    const birth = new Date(birthday);
-    const now = new Date();
-    let age = now.getFullYear() - birth.getFullYear();
-    const m = now.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-    return age;
-  };
-
-  const extractGuestDetails = (guest) => {
-    const info = guest?.personal_info_id || guest?.personal_info || {};
-    const personal = info.personal || guest?.personal || {};
-    const gadData = info.gadData || guest?.gadData || {};
-    const affiliation = info.affiliation || guest?.affiliation || {};
-    const contactInfo = info.contact || guest?.contact || {};
-    const academic =
-      affiliation.academic_information || affiliation.academicInformation || {};
-    const employment =
-      affiliation.employment_information ||
-      affiliation.employmentInformation ||
-      {};
-
-    const positionDesignation =
-      employment.employment_status ||
-      employment.employment_appointment_status ||
-      "";
-    const programYearSection = academic.course
-      ? `${academic.course}${academic.year_level ? ` / ${academic.year_level}` : ""}`
-      : academic.year_level || "";
-
-    const nameFromPersonal =
-      `${personal.first_name || personal.firstName || ""} ${personal.last_name || personal.lastName || ""}`
-        .trim()
-        .replace(/^\s+|\s+$/g, "");
-
-    const departmentRaw = employment.office || academic.college || "";
-    const department = toAcronym(departmentRaw);
-
-    const genderPreference =
-      gadData.gender_preference || gadData.genderPreference || "";
-    const status = personal.currentStatus || "";
-    const contact = contactInfo.mobileNumber || contactInfo.phoneNumber || "";
-    const email = contactInfo.email || "";
-
-    return {
-      name: nameFromPersonal || "Unknown guest",
-      age: calculateAge(personal?.birthday),
-      sex: gadData?.sexAtBirth || "",
-      college: academic.college || "",
-      course: academic.course || "",
-      yearLevel: academic.year_level || "",
-      office: employment.office || "",
-      department,
-      genderPreference,
-      status,
-      positionDesignation,
-      programYearSection,
-      contact,
-      email,
-    };
-  };
-
-  const buildRows = (list) =>
-    buildGuestRows(list, extractGuestDetails, capitalizeName);
-
-  /* Approved guest check-ins (legacy rows without a status count as approved). */
-  const approvedGuests = useMemo(
-    () =>
-      (Array.isArray(guests) ? guests : []).filter(
-        (g) => !g?.validation_status || g.validation_status === "approved",
-      ),
-    [guests],
-  );
-
-  /* A QR check-in by somebody with an account writes Event.attended_users and
-     no guest row, so the sheet used to stay empty for them even though Insights
-     counted them. Those profiles are turned into approved table rows here, with
-     the same column shape a guest row has. Rows are keyed by the account id
-     with a `checkin:` prefix so they can never collide with an EventGuest _id,
-     and Accounts already covered by the sheet are skipped — no double rows. */
-  const checkinGuestRows = useMemo(() => {
-    return (event?.attended_users || [])
-      .map((entry) => ({
-        entry,
-        user: entry?.user_id,
-      }))
-      .filter(({ user }) => user && (user._id || user.personal_info_id))
-      .filter(({ user }) => {
-        const accountId = user?._id ?? user?.user_id;
-        if (accountId && guestUserIds.has(String(accountId))) return false;
-        if (user?.personal_info_id) {
-          const pid = String(
-            user.personal_info_id?._id ?? user.personal_info_id,
-          );
-          if (guestUserIds.has(pid)) return false;
-        }
-        return true;
-      })
-      .map(({ entry, user }) => {
-        const details = extractGuestDetails(user);
-        return {
-          _id: `checkin:${user?._id ?? user?.personal_info_id}`,
-          full_name: details.name,
-          sex: details.sex,
-          age: details.age,
-          participant_type: details.status,
-          department_office_org:
-            details.department || details.college || details.office,
-          program_year_section: details.programYearSection,
-          position_designation: details.positionDesignation,
-          contact: details.contact,
-          attended_at: entry?.attended_at || null,
-          validation_status: "approved",
-          source: "account-check-in",
-          validation_note:
-            "Recorded automatically from a signed-in QR check-in",
-        };
-      });
-  }, [event, guestUserIds]);
-
-  /* What the Attendance table renders: every guest row plus the QR-only
-     account check-ins, approved ones first so a freshly recorded row is
-     visible on page one. */
-  const attendanceGuests = useMemo(() => {
-    const score = (g) =>
-      !g?.validation_status || g.validation_status === "approved" ? 0 : 1;
-    const time = (g) => new Date(g?.attended_at || 0).getTime() || 0;
-    return [...(Array.isArray(guests) ? guests : []), ...checkinGuestRows].sort(
-      (a, b) => score(a) - score(b) || time(b) - time(a),
-    );
-  }, [guests, checkinGuestRows]);
-
-  /* Every insight reads the same two sources: attendedProfiles (users with
-     accounts) + approvedGuests (QR check-ins), de-duplicated above so one person
-     counts once. The arithmetic lives in lib/eventInsights so it can be tested —
-     it used to be ~160 lines of inline useMemo, which is how a stakeholder bucket,
-     a missing dependency, an `undefined` chart slice and a mixed-provenance
-     average all went unnoticed. */
-  const insights = useMemo(
-    () => computeInsights(attendedProfiles, approvedGuests),
-    [attendedProfiles, approvedGuests],
-  );
-
-  const {
-    attendedCount,
-    maleCount,
-    femaleCount,
-    avgAge,
-    ageSampleSize,
-    roleCounts,
-    genderData: genderDataChart,
-    ageData,
-    collegeData,
-    perYearData,
-  } = insights;
-
-  /* The donut reads 0/0 for a brand-new event; the tab uses this to show an
-     empty state instead of a chart made of two zero slices. */
-  const hasInsightData = attendedCount > 0;
-
-  const statusCounts = useMemo(() => {
-    const counts = {};
-    attendedProfiles.forEach((p) => {
-      const status = p?.personal?.currentStatus || "Unknown";
-      counts[status] = (counts[status] || 0) + 1;
-    });
-    /* Approved guest check-ins join the breakdown by their participant type so
-       Students, Employees and Stakeholders are all represented. */
-    approvedGuests.forEach((g) => {
-      const status = g?.participant_type || "Unknown";
-      counts[status] = (counts[status] || 0) + 1;
-    });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [attendedProfiles, approvedGuests]);
-
-  const affiliationData = statusCounts;
-
-  /* ReportTab wants the guest sheet size on its own, separate from the combined
-     headcount Insights reports. */
-  const approvedGuestCount = approvedGuests.length;
-
-  const pendingGuestCount = (Array.isArray(guests) ? guests : []).filter(
-    (g) => g?.validation_status === "pending",
-  ).length;
-
-  const handleEditChange = (field, value) => {
-    setEditData((prev) => ({ ...(prev || {}), [field]: value }));
-  };
-
-  const handleSave = async () => {
-    if (!event?._id || !userId || !editData) return;
-
-    setSaving(true);
-    setError("");
-
-    try {
-      const oldPoster = event.event_poster;
-      const newPoster = editData.event_poster;
-
-      const startDateTime = editData.date
-        ? new Date(`${editData.date}T00:00`)
-        : null;
-      const endDateTime = editData.date
-        ? new Date(`${editData.date}T23:59`)
-        : null;
-
-      if (
-        !startDateTime ||
-        !endDateTime ||
-        Number.isNaN(startDateTime.getTime()) ||
-        Number.isNaN(endDateTime.getTime())
-      ) {
-        setError("Invalid event date value.");
-        setSaving(false);
-        return;
-      }
-
-      const payload = {
-        ...editData,
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
-        updated_by: userId,
-      };
-      // Never send the removed audience fields or the UI-only source flag.
-      delete payload.eligibility_criteria;
-      delete payload.target_number_of_participants;
-      delete payload.event_source;
-      // Normalize project linkage: independent sends null, project sends id.
-      if (!payload.project) payload.project = null;
-      if (!payload.project) payload.gad_activity = "";
-
-      const res = await axios.put(`/api/events/${event._id}`, payload);
-      const updated = res.data?.data || event;
-      if (oldPoster?.key && newPoster?.key && oldPoster.key !== newPoster.key) {
-        await axios.delete("/api/upload", {
-          data: { key: oldPoster.key },
-        });
-      }
-
-      setEvent({
-        ...updated,
-        event_poster: updated.event_poster ?? editData.event_poster,
-      });
-
-      setEditData({
-        ...updated,
-        event_poster: updated.event_poster || editData.event_poster || "",
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to save changes.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDownloadAttendanceQr = () => {
-    if (!attendanceQrDataUrl) return;
-    const link = document.createElement("a");
-    link.href = attendanceQrDataUrl;
-    link.download = `${event?.title || "event"}-attendance-qr.png`;
-    link.click();
-  };
 
   if (loading) {
     return (
@@ -755,6 +135,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       </div>
     );
   }
+
+  const { insights } = attendance;
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
@@ -790,19 +172,19 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-0 overflow-x-auto">
-        {[
-          { key: "overview", label: "Overview" },
-          { key: "attendance", label: "Attendance" },
-          { key: "insights", label: "Insights" },
-          { key: "reports", label: "Post-Activity Report" },
-        ].map((tab) => (
+      <div
+        className="flex gap-2 border-b border-gray-200 pb-0 overflow-x-auto"
+        role="tablist"
+        aria-label="Event sections"
+      >
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
+            role="tab"
+            aria-selected={currentTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`whitespace-nowrap px-4 py-2.5 -mb-px border-b-2 text-sm font-medium transition-all duration-200 ${
-              activeTab === tab.key
+              currentTab === tab.key
                 ? "border-secondary-600 text-secondary-700"
                 : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
             }`}
@@ -812,56 +194,67 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         ))}
       </div>
 
-      {activeTab === "overview" && (
+      {!canOrganize && (
+        <div
+          className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600"
+          role="status"
+        >
+          You are viewing an event organized by someone else. Attendance,
+          insights and the post-activity report are available to its creator
+          and to GAD Focal Persons.
+        </div>
+      )}
+
+      {currentTab === "overview" && (
         <OverviewTab
           isPast={isPast}
           event={event}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-          editData={editData}
-          setEditData={setEditData}
-          handleEditChange={handleEditChange}
-          handleSave={handleSave}
-          saving={saving}
-          error={error}
-          baseUrl={baseUrl}
+          isEditing={editor.isEditing}
+          setIsEditing={editor.setIsEditing}
+          editData={editor.editData}
+          setEditData={editor.setEditData}
+          handleSave={editor.handleSave}
+          saving={editor.saving}
+          saveError={editor.saveError}
+          setSaveError={editor.setSaveError}
+          buildEditData={buildEditData}
+          baseUrl={qr.baseUrl}
           eventId={eventId}
-          attendanceQrDataUrl={attendanceQrDataUrl}
-          handleDownloadAttendanceQr={handleDownloadAttendanceQr}
-          attendedCount={attendedCount}
-          pendingGuestCount={pendingGuestCount}
-          userId={userId}
-          showDeleteModal={showDeleteModal}
-          setShowDeleteModal={setShowDeleteModal}
-          deleteError={deleteError}
-          deleting={deleting}
-          handleDeleteEvent={handleDeleteEvent}
-          showCancelModal={showCancelModal}
-          setShowCancelModal={setShowCancelModal}
-          cancelReason={cancelReason}
-          setCancelReason={setCancelReason}
-          handleCancelEvent={handleCancelEvent}
-          handleReinstateEvent={handleReinstateEvent}
-          cancelling={cancelling}
-          reinstating={reinstating}
-          cancelError={cancelError}
+          attendanceQrDataUrl={qr.qrDataUrl}
+          handleDownloadAttendanceQr={() => qr.download(event.title)}
+          attendedCount={insights.attendedCount}
+          pendingGuestCount={attendance.pendingGuestCount}
+          /* Mirror the API: creator or Admin may edit, cancel and delete. */
+          canEdit={canManage}
+          canDelete={canManage}
+          showDeleteModal={lifecycle.showDeleteModal}
+          setShowDeleteModal={lifecycle.setShowDeleteModal}
+          deleteError={lifecycle.deleteError}
+          deleting={lifecycle.deleting}
+          handleDeleteEvent={lifecycle.handleDeleteEvent}
+          showCancelModal={lifecycle.showCancelModal}
+          setShowCancelModal={lifecycle.setShowCancelModal}
+          cancelReason={lifecycle.cancelReason}
+          setCancelReason={lifecycle.setCancelReason}
+          handleCancelEvent={lifecycle.handleCancelEvent}
+          handleReinstateEvent={lifecycle.handleReinstateEvent}
+          cancelling={lifecycle.cancelling}
+          reinstating={lifecycle.reinstating}
+          cancelError={lifecycle.cancelError}
           projects={projects}
-          allEvents={allEvents}
-          guests={attendanceGuests}
-          formatForInput={formatForInput}
           formatRangeLines={formatRangeLines}
         />
       )}
 
-      {activeTab === "attendance" && (
+      {currentTab === "attendance" && (
         <AttendanceTab
           event={event}
-          guests={attendanceGuests}
-          guestsLoading={guestsLoading}
-          counts={guestCounts}
+          guests={attendance.attendanceGuests}
+          guestsLoading={guestSheet.loading}
+          counts={guestSheet.counts}
           validationFilter={guestValidationFilter}
           setValidationFilter={setGuestValidationFilter}
-          onValidate={handleGuestValidation}
+          onValidate={guestSheet.validate}
           handleDownloadGuestsPdf={(list) =>
             handleDownloadGuestsPdf(list, event, buildRows)
           }
@@ -877,37 +270,38 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setGuestSexFilter={setGuestSexFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
-          existingGuests={attendanceGuests}
+          existingGuests={attendance.attendanceGuests}
+          /* A manual encode changes both stores, so both are refreshed. */
           onEncoded={() => {
-            setGuestReloadKey((k) => k + 1);
-            setEventReloadKey((k) => k + 1);
+            guestSheet.reload();
+            record.reload();
           }}
         />
       )}
 
-      {activeTab === "insights" && (
+      {currentTab === "insights" && (
         <InsightTab
-          attendedCount={attendedCount}
-          maleCount={maleCount}
-          femaleCount={femaleCount}
-          avgAge={avgAge}
-          ageSampleSize={ageSampleSize}
-          hasData={hasInsightData}
-          roleCounts={roleCounts}
-          statusCounts={statusCounts}
-          genderDataChart={genderDataChart}
-          affiliationData={affiliationData}
-          ageData={ageData}
-          collegeData={collegeData}
-          perYearData={perYearData}
+          attendedCount={insights.attendedCount}
+          maleCount={insights.maleCount}
+          femaleCount={insights.femaleCount}
+          avgAge={insights.avgAge}
+          ageSampleSize={insights.ageSampleSize}
+          hasData={attendance.hasInsightData}
+          roleCounts={insights.roleCounts}
+          statusCounts={attendance.statusCounts}
+          genderDataChart={insights.genderData}
+          affiliationData={attendance.statusCounts}
+          ageData={insights.ageData}
+          collegeData={insights.collegeData}
+          perYearData={insights.perYearData}
         />
       )}
 
-      {activeTab === "reports" && (
+      {currentTab === "reports" && (
         <ReportTab
           event={event}
-          approvedGuestCount={approvedGuestCount}
-          attendedCount={attendedCount}
+          approvedGuestCount={attendance.approvedGuestCount}
+          attendedCount={insights.attendedCount}
         />
       )}
     </div>

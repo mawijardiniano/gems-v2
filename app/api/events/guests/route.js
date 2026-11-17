@@ -6,47 +6,14 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
 import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
-
-/* Organizers who may validate guest check-ins (same set that may record
-   attendance for somebody else). The event creator is always allowed. */
-const ORGANIZER_ROLES = [
-  "Admin",
-  "GAD Focal Person",
-  "GAD Coordinator",
-  "Dean",
-];
-
-const STATUSES = ["pending", "approved", "rejected"];
-
-/* Rows created before manual validation existed have no status. They are
-   treated as approved so historical reports keep their numbers. */
-const APPROVED_OR_LEGACY = {
-  $or: [
-    { validation_status: "approved" },
-    { validation_status: { $exists: false } },
-    { validation_status: null },
-  ],
-};
-
-export function legacySafeStatusFilter(status) {
-  if (status === "approved") return APPROVED_OR_LEGACY;
-  if (status === "pending" || status === "rejected")
-    return { validation_status: status };
-  return null;
-}
-
-/* Shared gate: an organizer role, or the person who created the event, may
-   record/validate attendance for somebody else. */
-export function isEventOrganizer(user, event) {
-  if (!user) return false;
-  if (ORGANIZER_ROLES.includes(user.role)) return true;
-  return (
-    Boolean(event?.created_by) && String(event.created_by) === String(user._id)
-  );
-}
+import {
+  GUEST_STATUSES as STATUSES,
+  isEventOrganizer,
+  legacySafeStatusFilter,
+} from "@/data/lib/eventAccess";
 
 export async function GET(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   try {
     await connectDB();
@@ -56,6 +23,16 @@ export async function GET(req) {
       return NextResponse.json(
         { message: "Valid event_id is required" },
         { status: 400 },
+      );
+    /* The sheet carries contact numbers, ages and sex/gender identity, so
+       only the event's organizers may read it — the same gate as PATCH. */
+    const event = await Event.findById(event_id).select("created_by").lean();
+    if (!event)
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    if (!isEventOrganizer(user, event))
+      return NextResponse.json(
+        { message: "Only the event's organizers can view its guest list." },
+        { status: 403 },
       );
     const requested = searchParams.get("validation_status") || "all";
     if (requested !== "all" && !STATUSES.includes(requested))
@@ -88,6 +65,7 @@ export async function GET(req) {
     });
     return NextResponse.json({ status: "success", data: guests, counts });
   } catch (err) {
+    console.error("GET /api/events/guests failed:", err);
     return NextResponse.json(
       { message: "Unable to load guests." },
       { status: 500 },
@@ -134,9 +112,7 @@ export async function PATCH(req) {
     if (!event)
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
 
-    const isCreator =
-      event.created_by && String(event.created_by) === String(user._id);
-    if (!ORGANIZER_ROLES.includes(user.role) && !isCreator)
+    if (!isEventOrganizer(user, event))
       return NextResponse.json(
         {
           message:

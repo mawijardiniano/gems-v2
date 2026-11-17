@@ -6,44 +6,38 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { deleteFileFromBucket } from "@/data/lib/delete";
-
-const collectFileKeys = (report) => {
-  const keys = [];
-  for (const field of [
-    "office_memorandum",
-    "activity_design",
-    "attendance_sheet",
-  ]) {
-    if (report?.[field]?.key) keys.push(report[field].key);
-  }
-  if (Array.isArray(report?.photos)) {
-    report.photos.forEach((p) => p?.key && keys.push(p.key));
-  }
-  if (Array.isArray(report?.other_attachments)) {
-    report.other_attachments.forEach((p) => p?.key && keys.push(p.key));
-  }
-  return keys;
-};
+import { canManageEvent } from "@/data/lib/eventAccess";
+import {
+  collectReportFileKeys as collectFileKeys,
+  findForeignReportKey,
+} from "@/data/lib/eventFileKeys";
 
 export async function GET(req, { params }) {
   const { error, status } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
-  await connectDB();
-
   const { id } = await params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ message: "Invalid event id" }, { status: 400 });
+  }
 
   try {
+    await connectDB();
+    /* `data: null` (200) still means "no report yet" — ReportTab relies on it
+       to show the empty form rather than an error. */
     const report = await AccomplishmentReport.findOne({
       event_id: id,
-    }).populate(
-      "event_id",
-      "title venue start_date end_date start_dates end_dates",
-    );
+    })
+      .populate("event_id", "title venue start_date end_date start_dates end_dates")
+      .lean();
 
     return NextResponse.json({ data: report });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    console.error("GET /api/events/accomplishment-report/[id] failed:", err);
+    return NextResponse.json(
+      { message: "Unable to load report." },
+      { status: 500 },
+    );
   }
 }
 
@@ -71,12 +65,19 @@ export async function PUT(req, { params }) {
     const event = await Event.findById(id).select("created_by");
     const isSubmitter =
       existing.submitted_by?.toString() === user._id.toString();
-    const isEventCreator =
-      event?.created_by?.toString() === user._id.toString();
-    if (!isSubmitter && !isEventCreator && user.role !== "Admin") {
+    if (!isSubmitter && !canManageEvent(user, event)) {
       return NextResponse.json(
         { error: "You are not allowed to update this report" },
         { status: 403 },
+      );
+    }
+
+    /* Files already on the report may be kept; anything new must come from
+       the caller's own uploads, since replaced keys get deleted below. */
+    if (findForeignReportKey(body, { userId: user._id, existing })) {
+      return NextResponse.json(
+        { error: "One of the attached files was not uploaded by you." },
+        { status: 400 },
       );
     }
 

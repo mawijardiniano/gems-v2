@@ -6,6 +6,13 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { isEventOrganizer } from "@/data/lib/eventAccess";
+
+/* How old an offline-queued scan may be when it is replayed. */
+const OFFLINE_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000;
+/* Tolerance for a device clock running slightly ahead of the server. */
+const CLOCK_SKEW_MS = 5 * 60 * 1000;
+const MAX_IDS_PER_REQUEST = 200;
 
 export async function POST(req) {
   try {
@@ -24,6 +31,15 @@ export async function POST(req) {
     }
 
     const rawIds = Array.isArray(user_id) ? user_id : [user_id];
+    /* Each id is its own update query, so one request cannot carry thousands. */
+    if (rawIds.length > MAX_IDS_PER_REQUEST) {
+      return NextResponse.json(
+        {
+          message: `At most ${MAX_IDS_PER_REQUEST} people can be recorded per request.`,
+        },
+        { status: 400 },
+      );
+    }
     if (
       rawIds.length === 0 ||
       rawIds.some((uid) => !uid || !mongoose.Types.ObjectId.isValid(uid))
@@ -35,32 +51,43 @@ export async function POST(req) {
     }
     const targetIds = [...new Set(rawIds.map((uid) => uid.toString()))];
 
-    const ORGANIZER_ROLES = [
-      "Admin",
-      "GAD Focal Person",
-      "GAD Coordinator",
-      "Dean",
-    ];
+    /* Only what the permission, status and time-window checks read. */
+    const event = await Event.findById(event_id)
+      .select("created_by status start_date end_date start_dates end_dates date")
+      .lean();
+    if (!event) {
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    }
+
+    /* Recording someone else, or bypassing the time window, is for this
+       event's organizers: its creator or an oversight role. */
+    const isOrganizer = isEventOrganizer(user, event);
     const selfId = user._id.toString();
-    if (
-      targetIds.some((uid) => uid !== selfId) &&
-      !ORGANIZER_ROLES.includes(user.role)
-    ) {
+    if (targetIds.some((uid) => uid !== selfId) && !isOrganizer) {
       return NextResponse.json(
         { message: "You can only record your own attendance." },
         { status: 403 },
       );
     }
 
-    const event = await Event.findById(event_id);
-    if (!event) {
-      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    if (event.status === "cancelled") {
+      return NextResponse.json(
+        { message: "This event has been cancelled.", code: "EVENT_CANCELLED" },
+        { status: 400 },
+      );
     }
 
+    /* `captured_at` exists for the offline PWA queue (public/sw.js), which
+       replays scans taken without a connection. It is client-supplied, so it
+       is only trusted within a short replay window; otherwise a student could
+       back-date a check-in to any past event. */
     const now = Date.now();
+    const capturedMs = captured_at ? new Date(captured_at).getTime() : NaN;
     const hasCapturedAt =
-      captured_at && !isNaN(new Date(captured_at).getTime());
-    const referenceTime = hasCapturedAt ? new Date(captured_at).getTime() : now;
+      Number.isFinite(capturedMs) &&
+      capturedMs <= now + CLOCK_SKEW_MS &&
+      capturedMs >= now - OFFLINE_REPLAY_WINDOW_MS;
+    const referenceTime = hasCapturedAt ? Math.min(capturedMs, now) : now;
 
     /* Same day-bounded window the guest QR route and the manage-list badge use,
        from lib/eventStatus. This used to be a third hand-built copy that did not
@@ -68,7 +95,6 @@ export async function POST(req) {
        different answers at the same moment. */
     const { earliestStart, latestEnd } = attendanceWindow(event);
 
-    const isOrganizer = ORGANIZER_ROLES.includes(user.role);
     // Organizer manual adds (Manual Add Attendee button) bypass the QR
     // time-window checks so staff can mark attendance before/after the event.
     const bypassTimeWindow = manual_add === true && isOrganizer;
@@ -97,12 +123,14 @@ export async function POST(req) {
       );
     }
 
-    const attendedAt = hasCapturedAt ? new Date(captured_at) : new Date();
+    const attendedAt = new Date(referenceTime);
 
     const results = [];
     let anyAdded = false;
     for (const uid of targetIds) {
-      const updated = await Event.findOneAndUpdate(
+      /* updateOne, not findOneAndUpdate with new:true: the whole event (and
+         its full attendee list) was being returned and discarded per id. */
+      const { modifiedCount } = await Event.updateOne(
         {
           _id: event_id,
           "attended_users.user_id": { $ne: uid },
@@ -110,23 +138,27 @@ export async function POST(req) {
         {
           $push: { attended_users: { user_id: uid, attended_at: attendedAt } },
         },
-        { new: true },
       );
+      if (modifiedCount) anyAdded = true;
+      results.push({ user_id: uid, added: Boolean(modifiedCount) });
+    }
 
-      if (updated) {
-        anyAdded = true;
-        results.push({ user_id: uid, added: true });
-      } else {
-        const existingEvent = await Event.findById(event_id);
-        const existing = existingEvent?.attended_users?.find(
-          (a) => a.user_id?.toString() === uid,
-        );
-        results.push({
-          user_id: uid,
-          added: false,
-          already_attended: true,
-          attended_at: existing?.attended_at,
-        });
+    /* One read for everyone who was already on the list, instead of one
+       full event load per already-attended id. */
+    const already = results.filter((r) => !r.added);
+    if (already.length) {
+      const fresh = await Event.findById(event_id)
+        .select("attended_users")
+        .lean();
+      const byId = new Map(
+        (fresh?.attended_users || []).map((a) => [
+          String(a.user_id),
+          a.attended_at,
+        ]),
+      );
+      for (const r of already) {
+        r.already_attended = true;
+        r.attended_at = byId.get(r.user_id);
       }
     }
 
@@ -168,7 +200,7 @@ export async function POST(req) {
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { message: "Internal server error", error: err.message },
+      { message: "Internal server error" },
       { status: 500 },
     );
   }

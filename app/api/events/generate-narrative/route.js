@@ -1,6 +1,13 @@
 import ai from "@/data/lib/gemini";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/data/lib/auth";
+import { requireRole } from "@/data/lib/auth";
+import { cleanAiEventInput } from "@/data/lib/aiEventInput";
+import { EVENT_ORGANIZER_ROLES } from "@/data/lib/eventAccess";
+
+/* Only people who create or manage events use the generators (create page,
+   event edit form, post-activity report); anyone else was free to spend the
+   model quota. */
+const AI_ROLES = EVENT_ORGANIZER_ROLES;
 import { rateLimiters } from "@/data/lib/rateLimit";
 
 export async function POST(req) {
@@ -14,10 +21,16 @@ export async function POST(req) {
       );
     }
 
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+    const { error, status } = await requireRole(req, AI_ROLES);
+    if (error) return NextResponse.json({ error, message: error }, { status });
 
-    const data = await req.json();
+    const data = cleanAiEventInput(await req.json().catch(() => null));
+    if (!data.title) {
+      return NextResponse.json(
+        { error: "A title is required.", message: "A title is required." },
+        { status: 400 },
+      );
+    }
 
     const prompt = `
 You are an official report writer for a Philippine state university.
@@ -26,14 +39,13 @@ Write a professional post-activity narrative report for the following completed 
 
 EVENT DETAILS
 - Title: ${data.title}
-- Type of Activity: ${data.type_of_activity}
+- Type of Activity: ${data.type_of_activity || "Not specified"}
 ${data.gad_activity ? `- GAD Activity: ${data.gad_activity}` : ""}
 - Venue: ${data.venue || "Not specified"}
-- Date and Time: ${data.start_date ? new Date(data.start_date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : data.start_dates?.length ? data.start_dates.join(", ") : "Not specified"}
+- Date Held: ${data.date_long || "Not specified"}
 - Total Registered Participants: ${data.registered_count ?? "Not specified"}
 - Eligibility / Target Group: Open to all
-- Organizing Office/Unit: ${data.organizing_office_unit?.length ? data.organizing_office_unit.join(", ") : "Not specified"}
-${data.start_date ? `- Date Held: ${new Date(data.start_date).toLocaleDateString("en-US", { dateStyle: "long" })}` : data.start_dates?.length ? `- Date(s) Held: ${data.start_dates.join(", ")}` : ""}
+- Organizing Office/Unit: ${data.offices.length ? data.offices.join(", ") : "Not specified"}
 
 WRITING INSTRUCTIONS
 - Write 3 concise paragraphs only — no headers, no bullet points, no markdown

@@ -7,6 +7,8 @@ import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { optionalAuth } from "@/data/lib/auth";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { rateLimiters } from "@/data/lib/rateLimit";
+import { guestDedupeKey } from "@/data/lib/guestIdentity";
 
 const SEX = ["Male", "Female"];
 const GENDER_IDENTITY = ["Male", "Female", "LGBTQIA+"];
@@ -16,19 +18,48 @@ const PTYPE = ["Student", "Employee", "Stakeholder"];
    its own copy, subtly different from the one in the signed-in attendance route
    and from the badge on the manage list. */
 
+/* This form is public and its values end up on the printed attendance sheet,
+   so every free-text field is bounded and whitespace is collapsed. */
+const MAX_LEN = {
+  full_name: 120,
+  contact: 30,
+  department_office_org: 200,
+  position_designation: 200,
+  program_year_section: 200,
+};
+const clean = (value, max) =>
+  String(value ?? "")
+    .replace(/s+/g, " ")
+    .trim()
+    .slice(0, max);
+
+/* Only used for rows saved before dedupe_key existed: their names are
+   compared case-insensitively ("juan dela cruz" = "Juan  Dela Cruz"). */
+const NAME_COLLATION = { locale: "en", strength: 2 };
+
 /* UI sends program / year / section separately; combine into one sheet value. */
 function buildProgramYearSection(b) {
   if (b?.participant_type !== "Student") return "";
-  const programPart = String(
-    b?.program || b?.program_year_section || "",
-  ).trim();
-  const yearPart = String(b?.year || "").trim();
-  const sectionPart = String(b?.section || "").trim();
-  return [programPart, yearPart, sectionPart].filter(Boolean).join(" ").trim();
+  const programPart = clean(b?.program || b?.program_year_section, 120);
+  const yearPart = clean(b?.year, 20);
+  const sectionPart = clean(b?.section, 40);
+  return clean(
+    [programPart, yearPart, sectionPart].filter(Boolean).join(" "),
+    MAX_LEN.program_year_section,
+  );
 }
+
+const tooMany = (limited) =>
+  NextResponse.json(
+    { message: "Too many check-ins right now. Please try again in a minute." },
+    { status: 429, headers: limited.headers },
+  );
 
 export async function POST(req) {
   try {
+    const ipLimited = await rateLimiters.guestCheckinIp(req);
+    if (ipLimited.error) return tooMany(ipLimited);
+
     await connectDB();
     /* Optional: a logged-in student scanning the same QR still goes through
        the pending flow — the identity is recorded for review only. */
@@ -42,7 +73,10 @@ export async function POST(req) {
         { status: 400 },
       );
     }
-    const name = String(b?.full_name || "").trim();
+    const eventLimited = await rateLimiters.guestCheckinEvent(req, event_id);
+    if (eventLimited.error) return tooMany(eventLimited);
+
+    const name = clean(b?.full_name, MAX_LEN.full_name);
     if (!name)
       return NextResponse.json(
         { message: "Full name is required" },
@@ -79,7 +113,9 @@ export async function POST(req) {
           { status: 400 },
         );
     }
-    const event = await Event.findById(event_id);
+    const event = await Event.findById(event_id)
+      .select("status start_date end_date start_dates end_dates date")
+      .lean();
     if (!event)
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     if (event.status === "cancelled")
@@ -105,32 +141,53 @@ export async function POST(req) {
         },
         { status: 400 },
       );
-    const existing = await EventGuest.findOne({ event_id, full_name: name });
+    /* Everything the guest typed that ends up on the sheet. */
+    const details = {
+      full_name: name,
+      sex: b.sex,
+      gender_identity: genderIdentity || undefined,
+      age: ageNum,
+      contact: clean(b?.contact, MAX_LEN.contact),
+      participant_type: b.participant_type,
+      department_office_org: clean(
+        b?.department_office_org,
+        MAX_LEN.department_office_org,
+      ),
+      position_designation:
+        b.participant_type === "Student"
+          ? ""
+          : clean(b?.position_designation, MAX_LEN.position_designation),
+      program_year_section: buildProgramYearSection(b),
+    };
+
+    /* The same check-in is the same name *and* contact, participant type and
+       department (data/lib/guestIdentity.js). Matching on the name alone
+       stopped the second of two people who share a name from checking in.
+       Rows saved before dedupe_key existed have none and are still matched by
+       name until scripts/migrate-guest-dedupe-key.mjs backfills them. */
+    const dedupeKey = guestDedupeKey(details);
+    const existing = await EventGuest.findOne({
+      event_id,
+      $or: [
+        { dedupe_key: dedupeKey },
+        { dedupe_key: null, full_name: name },
+      ],
+    }).collation(NAME_COLLATION);
     if (existing) {
       if (existing.validation_status === "approved") {
         return NextResponse.json({
           message: "You are already marked as attended for this event.",
           already_attended: true,
           validation_status: "approved",
-          attended_at: existing.attended_at,
+          /* No timestamp: this endpoint is anonymous, and echoing when a
+             named person checked in let anyone look that up. */
         });
       }
       if (existing.validation_status === "rejected") {
-        /* Not approved last time — let the guest resubmit on the same row so
-           the unique event_id + full_name index still holds. */
-        existing.sex = b.sex;
-        existing.gender_identity = genderIdentity || undefined;
-        existing.age = ageNum;
-        existing.contact = String(b?.contact || "").trim();
-        existing.participant_type = b.participant_type;
-        existing.department_office_org = String(
-          b?.department_office_org || "",
-        ).trim();
-        existing.position_designation =
-          b.participant_type === "Student"
-            ? ""
-            : String(b?.position_designation || "").trim();
-        existing.program_year_section = buildProgramYearSection(b);
+        /* Not approved last time — the guest resubmits on the same row, which
+           keeps the rejection in its history. The save hook refreshes the
+           row's dedupe_key from the new details. */
+        existing.set(details);
         existing.attended_at = new Date();
         existing.source = "qr-scan";
         existing.validation_status = "pending";
@@ -161,23 +218,11 @@ export async function POST(req) {
           "You have already submitted a check-in for this event. Please wait for the organizer to validate it.",
         already_submitted: true,
         validation_status: "pending",
-        submitted_at: existing.attended_at,
       });
     }
     const guest = await EventGuest.create({
       event_id,
-      full_name: name,
-      sex: b.sex,
-      gender_identity: genderIdentity || undefined,
-      age: ageNum,
-      contact: String(b?.contact || "").trim(),
-      participant_type: b.participant_type,
-      department_office_org: String(b?.department_office_org || "").trim(),
-      position_designation:
-        b.participant_type === "Student"
-          ? ""
-          : String(b?.position_designation || "").trim(),
-      program_year_section: buildProgramYearSection(b),
+      ...details,
       attended_at: new Date(),
       source: "qr-scan",
       validation_status: "pending",
@@ -215,7 +260,7 @@ export async function POST(req) {
     }
     console.error(err);
     return NextResponse.json(
-      { message: "Internal server error", error: err.message },
+      { message: "Internal server error" },
       { status: 500 },
     );
   }

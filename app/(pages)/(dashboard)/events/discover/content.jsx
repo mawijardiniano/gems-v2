@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { eventSpan, effectiveStatus } from "@/data/lib/eventStatus";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,64 +37,17 @@ const ACTIVITY_TYPES = [
   "Others",
 ];
 
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
+/* Dates only for whole-day events (the normal case); legacy rows with real
+   times keep them. See data/lib/eventDates.js. */
 function DateRangeDisplay({ event }) {
-  const { start, end } = eventSpan(event);
-
-  if (start === null) {
+  const when = formatEventWhen(event);
+  if (!when) {
     return <span className="text-gray-400 text-xs">No date set</span>;
   }
-
-  const startDate = formatDate(new Date(start));
-  const startTime = formatTime(new Date(start));
-
-  if (end === null) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate} at {startTime}
-        </span>
-      </div>
-    );
-  }
-
-  const endDate = formatDate(new Date(end));
-  const endTime = formatTime(new Date(end));
-
-  if (startDate === endDate) {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <FaCalendar className="shrink-0 text-gray-400" />
-        <span>
-          {startDate}, {startTime} - {endTime}
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       <FaCalendar className="shrink-0 text-gray-400" />
-      <span>
-        {startDate} {startTime} - {endDate} {endTime}
-      </span>
+      <span>{when}</span>
     </div>
   );
 }
@@ -116,6 +70,15 @@ function EventCard({ event, onClick }) {
     <div
       className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details: ${event.title || "event"}`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(event._id);
+        }
+      }}
     >
       {/* Status banners */}
       {isCancelled && (
@@ -185,7 +148,7 @@ function EventCard({ event, onClick }) {
 
         {/* Stats & View link */}
         <div className="flex items-center justify-end pt-1 border-t border-gray-50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[8px]" />
           </span>
         </div>
@@ -219,7 +182,7 @@ export default function DiscoverContent() {
   useEffect(() => {
     const load = async () => {
       try {
-        const eventsRes = await axios.get("/api/events");
+        const eventsRes = await axios.get("/api/events?upcoming=1");
         setAllEvents(eventsRes.data?.data || []);
       } catch (err) {
         setError(
@@ -234,8 +197,11 @@ export default function DiscoverContent() {
   }, []);
 
   const discoverEvents = useMemo(() => {
+    /* "Upcoming events": finished ones used to be listed too, oldest first,
+       pushing what is actually coming up to the bottom. */
     let filtered = (allEvents || []).filter(
-      (evt) => evt.status !== "cancelled",
+      (evt) =>
+        evt.status !== "cancelled" && effectiveStatus(evt) !== "completed",
     );
 
     // Type filter
@@ -259,12 +225,6 @@ export default function DiscoverContent() {
       (a, b) => (eventSpan(a).start ?? 0) - (eventSpan(b).start ?? 0),
     );
   }, [allEvents, searchQuery, filterType]);
-
-  const updateEventInLists = (updated) => {
-    setAllEvents((prev) =>
-      prev.map((e) => (e._id === updated._id ? updated : e)),
-    );
-  };
 
   if (loading) {
     return (
@@ -310,6 +270,7 @@ export default function DiscoverContent() {
           <input
             type="text"
             placeholder="Search events by title, description, venue..."
+            aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"

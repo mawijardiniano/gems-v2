@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { eventSpan, attendanceWindow } from "@/data/lib/eventStatus";
+import { formatEventWhen } from "@/data/lib/eventDates";
 import { useParams, useRouter } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -50,8 +51,10 @@ export default function DiscoverEventContent() {
     return end !== null && end < Date.now();
   };
 
+  const isCancelled = (evt) => evt?.status === "cancelled";
+
   const isAttendanceAllowed = (evt) => {
-    if (!evt) return false;
+    if (!evt || isCancelled(evt)) return false;
     /* This used to read only the legacy arrays, so once events stopped writing
        them it would have reported "closed" for every new event. The shared
        window reads scalars first. */
@@ -66,71 +69,17 @@ export default function DiscoverEventContent() {
   const posterUrl = (evt) =>
     evt?.event_poster?.url || evt?.eventPoster?.url || evt?.poster?.url || "";
 
+  /* Dates only for whole-day events; see data/lib/eventDates.js. */
   const formatRange = (evt) => {
-    /* One line per stored day, sourced from eventSpan so a single-date event
-       renders identically to before while a multi-date row still lists each
-       day. Keep the per-day readings straight from the raw arrays. */
-    const startDates = Array.isArray(evt.start_dates)
-      ? evt.start_dates.filter(Boolean)
-      : [];
-    const endDates = Array.isArray(evt.end_dates)
-      ? evt.end_dates.filter(Boolean)
-      : [];
-    const span = eventSpan(evt);
-
-    /* No legacy arrays: fall back to the resolved span. */
-    const days =
-      startDates.length > 0
-        ? startDates
-        : span.start !== null
-          ? [new Date(span.start)]
-          : [];
-    const dayEnds =
-      startDates.length > 0
-        ? endDates
-        : span.end !== null
-          ? [new Date(span.end)]
-          : [];
-
-    if (days.length > 0) {
-      return days.map((startDate, index) => {
-        const dayNumber = index + 1;
-        const endDate = dayEnds[index];
-        const startStr = new Date(startDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        });
-        const timeStart = new Date(startDate).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        if (!endDate) {
-          return (
-            <div key={index}>
-              Day {dayNumber}: {startStr} {timeStart}
-            </div>
-          );
-        }
-
-        const timeEnd = new Date(endDate).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        return (
-          <div key={index}>
-            <div className="flex flex-row gap-2 items-center">
-              <FaCalendar />
-              Day {dayNumber}: {startStr} {timeStart} - {timeEnd}
-            </div>
-          </div>
-        );
-      });
-    }
+    const when = formatEventWhen(evt);
+    if (!when) return null;
+    return (
+      <div className="flex flex-row gap-2 items-center">
+        <FaCalendar />
+        {when}
+      </div>
+    );
   };
-
-  const requirements = [];
 
   if (loading) {
     return (
@@ -163,9 +112,13 @@ export default function DiscoverEventContent() {
 
   return (
     <div className="mx-auto p-5 font-sans space-y-6 max-w-6xl">
-      {event ? (
-        <>
-          <div className="relative rounded-xl overflow-hidden">
+      {/* `event` is always set here: the loading, error and not-found states
+          return above. */}
+      <>
+          {/* Without a poster the overlay used to collapse to zero height and hide
+              the title, dates and buttons; the minimum height and backdrop keep
+              the header visible either way. */}
+          <div className="relative rounded-xl overflow-hidden min-h-[400px] bg-linear-to-br from-secondary-800 to-secondary-600">
             {posterUrl(event) && (
               <img
                 src={posterUrl(event)}
@@ -198,9 +151,11 @@ export default function DiscoverEventContent() {
 
                 {!isAttendanceAllowed(event) && (
                   <div className="mt-2 px-4 py-2 bg-gray-500/50 text-white rounded-lg text-sm font-semibold inline-block">
-                    {isPast(event)
-                      ? "Attendance closed - Event has ended"
-                      : "Attendance opens when the event starts"}
+                    {isCancelled(event)
+                      ? "This event has been cancelled"
+                      : isPast(event)
+                        ? "Attendance closed - Event has ended"
+                        : "Attendance opens when the event starts"}
                   </div>
                 )}
                 {isAttendanceAllowed(event) && !isPast(event) && (
@@ -229,18 +184,7 @@ export default function DiscoverEventContent() {
               </p>
             </div>
           )}
-        </>
-      ) : (
-        <div className="py-16 text-center">
-          <p className="font-medium text-gray-600">
-            Sign in to view this event.
-          </p>
-          <p className="mt-1 text-sm text-gray-400">
-            Event details will appear here once you sign in or create an
-            account.
-          </p>
-        </div>
-      )}
+      </>
 
       <PWAInstallPrompt />
     </div>

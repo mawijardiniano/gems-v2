@@ -1,6 +1,13 @@
 import ai from "@/data/lib/gemini";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/data/lib/auth";
+import { requireRole } from "@/data/lib/auth";
+import { cleanAiEventInput } from "@/data/lib/aiEventInput";
+import { EVENT_ORGANIZER_ROLES } from "@/data/lib/eventAccess";
+
+/* Only people who create or manage events use the generators (create page,
+   event edit form, post-activity report); anyone else was free to spend the
+   model quota. */
+const AI_ROLES = EVENT_ORGANIZER_ROLES;
 import { rateLimiters } from "@/data/lib/rateLimit";
 
 export async function POST(req) {
@@ -14,18 +21,20 @@ export async function POST(req) {
       );
     }
 
-    const { error, status } = await requireAuth(req);
-    if (error) return NextResponse.json({ error }, { status });
+    const { error, status } = await requireRole(req, AI_ROLES);
+    if (error) return NextResponse.json({ error, message: error }, { status });
 
-    const data = await req.json();
+    const data = cleanAiEventInput(await req.json().catch(() => null));
+    if (!data.title) {
+      return NextResponse.json(
+        { error: "A title is required.", message: "A title is required." },
+        { status: 400 },
+      );
+    }
 
-    /* Events are scheduled by date only, so the prompt states the day rather
-       than parsing a time out of it. */
-    const eventDate = data.start_date
-      ? new Date(data.start_date).toLocaleDateString("en-US", {
-          dateStyle: "medium",
-        })
-      : "To be announced";
+    /* Events are scheduled by date only, so the prompt states the (Manila)
+       day rather than a time. */
+    const eventDate = data.date_medium || "To be announced";
 
     const prompt = `
 You are an official event communications writer for a Philippine state university.
@@ -34,7 +43,7 @@ Write a professional event description for the following university event:
 
 EVENT DETAILS
 - Title: ${data.title}
-- Type of Activity: ${data.type_of_activity}
+- Type of Activity: ${data.type_of_activity || "Not specified"}
 ${data.gad_activity ? `- GAD Activity: ${data.gad_activity}` : ""}
 - Venue: ${data.venue || "To be announced"}
 - Date: ${eventDate}

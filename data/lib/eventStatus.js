@@ -21,6 +21,8 @@
  * `instrumentation.js` starts no background job).
  */
 
+import { appStartOfDay, appEndOfDay } from "./appTime.js";
+
 /** Stored statuses, in the order the status menu offers them. */
 export const EVENT_STATUSES = [
   { value: "active", label: "Active" },
@@ -36,39 +38,12 @@ const normalizeStatus = (status) =>
     .trim()
     .toLowerCase();
 
-/** Midnight at the start of the day `date` falls on, or null when unparseable. */
-const startOfDay = (date) => {
-  /* `new Date(null)` is the 1970 epoch, not an invalid date, so an absent field
-     has to be rejected before the conversion. */
-  if (date === null || date === undefined || date === "") return null;
-  const parsed = date instanceof Date ? date : new Date(date);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return new Date(
-    parsed.getFullYear(),
-    parsed.getMonth(),
-    parsed.getDate(),
-    0,
-    0,
-    0,
-    0,
-  ).getTime();
-};
-
-/** 23:59:59.999 on the day `date` falls on, or null when unparseable. */
-const endOfDay = (date) => {
-  if (date === null || date === undefined || date === "") return null;
-  const parsed = date instanceof Date ? date : new Date(date);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return new Date(
-    parsed.getFullYear(),
-    parsed.getMonth(),
-    parsed.getDate(),
-    23,
-    59,
-    59,
-    999,
-  ).getTime();
-};
+/* Day boundaries are Manila days (data/lib/appTime.js), not the machine's: on
+   a UTC server the local-zone version opened attendance at 08:00 Manila time.
+   Both return null for absent or unparseable values (`new Date(null)` would
+   otherwise be the 1970 epoch). */
+const startOfDay = appStartOfDay;
+const endOfDay = appEndOfDay;
 
 /**
  * First and last timestamp an event occupies.
@@ -145,6 +120,22 @@ export const isEventOpen = (event, now = new Date()) =>
  * `app/api/events/attendance/route.js` and
  * `app/api/events/guest-attendance/route.js`. A null bound means "no bound".
  */
+/**
+ * Mongo filter for events that have not ended before the Manila day `now`
+ * falls on — the database-side twin of `effectiveStatus(...) !== "completed"`
+ * for date purposes, so lists of upcoming events need not load every row.
+ * Legacy rows with only `end_dates` are matched through the array.
+ */
+export function notEndedFilter(now = new Date()) {
+  const since = new Date(appStartOfDay(now));
+  return {
+    $or: [
+      { end_date: { $gte: since } },
+      { end_date: null, end_dates: { $elemMatch: { $gte: since } } },
+    ],
+  };
+}
+
 export function attendanceWindow(event) {
   const { start, end } = eventSpan(event);
   return { earliestStart: start, latestEnd: end };
