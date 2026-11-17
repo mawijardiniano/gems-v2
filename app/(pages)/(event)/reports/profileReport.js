@@ -36,14 +36,16 @@ export function profileReportRecords(population, filters = {}, valueFilters = {}
 export function baseProfileRecords(population, filters = {}) {
   const schoolYear = sampleReportSchoolYear(filters.schoolYear);
   const semester = sampleReportSemester(filters.semester);
+  /* Optional college scope (Dean): students by college, employees by office. */
+  const college = filters.college || "";
   const records = [];
   if (population !== "employees") {
-    sampleReportRecords("students", { schoolYear, semester }).forEach((r) =>
+    sampleReportRecords("students", { schoolYear, semester, college }).forEach((r) =>
       records.push({ ...r, __type: "Student" }),
     );
   }
   if (population !== "students") {
-    sampleReportRecords("employees", { schoolYear }).forEach((r) =>
+    sampleReportRecords("employees", { schoolYear, college }).forEach((r) =>
       records.push({ ...r, __type: "Employee" }),
     );
   }

@@ -125,9 +125,13 @@ export function sampleGenderProfileSummary(
   type,
   schoolYear = "",
   semester = "",
+  college = "",
 ) {
-  const base =
-    type === "employees"
+  /* A college-scoped report (the Dean's) names its college instead of the
+     university-wide population count. */
+  const base = college
+    ? `Sample dataset - ${type === "employees" ? "employees" : "students"} of ${college}`
+    : type === "employees"
       ? `Sample dataset - ${NUM(SAMPLE_EMPLOYEE_COUNT)} employees (university-wide)`
       : `Sample dataset - ${NUM(SAMPLE_STUDENT_COUNT)} students (university-wide)`;
   const year = sampleReportSchoolYear(schoolYear);
@@ -142,14 +146,25 @@ export function sampleGenderProfileSummary(
   return parts.length ? `${base}; ${parts.join("; ")}` : base;
 }
 
+/* `filters.college` scopes a report to one college (the Dean's): students
+   match their academic college, employees their office. Empty means
+   university-wide. */
 export function sampleReportRecords(source, filters = {}) {
   const schoolYear = sampleReportSchoolYear(filters.schoolYear);
+  const college = filters.college || "";
   if (source === "employees") {
-    return filterEmployeeRecords(SAMPLE_EMPLOYEE_RECORDS, { schoolYear });
+    return filterEmployeeRecords(SAMPLE_EMPLOYEE_RECORDS, {
+      schoolYear,
+      office: college,
+    });
   }
   /* Students also narrow by semester through the term history. */
   const semester = sampleReportSemester(filters.semester);
-  return filterStudentRecords(SAMPLE_STUDENT_RECORDS, { schoolYear, semester });
+  return filterStudentRecords(SAMPLE_STUDENT_RECORDS, {
+    schoolYear,
+    semester,
+    college,
+  });
 }
 
 export function sampleReportData(source, filters = {}) {
@@ -168,17 +183,18 @@ export function sampleQuickReportSections(type, filters = {}) {
 
   const schoolYear = resolvedSampleSchoolYear(type, filters.schoolYear);
   const semester = resolvedSampleSemester(type, filters.semester);
+  const college = filters.college || "";
   const options = { isSample: true };
 
   return entry.source === "employees"
     ? buildQuickReportSections(
         entry.kind,
-        sampleReportData("employees", { schoolYear }),
+        sampleReportData("employees", { schoolYear, college }),
         options,
       )
     : buildStudentReportSections(
         entry.kind,
-        sampleReportData("students", { schoolYear, semester }),
+        sampleReportData("students", { schoolYear, semester, college }),
         options,
       );
 }
@@ -194,19 +210,25 @@ export async function generateSampleQuickReport(type, filters = {}) {
   if (!entry) throw new Error(`Unknown gender profile type: ${type}`);
   const schoolYear = resolvedSampleSchoolYear(type, filters.schoolYear);
   const semester = resolvedSampleSemester(type, filters.semester);
+  const college = filters.college || "";
   const options = {
     isSample: true,
-    filterSummary: sampleGenderProfileSummary(entry.source, schoolYear, semester),
+    filterSummary: sampleGenderProfileSummary(
+      entry.source,
+      schoolYear,
+      semester,
+      college,
+    ),
   };
   return entry.source === "employees"
     ? generateQuickReport(
         entry.kind,
-        sampleReportData("employees", { schoolYear }),
+        sampleReportData("employees", { schoolYear, college }),
         options,
       )
     : generateStudentQuickReport(
         entry.kind,
-        sampleReportData("students", { schoolYear, semester }),
+        sampleReportData("students", { schoolYear, semester, college }),
         options,
       );
 }

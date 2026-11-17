@@ -117,6 +117,33 @@ const REPORT_TYPES = [
   },
 ];
 
+/* Live sex-disaggregated PDF. The API locks scoped roles (Dean, GAD
+   Coordinator) to their assigned college, so it is offered on the
+   college-scoped page only. */
+const LIVE_SEX_DISAGGREGATED = "sex-disaggregated";
+
+/* College-scoped (Dean) page: person-type reports only. The GAR, GPB matrix,
+   milestones and projects/events reports are university-wide. */
+const SCOPED_REPORT_VALUES = [
+  PROFILE_REPORT,
+  "students",
+  "employees",
+  "employees-position-level",
+  "employees-gender-gap",
+  "students-enrollment",
+  "students-gender-gap",
+  "students-intersectional",
+  "students-multi-year",
+];
+const SCOPED_REPORT_TYPES = [
+  ...REPORT_TYPES.filter((t) => SCOPED_REPORT_VALUES.includes(t.value)),
+  {
+    value: LIVE_SEX_DISAGGREGATED,
+    label: "Sex-Disaggregated Data (Live)",
+    mode: "download",
+  },
+];
+
 /* Quarter filter for the milestone progress report. A milestone is grouped by
    its target date; the actual date is the fallback when no target is set. */
 const QUARTERS = [
@@ -143,8 +170,12 @@ const SEMESTER_LABEL = {
   Summer: "Summer",
 };
 
-export default function ReportsContent() {
+/* `scopeCollege` (Dean) locks every report to one college and limits the list
+   to the person-type reports; empty keeps the university-wide page. */
+export default function ReportsContent({ scopeCollege = "" }) {
   const router = useRouter();
+  const scoped = Boolean(scopeCollege);
+  const reportTypes = scoped ? SCOPED_REPORT_TYPES : REPORT_TYPES;
 
   const [years, setYears] = useState([]);
   const [year, setYear] = useState("");
@@ -163,21 +194,24 @@ export default function ReportsContent() {
   );
   const [profileFilters, setProfileFilters] = useState({});
   const isProfile = reportType === PROFILE_REPORT;
+  const isLive = reportType === LIVE_SEX_DISAGGREGATED;
   const usesSample = isProfile || isSampleQuickReport(reportType);
-  /* Option lists and counts follow the population, year and semester. */
-  const profileFilterOptionsMemo = useMemo(
-    () =>
-      isProfile
-        ? profileFilterOptions(
-            population,
-            baseProfileRecords(population, {
-              schoolYear: sampleYear,
-              semester: population === "employees" ? "" : sampleSemester,
-            }),
-          )
-        : {},
-    [isProfile, population, sampleYear, sampleSemester],
-  );
+  /* Reports that need a GPB academic year (the database-backed ones). */
+  const needsGpbYear = !usesSample && !isLive;
+  /* Option lists and counts follow the population, year and semester. When
+     scoped they only count the college's records, and the College filter is
+     dropped so it cannot be widened or changed. */
+  const profileFilterOptionsMemo = useMemo(() => {
+    if (!isProfile) return {};
+    const base = baseProfileRecords(population, {
+      schoolYear: sampleYear,
+      semester: population === "employees" ? "" : sampleSemester,
+      college: scopeCollege,
+    });
+    const options = profileFilterOptions(population, base);
+    if (scoped) delete options.college;
+    return options;
+  }, [isProfile, population, sampleYear, sampleSemester, scopeCollege, scoped]);
   const [quarter, setQuarter] = useState("");
   const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState("");
@@ -189,8 +223,10 @@ export default function ReportsContent() {
   /* Section preview of a sample quick report; null means closed. */
   const [sectionPreview, setSectionPreview] = useState(null);
 
-  /* Load available years from the GPB collection */
+  /* Load available years from the GPB collection. The scoped page has no
+     GPB-year report, so it skips this. */
   useEffect(() => {
+    if (scoped) return undefined;
     let mounted = true;
     (async () => {
       try {
@@ -212,7 +248,7 @@ export default function ReportsContent() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [scoped]);
 
 
   const loadReadiness = useCallback(async (y) => {
@@ -231,8 +267,8 @@ export default function ReportsContent() {
   }, []);
 
   useEffect(() => {
-    loadReadiness(year);
-  }, [year, loadReadiness]);
+    if (!scoped) loadReadiness(year);
+  }, [scoped, year, loadReadiness]);
 
   /* Single source of truth for what the Gender Profile Report covers. Preview
      and download both go through this so the two can never drift apart. */
@@ -242,9 +278,21 @@ export default function ReportsContent() {
       schoolYear: sampleYear,
       semester: population === "employees" ? "" : sampleSemester,
     };
-    const valueFilters = normalizeProfileFilters(population, profileFilters);
+    /* The scoped college always wins over anything in the picker state. */
+    const valueFilters = normalizeProfileFilters(
+      population,
+      scoped ? { ...profileFilters, college: [scopeCollege] } : profileFilters,
+    );
     return { fields, filters, valueFilters };
-  }, [population, profileFields, sampleYear, sampleSemester, profileFilters]);
+  }, [
+    population,
+    profileFields,
+    sampleYear,
+    sampleSemester,
+    profileFilters,
+    scoped,
+    scopeCollege,
+  ]);
 
   /* Builds the same table the PDF prints, but as plain data — no jsPDF, so the
      preview opens instantly and follows every filter change. */
@@ -279,8 +327,10 @@ export default function ReportsContent() {
       const sections = sampleQuickReportSections(type, {
         schoolYear: reportSampleYear,
         semester: reportSemester,
+        college: scopeCollege,
       });
       const scope = [
+        scopeCollege,
         reportSampleYear ? `AY ${reportSampleYear}` : "All sample years",
         reportSemester ? SEMESTER_LABEL[reportSemester] || reportSemester : "",
       ]
@@ -315,7 +365,7 @@ export default function ReportsContent() {
         setStatus(
           `Gender Profile ${
             profileMode(fields) === "masterlist" ? "Masterlist" : "Breakdown"
-          } (${popLabel}${sampleYear ? `, AY ${sampleYear}` : ", all sample years"}${
+          } (${scoped ? `${scopeCollege}, ` : ""}${popLabel}${sampleYear ? `, AY ${sampleYear}` : ", all sample years"}${
             profileFilterSummary(population, profileFilters)
               ? `; ${profileFilterSummary(population, profileFilters)}`
               : ""
@@ -338,8 +388,10 @@ export default function ReportsContent() {
         await downloadSampleQuickReport(type, {
           schoolYear: reportSampleYear,
           semester: reportSemester,
+          college: scopeCollege,
         });
         const scope = [
+          scopeCollege,
           reportSampleYear ? `AY ${reportSampleYear}` : "",
           reportSemester ? SEMESTER_LABEL[reportSemester] || reportSemester : "",
         ]
@@ -355,7 +407,11 @@ export default function ReportsContent() {
 
       const params = new URLSearchParams();
       let endpoint;
-      if (type === "gar") {
+      if (type === LIVE_SEX_DISAGGREGATED) {
+        /* No college param: the API forces the Dean's assigned college. */
+        params.set("type", population);
+        endpoint = `/api/analytics/sex-disaggregated-data/report?${params.toString()}`;
+      } else if (type === "gar") {
         endpoint = `/api/reports/gad-ar?year=${encodeURIComponent(year)}`;
       } else if (type === "milestones") {
         if (quarter === "breakdown") {
@@ -393,6 +449,7 @@ export default function ReportsContent() {
         "projects-events": `projects-events-status-${year}${
           quarter && quarter !== "breakdown" ? `-q${quarter}` : ""
         }.pdf`,
+        [LIVE_SEX_DISAGGREGATED]: `sex-disaggregated-${population}.pdf`,
       };
       const filename =
         (res.headers?.["content-disposition"] || "").split("filename=")[1] ||
@@ -406,19 +463,24 @@ export default function ReportsContent() {
       window.URL.revokeObjectURL(url);
       setStatus("Report generated — download started.");
     } catch (err) {
-      setError("Could not generate the report. Please try again.");
+      setError(
+        type === LIVE_SEX_DISAGGREGATED && err?.response?.status === 404
+          ? "No live records found for this scope yet."
+          : "Could not generate the report. Please try again.",
+      );
     } finally {
       setGenerating(false);
     }
   };
 
   const handleGenerate = () => {
-    const type = REPORT_TYPES.find((t) => t.value === reportType);
+    const type = reportTypes.find((t) => t.value === reportType);
     if (!type) return;
 
-    /* Sample-based gender profiles are generated in the browser and need no
-       academic year; the database-backed reports do. */
-    if (type.value !== PROFILE_REPORT && !isSampleQuickReport(type.value) && !year) {
+    /* Sample-based gender profiles are generated in the browser and the live
+       sex-disaggregated report covers all years, so neither needs a GPB year;
+       the other database-backed reports do. */
+    if (needsGpbYear && !year) {
       setError("Select an academic year first.");
       return;
     }
@@ -493,9 +555,16 @@ export default function ReportsContent() {
           Generate Report
         </h1>
         <p className="text-gray-500 text-sm mt-1">
-          Reports Module — select a report and check data readiness before
-          generating.
+          {scoped
+            ? "Gender profile reports for students and employees of your college."
+            : "Reports Module — select a report and check data readiness before generating."}
         </p>
+        {scoped && (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-secondary-200 bg-secondary-50 px-3 py-1 text-xs font-medium text-secondary-700">
+            <FaInfoCircle size={11} />
+            Scope: {scopeCollege}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 items-start xl:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
@@ -520,7 +589,7 @@ export default function ReportsContent() {
               }}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
             >
-              {REPORT_TYPES.map((t) => (
+              {reportTypes.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
                 </option>
@@ -528,8 +597,7 @@ export default function ReportsContent() {
             </select>
           </div>
 
-          {isProfile && (
-            <>
+          {(isProfile || isLive) && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Population
@@ -553,7 +621,9 @@ export default function ReportsContent() {
                   ))}
                 </select>
               </div>
+          )}
 
+          {isProfile && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Report Fields
@@ -571,12 +641,22 @@ export default function ReportsContent() {
                   Name selected → one row per person (masterlist). Name not
                   selected → counts grouped by the selected fields, split by
                   sex when Sex is selected. Use each field&apos;s Filter… to
-                  narrow by College / Office, Program or Department. To compare
-                  students against employees, run the report once per
-                  Population.
+                  narrow by{" "}
+                  {scoped
+                    ? "Program or Department within your college"
+                    : "College / Office, Program or Department"}
+                  . To compare students against employees, run the report once
+                  per Population.
                 </p>
               </div>
-            </>
+          )}
+
+          {isLive && (
+            <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2.5 text-xs leading-relaxed text-secondary-800">
+              Built from the live database for {scopeCollege || "the selected college"}{" "}
+              (students by academic college, employees by office), covering all
+              academic years.
+            </div>
           )}
 
           {/* Every report except the comparative multi-year one accepts an
@@ -621,7 +701,7 @@ export default function ReportsContent() {
                 — every sample year is a complete snapshot.
               </p>
             </div>
-          ) : (
+          ) : needsGpbYear ? (
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
                 Academic Year
@@ -639,7 +719,7 @@ export default function ReportsContent() {
                 ))}
               </select>
             </div>
-          )}
+          ) : null}
 
           {/* Student sample reports can also pin a semester; the sample term
               history is the only dataset that carries one. */}
@@ -731,7 +811,7 @@ export default function ReportsContent() {
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={generating || (!usesSample && !year)}
+              disabled={generating || (needsGpbYear && !year)}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-secondary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {generating && (
@@ -757,7 +837,7 @@ export default function ReportsContent() {
 
         {/* The readiness check reads the live database for a specific academic
             year — it does not apply to the sample-based reports. */}
-        {!usesSample && (
+        {needsGpbYear && (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Data Readiness
@@ -831,12 +911,12 @@ export default function ReportsContent() {
             Available Reports
           </h3>
           <p className="text-xs text-gray-400 mb-4">
-            One-click downloads; the GAR opens the print preview workspace and
-            the sample-based reports are built in the browser from the sample
-            datasets.
+            {scoped
+              ? `One-click downloads for ${scopeCollege}; the sample-based reports are built in the browser from the sample datasets.`
+              : "One-click downloads; the GAR opens the print preview workspace and the sample-based reports are built in the browser from the sample datasets."}
           </p>
           <ul className="divide-y divide-gray-100">
-            {REPORT_TYPES.map((t) => (
+            {reportTypes.map((t) => (
               <li
                 key={t.value}
                 className="py-2.5 flex items-center justify-between gap-3"
@@ -871,11 +951,13 @@ export default function ReportsContent() {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-gray-500 mt-3 flex items-start gap-1">
-            <FaInfoCircle size={9} className="mt-0.5 shrink-0" />
-            Actuals are encoded in Project Monitoring → GAD Projects; completed
-            events auto-fill their accomplishment lines.
-          </p>
+          {!scoped && (
+            <p className="text-xs text-gray-500 mt-3 flex items-start gap-1">
+              <FaInfoCircle size={9} className="mt-0.5 shrink-0" />
+              Actuals are encoded in Project Monitoring → GAD Projects; completed
+              events auto-fill their accomplishment lines.
+            </p>
+          )}
         </div>
       </div>
 

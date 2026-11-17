@@ -12,6 +12,7 @@ import {
   FaUserGraduate,
   FaFolder,
   FaBook,
+  FaFileAlt,
 } from "react-icons/fa";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
 import Link from "next/link";
@@ -51,6 +52,12 @@ export default function Sidebar({ open, setOpen, role }) {
       href: "/dean/students",
       icon: <FaUserGraduate size={16} />,
       key: "student-list",
+    },
+    {
+      name: "Reports",
+      href: "/dean/reports",
+      icon: <FaFileAlt size={16} />,
+      key: "reports",
     },
     {
       name: "Projects",
