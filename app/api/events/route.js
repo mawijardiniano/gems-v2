@@ -27,6 +27,8 @@ import {
   organizingOfficeError,
 } from "@/data/lib/eventAccess";
 import { emitToUser } from "@/data/lib/realtime";
+import { participantCount } from "@/data/lib/eventParticipants";
+import { attachGuestRows } from "@/data/lib/eventGuestRows";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -238,17 +240,17 @@ export async function GET(req) {
            The role gate inside the hydrator decides who actually gets a
            decrypted identity. */
         const data = await hydrateUserPopulate(rows, user?.role);
+        /* Participants per event: account check-ins plus approved guest
+           rows (data/lib/eventParticipants.js), so walk-ins count too. Only
+           the account ids and the sheet's sex/status columns are read. */
+        const attendance = await Event.find({
+          _id: { $in: rows.map((r) => r._id) },
+        })
+          .select("title attended_users.user_id")
+          .lean();
+        await attachGuestRows(attendance);
         const counts = new Map(
-          (
-            await Event.aggregate([
-              { $match: { _id: { $in: rows.map((r) => r._id) } } },
-              {
-                $project: {
-                  n: { $size: { $ifNull: ["$attended_users", []] } },
-                },
-              },
-            ])
-          ).map((r) => [String(r._id), r.n]),
+          attendance.map((ev) => [String(ev._id), participantCount(ev)]),
         );
         for (const row of data) {
           row.attended_count = counts.get(String(row._id)) || 0;
@@ -329,12 +331,13 @@ export async function POST(req) {
       );
     }
 
-    const parsedStartDate = new Date(start_date);
-    const parsedEndDate = new Date(end_date);
+    /* A bare "YYYY-MM-DD" is that Manila day, as everywhere else. */
+    const parsedStartDate = parseAppDate(start_date);
+    const parsedEndDate = parseAppDate(end_date);
 
     if (
-      Number.isNaN(parsedStartDate.getTime()) ||
-      Number.isNaN(parsedEndDate.getTime()) ||
+      !parsedStartDate ||
+      !parsedEndDate ||
       parsedEndDate < parsedStartDate
     ) {
       return NextResponse.json(

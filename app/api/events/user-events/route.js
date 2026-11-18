@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
 import { hasEventOversight } from "@/data/lib/eventAccess";
+import EventGuest from "@/models/eventGuest";
+import { isApprovedGuest } from "@/data/lib/eventParticipants";
 
 export async function GET(req) {
   try {
@@ -46,8 +48,23 @@ export async function GET(req) {
       .limit(limit)
       .lean();
 
+    /* Participated = the same rule the reports count by
+       (data/lib/eventParticipants.js): an account check-in, unless the
+       organizer's guest sheet has a row for this person (that row decides),
+       plus approved sheet rows. People recorded by manual encode only have a
+       sheet row, so they never saw those events here. */
+    const [checkIns, sheetRows] = await Promise.all([
+      Event.find({ "attended_users.user_id": user_id }).distinct("_id"),
+      EventGuest.find({ user_id }).select("event_id validation_status").lean(),
+    ]);
+    const onSheet = new Set(sheetRows.map((r) => String(r.event_id)));
+    const participatedIds = new Set([
+      ...checkIns.map(String).filter((id) => !onSheet.has(id)),
+      ...sheetRows.filter(isApprovedGuest).map((r) => String(r.event_id)),
+    ]);
+
     const attendedEvents = await Event.find({
-      "attended_users.user_id": user_id,
+      _id: { $in: [...participatedIds] },
     })
       .select("-attended_users")
       .sort(sort)

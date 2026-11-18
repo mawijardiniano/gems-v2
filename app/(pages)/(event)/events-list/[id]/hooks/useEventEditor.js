@@ -8,7 +8,9 @@ import { buildEditData } from "../lib/eventEditData";
 /* The Overview's edit form: its state, and saving it.
 
    The form is rebuilt from the event whenever the event changes (first load,
-   background reload, after a save), always through buildEditData. */
+   background reload, after a save), always through buildEditData, but not
+   while it is open: a reload after cancelling/reinstating the event or a
+   manual encode used to throw away what the user had typed. */
 export function useEventEditor({ event, setEvent, userId }) {
   const [editData, setEditData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -16,8 +18,8 @@ export function useEventEditor({ event, setEvent, userId }) {
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
-    if (event) setEditData(buildEditData(event));
-  }, [event]);
+    if (event && !isEditing) setEditData(buildEditData(event));
+  }, [event, isEditing]);
 
   /* Returns true on success so the form only closes when the change stuck.
      Errors go to `saveError`, shown inside the form: the page-level error

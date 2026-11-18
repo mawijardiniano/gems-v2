@@ -139,6 +139,10 @@ export default function OverviewTab({
               if (isEditing) {
                 await handleCancelEdit();
               } else {
+                /* Start from the saved event every time (with the Dean
+                   route's GAD → Academic mapping): the first edit used to
+                   skip the mapping. */
+                resetEditData();
                 setIsEditing(true);
               }
             }}

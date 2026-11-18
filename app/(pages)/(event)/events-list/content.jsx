@@ -108,7 +108,35 @@ const SkeletonCard = () => (
 
 export default function EventsListContent() {
   const router = useRouter();
-  const userId = useSelector((state) => state.auth.userId);
+  const storedUserId = useSelector((state) => state.auth.userId);
+  /* The Redux id comes from localStorage. With it cleared but the session
+     cookie still valid, the list used to show its skeleton forever; the
+     signed-in account is asked for instead. */
+  const [profileUserId, setProfileUserId] = useState(null);
+  const userId = storedUserId || profileUserId;
+  useEffect(() => {
+    if (storedUserId) return undefined;
+    let cancelled = false;
+    axios
+      .get("/api/profile/my-profile")
+      .then((res) => {
+        if (cancelled) return;
+        const id = res.data?.user?._id;
+        if (id) setProfileUserId(String(id));
+        else {
+          setError("Unable to identify your account. Please sign in again.");
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Unable to identify your account. Please sign in again.");
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [storedUserId]);
 
   const [events, setEvents] = useState([]);
   const [projects, setProjects] = useState([]);

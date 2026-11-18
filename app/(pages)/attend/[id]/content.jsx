@@ -18,6 +18,7 @@ import {
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 import { formatEventWhen } from "@/data/lib/eventDates";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { APP_TIME_ZONE } from "@/data/lib/appTime";
 
 const EMPTY = {
   full_name: "",
@@ -54,12 +55,14 @@ const helperCls = "mt-1 text-[11px] text-gray-400";
 
 const formatDateTime = (value) => {
   if (!value) return "";
+  /* Manila time, like the event's own dates. */
   return new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: APP_TIME_ZONE,
   });
 };
 
@@ -108,6 +111,8 @@ export default function AttendContent() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   /* Programs offered for the college typed above, used as datalist hints. */
   const programOptions = useMemo(() => {
@@ -124,16 +129,20 @@ export default function AttendContent() {
       if (!eventId) return;
       setLoading(true);
       try {
+        setLoadFailed(false);
         const res = await axios.get(`/api/events/public/${eventId}`);
         setEvent(res.data?.data || null);
       } catch (err) {
         setEvent(null);
+        /* Only a 404 means the QR code is wrong. Anything else (no signal,
+           a server error) told guests to rescan a code that was fine. */
+        setLoadFailed(err?.response?.status !== 404);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [eventId]);
+  }, [eventId, reloadKey]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -204,6 +213,28 @@ export default function AttendContent() {
         title="Loading event"
         message="Fetching the event details for this QR code."
       />
+    );
+  }
+
+  if (!event && loadFailed) {
+    return (
+      <div>
+        <StateCard
+          tone="red"
+          icon={<FaExclamationCircle size={22} />}
+          title="Couldn't load the event"
+          message="Check your internet connection, then try again."
+        />
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
     );
   }
 

@@ -20,6 +20,9 @@ import {
 import { SampleToggle, SampleDataNotice } from "../gender-statistics/components/SampleToggle";
 import { useEffect, useMemo, useState } from "react";
 import { formatAmount } from "@/data/lib/money";
+import { effectiveStatus } from "@/data/lib/eventStatus";
+import { APP_TIME_ZONE, appParts } from "@/data/lib/appTime";
+import { academicYearStartOf } from "@/data/lib/academicYear";
 import {
   ResponsiveContainer,
   BarChart,
@@ -158,14 +161,12 @@ function academicYearLabel(year) {
   return y ? `${y}-${y + 1}` : "";
 }
 
+/* AY of the event's start day, as a Manila day (data/lib/academicYear). */
 function eventAcademicYearStart(event) {
   const raw =
     event?.start_date || (Array.isArray(event?.start_dates) ? event.start_dates[0] : null);
   if (!raw) return null;
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return null;
-
-  return date.getMonth() >= 7 ? date.getFullYear() : date.getFullYear() - 1;
+  return academicYearStartOf(raw);
 }
 
 function fmtPesoCompact(value) {
@@ -429,9 +430,14 @@ export default function EventsDashboardContent() {
   }, [events, selectedYear]);
 
   const eventStats = useMemo(() => {
-    const active = yearEvents.filter((e) => e.status === "active").length;
-    const completed = yearEvents.filter((e) => e.status === "completed").length;
-    const cancelled = yearEvents.filter((e) => e.status === "cancelled").length;
+    /* By the dates, not the stored flag: past events that were never marked
+       completed counted as "active" and "completed" stayed near zero. */
+    const statusOf = (e) => effectiveStatus(e);
+    const active = yearEvents.filter((e) =>
+      ["ongoing", "upcoming"].includes(statusOf(e)),
+    ).length;
+    const completed = yearEvents.filter((e) => statusOf(e) === "completed").length;
+    const cancelled = yearEvents.filter((e) => statusOf(e) === "cancelled").length;
     const totalParticipants = yearEvents.reduce(
       (sum, e) => sum + (e.attended_count || 0),
       0,
@@ -1361,6 +1367,7 @@ export default function EventsDashboardContent() {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
+                          timeZone: APP_TIME_ZONE,
                         },
                       )
                     : "TBD";
@@ -1380,13 +1387,16 @@ export default function EventsDashboardContent() {
                         <span className="text-xs font-bold text-secondary-700 leading-none">
                           {eventStartDate
                             ? new Date(eventStartDate)
-                                .toLocaleDateString("en-US", { month: "short" })
+                                .toLocaleDateString("en-US", {
+                                  month: "short",
+                                  timeZone: APP_TIME_ZONE,
+                                })
                                 .charAt(0)
                             : "—"}
                         </span>
                         <span className="text-lg font-bold text-secondary-700 leading-tight">
                           {eventStartDate
-                            ? new Date(eventStartDate).getDate()
+                            ? appParts(eventStartDate)?.day ?? "—"
                             : "—"}
                         </span>
                       </div>

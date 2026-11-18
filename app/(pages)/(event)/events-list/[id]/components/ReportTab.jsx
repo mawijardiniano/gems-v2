@@ -1,5 +1,6 @@
 "use client";
 
+import { readJson } from "@/data/lib/uploadClient";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -52,6 +53,12 @@ export default function ReportTab({
   event,
   approvedGuestCount = 0,
   attendedCount = 0,
+  /* The event's creator or an Admin may file the report (the API's rule);
+     the submitter may also edit it. Everyone else who can open the tab only
+     reads it. The tab used to offer Submit to people the API refused, after
+     they had uploaded every file. */
+  canSubmit = false,
+  viewerId = null,
 }) {
   const [form, setForm] = useState({ narrative: "" });
   const [files, setFilesState] = useState(EMPTY_FILES);
@@ -65,6 +72,10 @@ export default function ReportTab({
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [showReport, setShowReport] = useState(null);
+  /* A failed or pending load used to look like "no report yet" and showed
+     the empty form, so people re-entered a report that already existed. */
+  const [reportLoading, setReportLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [previewImg, setPreviewImg] = useState(null);
 
@@ -267,9 +278,19 @@ export default function ReportTab({
   };
 
   const fetchReport = async () => {
+    setReportLoading(true);
+    setLoadError("");
     try {
       const res = await fetch(`/api/events/accomplishment-report/${event._id}`);
-      const data = await res.json();
+      const data = await readJson(res);
+      if (!res.ok) {
+        setLoadError(
+          res.status === 403
+            ? "You are not allowed to view this event's report."
+            : data?.message || data?.error || "Unable to load the report.",
+        );
+        return;
+      }
 
       if (!data?.data) {
         setShowReport(null);
@@ -293,7 +314,9 @@ export default function ReportTab({
 
       setShowReport(report);
     } catch {
-      setShowReport(null);
+      setLoadError("Unable to load the report. Check your connection.");
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -349,10 +372,10 @@ export default function ReportTab({
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to submit");
+        throw new Error(errData.error || errData.message || "Failed to submit");
       }
 
-      const responseData = await res.json();
+      const responseData = await readJson(res);
       const savedReport = responseData.data || responseData;
 
       await fileLifecycle.commit();
@@ -393,6 +416,41 @@ export default function ReportTab({
       folder: "reports/attendance",
     },
   ];
+
+  if (reportLoading) {
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-500" role="status">
+        Loading report…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div
+        className="flex items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        role="alert"
+      >
+        <span>{loadError}</span>
+        <button
+          type="button"
+          onClick={fetchReport}
+          className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (showReport === null && !canSubmit) {
+    return (
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-500">
+        No accomplishment report has been submitted for this event yet. Only
+        the event&apos;s creator or an Admin can submit it.
+      </div>
+    );
+  }
 
   if (showReport !== null && !isEditing) {
     return (
@@ -439,6 +497,10 @@ export default function ReportTab({
                 </p>
               </div>
             </div>
+            {(canSubmit ||
+              (viewerId &&
+                String(showReport?.submitted_by?._id ?? showReport?.submitted_by) ===
+                  String(viewerId))) && (
             <button
               onClick={() => {
                 setSuccess("");
@@ -449,6 +511,7 @@ export default function ReportTab({
               <FiEdit2 size={13} />
               Edit
             </button>
+            )}
           </div>
 
           <div className="space-y-8">

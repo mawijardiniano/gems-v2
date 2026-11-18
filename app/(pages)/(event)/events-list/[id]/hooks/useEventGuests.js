@@ -12,6 +12,9 @@ export function useEventGuests(eventId, { active = true } = {}) {
   const [guests, setGuests] = useState([]);
   const [counts, setCounts] = useState(EMPTY_COUNTS);
   const [loading, setLoading] = useState(false);
+  /* A failed load used to look like an empty sheet ("No attendance recorded
+     yet" and zero counts). */
+  const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -20,6 +23,7 @@ export function useEventGuests(eventId, { active = true } = {}) {
 
     const load = async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await axios.get(
           `/api/events/guests?event_id=${eventId}&validation_status=all`,
@@ -28,7 +32,14 @@ export function useEventGuests(eventId, { active = true } = {}) {
         setGuests(res.data?.data || []);
         if (res.data?.counts) setCounts(res.data.counts);
       } catch (err) {
-        if (!cancelled) setGuests([]);
+        if (!cancelled) {
+          setGuests([]);
+          setError(
+            err?.response?.data?.message ||
+              err?.response?.data?.error ||
+              "Unable to load the attendance sheet.",
+          );
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -57,5 +68,5 @@ export function useEventGuests(eventId, { active = true } = {}) {
     reload();
   };
 
-  return { guests, counts, loading, reload, validate };
+  return { guests, counts, loading, error, reload, validate };
 }

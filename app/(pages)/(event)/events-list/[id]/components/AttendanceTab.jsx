@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIME_ZONE } from "@/data/lib/appTime";
 import { useState } from "react";
 import {
   FiDownload,
@@ -130,10 +131,13 @@ export default function AttendanceTab(props) {
      sits on an empty page past the end while earlier pages still have rows. */
   const currentPage = Math.min(page, totalPages);
   const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  /* Check-in time as Manila time, whatever the browser's timezone. */
   const fmtTime = (t) => {
     if (!t) return "-";
     const d = new Date(t);
-    return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString();
+    return Number.isNaN(d.getTime())
+      ? "-"
+      : d.toLocaleString("en-PH", { timeZone: APP_TIME_ZONE });
   };
   const pageIds = rows.map((g) => g._id).filter(Boolean);
   /* Only real guest rows can be approved / rejected / reset. */
@@ -214,7 +218,9 @@ export default function AttendanceTab(props) {
             placeholder="Search by name, department or program..."
             aria-label="Search attendance"
             value={guestSearch}
-            onChange={(e) => { setGuestSearch(e.target.value); setPage(1); }}
+            /* Clears the selection like the other filters: rows hidden by a
+               new search stayed selected and were approved in bulk. */
+            onChange={(e) => { setGuestSearch(e.target.value); setPage(1); setSelected([]); }}
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -222,7 +228,7 @@ export default function AttendanceTab(props) {
             aria-label="Filter by sex"
             className="input !w-auto !py-2 !rounded-lg !text-sm"
             value={guestSexFilter}
-            onChange={(e) => { setGuestSexFilter?.(e.target.value); setPage(1); }}
+            onChange={(e) => { setGuestSexFilter?.(e.target.value); setPage(1); setSelected([]); }}
           >
             <option value="all">Sex: All</option>
             <option value="male">Male</option>
@@ -399,7 +405,7 @@ export default function AttendanceTab(props) {
                           />
                         ) : null}
                       </td>
-                      <td className="text-gray-500">{(page - 1) * pageSize + idx + 1}</td>
+                      <td className="text-gray-500">{(currentPage - 1) * pageSize + idx + 1}</td>
                       <td className="font-medium text-gray-900">
                         {g.full_name}
                         {g.source === "manual-encode" && (
