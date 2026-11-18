@@ -10,7 +10,8 @@ import {
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useFileUploads } from "@/hooks/useFileUploads";
+import { readJson } from "@/data/lib/uploadClient";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   MAX_GANTT_ACTIVITIES,
@@ -49,9 +50,6 @@ const MILESTONE_STATUS_META = {
 
 const MAX_MILESTONES = 50;
 
-const ACCEPTED_PROOF_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_PROOF_SIZE = 10 * 1024 * 1024;
-
 /* Rows carry a client-only id: an upload resolves seconds later, by which time
    rows may have been added or removed, so it must find its row by id rather
    than by index. Stripped before saving. */
@@ -59,29 +57,6 @@ let rowSeq = 0;
 const nextRowId = () => `row-${(rowSeq += 1)}`;
 const withRowIds = (list) =>
   list.map((row) => (row._rid ? row : { ...row, _rid: nextRowId() }));
-
-/* Reads a JSON body without throwing on an empty or HTML error page. */
-const readJson = async (res) => {
-  try {
-    return await res.json();
-  } catch {
-    return {};
-  }
-};
-
-/* Deletes files uploaded in this session that never made it into the rows. */
-const discardUploads = (files) =>
-  Promise.all(
-    files
-      .filter((file) => file?.key)
-      .map((file) =>
-        fetch("/api/upload", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: file.key }),
-        }).catch(() => {}),
-      ),
-  );
 
 const emptyRow = () => ({
   _rid: nextRowId(),
@@ -107,7 +82,9 @@ export default function MilestonesModal({
   onClose,
   onSaved,
 }) {
-  const fileLifecycle = useFileLifecycle();
+  const fileLifecycle = useFileUploads();
+  /* Index of the row whose proofs are uploading, or null. */
+  const uploadingRow = fileLifecycle.uploading;
 
   const [rows, setRows] = useState(() => {
     const existing = Array.isArray(project?.milestones)
@@ -190,7 +167,6 @@ export default function MilestonesModal({
     setActivities([...activities, emptyActivity()]);
     setEditingActivity(activities.length);
   };
-  const [uploadingRow, setUploadingRow] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -276,34 +252,14 @@ export default function MilestonesModal({
     e.target.value = "";
     if (fileList.length === 0) return;
 
-    const invalid = fileList.filter(
-      (file) =>
-        !ACCEPTED_PROOF_TYPES.includes(file.type) || file.size > MAX_PROOF_SIZE,
-    );
-    if (invalid.length > 0) {
-      setError("Proof files must be PDF, JPG, or PNG and under 10MB each.");
-      return;
-    }
-
     const rowId = rowsRef.current[index]?._rid;
-    setUploadingRow(index);
     setError("");
-    const uploaded = [];
     try {
-      for (const file of fileList) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "milestone-proof");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await readJson(res);
-        if (!res.ok) {
-          throw new Error(data.error || data.message || "Upload failed");
-        }
-        uploaded.push({ url: data.url, key: data.key, name: file.name });
-      }
+      const uploaded = await fileLifecycle.upload(fileList, {
+        folder: "milestone-proof",
+        label: "Proof files",
+        target: index,
+      });
 
       /* Built on the latest rows and matched by id: edits made while the
          upload ran survive, and a removed row does not receive the files. */
@@ -315,13 +271,9 @@ export default function MilestonesModal({
           return { ...row, proofs: [...(row.proofs || []), ...uploaded] };
         }),
       );
-      if (!attached) await discardUploads(uploaded);
+      if (!attached) await fileLifecycle.discard(uploaded);
     } catch (err) {
-      /* Files that uploaded before the failure are not on any row. */
-      await discardUploads(uploaded);
       setError(err.message || "Failed to upload proof files");
-    } finally {
-      setUploadingRow(null);
     }
   };
 
@@ -336,16 +288,9 @@ export default function MilestonesModal({
           : row,
       ),
     );
-
     /* Files uploaded in this session are deleted right away; files that were
        already saved are only released when the save is committed. */
-    if (file?.key && !fileLifecycle.hasOriginal(file.key)) {
-      fetch("/api/upload", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: file.key }),
-      }).catch(() => {});
-    }
+    fileLifecycle.release(file);
   };
 
   useEscapeKey(!inline && !saving, () => closeAndCleanup());

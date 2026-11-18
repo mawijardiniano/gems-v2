@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
-
-/* Best-effort cleanup of an uploaded scanned copy. The upload route only
-   deletes files the caller is allowed to manage. */
-async function deleteUploadedFile(key) {
-  if (!key) return;
-  try {
-    await fetch("/api/upload", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key }),
-    });
-  } catch (err) {
-    console.error("Failed to delete file:", err);
-  }
-}
+import {
+  deleteUploadedFile,
+  readJson,
+  uploadFile,
+} from "@/data/lib/uploadClient";
 
 /* The "Update Status" modal: status, reason and an optional scanned copy. */
 export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
@@ -51,19 +41,8 @@ export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
       let scanned_copy = gpbStatus?.scanned_copy || { url: "", key: "" };
 
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-        formData.append("folder", "status/scanned");
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const uploadData = await uploadRes.json().catch(() => ({}));
-        if (!uploadRes.ok) {
-          throw new Error(uploadData.error || "Failed to upload scanned copy");
-        }
-        scanned_copy = { url: uploadData.url, key: uploadData.key };
-        uploadedKey = uploadData.key;
+        scanned_copy = await uploadFile(selectedFile, "status/scanned");
+        uploadedKey = scanned_copy.key;
       }
 
       const res = await fetch(`/api/gpb/status/${gpbId}`, {
@@ -75,7 +54,7 @@ export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
           scanned_copy,
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJson(res);
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to update status");
       }

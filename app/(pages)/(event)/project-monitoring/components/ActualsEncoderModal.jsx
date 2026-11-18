@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useFileUploads } from "@/hooks/useFileUploads";
+import { readJson } from "@/data/lib/uploadClient";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { formatPeso } from "@/data/lib/money";
-
-/* Reads a JSON body without throwing on an empty or HTML error page. */
-const readJson = async (res) => {
-  try {
-    return await res.json();
-  } catch {
-    return {};
-  }
-};
 import {
   FaPaperclip,
   FaSpinner,
@@ -27,9 +19,6 @@ import {
   normalizeAccomplishmentLines,
   shouldUseAccomplishmentOverride,
 } from "@/data/lib/accomplishmentSummary";
-
-const ACCEPTED_EVIDENCE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024;
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -68,14 +57,14 @@ export default function ActualsEncoderModal({
   onClose,
   onSaved,
 }) {
-  const fileLifecycle = useFileLifecycle();
+  const fileLifecycle = useFileUploads();
+  const evidenceUploading = fileLifecycle.isUploading;
 
   const [actual, setActual] = useState("");
   const [isOverride, setIsOverride] = useState(false);
   const [suggested, setSuggested] = useState("");
   const [expenditures, setExpenditures] = useState("");
   const [evidence, setEvidence] = useState([]);
-  const [evidenceUploading, setEvidenceUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -128,49 +117,17 @@ export default function ActualsEncoderModal({
     const fileList = Array.from(e.target.files || []);
     e.target.value = "";
     if (fileList.length === 0) return;
-
-    const invalid = fileList.filter(
-      (f) =>
-        !ACCEPTED_EVIDENCE_TYPES.includes(f.type) || f.size > MAX_EVIDENCE_SIZE,
-    );
-    if (invalid.length > 0) {
-      setError("Evidence files must be PDF, JPG, or PNG and under 10MB each.");
-      return;
-    }
-
-    setEvidenceUploading(true);
-    const uploaded = [];
+    setError("");
     try {
-      for (const file of fileList) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "expenditure-evidence");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await readJson(res);
-        if (!res.ok) {
-          throw new Error(data.error || data.message || "Upload failed");
-        }
-        uploaded.push({ url: data.url, key: data.key, name: file.name });
-      }
+      const uploaded = await fileLifecycle.upload(fileList, {
+        folder: "expenditure-evidence",
+        label: "Evidence files",
+      });
       /* Appended to the latest list, not the one captured when the upload
          started, so a file removed meanwhile does not come back. */
       commitEvidence((prev) => [...prev, ...uploaded]);
     } catch (err) {
-      /* Files uploaded before the failure are on no record: delete them. */
-      uploaded.forEach((file) => {
-        if (!file?.key) return;
-        fetch("/api/upload", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: file.key }),
-        }).catch(() => {});
-      });
       setError(err.message || "Failed to upload evidence files");
-    } finally {
-      setEvidenceUploading(false);
     }
   };
 
@@ -180,13 +137,7 @@ export default function ActualsEncoderModal({
       return;
     }
     commitEvidence((prev) => prev.filter((f) => f.key !== file.key));
-    if (!fileLifecycle.hasOriginal(file.key)) {
-      fetch("/api/upload", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: file.key }),
-      }).catch(() => {});
-    }
+    fileLifecycle.release(file);
   };
 
   const closeAndCleanup = () => {
