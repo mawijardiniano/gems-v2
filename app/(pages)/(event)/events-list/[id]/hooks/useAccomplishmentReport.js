@@ -5,6 +5,7 @@ import { useFileUploads } from "@/hooks/useFileUploads";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 import { readJson } from "@/data/lib/uploadClient";
+import { fileKeyOf } from "@/data/lib/eventFileKeys";
 
 export const EMPTY_FILES = {
   office_memorandum: null,
@@ -125,9 +126,7 @@ export function useAccomplishmentReport({
 
   const handleDownload = (file) => {
     if (!file?.key && !file?.url) return;
-    const key =
-      file.key ||
-      (file.url ? file.url.split(".com/")[1] : null);
+    const key = fileKeyOf(file);
     if (!key) return;
 
     const nameParam = file.name

@@ -3,6 +3,7 @@
 
 // Relative path (not "@/"), so node --test can load this file directly.
 import { APP_TIME_ZONE } from "../../../../../data/lib/appTime.js";
+import { fileKeyOf } from "../../../../../data/lib/eventFileKeys.js";
 
 /* Project fields are stored either as plain values or as { value, ... }. */
 export const getFieldValue = (field) => {
@@ -59,7 +60,7 @@ export const getSortedEvents = (project) =>
 
 /* Uploaded files are served through the authenticated proxy. */
 export const getEvidenceProxyUrl = (file) => {
-  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  const key = fileKeyOf(file);
   if (!key) return null;
   return `/api/files/proxy?key=${encodeURIComponent(key)}`;
 };
