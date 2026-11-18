@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { cacheOrSet } from "@/data/lib/cache";
-import { optionalAuth } from "@/data/lib/auth";
+import { requireRole } from "@/data/lib/auth";
 import { canViewPII, loadDecryptedPiiBatch } from "@/data/lib/profileBroker";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
@@ -13,6 +13,18 @@ import {
 import { TEACHING_CATEGORY_ORDER } from "@/app/(pages)/(event)/gender-statistics/components/employeeStats.js";
 
 const CACHE_TTL = 60 * 1000;
+
+/* Roles whose pages call this route: the GAD Focal Person and Coordinator
+   (gender-statistics, events dashboard), the SUC President (president
+   gender-statistics pages) and Admin. Anyone else — including a caller with
+   no login — is refused: filtered breakdowns can narrow to one person (one
+   LGBTQIA+ employee in an office), so the counts are not public data. */
+const GENDER_STATS_ROLES = [
+  "Admin",
+  "GAD Focal Person",
+  "GAD Coordinator",
+  "SUC President",
+];
 
 function sexBucket(profile) {
   const sex = profile?.gadData?.sexAtBirth;
@@ -438,7 +450,7 @@ async function buildByAcademicYear(baseProfiles, sexOf) {
 
 export async function GET(req) {
   try {
-    const { error, status, user } = await optionalAuth(req);
+    const { error, status, user } = await requireRole(req, GENDER_STATS_ROLES);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
