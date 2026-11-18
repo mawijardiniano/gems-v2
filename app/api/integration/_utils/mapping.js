@@ -379,7 +379,9 @@ export function mergeProfile(existing, mapped) {
       changes,
       "contact",
     ),
-    affiliation: {},
+    /* Start from the stored affiliation: `profile.set(merged)` replaces the
+       whole object, so keys the import doesn't carry would otherwise be lost. */
+    affiliation: { ...plainSection(existing?.affiliation) },
   };
 
   const existingAffiliation = plainSection(existing?.affiliation);

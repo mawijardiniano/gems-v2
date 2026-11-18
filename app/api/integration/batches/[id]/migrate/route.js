@@ -91,6 +91,7 @@ async function ensureUserAuthForProfile(profile, identity, mapped) {
 }
 
 export async function POST(req, { params }) {
+  let lockedBatchId = null;
   try {
     await connectDB();
 
@@ -104,16 +105,31 @@ export async function POST(req, { params }) {
 
     const { id } = await params;
 
-    const batch = await ImportBatch.findById(id);
+    /* Claim the batch atomically: only a `ready` batch can be migrated, and
+       only one request can move it to `migrating`. A double-click or a re-run
+       on a finished batch is refused instead of processing rows twice. */
+    const batch = await ImportBatch.findOneAndUpdate(
+      { _id: id, status: "ready" },
+      { $set: { status: "migrating" } },
+      { new: true },
+    );
     if (!batch) {
+      const existing = await ImportBatch.findById(id).select("status").lean();
+      if (!existing) {
+        return NextResponse.json(
+          { status: "error", message: "Batch not found" },
+          { status: 404 },
+        );
+      }
       return NextResponse.json(
-        { status: "error", message: "Batch not found" },
-        { status: 404 },
+        {
+          status: "error",
+          message: `Batch is ${existing.status}; only a ready batch can be migrated.`,
+        },
+        { status: 409 },
       );
     }
-
-    batch.status = "migrating";
-    await batch.save();
+    lockedBatchId = batch._id;
 
     const approved = await StagingRecord.find({
       batch_id: id,
@@ -155,7 +171,10 @@ export async function POST(req, { params }) {
           continue;
         }
 
-        let profile = await findExistingProfileForRecord(record, GemsProfile);
+        /* The lookup returns `{ profile, matchedOn }`, not the document. */
+        const match = await findExistingProfileForRecord(record, GemsProfile);
+        let profile = match?.profile || null;
+        const matchedOn = match?.matchedOn || null;
         let profileAction = "updated";
         let profileChanges = [];
 
@@ -262,6 +281,7 @@ export async function POST(req, { params }) {
           action: profileAction,
           profile_id: profile._id,
           profile_term_id: term._id,
+          matched_on: matchedOn,
           changes: profileChanges,
           message:
             profileAction === "created"
@@ -272,14 +292,20 @@ export async function POST(req, { params }) {
         };
         await record.save();
 
+        /* Name + birthday is the weakest match: two different people can
+           share both. Flag it so a reviewer can confirm the merge. */
+        const weakMatch = matchedOn === "name_birthday";
         await writeSyncLog({
           batchId: batch._id,
           stagingRecordId: record._id,
+          level: weakMatch ? "warn" : "info",
           action: profileAction === "created" ? "create" : "update",
           message:
             profileAction === "created"
               ? "Imported: new record created."
-              : "Imported: existing record updated.",
+              : weakMatch
+                ? "Matched existing person by name + birthday — check this is the same person."
+                : "Imported: existing record updated.",
           executedBy: auth.user._id,
           executedByUsername: auth.user.username,
           targetProfileId: profile._id,
@@ -287,6 +313,7 @@ export async function POST(req, { params }) {
           details: {
             school_year: schoolYear,
             semester,
+            matched_on: matchedOn,
             account_action: account.action,
             account_username: account.username,
           },
@@ -368,6 +395,13 @@ export async function POST(req, { params }) {
       },
     });
   } catch (error) {
+    /* Don't leave a claimed batch stuck in `migrating` after a crash. */
+    if (lockedBatchId) {
+      await ImportBatch.updateOne(
+        { _id: lockedBatchId, status: "migrating" },
+        { $set: { status: "failed", finished_at: new Date() } },
+      ).catch(() => {});
+    }
     return NextResponse.json(
       { status: "error", message: error.message },
       { status: 500 },
