@@ -1,6 +1,7 @@
 import { connectDB } from "@/data/lib/db";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import Event from "@/models/event";
+import Project from "@/models/projects";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
@@ -134,13 +135,34 @@ export async function GET(req) {
         );
       }
       query.event_id = eventId;
-    } else if (!canReadAllEventReports(user.role)) {
+    } else {
+      const eventFilter = {};
       /* Reports carry file keys for signed attendance sheets; any account
          used to list all of them. Others see only their own events'. */
-      const ownEvents = await Event.find({ created_by: user._id })
-        .select("_id")
-        .lean();
-      query.event_id = { $in: ownEvents.map((e) => e._id) };
+      if (!canReadAllEventReports(user.role)) {
+        eventFilter.created_by = user._id;
+      }
+      /* `?year=` narrows to one GPB year's events, as on GET /api/events. The
+         year lives on the linked project. The GAD-AR print builder used to
+         read every year's reports to use one year's. */
+      const year = searchParams.get("year");
+      if (year) {
+        const yearNumber = Number(year);
+        if (!Number.isFinite(yearNumber)) {
+          return NextResponse.json(
+            { message: "year must be a number" },
+            { status: 400 },
+          );
+        }
+        const projectIds = await Project.find({ year: yearNumber }).distinct(
+          "_id",
+        );
+        eventFilter.project = { $in: projectIds };
+      }
+      if (Object.keys(eventFilter).length > 0) {
+        const events = await Event.find(eventFilter).select("_id").lean();
+        query.event_id = { $in: events.map((e) => e._id) };
+      }
     }
 
     /* Bounded: the GAD-AR print builder reads this list, and an unbounded,

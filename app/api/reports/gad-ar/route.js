@@ -2,16 +2,19 @@ import { NextResponse } from "next/server";
 import { appParts } from "@/data/lib/appTime";
 import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
+import { canViewGpbReports } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
 import {
-  PROJECT_TYPE_ORDER,
   activityCellText,
+  budgetPercent,
   fieldList,
   fieldValue,
+  isActualResultReported,
+  orderProjectsByType,
   pdfPeso,
   projectTypeLabel,
 } from "@/data/lib/reportFields";
@@ -79,8 +82,18 @@ const MAIN_TABLE_HEAD = [
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+
+    /* Budget amounts, GAA totals and signatories: the same readers as the GPB
+       Plan and Budget Matrix (the GPB roles and the President). Any signed-in
+       account used to download it. */
+    if (!canViewGpbReports(user?.role)) {
+      return NextResponse.json(
+        { message: "You are not allowed to download this report." },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 
@@ -114,16 +127,7 @@ export async function GET(req) {
 
         const gpb = await GPB.findOne({ year }).populate("gaaBudgetId").lean();
 
-        const orderedProjects = [...projects]
-          .map((project, originalIndex) => ({ project, originalIndex }))
-          .sort((a, b) => {
-            const byType =
-              PROJECT_TYPE_ORDER[projectTypeLabel(a.project)] -
-              PROJECT_TYPE_ORDER[projectTypeLabel(b.project)];
-            if (byType !== 0) return byType;
-            return a.originalIndex - b.originalIndex;
-          })
-          .map((entry) => entry.project);
+        const orderedProjects = orderProjectsByType(projects);
 
         const generatedAt = new Date();
 
@@ -153,14 +157,8 @@ export async function GET(req) {
         const originalBudgetDisplay = hasBudget
           ? pdfPeso(originalBudget)
           : "To follow";
-        const utilPct =
-          originalBudget > 0
-            ? ((totalExpenditures / originalBudget) * 100).toFixed(2)
-            : "0.00";
-        const gadPct =
-          totalGAA > 0
-            ? ((totalExpenditures / totalGAA) * 100).toFixed(2)
-            : "0.00";
+        const utilPct = budgetPercent(totalExpenditures, originalBudget, hasBudget);
+        const gadPct = budgetPercent(totalExpenditures, totalGAA, hasBudget);
 
         let cursorY = 14;
         doc.setFont("times", "bold");
@@ -249,11 +247,11 @@ export async function GET(req) {
               "",
               "",
               { content: "% Utilization of Budget", styles: labelStyle },
-              `${utilPct}%`,
+              utilPct,
             ],
             [
               { content: "% of GAD Expenditure:", styles: labelStyle },
-              `${gadPct}%`,
+              gadPct,
               "",
               "",
             ],
@@ -288,9 +286,10 @@ export async function GET(req) {
             lastType = typeLabel;
           }
 
-          const isAttributedProgram = typeLabel === "Attributed Program";
           /* Derived from linked events unless the owner saved a manual override. */
-          const actualText = resolveAccomplishmentText(project);
+          const actualText = isActualResultReported(project)
+            ? resolveAccomplishmentText(project)
+            : "";
 
           body.push([
             String(index + 1),
@@ -300,7 +299,7 @@ export async function GET(req) {
             String(fieldValue(project.relevant_agency) || ""),
             activityCellText(project),
             fieldList(project.performance_indicator_target).join("\n"),
-            isAttributedProgram ? "" : String(actualText || ""),
+            String(actualText || ""),
             pdfPeso(fieldValue(project.gad_budget)),
             project.actual_expenditures
               ? pdfPeso(project.actual_expenditures)

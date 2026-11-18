@@ -12,32 +12,18 @@ import { renderPdfPagesToImages } from "@/data/lib/print/pdfRenderer";
 import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
 import { escapeHtml } from "@/data/lib/escapeHtml";
 import { formatAmount } from "@/data/lib/money";
-
-const getFieldValue = (field) => {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-};
-
-const getArrayValue = (field) => {
-  const v = getFieldValue(field);
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (v) return [v];
-  return [];
-};
-
-const getProjectTypeLabel = (project) => {
-  const rawType = project?.project_type;
-  const value =
-    rawType && typeof rawType === "object" ? rawType.value : rawType;
-  if (value === "Client Focused") return "Client-Focused Activities";
-  if (value === "Organization Focused")
-    return "Organization-Focused Activities";
-  if (value === "Attributed Program") return "Attributed Program";
-  return "Uncategorized";
-};
+import { appParts } from "@/data/lib/appTime";
+/* Shared with the server PDF route (app/api/reports/gad-ar), so the browser
+   print and the downloaded PDF group, label and fill rows the same way. */
+import {
+  activityPairs,
+  budgetPercent,
+  fieldList as getArrayValue,
+  fieldValue as getFieldValue,
+  isActualResultReported,
+  orderProjectsByType,
+  projectTypeLabel as getProjectTypeLabel,
+} from "@/data/lib/reportFields";
 
 /* Two decimals in en-PH like every other screen (data/lib/money.js); it
    used to follow the browser's locale and printed "NaN" for a blank amount. */
@@ -67,18 +53,17 @@ const renderList = (arr) =>
     : "";
 
 /* Activities keep the single GAD Activity column: each title is followed by
-   its description, which is index-paired with `gad_activity_description`. */
-const renderActivityList = (titles, descriptions) =>
-  titles.length > 0
-    ? titles
-        .map((item, i) => {
-          const description = descriptions[i];
-          return description
-            ? `${i + 1}. ${escapeHtml(item)}<br/>${escapeHtml(description)}`
-            : `${i + 1}. ${escapeHtml(item)}`;
-        })
-        .join("<br/>")
-    : "";
+   its description. `activityPairs` pairs them by index before dropping empty
+   entries; filtering each list first moved a description under the wrong
+   title whenever an earlier one was blank. */
+const renderActivityList = (pairs) =>
+  pairs
+    .map(({ title, description }, i) =>
+      description
+        ? `${i + 1}. ${escapeHtml(title)}<br/>${escapeHtml(description)}`
+        : `${i + 1}. ${escapeHtml(title)}`,
+    )
+    .join("<br/>");
 
 const collectAttachmentFiles = (report) => {
   const files = [];
@@ -168,13 +153,18 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
   }, [year]);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadEventAttachments() {
       try {
         const [eventsRes, reportsRes] = await Promise.all([
-          /* The year's events only: the list is bounded now, and the
-             report groups events by their project's year anyway. */
+          /* The year's events and reports only: the report groups events by
+             their project's year anyway. The reports list used to be every
+             year's. */
           fetch(`/api/events?year=${encodeURIComponent(year)}`),
-          fetch("/api/events/accomplishment-report"),
+          fetch(
+            `/api/events/accomplishment-report?year=${encodeURIComponent(year)}`,
+          ),
         ]);
         const eventsJson = await eventsRes.json();
         const reportsJson = await reportsRes.json();
@@ -200,13 +190,16 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           byProject[projectKey].push({ event, report });
         }
 
-        setEventAttachments(byProject);
+        if (!cancelled) setEventAttachments(byProject);
       } catch {
-        setEventAttachments({});
+        if (!cancelled) setEventAttachments({});
       }
     }
 
     if (year) loadEventAttachments();
+    return () => {
+      cancelled = true;
+    };
   }, [year]);
 
   useEffect(() => {
@@ -267,37 +260,15 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     ? `₱ ${fmt(originalBudget)}`
     : "To follow";
 
-  const utilPct =
-    originalBudget > 0
-      ? ((totalExpenditures / originalBudget) * 100).toFixed(2)
-      : "0.00";
-  const gadPct =
-    totalGAA > 0 ? ((totalExpenditures / totalGAA) * 100).toFixed(2) : "0.00";
+  const utilPct = budgetPercent(totalExpenditures, originalBudget, hasBudget);
+  const gadPct = budgetPercent(totalExpenditures, totalGAA, hasBudget);
 
   const handlePrint = async () => {
-    const now = new Date();
-    const reportDate = `${now.getMonth() + 1}-${now.getDate()}-${String(
-      now.getFullYear(),
-    ).slice(-2)}`;
+    /* Manila's date, like the server PDF; it used the browser's clock. */
+    const now = appParts(new Date());
+    const reportDate = `${now.month}-${now.day}-${String(now.year).slice(-2)}`;
 
-    const projectTypeOrder = {
-      "Client-Focused Activities": 0,
-      "Organization-Focused Activities": 1,
-      "Attributed Program": 2,
-      Uncategorized: 3,
-    };
-
-    const orderedProjects = [...projects]
-      .filter(Boolean)
-      .map((project, originalIndex) => ({ project, originalIndex }))
-      .sort((a, b) => {
-        const aType = getProjectTypeLabel(a.project);
-        const bType = getProjectTypeLabel(b.project);
-        const byType = projectTypeOrder[aType] - projectTypeOrder[bType];
-        if (byType !== 0) return byType;
-        return a.originalIndex - b.originalIndex;
-      })
-      .map((entry) => entry.project);
+    const orderedProjects = orderProjectsByType(projects.filter(Boolean));
 
     const renderedPdfPages = {};
     const pdfFilesToRender = collectUniquePdfFiles(eventAttachments);
@@ -337,16 +308,12 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
 
       const causes = getArrayValue(project.cause_gender_issue);
       const objectives = getArrayValue(project.gad_objective);
-      const activities = getArrayValue(project.gad_activity);
-      const activityDescriptions = getArrayValue(
-        project.gad_activity_description,
-      );
+      const activities = activityPairs(project);
       const indicators = getArrayValue(project.performance_indicator_target);
       /* Derived from linked events unless the owner saved a manual override. */
-      const actualText = resolveAccomplishmentText(project);
-
-      const isAttributedProgram = projectTypeLabel === "Attributed Program";
-      const actualCell = isAttributedProgram ? "" : actualText || "";
+      const actualCell = isActualResultReported(project)
+        ? resolveAccomplishmentText(project) || ""
+        : "";
 
       const sectionHeader = shouldShowTypeHeader
         ? `<tr class="type-header"><td colspan="11">${escapeHtml(projectTypeLabel)}</td></tr>`
@@ -359,7 +326,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             <td class="cell">${renderList(causes)}</td>
             <td class="cell">${renderList(objectives)}</td>
             <td class="cell">${escapeHtml(getFieldValue(project.relevant_agency))}</td>
-            <td class="cell">${renderActivityList(activities, activityDescriptions)}</td>
+            <td class="cell">${renderActivityList(activities)}</td>
             <td class="cell">${renderList(indicators)}</td>
             <td class="cell">${escapeHtml(actualCell)}</td>
             <td class="cell num">₱ ${fmt(getFieldValue(project.gad_budget))}</td>
@@ -776,11 +743,11 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
           <td class="empty"></td>
           <td class="empty"></td>
           <td class="label">% Utilization of Budget</td>
-          <td class="num">${utilPct}%</td>
+          <td class="num">${utilPct}</td>
         </tr>
         <tr>
           <td class="label">% of GAD Expenditure:</td>
-          <td class="num">${gadPct}%</td>
+          <td class="num">${gadPct}</td>
           <td class="empty"></td>
           <td class="empty"></td>
         </tr>

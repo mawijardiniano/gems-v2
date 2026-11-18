@@ -44,11 +44,38 @@ export function orderProjectsByType(projects) {
   );
 }
 
+/* The GAD-AR leaves "Actual Result" blank for an Attributed Program. The
+   page, the browser print and the PDF all ask this, so they cannot disagree
+   (the page used to show it while both printed versions left it blank). */
+export function isActualResultReported(project) {
+  return projectTypeLabel(project) !== "Attributed Program";
+}
+
+/* "12.34%" of `base`, for the GAD-AR budget block. A year with no GAA budget
+   encoded yet reads "To follow", like the amounts beside it, instead of a
+   "0.00%" that looks like a real figure. */
+export function budgetPercent(amount, base, hasBudget) {
+  if (!hasBudget) return "To follow";
+  const total = Number(base) || 0;
+  if (total <= 0) return "0.00%";
+  return `${(((Number(amount) || 0) / total) * 100).toFixed(2)}%`;
+}
+
 /* A plan field as a list, empty entries kept, for lists paired by index. */
 function indexedList(field) {
   const value = fieldValue(field);
   if (Array.isArray(value)) return value;
   return value ? [value] : [];
+}
+
+/** Each activity as `{ title, description }`, paired by index before any
+    empty entry is dropped (see activityCellText). */
+export function activityPairs(project) {
+  const titles = indexedList(project?.gad_activity);
+  const descriptions = indexedList(project?.gad_activity_description);
+  return titles
+    .map((title, idx) => ({ title, description: descriptions[idx] || "" }))
+    .filter(({ title }) => Boolean(title));
 }
 
 /* The GAD Activity column stays a single column: each activity prints its
@@ -57,13 +84,9 @@ function indexedList(field) {
    filtering out an empty description moved the next one under the wrong
    title. A pair is dropped only when its title is empty. */
 export function activityCellText(project, fallback = "") {
-  const titles = indexedList(project?.gad_activity);
-  const descriptions = indexedList(project?.gad_activity_description);
   return (
-    titles
-      .map((title, idx) => [title, descriptions[idx]])
-      .filter(([title]) => Boolean(title))
-      .map(([title, description]) =>
+    activityPairs(project)
+      .map(({ title, description }) =>
         description ? `${title}\n${description}` : title,
       )
       .join("\n") || fallback

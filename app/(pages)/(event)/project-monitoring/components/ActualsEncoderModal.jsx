@@ -5,6 +5,7 @@ import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { formatPeso } from "@/data/lib/money";
+import { fileKeyOf } from "@/data/lib/eventFileKeys";
 import {
   FaPaperclip,
   FaSpinner,
@@ -40,7 +41,7 @@ export function generateSuggestedActual(project) {
 }
 
 const getEvidenceDownloadUrl = (file) => {
-  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  const key = fileKeyOf(file);
   if (!key) return null;
   const nameParam = file?.name ? `&name=${encodeURIComponent(file.name)}` : "";
   return `/api/download?key=${encodeURIComponent(key)}${nameParam}`;

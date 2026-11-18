@@ -23,6 +23,23 @@ export const REPORT_FOLDERS = {
 export const POSTER_FOLDER = "events/posters";
 
 /**
+ * A stored file's storage key: its saved `key`, else the path of its `url`.
+ * The pages used to split the URL on ".com/", which returned nothing for any
+ * storage host not ending in ".com". Pure, so client code can use it too.
+ * @param {{ key?: string, url?: string }|null|undefined} file
+ * @returns {string|null}
+ */
+export function fileKeyOf(file) {
+  if (file?.key) return file.key;
+  if (!file?.url) return null;
+  try {
+    return new URL(file.url).pathname.replace(/^\/+/, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Every storage key referenced by an accomplishment report.
  * @param {object|null|undefined} report
  * @returns {string[]}
