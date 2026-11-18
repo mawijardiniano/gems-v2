@@ -7,8 +7,10 @@ import ProfileTerm from "@/models/profileTerm";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import {
   validateMappedPayload,
+  buildIdentity,
   buildIdentityDedupeKey,
 } from "@/app/api/integration/_utils/mapping";
+import { blindIndex } from "@/data/lib/identityVault";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -58,6 +60,12 @@ export async function POST(req, { params }) {
       (r) => r.status === "approved",
     ).length;
 
+    /* Rows staged before email matching was restored have no identity.email;
+       rebuild identity from the mapped payload so they get it. */
+    for (const r of records) {
+      r.identity = buildIdentity(r.mapped_payload || {});
+    }
+
     const studentIds = [];
     const employeeIds = [];
     const emails = [];
@@ -77,11 +85,21 @@ export async function POST(req, { params }) {
       orClauses.push({
         "affiliation.employment_information.employee_id": { $in: employeeIds },
       });
-    if (emails.length) orClauses.push({ "contact.email": { $in: emails } });
+    /* Email is encrypted in the vault; it is matched through the profile's
+       blind index (lowercased, so case doesn't matter). */
+    const emailByDigest = new Map();
+    for (const email of emails) {
+      const digest = blindIndex(email);
+      if (digest) emailByDigest.set(digest, email);
+    }
+    if (emailByDigest.size)
+      orClauses.push({
+        profileSearchIndex: { $in: [...emailByDigest.keys()] },
+      });
 
     const existingProfiles = orClauses.length
       ? await GemsProfile.find({ $or: orClauses })
-          .select("personal affiliation contact")
+          .select("affiliation profileSearchIndex")
           .lean()
       : [];
 
@@ -93,8 +111,10 @@ export async function POST(req, { params }) {
       if (sid && !profileByStudent.has(sid)) profileByStudent.set(sid, p);
       const eid = p.affiliation?.employment_information?.employee_id;
       if (eid && !profileByEmployee.has(eid)) profileByEmployee.set(eid, p);
-      const em = p.contact?.email;
-      if (em && !profileByEmail.has(em)) profileByEmail.set(em, p);
+      for (const digest of p.profileSearchIndex || []) {
+        const em = emailByDigest.get(digest);
+        if (em && !profileByEmail.has(em)) profileByEmail.set(em, p);
+      }
     }
 
     const profileIds = [...new Set(existingProfiles.map((p) => String(p._id)))];
