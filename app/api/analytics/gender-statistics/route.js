@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { cacheOrSet } from "@/data/lib/cache";
 import { optionalAuth } from "@/data/lib/auth";
-import {
-  canViewPII,
-  resolvePiiBatch,
-  applyRowPii,
-} from "@/data/lib/profileBroker";
+import { canViewPII, loadDecryptedPiiBatch } from "@/data/lib/profileBroker";
 import GemsProfile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import {
@@ -87,7 +83,7 @@ function toList(countsObj, nameKey) {
 
 /* Civil status and religion are PII, so they are absent from the GEMS document
    once the legacy columns are stripped. `buildStats` is handed profiles that
-   have already been through `applyRowPii`, so both values are decrypted before
+   carry their decrypted vault identity (`countingIdentity`), so both values are decrypted before
    they arrive and counting them costs one more pass over the same array - no
    extra vault read. Rows keep the same {name, Female, Male, Other, total}
    shape the sample module produces, so the sample/live toggle cannot drift. */
@@ -102,22 +98,6 @@ function piiBreakdown(profiles, read, sexOf) {
   });
   return toList(counts, "name");
 }
-
-const STUDENT_TYPE_FILTERS = {
-  Scholar: {
-    "affiliation.academic_information.isScholar": {
-      $exists: true,
-      $nin: [null, "", "No", "no", false],
-    },
-  },
-  "Person with Disability (PWD)": { "gadData.isPWD": true },
-  "Indigenous Peoples (IP)": { "gadData.isIndigenousPerson": true },
-  "Low Income": { "gadData.socioEconomicStatus": "Low Income" },
-  "Middle Income": { "gadData.socioEconomicStatus": "Middle Income" },
-  "High Income": { "gadData.socioEconomicStatus": "High Income" },
-};
-
-const STUDENT_TYPES = Object.keys(STUDENT_TYPE_FILTERS);
 
 const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
@@ -157,6 +137,48 @@ const DEMOGRAPHIC_ROWS = [
     test: (p) => p?.gadData?.socioEconomicStatus === "High Income",
   },
 ];
+
+/* The filterable student/demographic types. Every one except Scholar reads a
+   vaulted field (the `gadData` block no longer exists on the GEMS document),
+   so these are applied in memory after decryption, never in the Mongo query —
+   a query on `gadData.*` silently matches nothing. Solo Parent has no field
+   and is never offered as a filter. */
+const STUDENT_TYPES = [
+  "Scholar",
+  "Person with Disability (PWD)",
+  "Indigenous Peoples (IP)",
+  "Low Income",
+  "Middle Income",
+  "High Income",
+];
+
+const DEMOGRAPHIC_TEST = new Map(
+  DEMOGRAPHIC_ROWS.map((row) => [row.label, row.test]),
+);
+
+/* The identity fields the counts read, taken from the decrypted vault row in
+   the legacy `personal` / `gadData` shape the builders expect. The route
+   returns aggregates only, so this is the full set regardless of the caller's
+   role: the masked row shape drops birthday, gender identity, civil status,
+   religion and income, which zeroed those tables for masked roles and — with
+   the role absent from the cache key — leaked into every role's response. */
+function countingIdentity(pii) {
+  if (!pii) return { personal: {}, gadData: {} };
+  return {
+    personal: {
+      birthday: pii.birthday || null,
+      civil_status: pii.civil_status || null,
+      religion: pii.religion || null,
+    },
+    gadData: {
+      sexAtBirth: pii.sexAtBirth || null,
+      gender_preference: pii.gender_preference || null,
+      isPWD: pii.isPWD ?? null,
+      isIndigenousPerson: pii.isIndigenousPerson ?? null,
+      socioEconomicStatus: pii.socioEconomicStatus || null,
+    },
+  };
+}
 
 function buildDemographics(profiles, sexOf) {
   return DEMOGRAPHIC_ROWS.map((row) => {
@@ -460,12 +482,14 @@ export async function GET(req) {
 
     const keyOf = (list) => [...list].sort().join("+") || "all";
     const accessible = canViewPII(user?.role);
-    /* The response depends on the role... except it must not. This route
-       returns counts only — no name, no birthday, no contact — so masked and
-       revealed produce identical output. `role` is deliberately NOT in the
+    /* This route returns counts only — no name, no birthday, no contact — and
+       computes them from the full decrypted identity for every caller, so the
+       figures do not depend on the role. `role` is deliberately NOT in the
        cache key for that reason (unlike the list and dashboard routes, where
-       the row payload differs). If a future change ever puts an identity field
-       in this response, this key has to gain the role too. */
+       the row payload differs). The one role-dependent field,
+       `accessIndicators.canViewPii`, is set after the cache read. If a future
+       change ever puts an identity field in this response, this key has to
+       gain the role too. */
     const cacheKey = `gender-statistics:${type}:${keyOf(campuses)}:${keyOf(colleges)}:${keyOf(courses)}:${keyOf(personnelTypes)}:${keyOf(appointmentStatuses)}:${schoolYear || "all"}:${keyOf(semesters)}:${keyOf(yearLevels)}:${studentType || "all"}:${keyOf(sexes)}:${keyOf(ageGroups)}:${ageGroups.length ? today : "-"}:${keyOf(demographics)}`;
 
     const result = await cacheOrSet(
@@ -498,62 +522,48 @@ export async function GET(req) {
             $in: yearLevels,
           };
         }
+        /* Sex, student type, demographics and age bands all read vaulted
+           fields, so none of them can be filtered here — they are applied in
+           memory after the vault read, below. A `gadData.*` condition on this
+           query matches nothing now that the block is stripped. */
+
+        /* Only GEMS-owned fields are projected: identity comes from the vault. */
+        const baseProfiles = await GemsProfile.find(match, {
+          affiliation: 1,
+          vaultRef: 1,
+        }).lean();
+
+        /* One vault read for the whole result set. Decrypted in full for every
+           caller — see countingIdentity — since only aggregates leave here. */
+        const piiByRef = await loadDecryptedPiiBatch(
+          baseProfiles.map((p) => p.vaultRef),
+        );
+
+        /* Every row with its decrypted identity, before any filter. The
+           academic-year trend is built from this set, as it was before. */
+        const allProfiles = baseProfiles.map((p) => ({
+          ...p,
+          ...countingIdentity(piiByRef.get(String(p.vaultRef || ""))),
+        }));
+        let profiles = allProfiles;
+
+        if (sexes.length) {
+          const wanted = new Set(sexes);
+          profiles = profiles.filter((p) => wanted.has(p?.gadData?.sexAtBirth));
+        }
         if (
           type === "students" &&
           studentType &&
-          STUDENT_TYPE_FILTERS[studentType]
+          STUDENT_TYPES.includes(studentType)
         ) {
-          Object.assign(match, STUDENT_TYPE_FILTERS[studentType]);
+          const test = DEMOGRAPHIC_TEST.get(studentType);
+          profiles = profiles.filter((p) => test(p));
         }
-
         if (demographics.length) {
-          /* Any selected category matches; $and keeps it apart from the age $or. */
-          match.$and = [
-            {
-              $or: demographics.map((d) => STUDENT_TYPE_FILTERS[d]),
-            },
-          ];
+          /* Any selected category matches. */
+          const tests = demographics.map((d) => DEMOGRAPHIC_TEST.get(d));
+          profiles = profiles.filter((p) => tests.some((test) => test(p)));
         }
-        if (sexes.length) match["gadData.sexAtBirth"] = { $in: sexes };
-        /* Age bands cannot be filtered here: the birthday is encrypted in the
-           vault. They are applied in memory after the vault read, below.
-           A `$or` used to sit on this query for exactly that filter — it is
-           gone, and leaving a stale one would silently widen the match. */
-
-        /* Identity is never named in the projection: the route needs counts,
-           and reading the columns would both defeat the vault and break the
-           moment they are stripped. */
-        const baseProfiles = await GemsProfile.find(match).lean();
-
-        /* One vault read for the whole result set, then each row is given the
-           masked or revealed shape by role. buildStats keeps only gender and
-           age, so masked and revealed produce identical counts here — the
-           role is passed anyway so the broker, not the route, decides. */
-        const piiByRef = await resolvePiiBatch({
-          vaultRefs: baseProfiles.map((p) => p.vaultRef),
-          role: user?.role,
-        });
-
-        let profiles = baseProfiles.map((p) => {
-          const identity = applyRowPii(
-            {
-              personal: p.personal || {},
-              gadData: p.gadData || {},
-              contact: p.contact || {},
-              /* Needed by `applyRowPii` to resolve `person_type`: without it
-                 the status reads empty and every row falls into the wrong
-                 student/employee bucket. */
-              affiliation: p.affiliation || {},
-            },
-            piiByRef.get(String(p.vaultRef || "")),
-          );
-          return {
-            ...p,
-            personal: identity.personal,
-            gadData: identity.gadData,
-            affiliation: identity.affiliation || p.affiliation,
-          };
-        });
 
         if (schoolYear || semesters.length) {
           const termFilter = {};
@@ -576,7 +586,18 @@ export async function GET(req) {
         }
 
         const stats = buildStats(profiles, type);
-        const schoolYears = (await ProfileTerm.distinct("school_year"))
+        /* Year options are scoped to this person type (ignoring the other
+           filters, so a selection never vanishes when a filter narrows).
+           Unscoped, the employee page offered student-only years and its
+           default year matched no employee at all. */
+        const typeProfileIds = await GemsProfile.distinct("_id", {
+          "affiliation.person_type": match["affiliation.person_type"],
+        });
+        const schoolYears = (
+          await ProfileTerm.distinct("school_year", {
+            profile_id: { $in: typeProfileIds },
+          })
+        )
           .filter(Boolean)
           .sort()
           .reverse();
@@ -591,7 +612,7 @@ export async function GET(req) {
 
         const byAcademicYear =
           type === "students"
-            ? await buildByAcademicYear(baseProfiles, sexBucket)
+            ? await buildByAcademicYear(allProfiles, sexBucket)
             : [];
 
         return {
@@ -609,16 +630,23 @@ export async function GET(req) {
              The route returns aggregates only, so these change no number —
              they let the screen say where a figure came from instead of
              leaving a silent zero to be discovered in a GPB submission. */
-          accessIndicators: {
-            canViewPii: accessible,
-            identitySource: "vault",
-          },
+          accessIndicators: { identitySource: "vault" },
         };
       },
       CACHE_TTL,
     );
 
-    return NextResponse.json(result, { status: 200 });
+    /* Set per request, outside the role-agnostic cache entry. */
+    return NextResponse.json(
+      {
+        ...result,
+        accessIndicators: {
+          ...result.accessIndicators,
+          canViewPii: accessible,
+        },
+      },
+      { status: 200 },
+    );
   } catch (err) {
     console.error("gender-statistics failed:", err);
     return NextResponse.json(

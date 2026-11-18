@@ -85,20 +85,24 @@ function buildInsights(data) {
   return insights;
 }
 
-/* The page opens on the current academic year rather than every year, so the
-   headline figures describe the active term instead of a five-year rollup.
-   `BASELINE_EMPLOYEE_FILTERS` is what "Clear filters" restores, so clearing
-   returns to this default rather than to "All academic years". */
-const DEFAULT_EMPLOYEE_SCHOOL_YEAR = "2026-2027";
-
-const BASELINE_EMPLOYEE_FILTERS = {
+/* The page opens on the newest academic year the active dataset carries rather
+   than every year, so the headline figures describe the latest term instead of
+   a multi-year rollup. The year is read from the data (see `newestYear`), not
+   hard-coded, so a rollover needs no code change. "Clear filters" restores
+   this default rather than "All academic years". */
+const baselineEmployeeFilters = (year) => ({
   ...EMPTY_EMPLOYEE_FILTERS,
-  schoolYear: [DEFAULT_EMPLOYEE_SCHOOL_YEAR],
-};
+  schoolYear: year ? [year] : [],
+});
 
 export default function EmployeeGenderStatsContent() {
-  const [filters, setFilters] = useState(BASELINE_EMPLOYEE_FILTERS);
-  const [useSample, setUseSample] = useState(true);
+  const [filters, setFilters] = useState(EMPTY_EMPLOYEE_FILTERS);
+  /* The year last applied as the default, or null before the first options
+     arrive. Lets the default follow the data without overriding a reader's
+     own year choice. */
+  const [autoYear, setAutoYear] = useState(null);
+  /* Live data is the default; the synthetic dataset is opt-in via the toggle. */
+  const [useSample, setUseSample] = useState(false);
 
   const setFilter = (key) => (value) =>
     setFilters((prev) => {
@@ -115,9 +119,14 @@ export default function EmployeeGenderStatsContent() {
     });
 
   /* Live data only supports the filters the database backs: personnel type
-     (employment_status), college/office and employment status (appointment). */
+     (employment_status), college/office, employment status (appointment) and
+     a single academic year (ProfileTerm). Selecting two or more years compares
+     them in sample mode only; live, no year is sent and all years count. */
   const params = useMemo(
     () => ({
+      ...(filters.schoolYear.length === 1
+        ? { school_year: filters.schoolYear[0] }
+        : {}),
       ...(filters.office.length ? { college: filters.office.join(",") } : {}),
       ...(filters.personnelType.length
         ? { personnel_type: filters.personnelType.join(",") }
@@ -134,6 +143,7 @@ export default function EmployeeGenderStatsContent() {
         : {}),
     }),
     [
+      filters.schoolYear,
       filters.office,
       filters.personnelType,
       filters.appointmentStatus,
@@ -162,8 +172,8 @@ export default function EmployeeGenderStatsContent() {
 
   const activeData = useSample ? sampleStats : data;
 
-  /* Comparison mode (sample-only, since the employee API has no year
-     dimension): one stats payload per selected academic year. */
+  /* Comparison mode (sample-only; the live API filters by one year at a
+     time): one stats payload per selected academic year. */
   const selectedYears = useMemo(
     () => [...(filters.schoolYear || [])].sort(),
     [filters.schoolYear],
@@ -190,8 +200,12 @@ export default function EmployeeGenderStatsContent() {
   /* The default academic year is the page's resting state, not a filter the
      reader applied, so it is subtracted out: "Clear filters" stays hidden on
      load and counts only the dimensions the reader actually narrowed. */
+  const baselineFilters = useMemo(
+    () => baselineEmployeeFilters(autoYear),
+    [autoYear],
+  );
   const filterCount =
-    activeFilterCount(filters) - activeFilterCount(BASELINE_EMPLOYEE_FILTERS);
+    activeFilterCount(filters) - activeFilterCount(baselineFilters);
 
   /* Live profiles mostly have employment_information blank, so the API reports
      them under "Unspecified" â€” counted here for the coverage warning below. */
@@ -213,24 +227,31 @@ export default function EmployeeGenderStatsContent() {
     [filters.office],
   );
 
-  /* Academic-year options follow the active dataset, so sample mode lists the
-     five sample years (2020-2021 to 2024-2025) and live mode lists none, since
-     the employee API has no year dimension yet. */
+  /* Academic-year options follow the active dataset: sample mode lists the
+     five sample years (2020-2021 to 2024-2025), live mode the years that hold
+     employee term rows. */
   const schoolYearOptions = activeData?.schoolYears || [];
+  const newestYear = [...schoolYearOptions].sort().at(-1) || "";
 
-  /* The default year only applies while the active dataset actually carries it.
-     Without this, a live response with no 2026-2027 rows (or a future rollover
-     to a new year) would leave the filter pointing at a value the dropdown
-     cannot show and the query cannot match - an empty page that looks broken. */
+  /* Moves the default year to the newest one whenever the options change
+     (first load, sample/live toggle, a new term). Only a filter still sitting
+     on the previous default is moved — a year the reader picked, or cleared to
+     "All academic years", is left alone. Waits for data so a loading or failed
+     request does not wipe the default. */
   useEffect(() => {
-    if (schoolYearOptions.length === 0) return;
-    if (schoolYearOptions.includes(DEFAULT_EMPLOYEE_SCHOOL_YEAR)) return;
-    setFilters((prev) =>
-      (prev.schoolYear || []).includes(DEFAULT_EMPLOYEE_SCHOOL_YEAR)
-        ? { ...prev, schoolYear: [] }
-        : prev,
-    );
-  }, [schoolYearOptions.join(",")]);
+    if (!activeData) return;
+    setFilters((prev) => {
+      const years = prev.schoolYear || [];
+      /* No previous default (null) or an all-years default ("") means an
+         empty selection is the untouched state. */
+      const untouched = autoYear
+        ? years.length === 1 && years[0] === autoYear
+        : years.length === 0;
+      if (!untouched) return prev;
+      return { ...prev, schoolYear: newestYear ? [newestYear] : [] };
+    });
+    setAutoYear(newestYear || "");
+  }, [newestYear, !!activeData]);
 
   /* Printed on the quick-report PDFs so a filtered report is self-describing. */
   const filterSummary = useMemo(() => {
@@ -247,7 +268,12 @@ export default function EmployeeGenderStatsContent() {
     if (filters.positionLevel.length) {
       parts.push(`Position Level: ${filters.positionLevel.join(", ")}`);
     }
-    if (filters.schoolYear.length) {
+    /* Live mode filters by one year only (see params); with more selected,
+       the live figures span all years, so the label must not name them. */
+    if (
+      filters.schoolYear.length &&
+      (useSample || filters.schoolYear.length === 1)
+    ) {
       parts.push(`Academic Year: ${filters.schoolYear.join(", ")}`);
     }
     if (filters.demographics.length) {
@@ -260,7 +286,7 @@ export default function EmployeeGenderStatsContent() {
       parts.push(`Sex: ${filters.sexes.join(", ")}`);
     }
     return parts.join(" | ");
-  }, [filters]);
+  }, [filters, useSample]);
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
@@ -417,7 +443,7 @@ export default function EmployeeGenderStatsContent() {
           {filterCount > 0 && (
             <button
               type="button"
-              onClick={() => setFilters(BASELINE_EMPLOYEE_FILTERS)}
+              onClick={() => setFilters(baselineFilters)}
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               Clear filters ({filterCount})
@@ -427,9 +453,16 @@ export default function EmployeeGenderStatsContent() {
         <p className="text-[11px] text-gray-400">
           {useSample
             ? `Filters re-aggregate the sample records in your browser â€” ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
-            : "Live data can be filtered by personnel type, college/office and employment status. Department, Position Level and Academic Year are available with sample data only."}
+            : "Live data can be filtered by personnel type, college/office, employment status and one academic year. Department and Position Level are available with sample data only."}
         </p>
       </div>
+
+      {!useSample && filters.schoolYear.length > 1 && (
+        <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">
+          Year-by-year comparison uses sample data only. Live figures below
+          count all academic years — select a single year to filter them.
+        </div>
+      )}
 
       {useSample && (
         <div className="rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3 text-xs text-secondary-800">

@@ -131,7 +131,8 @@ export default function StudentGenderStatsContent() {
   const [demographics, setDemographics] = useState([]);
   const [ageGroups, setAgeGroups] = useState([]);
   const [sexes, setSexes] = useState([]);
-  const [useSample, setUseSample] = useState(true);
+  /* Live data is the default; the synthetic dataset is opt-in via the toggle. */
+  const [useSample, setUseSample] = useState(false);
 
   const params = useMemo(
     () => ({
