@@ -1,4 +1,21 @@
 import { ageGroupOf, ageGroupOptions, AGE_GROUP_ORDER } from "./ageGroups.js";
+import {
+  sexOf,
+  emptyCounts,
+  addCounts,
+  SEXES,
+  toList,
+  activeFilterCount,
+  uniqueFieldOptions,
+  GENDER_IDENTITY_ORDER,
+  genderIdentityRows,
+  pct,
+  groupBy,
+} from "./statsCore.js";
+
+/* Shared counting helpers live in statsCore.js; re-exported so importers of
+   this module keep working unchanged. */
+export { sexOf, activeFilterCount, uniqueFieldOptions, GENDER_IDENTITY_ORDER };
 
 export const YEAR_LEVEL_ORDER = [
   "1st Year",
@@ -27,49 +44,6 @@ export const LEVEL_ORDER = [
   "Graduate (Doctoral)",
 ];
 
-
-const SEXES = ["Female", "Male"];
-
-export function sexOf(record) {
-  return SEXES.includes(record?.sex) ? record.sex : "Female";
-}
-
-function emptyCounts() {
-  return { Female: 0, Male: 0, total: 0 };
-}
-
-function addCounts(bucket, sex) {
-  bucket[sex] = (bucket[sex] || 0) + 1;
-  bucket.total += 1;
-}
-
-function orderIndex(order, value) {
-  const idx = order.indexOf(value);
-  return idx === -1 ? order.length : idx;
-}
-
-function toList(countsObj, nameKey, order) {
-  const rows = Object.entries(countsObj).map(([name, c]) => ({
-    [nameKey]: name,
-    Female: c.Female || 0,
-    Male: c.Male || 0,
-    total: c.total || 0,
-    pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
-  }));
-
-  if (order) {
-    rows.sort(
-      (a, b) =>
-        orderIndex(order, a[nameKey]) - orderIndex(order, b[nameKey]) ||
-        b.total - a.total,
-    );
-  } else {
-    rows.sort((a, b) => b.total - a.total);
-  }
-  return rows;
-}
-
-
 export const EMPTY_STUDENT_FILTERS = {
   campus: [],
   college: [],
@@ -82,12 +56,6 @@ export const EMPTY_STUDENT_FILTERS = {
   ageGroups: [],
   sexes: [],
 };
-
-export function activeFilterCount(filters = {}) {
-  return Object.values(filters).filter((value) =>
-    Array.isArray(value) ? value.length > 0 : Boolean(value),
-  ).length;
-}
 
 /** Demographic Profile category match - the six student types plus Solo Parent
     (sample data only; the live database has no solo parent field). */
@@ -162,21 +130,7 @@ export function filterStudentRecords(records = [], filters = {}) {
   });
 }
 
-/** Distinct values of a record field, in the order they first appear. */
-export function uniqueFieldOptions(records = [], key) {
-  const seen = new Set();
-  const values = [];
-  records.forEach((record) => {
-    const value = record?.[key];
-    if (!value || seen.has(value)) return;
-    seen.add(value);
-    values.push(value);
-  });
-  return values;
-}/* == Aggregation ====================================================== */
-
-const pct = (part, whole) =>
-  whole ? Math.round((part / whole) * 1000) / 10 : 0;
+/* == Aggregation ====================================================== */
 
 /** Same three-bucket rule the API uses for academic level. */
 export function studentLevelOf(record) {
@@ -191,16 +145,6 @@ export function studentLevelOf(record) {
   if (isDoctoral) return "Graduate (Doctoral)";
   if (isMasters) return "Graduate (Masters)";
   return "Undergraduate";
-}
-
-function groupBy(records, keyFn, nameKey, order) {
-  const counts = {};
-  records.forEach((record) => {
-    const key = keyFn(record) || "Unspecified";
-    if (!counts[key]) counts[key] = emptyCounts();
-    addCounts(counts[key], sexOf(record));
-  });
-  return toList(counts, nameKey, order);
 }
 
 /** Count each sex once per student type category (categories overlap). */
@@ -237,23 +181,6 @@ function soloParentRow(records) {
 
 /* The gender-identity values the database stores in gadData.gender_preference.
    "Not specified" is appended only when the dataset has such records. */
-export const GENDER_IDENTITY_ORDER = ["Male", "Female", "LGBTQIA+"];
-
-function genderIdentityRows(records = []) {
-  const counts = new Map(GENDER_IDENTITY_ORDER.map((name) => [name, 0]));
-  let unspecified = 0;
-  records.forEach((record) => {
-    const value = record?.genderIdentity;
-    if (counts.has(value)) counts.set(value, counts.get(value) + 1);
-    else unspecified += 1;
-  });
-  const rows = GENDER_IDENTITY_ORDER.map((name) => ({
-    name,
-    value: counts.get(name),
-  }));
-  if (unspecified > 0) rows.push({ name: "Not specified", value: unspecified });
-  return rows;
-}
 
 /** Every academic year in a dataset, newest first (filter option list). */
 function sampleSchoolYears(records = []) {
