@@ -213,6 +213,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     loadGPB();
   }, [loadGPB]);
 
+  /* Returns false when the budgets could not be loaded. The failure used to
+     be swallowed, and the modal then said no GAA budget exists. */
   const loadBudgets = useCallback(async () => {
     try {
       const res = await axios.get("/api/gaa-budget");
@@ -221,15 +223,27 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         (budget) => !existingYears.includes(Number(budget.year)),
       );
       setAvailableBudgets(filtered);
+      return true;
     } catch {
+      return false;
     }
   }, [gpbList]);
 
+  const [openingModal, setOpeningModal] = useState(false);
   const openModal = async () => {
-    await loadBudgets();
-    setSelectedYear("");
-    setSelectedBudget("");
-    setShowModal(true);
+    if (openingModal) return;
+    setOpeningModal(true);
+    try {
+      if (!(await loadBudgets())) {
+        setError("Unable to load the GAA budgets. Please try again.");
+        return;
+      }
+      setSelectedYear("");
+      setSelectedBudget("");
+      setShowModal(true);
+    } finally {
+      setOpeningModal(false);
+    }
   };
 
   const closeModal = () => {
@@ -287,7 +301,10 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
       const res = await axios.get("/api/gaa-budget");
       setAttachBudgetOptions(res.data?.data || []);
     } catch {
+      /* Not "no budget for this year": the list could not be loaded. */
       setAttachBudgetOptions([]);
+      setAttachModal(null);
+      setError("Unable to load the GAA budgets. Please try again.");
     }
   };
 
@@ -381,18 +398,23 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     [gpbList, selectedYear],
   );
 
-  const totalPages = Math.ceil(gpbList.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(gpbList.length / itemsPerPage));
   const paginatedGPB = gpbList.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
 
+  /* Deleting the only card on the last page left an empty page reading
+     "Showing 7–6 of 6". */
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
   const stats = useMemo(() => {
     const total = gpbList.length;
     const approved = gpbList.filter((g) => g.status_of_gpb?.status === "approved").length;
     const draft = gpbList.filter((g) => g.status_of_gpb?.status === "draft" || !g.status_of_gpb?.status).length;
-    const totalProjects = gpbList.reduce((s, g) => s + (g.projects?.length || 0), 0);
-    return { total, approved, draft, totalProjects };
+    return { total, approved, draft };
   }, [gpbList]);
 
   const canManage = role !== "gad coordinator" && role !== "planning director";
@@ -411,8 +433,10 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         <div className="flex items-center gap-3">
           {canManage && (
             <button
+              type="button"
               onClick={openModal}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
+              disabled={openingModal}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200 disabled:opacity-60 disabled:cursor-wait"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add GPB
@@ -462,8 +486,10 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             action={
               canManage ? (
                 <button
+                  type="button"
                   onClick={openModal}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
+                  disabled={openingModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-60 disabled:cursor-wait"
                 >
                   <FaPlus className="h-3 w-3" />
                   Create GPB

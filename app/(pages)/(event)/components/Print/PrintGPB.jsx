@@ -122,6 +122,27 @@ export default function PrintGPB({
        fixed type labels, and gad_budget is printed as a formatted number. */
     const esc = escapeHtml;
     const escList = (list) => list.map((item) => esc(item));
+    /* Titles and descriptions are paired by index, and descriptions are
+       optional. Filtering empty descriptions on their own moved activity B's
+       description under activity A, so pairs are dropped together, only when
+       the title is empty. */
+    const activityPairs = (project) => {
+      const titles = getFieldValue(project?.gad_activity);
+      const descriptions = getFieldValue(project?.gad_activity_description);
+      const titleList = Array.isArray(titles) ? titles : titles ? [titles] : [];
+      const descList = Array.isArray(descriptions)
+        ? descriptions
+        : descriptions
+          ? [descriptions]
+          : [];
+      const pairs = titleList
+        .map((title, i) => [title, descList[i] ?? ""])
+        .filter(([title]) => Boolean(title));
+      return {
+        gad_activity: escList(pairs.map(([title]) => title)),
+        gad_activity_description: escList(pairs.map(([, desc]) => desc || "")),
+      };
+    };
     const safeProjects = (Array.isArray(projects) ? projects : []).map(
       (project) => ({
         ...project,
@@ -129,10 +150,7 @@ export default function PrintGPB({
         gender_issue: esc(getFieldValue(project?.gender_issue)),
         cause_gender_issue: escList(getArrayValue(project?.cause_gender_issue)),
         gad_objective: escList(getArrayValue(project?.gad_objective)),
-        gad_activity: escList(getArrayValue(project?.gad_activity)),
-        gad_activity_description: escList(
-          getArrayValue(project?.gad_activity_description),
-        ),
+        ...activityPairs(project),
         performance_indicator_target: escList(
           getArrayValue(project?.performance_indicator_target),
         ),

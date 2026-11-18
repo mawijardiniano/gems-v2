@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /* Reviewer comments on a project: the "add comment" modal and deleting a
    comment from a row. The author is taken from the session by the API. */
@@ -12,8 +12,13 @@ export function useProjectComments({ onChanged }) {
   const [commentProjectId, setCommentProjectId] = useState(null);
   const [commentSaving, setCommentSaving] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const deletingCommentRef = useRef(false);
 
+  /* Starts empty: a draft cancelled on one project used to be pre-filled,
+     and could be submitted, on the next. */
   const openComment = (projectId) => {
+    setComment("");
+    setCommentType("approval");
     setCommentField(["general"]);
     setCommentProjectId(projectId);
     setCommentError("");
@@ -60,7 +65,11 @@ export function useProjectComments({ onChanged }) {
     }
   };
 
+  /* One delete at a time, and only after the reviewer confirms. */
   const handleDeleteComment = async (projectId, commentId) => {
+    if (deletingCommentRef.current) return;
+    if (!window.confirm("Delete this comment?")) return;
+    deletingCommentRef.current = true;
     setCommentError("");
     try {
       const res = await fetch(
@@ -75,6 +84,8 @@ export function useProjectComments({ onChanged }) {
       onChanged?.();
     } catch {
       setCommentError("Unable to delete the comment. Check your connection.");
+    } finally {
+      deletingCommentRef.current = false;
     }
   };
 
