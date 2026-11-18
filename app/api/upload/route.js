@@ -15,27 +15,16 @@ import {
   isProjectManagerRole,
 } from "@/data/lib/projectAccess";
 import { getS3Client, storageBucket, buildObjectUrl } from "@/data/lib/storage";
+import {
+  MAX_UPLOAD_FILE_BYTES,
+  UPLOAD_FOLDER_RULES,
+} from "@/data/lib/uploadRules";
 
 const s3 = getS3Client;
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
-
-const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-const PDF_EXTS = [".pdf"];
-const DOC_EXTS = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"];
-
-const FOLDER_RULES = {
-  "events/posters": IMAGE_EXTS,
-  "reports/photos": IMAGE_EXTS,
-  "reports/memorandum": [...IMAGE_EXTS, ...PDF_EXTS],
-  "reports/activity-design": [...IMAGE_EXTS, ...PDF_EXTS],
-  "reports/attendance": [...IMAGE_EXTS, ...PDF_EXTS],
-  "reports/other-attachments": [...IMAGE_EXTS, ...PDF_EXTS, ...DOC_EXTS],
-  "status/scanned": [...IMAGE_EXTS, ...PDF_EXTS],
-  "expenditure-evidence": [".pdf", ".jpg", ".jpeg", ".png"],
-  /* Proof files attached to completed project milestones. */
-  "milestone-proof": [".pdf", ".jpg", ".jpeg", ".png"],
-};
+/* Shared with the forms, which check the same rules before uploading. */
+const MAX_FILE_SIZE = MAX_UPLOAD_FILE_BYTES;
+const FOLDER_RULES = UPLOAD_FOLDER_RULES;
 
 const BLOCKED_MIME_TYPES = [
   "text/html",

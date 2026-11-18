@@ -232,6 +232,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setEditData={editor.setEditData}
           handleSave={editor.handleSave}
           saving={editor.saving}
+          posterFiles={editor.posterFiles}
           saveError={editor.saveError}
           setSaveError={editor.setSaveError}
           buildEditData={buildEditData}

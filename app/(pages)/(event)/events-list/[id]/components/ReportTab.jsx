@@ -1,7 +1,6 @@
 "use client";
 
 import { readJson } from "@/data/lib/uploadClient";
-import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import {
   FiEdit2,
@@ -16,7 +15,8 @@ import {
   FiDownload,
 } from "react-icons/fi";
 import { FaMagic } from "react-icons/fa";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useFileUploads } from "@/hooks/useFileUploads";
+import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const EMPTY_FILES = {
@@ -67,7 +67,6 @@ export default function ReportTab({
      flight overwrite each other and one file is lost (but left in storage). */
   const filesRef = useRef(EMPTY_FILES);
   const [generating, setGenerating] = useState(false);
-  const [uploading, setUploading] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -79,7 +78,11 @@ export default function ReportTab({
   const [isEditing, setIsEditing] = useState(false);
   const [previewImg, setPreviewImg] = useState(null);
 
-  const fileLifecycle = useFileLifecycle();
+  /* Uploads, checks and cleanup through the shared hook. Rolled back on
+     unmount: switching tabs mid-draft used to orphan every upload. A file
+     that finishes after Cancel is deleted instead of landing in a closed
+     form. */
+  const fileLifecycle = useFileUploads({ rollbackOnUnmount: true });
   useEscapeKey(Boolean(previewImg), () => setPreviewImg(null));
 
   /* Replace the file list outright (start/end of an edit session). */
@@ -94,7 +97,7 @@ export default function ReportTab({
     fileLifecycle.syncCurrent(keysOf(next));
     return next;
   };
-  const isUploading = Object.values(uploading).some(Boolean);
+  const isUploading = fileLifecycle.isUploading;
 
   const keysOf = (f) =>
     [
@@ -140,12 +143,21 @@ export default function ReportTab({
     }
   };
 
-  const deleteFileByKey = async (key) => {
-    if (!key) return;
+  /* Checked against the folder's rule before uploading; files uploaded
+     before a failure in the same batch are deleted (uploadFiles). Returns
+     null when nothing should be added. */
+  const uploadInto = async (fileList, { folder, field, label }) => {
+    setError("");
     try {
-      await axios.delete("/api/upload", { data: { key } });
+      return await fileLifecycle.upload(fileList, {
+        folder,
+        label,
+        maxBytes: MAX_UPLOAD_FILE_BYTES,
+        target: field,
+      });
     } catch (err) {
-      console.log("Failed to delete old file:", err);
+      setError(err.message || `Failed to upload ${label.toLowerCase()}.`);
+      return null;
     }
   };
 
@@ -180,79 +192,40 @@ export default function ReportTab({
     setIsEditing(true);
   };
 
-  const handleSingleFileUpload = async (file, field, folder) => {
+  const handleSingleFileUpload = async (file, field, folder, label) => {
     if (!file) return;
-    setUploading((prev) => ({ ...prev, [field]: true }));
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", folder);
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const oldFile = filesRef.current[field];
-      updateFiles((prev) => ({
-        ...prev,
-        [field]: { url: res.data.url, key: res.data.key, name: file.name },
-      }));
-      if (oldFile?.key && !fileLifecycle.hasOriginal(oldFile.key)) {
-        deleteFileByKey(oldFile.key);
-      }
-    } catch {
-      setError(`Failed to upload ${field}`);
-    } finally {
-      setUploading((prev) => ({ ...prev, [field]: false }));
-    }
+    const uploaded = await uploadInto([file], { folder, field, label });
+    if (!uploaded?.length) return;
+    const oldFile = filesRef.current[field];
+    updateFiles((prev) => ({ ...prev, [field]: uploaded[0] }));
+    /* The file it replaces is deleted now if it was uploaded in this edit;
+       a saved one waits for the save (commit). */
+    if (oldFile) fileLifecycle.release(oldFile);
   };
 
+  /* One by one with cleanup on failure: a rejected photo used to leave the
+     ones uploaded in parallel with it in storage, on no record. */
   const handlePhotosUpload = async (fileList) => {
-    setUploading((prev) => ({ ...prev, photos: true }));
-    try {
-      const uploaded = await Promise.all(
-        Array.from(fileList).map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", "reports/photos");
-          const res = await axios.post("/api/upload", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          return { url: res.data.url, key: res.data.key };
-        }),
-      );
-      updateFiles((prev) => ({
-        ...prev,
-        photos: [...prev.photos, ...uploaded],
-      }));
-    } catch {
-      setError("Failed to upload photos");
-    } finally {
-      setUploading((prev) => ({ ...prev, photos: false }));
-    }
+    const uploaded = await uploadInto(fileList, {
+      folder: "reports/photos",
+      field: "photos",
+      label: "Photos",
+    });
+    if (!uploaded?.length) return;
+    updateFiles((prev) => ({ ...prev, photos: [...prev.photos, ...uploaded] }));
   };
 
   const handleOtherAttachmentsUpload = async (fileList) => {
-    setUploading((prev) => ({ ...prev, other_attachments: true }));
-    try {
-      const uploaded = await Promise.all(
-        Array.from(fileList).map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", "reports/other-attachments");
-          const res = await axios.post("/api/upload", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          return { url: res.data.url, key: res.data.key, name: file.name };
-        }),
-      );
-      updateFiles((prev) => ({
-        ...prev,
-        other_attachments: [...prev.other_attachments, ...uploaded],
-      }));
-    } catch {
-      setError("Failed to upload attachments");
-    } finally {
-      setUploading((prev) => ({ ...prev, other_attachments: false }));
-    }
+    const uploaded = await uploadInto(fileList, {
+      folder: "reports/other-attachments",
+      field: "other_attachments",
+      label: "Attachments",
+    });
+    if (!uploaded?.length) return;
+    updateFiles((prev) => ({
+      ...prev,
+      other_attachments: [...prev.other_attachments, ...uploaded],
+    }));
   };
 
   const removePhoto = (idx) => {
@@ -261,9 +234,7 @@ export default function ReportTab({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== idx),
     }));
-    if (photo?.key && !fileLifecycle.hasOriginal(photo.key)) {
-      deleteFileByKey(photo.key);
-    }
+    fileLifecycle.release(photo);
   };
 
   const removeOtherAttachment = (idx) => {
@@ -272,9 +243,7 @@ export default function ReportTab({
       ...prev,
       other_attachments: prev.other_attachments.filter((_, i) => i !== idx),
     }));
-    if (attachment?.key && !fileLifecycle.hasOriginal(attachment.key)) {
-      deleteFileByKey(attachment.key);
-    }
+    fileLifecycle.release(attachment);
   };
 
   const fetchReport = async () => {
@@ -728,17 +697,20 @@ export default function ReportTab({
                 <div className="file-input">
                   <input
                     type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) =>
+                    accept=".jpg,.jpeg,.png,.gif,.webp,.pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
                       handleSingleFileUpload(
-                        e.target.files[0],
+                        file,
                         field.key,
                         field.folder,
-                      )
-                    }
+                        field.label,
+                      );
+                    }}
                   />
                 </div>
-                {uploading[field.key] && (
+                {fileLifecycle.isUploadingTarget(field.key) && (
                   <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
                     <FiLoader className="animate-spin" /> Uploading...
                   </p>
@@ -757,9 +729,7 @@ export default function ReportTab({
                       onClick={() => {
                         const old = filesRef.current[field.key];
                         updateFiles((prev) => ({ ...prev, [field.key]: null }));
-                        if (old?.key && !fileLifecycle.hasOriginal(old.key)) {
-                          deleteFileByKey(old.key);
-                        }
+                        fileLifecycle.release(old);
                       }}
                     >
                       <FiX size={10} />
@@ -778,12 +748,16 @@ export default function ReportTab({
           <div className="file-input">
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
               multiple
-              onChange={(e) => handlePhotosUpload(e.target.files)}
+              onChange={(e) => {
+                const list = Array.from(e.target.files || []);
+                e.target.value = "";
+                handlePhotosUpload(list);
+              }}
             />
           </div>
-          {uploading.photos && (
+          {fileLifecycle.isUploadingTarget("photos") && (
             <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
               <FiLoader className="animate-spin" /> Uploading photos...
             </p>
@@ -818,12 +792,16 @@ export default function ReportTab({
           <div className="file-input">
             <input
               type="file"
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
               multiple
-              onChange={(e) => handleOtherAttachmentsUpload(e.target.files)}
+              onChange={(e) => {
+                const list = Array.from(e.target.files || []);
+                e.target.value = "";
+                handleOtherAttachmentsUpload(list);
+              }}
             />
           </div>
-          {uploading.other_attachments && (
+          {fileLifecycle.isUploadingTarget("other_attachments") && (
             <p className="text-xs text-secondary-500 mt-2 flex items-center gap-1">
               <FiLoader className="animate-spin" /> Uploading attachments...
             </p>

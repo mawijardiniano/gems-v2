@@ -3,6 +3,13 @@
    server checks that the caller may delete a key; these helpers only make
    sure partial or abandoned uploads are cleaned up. */
 
+// Relative path (not "@/"), so node --test can load this file directly.
+import {
+  UPLOAD_FOLDER_RULES,
+  describeExtensions,
+  extensionOf,
+} from "./uploadRules.js";
+
 export const DOCUMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
@@ -16,17 +23,29 @@ export async function readJson(res) {
 }
 
 /* An error message when any file has the wrong type or is too large, else
-   null. `label` names the files in the message ("Proof files ..."). */
+   null. `label` names the files in the message ("Proof files ...").
+
+   With `folder` (or `exts`) the check is the server's own rule for that
+   folder (data/lib/uploadRules.js), by extension, and the message lists
+   those types. Without either it falls back to the PDF/JPG/PNG MIME check. */
 export function validateFiles(
   files,
-  { types = DOCUMENT_TYPES, maxBytes = MAX_UPLOAD_BYTES, label = "Files" } = {},
+  {
+    folder,
+    exts,
+    types = DOCUMENT_TYPES,
+    maxBytes = MAX_UPLOAD_BYTES,
+    label = "Files",
+  } = {},
 ) {
-  const bad = (files || []).some(
-    (f) => (types && !types.includes(f.type)) || f.size > maxBytes,
-  );
+  const allowed = exts || (folder ? UPLOAD_FOLDER_RULES[folder] : null);
+  const typeOk = (f) =>
+    allowed ? allowed.includes(extensionOf(f?.name)) : types.includes(f?.type);
+  const bad = (files || []).some((f) => !typeOk(f) || f.size > maxBytes);
   if (!bad) return null;
   const mb = Math.round(maxBytes / (1024 * 1024));
-  return `${label} must be PDF, JPG, or PNG and under ${mb}MB each.`;
+  const kinds = allowed ? describeExtensions(allowed) : "PDF, JPG, or PNG";
+  return `${label} must be ${kinds} and under ${mb}MB each.`;
 }
 
 /* Best-effort delete; never throws. */

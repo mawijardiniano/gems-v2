@@ -1,39 +1,40 @@
 "use client";
 
-import axios from "axios";
 import { useState } from "react";
+import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 import { FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import EventFormFields from "../../../../components/EventFormFields";
 
-/* Editing uploads a new poster straight away (and can remove the saved one).
-   The replaced file is cleaned up by the page once the save succeeds, and a
-   new upload is deleted by OverviewTab if the edit is cancelled. */
-function PosterEditor({ poster, onChange, onUploadingChange }) {
-  const [uploading, setUploadingState] = useState(false);
+/* Editing uploads a new poster straight away (and can remove the saved one)
+   through the editor's poster session (useEventEditor): a poster replaced or
+   removed during the edit is deleted at once if it was uploaded in this
+   edit; the saved one only once a save drops it. */
+function PosterEditor({ poster, onChange, posterFiles }) {
   const [error, setError] = useState("");
+  const uploading = Boolean(posterFiles?.isUploading);
 
-  const setUploading = (value) => {
-    setUploadingState(value);
-    onUploadingChange?.(value);
+  const replaceWith = (next) => {
+    if (poster?.key && poster.key !== next?.key) posterFiles?.release(poster);
+    posterFiles?.syncCurrent(next?.key ? [next.key] : []);
+    onChange(next);
   };
 
   const upload = async (file) => {
-    if (!file) return;
-    setUploading(true);
+    if (!file || !posterFiles) return;
     setError("");
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "events/posters");
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const uploaded = await posterFiles.upload([file], {
+        folder: "events/posters",
+        maxBytes: MAX_UPLOAD_FILE_BYTES,
+        label: "The poster",
+        target: "poster",
       });
-      onChange({ url: res.data.url, key: res.data.key });
+      /* null: the edit was cancelled while it uploaded. */
+      if (!uploaded?.length) return;
+      replaceWith({ url: uploaded[0].url, key: uploaded[0].key });
     } catch (err) {
-      setError("Failed to upload image. Please try again.");
-    } finally {
-      setUploading(false);
+      setError(err.message || "Failed to upload image. Please try again.");
     }
   };
 
@@ -56,7 +57,7 @@ function PosterEditor({ poster, onChange, onUploadingChange }) {
             <button
               type="button"
               className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
-              onClick={() => onChange("")}
+              onClick={() => replaceWith("")}
               aria-label="Remove poster"
             >
               <FiX size={12} />
@@ -68,8 +69,12 @@ function PosterEditor({ poster, onChange, onUploadingChange }) {
         <input
           id="edit-event-poster"
           type="file"
-          accept="image/*"
-          onChange={(e) => upload(e.target.files?.[0])}
+          accept=".jpg,.jpeg,.png,.gif,.webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            upload(file);
+          }}
         />
       </div>
       {uploading && (
@@ -93,8 +98,9 @@ export default function EventEditForm({
   setSaveError,
   onCancel,
   onSave,
+  posterFiles,
 }) {
-  const [posterUploading, setPosterUploading] = useState(false);
+  const posterUploading = Boolean(posterFiles?.isUploading);
 
   return (
     <>
@@ -116,7 +122,7 @@ export default function EventEditForm({
             onChange={(poster) =>
               setEditData((prev) => ({ ...(prev || {}), event_poster: poster }))
             }
-            onUploadingChange={setPosterUploading}
+            posterFiles={posterFiles}
           />
         }
       />
