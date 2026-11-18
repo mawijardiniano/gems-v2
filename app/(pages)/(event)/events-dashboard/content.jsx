@@ -19,6 +19,7 @@ import {
 } from "../gender-statistics/components/employeeStats";
 import { SampleToggle, SampleDataNotice } from "../gender-statistics/components/SampleToggle";
 import { useEffect, useMemo, useState } from "react";
+import { formatAmount } from "@/data/lib/money";
 import {
   ResponsiveContainer,
   BarChart,
@@ -423,27 +424,6 @@ export default function EventsDashboardContent() {
   const [useSample, setUseSample] = useState(true);
 
   const router = useRouter();
-
-  const { totalGAA, totalGAD, avgGADPercent } = useMemo(() => {
-    const totalGAA = gaaBudget.reduce((sum, g) => sum + (g.totalGAA || 0), 0);
-    const totalGAD = gaaBudget.reduce(
-      (sum, g) => sum + (g.gadAnnualBudget || 0),
-      0,
-    );
-    const avgGADPercent =
-      gaaBudget.length > 0
-        ? (
-            gaaBudget.reduce((sum, g) => sum + (g.gadPercent || 0), 0) /
-            gaaBudget.length
-          ).toFixed(2)
-        : 0;
-
-    return {
-      totalGAA: totalGAA.toLocaleString(),
-      totalGAD: totalGAD.toLocaleString(),
-      avgGADPercent,
-    };
-  }, [gaaBudget]);
 
   const yearEvents = useMemo(() => {
     const y = Number(selectedYear);
@@ -1510,7 +1490,7 @@ export default function EventsDashboardContent() {
                           {gaa.year}
                         </td>
                         <td className="py-3 px-4 text-right text-sm text-gray-600">
-                          ₱ {Number(gaa.totalGAA).toLocaleString()}
+                          ₱ {formatAmount(gaa.totalGAA, "—")}
                         </td>
                         <td className="py-3 px-4 text-right">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700">
@@ -1518,7 +1498,7 @@ export default function EventsDashboardContent() {
                           </span>
                         </td>
                         <td className="py-3 pl-4 text-right text-sm font-semibold text-emerald-600">
-                          ₱ {Number(gaa.gadAnnualBudget).toLocaleString()}
+                          ₱ {formatAmount(gaa.gadAnnualBudget, "—")}
                         </td>
                       </tr>
                     ))}
