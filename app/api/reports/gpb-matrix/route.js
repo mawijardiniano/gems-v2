@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { appParts } from "@/data/lib/appTime";
 import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
-import { canAccessGpb } from "@/data/lib/roleAccess";
+import { canViewGpbReports } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import { parseGpbYear } from "@/data/lib/gpbYear";
@@ -75,9 +75,9 @@ export async function GET(req) {
   try {
     const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
-    /* Budget amounts and signatories are for the GPB roles only, the same
-       roles that may open /gpb. */
-    if (!canAccessGpb(user?.role)) {
+    /* Budget amounts and signatories are for the GPB roles and the President
+       (read-only). */
+    if (!canViewGpbReports(user?.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

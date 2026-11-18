@@ -6,7 +6,7 @@ import "@/models/projects";
 import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
-import { canAccessGpb } from "@/data/lib/roleAccess";
+import { canAccessGpb, canViewGpbReports } from "@/data/lib/roleAccess";
 import { isGpbManagerRole } from "@/data/lib/projectAccess";
 import { validateBudgetLink } from "@/data/lib/budgetLinking";
 import { parseGpbYear } from "@/data/lib/gpbYear";
@@ -22,6 +22,16 @@ export async function GET(req) {
        this the API handed the same plans, budgets and projects to every signed-in
        user. Fail closed on an unknown role. */
     if (!canAccessGpb(user?.role)) {
+      /* The President picks a GPB year for the read-only reports, so it gets
+         the years and nothing else. */
+      if (canViewGpbReports(user?.role)) {
+        await connectDB();
+        const years = await GPB.find()
+          .select("year status_of_gpb.status")
+          .sort({ year: -1 })
+          .lean();
+        return Response.json({ success: true, data: years });
+      }
       return NextResponse.json(
         { error: "You are not allowed to view the GPB" },
         { status: 403 },

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
-import { canAccessGpb } from "@/data/lib/roleAccess";
+import { canViewGpbReports } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import GPB from "@/models/gpb";
@@ -23,9 +23,9 @@ export async function GET(req) {
   try {
     const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
-    /* Milestone reports are for the GPB roles only, the same roles that may
-       open /gpb. */
-    if (!canAccessGpb(user?.role)) {
+    /* Milestone reports are for the GPB roles and the President
+       (read-only). */
+    if (!canViewGpbReports(user?.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

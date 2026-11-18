@@ -63,6 +63,16 @@ export const EVENT_ROLE_PAGE_ACCESS = {
 export const canAccessGpb = (role) =>
   (EVENT_ROLE_PAGE_ACCESS[normalizeRole(role)] || []).includes("gpb");
 
+/**
+ * Whether `role` may download the GPB year reports (Plan and Budget Matrix,
+ * Milestone Progress) and list the GPB years they are picked from.
+ *
+ * The GPB roles, plus the President, whose Reports and GAD Projects pages
+ * offer these downloads read-only. The President still has no /gpb page.
+ */
+export const canViewGpbReports = (role) =>
+  canAccessGpb(role) || normalizeRole(role) === "president";
+
 /* Menu keys a role may see — used by the (event) sidebar. */
 export const EVENT_ROLE_MENU_ACCESS = {
   "gad focal person": [
