@@ -2,6 +2,9 @@
    formatting/parsing and the add-project wizard's step validators. Moved out
    of content.jsx so they can be tested on their own. */
 
+// Relative path (not "@/"), so node --test can load this file directly.
+import { toOfficeArray } from "../../../../../../data/lib/colleges.js";
+
 export const ACTIVITY_TYPE = ["Seminar", "Training", "Lecture"];
 
 export function describeBudgetRejection(data) {
@@ -234,4 +237,139 @@ export function isEditRowValid(row) {
     isNonEmptyArrayFilled(row.responsible_office) &&
     indicatorsValid(row.performance_indicator_target)
   );
+}
+
+/* ── GAD activity rows (title + description) ─────────────────────────────
+   Each row in the wizard and the edit modal is a title with an optional
+   description underneath. Adding or removing a row has to move both arrays
+   together, otherwise description 2 would show up under title 3. These take a
+   project form and return the updated copy, so the "new project" and the
+   "edit project" forms share one implementation. */
+export function setActivityTitle(project, idx, value) {
+  const titles = [...(project?.gad_activity || [""])];
+  titles[idx] = value;
+  return {
+    ...project,
+    gad_activity: titles,
+    gad_activity_description: alignActivityDescriptions(
+      titles,
+      project?.gad_activity_description,
+    ),
+  };
+}
+
+export function setActivityDescription(project, idx, value) {
+  const descriptions = alignActivityDescriptions(
+    project?.gad_activity,
+    project?.gad_activity_description,
+  );
+  descriptions[idx] = value;
+  return { ...project, gad_activity_description: descriptions };
+}
+
+export function addActivityRow(project) {
+  return {
+    ...project,
+    gad_activity: [...(project?.gad_activity || [""]), ""],
+    gad_activity_description: [
+      ...alignActivityDescriptions(
+        project?.gad_activity,
+        project?.gad_activity_description,
+      ),
+      "",
+    ],
+  };
+}
+
+export function removeActivityRow(project, idx) {
+  const titles = [...(project?.gad_activity || [""])];
+  if (titles.length <= 1) return project;
+  const descriptions = alignActivityDescriptions(
+    project?.gad_activity,
+    project?.gad_activity_description,
+  );
+  titles.splice(idx, 1);
+  descriptions.splice(idx, 1);
+  return { ...project, gad_activity: titles, gad_activity_description: descriptions };
+}
+
+/* ── Table ordering and labels ───────────────────────────────────────── */
+const PROJECT_TYPE_ORDER = {
+  "Client Focused": 0,
+  "Organization Focused": 1,
+  "Attributed Program": 2,
+  Uncategorized: 3,
+};
+
+export function getProjectTypeLabel(project) {
+  const rawType = project?.project_type;
+  const value = rawType && typeof rawType === "object" ? rawType.value : rawType;
+  return Object.hasOwn(PROJECT_TYPE_ORDER, value) ? value : "Uncategorized";
+}
+
+/* Groups projects by type in the GPB's fixed order; within a type the saved
+   order is kept (Array.prototype.sort is stable). */
+export function orderProjectsByType(projects) {
+  const list = Array.isArray(projects) ? projects : [];
+  return [...list].sort(
+    (a, b) =>
+      PROJECT_TYPE_ORDER[getProjectTypeLabel(a)] -
+      PROJECT_TYPE_ORDER[getProjectTypeLabel(b)],
+  );
+}
+
+export function getCreatorName(project) {
+  const creator = project?.createdBy;
+  if (!creator) return "—";
+  const personal = creator.personal_info_id?.personal;
+  if (personal) {
+    return `${personal.first_name || ""} ${personal.last_name || ""}`.trim();
+  }
+  return creator.username || "—";
+}
+
+export function getCreatorRole(project) {
+  return project?.createdBy?.role || "";
+}
+
+/* The API stores most fields as { value, ... } objects; the page works with
+   the plain values and keeps the originals in `_raw`. */
+export function normalizeGpbProject(p) {
+  const plain = (field) => p[field]?.value ?? p[field];
+  const titles = plain("gad_activity") ?? [];
+  return {
+    ...p,
+    _raw: {
+      project_type: p.project_type,
+      gender_issue: p.gender_issue,
+      cause_gender_issue: p.cause_gender_issue,
+      gad_objective: p.gad_objective,
+      supporting_statistics_data: p.supporting_statistics_data,
+      relevant_agency: p.relevant_agency,
+      gad_activity: p.gad_activity,
+      gad_activity_description: p.gad_activity_description,
+      performance_indicator_target: p.performance_indicator_target,
+      gad_budget: p.gad_budget,
+      source_budget: p.source_budget,
+      responsible_office: p.responsible_office,
+    },
+    project_type: plain("project_type"),
+    gender_issue: plain("gender_issue"),
+    cause_gender_issue: plain("cause_gender_issue") ?? [],
+    gad_objective: plain("gad_objective") ?? [],
+    supporting_statistics_data: plain("supporting_statistics_data"),
+    relevant_agency: plain("relevant_agency"),
+    gad_activity: titles,
+    /* Always index-paired with the titles, so legacy projects (titles only)
+       get an empty description per row instead of shifting descriptions. */
+    gad_activity_description: alignActivityDescriptions(
+      titles,
+      plain("gad_activity_description") ?? [],
+    ),
+    performance_indicator_target: plain("performance_indicator_target") ?? [],
+    gad_budget: plain("gad_budget"),
+    source_budget: plain("source_budget"),
+    responsible_office: toOfficeArray(plain("responsible_office")),
+    comments: Array.isArray(p.comments) ? p.comments : [],
+  };
 }

@@ -1,0 +1,677 @@
+"use client";
+
+import React from "react";
+import { alignActivityDescriptions, isAttributedProgram, isStep1Valid, isStep2Valid, isStep3Valid, serializeIndicators } from "../lib/projectForm";
+import PerformanceIndicatorInput from "./PerformanceIndicatorInput";
+import OfficeMultiSelect from "../../../components/OfficeMultiSelect";
+import { toOfficeArray } from "@/data/lib/colleges";
+
+/* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
+   the state and handlers and passes them in. */
+export default function AddProjectWizard({
+  addError,
+  addLoading,
+  addWarning,
+  budgetSummary,
+  duplicateWarnings,
+  handleActivityDescriptionChange,
+  handleActivityTitleChange,
+  handleAddActivityRow,
+  handleAddArrayField,
+  handleArrayFieldChange,
+  handleNewProjectChange,
+  handleRemoveActivityRow,
+  handleRemoveArrayField,
+  handleWizardSubmit,
+  newProject,
+  nextRefPreview,
+  setShowWizard,
+  setWizardStep,
+  wizardStep,
+  year,
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add project"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Add Project — Year {year}
+          </h2>
+          <button
+            onClick={() => {
+              setShowWizard(false);
+              setWizardStep(1);
+            }}
+            className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 mb-6">
+          {[
+            "Gender Issue",
+            "Objectives & Data",
+            "Activity & Budget",
+            "Review",
+          ].map((label, i) => (
+            <React.Fragment key={i}>
+              <div
+                className={`flex items-center gap-1.5 ${
+                  wizardStep === i + 1
+                    ? "text-secondary-600"
+                    : wizardStep > i + 1
+                      ? "text-green-600"
+                      : "text-gray-400"
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                    wizardStep === i + 1
+                      ? "border-secondary-600 bg-secondary-50"
+                      : wizardStep > i + 1
+                        ? "border-green-600 bg-green-50"
+                        : "border-gray-300"
+                  }`}
+                >
+                  {wizardStep > i + 1 ? "✓" : i + 1}
+                </div>
+                <span className="text-xs font-medium hidden sm:block">
+                  {label}
+                </span>
+              </div>
+              {i < 3 && (
+                <div
+                  className={`flex-1 h-0.5 ${wizardStep > i + 1 ? "bg-green-400" : "bg-gray-200"}`}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {budgetSummary !== null && !budgetSummary.hasBudget && (
+          <div className="whitespace-pre-line rounded-xl bg-secondary-50 border border-secondary-200 px-4 py-3 text-secondary-700 mb-4">
+            No GAA budget allocated for {year} yet — you can still record
+            this project. Utilization will be tracked and capped
+            automatically once the budget arrives.
+          </div>
+        )}
+
+        {addError && (
+          <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">
+            {addError}
+          </div>
+        )}
+
+        {addWarning && (
+          <div className="mb-4 p-3 rounded bg-secondary-50 border border-secondary-200 text-secondary-700 text-sm whitespace-pre-line">
+            {addWarning}
+          </div>
+        )}
+
+        {wizardStep === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                rows={3}
+                value={newProject.project_type}
+                onChange={(e) =>
+                  handleNewProjectChange("project_type", e.target.value)
+                }
+              >
+                <option value="">Select project type</option>
+                <option value="Client Focused">Client Focused</option>
+                <option value="Organization Focused">
+                  Organization Focused
+                </option>
+                <option value="Attributed Program">
+                  Attributed Program
+                </option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-500">
+              <span>Project Reference No.</span>
+              <span className="font-mono font-semibold text-gray-700">
+                {nextRefPreview}
+              </span>
+            </div>
+            {!isAttributedProgram(newProject) && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Gender Issue / GAD Mandate{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                    rows={3}
+                    value={newProject.gender_issue}
+                    onChange={(e) =>
+                      handleNewProjectChange("gender_issue", e.target.value)
+                    }
+                  />
+                  {duplicateWarnings.length > 0 && (
+                    <div className="mt-2 p-3 rounded-lg bg-secondary-50 border border-secondary-200 text-secondary-700 text-xs space-y-1">
+                      <p className="font-semibold flex items-center gap-1">
+                        ⚠️ Similar Gender Issue / GAD Mandate exists:
+                      </p>
+                      {duplicateWarnings.map((w, i) => (
+                        <p key={i} className="pl-4">
+                          "{w.gender_issue}" (
+                          {Math.round(w.similarity * 100)}% match)
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cause of the Gender Issue{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  {newProject.cause_gender_issue.map((val, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <textarea
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                        rows={2}
+                        value={val}
+                        onChange={(e) =>
+                          handleArrayFieldChange(
+                            "cause_gender_issue",
+                            idx,
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <div className="flex flex-col gap-1">
+                        {newProject.cause_gender_issue.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveArrayField(
+                                "cause_gender_issue",
+                                idx,
+                              )
+                            }
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                          >
+                            -
+                          </button>
+                        )}
+                        {idx ===
+                          newProject.cause_gender_issue.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddArrayField("cause_gender_issue")
+                            }
+                            className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {wizardStep === 2 && !isAttributedProgram(newProject) && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                GAD Result Statement / GAD Objective{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              {newProject.gad_objective.map((val, idx) => (
+                <div key={idx} className="flex gap-2 mb-2">
+                  <textarea
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                    rows={2}
+                    value={val}
+                    onChange={(e) =>
+                      handleArrayFieldChange(
+                        "gad_objective",
+                        idx,
+                        e.target.value,
+                      )
+                    }
+                  />
+                  <div className="flex flex-col gap-1">
+                    {newProject.gad_objective.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveArrayField("gad_objective", idx)
+                        }
+                        className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                      >
+                        -
+                      </button>
+                    )}
+                    {idx === newProject.gad_objective.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleAddArrayField("gad_objective")}
+                        className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Supporting Statistics / Data
+              </label>
+              <textarea
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                rows={3}
+                value={newProject.supporting_statistics_data}
+                onChange={(e) =>
+                  handleNewProjectChange(
+                    "supporting_statistics_data",
+                    e.target.value,
+                  )
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Relevant Agency MFO/PAP{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                rows={2}
+                value={newProject.relevant_agency}
+                onChange={(e) =>
+                  handleNewProjectChange("relevant_agency", e.target.value)
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {wizardStep === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                GAD Activity <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-400 mb-2">
+                Type the activity title, then its description underneath.
+                Both print inside the single GAD Activity column.
+              </p>
+              {newProject.gad_activity.map((val, idx) => (
+                <div
+                  key={idx}
+                  className="flex gap-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2"
+                >
+                  <div className="flex-1 space-y-2">
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                      rows={2}
+                      placeholder="GAD activity title"
+                      value={val}
+                      onChange={(e) =>
+                        handleActivityTitleChange(idx, e.target.value)
+                      }
+                    />
+                    <textarea
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                      rows={2}
+                      placeholder="Description (optional)"
+                      value={
+                        alignActivityDescriptions(
+                          newProject.gad_activity,
+                          newProject.gad_activity_description,
+                        )[idx] || ""
+                      }
+                      onChange={(e) =>
+                        handleActivityDescriptionChange(idx, e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {newProject.gad_activity.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveActivityRow(idx)}
+                        className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                      >
+                        -
+                      </button>
+                    )}
+                    {idx === newProject.gad_activity.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={handleAddActivityRow}
+                        className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {!isAttributedProgram(newProject) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Output Performance Indicators and Target
+                </label>
+                {newProject.performance_indicator_target.map((val, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2 items-start">
+                    <div className="flex-1">
+                      <PerformanceIndicatorInput
+                        value={val}
+                        onChange={(updated) => {
+                          const arr = [
+                            ...newProject.performance_indicator_target,
+                          ];
+                          arr[idx] = updated;
+                          handleNewProjectChange(
+                            "performance_indicator_target",
+                            arr,
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 mt-4">
+                      {newProject.performance_indicator_target.length >
+                        1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleRemoveArrayField(
+                              "performance_indicator_target",
+                              idx,
+                            )
+                          }
+                          className="px-2 py-1 bg-red-500 text-white rounded text-xs"
+                        >
+                          -
+                        </button>
+                      )}
+                      {idx ===
+                        newProject.performance_indicator_target.length -
+                          1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleAddArrayField(
+                              "performance_indicator_target",
+                            )
+                          }
+                          className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  GAD Budget <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                  value={newProject.gad_budget}
+                  onChange={(e) =>
+                    handleNewProjectChange(
+                      "gad_budget",
+                      Number(e.target.value),
+                    )
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Source of Budget <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                  rows={2}
+                  value={newProject.source_budget}
+                  onChange={(e) =>
+                    handleNewProjectChange("source_budget", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Responsible Unit/Office{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <OfficeMultiSelect
+                value={newProject.responsible_office}
+                onChange={(next) =>
+                  handleNewProjectChange("responsible_office", next)
+                }
+              />
+            </div>
+          </div>
+        )}
+
+        {wizardStep === 4 && (
+          <div className="space-y-3 text-sm">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div>
+                <span className="font-medium text-gray-600">
+                  Project Type:
+                </span>
+                <p className="mt-0.5 text-gray-800">
+                  {newProject.project_type || "—"}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Gender Issue:
+                </span>
+                <p className="mt-0.5 text-gray-800">
+                  {newProject.gender_issue || "—"}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Cause of Gender Issue:
+                </span>
+                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                  {newProject.cause_gender_issue
+                    .filter(Boolean)
+                    .map((v, i) => (
+                      <li key={i}>{v}</li>
+                    ))}
+                </ul>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  GAD Objective:
+                </span>
+                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                  {newProject.gad_objective.filter(Boolean).map((v, i) => (
+                    <li key={i}>{v}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Supporting Statistics:
+                </span>
+                <p className="mt-0.5 text-gray-800">
+                  {newProject.supporting_statistics_data || "—"}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Relevant Agency:
+                </span>
+                <p className="mt-0.5 text-gray-800">
+                  {newProject.relevant_agency || "—"}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  GAD Activity:
+                </span>
+                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                  {newProject.gad_activity.filter(Boolean).map((v, i) => {
+                    const description = alignActivityDescriptions(
+                      newProject.gad_activity,
+                      newProject.gad_activity_description,
+                    )[i];
+                    return (
+                      <li key={i}>
+                        {v}
+                        {description ? (
+                          <span className="block pl-4">{description}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Performance Indicators:
+                </span>
+                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                  {serializeIndicators(
+                    newProject.performance_indicator_target,
+                  ).map((v, i) => (
+                    <li key={i}>{v}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="font-medium text-gray-600">
+                    GAD Budget:
+                  </span>
+                  <p className="mt-0.5 text-gray-800">
+                    ₱{Number(newProject.gad_budget || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Source of Budget:
+                  </span>
+                  <p className="mt-0.5 text-gray-800">
+                    {newProject.source_budget || "—"}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Responsible Office:
+                </span>
+                <p className="mt-0.5 text-gray-800">
+                  {toOfficeArray(newProject.responsible_office).join(
+                    ", ",
+                  ) || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(() => {
+          const stepValid =
+            wizardStep === 1
+              ? isStep1Valid(newProject)
+              : wizardStep === 2
+                ? isStep2Valid(newProject)
+                : wizardStep === 3
+                  ? isStep3Valid(newProject)
+                  : true;
+
+          return (
+            <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-gray-200">
+              {!stepValid && (
+                <div className="text-xs text-red-500 text-right">
+                  Please fill in all required fields before continuing.
+                </div>
+              )}
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (wizardStep === 1) {
+                      setShowWizard(false);
+                      setWizardStep(1);
+                    } else if (
+                      isAttributedProgram(newProject) &&
+                      wizardStep === 3
+                    ) {
+                      setWizardStep(1);
+                    } else {
+                      setWizardStep(wizardStep - 1);
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                >
+                  {wizardStep === 1 ? "Cancel" : "← Back"}
+                </button>
+                {wizardStep < 4 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        isAttributedProgram(newProject) &&
+                        wizardStep === 1
+                      ) {
+                        setWizardStep(3);
+                      } else {
+                        setWizardStep(wizardStep + 1);
+                      }
+                    }}
+                    disabled={!stepValid}
+                    className="px-5 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleWizardSubmit}
+                    disabled={
+                      addLoading ||
+                      !isStep3Valid(newProject) ||
+                      !isStep1Valid(newProject) ||
+                      !isStep2Valid(newProject)
+                    }
+                    className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {addLoading ? "Saving..." : "Submit"}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
