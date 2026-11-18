@@ -5,6 +5,17 @@ import { buildBudgetSummary } from "@/data/lib/budgetLinking";
 import { roundCentavos } from "@/data/lib/gaaBudgetInput";
 
 /**
+ * Which projects belong to a year's plan: the ones in its GPB, or — before
+ * the year has a GPB — every project of that year. The summary, the GPB page
+ * and the matrix PDF all use this rule, so their totals add up the same rows.
+ */
+export function yearProjectsMatch(gpb, year) {
+  return gpb
+    ? { _id: { $in: Array.isArray(gpb.projects) ? gpb.projects : [] } }
+    : { year };
+}
+
+/**
  * The budget figures for one year, from a single source of truth: the year's
  * GPB. The budget is the one *attached* to the GPB and "used" is the sum of
  * the projects *in* the GPB.
@@ -29,9 +40,7 @@ export async function computeYearBudgetSummary(year, { extraUsed = 0 } = {}) {
     ? gpb.gaaBudgetId || null
     : await GAABudget.findOne({ year }).lean();
 
-  const match = gpb
-    ? { _id: { $in: Array.isArray(gpb.projects) ? gpb.projects : [] } }
-    : { year };
+  const match = yearProjectsMatch(gpb, year);
   const [used] = await Project.aggregate([
     { $match: match },
     {
@@ -52,5 +61,5 @@ export async function computeYearBudgetSummary(year, { extraUsed = 0 } = {}) {
     summary.overBudget = summary.remainingBudget < 0;
     summary.overBy = summary.overBudget ? Math.abs(summary.remainingBudget) : 0;
   }
-  return { summary, budget, hasGpb: Boolean(gpb) };
+  return { summary, budget, gpb, hasGpb: Boolean(gpb) };
 }

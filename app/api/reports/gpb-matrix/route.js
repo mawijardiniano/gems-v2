@@ -4,12 +4,11 @@ import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
-import GPB from "@/models/gpb";
-/* Side-effect import: `GPB.gaaBudgetId` refs the `GAABudget` model, and a
-   populate for a model that was never registered throws
-   `Schema hasn't been registered for model "GAABudget"`. Importing the module
-   is what registers it, so this line is load-bearing. */
-import "@/models/gaa_budget";
+import {
+  computeYearBudgetSummary,
+  yearProjectsMatch,
+} from "@/data/lib/yearBudgetSummary";
+import { formatAmount } from "@/data/lib/money";
 import SystemSetting from "@/models/systemSetting";
 import {
   SIGNATORIES_SETTING_KEY,
@@ -52,8 +51,10 @@ function activityCellText(project) {
     .join("\n");
 }
 
+/* "Php" rather than "₱": the PDF's Times font has no peso sign. Two
+   decimals, like every other screen (data/lib/money.js). */
 function peso(n) {
-  return `Php ${Number(n || 0).toLocaleString("en-PH")}`;
+  return `Php ${formatAmount(Number(n) || 0)}`;
 }
 
 const PROJECT_TYPE_ORDER = {
@@ -132,16 +133,30 @@ export async function GET(req) {
     const result = await cacheOrSet(
       `gpb-matrix-report:${year}`,
       async () => {
+        /* The same projects and figures as the GPB page and the budget
+           summary (data/lib/yearBudgetSummary.js): the GPB's projects and
+           its attached budget. The matrix used to list every project of the
+           year, so its TOTAL could differ from the page's "used" figure. */
+        const { summary, budget, gpb } = await computeYearBudgetSummary(year);
         /* Plan fields only — no event/accomplishment populate is needed. */
-        const projects = await Project.find({ year }).lean();
+        const found = await Project.find(yearProjectsMatch(gpb, year)).lean();
+        /* In the GPB's own order, as on the GPB page. */
+        const position = new Map(
+          (gpb?.projects || []).map((id, i) => [String(id), i]),
+        );
+        const projects = gpb
+          ? [...found].sort(
+              (a, b) =>
+                (position.get(String(a._id)) ?? 0) -
+                (position.get(String(b._id)) ?? 0),
+            )
+          : found;
         if (!projects || projects.length === 0) {
           return {
             __empty: true,
             message: `No GAD projects found for AY ${year}.`,
           };
         }
-
-        const gpb = await GPB.findOne({ year }).populate("gaaBudgetId").lean();
 
         const orderedProjects = [...projects]
           .map((project, originalIndex) => ({ project, originalIndex }))
@@ -166,14 +181,9 @@ export async function GET(req) {
         const M = 10;
         const usableWidth = pageWidth - 2 * M;
 
-        const totalBudget = orderedProjects.reduce(
-          (s, p) => s + (Number(fieldValue(p.gad_budget)) || 0),
-          0,
-        );
-        const gaa = gpb?.gaaBudgetId || null;
-        const totalGAA = Number(gaa?.totalGAA) || 0;
-        const totalGAADisplay = gaa
-          ? totalGAA.toLocaleString("en-PH", { minimumFractionDigits: 2 })
+        const totalBudget = summary.usedBudget;
+        const totalGAADisplay = budget
+          ? formatAmount(budget.totalGAA, "To follow")
           : "To follow";
 
         let cursorY = 14;

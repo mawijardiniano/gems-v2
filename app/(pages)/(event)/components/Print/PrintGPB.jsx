@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toOfficeArray } from "@/data/lib/colleges";
 import { escapeHtml } from "@/data/lib/escapeHtml";
+import { formatAmount } from "@/data/lib/money";
 import {
   SIGNATORIES_SETTING_KEY,
   SIGNATORY_BLANK,
@@ -51,6 +52,10 @@ const activityCellHtml = (title, description) =>
 
 export default function PrintGPB({
   totalGAA,
+  /* The plan's GAD budget total — the "used" figure from the year's budget
+     summary, so the print matches the page's cards and the matrix PDF. When
+     not given, the printed projects are summed. */
+  totalGadBudget,
   budgetYear,
   projects,
   year,
@@ -106,18 +111,9 @@ export default function PrintGPB({
   }, [year]);
 
   const handlePrintProjects = () => {
-    let totalGAAFormatted = "";
-    if (typeof totalGAA === "number" && !isNaN(totalGAA)) {
-      totalGAAFormatted = totalGAA.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-      });
-    } else if (typeof totalGAA === "string" && !isNaN(Number(totalGAA))) {
-      totalGAAFormatted = Number(totalGAA).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-      });
-    } else {
-      totalGAAFormatted = "To follow";
-    }
+    /* Amounts print with two decimals in en-PH, like every other screen
+       (data/lib/money.js); they used to follow the browser's locale. */
+    const totalGAAFormatted = formatAmount(totalGAA, "To follow");
 
     /* Every text field is HTML-escaped here, once, because the rows below are
        interpolated into an HTML string written into a same-origin iframe. A
@@ -182,6 +178,18 @@ export default function PrintGPB({
       })
       .map((entry) => entry.project);
 
+    const planTotal =
+      totalGadBudget !== null &&
+      totalGadBudget !== undefined &&
+      Number.isFinite(Number(totalGadBudget))
+        ? Number(totalGadBudget)
+        : Math.round(
+            orderedProjects.reduce(
+              (sum, p) => sum + (Number(p.gad_budget) || 0),
+              0,
+            ) * 100,
+          ) / 100;
+
     const html = `
       <html><head><title>Projects List</title>
       <style>
@@ -211,6 +219,7 @@ export default function PrintGPB({
         .date {width:200px}
         .gad-activity-title { display: block; }
         .gad-activity-description { display: block; margin-top: 3px; }
+        .total-row td { font-weight: bold; background: #f8f8f8; }
       </style></head><body>
       <div class="gad-report-header">
         <h4>ANNUAL GENDER AND DEVELOPMENT (GAD) PLAN AND BUDGET</h4>
@@ -264,16 +273,7 @@ export default function PrintGPB({
                 perfArr.length,
                 1,
               );
-              let gadBudgetFormatted = "";
-              if (
-                !isNaN(Number(project.gad_budget)) &&
-                project.gad_budget !== ""
-              ) {
-                gadBudgetFormatted = Number(project.gad_budget).toLocaleString(
-                  undefined,
-                  { minimumFractionDigits: 2 },
-                );
-              }
+              const gadBudgetFormatted = formatAmount(project.gad_budget);
               const sectionHeader = shouldShowTypeHeader
                 ? `<tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>`
                 : "";
@@ -333,6 +333,11 @@ export default function PrintGPB({
               return `${sectionHeader}${projectRows}`;
             })
             .join("")}
+          <tr class="total-row">
+            <td colspan="8" style="text-align:right">TOTAL</td>
+            <td>${formatAmount(planTotal, "0.00")}</td>
+            <td></td><td></td>
+          </tr>
         </tbody>
 
     

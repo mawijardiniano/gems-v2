@@ -114,6 +114,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
         gpbStatus={gpbStatus}
         projects={projects}
         totalGAA={gpb.totalGAA}
+        /* The same "used" figure as the budget cards. */
+        totalGadBudget={budgetSummary?.usedBudget}
         onBack={() => router.push(backPath)}
         onViewScannedCopy={viewer.openViewer}
       />

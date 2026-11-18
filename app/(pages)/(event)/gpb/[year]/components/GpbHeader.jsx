@@ -27,6 +27,7 @@ export default function GpbHeader({
   gpbStatus,
   projects,
   totalGAA,
+  totalGadBudget,
   onBack,
   onViewScannedCopy,
 }) {
@@ -78,6 +79,7 @@ export default function GpbHeader({
 
         <PrintGPB
           totalGAA={totalGAA}
+          totalGadBudget={totalGadBudget}
           budgetYear={year}
           projects={projects}
           /* The signatory block is keyed by the GPB's academic year. Without
