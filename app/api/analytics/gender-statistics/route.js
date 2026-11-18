@@ -460,9 +460,18 @@ export async function GET(req) {
       url.searchParams.get("type") === "employees" ? "employees" : "students";
     /* Multi-select filters arrive comma-joined (e.g. "1st,2nd"); single values
        still parse to a one-item list so old callers keep working. */
-    const campuses = parseListParam(url.searchParams.get("campus"));
+    /* Campus and course live in `academic_information`, which only students
+       have — `employment_information` carries neither. For employees they
+       could only ever match nothing, so they are ignored (and kept out of the
+       cache key) rather than turning the page empty. */
+    const isStudentRequest = type === "students";
+    const campuses = isStudentRequest
+      ? parseListParam(url.searchParams.get("campus"))
+      : [];
     const colleges = parseListParam(url.searchParams.get("college"));
-    const courses = parseListParam(url.searchParams.get("course"));
+    const courses = isStudentRequest
+      ? parseListParam(url.searchParams.get("course"))
+      : [];
     const semesters = parseListParam(url.searchParams.get("semester"));
     const yearLevels = parseListParam(url.searchParams.get("year_level"));
     const personnelTypes = parseListParam(
