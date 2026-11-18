@@ -1,4 +1,21 @@
 import { ageGroupOf, ageGroupOptions, AGE_GROUP_ORDER } from "./ageGroups.js";
+import {
+  sexOf,
+  emptyCounts,
+  addCounts,
+  SEXES,
+  toList,
+  activeFilterCount,
+  uniqueFieldOptions,
+  GENDER_IDENTITY_ORDER,
+  genderIdentityRows,
+  pct,
+  groupBy,
+} from "./statsCore.js";
+
+/* Shared counting helpers live in statsCore.js; re-exported so importers of
+   this module keep working unchanged. */
+export { sexOf, activeFilterCount, uniqueFieldOptions, GENDER_IDENTITY_ORDER };
 
 export const LIVE_PERSONNEL_TYPES = ["Faculty", "Non-teaching Personnel"];
 
@@ -69,48 +86,6 @@ export const ACADEMIC_RANK_ORDER = [
   "Professor",
 ];
 
-const SEXES = ["Female", "Male"];
-
-export function sexOf(record) {
-  return SEXES.includes(record?.sex) ? record.sex : "Female";
-}
-
-function emptyCounts() {
-  return { Female: 0, Male: 0, total: 0 };
-}
-
-function addCounts(bucket, sex) {
-  bucket[sex] = (bucket[sex] || 0) + 1;
-  bucket.total += 1;
-}
-
-function orderIndex(order, value) {
-  const idx = order.indexOf(value);
-  return idx === -1 ? order.length : idx;
-}
-
-function toList(countsObj, nameKey, order) {
-  const rows = Object.entries(countsObj).map(([name, c]) => ({
-    [nameKey]: name,
-    Female: c.Female || 0,
-    Male: c.Male || 0,
-    total: c.total || 0,
-    pctFemale: c.total ? Math.round(((c.Female || 0) / c.total) * 1000) / 10 : 0,
-  }));
-
-  if (order) {
-    rows.sort(
-      (a, b) =>
-        orderIndex(order, a[nameKey]) - orderIndex(order, b[nameKey]) ||
-        b.total - a.total,
-    );
-  } else {
-    rows.sort((a, b) => b.total - a.total);
-  }
-  return rows;
-}
-
-
 export const EMPTY_EMPLOYEE_FILTERS = {
   schoolYear: [],
   personnelType: [],
@@ -122,12 +97,6 @@ export const EMPTY_EMPLOYEE_FILTERS = {
   ageGroups: [],
   sexes: [],
 };
-
-export function activeFilterCount(filters = {}) {
-  return Object.values(filters).filter((value) =>
-    Array.isArray(value) ? value.length > 0 : Boolean(value),
-  ).length;
-}
 
 export function filterEmployeeRecords(records = [], filters = {}) {
   /* Personnel type / office / department / appointment / position accept either
@@ -180,18 +149,6 @@ export function filterEmployeeRecords(records = [], filters = {}) {
   });
 }
 
-export function uniqueFieldOptions(records = [], key) {
-  const seen = new Set();
-  const values = [];
-  records.forEach((record) => {
-    const value = record?.[key];
-    if (!value || seen.has(value)) return;
-    seen.add(value);
-    values.push(value);
-  });
-  return values;
-}
-
 export function departmentOptions(records = [], offices = []) {
   /* Scoped to the union of the selected offices; empty (or legacy "") means
      all offices. Accepts a single office string for backward compat. */
@@ -208,8 +165,6 @@ export function departmentOptions(records = [], offices = []) {
   );
 }
 
-
-
 const DEMOGRAPHIC_ROWS = [
   { label: "Scholar", test: (r) => r?.scholar === true },
   { label: "Person with Disability (PWD)", test: (r) => r?.pwd === true },
@@ -219,38 +174,6 @@ const DEMOGRAPHIC_ROWS = [
   { label: "Middle Income", test: (r) => r?.income === "Middle Income" },
   { label: "High Income", test: (r) => r?.income === "High Income" },
 ];
-
-export const GENDER_IDENTITY_ORDER = ["Male", "Female", "LGBTQIA+"];
-
-function genderIdentityRows(records = []) {
-  const counts = new Map(GENDER_IDENTITY_ORDER.map((name) => [name, 0]));
-  let unspecified = 0;
-  records.forEach((record) => {
-    const value = record?.genderIdentity;
-    if (counts.has(value)) counts.set(value, counts.get(value) + 1);
-    else unspecified += 1;
-  });
-  const rows = GENDER_IDENTITY_ORDER.map((name) => ({
-    name,
-    value: counts.get(name),
-  }));
-  if (unspecified > 0) rows.push({ name: "Not specified", value: unspecified });
-  return rows;
-}
-
-const pct = (part, whole) =>
-  whole ? Math.round((part / whole) * 1000) / 10 : 0;
-
-function groupBy(records, keyFn, nameKey, order) {
-  const counts = {};
-  records.forEach((record) => {
-    const key = keyFn(record) || "Unspecified";
-    if (!counts[key]) counts[key] = emptyCounts();
-    addCounts(counts[key], sexOf(record));
-  });
-  return toList(counts, nameKey, order);
-}
-
 
 /**
  * Build the same response shape as
