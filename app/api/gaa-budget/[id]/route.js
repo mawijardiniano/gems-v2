@@ -5,36 +5,77 @@ import GPB from "@/models/gpb";
 import { connectDB } from "@/data/lib/db";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
+import { linkBudgetToMatchingGpb } from "@/data/lib/budgetLinking";
+import {
+  GPB_LOCKED_MESSAGE,
+  canViewProjectDetails,
+  isGpbLocked,
+  isGpbManagerRole,
+} from "@/data/lib/projectAccess";
+import { parseBudgetInput } from "@/data/lib/gaaBudgetInput";
+
+const notFound = () =>
+  NextResponse.json({ error: "Not found" }, { status: 404 });
+
+const forbidden = (action) =>
+  NextResponse.json(
+    { error: `You are not allowed to ${action} GAA budgets.` },
+    { status: 403 },
+  );
+
+/* A budget attached to an approved GPB is part of that plan and is locked
+   with it (see data/lib/projectAccess.js). */
+async function linkedToApprovedGpb(budgetId) {
+  const gpbs = await GPB.find({ gaaBudgetId: budgetId })
+    .select("status_of_gpb.status")
+    .lean();
+  return gpbs.some(isGpbLocked);
+}
 
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+  if (!canViewProjectDetails(user.role)) return forbidden("view");
   await connectDB();
   const { id } = await params;
+  if (!mongoose.isValidObjectId(id)) return notFound();
   try {
-    const budget = await GAABudget.findById(id);
-    if (!budget)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const budget = await GAABudget.findById(id).lean();
+    if (!budget) return notFound();
     return NextResponse.json({ success: true, data: budget });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("GET /api/gaa-budget/[id] failed:", err);
+    return NextResponse.json(
+      { error: "Unable to load the GAA budget." },
+      { status: 500 },
+    );
   }
 }
 
 export async function PUT(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+  if (!isGpbManagerRole(user.role)) return forbidden("edit");
   await connectDB();
   const { id } = await params;
-  const body = await req.json();
+  if (!mongoose.isValidObjectId(id)) return notFound();
+
+  const parsed = parseBudgetInput(await req.json().catch(() => null));
+  if (parsed.error) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  const { year: nextYear, totalGAA, gadPercent } = parsed;
+
   try {
     const budget = await GAABudget.findById(id);
-    if (!budget) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!budget) return notFound();
+
+    if (await linkedToApprovedGpb(id)) {
+      return NextResponse.json({ error: GPB_LOCKED_MESSAGE }, { status: 409 });
     }
 
-    const nextYear = Number(body.year);
-    if (Number.isFinite(nextYear) && nextYear !== Number(budget.year)) {
+    const yearChanged = nextYear !== Number(budget.year);
+    if (yearChanged) {
       const linkedGpbs = await GPB.find({ gaaBudgetId: id }).select("year");
       const mismatched = linkedGpbs.filter((g) => Number(g.year) !== nextYear);
       if (mismatched.length > 0) {
@@ -49,33 +90,53 @@ export async function PUT(req, { params }) {
       }
     }
 
-    budget.year = body.year;
-    budget.totalGAA = body.totalGAA;
-    budget.gadPercent = body.gadPercent;
+    budget.year = nextYear;
+    budget.totalGAA = totalGAA;
+    budget.gadPercent = gadPercent;
     await budget.save();
+
+    /* Same as on create: a budget now covering a new year attaches to that
+       year's GPB if it has none. */
+    if (yearChanged) await linkBudgetToMatchingGpb(GPB, budget);
+
     await logActivity({
       req,
       action: "GAA_BUDGET_UPDATE",
-      description: `GAA Budget updated for year ${body.year}`,
+      description: `GAA Budget updated for year ${nextYear}`,
       resource_type: "gaa_budget",
       resource_id: id,
       severity: "info",
     });
     return NextResponse.json({ success: true, data: budget });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err?.code === 11000) {
+      return NextResponse.json(
+        { error: `A GAA Budget for year ${nextYear} already exists.` },
+        { status: 400 },
+      );
+    }
+    console.error("PUT /api/gaa-budget/[id] failed:", err);
+    return NextResponse.json(
+      { error: "Unable to update the GAA budget." },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+  if (!isGpbManagerRole(user.role)) return forbidden("delete");
   await connectDB();
   const { id } = await params;
+  if (!mongoose.isValidObjectId(id)) return notFound();
   try {
+    if (await linkedToApprovedGpb(id)) {
+      return NextResponse.json({ error: GPB_LOCKED_MESSAGE }, { status: 409 });
+    }
+
     const deleted = await GAABudget.findByIdAndDelete(id);
-    if (!deleted)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!deleted) return notFound();
 
     await GPB.updateMany({ gaaBudgetId: id }, { $set: { gaaBudgetId: null } });
 
@@ -90,6 +151,10 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("DELETE /api/gaa-budget/[id] failed:", err);
+    return NextResponse.json(
+      { error: "Unable to delete the GAA budget." },
+      { status: 500 },
+    );
   }
 }

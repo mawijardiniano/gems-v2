@@ -8,6 +8,12 @@ import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
+import AcademicProject from "@/models/academicProject";
+import ResearchExtensionProject from "@/models/researchExtensionProject";
+import {
+  MODULE_EDITOR_ROLES,
+  isProjectManagerRole,
+} from "@/data/lib/projectAccess";
 import { getS3Client, storageBucket, buildObjectUrl } from "@/data/lib/storage";
 
 const s3 = getS3Client;
@@ -72,23 +78,29 @@ const GPB_MANAGEMENT_ROLES = [
   "gad focal person",
 ];
 
-async function canDeleteLegacyKey(key, userId, canManageGPB) {
+/**
+ * Whether `user` may delete a stored file that is not in their own upload
+ * folder: only when the file is attached to at least one record and the
+ * caller may manage every record it is attached to.
+ *
+ * This replaces a check that allowed the delete whenever *no one else's*
+ * record referenced the key. That check never looked at Academic or R&E
+ * projects, so anyone could delete their evidence and milestone proofs, and it
+ * let anyone delete another user's unattached uploads.
+ */
+async function canDeleteReferencedKey(key, user, canManageGPB) {
   await connectDB();
 
-  const [foreignProject, foreignEvent, foreignReport, gpbReference] =
+  const fileQuery = {
+    $or: [{ "expenditure_evidence.key": key }, { "milestones.proofs.key": key }],
+  };
+  const [gadProjects, academic, research, events, reports, gpbRef] =
     await Promise.all([
-      Project.exists({
-        $or: [
-          { "expenditure_evidence.key": key },
-          { "milestones.proofs.key": key },
-        ],
-        createdBy: { $ne: userId },
-      }),
-      Event.exists({
-        "event_poster.key": key,
-        created_by: { $ne: userId },
-      }),
-      AccomplishmentReport.exists({
+      Project.find(fileQuery).select("createdBy").lean(),
+      AcademicProject.find(fileQuery).select("createdBy").lean(),
+      ResearchExtensionProject.find(fileQuery).select("createdBy").lean(),
+      Event.find({ "event_poster.key": key }).select("created_by").lean(),
+      AccomplishmentReport.find({
         $or: [
           { "office_memorandum.key": key },
           { "activity_design.key": key },
@@ -96,18 +108,29 @@ async function canDeleteLegacyKey(key, userId, canManageGPB) {
           { photos: { $elemMatch: { key } } },
           { other_attachments: { $elemMatch: { key } } },
         ],
-        submitted_by: { $ne: userId },
-      }),
+      })
+        .select("submitted_by")
+        .lean(),
       GPB.exists({ "status_of_gpb.scanned_copy.key": key }),
     ]);
 
-  if (foreignProject || foreignEvent || foreignReport) {
-    return false;
-  }
-  if (gpbReference && !canManageGPB) {
-    return false;
-  }
-  return true;
+  const me = String(user?._id);
+  const role = normalizeRole(user?.role);
+  const owns = (id) => String(id) === me;
+
+  const checks = [
+    ...gadProjects.map(
+      (p) => owns(p.createdBy) || isProjectManagerRole(user?.role),
+    ),
+    ...[...academic, ...research].map(
+      (p) => owns(p.createdBy) || MODULE_EDITOR_ROLES.includes(role),
+    ),
+    ...events.map((e) => owns(e.created_by)),
+    ...reports.map((r) => owns(r.submitted_by)),
+    ...(gpbRef ? [canManageGPB] : []),
+  ];
+
+  return checks.length > 0 && checks.every(Boolean);
 }
 
 function isKeyOwnedByCaller(key, user) {
@@ -118,30 +141,6 @@ function isKeyOwnedByCaller(key, user) {
   return segments[1] === String(user._id);
 }
 
-/* Milestone proofs are often uploaded by the project creator but reviewed and
-   corrected by a GAD Focal Person (or vice versa), so deleting one is
-   authorised by project ownership/role rather than upload ownership. */
-const MILESTONE_PROOF_EDITOR_ROLES = ["gad focal person", "admin"];
-
-async function canDeleteMilestoneProof(key, user) {
-  if (!key.startsWith("milestone-proof/")) return false;
-
-  await connectDB();
-
-  const owners = await Project.find({ "milestones.proofs.key": key })
-    .select("createdBy")
-    .lean();
-
-  if (owners.length === 0) return false;
-
-  if (MILESTONE_PROOF_EDITOR_ROLES.includes(normalizeRole(user?.role))) {
-    return true;
-  }
-
-  return owners.every(
-    (project) => String(project.createdBy) === String(user?._id),
-  );
-}
 
 function isSafeKey(key) {
   return Boolean(key) && !key.startsWith("/") && !key.split("/").includes("..");
@@ -238,13 +237,9 @@ export async function DELETE(req) {
     let allowed = isKeyOwnedByCaller(normalizedKey, user);
 
     if (!allowed) {
-      allowed = await canDeleteMilestoneProof(normalizedKey, user);
-    }
-
-    if (!allowed) {
-      allowed = await canDeleteLegacyKey(
+      allowed = await canDeleteReferencedKey(
         normalizedKey,
-        user._id,
+        user,
         GPB_MANAGEMENT_ROLES.includes(normalizeRole(user?.role)),
       );
     }

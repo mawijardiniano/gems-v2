@@ -2,14 +2,9 @@
 
 /* Guest fields come from the public, no-login /attend form, so everything
    interpolated into the print/PDF HTML is escaped to keep it as text. */
-export function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "@/data/lib/escapeHtml";
+
+export { escapeHtml };
 
 /* The paper form has one shared "Extension / Research" box, so either type
    ticks it. */

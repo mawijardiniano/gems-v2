@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   FaCheck,
   FaChevronLeft,
@@ -10,7 +11,12 @@ import {
   FaSpinner,
   FaTimes,
 } from "react-icons/fa";
-import { FieldRenderer, resolveOptions } from "./ProjectFormFields";
+import {
+  FieldRenderer,
+  listToText,
+  resolveOptions,
+  textToList,
+} from "./ProjectFormFields";
 
 /*
  * Multi-step "New Project" wizard for the office-managed project modules.
@@ -210,6 +216,10 @@ export default function ProjectCreateModal({
   const [submitError, setSubmitError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  /* Escape or the backdrop close the wizard, but never in the middle of a
+     save (the request would finish with the modal gone). */
+  useEscapeKey(!saving, onClose);
+
   const isReview = stepIndex === reviewIndex;
   const currentStep = isReview ? null : groupedSteps[stepIndex];
 
@@ -281,10 +291,7 @@ export default function ProjectCreateModal({
       const raw = values[field.key];
 
       if (field.type === "list") {
-        payload[field.key] = String(raw ?? "")
-          .split(/[,\n]/)
-          .map((item) => item.trim())
-          .filter(Boolean);
+        payload[field.key] = textToList(raw);
         continue;
       }
 
@@ -339,14 +346,22 @@ export default function ProjectCreateModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50"
-        onClick={onClose}
+        onClick={() => !saving && onClose()}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl">
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-create-title"
+      >
         <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-2xl">
           <div>
-            <h3 className="text-base font-bold text-gray-900">
-              New {config.title} Project
+            <h3 id="project-create-title" className="text-base font-bold text-gray-900">
+              {/* config.title is plural ("Academic Projects"); this read
+                  "New Academic Projects Project". */}
+              New {String(config.title || "").replace(/\s*Projects?$/i, "")}{" "}
+              Project
             </h3>
             <p className="text-[11px] text-gray-400 mt-0.5">
               Fields marked <span className="text-rose-500">*</span> are required.

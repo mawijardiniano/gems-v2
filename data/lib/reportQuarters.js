@@ -1,9 +1,12 @@
 /* Shared helpers for the downloadable PDF reports (jsPDF + autoTable).
 
-   Quarter logic reads the UTC calendar parts on purpose: milestone and event
-   dates are stored at UTC midnight (the forms send date-only values), so a
-   server that is not on UTC would otherwise shift a record into the
-   neighbouring quarter or render it one day early. */
+   Dates are read as Manila calendar days (data/lib/appTime.js), never in the
+   server's zone. Older milestone and event dates were stored at UTC midnight
+   and newer ones at Manila midnight; reading UTC parts showed the newer ones a
+   day early (and could move a record into the previous quarter), while the
+   Manila day of both is the day that was picked. */
+
+import { APP_UTC_OFFSET_MS, appParts } from "./appTime.js";
 
 export const M = 10;
 
@@ -23,9 +26,10 @@ export function toDate(value) {
 export function fmtDate(value) {
   const date = toDate(value);
   if (!date) return "—";
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${month}/${day}/${date.getUTCFullYear()}`;
+  const p = appParts(date);
+  const month = String(p.month).padStart(2, "0");
+  const day = String(p.day).padStart(2, "0");
+  return `${month}/${day}/${p.year}`;
 }
 
 /* Calendar quarter (1-4) of a date by month only — Q1 Jan-Mar ... Q4 Oct-Dec.
@@ -34,12 +38,15 @@ export function fmtDate(value) {
 export function dateQuarter(value) {
   const date = toDate(value);
   if (!date) return null;
-  return Math.floor(date.getUTCMonth() / 3) + 1;
+  return Math.floor((appParts(date).month - 1) / 3) + 1;
 }
 
 /* Last day of a quarter, used to tell on-time completions from late ones. */
 export function quarterEndDate(year, quarter) {
-  return new Date(Date.UTC(year, quarter * 3, 0, 23, 59, 59, 999));
+  /* 23:59:59.999 Manila on the quarter's last day. */
+  return new Date(
+    Date.UTC(year, quarter * 3, 0, 23, 59, 59, 999) - APP_UTC_OFFSET_MS,
+  );
 }
 
 export function academicYearLabel(year) {
@@ -66,10 +73,10 @@ export const SYSTEM_FOOTER_TEXT =
   "System-generated via GEMS";
 
 export function drawFooter(doc, pageWidth, pageHeight) {
-  const now = new Date();
-  const reportDate = `${now.getMonth() + 1}-${now.getDate()}-${String(
-    now.getFullYear(),
-  ).slice(-2)}`;
+  /* Manila's date: on a UTC server, reports made 00:00–08:00 Manila time
+     carried yesterday's date. */
+  const now = appParts(new Date());
+  const reportDate = `${now.month}-${now.day}-${String(now.year).slice(-2)}`;
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);

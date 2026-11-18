@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   FaExclamationTriangle,
   FaSpinner,
@@ -27,6 +28,8 @@ export default function ProjectDeleteModal({
   onDeleted,
 }) {
   const [deleting, setDeleting] = useState(false);
+
+  useEscapeKey(!deleting, onClose);
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
@@ -57,16 +60,21 @@ export default function ProjectDeleteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50"
-        onClick={onClose}
+        onClick={() => !deleting && onClose()}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6 text-center">
+      <div
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6 text-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-delete-title"
+      >
         <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
           <FaTrash className="text-2xl text-red-500" />
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 id="project-delete-title" className="text-xl font-bold text-gray-900">
             Delete this project?
           </h2>
           <p className="text-sm text-gray-600 break-words">

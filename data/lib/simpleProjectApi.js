@@ -1,6 +1,7 @@
 import { parseGanttActivities } from "./ganttParse.js";
 
 import { NextResponse } from "next/server";
+import { parseAppDate } from "@/data/lib/appTime.js";
 import { connectDB } from "@/data/lib/db.js";
 import { requireAuth } from "@/data/lib/auth.js";
 import { logActivity } from "@/data/lib/activityLog.js";
@@ -15,8 +16,18 @@ import {
   hydrateProjectAttendanceSex,
 } from "@/data/lib/accomplishmentSummary.js";
 import UserAuth from "@/models/user";
-import "@/models/event";
+import Event from "@/models/event";
 import "@/models/profile";
+import mongoose from "mongoose";
+import { deleteFileFromBucket } from "@/data/lib/delete.js";
+import {
+  MODULE_EDITOR_ROLES,
+  canViewProjectDetails,
+} from "@/data/lib/projectAccess.js";
+import {
+  collectProjectFileKeys,
+  findForeignProjectKey,
+} from "@/data/lib/projectFileKeys.js";
 
 /*
  * Shared route handlers for the office-managed project modules
@@ -35,14 +46,47 @@ const MAX_REF_ATTEMPTS = 3;
 
 /* Roles (besides the creator) allowed to manage schedule, status, milestones
    and approval details on a module project. */
-const DEFAULT_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
+const DEFAULT_EDITOR_ROLES = MODULE_EDITOR_ROLES;
+
+const MAX_COMMENT_LENGTH = 2000;
+
+const notFound = () => Response.json({ error: "Not found" }, { status: 404 });
+
+const isCreatorOf = (user, project) =>
+  Boolean(user && project?.createdBy) &&
+  String(project.createdBy?._id ?? project.createdBy) === String(user._id);
+
+/**
+ * Validates a client-supplied list of event ids before it is linked to a
+ * project: each must be a real event, and — unless the caller has an editor
+ * role — one the caller created. Unchecked, anyone could attach other
+ * colleges' events and inflate the generated accomplishment.
+ * @returns {Promise<{ ids: string[] } | { error: string }>}
+ */
+async function validateEventLinks(input, user, isEditor) {
+  if (!Array.isArray(input)) return { ids: [] };
+  const ids = [...new Set(input.filter(Boolean).map(String))];
+  if (ids.some((id) => !mongoose.isValidObjectId(id))) {
+    return { error: "Invalid event id" };
+  }
+  if (ids.length === 0) return { ids };
+  const found = await Event.find({ _id: { $in: ids } })
+    .select("created_by")
+    .lean();
+  if (found.length !== ids.length) return { error: "An event was not found" };
+  if (
+    !isEditor &&
+    found.some((evt) => String(evt.created_by) !== String(user._id))
+  ) {
+    return { error: "You can only link events you created" };
+  }
+  return { ids };
+}
 
 /** Returns the Date for a valid input, null for empty input, or undefined when invalid. */
-const parseDateInput = (value) => {
-  if (value === null || value === undefined || value === "") return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date;
-};
+/* "YYYY-MM-DD" from a form is that Manila day (data/lib/appTime.js); it used
+   to be stored as UTC midnight. */
+const parseDateInput = parseAppDate;
 
 /** Unwraps `{ value }` field shapes coming from the forms. */
 const unwrap = (value) =>
@@ -265,8 +309,17 @@ export function createCollectionHandlers({
   buildExtra,
 }) {
   const GET = async (req) => {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+
+    /* Budgets, actuals and attendance of linked events are for the roles
+       with the project pages; this list reached every signed-in account. */
+    if (!canViewProjectDetails(user.role)) {
+      return Response.json(
+        { error: "You are not allowed to view these projects." },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 
@@ -277,12 +330,24 @@ export function createCollectionHandlers({
   };
 
   const POST = async (req) => {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+
+    /* The same roles the page offers "New project" to. */
+    const isEditor = DEFAULT_EDITOR_ROLES.includes(normalizeRole(user.role));
+    if (!isEditor) {
+      return Response.json(
+        { message: `You are not allowed to add ${label} projects.` },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return Response.json({ message: "Invalid request body" }, { status: 400 });
+    }
     const year = Number(body.year);
 
     if (!Number.isFinite(year) || !Number.isInteger(year)) {
@@ -320,7 +385,8 @@ export function createCollectionHandlers({
       }
     }
 
-    const actorId = body.userId || null;
+    /* The creator is whoever is signed in — not a userId from the body. */
+    const actorId = user._id;
     const data = {
       year,
       reference_number: providedRef || null,
@@ -390,17 +456,11 @@ export function createCollectionHandlers({
     }
 
     if (body.events !== undefined) {
-      data.events = Array.isArray(body.events)
-        ? body.events.filter(Boolean)
-        : [];
-    }
-
-    if (actorId) {
-      const actorExists = await UserAuth.exists({ _id: actorId });
-      if (!actorExists) {
-        data.createdBy = null;
-        data.lastUpdatedBy = null;
+      const links = await validateEventLinks(body.events, user, isEditor);
+      if (links.error) {
+        return Response.json({ message: links.error }, { status: 400 });
       }
+      data.events = links.ids;
     }
 
     /* Auto-assigned numbers can collide when two projects are created at the
@@ -489,17 +549,26 @@ export function createItemHandlers({
   editorRoles = DEFAULT_EDITOR_ROLES,
 }) {
   const GET = async (req, { params }) => {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) return notFound();
+
+    const basic = await model.findById(id).select("createdBy").lean();
+    if (!basic) return notFound();
+    if (!canViewProjectDetails(user.role) && !isCreatorOf(user, basic)) {
+      return Response.json(
+        { error: "You are not allowed to view this project." },
+        { status: 403 },
+      );
+    }
+
     const project = await buildPopulate(model.findById(id), populatePaths);
 
-    if (!project) {
-      return Response.json({ error: "Not found" }, { status: 404 });
-    }
+    if (!project) return notFound();
 
     return Response.json({ data: withGeneratedAccomplishment(project) });
   };
@@ -511,57 +580,37 @@ export function createItemHandlers({
     await connectDB();
 
     const { id } = await params;
-    const body = await req.json();
+    if (!mongoose.isValidObjectId(id)) return notFound();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return Response.json({ error: "Invalid request body" }, { status: 400 });
+    }
 
     try {
       const project = await model.findById(id);
 
-      if (!project) {
-        return Response.json({ error: "Not found" }, { status: 404 });
+      if (!project) return notFound();
+
+      /* Every change needs the creator or an editor role. Only schedule,
+         milestones, approval and actuals used to be checked; title, budget,
+         college and the Gantt chart were open to any signed-in account. */
+      const isEditorRole = editorRoles.includes(normalizeRole(user?.role));
+      if (!isCreatorOf(user, project) && !isEditorRole) {
+        return Response.json(
+          {
+            error: `Only the project creator or an authorized ${label} editor can change this project`,
+          },
+          { status: 403 },
+        );
       }
 
-      const touchesActuals =
-        body.actual_accomplishment !== undefined ||
-        body.actual_accomplishment_override !== undefined ||
-        body.actual_expenditures !== undefined ||
-        body.expenditure_evidence !== undefined;
-
-      if (touchesActuals) {
-        const creatorId = project.createdBy ? String(project.createdBy) : "";
-
-        if (!user || creatorId !== String(user._id)) {
-          return Response.json(
-            { error: "Only the project creator can edit actuals" },
-            { status: 403 },
-          );
-        }
-      }
-
-      const scheduleTouched =
-        body.start_date !== undefined ||
-        body.end_date !== undefined ||
-        body.project_status !== undefined;
-      const milestonesTouched = body.milestones !== undefined;
-      const approvalTouched =
-        body.approved_resolution_no !== undefined ||
-        body.other_details !== undefined;
-
-      if (scheduleTouched || milestonesTouched || approvalTouched) {
-        const creatorId = project.createdBy ? String(project.createdBy) : "";
-        const isCreator = !!user && creatorId === String(user._id);
-        const isEditorRole = editorRoles.includes(normalizeRole(user?.role));
-
-        if (!isCreator && !isEditorRole) {
-          let message = `Only the project creator or an authorized ${label} editor can update this project`;
-
-          if (approvalTouched && !scheduleTouched && !milestonesTouched) {
-            message = `Only the project creator or an authorized ${label} editor can update the approval details`;
-          } else if (milestonesTouched && !scheduleTouched) {
-            message = `Only the project creator or an authorized ${label} editor can manage milestones`;
-          }
-
-          return Response.json({ error: message }, { status: 403 });
-        }
+      /* Evidence and proof keys must be the caller's own uploads or already
+         on this project. */
+      if (findForeignProjectKey(body, { userId: user._id, existing: project })) {
+        return Response.json(
+          { error: "One of the attached files was not uploaded by you." },
+          { status: 400 },
+        );
       }
 
       for (const [field, kind] of Object.entries(fieldSpecs)) {
@@ -578,7 +627,12 @@ export function createItemHandlers({
         if (body[field] === undefined) continue;
 
         const value = String(unwrap(body[field]) ?? "").trim();
-        if (!value) continue;
+        /* An empty value clears an optional choice; it used to be skipped,
+           so the field could never be emptied once set. */
+        if (!value) {
+          project[field] = undefined;
+          continue;
+        }
 
         if (!enumFields[field].includes(value)) {
           return Response.json({ error: `Invalid ${field}` }, { status: 400 });
@@ -688,7 +742,14 @@ export function createItemHandlers({
       }
 
       if (body.actual_expenditures !== undefined) {
-        project.actual_expenditures = Number(body.actual_expenditures) || 0;
+        const spent = Number(body.actual_expenditures);
+        if (!Number.isFinite(spent) || spent < 0) {
+          return Response.json(
+            { error: "Actual expenditures must be zero or a positive amount" },
+            { status: 400 },
+          );
+        }
+        project.actual_expenditures = spent;
       }
 
       if (body.expenditure_evidence !== undefined) {
@@ -698,9 +759,11 @@ export function createItemHandlers({
       }
 
       if (body.events !== undefined) {
-        project.events = Array.isArray(body.events)
-          ? body.events.filter(Boolean)
-          : [];
+        const links = await validateEventLinks(body.events, user, isEditorRole);
+        if (links.error) {
+          return Response.json({ error: links.error }, { status: 400 });
+        }
+        project.events = links.ids;
       }
 
       /* Reference numbers are normally assigned automatically; this allows an
@@ -752,9 +815,11 @@ export function createItemHandlers({
       return Response.json({ data: withGeneratedAccomplishment(populated) });
     } catch (err) {
       console.error(`${actionPrefix}_UPDATE error:`, err);
+      const clientError =
+        err?.name === "ValidationError" || err?.name === "CastError";
       return Response.json(
-        { error: "Update failed", details: err.message },
-        { status: 500 },
+        { error: clientError ? "Invalid project data" : "Update failed" },
+        { status: clientError ? 400 : 500 },
       );
     }
   };
@@ -766,13 +831,12 @@ export function createItemHandlers({
     await connectDB();
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) return notFound();
 
     try {
       const project = await model.findById(id);
 
-      if (!project) {
-        return Response.json({ error: "Not found" }, { status: 404 });
-      }
+      if (!project) return notFound();
 
       /* Deleting is destructive — only the creator or an authorized editor. */
       const creatorId = project.createdBy ? String(project.createdBy) : "";
@@ -792,6 +856,16 @@ export function createItemHandlers({
          simply stop resolving to a project once it is gone. */
       const deleted = await model.findByIdAndDelete(id);
 
+      /* Its evidence and milestone proofs go with it; they used to stay in
+         storage with nothing pointing at them. */
+      for (const key of collectProjectFileKeys(deleted)) {
+        try {
+          await deleteFileFromBucket(key);
+        } catch (fileErr) {
+          console.error(`Failed to delete project file ${key}:`, fileErr);
+        }
+      }
+
       await logActivity({
         req,
         action: `${actionPrefix}_DELETE`,
@@ -805,10 +879,7 @@ export function createItemHandlers({
       return Response.json({ data: deleted });
     } catch (err) {
       console.error(`${actionPrefix}_DELETE error:`, err);
-      return Response.json(
-        { error: "Delete failed", details: err.message },
-        { status: 500 },
-      );
+      return Response.json({ error: "Delete failed" }, { status: 500 });
     }
   };
 
@@ -863,7 +934,11 @@ export function createCommentHandlers({
 
       return Response.json({ data: comments, byField });
     } catch (error) {
-      return Response.json({ message: error.message }, { status: 500 });
+      console.error(`${actionPrefix}_COMMENTS error:`, error);
+      return Response.json(
+        { message: "Unable to load comments." },
+        { status: 500 },
+      );
     }
   };
 
@@ -875,7 +950,12 @@ export function createCommentHandlers({
 
     try {
       const { id } = await params;
-      const { fields, field, message, type, userId } = await req.json();
+      if (!mongoose.isValidObjectId(id)) {
+        return Response.json({ message: "Project not found" }, { status: 404 });
+      }
+      const { fields, field, message: rawMessage, type } =
+        (await req.json().catch(() => null)) || {};
+      const message = String(rawMessage ?? "").trim();
 
       const rawFields = Array.isArray(fields)
         ? fields
@@ -888,11 +968,16 @@ export function createCommentHandlers({
       );
       const targetFields = cleanFields.length ? cleanFields : ["general"];
 
-      const actorId = userId || user?._id;
+      /* The author is whoever is signed in — a userId from the body let
+         anyone comment as somebody else. */
+      const actorId = user._id;
 
-      if (!message || !actorId) {
+      if (!message) {
+        return Response.json({ message: "A message is required" }, { status: 400 });
+      }
+      if (message.length > MAX_COMMENT_LENGTH) {
         return Response.json(
-          { message: "userId and message are required" },
+          { message: `Comments are limited to ${MAX_COMMENT_LENGTH} characters` },
           { status: 400 },
         );
       }
@@ -903,14 +988,14 @@ export function createCommentHandlers({
         return Response.json({ message: "Project not found" }, { status: 404 });
       }
 
-      const actor = await UserAuth.findById(
-        actorId,
-        "_id role username",
-      ).lean();
-
-      if (!actor) {
-        return Response.json({ message: "User not found" }, { status: 404 });
+      if (!canViewProjectDetails(user.role) && !isCreatorOf(user, project)) {
+        return Response.json(
+          { message: "You are not allowed to comment on this project." },
+          { status: 403 },
+        );
       }
+
+      const actor = { _id: user._id, role: user.role, username: user.username };
 
       const now = new Date();
 
@@ -941,12 +1026,15 @@ export function createCommentHandlers({
       });
     } catch (error) {
       console.error(`${actionPrefix}_COMMENT error:`, error);
-      return Response.json({ message: error.message }, { status: 500 });
+      return Response.json(
+        { message: "Unable to add the comment." },
+        { status: 500 },
+      );
     }
   };
 
   const DELETE = async (req, { params }) => {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -956,21 +1044,49 @@ export function createCommentHandlers({
       const { searchParams } = new URL(req.url);
       const commentId = searchParams.get("commentId");
 
-      if (!commentId) {
+      if (
+        !mongoose.isValidObjectId(id) ||
+        !commentId ||
+        !mongoose.isValidObjectId(commentId)
+      ) {
         return Response.json({ message: "Missing commentId" }, { status: 400 });
       }
 
-      const project = await model.findById(id);
+      const project = await model
+        .findById(id)
+        .select("comments._id comments.userId")
+        .lean();
 
       if (!project) {
         return Response.json({ message: "Project not found" }, { status: 404 });
       }
 
-      project.comments = (project.comments || []).filter(
-        (c) => c._id.toString() !== commentId,
+      const comment = (project.comments || []).find(
+        (c) => String(c._id) === commentId,
       );
-      project.markModified("comments");
-      await project.save();
+      if (!comment) {
+        return Response.json({ message: "Comment not found" }, { status: 404 });
+      }
+
+      /* Its author or an editor role — anyone could delete any comment. */
+      if (
+        String(comment.userId) !== String(user._id) &&
+        !DEFAULT_EDITOR_ROLES.includes(normalizeRole(user.role))
+      ) {
+        return Response.json(
+          { message: "You can only delete your own comments." },
+          { status: 403 },
+        );
+      }
+
+      /* $pull removes just this comment, so a concurrent one is kept. */
+      const updated = await model
+        .findByIdAndUpdate(
+          id,
+          { $pull: { comments: { _id: comment._id } } },
+          { new: true },
+        )
+        .select("comments");
 
       await logActivity({
         req,
@@ -982,9 +1098,13 @@ export function createCommentHandlers({
         metadata: { commentId },
       });
 
-      return Response.json({ success: true, data: project.comments });
+      return Response.json({ success: true, data: updated?.comments || [] });
     } catch (error) {
-      return Response.json({ message: error.message }, { status: 500 });
+      console.error(`${actionPrefix}_COMMENT_DELETE error:`, error);
+      return Response.json(
+        { message: "Unable to delete the comment." },
+        { status: 500 },
+      );
     }
   };
 

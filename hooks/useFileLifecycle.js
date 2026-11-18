@@ -1,18 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-
-async function deleteStoredFile(key) {
-  try {
-    await fetch("/api/upload", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key }),
-    });
-  } catch (err) {
-    console.warn("useFileLifecycle: failed to delete file:", key, err);
-  }
-}
+import { deleteUploadedFile as deleteStoredFile } from "@/data/lib/uploadClient";
 
 const toKeySet = (keys) => new Set((keys || []).filter(Boolean));
 

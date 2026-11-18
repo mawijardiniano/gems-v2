@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatPeso } from "@/data/lib/money";
+import { MODULE_EDITOR_ROLES } from "@/data/lib/projectAccess";
 import {
   FaChevronDown,
   FaChevronUp,
@@ -17,6 +19,14 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import ProjectCreateModal from "./ProjectCreateModal";
+import {
+  ayLabel,
+  formatDate,
+  getActiveEvents,
+  getArrayValue,
+  getEventStart,
+  getFieldValue,
+} from "../lib/projectView";
 import DetailTabs from "./DetailTabs";
 import ActualsEncoderModal from "./ActualsEncoderModal";
 import {
@@ -41,57 +51,14 @@ import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
  */
 
 /* Roles (besides the creator) allowed to manage schedule, status + milestones */
-const PROJECT_EDITOR_ROLES = ["gad focal person", "gad coordinator", "admin"];
+/* Shared with the module API and the upload route (data/lib/projectAccess.js). */
+const PROJECT_EDITOR_ROLES = MODULE_EDITOR_ROLES;
 
 /* Detail fields that hold budget amounts — hidden with the rest of the budget
    figures when the project falls outside the viewer's budget scope. */
 const BUDGET_DETAIL_KEYS = ["source_budget", "gad_budget"];
 
-const getFieldValue = (field) => {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-};
-
-const getArrayValue = (field) => {
-  const value = getFieldValue(field);
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (value) return [value];
-  return [];
-};
-
-const fmtPeso = (n) =>
-  `₱ ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-
-const formatDate = (d) => {
-  if (!d) return null;
-  const date = new Date(d);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-PH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const ayLabel = (year) => `AY ${year}-${Number(year) + 1}`;
-
-const getEventStart = (ev) => {
-  const value =
-    ev?.start_date ||
-    (Array.isArray(ev?.start_dates) ? ev.start_dates[0] : null);
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const getProjectEvents = (project) =>
-  (Array.isArray(project?.events) ? project.events : []).filter(Boolean);
-
-const getActiveEvents = (project) =>
-  getProjectEvents(project).filter((ev) => ev?.status !== "cancelled");
+const fmtPeso = (n) => formatPeso(n);
 
 const getProjectStatus = (project, statuses) =>
   statuses.includes(project?.project_status)

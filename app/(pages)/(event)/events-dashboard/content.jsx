@@ -19,6 +19,7 @@ import {
 } from "../gender-statistics/components/employeeStats";
 import { SampleToggle, SampleDataNotice } from "../gender-statistics/components/SampleToggle";
 import { useEffect, useMemo, useState } from "react";
+import { formatAmount } from "@/data/lib/money";
 import {
   ResponsiveContainer,
   BarChart,
@@ -380,7 +381,7 @@ function ChartTooltip({ active, payload, label }) {
           />
           <span className="text-gray-600">{entry.name}:</span>
           <span className="font-medium text-gray-900">
-            ₱ {Number(entry.value).toLocaleString()}
+            {entry.value == null ? "To follow" : `₱ ${formatAmount(entry.value)}`}
           </span>
         </div>
       ))}
@@ -397,9 +398,6 @@ export default function EventsDashboardContent() {
   const [gpbLoading, setGpbLoading] = useState(true);
   const [gpbError, setGpbError] = useState("");
 
-  const [gaaBudget, setGAABudget] = useState([]);
-  const [gaaLoading, setGaaLoading] = useState(true);
-  const [gaaError, setGaaError] = useState("");
 
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
@@ -423,27 +421,6 @@ export default function EventsDashboardContent() {
   const [useSample, setUseSample] = useState(true);
 
   const router = useRouter();
-
-  const { totalGAA, totalGAD, avgGADPercent } = useMemo(() => {
-    const totalGAA = gaaBudget.reduce((sum, g) => sum + (g.totalGAA || 0), 0);
-    const totalGAD = gaaBudget.reduce(
-      (sum, g) => sum + (g.gadAnnualBudget || 0),
-      0,
-    );
-    const avgGADPercent =
-      gaaBudget.length > 0
-        ? (
-            gaaBudget.reduce((sum, g) => sum + (g.gadPercent || 0), 0) /
-            gaaBudget.length
-          ).toFixed(2)
-        : 0;
-
-    return {
-      totalGAA: totalGAA.toLocaleString(),
-      totalGAD: totalGAD.toLocaleString(),
-      avgGADPercent,
-    };
-  }, [gaaBudget]);
 
   const yearEvents = useMemo(() => {
     const y = Number(selectedYear);
@@ -475,13 +452,9 @@ export default function EventsDashboardContent() {
       const y = Number(g?.year);
       if (y) years.add(y);
     });
-    gaaBudget.forEach((g) => {
-      const y = Number(g?.year);
-      if (y) years.add(y);
-    });
     years.add(new Date().getFullYear());
     return [...years].sort((a, b) => b - a);
-  }, [GPB, gaaBudget]);
+  }, [GPB]);
 
 
   useEffect(() => {
@@ -589,33 +562,33 @@ export default function EventsDashboardContent() {
     };
   }, [selectedGpb]);
 
-  const gaaChartData = useMemo(() => {
-    return [...gaaBudget]
-      .sort((a, b) => a.year - b.year)
-      .map((g) => ({
-        year: g.year,
-        gaa: g.totalGAA,
-        gad: g.gadAnnualBudget,
-      }));
-  }, [gaaBudget]);
+  /* The budget each year's plan uses: the one attached to that year's GPB,
+     as on the GPB page, its print and the matrix PDF. A GPB with no budget
+     attached reads "To follow" there, so it shows no bars here either. The
+     GPB list comes back newest-first; the five latest plans are shown. */
+  const planBudgets = useMemo(
+    () =>
+      GPB.slice(0, 5).map((g) => {
+        const budget =
+          g?.gaaBudgetId && typeof g.gaaBudgetId === "object"
+            ? g.gaaBudgetId
+            : null;
+        return { _id: g._id, year: g.year, budget };
+      }),
+    [GPB],
+  );
 
-  useEffect(() => {
-    const load = async () => {
-      setGaaLoading(true);
-      setGaaError("");
-      try {
-        const res = await axios.get("/api/gaa-budget");
-        setGAABudget(res.data?.data?.slice(0, 5) || []);
-      } catch (err) {
-        setGaaError(
-          err.response?.data?.message || "Unable to load GAA budget.",
-        );
-      } finally {
-        setGaaLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const gaaChartData = useMemo(
+    () =>
+      [...planBudgets]
+        .sort((a, b) => a.year - b.year)
+        .map(({ year, budget }) => ({
+          year,
+          gaa: budget ? budget.totalGAA : null,
+          gad: budget ? budget.gadAnnualBudget : null,
+        })),
+    [planBudgets],
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -790,12 +763,6 @@ export default function EventsDashboardContent() {
         <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm animate-slide-up">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{gpbError}</span>
-        </div>
-      )}
-      {gaaError && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-700 text-sm animate-slide-up">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span>{gaaError}</span>
         </div>
       )}
 
@@ -1153,7 +1120,7 @@ export default function EventsDashboardContent() {
                     GAA Budget per Year
                   </h2>
                   <p className="text-xs text-gray-500">
-                    GAD allocation from total budget
+                    Budget attached to each year's GPB
                   </p>
                 </div>
               </div>
@@ -1161,13 +1128,13 @@ export default function EventsDashboardContent() {
           </div>
 
           <div className="p-5">
-            {gaaLoading ? (
+            {gpbLoading ? (
               <SkeletonChart />
-            ) : gaaBudget.length === 0 ? (
+            ) : planBudgets.length === 0 ? (
               <EmptyState
                 icon={Inbox}
                 title="No budget data"
-                description="GAA budget records will appear here once added."
+                description="Budgets appear here once a GPB has one attached."
               />
             ) : (
               <div className="w-full h-72">
@@ -1202,7 +1169,7 @@ export default function EventsDashboardContent() {
                         dataKey="gaa"
                         position="top"
                         formatter={(value) =>
-                          `₱${(value / 1000000).toFixed(1)}M`
+                          value == null ? "" : `₱${(value / 1000000).toFixed(1)}M`
                         }
                         style={{ fontSize: "10px", fill: "#6b7280" }}
                       />
@@ -1218,7 +1185,7 @@ export default function EventsDashboardContent() {
                         dataKey="gad"
                         position="top"
                         formatter={(value) =>
-                          `₱${(value / 1000000).toFixed(1)}M`
+                          value == null ? "" : `₱${(value / 1000000).toFixed(1)}M`
                         }
                         style={{ fontSize: "10px", fill: "#6b7280" }}
                       />
@@ -1466,20 +1433,20 @@ export default function EventsDashboardContent() {
                   <h2 className="text-sm font-semibold text-gray-900">
                     GAA Budget
                   </h2>
-                  <p className="text-xs text-gray-500">Annual allocation</p>
+                  <p className="text-xs text-gray-500">Attached to each GPB</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="p-5">
-            {gaaLoading ? (
+            {gpbLoading ? (
               <SkeletonTable rows={4} />
-            ) : gaaBudget.length === 0 ? (
+            ) : planBudgets.length === 0 ? (
               <EmptyState
                 icon={Inbox}
                 title="No budget data"
-                description="GAA budget records will appear here once added."
+                description="Budgets appear here once a GPB has one attached."
               />
             ) : (
               <div className="overflow-hidden">
@@ -1501,25 +1468,36 @@ export default function EventsDashboardContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {gaaBudget.map((gaa, idx) => (
+                    {planBudgets.map(({ _id, year, budget }) => (
                       <tr
-                        key={gaa._id}
+                        key={_id}
                         className="hover:bg-gray-50 transition-colors duration-150"
                       >
                         <td className="py-3 pr-4 text-sm font-semibold text-gray-900">
-                          {gaa.year}
+                          {year}
                         </td>
-                        <td className="py-3 px-4 text-right text-sm text-gray-600">
-                          ₱ {Number(gaa.totalGAA).toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700">
-                            {gaa.gadPercent}%
-                          </span>
-                        </td>
-                        <td className="py-3 pl-4 text-right text-sm font-semibold text-emerald-600">
-                          ₱ {Number(gaa.gadAnnualBudget).toLocaleString()}
-                        </td>
+                        {budget ? (
+                          <>
+                            <td className="py-3 px-4 text-right text-sm text-gray-600">
+                              ₱ {formatAmount(budget.totalGAA, "—")}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-50 text-secondary-700">
+                                {budget.gadPercent}%
+                              </span>
+                            </td>
+                            <td className="py-3 pl-4 text-right text-sm font-semibold text-emerald-600">
+                              ₱ {formatAmount(budget.gadAnnualBudget, "—")}
+                            </td>
+                          </>
+                        ) : (
+                          <td
+                            colSpan={3}
+                            className="py-3 pl-4 text-right text-sm italic text-gray-400"
+                          >
+                            To follow
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -1527,7 +1505,7 @@ export default function EventsDashboardContent() {
               </div>
             )}
 
-            {gaaBudget.length > 0 && (
+            {planBudgets.length > 0 && (
               <div className="mt-3 pt-3 border-t border-gray-50">
                 <button
                   onClick={() => router.push("/gaa-budget")}

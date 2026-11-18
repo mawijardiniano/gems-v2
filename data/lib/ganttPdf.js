@@ -246,6 +246,7 @@ export function buildGanttPdf({
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "Asia/Manila",
   });
 
   let y = drawLetterhead(pdf, logoDataUrl);

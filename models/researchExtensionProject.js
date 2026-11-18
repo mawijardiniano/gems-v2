@@ -136,6 +136,9 @@ const ResearchExtensionProjectSchema = new Schema({
 
 applyReferenceNumberIndex(ResearchExtensionProjectSchema);
 ResearchExtensionProjectSchema.index({ classification: 1, year: -1 });
+/* Reference numbering reads every project of a year; the compound index
+   above starts with classification, so it cannot serve that. */
+ResearchExtensionProjectSchema.index({ year: 1 });
 ResearchExtensionProjectSchema.index({ project_status: 1 });
 ResearchExtensionProjectSchema.index({ project_leader: 1 });
 

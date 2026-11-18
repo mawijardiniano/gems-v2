@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { roundCentavos } from "../data/lib/gaaBudgetInput.js";
 
 const gaaBudgetSchema = new Schema({
   year: { type: Number, required: true,   unique: true, },
@@ -9,9 +10,10 @@ const gaaBudgetSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-gaaBudgetSchema.pre("save", function (next) {
-  this.gadAnnualBudget = this.totalGAA * (this.gadPercent / 100);
-  next();
+/* Rounded to centavos: the raw product (87,654,321 × 7% = 6135802.470000001)
+   made a plan that used the budget exactly read "Over budget by ₱0.00". */
+gaaBudgetSchema.pre("save", function () {
+  this.gadAnnualBudget = roundCentavos(this.totalGAA * (this.gadPercent / 100));
 });
 
 export default mongoose.models.GAABudget ||

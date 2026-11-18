@@ -188,4 +188,13 @@ ProjectSchema.index(
   },
 );
 
+/* The partial unique index above only covers rows with a reference number,
+   so it cannot serve a plain year lookup — every `find({ year })` (budget
+   summary, reference numbering, GPB repair) scanned the collection. */
+ProjectSchema.index({ year: 1 });
+/* Event deletes pull the event from every project (eventCascade.js). */
+ProjectSchema.index({ events: 1 });
+/* "My projects" pickers and the upload delete check filter by creator. */
+ProjectSchema.index({ createdBy: 1 });
+
 export default models.Project || model("Project", ProjectSchema);

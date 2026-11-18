@@ -81,6 +81,12 @@ const AcademicProjectSchema = new Schema({
     default: "for-review",
   },
 
+  /* Optional approval metadata encoded from the monitoring page. The routes
+     already accepted these fields, but without them in the schema strict mode
+     dropped the values silently, so Academic approval details never saved. */
+  approved_resolution_no: FieldSchema(String),
+  other_details: FieldSchema(String),
+
   milestones: {
     type: [MilestoneSchema],
     default: [],
@@ -128,6 +134,9 @@ const AcademicProjectSchema = new Schema({
 
 applyReferenceNumberIndex(AcademicProjectSchema);
 AcademicProjectSchema.index({ college: 1, year: -1 });
+/* Reference numbering reads every project of a year; the compound index
+   above starts with college, so it cannot serve that. */
+AcademicProjectSchema.index({ year: 1 });
 AcademicProjectSchema.index({ project_type: 1 });
 AcademicProjectSchema.index({ project_status: 1 });
 

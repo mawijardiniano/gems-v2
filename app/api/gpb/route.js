@@ -7,6 +7,7 @@ import GAABudget from "@/models/gaa_budget";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { canAccessGpb } from "@/data/lib/roleAccess";
+import { isGpbManagerRole } from "@/data/lib/projectAccess";
 import { validateBudgetLink } from "@/data/lib/budgetLinking";
 import { NextResponse } from "next/server";
 
@@ -48,7 +49,7 @@ export async function GET(req) {
     return Response.json(
       {
         success: false,
-        message: error.message,
+        message: "Unable to load GPBs.",
       },
       { status: 500 },
     );
@@ -57,16 +58,26 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+
+    /* Creating a year's GPB is the Focal Person's (or an Admin's) job, as on
+       the GPB page; it used to need only a signed-in account. */
+    if (!isGpbManagerRole(user.role)) {
+      return Response.json(
+        { success: false, message: "You are not allowed to create a GPB" },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 
-    const body = await req.json();
+    const body = (await req.json().catch(() => null)) || {};
 
-    const { year, gaaBudgetId } = body;
+    const year = Number(body.year);
+    const { gaaBudgetId } = body;
 
-    if (!year) {
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
       return Response.json(
         {
           success: false,
@@ -142,7 +153,10 @@ export async function POST(req) {
     return Response.json(
       {
         success: false,
-        message: error.message,
+        message:
+          error?.code === 11000
+            ? "A GPB for that year already exists"
+            : "Unable to create the GPB.",
       },
       { status: 500 },
     );

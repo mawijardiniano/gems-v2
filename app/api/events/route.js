@@ -17,6 +17,7 @@ import {
 } from "@/data/lib/referenceNumber";
 import mongoose from "mongoose";
 import { EVENT_STATUSES, notEndedFilter } from "@/data/lib/eventStatus";
+import { appEndOfDay, parseAppDate } from "@/data/lib/appTime";
 import { canViewPII } from "@/data/lib/profileBroker";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
@@ -26,6 +27,8 @@ const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 /* Hard ceiling on a single page, so ?limit=100000 cannot defeat pagination. */
 const MAX_PAGE_SIZE = 200;
+/* A date range is already bounded; this only stops a pathological range. */
+const MAX_RANGE_SIZE = 1000;
 
 /* Read from the model so the filter and the schema enum cannot drift. */
 const EVENT_ACTIVITY_TYPES = Event.schema.path("type_of_activity").enumValues;
@@ -135,6 +138,39 @@ export async function GET(req) {
       filter.$and = [...(filter.$and || []), notEndedFilter()];
     }
 
+    /* ?from=YYYY-MM-DD&to=YYYY-MM-DD — events overlapping those Manila days,
+       for the calendar, which used to download every event to draw a month.
+       Legacy rows with only start_dates/end_dates are matched through them. */
+    const fromParam = searchParams.get("from");
+    const toParam = searchParams.get("to");
+    const rangeFrom = fromParam ? parseAppDate(fromParam) : null;
+    const rangeTo = toParam ? parseAppDate(toParam) : null;
+    if (rangeFrom === undefined || rangeTo === undefined) {
+      return NextResponse.json(
+        { status: "error", message: "from/to must be dates (YYYY-MM-DD)" },
+        { status: 400 },
+      );
+    }
+    const hasRange = Boolean(rangeFrom || rangeTo);
+    if (hasRange) {
+      const conditions = [];
+      if (rangeTo) {
+        /* Starts on or before the last day of the range. */
+        const toEnd = new Date(appEndOfDay(rangeTo));
+        conditions.push({
+          $or: [
+            { start_date: { $lte: toEnd } },
+            { start_date: null, start_dates: { $elemMatch: { $lte: toEnd } } },
+          ],
+        });
+      }
+      if (rangeFrom) {
+        /* Ends on or after the first day of the range. */
+        conditions.push(notEndedFilter(rangeFrom));
+      }
+      filter.$and = [...(filter.$and || []), ...conditions];
+    }
+
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const rawLimit = Number(searchParams.get("limit"));
     const limit =
@@ -142,7 +178,9 @@ export async function GET(req) {
         ? Math.min(Math.floor(rawLimit), MAX_PAGE_SIZE)
         : upcomingOnly
           ? MAX_PAGE_SIZE
-          : 0;
+          : hasRange
+            ? MAX_RANGE_SIZE
+            : 0;
     const skip = limit ? (page - 1) * limit : 0;
 
     /* The cache key must describe the query, not just the creator. Keying on
@@ -158,6 +196,7 @@ export async function GET(req) {
       year || "",
       search || "",
       upcomingOnly ? "upcoming" : "",
+      hasRange ? `${fromParam || ""}~${toParam || ""}` : "",
       page,
       limit,
     ].join("|")}`;

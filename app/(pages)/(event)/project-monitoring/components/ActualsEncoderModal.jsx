@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useEffect, useRef, useState } from "react";
+import { useFileUploads } from "@/hooks/useFileUploads";
+import { readJson } from "@/data/lib/uploadClient";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { formatPeso } from "@/data/lib/money";
 import {
   FaPaperclip,
   FaSpinner,
@@ -17,9 +20,6 @@ import {
   shouldUseAccomplishmentOverride,
 } from "@/data/lib/accomplishmentSummary";
 
-const ACCEPTED_EVIDENCE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024;
-
 const getFieldValue = (field) => {
   if (!field) return "";
   if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
@@ -28,11 +28,7 @@ const getFieldValue = (field) => {
   return field;
 };
 
-const fmtPeso = (n) =>
-  `₱ ${Number(n || 0).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+const fmtPeso = (n) => formatPeso(n);
 
 /**
  * Suggested accomplishment text built from the events linked to the project.
@@ -61,16 +57,28 @@ export default function ActualsEncoderModal({
   onClose,
   onSaved,
 }) {
-  const fileLifecycle = useFileLifecycle();
+  const fileLifecycle = useFileUploads();
+  const evidenceUploading = fileLifecycle.isUploading;
 
   const [actual, setActual] = useState("");
   const [isOverride, setIsOverride] = useState(false);
   const [suggested, setSuggested] = useState("");
   const [expenditures, setExpenditures] = useState("");
   const [evidence, setEvidence] = useState([]);
-  const [evidenceUploading, setEvidenceUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* The latest evidence list, for uploads that finish after a render. */
+  const evidenceRef = useRef(evidence);
+  evidenceRef.current = evidence;
+  const commitEvidence = (change) => {
+    const next = change(evidenceRef.current);
+    evidenceRef.current = next;
+    setEvidence(next);
+    fileLifecycle.syncCurrent(next.map((f) => f?.key));
+  };
+
+  useEscapeKey(true, () => closeAndCleanup());
 
   useEffect(() => {
     if (!project) return;
@@ -109,40 +117,17 @@ export default function ActualsEncoderModal({
     const fileList = Array.from(e.target.files || []);
     e.target.value = "";
     if (fileList.length === 0) return;
-
-    const invalid = fileList.filter(
-      (f) =>
-        !ACCEPTED_EVIDENCE_TYPES.includes(f.type) || f.size > MAX_EVIDENCE_SIZE,
-    );
-    if (invalid.length > 0) {
-      setError("Evidence files must be PDF, JPG, or PNG and under 10MB each.");
-      return;
-    }
-
-    setEvidenceUploading(true);
+    setError("");
     try {
-      const uploaded = [];
-      for (const file of fileList) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "expenditure-evidence");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || data.message || "Upload failed");
-        }
-        uploaded.push({ url: data.url, key: data.key, name: file.name });
-      }
-      const next = [...evidence, ...uploaded];
-      setEvidence(next);
-      fileLifecycle.syncCurrent(next.map((f) => f?.key));
+      const uploaded = await fileLifecycle.upload(fileList, {
+        folder: "expenditure-evidence",
+        label: "Evidence files",
+      });
+      /* Appended to the latest list, not the one captured when the upload
+         started, so a file removed meanwhile does not come back. */
+      commitEvidence((prev) => [...prev, ...uploaded]);
     } catch (err) {
       setError(err.message || "Failed to upload evidence files");
-    } finally {
-      setEvidenceUploading(false);
     }
   };
 
@@ -151,19 +136,13 @@ export default function ActualsEncoderModal({
       setEvidence((prev) => prev.filter((f) => f !== file));
       return;
     }
-    const next = evidence.filter((f) => f.key !== file.key);
-    setEvidence(next);
-    fileLifecycle.syncCurrent(next.map((f) => f?.key));
-    if (!fileLifecycle.hasOriginal(file.key)) {
-      fetch("/api/upload", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: file.key }),
-      }).catch(() => {});
-    }
+    commitEvidence((prev) => prev.filter((f) => f.key !== file.key));
+    fileLifecycle.release(file);
   };
 
   const closeAndCleanup = () => {
+    /* Closing mid-save would delete evidence the save is still linking. */
+    if (saving) return;
     fileLifecycle.rollback();
     fileLifecycle.resetSession();
     onClose();
@@ -177,6 +156,14 @@ export default function ActualsEncoderModal({
 
   const saveActuals = async () => {
     if (!project) return;
+    if (evidenceUploading) {
+      setError("Please wait for the evidence upload to finish.");
+      return;
+    }
+    if (!Number.isFinite(Number(expenditures || 0)) || spent < 0) {
+      setError("Actual expenditures must be zero or a positive amount.");
+      return;
+    }
     if (spent > 0 && evidence.length === 0) {
       setError(
         "Actual expenditures require at least one evidence file (receipt, voucher, or financial report).",
@@ -205,7 +192,7 @@ export default function ActualsEncoderModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to save");
       }
@@ -227,10 +214,17 @@ export default function ActualsEncoderModal({
         onClick={closeAndCleanup}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in">
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="actuals-modal-title"
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h3 className="text-base font-bold text-gray-900">Update Actuals</h3>
+          <h3 id="actuals-modal-title" className="text-base font-bold text-gray-900">
+            Update Actuals
+          </h3>
           <button
             type="button"
             onClick={closeAndCleanup}

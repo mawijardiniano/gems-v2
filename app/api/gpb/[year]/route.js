@@ -15,6 +15,11 @@ import {
   hydrateProjectAttendanceSex,
 } from "@/data/lib/accomplishmentSummary";
 import { NextResponse } from "next/server";
+import {
+  GPB_LOCKED_MESSAGE,
+  isGpbLocked,
+  isGpbManagerRole,
+} from "@/data/lib/projectAccess";
 
 export async function GET(req, { params }) {
   const { error, status, user } = await requireAuth(req);
@@ -148,9 +153,10 @@ export async function DELETE(req, { params }) {
   if (error) return NextResponse.json({ error }, { status });
 
   /* Deleting a year removes the plan and its links outright, and there is no
-     soft-delete to fall back on, so it carries the same page gate as reading
-     one - the precedent set for destructive deletes across the API. */
-  if (!canAccessGpb(user?.role)) {
+     soft-delete to fall back on. Only the roles that manage GPBs may do it
+     (the page hides it from coordinators and the planning director, who could
+     still call it while the check was the read gate). */
+  if (!isGpbManagerRole(user?.role)) {
     return NextResponse.json(
       { error: "You are not allowed to delete the GPB" },
       { status: 403 },
@@ -166,9 +172,18 @@ export async function DELETE(req, { params }) {
     return Response.json({ message: "Invalid year" }, { status: 400 });
   }
 
-  const gpb = await GPB.findOneAndDelete({
-    year: yearNum,
-  });
+  const existing = await GPB.findOne({ year: yearNum })
+    .select("status_of_gpb.status")
+    .lean();
+  if (!existing) {
+    return Response.json({ message: "GPB not found" }, { status: 404 });
+  }
+  /* An approved plan is final until it is disapproved. */
+  if (isGpbLocked(existing)) {
+    return Response.json({ message: GPB_LOCKED_MESSAGE }, { status: 409 });
+  }
+
+  const gpb = await GPB.findOneAndDelete({ _id: existing._id });
 
   if (!gpb) {
     return Response.json({ message: "GPB not found" }, { status: 404 });
@@ -190,8 +205,15 @@ export async function DELETE(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+  /* Attaching or detaching a year's budget changes the plan's totals. */
+  if (!isGpbManagerRole(user.role)) {
+    return NextResponse.json(
+      { error: "You are not allowed to change the GPB budget" },
+      { status: 403 },
+    );
+  }
   await connectDB();
 
   const { year } = await params;
@@ -208,6 +230,9 @@ export async function PATCH(req, { params }) {
     const gpb = await GPB.findOne({ year: yearNum });
     if (!gpb) {
       return Response.json({ message: "GPB not found" }, { status: 404 });
+    }
+    if (isGpbLocked(gpb)) {
+      return Response.json({ message: GPB_LOCKED_MESSAGE }, { status: 409 });
     }
 
     if (gaaBudgetId === null || gaaBudgetId === "") {
@@ -270,7 +295,7 @@ export async function PATCH(req, { params }) {
     return Response.json(
       {
         success: false,
-        message: err.message,
+        message: "Unable to update the GPB budget.",
       },
       { status: 500 },
     );

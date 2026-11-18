@@ -36,8 +36,12 @@ const handlers = createCollectionHandlers({
   },
   requiredEnums: ["classification"],
   populatePaths: ["createdBy", "project_leader"],
+  /* A leader id that is not an ObjectId used to surface as a 500 CastError;
+     it now falls back to the creator. */
   buildExtra: (body, userId) => ({
-    project_leader: body.project_leader || userId || null,
+    project_leader: /^[a-f0-9]{24}$/i.test(String(body.project_leader || ""))
+      ? body.project_leader
+      : userId,
   }),
 });
 

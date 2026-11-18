@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { appDateInput } from "@/data/lib/appTime";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FaExclamationTriangle,
   FaPaperclip,
@@ -9,7 +10,9 @@ import {
   FaTimes,
   FaTrash,
 } from "react-icons/fa";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useFileUploads } from "@/hooks/useFileUploads";
+import { readJson } from "@/data/lib/uploadClient";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   MAX_GANTT_ACTIVITIES,
   emptyActivity,
@@ -47,10 +50,16 @@ const MILESTONE_STATUS_META = {
 
 const MAX_MILESTONES = 50;
 
-const ACCEPTED_PROOF_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_PROOF_SIZE = 10 * 1024 * 1024;
+/* Rows carry a client-only id: an upload resolves seconds later, by which time
+   rows may have been added or removed, so it must find its row by id rather
+   than by index. Stripped before saving. */
+let rowSeq = 0;
+const nextRowId = () => `row-${(rowSeq += 1)}`;
+const withRowIds = (list) =>
+  list.map((row) => (row._rid ? row : { ...row, _rid: nextRowId() }));
 
 const emptyRow = () => ({
+  _rid: nextRowId(),
   title: "",
   target_date: "",
   actual_date: "",
@@ -59,14 +68,9 @@ const emptyRow = () => ({
   source_activity: "",
 });
 
-const toDateInputValue = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-};
+/* The Manila day of a stored date — the browser's local day showed the
+   previous day west of UTC+8, and saving unchanged moved it back a day. */
+const toDateInputValue = (value) => appDateInput(value);
 
 export default function MilestonesModal({
   project,
@@ -78,7 +82,9 @@ export default function MilestonesModal({
   onClose,
   onSaved,
 }) {
-  const fileLifecycle = useFileLifecycle();
+  const fileLifecycle = useFileUploads();
+  /* Index of the row whose proofs are uploading, or null. */
+  const uploadingRow = fileLifecycle.uploading;
 
   const [rows, setRows] = useState(() => {
     const existing = Array.isArray(project?.milestones)
@@ -88,6 +94,7 @@ export default function MilestonesModal({
     if (existing.length === 0) return [emptyRow()];
 
     return existing.map((m) => ({
+      _rid: nextRowId(),
       title: m.title || "",
       target_date: toDateInputValue(m.target_date),
       actual_date: toDateInputValue(m.actual_date),
@@ -150,8 +157,7 @@ export default function MilestonesModal({
     ) {
       return;
     }
-    setRows(next);
-    syncProofKeys(next);
+    commitRows(() => withRowIds(next));
   };
   const [editingActivity, setEditingActivity] = useState(null);
 
@@ -161,9 +167,34 @@ export default function MilestonesModal({
     setActivities([...activities, emptyActivity()]);
     setEditingActivity(activities.length);
   };
-  const [uploadingRow, setUploadingRow] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* The latest rows, for work that finishes after a render (uploads). */
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  /* Applies `change` to the latest rows and keeps the file lifecycle in step,
+     so an upload finishing late never overwrites edits made meanwhile. */
+  const commitRows = (change) => {
+    const next = change(rowsRef.current);
+    rowsRef.current = next;
+    setRows(next);
+    syncProofKeys(next);
+    return next;
+  };
+
+  /* Inline editors are unmounted by switching tab, collapsing the card or
+     paging away — none of which went through Cancel, so proofs uploaded but
+     never saved stayed in storage. After a save, commit() has made them
+     "original", so nothing saved is deleted here. */
+  useEffect(
+    () => () => {
+      fileLifecycle.rollback();
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   /* Proofs already saved on the project are recorded so files dropped later in
      the session are only released once they are truly no longer referenced. */
@@ -213,9 +244,7 @@ export default function MilestonesModal({
     );
 
   const removeRow = (index) => {
-    const nextRows = rows.filter((_, i) => i !== index);
-    setRows(nextRows);
-    syncProofKeys(nextRows);
+    commitRows((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleProofUpload = async (index, e) => {
@@ -223,72 +252,52 @@ export default function MilestonesModal({
     e.target.value = "";
     if (fileList.length === 0) return;
 
-    const invalid = fileList.filter(
-      (file) =>
-        !ACCEPTED_PROOF_TYPES.includes(file.type) || file.size > MAX_PROOF_SIZE,
-    );
-    if (invalid.length > 0) {
-      setError("Proof files must be PDF, JPG, or PNG and under 10MB each.");
-      return;
-    }
-
-    setUploadingRow(index);
+    const rowId = rowsRef.current[index]?._rid;
     setError("");
     try {
-      const uploaded = [];
-      for (const file of fileList) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "milestone-proof");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || data.message || "Upload failed");
-        }
-        uploaded.push({ url: data.url, key: data.key, name: file.name });
-      }
+      const uploaded = await fileLifecycle.upload(fileList, {
+        folder: "milestone-proof",
+        label: "Proof files",
+        target: index,
+      });
 
-      const nextRows = rows.map((row, i) =>
-        i === index
-          ? { ...row, proofs: [...(row.proofs || []), ...uploaded] }
-          : row,
+      /* Built on the latest rows and matched by id: edits made while the
+         upload ran survive, and a removed row does not receive the files. */
+      let attached = false;
+      commitRows((prev) =>
+        prev.map((row) => {
+          if (row._rid !== rowId) return row;
+          attached = true;
+          return { ...row, proofs: [...(row.proofs || []), ...uploaded] };
+        }),
       );
-      setRows(nextRows);
-      syncProofKeys(nextRows);
+      if (!attached) await fileLifecycle.discard(uploaded);
     } catch (err) {
       setError(err.message || "Failed to upload proof files");
-    } finally {
-      setUploadingRow(null);
     }
   };
 
   const removeProof = (index, file) => {
-    const nextRows = rows.map((row, i) =>
-      i === index
-        ? {
-            ...row,
-            proofs: (row.proofs || []).filter((proof) => proof !== file),
-          }
-        : row,
+    commitRows((prev) =>
+      prev.map((row, i) =>
+        i === index
+          ? {
+              ...row,
+              proofs: (row.proofs || []).filter((proof) => proof !== file),
+            }
+          : row,
+      ),
     );
-    setRows(nextRows);
-    syncProofKeys(nextRows);
-
     /* Files uploaded in this session are deleted right away; files that were
        already saved are only released when the save is committed. */
-    if (file?.key && !fileLifecycle.hasOriginal(file.key)) {
-      fetch("/api/upload", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: file.key }),
-      }).catch(() => {});
-    }
+    fileLifecycle.release(file);
   };
 
+  useEscapeKey(!inline && !saving, () => closeAndCleanup());
+
   const closeAndCleanup = () => {
+    /* Closing mid-save would delete files the save is still linking. */
+    if (saving) return;
     fileLifecycle.rollback();
     fileLifecycle.resetSession();
     onClose();
@@ -296,6 +305,10 @@ export default function MilestonesModal({
 
   const saveMilestones = async () => {
     if (!project) return;
+    if (uploadingRow !== null) {
+      setError("Please wait for the proof upload to finish.");
+      return;
+    }
 
     const cleaned = rows
       .map((row) => ({
@@ -344,7 +357,7 @@ export default function MilestonesModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         throw new Error(data.error || data.message || "Failed to save");
       }
@@ -760,7 +773,8 @@ export default function MilestonesModal({
             <button
               type="button"
               onClick={closeAndCleanup}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              disabled={saving}
+              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -768,7 +782,7 @@ export default function MilestonesModal({
           <button
             type="button"
             onClick={saveMilestones}
-            disabled={saving}
+            disabled={saving || uploadingRow !== null}
             className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving && <FaSpinner className="animate-spin" size={12} />}

@@ -4,6 +4,8 @@
  * it also runs in plain-Node tests. Parsing/validation lives in ganttParse.js.
  */
 
+import { appParts } from "./appTime.js";
+
 export const MAX_GANTT_ACTIVITIES = 50;
 
 export const TIMELINE_MONTHS = [
@@ -30,9 +32,11 @@ const toUtcDay = (value) => {
     const [y, m, d] = value.split("-").map(Number);
     return Date.UTC(y, m - 1, d);
   }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  /* The Manila day the instant falls on — not the viewer's local day, which
+     put a Manila-midnight date on the previous day west of UTC+8. */
+  const parts = appParts(value);
+  if (!parts) return null;
+  return Date.UTC(parts.year, parts.month - 1, parts.day);
 };
 
 /** Formats a value as "YYYY-MM-DD" for date inputs ("" when invalid). */
@@ -238,7 +242,9 @@ export const timelineYears = (activities, fallbackYear) => {
   const span = activityYears(activities);
   const fallback = Number(fallbackYear);
   if (!span) {
-    return Number.isFinite(fallback) ? [fallback] : [new Date().getFullYear()];
+    return Number.isFinite(fallback)
+      ? [fallback]
+      : [appParts(new Date()).year];
   }
   const years = [];
   for (let y = span.start; y <= span.end; y++) years.push(y);
