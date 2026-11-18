@@ -148,12 +148,26 @@ export async function resolvePii({ vaultRef, role }) {
  * List screens page 50 rows at a time; a per-row lookup would turn a single
  * request into 51 round trips. Returns a `Map` keyed by `vaultRef` holding
  * only the refs that actually have a vault row.
+ *
+ * `fields` (optional) limits the read to those vault fields: the rest are
+ * neither loaded nor decrypted. Aggregate routes that only count a few
+ * attributes pass it, which cuts the read and keeps names and contact
+ * details out of memory entirely. Omitted, every field is returned.
  */
-export async function loadDecryptedPiiBatch(vaultRefs = []) {
+export async function loadDecryptedPiiBatch(vaultRefs = [], { fields } = {}) {
   const refs = [...new Set((vaultRefs || []).filter(Boolean).map(String))];
   if (!refs.length) return new Map();
 
-  const rows = await IdentityVault.find({ vaultRef: { $in: refs } }).lean();
+  const projection = fields?.length
+    ? Object.fromEntries([
+        ["vaultRef", 1],
+        ...fields.map((name) => [`fields.${name}`, 1]),
+      ])
+    : undefined;
+  const rows = await IdentityVault.find(
+    { vaultRef: { $in: refs } },
+    projection,
+  ).lean();
 
   const out = new Map();
   for (const row of rows) {

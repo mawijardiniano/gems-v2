@@ -174,6 +174,18 @@ const DEMOGRAPHIC_TEST = new Map(
    role: the masked row shape drops birthday, gender identity, civil status,
    religion and income, which zeroed those tables for masked roles and — with
    the role absent from the cache key — leaked into every role's response. */
+/* The vault fields countingIdentity reads — the only ones loaded. */
+const COUNTING_FIELDS = [
+  "birthday",
+  "civil_status",
+  "religion",
+  "sexAtBirth",
+  "gender_preference",
+  "isPWD",
+  "isIndigenousPerson",
+  "socioEconomicStatus",
+];
+
 function countingIdentity(pii) {
   if (!pii) return { personal: {}, gadData: {} };
   return {
@@ -418,12 +430,10 @@ function buildStats(profiles, type) {
   };
 }
 
-async function buildByAcademicYear(baseProfiles, sexOf) {
+/* `terms` is the person type's term rows, loaded once in GET; rows whose
+   profile is not in `baseProfiles` are skipped. */
+function buildByAcademicYear(baseProfiles, sexOf, terms) {
   const profilesById = new Map(baseProfiles.map((p) => [String(p._id), p]));
-  const terms = await ProfileTerm.find(
-    {},
-    { profile_id: 1, school_year: 1 },
-  ).lean();
 
   const perYear = {};
   for (const t of terms) {
@@ -558,7 +568,25 @@ export async function GET(req) {
            caller — see countingIdentity — since only aggregates leave here. */
         const piiByRef = await loadDecryptedPiiBatch(
           baseProfiles.map((p) => p.vaultRef),
+          { fields: COUNTING_FIELDS },
         );
+
+        /* All term rows for this person type, in one query. Year options,
+           semester options, the term filter and the academic-year trend are
+           all derived from it. Scoped to the type (not to the other filters)
+           so a year option never vanishes when a filter narrows; unscoped, the
+           employee page offered student-only years. When no filter but the
+           type applies, `baseProfiles` already is the whole type. */
+        const onlyTypeFilter = Object.keys(match).length === 1;
+        const typeProfileIds = onlyTypeFilter
+          ? baseProfiles.map((p) => p._id)
+          : await GemsProfile.distinct("_id", {
+              "affiliation.person_type": match["affiliation.person_type"],
+            });
+        const terms = await ProfileTerm.find(
+          { profile_id: { $in: typeProfileIds } },
+          { profile_id: 1, school_year: 1, semester: 1 },
+        ).lean();
 
         /* Every row with its decrypted identity, before any filter. The
            academic-year trend is built from this set, as it was before. */
@@ -587,13 +615,16 @@ export async function GET(req) {
         }
 
         if (schoolYear || semesters.length) {
-          const termFilter = {};
-          if (schoolYear) termFilter.school_year = schoolYear;
-          if (semesters.length) termFilter.semester = { $in: semesters };
-          const terms = await ProfileTerm.find(termFilter, {
-            profile_id: 1,
-          }).lean();
-          const idSet = new Set(terms.map((t) => String(t.profile_id)));
+          const wantedSemesters = new Set(semesters);
+          const idSet = new Set(
+            terms
+              .filter(
+                (t) =>
+                  (!schoolYear || t.school_year === schoolYear) &&
+                  (!semesters.length || wantedSemesters.has(t.semester)),
+              )
+              .map((t) => String(t.profile_id)),
+          );
           profiles = profiles.filter((p) => idSet.has(String(p._id)));
         }
 
@@ -607,33 +638,25 @@ export async function GET(req) {
         }
 
         const stats = buildStats(profiles, type);
-        /* Year options are scoped to this person type (ignoring the other
-           filters, so a selection never vanishes when a filter narrows).
-           Unscoped, the employee page offered student-only years and its
-           default year matched no employee at all. */
-        const typeProfileIds = await GemsProfile.distinct("_id", {
-          "affiliation.person_type": match["affiliation.person_type"],
-        });
-        const schoolYears = (
-          await ProfileTerm.distinct("school_year", {
-            profile_id: { $in: typeProfileIds },
-          })
-        )
-          .filter(Boolean)
+        const schoolYears = [
+          ...new Set(terms.map((t) => t.school_year).filter(Boolean)),
+        ]
           .sort()
           .reverse();
 
-        const semesterList = schoolYear
-          ? await ProfileTerm.distinct("semester", { school_year: schoolYear })
-          : await ProfileTerm.distinct("semester");
+        const semesterList = new Set(
+          terms
+            .filter((t) => !schoolYear || t.school_year === schoolYear)
+            .map((t) => t.semester),
+        );
         const semesterOptions =
           type === "students"
-            ? ["1st", "2nd", "Summer"].filter((s) => semesterList.includes(s))
+            ? ["1st", "2nd", "Summer"].filter((s) => semesterList.has(s))
             : [];
 
         const byAcademicYear =
           type === "students"
-            ? await buildByAcademicYear(allProfiles, sexBucket)
+            ? buildByAcademicYear(allProfiles, sexBucket, terms)
             : [];
 
         return {
