@@ -169,12 +169,14 @@ export function buildIdentity(mappedPayload) {
   const employeeId =
     mappedPayload?.affiliation?.employment_information?.employee_id?.trim?.() ||
     "";
-  // const email = mappedPayload?.contact?.email?.trim?.().toLowerCase?.() || "";
+  /* Lowercased: email addresses are matched case-insensitively, both for
+     in-batch dedupe and against the vault's blind index. */
+  const email = mappedPayload?.contact?.email?.trim?.().toLowerCase?.() || "";
 
   return {
     student_id: studentId,
     employee_id: employeeId,
-    // email,
+    email,
   };
 }
 
@@ -183,52 +185,6 @@ export function normalizeName(value) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
-}
-
-export async function findExistingProfileForRecord(record, GemsProfile) {
-  const identity = record.identity || {};
-  const mapped = record.mapped_payload || {};
-
-  if (identity.student_id) {
-    const byStudent = await GemsProfile.findOne({
-      "affiliation.academic_information.student_id": identity.student_id,
-    });
-    if (byStudent) return { profile: byStudent, matchedOn: "student_id" };
-  }
-
-  if (identity.employee_id) {
-    const byEmployee = await GemsProfile.findOne({
-      "affiliation.employment_information.employee_id": identity.employee_id,
-    });
-    if (byEmployee) return { profile: byEmployee, matchedOn: "employee_id" };
-  }
-
-  if (identity.email) {
-    const byEmail = await GemsProfile.findOne({
-      "contact.email": identity.email,
-    });
-    if (byEmail) return { profile: byEmail, matchedOn: "email" };
-  }
-
-  const first = normalizeName(mapped?.personal?.first_name);
-  const last = normalizeName(mapped?.personal?.last_name);
-  const birthday = mapped?.personal?.birthday
-    ? new Date(mapped.personal.birthday)
-    : null;
-
-  if (first && last && birthday && !Number.isNaN(birthday.getTime())) {
-    const candidates = await GemsProfile.find({
-      "personal.birthday": birthday,
-    }).limit(50);
-    const match = candidates.find(
-      (p) =>
-        normalizeName(p.personal?.first_name) === first &&
-        normalizeName(p.personal?.last_name) === last,
-    );
-    if (match) return { profile: match, matchedOn: "name_birthday" };
-  }
-
-  return null;
 }
 
 export function buildIdentityDedupeKey(identity = {}) {
@@ -333,7 +289,7 @@ function normalizeComparable(value) {
   return String(value);
 }
 
-function equalValues(a, b) {
+export function equalValues(a, b) {
   return normalizeComparable(a) === normalizeComparable(b);
 }
 
@@ -358,27 +314,14 @@ function mergeSection(existingSection, incomingSection, changes, prefix) {
   return merged;
 }
 
+/**
+ * Merges the GEMS-owned part of an import row (affiliation) onto a profile.
+ * PII (`personal`, `gadData`, `contact`) is not on the profile any more —
+ * it goes through the vault; see `extractIncomingPii` / `diffPii`.
+ */
 export function mergeProfile(existing, mapped) {
   const changes = [];
   const merged = {
-    personal: mergeSection(
-      existing?.personal,
-      mapped?.personal,
-      changes,
-      "personal",
-    ),
-    gadData: mergeSection(
-      existing?.gadData,
-      mapped?.gadData,
-      changes,
-      "gadData",
-    ),
-    contact: mergeSection(
-      existing?.contact,
-      mapped?.contact,
-      changes,
-      "contact",
-    ),
     /* Start from the stored affiliation: `profile.set(merged)` replaces the
        whole object, so keys the import doesn't carry would otherwise be lost. */
     affiliation: { ...plainSection(existing?.affiliation) },
@@ -423,11 +366,6 @@ export function mergeProfile(existing, mapped) {
   }
   if (!merged.affiliation.employment_information?.employee_id) {
     delete merged.affiliation.employment_information;
-  }
-
-  if (merged.personal?.birthday) {
-    const d = new Date(merged.personal.birthday);
-    if (!Number.isNaN(d.getTime())) merged.personal.birthday = d;
   }
 
   return { merged, changes };

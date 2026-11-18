@@ -8,22 +8,22 @@ import UserAuth from "@/models/user";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { logActivity } from "@/data/lib/activityLog";
 import {
-  findExistingProfileForRecord,
   mergeProfile,
   mergeTermAffiliation,
 } from "@/app/api/integration/_utils/mapping";
+import {
+  findExistingProfileForRecord,
+  extractIncomingPii,
+  diffPii,
+} from "@/app/api/integration/_utils/profileMatch";
+import { assignIdentifiers, savePii } from "@/data/lib/vaultWriter";
+import { loadDecryptedPii } from "@/data/lib/profileBroker";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import {
   normalizeStudentUsername,
   normalizeEmployeeUsername,
   usernameEqualsFilter,
 } from "@/data/lib/usernames";
-
-function asDate(value) {
-  if (!value) return undefined;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? undefined : d;
-}
 
 function normalizeUsername(value) {
   if (!value) return "";
@@ -145,7 +145,16 @@ export async function POST(req, { params }) {
     for (const record of approved) {
       try {
         const mapped = record.mapped_payload || {};
-        const identity = record.identity || {};
+        /* Rows staged before email matching was restored have an empty
+           identity.email; take it from the mapped payload instead. */
+        const identity = {
+          ...(record.identity?.toObject?.() ?? record.identity ?? {}),
+        };
+        if (!identity.email) {
+          identity.email = String(mapped.contact?.email || "")
+            .trim()
+            .toLowerCase();
+        }
 
         const hasIdentity =
           identity.student_id || identity.employee_id || identity.email;
@@ -178,13 +187,27 @@ export async function POST(req, { params }) {
         let profileAction = "updated";
         let profileChanges = [];
 
+        /* PII (names, birthday, contact, GAD data) lives encrypted in the
+           Identity Vault; the profile holds identifiers, `vaultRef` and the
+           blind search index only. Same write path as POST /api/profile. */
+        const incomingPii = extractIncomingPii(mapped);
+
         if (!profile) {
+          /* Vault first: if the profile write then fails, the worst case is
+             an orphan vault row — never a profile without its PII. */
+          const { gemsPublicId, vaultRef } =
+            await assignIdentifiers(GemsProfile);
+          const { patch } = await savePii({
+            vaultRef,
+            pii: incomingPii,
+            ownerType: "profile",
+          });
           profile = await GemsProfile.create({
-            personal: {
-              ...(mapped.personal || {}),
-              birthday: asDate(mapped.personal?.birthday),
-            },
-            gadData: mapped.gadData || {},
+            gemsPublicId,
+            vaultRef,
+            migrationStatus: "vaulted",
+            profileSearchIndex: patch.profileSearchIndex,
+            created_by: auth.user._id,
             /* `person_type` is GEMS-owned and required, so it is carried onto
                the affiliation block explicitly. It arrives on the mapped
                payload's affiliation already; the fallback covers a payload
@@ -196,17 +219,43 @@ export async function POST(req, { params }) {
                 mapped.personal?.currentStatus ||
                 undefined,
             },
-            contact: mapped.contact || {},
           });
           profileAction = "created";
           created += 1;
         } else {
+          /* A profile from an import made before this fix may have no vault
+             row at all; it gets one now, filled from this row. */
+          let existingPii = {};
+          if (profile.vaultRef) {
+            existingPii = (await loadDecryptedPii(profile.vaultRef)) || {};
+          } else {
+            const ids = await assignIdentifiers(GemsProfile);
+            profile.vaultRef = ids.vaultRef;
+            if (!profile.gemsPublicId) profile.gemsPublicId = ids.gemsPublicId;
+            profile.migrationStatus = "vaulted";
+          }
+
+          const { changedPii, changes: piiChanges } = diffPii(
+            existingPii,
+            incomingPii,
+          );
+          if (piiChanges.length > 0) {
+            const { patch } = await savePii({
+              profileId: profile._id,
+              vaultRef: profile.vaultRef,
+              pii: changedPii,
+              mergedWith: existingPii,
+              ownerType: "profile",
+            });
+            profile.profileSearchIndex = patch.profileSearchIndex;
+          }
+
           const { merged, changes } = mergeProfile(profile, mapped);
           profile.set(merged);
           await profile.save();
           updated += 1;
-          profileChanges = changes;
-          if (changes.length === 0) identical += 1;
+          profileChanges = [...changes, ...piiChanges];
+          if (profileChanges.length === 0) identical += 1;
         }
 
         const account = await ensureUserAuthForProfile(
