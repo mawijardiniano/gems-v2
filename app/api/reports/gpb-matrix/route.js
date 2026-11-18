@@ -22,10 +22,10 @@ import {
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-  PROJECT_TYPE_ORDER,
   activityCellText,
   fieldList,
   fieldValue,
+  orderProjectsByType,
   pdfPeso,
   projectTypeLabel,
 } from "@/data/lib/reportFields";
@@ -120,16 +120,7 @@ export async function GET(req) {
           };
         }
 
-        const orderedProjects = [...projects]
-          .map((project, originalIndex) => ({ project, originalIndex }))
-          .sort((a, b) => {
-            const byType =
-              PROJECT_TYPE_ORDER[projectTypeLabel(a.project)] -
-              PROJECT_TYPE_ORDER[projectTypeLabel(b.project)];
-            if (byType !== 0) return byType;
-            return a.originalIndex - b.originalIndex;
-          })
-          .map((entry) => entry.project);
+        const orderedProjects = orderProjectsByType(projects);
 
         const generatedAt = new Date();
 

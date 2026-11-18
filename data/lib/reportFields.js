@@ -44,19 +44,34 @@ export function orderProjectsByType(projects) {
   );
 }
 
+/* A plan field as a list, empty entries kept, for lists paired by index. */
+function indexedList(field) {
+  const value = fieldValue(field);
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
 /* The GAD Activity column stays a single column: each activity prints its
-   title with its (index-paired) description on the following line. */
+   title with its (index-paired) description on the following line.
+   Descriptions are optional, so they are paired before anything is dropped:
+   filtering out an empty description moved the next one under the wrong
+   title. A pair is dropped only when its title is empty. */
 export function activityCellText(project, fallback = "") {
-  const titles = fieldList(project?.gad_activity);
-  const descriptions = fieldList(project?.gad_activity_description);
+  const titles = indexedList(project?.gad_activity);
+  const descriptions = indexedList(project?.gad_activity_description);
   return (
     titles
-      .map((title, idx) =>
-        descriptions[idx] ? `${title}\n${descriptions[idx]}` : title,
+      .map((title, idx) => [title, descriptions[idx]])
+      .filter(([title]) => Boolean(title))
+      .map(([title, description]) =>
+        description ? `${title}\n${description}` : title,
       )
       .join("\n") || fallback
   );
 }
+
+/** The project statuses a GAD project moves through. */
+export const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
 
 /* "Php 1,234.50": the PDFs' Times font has no peso sign. Two decimals, like
    every other screen (data/lib/money.js). */

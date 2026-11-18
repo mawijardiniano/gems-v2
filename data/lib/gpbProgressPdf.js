@@ -15,6 +15,12 @@ import {
   toDate,
 } from "./reportQuarters.js";
 import { appParts } from "./appTime.js";
+import {
+  PROJECT_STATUSES,
+  activityCellText,
+  orderProjectsByType,
+  projectTypeLabel,
+} from "./reportFields.js";
 
 /* jspdf-autotable ships as a UMD/CJS bundle: depending on the runtime the
    exported table function can arrive as the namespace itself, as `default`, or
@@ -31,56 +37,9 @@ if (!autoTable) {
   throw new Error("Could not load the PDF table renderer (jspdf-autotable).");
 }
 
-function fieldValue(field) {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-}
-
-function fieldList(field) {
-  const v = fieldValue(field);
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (v) return [v];
-  return [];
-}
-
 /* GAD activity titles and their descriptions share the single GAD ACTIVITY
-   column: every activity prints its title with the description on the line
-   below it, so the report never grows a column the official form doesn't
-   have. Descriptions are index-paired with the titles and may be missing on
-   projects filed before the field existed. */
-function activityLines(project) {
-  const titles = fieldList(project.gad_activity);
-  const descriptions = fieldList(project.gad_activity_description);
-
-  return titles
-    .map((title, idx) => {
-      const description = descriptions[idx];
-      return description ? `${title}\n${description}` : title;
-    })
-    .join("\n");
-}
-
-const PROJECT_TYPE_ORDER = {
-  "Client Focused": 0,
-  "Organization Focused": 1,
-  "Attributed Program": 2,
-  Uncategorized: 3,
-};
-
-function projectTypeLabel(project) {
-  const rawType = project?.project_type;
-  const value =
-    rawType && typeof rawType === "object" ? rawType.value : rawType;
-  if (value === "Client Focused") return "Client Focused";
-  if (value === "Organization Focused") return "Organization Focused";
-  if (value === "Attributed Program") return "Attributed Program";
-  return "Uncategorized";
-}
-
-const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
+   column, the same text as every other GPB report (data/lib/reportFields.js). */
+const activityLines = (project) => activityCellText(project);
 
 function projectStatus(project) {
   return PROJECT_STATUSES.includes(project?.project_status)
@@ -1151,20 +1110,8 @@ function drawQuarterBreakdownSection(doc, section, usableWidth, y) {
   return cursor + 6;
 }
 
-/* Groups projects the way every report lists them: by project type, then by
-   the order they arrived from the database. */
-export function orderProjectsByType(projects) {
-  return [...projects]
-    .map((project, originalIndex) => ({ project, originalIndex }))
-    .sort((a, b) => {
-      const byType =
-        PROJECT_TYPE_ORDER[projectTypeLabel(a.project)] -
-        PROJECT_TYPE_ORDER[projectTypeLabel(b.project)];
-      if (byType !== 0) return byType;
-      return a.originalIndex - b.originalIndex;
-    })
-    .map((entry) => entry.project);
-}
+/* Re-exported for the progress route: the one ordering every report uses. */
+export { orderProjectsByType };
 
 export {
   buildOverallReport,

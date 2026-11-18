@@ -23,6 +23,8 @@ import {
   FaFileAlt,
   FaFilePdf,
 } from "react-icons/fa";
+import { formatPeso } from "@/data/lib/money";
+import StatCard from "./[year]/components/StatCard";
 
 
 function SkeletonCard() {
@@ -70,28 +72,6 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color = "blue" }) {
-  const colorMap = {
-    blue: "bg-secondary-50 text-secondary-600",
-    green: "bg-emerald-50 text-emerald-600",
-    amber: "bg-secondary-50 text-secondary-600",
-    violet: "bg-secondary-50 text-secondary-600",
-  };
-  return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-200">
-      <div className="flex items-center gap-4">
-        <div className={`h-12 w-12 rounded-xl ${colorMap[color] || colorMap.blue} flex items-center justify-center shrink-0`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-          <p className="text-xl font-bold text-gray-900 mt-0.5 truncate">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function QuickReportButton({
   label,
   icon: Icon,
@@ -101,10 +81,7 @@ function QuickReportButton({
   onClick,
   accent = "blue",
 }) {
-  const accentClass =
-    accent === "violet"
-      ? "hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700"
-      : "hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700";
+  const accentClass = "hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700";
   return (
     <button
       type="button"
@@ -314,7 +291,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
   };
 
   const attachableBudgets =
-    attachModal && !loading
+    attachModal
       ? attachBudgetOptions.filter(
           (b) => Number(b.year) === Number(attachModal.gpb.year),
         )
@@ -546,6 +523,9 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                               e.stopPropagation();
                               setOpenMenuId(openMenuId === item._id ? null : item._id);
                             }}
+                            type="button"
+                            aria-label={`Actions for GPB ${item.year}`}
+                            aria-expanded={openMenuId === item._id}
                             className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
                           >
                             <FaEllipsisV className="h-4 w-4" />
@@ -643,7 +623,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                           </span>
                           <span className="font-semibold text-gray-900">
                             {gaa?.totalGAA
-                              ? `₱ ${Number(gaa.totalGAA).toLocaleString()}`
+                              ? formatPeso(gaa.totalGAA)
                               : "To follow"}
                           </span>
                         </div>
@@ -654,7 +634,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                           </span>
                           <span className="font-semibold text-emerald-600">
                             {gaa?.gadAnnualBudget
-                              ? `₱ ${Number(gaa.gadAnnualBudget).toLocaleString()}`
+                              ? formatPeso(gaa.gadAnnualBudget)
                               : "To follow"}
                           </span>
                         </div>
@@ -737,6 +717,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
               <div className="flex items-center gap-1">
                 <button
+                  type="button"
+                  aria-label="Previous page"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
                   className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
@@ -769,6 +751,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   );
                 })}
                 <button
+                  type="button"
+                  aria-label="Next page"
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
                   className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
@@ -798,6 +782,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   </div>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={closeModal}
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
@@ -857,8 +843,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   <option value="">No budget — link later</option>
                   {availableBudgets.map((budget) => (
                     <option key={budget._id} value={budget._id}>
-                      FY {budget.year} — ₱{" "}
-                      {Number(budget.gadAnnualBudget || 0).toLocaleString()}{" "}
+                      FY {budget.year} —{" "}
+                      {formatPeso(budget.gadAnnualBudget)}{" "}
                       GAD budget
                     </option>
                   ))}
@@ -876,13 +862,13 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         <div className="flex items-center justify-between">
                           <span className="text-gray-500">Total GAA</span>
                           <span className="font-semibold text-gray-900">
-                            ₱ {Number(budget.totalGAA).toLocaleString()}
+                            {formatPeso(budget.totalGAA)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-500">GAD Budget</span>
                           <span className="font-semibold text-emerald-600">
-                            ₱ {Number(budget.gadAnnualBudget).toLocaleString()}
+                            {formatPeso(budget.gadAnnualBudget)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -946,6 +932,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   </div>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={closeAttachModal}
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
@@ -976,8 +964,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     <option value="">Select a budget</option>
                     {attachableBudgets.map((budget) => (
                       <option key={budget._id} value={budget._id}>
-                        FY {budget.year} — ₱{" "}
-                        {Number(budget.gadAnnualBudget || 0).toLocaleString()}{" "}
+                        FY {budget.year} —{" "}
+                        {formatPeso(budget.gadAnnualBudget)}{" "}
                         GAD budget
                       </option>
                     ))}

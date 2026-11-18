@@ -19,6 +19,8 @@ export default function ConfirmDeleteModal({
         aria-label="Delete project"
       >
         <button
+          type="button"
+          aria-label="Close"
           className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
           onClick={() => setDeleteModal({ open: false, project: null })}
         >

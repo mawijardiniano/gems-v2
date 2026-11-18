@@ -38,7 +38,7 @@ import {
   findForeignProjectKey,
 } from "@/data/lib/projectFileKeys";
 
-const PROJECT_STATUSES = ["for-review", "ongoing", "completed"];
+import { PROJECT_STATUSES } from "@/data/lib/reportFields";
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
 
