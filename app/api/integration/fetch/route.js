@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { stageRows } from "@/app/api/integration/_utils/staging";
+import {
+  stageRows,
+  MAX_BATCH_ROWS,
+  MAX_SOURCE_BYTES,
+} from "@/app/api/integration/_utils/staging";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -65,17 +69,13 @@ export async function POST(req) {
     const body = await req.json().catch(() => ({}));
     const sourceName = body.source_name || "HRMIS API";
 
-    let endpoint = body.endpoint || "";
-    let headers = body.headers || {};
-    let storedConfig = null;
-    if (!endpoint || Object.keys(headers).length === 0) {
-      const setting = await SystemSetting.findOne({ key: CONFIG_KEY }).lean();
-      storedConfig = setting?.value || null;
-      if (!endpoint && storedConfig?.endpoint) endpoint = storedConfig.endpoint;
-      if (Object.keys(headers).length === 0 && storedConfig?.headers) {
-        headers = storedConfig.headers;
-      }
-    }
+    /* Endpoint and headers come only from the stored config, which is
+       validated and audited on save. Accepting them from the request body
+       would let a caller point the server at any URL, unaudited. */
+    const setting = await SystemSetting.findOne({ key: CONFIG_KEY }).lean();
+    const storedConfig = setting?.value || null;
+    const endpoint = storedConfig?.endpoint || "";
+    const headers = storedConfig?.headers || {};
     const defaultSchoolYear =
       body.school_year || storedConfig?.school_year || "";
     const defaultSemester = body.semester || storedConfig?.semester || "";
@@ -84,7 +84,8 @@ export async function POST(req) {
       return NextResponse.json(
         {
           status: "error",
-          message: "endpoint is required (no stored config found)",
+          message:
+            "No HRMIS endpoint configured. Save the integration config first.",
         },
         { status: 400 },
       );
@@ -98,6 +99,9 @@ export async function POST(req) {
       response = await fetch(endpoint, {
         headers,
         signal: controller.signal,
+        /* A redirect could send the request (and its auth headers) to a
+           host the config check never saw. */
+        redirect: "error",
       });
     } catch (err) {
       clearTimeout(timeout);
@@ -132,9 +136,9 @@ export async function POST(req) {
         { status: 502 },
       );
     }
-    clearTimeout(timeout);
 
     if (!response.ok) {
+      clearTimeout(timeout);
       await logFetchFailure(req, auth, {
         endpoint,
         sourceName,
@@ -151,12 +155,80 @@ export async function POST(req) {
       );
     }
 
-    const payload = await response.json();
+    /* Read the body under the same timeout, and refuse anything that is
+       too large, not JSON, or not a list of rows — staging an empty batch
+       would hide a broken feed. */
+    const badPayload = async (errorCode, message, statusCode = 502) => {
+      await logFetchFailure(req, auth, {
+        endpoint,
+        sourceName,
+        errorCode,
+        statusCode,
+        message,
+      });
+      return NextResponse.json(
+        { status: "error", message },
+        { status: statusCode },
+      );
+    };
+
+    let text;
+    try {
+      const declared = Number(response.headers.get("content-length") || 0);
+      if (declared > MAX_SOURCE_BYTES) {
+        clearTimeout(timeout);
+        return badPayload(
+          "FETCH_TOO_LARGE",
+          `Response is too large (max ${MAX_SOURCE_BYTES / 1024 / 1024} MB).`,
+          413,
+        );
+      }
+      text = await response.text();
+    } catch (err) {
+      clearTimeout(timeout);
+      return err?.name === "AbortError"
+        ? badPayload(
+            "FETCH_TIMEOUT",
+            `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
+            504,
+          )
+        : badPayload("FETCH_UNREADABLE", `Failed to read response: ${err.message}`);
+    }
+    clearTimeout(timeout);
+
+    if (text.length > MAX_SOURCE_BYTES) {
+      return badPayload(
+        "FETCH_TOO_LARGE",
+        `Response is too large (max ${MAX_SOURCE_BYTES / 1024 / 1024} MB).`,
+        413,
+      );
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return badPayload("FETCH_NOT_JSON", "Endpoint did not return valid JSON.");
+    }
+
     const rows = Array.isArray(payload)
       ? payload
-      : Array.isArray(payload.data)
+      : Array.isArray(payload?.data)
         ? payload.data
-        : [];
+        : null;
+    if (!rows) {
+      return badPayload(
+        "FETCH_BAD_SHAPE",
+        "Endpoint response is not a list of rows (expected an array or { data: [] }).",
+      );
+    }
+    if (rows.length > MAX_BATCH_ROWS) {
+      return badPayload(
+        "FETCH_TOO_MANY_ROWS",
+        `Endpoint returned ${rows.length} rows; the limit per batch is ${MAX_BATCH_ROWS}.`,
+        413,
+      );
+    }
 
     const { batch, insertedCount, duplicateCount } = await stageRows({
       rows,
@@ -188,7 +260,8 @@ export async function POST(req) {
       action: "sync",
       message: `Fetched ${rows.length} row(s) from HRMIS API (${insertedCount} staged, ${duplicateCount} duplicates flagged)`,
       details: {
-        endpoint,
+        /* Host only: the endpoint's query string may carry a token. */
+        endpoint_host: safeHost(endpoint),
         fetched: rows.length,
         staged: insertedCount,
         duplicates_flagged: duplicateCount,

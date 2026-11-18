@@ -14,6 +14,23 @@ const SENSITIVE_HEADER_KEYS = [
   "cookie",
 ];
 
+/* Hosts the server must never be pointed at: itself, link-local (cloud
+   metadata at 169.254.169.254) and unspecified addresses. Private LAN ranges
+   are allowed on purpose — HRMIS may live on the campus network. Only the
+   literal hostname is checked; a DNS name resolving to these is not caught. */
+function isBlockedHost(hostname) {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host === "0.0.0.0" || host === "::" || host === "::1") return true;
+  if (/^127\./.test(host)) return true;
+  if (/^169\.254\./.test(host)) return true;
+  if (/^fe[89ab][0-9a-f]:/.test(host)) return true;
+  /* IPv4-mapped IPv6: URL parsing rewrites ::ffff:127.0.0.1 to hex
+     (::ffff:7f00:1), so no prefix check on the dotted form is reliable. */
+  if (/^::ffff:/.test(host)) return true;
+  return false;
+}
+
 function maskValue(value) {
   if (!value) return "";
   if (value.length <= 8) return "••••••••";
@@ -103,6 +120,15 @@ export async function PUT(req) {
     if (!["http:", "https:"].includes(parsedUrl.protocol)) {
       return NextResponse.json(
         { status: "error", message: "endpoint must use http or https" },
+        { status: 400 },
+      );
+    }
+    if (isBlockedHost(parsedUrl.hostname)) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "endpoint cannot point to localhost or a link-local address",
+        },
         { status: 400 },
       );
     }
