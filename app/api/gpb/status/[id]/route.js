@@ -12,19 +12,27 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { buildObjectUrl } from "@/data/lib/storage";
 import { isAcceptableKey } from "@/data/lib/eventFileKeys";
+import { canAccessGpb } from "@/data/lib/roleAccess";
 
 const SCANNED_FOLDER = "status/scanned";
 const MAX_REASON_LENGTH = 500;
 
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
+  /* The reason and the scanned copy are for the GPB roles only. */
+  if (!canAccessGpb(user?.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   await connectDB();
 
   try {
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return Response.json({ error: "Invalid GPB id" }, { status: 400 });
+    }
 
-    const gpb = await GPB.findById(id);
+    const gpb = await GPB.findById(id).select("status_of_gpb").lean();
 
     if (!gpb) {
       return Response.json({ error: "GPB Status not found" }, { status: 404 });
@@ -119,21 +127,44 @@ export async function POST(req, { params }) {
       );
     }
 
-    gpb.status_of_gpb = {
-      status: nextStatus,
-      reason: nextReason,
-      scanned_copy: {
-        url: nextKey ? buildObjectUrl(nextKey) : "",
-        key: nextKey,
+    /* Write only if the status is still the one checked above. Two updates
+       sent together (draft and approve) both passed the check, and the last
+       save won. A plan saved before the default existed has no status, which
+       reads as "draft". */
+    const updated = await GPB.findOneAndUpdate(
+      {
+        _id: id,
+        "status_of_gpb.status":
+          currentStatus === "draft" ? { $in: ["draft", null] } : currentStatus,
       },
-    };
-
-    await gpb.save();
+      {
+        $set: {
+          status_of_gpb: {
+            status: nextStatus,
+            reason: nextReason,
+            scanned_copy: {
+              url: nextKey ? buildObjectUrl(nextKey) : "",
+              key: nextKey,
+            },
+          },
+        },
+      },
+      { new: true, runValidators: true },
+    );
+    if (!updated) {
+      return Response.json(
+        {
+          error:
+            "The GPB status was changed by someone else. Reload and try again.",
+        },
+        { status: 409 },
+      );
+    }
 
     await logActivity({
       req,
       action: "GPB_STATUS",
-      description: `GPB status updated to "${gpb.status_of_gpb?.status}"`,
+      description: `GPB status updated to "${nextStatus}"`,
       resource_type: "gpb",
       resource_id: id,
       severity: "info",
@@ -152,12 +183,12 @@ export async function POST(req, { params }) {
           senderId: user._id,
           type: "gpb_status_updated",
           title: `GPB ${gpb.year} ${nextStatus}`,
-          message: `The GPB for year ${gpb.year} was marked "${nextStatus}"${reason ? `: ${reason}` : "."}`,
+          message: `The GPB for year ${gpb.year} was marked "${nextStatus}"${nextReason ? `: ${nextReason}` : "."}`,
           metadata: {
             year: gpb.year,
             status: nextStatus,
             previousStatus: currentStatus,
-            reason: reason || "",
+            reason: nextReason,
           },
         });
       } catch (notifyError) {
@@ -167,7 +198,7 @@ export async function POST(req, { params }) {
 
     return Response.json({
       success: true,
-      data: gpb.status_of_gpb,
+      data: updated.status_of_gpb,
     });
   } catch (error) {
     console.error("GPB status route failed:", error);

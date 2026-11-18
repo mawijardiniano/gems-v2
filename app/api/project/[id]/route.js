@@ -23,6 +23,7 @@ import GPB from "@/models/gpb";
 import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import { parseAppDate } from "@/data/lib/appTime";
+import { buildObjectUrl } from "@/data/lib/storage";
 import mongoose from "mongoose";
 import {
   GPB_LOCKED_MESSAGE,
@@ -54,20 +55,42 @@ const MAX_APPROVAL_TEXT_LENGTH = 500;
    to be stored as UTC midnight. */
 const parseDateInput = parseAppDate;
 
+/* Links of the key-less files already on a project. Files uploaded before
+   keys were stored have only a URL, and an edit must not drop them. */
+const legacyFileUrls = (project) =>
+  new Set(
+    [
+      ...(project?.expenditure_evidence || []),
+      ...(project?.milestones || []).flatMap((m) => m?.proofs || []),
+    ]
+      .filter((f) => f?.url && !f?.key)
+      .map((f) => f.url),
+  );
+
+/**
+ * Normalizes uploaded files sent by the client. The link is rebuilt from the
+ * key: a client-supplied URL could point at someone else's file or be a
+ * `javascript:` link. (findForeignProjectKey has already checked the keys.)
+ * A file with no key is kept only when its link is already on the record.
+ */
+const normalizeProjectFiles = (input, legacyUrls) =>
+  input
+    .filter((file) => file && typeof file === "object")
+    .map((file) => {
+      const key = typeof file.key === "string" ? file.key.trim() : "";
+      const name = file.name ? String(file.name).slice(0, 255) : null;
+      if (key) return { url: buildObjectUrl(key), key, name };
+      const url = typeof file.url === "string" ? file.url : "";
+      return url && legacyUrls.has(url) ? { url, key: "", name } : null;
+    })
+    .filter(Boolean);
+
 /** Validates and normalizes the proof files attached to a milestone. */
-const parseMilestoneProofs = (input) => {
+const parseMilestoneProofs = (input, legacyUrls) => {
   if (input === undefined || input === null) return { proofs: [] };
   if (!Array.isArray(input)) return { error: "invalid proof files" };
 
-  const proofs = input
-    .filter(
-      (file) => file && typeof file === "object" && (file.url || file.key),
-    )
-    .map((file) => ({
-      url: file.url || "",
-      key: file.key || "",
-      name: file.name || null,
-    }));
+  const proofs = normalizeProjectFiles(input, legacyUrls);
 
   if (proofs.length > MAX_MILESTONE_PROOFS) {
     return { error: `too many proof files (max ${MAX_MILESTONE_PROOFS})` };
@@ -77,7 +100,7 @@ const parseMilestoneProofs = (input) => {
 };
 
 /** Validates and normalizes an incoming milestones array. */
-const parseMilestones = (input) => {
+const parseMilestones = (input, legacyUrls = new Set()) => {
   if (!Array.isArray(input)) {
     return { error: "Invalid milestones payload" };
   }
@@ -118,7 +141,7 @@ const parseMilestones = (input) => {
       return { error: `Invalid status for milestone "${title}"` };
     }
 
-    const parsedProofs = parseMilestoneProofs(raw.proofs);
+    const parsedProofs = parseMilestoneProofs(raw.proofs, legacyUrls);
     if (parsedProofs.error) {
       return { error: `Milestone "${title}": ${parsedProofs.error}` };
     }
@@ -281,7 +304,10 @@ export async function PUT(req, { params }) {
     }
 
     if (body.milestones !== undefined) {
-      const parsedMilestones = parseMilestones(body.milestones);
+      const parsedMilestones = parseMilestones(
+        body.milestones,
+        legacyFileUrls(project),
+      );
       if (parsedMilestones.error) {
         return Response.json(
           { error: parsedMilestones.error },
@@ -358,13 +384,10 @@ export async function PUT(req, { params }) {
     }
     if (body.expenditure_evidence !== undefined) {
       project.expenditure_evidence = Array.isArray(body.expenditure_evidence)
-        ? body.expenditure_evidence
-            .filter((f) => f && (f.url || f.key))
-            .map((f) => ({
-              url: f.url || "",
-              key: f.key || "",
-              name: f.name || null,
-            }))
+        ? normalizeProjectFiles(
+            body.expenditure_evidence,
+            legacyFileUrls(project),
+          )
         : [];
     }
 
