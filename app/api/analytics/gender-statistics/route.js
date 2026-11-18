@@ -78,18 +78,40 @@ function addCounts(bucket, sex) {
   bucket.total += 1;
 }
 
+/* Percentage to one decimal place; 0 when there is no whole. */
+function pct(part, whole) {
+  return whole ? Math.round((part / whole) * 1000) / 10 : 0;
+}
+
+/* The {Female, Male, Other, total, pctFemale} shape every breakdown row
+   carries, from a counts bucket (missing buckets read as zeros). */
+function countRow(c = {}) {
+  const total = c.total || 0;
+  return {
+    Female: c.Female || 0,
+    Male: c.Male || 0,
+    Other: c.Other || 0,
+    total,
+    pctFemale: pct(c.Female || 0, total),
+  };
+}
+
+/* Counts profiles by key, split by sex. A falsy key skips the profile, so
+   callers that want an "Unspecified" bucket put the fallback in `keyOf`. */
+function countBy(profiles, keyOf, sexOf) {
+  const counts = {};
+  profiles.forEach((p) => {
+    const key = keyOf(p);
+    if (!key) return;
+    if (!counts[key]) counts[key] = emptyCounts();
+    addCounts(counts[key], sexOf(p));
+  });
+  return counts;
+}
+
 function toList(countsObj, nameKey) {
   return Object.entries(countsObj)
-    .map(([name, c]) => ({
-      [nameKey]: name,
-      Female: c.Female || 0,
-      Male: c.Male || 0,
-      Other: c.Other || 0,
-      total: c.total || 0,
-      pctFemale: c.total
-        ? Math.round(((c.Female || 0) / c.total) * 1000) / 10
-        : 0,
-    }))
+    .map(([name, c]) => ({ [nameKey]: name, ...countRow(c) }))
     .sort((a, b) => b.total - a.total);
 }
 
@@ -102,13 +124,10 @@ function toList(countsObj, nameKey) {
 const PII_UNKNOWN = "Unknown";
 
 function piiBreakdown(profiles, read, sexOf) {
-  const counts = {};
-  profiles.forEach((p) => {
-    const key = read(p) || PII_UNKNOWN;
-    if (!counts[key]) counts[key] = emptyCounts();
-    addCounts(counts[key], sexOf(p));
-  });
-  return toList(counts, "name");
+  return toList(
+    countBy(profiles, (p) => read(p) || PII_UNKNOWN, sexOf),
+    "name",
+  );
 }
 
 const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
@@ -204,19 +223,23 @@ function countingIdentity(pii) {
   };
 }
 
-function buildDemographics(profiles, sexOf) {
+/* One counts bucket per DEMOGRAPHIC_ROWS entry, in that order. Shared by the
+   demographics table and the student-type breakdown, which differ only in
+   the row label's key and in whether pctFemale is included. */
+function countDemographicRows(profiles, sexOf) {
   return DEMOGRAPHIC_ROWS.map((row) => {
     const counts = emptyCounts();
     profiles.forEach((p) => {
       if (row.test(p)) addCounts(counts, sexOf(p));
     });
-    return {
-      label: row.label,
-      Female: counts.Female,
-      Male: counts.Male,
-      Other: counts.Other,
-      total: counts.total,
-    };
+    return { label: row.label, counts };
+  });
+}
+
+function buildDemographics(profiles, sexOf) {
+  return countDemographicRows(profiles, sexOf).map(({ label, counts }) => {
+    const { pctFemale, ...row } = countRow(counts);
+    return { label, ...row };
   });
 }
 
@@ -228,22 +251,10 @@ function orderIndex(order, value) {
 /* The six student type categories as table rows - the same tests as the
    demographics table, exposed as a filterable breakdown. */
 function buildStudentTypes(profiles, sexOf) {
-  return DEMOGRAPHIC_ROWS.map((row) => {
-    const counts = emptyCounts();
-    profiles.forEach((p) => {
-      if (row.test(p)) addCounts(counts, sexOf(p));
-    });
-    return {
-      type: row.label,
-      Female: counts.Female,
-      Male: counts.Male,
-      Other: counts.Other,
-      total: counts.total,
-      pctFemale: counts.total
-        ? Math.round((counts.Female / counts.total) * 1000) / 10
-        : 0,
-    };
-  });
+  return countDemographicRows(profiles, sexOf).map(({ label, counts }) => ({
+    type: label,
+    ...countRow(counts),
+  }));
 }
 
 function buildStats(profiles, type) {
@@ -266,14 +277,8 @@ function buildStats(profiles, type) {
     ? (p) => p?.affiliation?.academic_information?.college || "Unspecified"
     : (p) => p?.affiliation?.employment_information?.office || "Unspecified";
 
-  const byGroupCounts = {};
-  profiles.forEach((p) => {
-    const key = groupKey(p);
-    if (!byGroupCounts[key]) byGroupCounts[key] = emptyCounts();
-    addCounts(byGroupCounts[key], sexOf(p));
-  });
   const byGroup = toList(
-    byGroupCounts,
+    countBy(profiles, groupKey, sexOf),
     isStudent ? "college" : "office",
   ).filter((r) => (isStudent ? r.college : r.office) !== "Unspecified");
 
@@ -286,18 +291,16 @@ function buildStats(profiles, type) {
   let byTeaching = [];
 
   if (isStudent) {
-    const programCounts = {};
-    profiles.forEach((p) => {
-      const key = p?.affiliation?.academic_information?.course || "Unspecified";
-      if (!programCounts[key]) programCounts[key] = emptyCounts();
-      addCounts(programCounts[key], sexOf(p));
-    });
+    const programCounts = countBy(
+      profiles,
+      (p) => p?.affiliation?.academic_information?.course || "Unspecified",
+      sexOf,
+    );
     byProgram = toList(programCounts, "program")
       .filter((r) => r.program !== "Unspecified")
       .slice(0, 10);
 
-    const levelCounts = {};
-    profiles.forEach((p) => {
+    const levelOf = (p) => {
       const college = p?.affiliation?.academic_information?.college || "";
       const course = p?.affiliation?.academic_information?.course || "";
       const yearLevel = p?.affiliation?.academic_information?.year_level || "";
@@ -307,23 +310,20 @@ function buildStats(profiles, type) {
       const isMasters =
         !isDoctoral &&
         (isGraduate || /master/i.test(course) || /master/i.test(yearLevel));
-      const key = isDoctoral
+      return isDoctoral
         ? "Graduate (Doctoral)"
         : isMasters
           ? "Graduate (Masters)"
           : "Undergraduate";
-      if (!levelCounts[key]) levelCounts[key] = emptyCounts();
-      addCounts(levelCounts[key], sexOf(p));
-    });
-    byLevel = toList(levelCounts, "level");
+    };
+    byLevel = toList(countBy(profiles, levelOf, sexOf), "level");
 
-    const yearLevelCounts = {};
-    profiles.forEach((p) => {
-      const key = p?.affiliation?.academic_information?.year_level || "";
-      if (!key) return;
-      if (!yearLevelCounts[key]) yearLevelCounts[key] = emptyCounts();
-      addCounts(yearLevelCounts[key], sexOf(p));
-    });
+    /* No fallback: a profile without a year level is left out. */
+    const yearLevelCounts = countBy(
+      profiles,
+      (p) => p?.affiliation?.academic_information?.year_level,
+      sexOf,
+    );
     byYearLevel = toList(yearLevelCounts, "year_level").sort(
       (a, b) =>
         orderIndex(YEAR_LEVELS, a.year_level) -
@@ -332,61 +332,52 @@ function buildStats(profiles, type) {
 
     byStudentType = buildStudentTypes(profiles, sexOf);
   } else {
-    const appointmentCounts = {};
-    profiles.forEach((p) => {
-      const key =
-        p?.affiliation?.employment_information?.employment_appointment_status ||
-        "Unspecified";
-      if (!appointmentCounts[key]) appointmentCounts[key] = emptyCounts();
-      addCounts(appointmentCounts[key], sexOf(p));
-    });
-    byAppointment = toList(appointmentCounts, "status");
+    byAppointment = toList(
+      countBy(
+        profiles,
+        (p) =>
+          p?.affiliation?.employment_information
+            ?.employment_appointment_status || "Unspecified",
+        sexOf,
+      ),
+      "status",
+    );
 
-    const statusCounts = {};
-    profiles.forEach((p) => {
-      const key =
-        p?.affiliation?.employment_information?.employment_status ||
-        "Unspecified";
-      if (!statusCounts[key]) statusCounts[key] = emptyCounts();
-      addCounts(statusCounts[key], sexOf(p));
-    });
-    byEmploymentStatus = toList(statusCounts, "status");
+    byEmploymentStatus = toList(
+      countBy(
+        profiles,
+        (p) =>
+          p?.affiliation?.employment_information?.employment_status ||
+          "Unspecified",
+        sexOf,
+      ),
+      "status",
+    );
 
     /* Teaching vs non-teaching: the same two-bucket rollup of
        `employment_status` that `teachingCategoryOf` applies to the sample
        records in employeeStats.js. `employment_status` is the field the
        `personnel_type` filter queries, so both agree by construction. */
-    const teachingCounts = {};
-    profiles.forEach((p) => {
-      const key =
+    const teachingCounts = countBy(
+      profiles,
+      (p) =>
         p?.affiliation?.employment_information?.employment_status === "Faculty"
           ? "Faculty"
-          : "Non-Teaching Personnel";
-      if (!teachingCounts[key]) teachingCounts[key] = emptyCounts();
-      addCounts(teachingCounts[key], sexOf(p));
-    });
-    byTeaching = TEACHING_CATEGORY_ORDER.map((name) => {
-      const c = teachingCounts[name] || emptyCounts();
-      return {
-        name,
-        Female: c.Female || 0,
-        Male: c.Male || 0,
-        Other: c.Other || 0,
-        total: c.total || 0,
-        pctFemale: c.total
-          ? Math.round(((c.Female || 0) / c.total) * 1000) / 10
-          : 0,
-      };
-    });
+          : "Non-Teaching Personnel",
+      sexOf,
+    );
+    /* Both categories always appear, in a fixed order, even when empty. */
+    byTeaching = TEACHING_CATEGORY_ORDER.map((name) => ({
+      name,
+      ...countRow(teachingCounts[name]),
+    }));
   }
 
-  const ageCounts = {};
-  profiles.forEach((p) => {
-    const key = ageGroupOf({ birthday: p?.personal?.birthday });
-    if (!key) return;
-    if (!ageCounts[key]) ageCounts[key] = emptyCounts();
-    addCounts(ageCounts[key], sexOf(p));
-  });
+  const ageCounts = countBy(
+    profiles,
+    (p) => ageGroupOf({ birthday: p?.personal?.birthday }),
+    sexOf,
+  );
   const byAgeGroup = toList(ageCounts, "age_group").sort(
     (a, b) =>
       orderIndex(AGE_GROUP_ORDER, a.age_group) -
@@ -405,19 +396,11 @@ function buildStats(profiles, type) {
          the Female/Male split understates them. Surfaced because a report
          built on it would otherwise look complete. */
       unresolvedSex,
-      pctFemale: totals.total
-        ? Math.round((totals.Female / totals.total) * 1000) / 10
-        : 0,
-      pctMale: totals.total
-        ? Math.round((totals.Male / totals.total) * 1000) / 10
-        : 0,
-      pctOther: totals.total
-        ? Math.round((totals.Other / totals.total) * 1000) / 10
-        : 0,
+      pctFemale: pct(totals.Female, totals.total),
+      pctMale: pct(totals.Male, totals.total),
+      pctOther: pct(totals.Other, totals.total),
       lgbtqia,
-      pctLgbtqia: totals.total
-        ? Math.round((lgbtqia / totals.total) * 1000) / 10
-        : 0,
+      pctLgbtqia: pct(lgbtqia, totals.total),
     },
     [isStudent ? "byCollege" : "byOffice"]: byGroup,
     ...(isStudent
