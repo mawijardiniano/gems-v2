@@ -2,12 +2,14 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/data/lib/auth";
 import { getS3Client, storageBucket } from "@/data/lib/storage";
+import { connectDB } from "@/data/lib/db";
+import { canReadStoredFile } from "@/data/lib/fileAccess";
 
 const s3 = getS3Client;
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
 
     const { searchParams } = new URL(req.url);
@@ -28,6 +30,13 @@ export async function GET(req) {
 
     if (!key || key.startsWith("/") || key.split("/").includes("..")) {
       return NextResponse.json({ error: "Invalid key" }, { status: 400 });
+    }
+
+    /* Same rule as /api/files/proxy: only files of records the caller may
+       read. Not-found and not-allowed answer the same. */
+    await connectDB();
+    if (!(await canReadStoredFile(user, key))) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
     const object = await s3().send(
@@ -59,7 +68,7 @@ export async function GET(req) {
     }
     console.error("DOWNLOAD ERROR:", err);
     return NextResponse.json(
-      { error: "Download failed", details: err.message },
+      { error: "Download failed" },
       { status: 500 },
     );
   }

@@ -19,10 +19,6 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({ children }) {
   useEffect(() => {
-    fetch("/api/socket")
-      .then(() => console.log("Socket.IO init requested"))
-      .catch((err) => console.error("Socket.IO init failed", err));
-
     registerServiceWorker();
   }, []);
 

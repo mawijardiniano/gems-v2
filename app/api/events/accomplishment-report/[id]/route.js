@@ -6,14 +6,14 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { deleteFileFromBucket } from "@/data/lib/delete";
-import { canManageEvent } from "@/data/lib/eventAccess";
+import { canManageEvent, canViewEventReport } from "@/data/lib/eventAccess";
 import {
   collectReportFileKeys as collectFileKeys,
   findForeignReportKey,
 } from "@/data/lib/eventFileKeys";
 
 export async function GET(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -23,6 +23,18 @@ export async function GET(req, { params }) {
 
   try {
     await connectDB();
+    /* The report holds the signed attendance sheet's file key; any account
+       used to read any event's report. */
+    const event = await Event.findById(id).select("created_by").lean();
+    if (!event) {
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    }
+    if (!canViewEventReport(user, event)) {
+      return NextResponse.json(
+        { message: "You are not allowed to view this report." },
+        { status: 403 },
+      );
+    }
     /* `data: null` (200) still means "no report yet" — ReportTab relies on it
        to show the empty form rather than an error. */
     const report = await AccomplishmentReport.findOne({
@@ -131,6 +143,10 @@ export async function PUT(req, { params }) {
       data: updated,
     });
   } catch (err) {
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    console.error("PUT /api/events/accomplishment-report/[id] failed:", err);
+    return NextResponse.json(
+      { message: "Unable to update the report." },
+      { status: 500 },
+    );
   }
 }

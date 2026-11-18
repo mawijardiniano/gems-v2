@@ -7,9 +7,13 @@ import { requireAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 import { isEventOrganizer } from "@/data/lib/eventAccess";
+import UserAuth from "@/models/user";
 
-/* How old an offline-queued scan may be when it is replayed. */
-const OFFLINE_REPLAY_WINDOW_MS = 24 * 60 * 60 * 1000;
+/* How old an offline-queued scan may be when it is replayed. The scan time
+   comes from the device, so this is also how far back a check-in can be
+   dated: it was 24 hours, which let a student "check in" the day after an
+   event ended. Two hours still covers a scan queued at the venue. */
+const OFFLINE_REPLAY_WINDOW_MS = 2 * 60 * 60 * 1000;
 /* Tolerance for a device clock running slightly ahead of the server. */
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
 const MAX_IDS_PER_REQUEST = 200;
@@ -63,11 +67,24 @@ export async function POST(req) {
        event's organizers: its creator or an oversight role. */
     const isOrganizer = isEventOrganizer(user, event);
     const selfId = user._id.toString();
-    if (targetIds.some((uid) => uid !== selfId) && !isOrganizer) {
+    const otherIds = targetIds.filter((uid) => uid !== selfId);
+    if (otherIds.length && !isOrganizer) {
       return NextResponse.json(
         { message: "You can only record your own attendance." },
         { status: 403 },
       );
+    }
+
+    /* Ids sent by an organizer must be real accounts: any well-formed id was
+       pushed into the attendee list and counted as a participant. */
+    if (otherIds.length) {
+      const found = await UserAuth.countDocuments({ _id: { $in: otherIds } });
+      if (found !== otherIds.length) {
+        return NextResponse.json(
+          { message: "Some of the selected accounts no longer exist." },
+          { status: 400 },
+        );
+      }
     }
 
     if (event.status === "cancelled") {

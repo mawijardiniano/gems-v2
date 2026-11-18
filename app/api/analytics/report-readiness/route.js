@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { cacheOrSet } from "@/data/lib/cache";
-import { optionalAuth } from "@/data/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
+import { canViewProjectDetails } from "@/data/lib/projectAccess";
 import Project from "@/models/projects";
 import Event from "@/models/event";
 import AccomplishmentReport from "@/models/accomplishment_report";
@@ -23,8 +24,16 @@ function projectLabel(p) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await optionalAuth(req);
+    /* Project titles and events missing reports are for the GAD roles that
+       read the dashboard and Reports pages; this answered anonymous callers. */
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+    if (!canViewProjectDetails(user.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to view report readiness." },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 

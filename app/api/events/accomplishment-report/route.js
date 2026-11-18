@@ -6,7 +6,11 @@ import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { findForeignReportKey } from "@/data/lib/eventFileKeys";
-import { canManageEvent } from "@/data/lib/eventAccess";
+import {
+  canManageEvent,
+  canReadAllEventReports,
+  canViewEventReport,
+} from "@/data/lib/eventAccess";
 
 const MAX_REPORTS = 1000;
 
@@ -103,7 +107,7 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
     await connectDB();
 
@@ -119,7 +123,24 @@ export async function GET(req) {
           { status: 400 },
         );
       }
+      const event = await Event.findById(eventId).select("created_by").lean();
+      if (!event) {
+        return NextResponse.json({ message: "Event not found" }, { status: 404 });
+      }
+      if (!canViewEventReport(user, event)) {
+        return NextResponse.json(
+          { message: "You are not allowed to view this report." },
+          { status: 403 },
+        );
+      }
       query.event_id = eventId;
+    } else if (!canReadAllEventReports(user.role)) {
+      /* Reports carry file keys for signed attendance sheets; any account
+         used to list all of them. Others see only their own events'. */
+      const ownEvents = await Event.find({ created_by: user._id })
+        .select("_id")
+        .lean();
+      query.event_id = { $in: ownEvents.map((e) => e._id) };
     }
 
     /* Bounded: the GAD-AR print builder reads this list, and an unbounded,

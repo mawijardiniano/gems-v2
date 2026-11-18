@@ -8,6 +8,7 @@ import Notification from "@/models/notification";
 import { rateLimiters } from "@/data/lib/rateLimit";
 import { usernameEqualsFilter } from "@/data/lib/usernames";
 import { resolvePii } from "@/data/lib/profileBroker";
+import { emitToUser } from "@/data/lib/realtime";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -292,8 +293,8 @@ export async function POST(req) {
             metadata: { missingFields },
           });
 
-          if (global.io) {
-            global.io.emit("notification:new", {
+          {
+            emitToUser(user._id, "notification:new", {
               recipientId: String(user._id),
               notification: {
                 _id: "pending",
@@ -326,8 +327,8 @@ export async function POST(req) {
             metadata: {},
           });
 
-          if (global.io) {
-            global.io.emit("notification:new", {
+          {
+            emitToUser(user._id, "notification:new", {
               recipientId: String(user._id),
               notification: {
                 _id: "pending",

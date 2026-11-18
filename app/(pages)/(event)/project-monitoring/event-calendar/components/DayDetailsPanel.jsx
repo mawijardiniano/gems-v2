@@ -57,7 +57,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
     ...(event.organizing_office_unit || []),
     ...(event.co_organizing_office_unit || []),
   ];
-  const registeredCount = (event.attended_users || []).length;
+  const registeredCount = event.attended_count || 0;
 
   return (
     <li

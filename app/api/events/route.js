@@ -21,7 +21,12 @@ import { appEndOfDay, parseAppDate } from "@/data/lib/appTime";
 import { canViewPII } from "@/data/lib/profileBroker";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
-import { EVENT_CREATOR_ROLES, hasEventOversight } from "@/data/lib/eventAccess";
+import {
+  EVENT_CREATOR_ROLES,
+  hasEventOversight,
+  organizingOfficeError,
+} from "@/data/lib/eventAccess";
+import { emitToUser } from "@/data/lib/realtime";
 
 const EVENTS_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -178,9 +183,7 @@ export async function GET(req) {
         ? Math.min(Math.floor(rawLimit), MAX_PAGE_SIZE)
         : upcomingOnly
           ? MAX_PAGE_SIZE
-          : hasRange
-            ? MAX_RANGE_SIZE
-            : 0;
+          : MAX_RANGE_SIZE;
     const skip = limit ? (page - 1) * limit : 0;
 
     /* The cache key must describe the query, not just the creator. Keying on
@@ -212,10 +215,16 @@ export async function GET(req) {
           )
           .skip(skip);
 
-        /* An unbounded limit is only used by callers that genuinely need every
-           row (the calendar, the report builders). `?limit=` makes the list
-           page bounded. */
-        if (limit) query.limit(limit);
+        /* Always bounded: with no `limit`, `upcoming` or date range this
+           used to return every event in the system. Callers that need a whole
+           set narrow it (`?year=`, `?from=&to=`, `?created_by=`). */
+        query.limit(limit);
+
+        /* Only the number of attendees leaves this route. The list used to
+           hand every attendee's id to any signed-in account; the screens only
+           ever read its length. The event page (/api/events/[id]) serves the
+           list itself, to organizers. */
+        query.select("-attended_users");
 
         const rows = await query
           .populate({
@@ -229,8 +238,23 @@ export async function GET(req) {
            The role gate inside the hydrator decides who actually gets a
            decrypted identity. */
         const data = await hydrateUserPopulate(rows, user?.role);
+        const counts = new Map(
+          (
+            await Event.aggregate([
+              { $match: { _id: { $in: rows.map((r) => r._id) } } },
+              {
+                $project: {
+                  n: { $size: { $ifNull: ["$attended_users", []] } },
+                },
+              },
+            ])
+          ).map((r) => [String(r._id), r.n]),
+        );
+        for (const row of data) {
+          row.attended_count = counts.get(String(row._id)) || 0;
+        }
 
-        const total = limit ? await Event.countDocuments(filter) : data.length;
+        const total = await Event.countDocuments(filter);
 
         return { data, total };
       },
@@ -337,6 +361,11 @@ export async function POST(req) {
         },
         { status: 403 },
       );
+    }
+
+    const officeError = organizingOfficeError(user, officeUnits);
+    if (officeError) {
+      return NextResponse.json({ message: officeError }, { status: 403 });
     }
 
     const isProjectBased = Boolean(project);
@@ -459,12 +488,12 @@ export async function POST(req) {
       metadata: { event_id: newEvent?._id },
     });
 
-    if (global.io) {
-      global.io.emit("event:created", {
-        event: newEvent,
-        createdBy: user._id,
-      });
-    }
+    /* Only the creator's own screens list a new event live; this went to
+       every connected socket, signed in or not. */
+    emitToUser(user._id, "event:created", {
+      event: newEvent,
+      createdBy: user._id,
+    });
 
     return NextResponse.json(
       { message: "Event created successfully", event: newEvent },

@@ -16,7 +16,11 @@ import {
 import { normalizeRefNumber } from "@/data/lib/referenceNumber";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
-import { canManageEvent } from "@/data/lib/eventAccess";
+import {
+  canManageEvent,
+  isEventOrganizer,
+  organizingOfficeError,
+} from "@/data/lib/eventAccess";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -93,13 +97,27 @@ export async function GET(req, { params }) {
         { status: 404 },
       );
 
+    /* The attendee list (usernames, colleges, courses, offices) and the
+       cancellation details are for the event's organizers. Any signed-in
+       account used to read them. Others get their own check-in, if any, and
+       the number of attendees. */
+    const attendees = Array.isArray(event.attended_users)
+      ? event.attended_users
+      : [];
+    event.attended_count = attendees.length;
+    if (!isEventOrganizer(user, event)) {
+      event.attended_users = attendees.filter(
+        (a) => String(a?.user_id?._id ?? a?.user_id) === String(user._id),
+      );
+      delete event.cancel_reason;
+      delete event.cancelled_by;
+    }
+
     /* Names, birthdays and sex-at-birth live in the vault. The attendance modal
        reads `attended_users.user_id.personal_info_id.gadData.sexAtBirth` to fill
        its Sex column and `personal.birthday` for age, so without this the modal
-       would come up blank once the legacy columns are stripped.
-       This route is reachable anonymously (`optionalAuth`), so the role gate
-       inside the hydrator is what stops an unauthenticated caller from reading a
-       decrypted identity out of `created_by` and the attendance list. */
+       would come up blank once the legacy columns are stripped. The role gate
+       inside the hydrator still decides who reads a decrypted identity. */
     await hydrateUserPopulate(event.attended_users, user?.role);
     await hydrateUserPopulate(event.created_by, user?.role);
 
@@ -189,6 +207,8 @@ export async function PUT(req, { params }) {
     const newProjectId =
       body.project === undefined ? oldProjectId : body.project;
 
+    const previousOffices = canonicalOfficeList(event.organizing_office_unit);
+
     for (const field of EDITABLE_FIELDS) {
       if (body[field] === undefined) continue;
 
@@ -198,6 +218,25 @@ export async function PUT(req, { params }) {
           ? canonicalOfficeList(body[field])
           : body[field],
       );
+    }
+
+    /* Only checked when the offices change, so an older event credited to
+       another office can still be edited in other ways. */
+    const officesChanged =
+      body.organizing_office_unit !== undefined &&
+      JSON.stringify(canonicalOfficeList(event.organizing_office_unit)) !==
+        JSON.stringify(previousOffices);
+    if (officesChanged) {
+      const officeError = organizingOfficeError(
+        user,
+        event.organizing_office_unit,
+      );
+      if (officeError) {
+        return NextResponse.json(
+          { status: "error", message: officeError },
+          { status: 403 },
+        );
+      }
     }
 
     // Enforce Project-based (GPB) vs Independent on update.

@@ -28,6 +28,7 @@ import {
   searchIndexQuery,
   loadDecryptedPiiBatch,
 } from "@/data/lib/profileBroker";
+import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
 
 const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -727,10 +728,8 @@ export async function POST(req) {
       severity: "info",
     });
 
-    if (global.io) {
-      global.io.emit("profile:new", createdProfile);
-      console.log("✅ Emitted profile:new", createdProfile._id);
-    }
+    /* Staff dashboards only; whole profiles went to every socket. */
+    emitToRoles(PROFILE_WATCHER_ROLES, "profile:new", createdProfile);
 
     return NextResponse.json(
       {
@@ -778,10 +777,7 @@ export async function DELETE(req) {
       metadata: { count: usersToDelete.length },
     });
 
-    if (global.io) {
-      global.io.emit("profile:deleted");
-      console.log("✅ Emitted profile:deleted for User role only");
-    }
+    emitToRoles(PROFILE_WATCHER_ROLES, "profile:deleted");
 
     return NextResponse.json({
       status: "success",

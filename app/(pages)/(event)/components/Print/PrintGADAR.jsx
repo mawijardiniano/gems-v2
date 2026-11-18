@@ -10,6 +10,8 @@ import {
 import { FaPrint } from "react-icons/fa";
 import { renderPdfPagesToImages } from "@/data/lib/print/pdfRenderer";
 import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
+import { escapeHtml } from "@/data/lib/escapeHtml";
+import { formatAmount } from "@/data/lib/money";
 
 const getFieldValue = (field) => {
   if (!field) return "";
@@ -37,17 +39,14 @@ const getProjectTypeLabel = (project) => {
   return "Uncategorized";
 };
 
-const fmt = (n) =>
-  Number(n).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+/* Two decimals in en-PH like every other screen (data/lib/money.js); it
+   used to follow the browser's locale and printed "NaN" for a blank amount. */
+const fmt = (n) => formatAmount(Number(n) || 0);
 
-const escapeHtml = (value) =>
-  String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+/* Every value written into the print HTML goes through escapeHtml (the
+   shared one, which also escapes quotes for attributes). Project text such
+   as a gender issue used to be written raw into a same-origin iframe, so
+   "<img src=x onerror=…>" ran in the session of whoever printed. */
 
 const getFileExt = (file) => {
   const source = file?.name || file?.url || "";
@@ -63,7 +62,9 @@ const isImageFile = (file) =>
   );
 
 const renderList = (arr) =>
-  arr.length > 0 ? arr.map((item, i) => `${i + 1}. ${item}`).join("<br/>") : "";
+  arr.length > 0
+    ? arr.map((item, i) => `${i + 1}. ${escapeHtml(item)}`).join("<br/>")
+    : "";
 
 /* Activities keep the single GAD Activity column: each title is followed by
    its description, which is index-paired with `gad_activity_description`. */
@@ -73,8 +74,8 @@ const renderActivityList = (titles, descriptions) =>
         .map((item, i) => {
           const description = descriptions[i];
           return description
-            ? `${i + 1}. ${item}<br/>${description}`
-            : `${i + 1}. ${item}`;
+            ? `${i + 1}. ${escapeHtml(item)}<br/>${escapeHtml(description)}`
+            : `${i + 1}. ${escapeHtml(item)}`;
         })
         .join("<br/>")
     : "";
@@ -170,7 +171,9 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
     async function loadEventAttachments() {
       try {
         const [eventsRes, reportsRes] = await Promise.all([
-          fetch("/api/events"),
+          /* The year's events only: the list is bounded now, and the
+             report groups events by their project's year anyway. */
+          fetch(`/api/events?year=${encodeURIComponent(year)}`),
           fetch("/api/events/accomplishment-report"),
         ]);
         const eventsJson = await eventsRes.json();
@@ -203,8 +206,8 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       }
     }
 
-    loadEventAttachments();
-  }, []);
+    if (year) loadEventAttachments();
+  }, [year]);
 
   useEffect(() => {
     if (!eventAttachments) return;
@@ -346,26 +349,26 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       const actualCell = isAttributedProgram ? "" : actualText || "";
 
       const sectionHeader = shouldShowTypeHeader
-        ? `<tr class="type-header"><td colspan="11">${projectTypeLabel}</td></tr>`
+        ? `<tr class="type-header"><td colspan="11">${escapeHtml(projectTypeLabel)}</td></tr>`
         : "";
 
       const rowHtml = `
           <tr>
             <td class="cell num">${index + 1}</td>
-            <td class="cell">${getFieldValue(project.gender_issue) || ""}</td>
+            <td class="cell">${escapeHtml(getFieldValue(project.gender_issue))}</td>
             <td class="cell">${renderList(causes)}</td>
             <td class="cell">${renderList(objectives)}</td>
-            <td class="cell">${getFieldValue(project.relevant_agency) || ""}</td>
+            <td class="cell">${escapeHtml(getFieldValue(project.relevant_agency))}</td>
             <td class="cell">${renderActivityList(activities, activityDescriptions)}</td>
             <td class="cell">${renderList(indicators)}</td>
-            <td class="cell">${actualCell}</td>
+            <td class="cell">${escapeHtml(actualCell)}</td>
             <td class="cell num">₱ ${fmt(getFieldValue(project.gad_budget))}</td>
             <td class="cell num">${
               project.actual_expenditures
                 ? `₱ ${fmt(project.actual_expenditures)}`
                 : ""
             }</td>
-            <td class="cell">${getArrayValue(project.responsible_office).join(", ")}</td>
+            <td class="cell">${escapeHtml(getArrayValue(project.responsible_office).join(", "))}</td>
           </tr>
         `;
 
@@ -413,7 +416,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             <div class="pdf-note">
               <div class="pdf-icon">PDF</div>
               <div><strong>${escapeHtml(file.name || "PDF Document")}</strong></div>
-              <div class="muted">PDF attachment — open the file to view/print: <a href="${file.url}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
+              <div class="muted">PDF attachment — open the file to view/print: <a href="${escapeHtml(file.url)}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
               ${
                 renderError
                   ? `<div class="render-error">⚠ Render failed: ${escapeHtml(renderError)}</div>`
@@ -426,7 +429,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             <div class="pdf-note">
               <div class="pdf-icon">${escapeHtml((getFileExt(file) || "doc").toUpperCase())}</div>
               <div><strong>${escapeHtml(file.name || "Document")}</strong></div>
-              <div class="muted">Document attachment — open the file to view/print: <a href="${file.url}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
+              <div class="muted">Document attachment — open the file to view/print: <a href="${escapeHtml(file.url)}" target="_blank">${escapeHtml(file.name || file.url)}</a></div>
             </div>
           `;
 
@@ -444,14 +447,14 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
             (src, i) =>
               `<div class="attachment-block${
                 i > 0 || pageBreakBefore ? " page-break-before" : ""
-              }"><img class="attachment-img" src="${src}" alt="Page ${
+              }"><img class="attachment-img" src="${escapeHtml(src)}" alt="Page ${
                 i + 1
               }" /></div>`,
           )
           .join("");
       }
       if (isImageFile(file)) {
-        return `<div class="attachment-block${breakClass}"><img class="attachment-img" src="${file.url}" alt="${escapeHtml(file.name || "attachment")}" /></div>`;
+        return `<div class="attachment-block${breakClass}"><img class="attachment-img" src="${escapeHtml(file.url)}" alt="${escapeHtml(file.name || "attachment")}" /></div>`;
       }
       if (isPdfFile(file)) {
         return `<div class="attachment-block${breakClass}">${pdfNoteHtml(file)}</div>`;
@@ -508,7 +511,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       <html>
       <head>
         <meta charset="utf-8" />
-        <title>GAD Accomplishment Report ${year}</title>
+        <title>GAD Accomplishment Report ${escapeHtml(year)}</title>
         <style>
           @page {
             size: legal landscape;
@@ -734,7 +737,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
         <div class="print-footer">Report Generated: ${reportDate} &nbsp; <span class="page-num"></span></div>
         <div class="header">
           <h1>ANNUAL GENDER AND DEVELOPMENT (GAD) ACCOMPLISHMENT REPORT</h1>
-          <p>FY: <strong>${year}</strong></p>
+          <p>FY: <strong>${escapeHtml(year)}</strong></p>
         </div>
 
         <!-- ── Row 1: Reference | Date Endorsed ───────────── -->
@@ -829,8 +832,8 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
 <td class="blank-space-3"></td>
       </tr>
       <tr>
-        <td style="font-weight: bold">${signatories.focalPointName}</td>
-    <td style="font-weight: bold">${signatories.presidentName}</td>
+        <td style="font-weight: bold">${escapeHtml(signatories.focalPointName)}</td>
+    <td style="font-weight: bold">${escapeHtml(signatories.presidentName)}</td>
 <td class="date-border-1"></td>
       </tr>
             <tr>

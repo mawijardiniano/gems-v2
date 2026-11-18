@@ -432,8 +432,8 @@ export default function EventsListContent() {
                       <div className="flex items-center gap-1.5 text-xs text-gray-400">
                         <FaUsers size={12} />
                         <span>
-                          {evt.attended_users?.length || 0} participant
-                          {(evt.attended_users?.length || 0) !== 1 ? "s" : ""}
+                          {evt.attended_count || 0} participant
+                          {(evt.attended_count || 0) !== 1 ? "s" : ""}
                         </span>
                       </div>
                       <button

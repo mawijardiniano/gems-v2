@@ -4,6 +4,7 @@ import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
 
 export async function DELETE(req) {
   try {
@@ -35,11 +36,11 @@ export async function DELETE(req) {
       metadata: { ids },
     });
 
-    if (global.io) {
-      profileIds.forEach((pid) => {
-        io.emit("profile:deleted", { id: pid.toString() });
+    profileIds.forEach((pid) => {
+      emitToRoles(PROFILE_WATCHER_ROLES, "profile:deleted", {
+        id: pid.toString(),
       });
-    }
+    });
 
     return NextResponse.json({
       status: "success",
