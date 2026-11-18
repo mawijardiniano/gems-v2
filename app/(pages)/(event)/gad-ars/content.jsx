@@ -7,45 +7,26 @@ import { formatAmount } from "@/data/lib/money";
 import {
   FaFileAlt,
   FaTimes,
-  FaCheckCircle,
   FaExclamationTriangle,
   FaFolderOpen,
-  FaLock,
   FaPaperclip,
   FaDownload,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
+import { resolveAccomplishmentText } from "@/data/lib/accomplishmentSummary";
+import { fileKeyOf } from "@/data/lib/eventFileKeys";
+/* Shared with the print and the server PDF, so all three group, label and
+   fill rows the same way. */
 import {
-  resolveAccomplishmentText,
-} from "@/data/lib/accomplishmentSummary";
-
-const getFieldValue = (field) => {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-};
-
-const getArrayValue = (field) => {
-  const v = getFieldValue(field);
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (v) return [v];
-  return [];
-};
-
-const getProjectTypeLabel = (project) => {
-  const rawType = project?.project_type;
-  const value =
-    rawType && typeof rawType === "object" ? rawType.value : rawType;
-  if (value === "Client Focused") return "Client Focused";
-  if (value === "Organization Focused") return "Organization Focused";
-  if (value === "Attributed Program") return "Attributed Program";
-  return "Uncategorized";
-};
-
+  activityPairs,
+  fieldList as getArrayValue,
+  fieldValue as getFieldValue,
+  isActualResultReported,
+  orderProjectsByType,
+  projectTypeLabel as getProjectTypeLabel,
+} from "@/data/lib/reportFields";
 
 const getEvidenceFileType = (file) => {
   const name = `${file?.name || ""} ${file?.url || ""}`.toLowerCase();
@@ -55,13 +36,13 @@ const getEvidenceFileType = (file) => {
 };
 
 const getEvidenceProxyUrl = (file) => {
-  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  const key = fileKeyOf(file);
   if (!key) return null;
   return `/api/files/proxy?key=${encodeURIComponent(key)}`;
 };
 
 const getEvidenceDownloadUrl = (file) => {
-  const key = file?.key || (file?.url ? file.url.split(".com/")[1] : null);
+  const key = fileKeyOf(file);
   if (!key) return null;
   const nameParam = file?.name ? `&name=${encodeURIComponent(file.name)}` : "";
   return `/api/download?key=${encodeURIComponent(key)}${nameParam}`;
@@ -83,7 +64,9 @@ export default function GADARContent() {
   const [loading, setLoading] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  /* Set when the year's projects could not be loaded, so a failure does not
+     read as "No projects found". */
+  const [projectsError, setProjectsError] = useState("");
 
   /* The page had a whole actuals editor here (state, upload, save) that
      nothing opened, and that called an undefined function. Actuals are
@@ -98,13 +81,6 @@ export default function GADARContent() {
       return () => clearTimeout(t);
     }
   }, [error]);
-
-  useEffect(() => {
-    if (success) {
-      const t = setTimeout(() => setSuccess(""), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [success]);
 
   const fetchGPBList = useCallback(async () => {
     setLoading(true);
@@ -135,30 +111,42 @@ export default function GADARContent() {
     fetchGPBList();
   }, [fetchGPBList]);
 
-  const fetchProjects = useCallback(async () => {
-    if (!selectedYear) return;
-    setLoadingProjects(true);
-    try {
-      const res = await fetch(`/api/gpb/${selectedYear}`);
-      const data = await res.json();
-      if (res.ok && data.data) {
-        setProjects(data.data.projects || []);
-        setGaaBudget(data.data.gaaBudgetId || null);
-      } else {
-        setProjects([]);
-        setGaaBudget(null);
-      }
-    } catch {
-      setProjects([]);
-      setGaaBudget(null);
-    } finally {
-      setLoadingProjects(false);
-    }
-  }, [selectedYear]);
-
+  /* `cancelled` drops a response for a year no longer selected: switching
+     years quickly let the older, slower response overwrite the newer one. */
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects, selectedYear]);
+    if (!selectedYear) return;
+    let cancelled = false;
+
+    (async () => {
+      setLoadingProjects(true);
+      setProjectsError("");
+      let nextProjects = [];
+      let nextBudget = null;
+      let nextError = "";
+      try {
+        const res = await fetch(`/api/gpb/${selectedYear}`);
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.data) {
+          nextProjects = data.data.projects || [];
+          nextBudget = data.data.gaaBudgetId || null;
+        } else if (res.status !== 404) {
+          nextError =
+            data.message || data.error || "Failed to load the GAD projects.";
+        }
+      } catch {
+        nextError = "Network error. Please try again.";
+      }
+      if (cancelled) return;
+      setProjects(nextProjects);
+      setGaaBudget(nextBudget);
+      setProjectsError(nextError);
+      setLoadingProjects(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedYear]);
 
   const resetPreviewState = () => {
     setPreviewLoading(true);
@@ -219,25 +207,7 @@ export default function GADARContent() {
     0,
   );
 
-  const getActualForDisplay = (project) => resolveAccomplishmentText(project);
-
-  const projectTypeOrder = {
-    "Client Focused": 0,
-    "Organization Focused": 1,
-    "Attributed Program": 2,
-    Uncategorized: 3,
-  };
-
-  const orderedProjects = [...projects]
-    .map((project, originalIndex) => ({ project, originalIndex }))
-    .sort((a, b) => {
-      const aType = getProjectTypeLabel(a.project);
-      const bType = getProjectTypeLabel(b.project);
-      const byType = projectTypeOrder[aType] - projectTypeOrder[bType];
-      if (byType !== 0) return byType;
-      return a.originalIndex - b.originalIndex;
-    })
-    .map((entry) => entry.project);
+  const orderedProjects = orderProjectsByType(projects);
 
   const viewerFiles = evidenceViewer?.files || [];
   const viewerIndex = evidenceViewer?.index ?? 0;
@@ -277,12 +247,6 @@ export default function GADARContent() {
         </div>
       </div>
 
-      {success && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm animate-slide-up">
-          <FaCheckCircle className="h-5 w-5 shrink-0" />
-          <span>{success}</span>
-        </div>
-      )}
       {error && (
         <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
@@ -341,6 +305,14 @@ export default function GADARContent() {
             <div key={i} className="h-8 bg-gray-200 rounded" />
           ))}
         </div>
+      ) : projectsError ? (
+        <div className="rounded-2xl bg-white border border-red-100 shadow-sm p-12 text-center">
+          <FaExclamationTriangle className="h-10 w-10 text-red-300 mx-auto mb-3" />
+          <p className="text-sm font-medium text-gray-900">
+            Could not load the GAD projects for {selectedYear}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{projectsError}</p>
+        </div>
       ) : projects.length === 0 ? (
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
           <FaFileAlt className="h-10 w-10 text-gray-300 mx-auto mb-3" />
@@ -390,9 +362,6 @@ export default function GADARContent() {
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                     Responsible Unit/Office
                   </th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -407,23 +376,27 @@ export default function GADARContent() {
 
                   const causes = getArrayValue(project.cause_gender_issue);
                   const objectives = getArrayValue(project.gad_objective);
-                  const activities = getArrayValue(project.gad_activity);
+                  const activities = activityPairs(project);
                   const indicators = getArrayValue(
                     project.performance_indicator_target,
                   );
-                  const actual = getActualForDisplay(project);
-                  const actualEvents = Array.isArray(project.events)
-                    ? project.events.filter(
-                        (ev) => ev && ev.status !== "cancelled",
-                      )
-                    : [];
+                  /* Derived from linked events unless the owner saved a
+                     manual override. Left blank for an Attributed Program,
+                     as on the print and the PDF. */
+                  const actualReported = isActualResultReported(project);
+                  const actual = actualReported
+                    ? resolveAccomplishmentText(project)
+                    : "";
+                  /* Variance only once actuals are encoded: before that it
+                     showed the whole budget as variance. */
+                  const hasActuals = Boolean(project.actual_expenditures);
 
                   return (
                     <React.Fragment key={project._id}>
                       {shouldShowTypeHeader && (
                         <tr className="bg-orange-300 border-y border-black">
                           <td
-                            colSpan={12}
+                            colSpan={11}
                             className="py-2 px-4 text-sm font-semibold text-black"
                           >
                             {projectTypeLabel}
@@ -465,8 +438,15 @@ export default function GADARContent() {
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {activities.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
-                              {activities.map((a, i) => (
-                                <li key={i}>{a}</li>
+                              {activities.map(({ title, description }, i) => (
+                                <li key={i}>
+                                  {title}
+                                  {description && (
+                                    <span className="block pl-4 text-gray-500">
+                                      {description}
+                                    </span>
+                                  )}
+                                </li>
                               ))}
                             </ol>
                           ) : (
@@ -487,6 +467,10 @@ export default function GADARContent() {
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {actual ? (
                             actual
+                          ) : !actualReported ? (
+                            <span className="text-gray-400 italic">
+                              Not reported for Attributed Programs
+                            </span>
                           ) : (
                             <span className="text-gray-400 italic">
                               Encode actuals in Project Monitoring → GAD
@@ -520,27 +504,21 @@ export default function GADARContent() {
                                 </button>
                               )}
                           </div>
-                          <span className="block mt-1 text-[10px] font-normal text-gray-400">
-                            Variance: ₱{" "}
-                            {fmt(
-                              (Number(getFieldValue(project.gad_budget)) || 0) -
-                                (Number(project.actual_expenditures) || 0),
-                            )}
-                          </span>
+                          {hasActuals && (
+                            <span className="block mt-1 text-[10px] font-normal text-gray-400">
+                              Variance: ₱{" "}
+                              {fmt(
+                                (Number(getFieldValue(project.gad_budget)) ||
+                                  0) -
+                                  (Number(project.actual_expenditures) || 0),
+                              )}
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-4 align-top text-xs text-gray-800">
                           {getArrayValue(project.responsible_office).join(
                             ", ",
                           ) || "—"}
-                        </td>
-                        <td className="px-3 py-4 align-top text-center">
-                          <span
-                            title="Actuals are now encoded in Project Monitoring → GAD Projects"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg cursor-not-allowed select-none"
-                          >
-                            <FaLock className="h-3 w-3" />
-                            View only
-                          </span>
                         </td>
                       </tr>
                     </React.Fragment>
@@ -561,7 +539,7 @@ export default function GADARContent() {
                   <td className="px-3 py-3 text-right text-xs font-bold text-emerald-600">
                     ₱ {fmt(totalExpenditures)}
                   </td>
-                  <td colSpan={2} />
+                  <td />
                 </tr>
               </tfoot>
             </table>
