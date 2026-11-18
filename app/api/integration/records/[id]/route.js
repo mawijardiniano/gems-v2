@@ -56,26 +56,52 @@ export async function PATCH(req, { params }) {
        we log, `record` already holds the new values. */
     const before = record.toObject();
 
+    /* Rows that already reached production (or are being migrated) are
+       history; editing them here would not change the live profile. */
+    if (record.status === "migrated") {
+      return NextResponse.json(
+        { status: "error", message: "Record is already migrated." },
+        { status: 409 },
+      );
+    }
+
     if (body.mapped_payload) {
       record.mapped_payload = body.mapped_payload;
       record.identity = buildIdentity(body.mapped_payload);
       record.school_year = body.mapped_payload.school_year || "";
       record.semester = body.mapped_payload.semester || "";
+      /* An edited row has not been checked; it must pass validation again
+         before it can be approved. */
+      record.status = "pending";
+      record.validation_errors = [];
+    }
+
+    if (body.revalidate === true) {
+      const errors = validateMappedPayload(record.mapped_payload || {});
+      record.validation_errors = errors;
+      /* Same rule as the batch validate route: warnings don't block. */
+      const blocking = errors.some((e) => e.level !== "warning");
+      record.status = blocking ? "invalid" : "valid";
     }
 
     if (
       body.status &&
       ["approved", "rejected", "pending"].includes(body.status)
     ) {
+      /* Approval is the gate before migration; only a row that passed
+         validation may go through it. */
+      if (body.status === "approved" && record.status !== "valid") {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `Only a valid record can be approved (this one is ${record.status}).`,
+          },
+          { status: 400 },
+        );
+      }
       record.status = body.status;
       record.reviewed_by = auth.user._id;
       record.reviewed_at = new Date();
-    }
-
-    if (body.revalidate === true) {
-      const errors = validateMappedPayload(record.mapped_payload || {});
-      record.validation_errors = errors;
-      record.status = errors.length ? "invalid" : "valid";
     }
 
     await record.save();

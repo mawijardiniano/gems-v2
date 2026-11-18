@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import csv from "csvtojson";
 import { connectDB } from "@/data/lib/db";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
-import { stageRows } from "@/app/api/integration/_utils/staging";
+import {
+  stageRows,
+  MAX_BATCH_ROWS,
+  MAX_SOURCE_BYTES,
+} from "@/app/api/integration/_utils/staging";
+import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
 export async function POST(req) {
@@ -31,26 +36,41 @@ export async function POST(req) {
 
     const name = file.name || "upload.csv";
     const lower = name.toLowerCase();
-    if (!lower.endsWith(".csv") && !lower.endsWith(".xlsx")) {
+    if (!lower.endsWith(".csv")) {
       return NextResponse.json(
-        { status: "error", message: "Only .csv or .xlsx files are allowed" },
+        { status: "error", message: "Only .csv files are allowed" },
         { status: 400 },
       );
     }
 
-    if (lower.endsWith(".xlsx")) {
+    if (file.size > MAX_SOURCE_BYTES) {
       return NextResponse.json(
         {
           status: "error",
-          message:
-            "XLSX parsing is not enabled yet in this build. Install and wire the xlsx parser first.",
+          message: `File is too large (max ${MAX_SOURCE_BYTES / 1024 / 1024} MB).`,
         },
-        { status: 400 },
+        { status: 413 },
       );
     }
 
     const text = await file.text();
     const rows = await csv().fromString(text);
+
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { status: "error", message: "The file has no data rows." },
+        { status: 400 },
+      );
+    }
+    if (rows.length > MAX_BATCH_ROWS) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `File has ${rows.length} rows; split it into files of at most ${MAX_BATCH_ROWS}.`,
+        },
+        { status: 413 },
+      );
+    }
 
     const { batch, insertedCount, duplicateCount } = await stageRows({
       rows,
@@ -63,6 +83,20 @@ export async function POST(req) {
         school_year: defaultSchoolYear,
         semester: defaultSemester,
       },
+    });
+
+    await writeSyncLog({
+      batchId: batch._id,
+      action: "sync",
+      message: `Uploaded ${rows.length} row(s) from ${name} (${insertedCount} staged, ${duplicateCount} duplicates flagged)`,
+      details: {
+        source_name: name,
+        fetched: rows.length,
+        staged: insertedCount,
+        duplicates_flagged: duplicateCount,
+      },
+      executedBy: auth.user._id,
+      executedByUsername: auth.user.username,
     });
 
     /* An upload stages a batch of people for import. Logged here so the trail

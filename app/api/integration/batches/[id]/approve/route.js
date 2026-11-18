@@ -29,6 +29,18 @@ export async function POST(req, { params }) {
       );
     }
 
+    /* Approval only makes sense on a validated batch that hasn't started
+       migrating; anything else would approve rows nobody checked. */
+    if (batch.status !== "ready") {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `Batch is ${batch.status}; validate it first (only a ready batch can be approved).`,
+        },
+        { status: 409 },
+      );
+    }
+
     const ids = Array.isArray(body.record_ids) ? body.record_ids : null;
 
     const filter = { batch_id: id, status: "valid" };

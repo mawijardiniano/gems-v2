@@ -33,10 +33,30 @@ export async function POST(req, { params }) {
       );
     }
 
+    /* A batch being migrated, or already migrated, must not be re-checked:
+       validation rewrites record statuses and would put migrated rows back
+       in the approve queue. */
+    if (["migrating", "completed"].includes(batch.status)) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: `Batch is ${batch.status}; it cannot be validated now.`,
+        },
+        { status: 409 },
+      );
+    }
+
     batch.status = "validating";
     await batch.save();
 
-    const records = await StagingRecord.find({ batch_id: id });
+    /* Only rows still under review are (re)checked. Approved, rejected,
+       migrated, failed and duplicate rows keep their status. */
+    const REVALIDATABLE = ["pending", "valid", "invalid"];
+    const allRecords = await StagingRecord.find({ batch_id: id });
+    const records = allRecords.filter((r) => REVALIDATABLE.includes(r.status));
+    const approvedCount = allRecords.filter(
+      (r) => r.status === "approved",
+    ).length;
 
     const studentIds = [];
     const employeeIds = [];
@@ -112,7 +132,13 @@ export async function POST(req, { params }) {
       }
     }
 
-    const seen = new Set();
+    /* Rows already approved still occupy their ID within this batch. */
+    const seen = new Set(
+      allRecords
+        .filter((r) => r.status === "approved")
+        .map((r) => buildIdentityDedupeKey(r.identity || {}))
+        .filter(Boolean),
+    );
     let valid = 0;
     let invalid = 0;
     let existingCount = 0;
@@ -204,7 +230,9 @@ export async function POST(req, { params }) {
       existing: batch.totals.existing,
     };
 
-    batch.status = valid > 0 ? "ready" : "failed";
+    /* Rows approved earlier are still migratable, so they keep the batch ready. */
+    const migratable = valid + approvedCount;
+    batch.status = migratable > 0 ? "ready" : "failed";
     batch.totals.valid = valid;
     batch.totals.invalid = invalid;
     batch.totals.existing = existingCount;
@@ -258,7 +286,10 @@ export async function POST(req, { params }) {
           redacted: false,
         },
       ],
-      outcome: { result: valid > 0 ? "success" : "failure", status_code: 200 },
+      outcome: {
+        result: migratable > 0 ? "success" : "failure",
+        status_code: 200,
+      },
     });
 
     return NextResponse.json({

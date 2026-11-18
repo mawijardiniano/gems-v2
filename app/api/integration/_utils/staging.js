@@ -6,6 +6,12 @@ import {
   mapToStagingPayload,
 } from "@/app/api/integration/_utils/mapping";
 
+/* Upper bounds on what one batch may hold. Validation and migration run
+   row by row inside a request, so an unbounded file or feed would time out
+   or exhaust memory before it ever reached review. */
+export const MAX_BATCH_ROWS = 10000;
+export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
+
 export async function stageRows({
   rows,
   sourceType,

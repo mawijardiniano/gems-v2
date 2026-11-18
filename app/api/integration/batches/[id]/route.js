@@ -27,6 +27,17 @@ export async function DELETE(req, { params }) {
       );
     }
 
+    /* Deleting mid-migration would pull records out from under the run. */
+    if (batch.status === "migrating") {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Batch is migrating; wait for it to finish before deleting.",
+        },
+        { status: 409 },
+      );
+    }
+
     const [recordsResult, logsResult] = await Promise.all([
       StagingRecord.deleteMany({ batch_id: id }),
       SyncLog.deleteMany({ batch_id: id }),
