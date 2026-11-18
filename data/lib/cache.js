@@ -39,6 +39,19 @@ export function cacheDelPrefix(prefix) {
   }
 }
 
+/* The year reports built from GPBs and their projects. A write to either
+   clears them, so a download straight after an edit shows the edit. */
+const PROJECT_REPORT_PREFIXES = [
+  "gpb-matrix-report:",
+  "gpb-progress-report:",
+  "gad-ar-report:",
+  "projects-events-report:",
+];
+
+export function clearProjectReportCaches() {
+  for (const prefix of PROJECT_REPORT_PREFIXES) cacheDelPrefix(prefix);
+}
+
 
 export function cacheFlush() {
   store.clear();

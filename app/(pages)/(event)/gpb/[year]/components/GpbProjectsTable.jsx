@@ -217,7 +217,7 @@ export default function GpbProjectsTable({
                       {shouldShowTypeHeader && (
                         <tr className="bg-orange-300 border-y border-black">
                           <td
-                            colSpan={role !== "planning director" ? 14 : 12}
+                            colSpan={role !== "planning director" ? 14 : 13}
                             className="py-2 px-4 text-sm font-semibold text-black"
                           >
                             {projectTypeLabel}
@@ -253,10 +253,9 @@ export default function GpbProjectsTable({
                                     className="py-2 px-4 border text-xs"
                                     rowSpan={maxRows}
                                   >
-                                    <div>
-                                      {project._raw.gender_issue?.value}
-                                    </div>
-                                    {/* <pre>{JSON.stringify(project._raw.cause_gender_issue, null, 2)}</pre> */}
+                                    {/* The normalized value: a legacy plain
+                                        string has no `.value` and was blank. */}
+                                    <div>{project.gender_issue}</div>
                                   </td>
                                 )}
                               </>

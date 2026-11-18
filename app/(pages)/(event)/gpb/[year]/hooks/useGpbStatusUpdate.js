@@ -18,13 +18,19 @@ export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
   /* The modal opens with the saved reason: the API replaces the reason with
      whatever is sent (so it can be cleared), and an empty field would
      silently wipe it on every status update. */
+  /* It also opens on the saved status and with no file picked: a file picked
+     and then cancelled used to stay selected and be uploaded on the next save,
+     while the file input looked empty. */
   const openModal = () => {
     setReasonField(gpbStatus?.reason || "");
+    setStatusType(gpbStatus?.status || "approved");
+    setSelectedFile(null);
     setOpen(true);
   };
 
   const closeModal = () => {
     if (saving) return;
+    setSelectedFile(null);
     setOpen(false);
   };
 
@@ -109,8 +115,11 @@ export function useScannedViewer(scannedCopyUrl) {
 
   const download = () => {
     if (!scannedCopyUrl) return;
+    /* A new tab: without it, Download replaced the GPB page with the file. */
     const link = document.createElement("a");
     link.href = scannedCopyUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
     document.body.appendChild(link);
     link.click();
     link.remove();

@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { appParts } from "@/data/lib/appTime";
 import { connectDB } from "@/data/lib/db";
 import { requireAuth } from "@/data/lib/auth";
+import { canViewGpbReports } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
+import { parseGpbYear } from "@/data/lib/gpbYear";
 import {
   computeYearBudgetSummary,
   yearProjectsMatch,
@@ -20,10 +22,10 @@ import {
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-  PROJECT_TYPE_ORDER,
   activityCellText,
   fieldList,
   fieldValue,
+  orderProjectsByType,
   pdfPeso,
   projectTypeLabel,
 } from "@/data/lib/reportFields";
@@ -71,20 +73,24 @@ const MAIN_TABLE_HEAD = [
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+    /* Budget amounts and signatories are for the GPB roles and the President
+       (read-only). */
+    if (!canViewGpbReports(user?.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     await connectDB();
 
     const url = new URL(req.url);
-    const yearParam = url.searchParams.get("year")?.trim();
-    if (!yearParam || Number.isNaN(Number(yearParam))) {
+    const year = parseGpbYear(url.searchParams.get("year"));
+    if (year === null) {
       return NextResponse.json(
         { message: "Valid academic year is required." },
         { status: 400 },
       );
     }
-    const year = Number(yearParam);
 
     const result = await cacheOrSet(
       `gpb-matrix-report:${year}`,
@@ -114,16 +120,7 @@ export async function GET(req) {
           };
         }
 
-        const orderedProjects = [...projects]
-          .map((project, originalIndex) => ({ project, originalIndex }))
-          .sort((a, b) => {
-            const byType =
-              PROJECT_TYPE_ORDER[projectTypeLabel(a.project)] -
-              PROJECT_TYPE_ORDER[projectTypeLabel(b.project)];
-            if (byType !== 0) return byType;
-            return a.originalIndex - b.originalIndex;
-          })
-          .map((entry) => entry.project);
+        const orderedProjects = orderProjectsByType(projects);
 
         const generatedAt = new Date();
 

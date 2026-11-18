@@ -52,7 +52,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const statusUpdate = useGpbStatusUpdate({
     gpbId: gpb.gpbId,
     gpbStatus,
-    onUpdated: () => gpb.fetchProjects(),
+    onUpdated: () => gpb.fetchProjects({ quiet: true }),
   });
   const viewer = useScannedViewer(gpbStatus?.scanned_copy?.url);
 
@@ -61,7 +61,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
   // ── Pagination ───────────────────────────────────────────
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [pageSizeInput, setPageSizeInput] = useState("10");
 
   const orderedProjects = orderProjectsByType(projects);
@@ -203,8 +203,11 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
             + Add Project
           </button>
         )}
-        {role !== "gad coordinator" && (
+        {/* Hidden until the plan has loaded: with no GPB id the save posted
+            to /api/gpb/status/null. */}
+        {!loadError && gpb.gpbId && role !== "gad coordinator" && (
           <button
+            type="button"
             onClick={statusUpdate.openModal}
             className="bg-secondary-600 py-2 px-5 text-white rounded-md font-medium"
           >

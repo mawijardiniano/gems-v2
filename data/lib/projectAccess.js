@@ -32,8 +32,10 @@ export const isModuleEditorRole = (role) =>
 
 /** Roles that may create, attach budgets to, or delete a whole GPB, and
     create, edit or delete GAA budgets. Matches the pages: coordinators and
-    the planning director see GPBs and budgets read-only. */
-export const GPB_MANAGER_ROLES = ["gad focal person", "admin"];
+    the planning director see GPBs and budgets read-only. Admin is not here:
+    it has no GPB page and cannot read GPBs (canAccessGpb), so it could
+    change plans it was not allowed to see. */
+export const GPB_MANAGER_ROLES = ["gad focal person"];
 
 /** Roles that may add a GAD project to a GPB (the GPB page's "+ Add Project";
     the planning director reviews instead). */

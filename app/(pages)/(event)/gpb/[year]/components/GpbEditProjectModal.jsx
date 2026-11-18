@@ -44,6 +44,8 @@ export default function GpbEditProjectModal({
             </p>
           </div>
           <button
+            type="button"
+            aria-label="Close"
             onClick={cancelEdit}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-3xl transition"
           >
@@ -75,7 +77,6 @@ export default function GpbEditProjectModal({
               </label>
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
-                rows={3}
                 value={editRow.project_type}
                 onChange={(e) =>
                   handleEditRowChange("project_type", e.target.value)

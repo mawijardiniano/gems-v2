@@ -42,11 +42,13 @@ export default function AddProjectWizard({
           <h2 className="text-xl font-semibold text-gray-800">
             Add Project — Year {year}
           </h2>
+          {/* Closing (and the step reset) is closeWizard's job, which waits
+              while a save is running; resetting the step here sent a saving
+              wizard back to step 1. */}
           <button
-            onClick={() => {
-              setShowWizard(false);
-              setWizardStep(1);
-            }}
+            type="button"
+            aria-label="Close"
+            onClick={() => setShowWizard(false)}
             className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
           >
             &times;
@@ -122,7 +124,6 @@ export default function AddProjectWizard({
               </label>
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
-                rows={3}
                 value={newProject.project_type}
                 onChange={(e) =>
                   handleNewProjectChange("project_type", e.target.value)
@@ -437,11 +438,12 @@ export default function AddProjectWizard({
                   type="number"
                   min="0"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
-                  value={newProject.gad_budget}
+                  value={newProject.gad_budget ?? ""}
+                  /* An emptied field stays empty; Number("") made it "0". */
                   onChange={(e) =>
                     handleNewProjectChange(
                       "gad_budget",
-                      Number(e.target.value),
+                      e.target.value === "" ? "" : Number(e.target.value),
                     )
                   }
                 />
