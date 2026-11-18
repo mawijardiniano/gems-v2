@@ -1,42 +1,19 @@
-import ai from "@/data/lib/gemini";
-import { NextResponse } from "next/server";
-import { requireRole } from "@/data/lib/auth";
-import { cleanAiEventInput } from "@/data/lib/aiEventInput";
-import { EVENT_ORGANIZER_ROLES } from "@/data/lib/eventAccess";
+import {
+  createAiEventTextRoute,
+  gadEmphasis,
+} from "@/data/lib/aiEventTextRoute";
 
-/* Only people who create or manage events use the generators (create page,
-   event edit form, post-activity report); anyone else was free to spend the
-   model quota. */
-const AI_ROLES = EVENT_ORGANIZER_ROLES;
-import { rateLimiters } from "@/data/lib/rateLimit";
-
-export async function POST(req) {
-  try {
-    // Rate limit: 10 AI generations per minute per user
-    const rateLimitResult = await rateLimiters.ai(req);
-    if (rateLimitResult.error) {
-      return NextResponse.json(
-        { error: rateLimitResult.error },
-        { status: rateLimitResult.status, headers: rateLimitResult.headers },
-      );
-    }
-
-    const { error, status } = await requireRole(req, AI_ROLES);
-    if (error) return NextResponse.json({ error, message: error }, { status });
-
-    const data = cleanAiEventInput(await req.json().catch(() => null));
-    if (!data.title) {
-      return NextResponse.json(
-        { error: "A title is required.", message: "A title is required." },
-        { status: 400 },
-      );
-    }
-
+/* The event description shown on the create page and the edit form. Rate
+   limiting, the organizer-role check and input cleanup live in
+   data/lib/aiEventTextRoute.js. */
+const generate = createAiEventTextRoute({
+  failMessage: "Failed to generate description",
+  buildPrompt: (data) => {
     /* Events are scheduled by date only, so the prompt states the (Manila)
        day rather than a time. */
     const eventDate = data.date_medium || "To be announced";
 
-    const prompt = `
+    return `
 You are an official event communications writer for a Philippine state university.
 
 Write a professional event description for the following university event:
@@ -56,30 +33,14 @@ WRITING INSTRUCTIONS
 - Tone: formal, institutional, and motivating — suitable for an official university announcement
 - Use active voice throughout
 - Do not repeat the event title verbatim more than once
-${
-  data.type_of_activity === "GAD" || data.gad_activity
-    ? "- This is a GAD (Gender and Development) activity: emphasize gender responsiveness, inclusivity, and the promotion of equal opportunities"
-    : ""
-}
+${gadEmphasis(data)}
 
 
 Return only the two paragraphs of the description. No preamble, no title, no sign-off.
 `;
+  },
+});
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
-
-    return NextResponse.json({
-      description: response.text,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Failed to generate description" },
-      { status: 500 },
-    );
-  }
+export async function POST(req) {
+  return generate(req);
 }

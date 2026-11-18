@@ -1,4 +1,5 @@
-import { APP_TIME_ZONE, appDateInput } from "@/data/lib/appTime";
+import { appDateInput } from "@/data/lib/appTime";
+import { formatLongDay } from "@/data/lib/eventDates";
 
 /** The Manila "YYYY-MM-DD" for a stored date (for <input type="date">). */
 export const formatForInput = (value) => {
@@ -32,17 +33,7 @@ export const buildEditData = (evt) => {
   };
 };
 
-const formatDateOnly = (value) => {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? "Invalid date"
-    : d.toLocaleDateString(undefined, {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        timeZone: APP_TIME_ZONE,
-      });
-};
+const formatDateOnly = (value) => formatLongDay(value);
 
 /* Lines for the Overview's "Date Range" tile. Date-only: the time of day is
    noise here, and a same-day event reads as one date, not "X - X". */

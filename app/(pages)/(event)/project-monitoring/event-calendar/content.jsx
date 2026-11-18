@@ -1,7 +1,8 @@
 "use client";
 
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { canManageEvent as canManageEventRule } from "@/data/lib/eventAccess";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaCalendarDay,
@@ -18,18 +19,6 @@ const MONTH_LABELS = [
 ];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MAX_SPAN_DAYS = 62;
-
-/* created_by can be a populated object or a raw ObjectId */
-const getCreatorId = (e) => {
-  const creator = e?.created_by;
-  if (!creator) return "";
-  if (typeof creator === "object") {
-    return creator._id ? creator._id.toString() : "";
-  }
-  return creator.toString();
-};
-
-const isAdminRole = (role) => (role || "").toLowerCase() === "admin";
 
 const dateKey = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -55,7 +44,11 @@ export default function EventCalendarContent() {
 
   /* Only the weeks the grid shows (plus a margin for multi-day events),
      instead of every event in the system on every visit. */
+  /* Each load gets a number; only the latest one may write. Clicking Next
+     twice quickly let the slower, older month overwrite the newer one. */
+  const loadSeq = useRef(0);
   const loadEvents = useCallback(async () => {
+    const seq = ++loadSeq.current;
     setLoading(true);
     setError("");
     try {
@@ -67,13 +60,15 @@ export default function EventCalendarContent() {
       const res = await axios.get("/api/events", {
         params: { from: iso(from), to: iso(to) },
       });
+      if (seq !== loadSeq.current) return;
       setEvents(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
+      if (seq !== loadSeq.current) return;
       setError(
         err?.response?.data?.message || "Failed to load events. Please try again.",
       );
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, [viewYear, viewMonth]);
 
@@ -96,11 +91,11 @@ export default function EventCalendarContent() {
     loadProfile();
   }, []);
 
+  /* The shared rule (creator or Admin), as the event API enforces it. */
   const canManageEvent = useCallback(
     (event) =>
       Boolean(currentUser?.id) &&
-      (getCreatorId(event) === currentUser.id ||
-        isAdminRole(currentUser.role)),
+      canManageEventRule({ _id: currentUser.id, role: currentUser.role }, event),
     [currentUser],
   );
 
@@ -142,12 +137,17 @@ export default function EventCalendarContent() {
     });
   }, [viewYear, viewMonth]);
 
-  const monthEventCount = useMemo(
-    () =>
-      cells.filter((c) => c.inMonth && (eventsByDay[c.key] || []).length > 0)
-        .length,
-    [cells, eventsByDay],
-  );
+  /* Distinct events with a day in this month. It counted days that had
+     events, so three events on one day read "1 event". */
+  const monthEventCount = useMemo(() => {
+    const ids = new Set();
+    cells
+      .filter((c) => c.inMonth)
+      .forEach((c) =>
+        (eventsByDay[c.key] || []).forEach((ev) => ids.add(String(ev?._id))),
+      );
+    return ids.size;
+  }, [cells, eventsByDay]);
 
   const selectedEvents = useMemo(
     () => eventsByDay[selectedKey] || [],

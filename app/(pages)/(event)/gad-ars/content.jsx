@@ -2,29 +2,23 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { useSelector } from "react-redux";
-import { useFileLifecycle } from "@/hooks/useFileLifecycle";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { formatAmount } from "@/data/lib/money";
 import {
   FaFileAlt,
-  FaCalendarAlt,
-  FaEdit,
   FaTimes,
   FaCheckCircle,
   FaExclamationTriangle,
   FaFolderOpen,
   FaLock,
   FaPaperclip,
-  FaTrash,
   FaDownload,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
 import PrintGADAR from "../components/Print/PrintGADAR";
 import {
-  generateAccomplishmentSummary,
-  normalizeAccomplishmentLines,
   resolveAccomplishmentText,
-  usesAccomplishmentOverride,
 } from "@/data/lib/accomplishmentSummary";
 
 const getFieldValue = (field) => {
@@ -52,8 +46,6 @@ const getProjectTypeLabel = (project) => {
   return "Uncategorized";
 };
 
-const ACCEPTED_EVIDENCE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
-const MAX_EVIDENCE_SIZE = 10 * 1024 * 1024;
 
 const getEvidenceFileType = (file) => {
   const name = `${file?.name || ""} ${file?.url || ""}`.toLowerCase();
@@ -82,9 +74,7 @@ const getProjectContextLabel = (project) => {
 };
 
 export default function GADARContent() {
-  const userId = useSelector((state) => state.auth.userId);
   const searchParams = useSearchParams();
-  const fileLifecycle = useFileLifecycle();
 
   const [gpbList, setGpbList] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
@@ -95,35 +85,12 @@ export default function GADARContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [editProject, setEditProject] = useState(null);
-  const [editActual, setEditActual] = useState("");
-  const [editOverride, setEditOverride] = useState(false);
-  const [editSuggestion, setEditSuggestion] = useState("");
-  const [editExpenditures, setEditExpenditures] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [editEvidence, setEditEvidence] = useState([]);
-  const [evidenceUploading, setEvidenceUploading] = useState(false);
+  /* The page had a whole actuals editor here (state, upload, save) that
+     nothing opened, and that called an undefined function. Actuals are
+     encoded from the GAD projects page (ActualsEncoderModal). */
   const [evidenceViewer, setEvidenceViewer] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(true);
   const [previewError, setPreviewError] = useState("");
-
-  const canEditActuals = (project) => {
-    const creatorId = String(project.createdBy?._id || project.createdBy || "");
-    return creatorId === String(userId);
-  };
-
-  const getCreatorName = (project) => {
-    const creator = project.createdBy;
-    if (!creator) return "the project creator";
-    const profile = creator.personal_info_id;
-    if (profile?.personal) {
-      const name = `${profile.personal.first_name || ""} ${
-        profile.personal.last_name || ""
-      }`.trim();
-      return name || creator.username || "the project creator";
-    }
-    return creator.username || "the project creator";
-  };
 
   useEffect(() => {
     if (error) {
@@ -193,92 +160,6 @@ export default function GADARContent() {
     fetchProjects();
   }, [fetchProjects, selectedYear]);
 
-  const openEdit = (project) => {
-    const storedLines = normalizeAccomplishmentLines(
-      project.actual_accomplishment,
-    );
-    const suggestion =
-      generateAccomplishmentSummary(project) ||
-      project.generated_accomplishment ||
-      "";
-    /* Legacy hand-written text on a project without linked events is treated as a
-       manual override so saving never drops it. */
-    const isOverride = shouldUseAccomplishmentOverride(project, suggestion);
-
-    setEditOverride(isOverride);
-    setEditSuggestion(suggestion);
-    setEditProject(project);
-    setEditActual(
-      isOverride
-        ? storedLines.join("\n")
-        : suggestion || storedLines.join("\n"),
-    );
-    setEditExpenditures(project.actual_expenditures || "");
-    const evidence = Array.isArray(project.expenditure_evidence)
-      ? project.expenditure_evidence
-      : [];
-    setEditEvidence(evidence);
-    fileLifecycle.startSession(evidence.map((f) => f?.key));
-  };
-
-  const handleEvidenceUpload = async (e) => {
-    const fileList = Array.from(e.target.files || []);
-    e.target.value = "";
-    if (fileList.length === 0) return;
-
-    const invalid = fileList.filter(
-      (f) =>
-        !ACCEPTED_EVIDENCE_TYPES.includes(f.type) || f.size > MAX_EVIDENCE_SIZE,
-    );
-    if (invalid.length > 0) {
-      setError("Evidence files must be PDF, JPG, or PNG and under 10MB each.");
-      return;
-    }
-
-    setEvidenceUploading(true);
-    try {
-      const uploaded = [];
-      for (const file of fileList) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", "expenditure-evidence");
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || data.message || "Upload failed");
-        }
-        uploaded.push({ url: data.url, key: data.key, name: file.name });
-      }
-      const next = [...editEvidence, ...uploaded];
-      setEditEvidence(next);
-      fileLifecycle.syncCurrent(next.map((f) => f?.key));
-    } catch (err) {
-      setError(err.message || "Failed to upload evidence files");
-    } finally {
-      setEvidenceUploading(false);
-    }
-  };
-
-  const removeEvidenceFile = (file) => {
-    if (!file?.key) {
-      setEditEvidence((prev) => prev.filter((f) => f !== file));
-      return;
-    }
-    const next = editEvidence.filter((f) => f.key !== file.key);
-    setEditEvidence(next);
-    fileLifecycle.syncCurrent(next.map((f) => f?.key));
-    if (!fileLifecycle.hasOriginal(file.key)) {
-      fetch("/api/upload", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: file.key }),
-      }).catch(() => {});
-    }
-  };
-
   const resetPreviewState = () => {
     setPreviewLoading(true);
     setPreviewError("");
@@ -305,17 +186,6 @@ export default function GADARContent() {
     link.remove();
   };
 
-  const closeEdit = () => {
-    fileLifecycle.rollback();
-    fileLifecycle.resetSession();
-    setEditProject(null);
-    setEditActual("");
-    setEditOverride(false);
-    setEditSuggestion("");
-    setEditExpenditures("");
-    setEditEvidence([]);
-  };
-
   useEffect(() => {
     if (!evidenceViewer) return;
     const onKey = (e) => {
@@ -329,59 +199,16 @@ export default function GADARContent() {
           v ? { ...v, index: Math.min(v.files.length - 1, v.index + 1) } : v,
         );
         resetPreviewState();
-      } else if (e.key === "Escape") {
-        setEvidenceViewer(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [evidenceViewer]);
+  useEscapeKey(Boolean(evidenceViewer), () => setEvidenceViewer(null));
 
-  const saveActuals = async () => {
-    if (!editProject) return;
-    setSaving(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/project/${editProject._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          /* Custom text is stored only when the owner overrides the value derived
-             from the project's linked events. */
-          actual_accomplishment: editOverride
-            ? editActual
-                .split("\n")
-                .map((l) => l.trim())
-                .filter(Boolean)
-            : [],
-          actual_accomplishment_override: editOverride,
-          actual_expenditures: Number(editExpenditures) || 0,
-          expenditure_evidence: editEvidence,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || data.message || "Failed to save");
-      }
-
-      await fileLifecycle.commit();
-      setSuccess("GAD AR actuals saved successfully!");
-      closeEdit();
-      fetchProjects();
-    } catch (err) {
-      setError(err.message || "Failed to save actuals");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const fmt = (n) =>
-    Number(n).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  /* en-PH, two decimals, like every other screen; it followed the
+     browser's locale and printed "NaN" for a blank amount. */
+  const fmt = (n) => formatAmount(Number(n) || 0);
 
   const totalBudget = projects.reduce(
     (s, p) => s + (Number(getFieldValue(p.gad_budget)) || 0),

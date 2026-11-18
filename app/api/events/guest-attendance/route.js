@@ -27,9 +27,12 @@ const MAX_LEN = {
   position_designation: 200,
   program_year_section: 200,
 };
+/* Collapses whitespace. The pattern was `/s+/` (no backslash), which
+   replaced every letter "s" with a space: "Jessica Santos" was stored as
+   "Je ica Santo". */
 const clean = (value, max) =>
   String(value ?? "")
-    .replace(/s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, max);
 

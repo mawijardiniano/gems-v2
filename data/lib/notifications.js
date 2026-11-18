@@ -1,5 +1,6 @@
 import Notification from "@/models/notification";
 import UserAuth from "@/models/user";
+import { emitToUser } from "@/data/lib/realtime";
 
 export function normalizeRole(role) {
   return String(role || "")
@@ -135,14 +136,13 @@ export async function createNotifications({
 
   const created = await Notification.insertMany(docs);
 
-  if (global.io) {
-    created.forEach((notification) => {
-      global.io.emit("notification:new", {
-        recipientId: String(notification.recipientId),
-        notification,
-      });
+  /* To the recipient only: this went to every connected socket. */
+  created.forEach((notification) => {
+    emitToUser(notification.recipientId, "notification:new", {
+      recipientId: String(notification.recipientId),
+      notification,
     });
-  }
+  });
 
   return created;
 }

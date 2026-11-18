@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { requireAuth, optionalAuth } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { canonicalOfficeList } from "@/data/lib/colleges";
+import { parseAppDate } from "@/data/lib/appTime";
 import { deleteEventCascade } from "@/data/lib/eventCascade";
 import {
   USER_POPULATE_BASE,
@@ -16,7 +17,13 @@ import {
 import { normalizeRefNumber } from "@/data/lib/referenceNumber";
 import { isAcceptablePosterKey } from "@/data/lib/eventFileKeys";
 import { checkEventProjectLink } from "@/data/lib/eventProjectLink";
-import { canManageEvent } from "@/data/lib/eventAccess";
+import {
+  canManageEvent,
+  isEventOrganizer,
+  organizingOfficeError,
+} from "@/data/lib/eventAccess";
+import { participantCount } from "@/data/lib/eventParticipants";
+import { attachGuestRows } from "@/data/lib/eventGuestRows";
 
 const EDITABLE_FIELDS = [
   "title",
@@ -93,13 +100,31 @@ export async function GET(req, { params }) {
         { status: 404 },
       );
 
+    /* The attendee list (usernames, colleges, courses, offices) and the
+       cancellation details are for the event's organizers. Any signed-in
+       account used to read them. Others get their own check-in, if any, and
+       the number of attendees. */
+    const attendees = Array.isArray(event.attended_users)
+      ? event.attended_users
+      : [];
+    /* Account check-ins plus approved guest rows, one per person. The sheet
+       rows themselves are not sent (organizers read /api/events/guests). */
+    await attachGuestRows([event]);
+    event.attended_count = participantCount(event);
+    delete event.guest_rows;
+    if (!isEventOrganizer(user, event)) {
+      event.attended_users = attendees.filter(
+        (a) => String(a?.user_id?._id ?? a?.user_id) === String(user._id),
+      );
+      delete event.cancel_reason;
+      delete event.cancelled_by;
+    }
+
     /* Names, birthdays and sex-at-birth live in the vault. The attendance modal
        reads `attended_users.user_id.personal_info_id.gadData.sexAtBirth` to fill
        its Sex column and `personal.birthday` for age, so without this the modal
-       would come up blank once the legacy columns are stripped.
-       This route is reachable anonymously (`optionalAuth`), so the role gate
-       inside the hydrator is what stops an unauthenticated caller from reading a
-       decrypted identity out of `created_by` and the attendance list. */
+       would come up blank once the legacy columns are stripped. The role gate
+       inside the hydrator still decides who reads a decrypted identity. */
     await hydrateUserPopulate(event.attended_users, user?.role);
     await hydrateUserPopulate(event.created_by, user?.role);
 
@@ -122,6 +147,13 @@ export async function PUT(req, { params }) {
     return NextResponse.json(
       { status: "error", message: "Missing event id" },
       { status: 400 },
+    );
+  }
+  /* A malformed id used to surface Mongoose's raw CastError text. */
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json(
+      { status: "error", message: "Event not found" },
+      { status: 404 },
     );
   }
 
@@ -189,6 +221,22 @@ export async function PUT(req, { params }) {
     const newProjectId =
       body.project === undefined ? oldProjectId : body.project;
 
+    const previousOffices = canonicalOfficeList(event.organizing_office_unit);
+
+    /* A bare "YYYY-MM-DD" is that Manila day (parseAppDate); a plain cast
+       stored UTC midnight, 08:00 in Manila. */
+    for (const field of ["start_date", "end_date"]) {
+      if (body[field] === undefined) continue;
+      const parsed = parseAppDate(body[field]);
+      if (parsed === undefined) {
+        return NextResponse.json(
+          { status: "error", message: `Invalid ${field.replace("_", " ")}.` },
+          { status: 400 },
+        );
+      }
+      body[field] = parsed;
+    }
+
     for (const field of EDITABLE_FIELDS) {
       if (body[field] === undefined) continue;
 
@@ -198,6 +246,25 @@ export async function PUT(req, { params }) {
           ? canonicalOfficeList(body[field])
           : body[field],
       );
+    }
+
+    /* Only checked when the offices change, so an older event credited to
+       another office can still be edited in other ways. */
+    const officesChanged =
+      body.organizing_office_unit !== undefined &&
+      JSON.stringify(canonicalOfficeList(event.organizing_office_unit)) !==
+        JSON.stringify(previousOffices);
+    if (officesChanged) {
+      const officeError = organizingOfficeError(
+        user,
+        event.organizing_office_unit,
+      );
+      if (officeError) {
+        return NextResponse.json(
+          { status: "error", message: officeError },
+          { status: 403 },
+        );
+      }
     }
 
     // Enforce Project-based (GPB) vs Independent on update.
@@ -315,15 +382,29 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({ status: "success", data: populated });
   } catch (error) {
-    console.error("Validation failed:", error);
+    console.error("PUT /api/events/[id] failed:", error);
+    /* Two edits racing (optimistic concurrency) or onto the same reference
+       number: a conflict to retry, not a server error. */
+    if (error?.name === "VersionError" || error?.code === 11000) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message:
+            "Someone else changed this event at the same time. Reload it and try again.",
+        },
+        { status: 409 },
+      );
+    }
     /* Schema validation and bad casts are the caller's fault (400); anything
-       else is ours and must not leak internals. */
+       else is ours. Neither sends Mongoose's own text. */
     const clientError =
       error?.name === "ValidationError" || error?.name === "CastError";
     return NextResponse.json(
       {
         status: "error",
-        message: clientError ? error.message : "Unable to update event.",
+        message: clientError
+          ? "Some event details are invalid. Check the dates and fields."
+          : "Unable to update event.",
       },
       { status: clientError ? 400 : 500 },
     );

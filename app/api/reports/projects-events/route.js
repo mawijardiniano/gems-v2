@@ -4,6 +4,9 @@ import { requireAuth } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
 import Event from "@/models/event";
+import { effectiveStatus } from "@/data/lib/eventStatus";
+import { participantCount } from "@/data/lib/eventParticipants";
+import { attachGuestRows } from "@/data/lib/eventGuestRows";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -16,6 +19,15 @@ import {
   fmtDate,
   toDate,
 } from "@/data/lib/reportQuarters";
+import {
+  PROJECT_TYPE_ORDER,
+  activityCellText,
+  fieldList,
+  projectTypeLabel,
+} from "@/data/lib/reportFields";
+
+const projectActivityText = (project) =>
+  activityCellText(project, "Untitled activity");
 
 const REPORT_CACHE_TTL = 60 * 1000;
 
@@ -41,55 +53,11 @@ const STATUS_COLORS = {
   "Active (Ongoing)": [37, 99, 235],
 };
 
-const PROJECT_TYPE_ORDER = {
-  "Client Focused": 0,
-  "Organization Focused": 1,
-  "Attributed Program": 2,
-  Uncategorized: 3,
-};
-
 const headingStyle = {
   fontStyle: "bold",
   fontSize: 9,
   fillColor: [240, 240, 240],
 };
-
-function fieldValue(field) {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-}
-
-function fieldList(field) {
-  const value = fieldValue(field);
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (value) return [value];
-  return [];
-}
-
-/* GAD activity titles with their description on the line below, so the report
-   keeps the single GAD ACTIVITY column. Descriptions are index-paired with the
-   titles and are skipped when a project has none. */
-function projectActivity(project) {
-  const titles = fieldList(project?.gad_activity);
-  const descriptions = fieldList(project?.gad_activity_description);
-
-  return (
-    titles
-      .map((title, idx) =>
-        descriptions[idx] ? `${title}\n${descriptions[idx]}` : title,
-      )
-      .join("\n") || "Untitled activity"
-  );
-}
-
-function projectTypeLabel(project) {
-  const raw = project?.project_type;
-  const value = raw && typeof raw === "object" ? raw.value : raw;
-  return PROJECT_TYPE_ORDER[value] !== undefined ? value : "Uncategorized";
-}
 
 /* A project belongs to the quarter of its start date. */
 function projectDate(project) {
@@ -133,8 +101,10 @@ function milestoneProgress(project) {
   };
 }
 
+/* Account check-ins plus approved guest-sheet rows (guest_rows attached in
+   GET), one count per person. Walk-ins used to be left out. */
 function attendedCount(event) {
-  return Array.isArray(event?.attended_users) ? event.attended_users.length : 0;
+  return participantCount(event);
 }
 
 /* Wide column layouts (landscape legal, ~336mm usable width). */
@@ -383,7 +353,7 @@ function buildStatusReport({ projects, events, year, quarter }) {
         return [
           String(projectIndex),
           String(project.reference_number || "—"),
-          projectActivity(project),
+          projectActivityText(project),
           projectTypeLabel(project),
           fmtDate(project.start_date),
           fmtDate(project.end_date),
@@ -465,7 +435,7 @@ function buildStatusReport({ projects, events, year, quarter }) {
         return [
           "Project",
           String(project.reference_number || "—"),
-          projectActivity(project),
+          projectActivityText(project),
           {
             content: label,
             styles: { textColor: STATUS_COLORS[label], fontStyle: "bold" },
@@ -589,9 +559,25 @@ export async function GET(req) {
 
         /* Same year-scoping convention as the readiness check: an event
            belongs to the year through the project it is linked to. */
-        const events = await Event.find({
+        const loaded = await Event.find({
           project: { $in: projects.map((project) => project._id) },
         }).lean();
+        await attachGuestRows(loaded);
+        /* "Completed" is derived from the dates: an event that ended but was
+           never marked completed used to print as "Active (Ongoing)".
+           Cancelled events keep their status (and stay out of the report). */
+        const events = loaded.map((event) => {
+          const derived = effectiveStatus(event);
+          return {
+            ...event,
+            status:
+              derived === "cancelled"
+                ? "cancelled"
+                : derived === "completed"
+                  ? "completed"
+                  : "active",
+          };
+        });
 
         const orderedProjects = [...projects]
           .map((project, originalIndex) => ({ project, originalIndex }))

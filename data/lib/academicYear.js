@@ -7,6 +7,9 @@
  * fiscal year, so `gpbYearToAY` bridges the two.
  */
 
+// Relative path (not "@/"), so node --test can load this file directly.
+import { appParts } from "./appTime.js";
+
 export const ACADEMIC_YEAR_PATTERN = /^(\d{4})-(\d{4})$/;
 
 /** Normalizes "2025-2026" (trims); returns null when invalid. */
@@ -30,11 +33,19 @@ export function isAcademicYear(value) {
  * PH convention: AY starts in August. Aug 2026–Jul 2027 => "2026-2027".
  */
 export function currentAcademicYear(date = new Date()) {
-  const d = date instanceof Date ? date : new Date(date);
-  const month = d.getMonth(); // 0-based; 7 = August
-  const year = d.getFullYear();
-  const start = month >= 7 ? year : year - 1;
-  return `${start}-${start + 1}`;
+  const start = academicYearStartOf(date);
+  return start === null ? "" : `${start}-${start + 1}`;
+}
+
+/**
+ * First calendar year of the academic year `date` falls in, read as a
+ * Manila day (a server or browser outside UTC+8 put the last hours of
+ * July 31 into the next AY). Null for an invalid date.
+ */
+export function academicYearStartOf(date) {
+  const parts = appParts(date instanceof Date ? date : new Date(date));
+  if (!parts) return null;
+  return parts.month >= 8 ? parts.year : parts.year - 1;
 }
 
 /** Bridges GPB fiscal year Number -> AY string. 2025 => "2025-2026". */

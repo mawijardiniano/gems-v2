@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { usePathname } from "next/navigation";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import CheckInStatusBanner from "./overview/CheckInStatusBanner";
@@ -22,6 +21,7 @@ export default function OverviewTab({
   setEditData,
   handleSave,
   saving,
+  posterFiles,
   saveError,
   setSaveError,
   buildEditData,
@@ -69,20 +69,11 @@ export default function OverviewTab({
     setSaveError("");
   };
 
-  /* A poster uploaded during this edit but not saved is an orphan file. */
+  /* Posters uploaded during this edit are deleted (every one, not only
+     the last), and an upload still running is dropped when it lands. */
   const handleCancelEdit = async () => {
-    if (
-      editData?.event_poster?.key &&
-      editData.event_poster?.key !== event.event_poster?.key
-    ) {
-      try {
-        await axios.delete("/api/upload", {
-          data: { key: editData.event_poster.key },
-        });
-      } catch (err) {
-        console.error("Failed to delete orphan poster:", err);
-      }
-    }
+    await posterFiles?.rollback();
+    posterFiles?.resetSession();
     resetEditData();
     setIsEditing(false);
   };
@@ -139,6 +130,10 @@ export default function OverviewTab({
               if (isEditing) {
                 await handleCancelEdit();
               } else {
+                /* Start from the saved event every time (with the Dean
+                   route's GAD → Academic mapping): the first edit used to
+                   skip the mapping. */
+                resetEditData();
                 setIsEditing(true);
               }
             }}
@@ -160,6 +155,7 @@ export default function OverviewTab({
             setSaveError={setSaveError}
             onCancel={handleCancelEdit}
             onSave={handleSaveClick}
+            posterFiles={posterFiles}
           />
         ) : (
           <EventDetailsView

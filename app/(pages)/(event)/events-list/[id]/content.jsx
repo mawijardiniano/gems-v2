@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { canManageEvent, isEventOrganizer } from "@/data/lib/eventAccess";
+import { effectiveStatus } from "@/data/lib/eventStatus";
 import OverviewTab from "./components/OverviewTab";
 import AttendanceTab from "./components/AttendanceTab";
 import InsightTab from "./components/InsightTab";
@@ -96,15 +97,13 @@ export default function EventManageContent({ backPath = "/events-list" }) {
       setGuestValidationFilter(validation);
   }, [searchParams]);
 
-  const isPast = useMemo(() => {
-    if (!event) return false;
-    let end = event.end_date || event.start_date || event.date;
-    if (Array.isArray(event.end_dates) && event.end_dates.length > 0) {
-      end = event.end_dates[event.end_dates.length - 1];
-    }
-    if (!end) return false;
-    return new Date(end).getTime() < Date.now();
-  }, [event]);
+  /* Ended = derived "completed" (the shared rule in data/lib/eventStatus).
+     The page had its own date check that also called a cancelled event
+     "ended … we hope it was a success". */
+  const isPast = useMemo(
+    () => Boolean(event) && effectiveStatus(event) === "completed",
+    [event],
+  );
 
   if (loading) {
     return (
@@ -205,6 +204,24 @@ export default function EventManageContent({ backPath = "/events-list" }) {
         </div>
       )}
 
+      {guestSheet.error && (
+        <div
+          className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
+          <span>
+            {guestSheet.error} Attendance counts below may be incomplete.
+          </span>
+          <button
+            type="button"
+            onClick={guestSheet.reload}
+            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {currentTab === "overview" && (
         <OverviewTab
           isPast={isPast}
@@ -215,6 +232,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setEditData={editor.setEditData}
           handleSave={editor.handleSave}
           saving={editor.saving}
+          posterFiles={editor.posterFiles}
           saveError={editor.saveError}
           setSaveError={editor.setSaveError}
           buildEditData={buildEditData}
@@ -251,7 +269,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           event={event}
           guests={attendance.attendanceGuests}
           guestsLoading={guestSheet.loading}
-          counts={guestSheet.counts}
           validationFilter={guestValidationFilter}
           setValidationFilter={setGuestValidationFilter}
           onValidate={guestSheet.validate}
@@ -270,7 +287,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setGuestSexFilter={setGuestSexFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
-          existingGuests={attendance.attendanceGuests}
           /* A manual encode changes both stores, so both are refreshed. */
           onEncoded={() => {
             guestSheet.reload();
@@ -288,7 +304,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           ageSampleSize={insights.ageSampleSize}
           hasData={attendance.hasInsightData}
           roleCounts={insights.roleCounts}
-          statusCounts={attendance.statusCounts}
           genderDataChart={insights.genderData}
           affiliationData={attendance.statusCounts}
           ageData={insights.ageData}
@@ -302,6 +317,8 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           event={event}
           approvedGuestCount={attendance.approvedGuestCount}
           attendedCount={insights.attendedCount}
+          canSubmit={canManage}
+          viewerId={userId}
         />
       )}
     </div>

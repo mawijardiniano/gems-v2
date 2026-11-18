@@ -55,13 +55,17 @@ export default function EventDangerZone({
                 <FiX size={18} />
               </div>
               <div>
+                {/* Worded by the action offered: a completed event that can be
+                    reinstated used to read "Cancel this event". */}
                 <p className="font-semibold text-gray-900">
-                  {isCancelled ? "Reinstate this event" : "Cancel this event"}
+                  {canCancel ? "Cancel this event" : "Reinstate this event"}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {isCancelled
-                    ? "Reinstating puts the event back to active and reopens check-in."
-                    : "Cancelling stops check-in and hides the event from Discover. It can be reinstated later."}
+                  {canCancel
+                    ? "Cancelling stops check-in and hides the event from Discover. It can be reinstated later."
+                    : isCancelled
+                      ? "Reinstating puts the event back to active and reopens check-in."
+                      : "Reinstating puts the event back to active."}
                 </p>
                 {event.cancel_reason && (
                   <p className="mt-1 text-xs text-gray-400">

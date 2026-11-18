@@ -8,8 +8,13 @@ import mongoose from "mongoose";
 import { requireAuth } from "@/data/lib/auth";
 import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
-import { loadDecryptedPii, revealProfilePii } from "@/data/lib/profileBroker";
+import {
+  canViewPII,
+  loadDecryptedPii,
+  revealProfilePii,
+} from "@/data/lib/profileBroker";
 import { isEventOrganizer } from "@/data/lib/eventAccess";
+import { appParts } from "@/data/lib/appTime";
 import { guestDedupeKey, pickAdoptableWalkIn } from "@/data/lib/guestIdentity";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
@@ -283,13 +288,29 @@ export async function POST(req) {
         ? STUDENT
         : EMPLOYEE;
 
-    const birthday = personal.birthday ? new Date(personal.birthday) : null;
+    /* The sheet needs the name and sex. The contact number and birthday
+       are only copied from the person's record for organizers cleared to
+       read personal data; any event organizer could pick any account and
+       read both back from the guest sheet. Others type the contact
+       themselves (or leave it blank) and the age stays empty. */
+    const mayCopyPersonalData = canViewPII(user.role);
+
+    const birthday =
+      mayCopyPersonalData && personal.birthday
+        ? new Date(personal.birthday)
+        : null;
     let age = null;
-    if (birthday && !Number.isNaN(birthday.getTime())) {
-      const now = new Date();
-      age = now.getFullYear() - birthday.getFullYear();
-      const m = now.getMonth() - birthday.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birthday.getDate())) age -= 1;
+    /* Both dates as Manila days: the server's own calendar (UTC) made a
+       birthday on the event day read one year young until 08:00 Manila. */
+    const born = birthday ? appParts(birthday) : null;
+    const today = appParts(Date.now());
+    if (born && today) {
+      age = today.year - born.year;
+      if (
+        today.month < born.month ||
+        (today.month === born.month && today.day < born.day)
+      )
+        age -= 1;
       if (age < 1 || age > 120) age = null;
     }
 
@@ -298,7 +319,7 @@ export async function POST(req) {
       full_name: fullName,
       sex: sexAtBirth,
       age,
-      contact: contactOf(identity) || bodyContact,
+      contact: (mayCopyPersonalData && contactOf(identity)) || bodyContact,
       participant_type: participantType,
       department_office_org: departmentOf(identity, participantType),
       position_designation: positionOf(identity, participantType),

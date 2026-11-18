@@ -3,8 +3,25 @@
 /* Guest fields come from the public, no-login /attend form, so everything
    interpolated into the print/PDF HTML is escaped to keep it as text. */
 import { escapeHtml } from "@/data/lib/escapeHtml";
+import { APP_TIME_ZONE } from "@/data/lib/appTime";
 
 export { escapeHtml };
+
+/* "Mar 4, 2026" or "Mar 4, 2026 - Mar 6, 2026", as Manila days. The three
+   sheets each had a copy that used the browser's timezone, so an event on
+   Aug 1 printed as Jul 31 outside the Philippines. */
+const SHEET_DAY = {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: APP_TIME_ZONE,
+};
+function sheetDateLabel(start, end) {
+  if (!start) return "";
+  const startStr = new Date(start).toLocaleDateString("en-US", SHEET_DAY);
+  const endStr = end ? new Date(end).toLocaleDateString("en-US", SHEET_DAY) : null;
+  return endStr && endStr !== startStr ? `${startStr} - ${endStr}` : startStr;
+}
 
 /* The paper form has one shared "Extension / Research" box, so either type
    ticks it. */
@@ -31,13 +48,15 @@ export function buildGuestRows(guests, extractGuestDetails, capitalizeName) {
       return {
         name: g.full_name,
         sex: g.sex,
-        genderPreference: "",
+        genderPreference: g.gender_identity || "",
         age: g.age,
         status: g.participant_type,
         department: g.department_office_org,
         positionDesignation: g.position_designation,
         programYearSection: g.program_year_section,
-        contact: "",
+        /* The guest gave these on the check-in form; they were printed as
+           blank columns on every official sheet. */
+        contact: g.contact || "",
         email: "",
       };
     }
@@ -106,24 +125,7 @@ export function handlePrintGuests(guests, event, buildRows) {
     (event.end_dates || []).slice(-1).pop() ||
     eventStartDate;
 
-  const dateLabel = (() => {
-    if (!eventStartDate) return "";
-    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const endStr = eventEndDate
-      ? new Date(eventEndDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : null;
-    return endStr && endStr !== startStr
-      ? `${startStr} - ${endStr}`
-      : startStr;
-  })();
+  const dateLabel = sheetDateLabel(eventStartDate, eventEndDate);
 
 
   const typeOfActivityHTML = activityTypeBoxes(event.type_of_activity)
@@ -252,24 +254,7 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
     (event.end_dates || []).slice(-1).pop() ||
     eventStartDate;
 
-  const dateLabel = (() => {
-    if (!eventStartDate) return "";
-    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const endStr = eventEndDate
-      ? new Date(eventEndDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : null;
-    return endStr && endStr !== startStr
-      ? `${startStr} - ${endStr}`
-      : startStr;
-  })();
+  const dateLabel = sheetDateLabel(eventStartDate, eventEndDate);
 
 
   // [X]/[ ] because jsPDF's built-in WinAnsi fonts cannot render ballot boxes.
@@ -480,24 +465,7 @@ export function handleDownloadBlankGuestsPdf(event) {
     (event.end_dates || []).slice(-1).pop() ||
     eventStartDate;
 
-  const dateLabel = (() => {
-    if (!eventStartDate) return "";
-    const startStr = new Date(eventStartDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    const endStr = eventEndDate
-      ? new Date(eventEndDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : null;
-    return endStr && endStr !== startStr
-      ? `${startStr} - ${endStr}`
-      : startStr;
-  })();
+  const dateLabel = sheetDateLabel(eventStartDate, eventEndDate);
 
 
   const typeOfActivityHTML = activityTypeBoxes(event.type_of_activity)

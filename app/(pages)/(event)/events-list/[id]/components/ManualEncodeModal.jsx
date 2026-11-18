@@ -174,11 +174,16 @@ export default function ManualEncodeModal({
      for a *different* person who shares the name, so they were never sent;
      same-name QR walk-ins are reconciled by the API, which links one only when
      it is unambiguously this person. */
+  /* Approved rows only. A pending or rejected row is not counted, and the
+     API approves it when the organizer records the person, so those must be
+     sent; they used to be skipped with "already counted". */
   const alreadyInSheet = (person, sheet = []) => {
     const id = String(person?._id || "");
     if (!id) return false;
     return (Array.isArray(sheet) ? sheet : []).some(
-      (g) => String(g?.user_id || "") === id,
+      (g) =>
+        String(g?.user_id || "") === id &&
+        (!g?.validation_status || g.validation_status === "approved"),
     );
   };
 
@@ -259,7 +264,11 @@ export default function ManualEncodeModal({
     }
   };
 
-  useEscapeKey(open, onClose);
+  /* Never closes mid-save (Escape, X or Cancel), so the result is seen. */
+  const closeIfIdle = () => {
+    if (!saving) onClose?.();
+  };
+  useEscapeKey(open, closeIfIdle);
 
   if (!open) return null;
 
@@ -297,7 +306,8 @@ export default function ManualEncodeModal({
           <button
             type="button"
             aria-label="Close manual encode"
-            onClick={onClose}
+            onClick={closeIfIdle}
+            disabled={saving}
             className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
           >
             <FiX size={16} />
@@ -490,7 +500,8 @@ export default function ManualEncodeModal({
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-slate-50 px-5 py-3">
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeIfIdle}
+            disabled={saving}
             className="btn-secondary !py-2 !px-4 !text-xs !rounded-lg"
           >
             {feedback?.tone === "ok" ? "Done" : "Cancel"}

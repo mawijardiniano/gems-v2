@@ -84,6 +84,7 @@ export default function MilestonesModal({
 }) {
   const fileLifecycle = useFileUploads();
   /* Index of the row whose proofs are uploading, or null. */
+  /* A row whose proofs are uploading, or null; isUploadingTarget(i) per row. */
   const uploadingRow = fileLifecycle.uploading;
 
   const [rows, setRows] = useState(() => {
@@ -263,6 +264,9 @@ export default function MilestonesModal({
 
       /* Built on the latest rows and matched by id: edits made while the
          upload ran survive, and a removed row does not receive the files. */
+      /* null: the editor closed while it ran; the files were deleted. */
+      if (!uploaded) return;
+
       let attached = false;
       commitRows((prev) =>
         prev.map((row) => {
@@ -704,7 +708,7 @@ export default function MilestonesModal({
                                 {row.status === "completed" ? (
                                   <>
                                     <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
-                                      {uploadingRow === i ? (
+                                      {fileLifecycle.isUploadingTarget(i) ? (
                                         <FaSpinner
                                           size={10}
                                           className="animate-spin"
@@ -712,7 +716,7 @@ export default function MilestonesModal({
                                       ) : (
                                         <FaPaperclip size={10} />
                                       )}
-                                      {uploadingRow === i
+                                      {fileLifecycle.isUploadingTarget(i)
                                         ? "Uploading…"
                                         : "Upload proof"}
                                       <input

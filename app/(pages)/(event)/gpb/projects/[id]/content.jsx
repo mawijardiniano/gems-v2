@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { participantCount } from "@/data/lib/eventParticipants";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -115,16 +116,12 @@ export default function ProjectContent() {
   }
 
   const events = Array.isArray(project.events) ? project.events : [];
+  /* Account check-ins plus approved guest rows (data/lib/eventParticipants). */
   const totalActualParticipants = events.reduce(
-    (sum, e) =>
-      sum + (Array.isArray(e.attended_users) ? e.attended_users.length : 0),
+    (sum, e) => sum + participantCount(e),
     0,
   );
-  const totalRegisteredParticipants = events.reduce(
-    (sum, e) =>
-      sum + (Array.isArray(e.attended_users) ? e.attended_users.length : 0),
-    0,
-  );
+  const totalRegisteredParticipants = totalActualParticipants;
 
   const indicatorProgress = indicatorTargets(project, {
     key: "attended_users",
@@ -359,9 +356,7 @@ export default function ProjectContent() {
                       <td className="py-3 px-6 text-right">
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                           <FiUsers className="h-3.5 w-3.5 text-gray-400" />
-                          {Array.isArray(event.attended_users)
-                            ? event.attended_users.length
-                            : 0}
+                          {participantCount(event)}
                         </span>
                         <span
                           className="ml-1 inline-flex items-center text-[11px] text-gray-400"

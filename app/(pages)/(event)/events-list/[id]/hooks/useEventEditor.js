@@ -4,20 +4,35 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { appDayRange } from "@/data/lib/appTime";
 import { buildEditData } from "../lib/eventEditData";
+import { useFileUploads } from "@/hooks/useFileUploads";
 
 /* The Overview's edit form: its state, and saving it.
 
    The form is rebuilt from the event whenever the event changes (first load,
-   background reload, after a save), always through buildEditData. */
+   background reload, after a save), always through buildEditData, but not
+   while it is open: a reload after cancelling/reinstating the event or a
+   manual encode used to throw away what the user had typed. */
 export function useEventEditor({ event, setEvent, userId }) {
   const [editData, setEditData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
+  /* Poster files of the open edit: a poster uploaded and then replaced,
+     removed or cancelled is deleted; the saved one is only deleted once a
+     save drops it; leaving the page mid-edit rolls the new uploads back.
+     Each of those used to leave an orphan file. */
+  const posterFiles = useFileUploads({ rollbackOnUnmount: true });
   useEffect(() => {
-    if (event) setEditData(buildEditData(event));
-  }, [event]);
+    if (!isEditing) return;
+    const savedKey = event?.event_poster?.key;
+    posterFiles.startSession(savedKey ? [savedKey] : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing]);
+
+  useEffect(() => {
+    if (event && !isEditing) setEditData(buildEditData(event));
+  }, [event, isEditing]);
 
   /* Returns true on success so the form only closes when the change stuck.
      Errors go to `saveError`, shown inside the form: the page-level error
@@ -29,7 +44,6 @@ export function useEventEditor({ event, setEvent, userId }) {
     setSaveError("");
 
     try {
-      const oldPoster = event.event_poster;
       const newPoster = editData.event_poster;
 
       if (!editData.date) {
@@ -76,16 +90,11 @@ export function useEventEditor({ event, setEvent, userId }) {
       const res = await axios.put(`/api/events/${event._id}`, payload);
       const updated = res.data?.data || event;
 
-      /* The old poster is gone from the record once it is replaced or
-         removed, so its file is cleaned up either way. A failed cleanup only
-         leaves an orphan file; the save itself already succeeded. */
-      if (oldPoster?.key && oldPoster.key !== newPoster?.key) {
-        try {
-          await axios.delete("/api/upload", { data: { key: oldPoster.key } });
-        } catch (cleanupErr) {
-          console.error("Failed to delete replaced poster:", cleanupErr);
-        }
-      }
+      /* The saved poster is deleted only now that the record no longer
+         uses it (replaced or removed). A failed cleanup only leaves an
+         orphan file; the save itself already succeeded. */
+      posterFiles.syncCurrent(newPoster?.key ? [newPoster.key] : []);
+      await posterFiles.commit();
 
       /* Keep the hydrated creator already on screen; the effect above then
          rebuilds the form from the saved event. */
@@ -113,5 +122,6 @@ export function useEventEditor({ event, setEvent, userId }) {
     saveError,
     setSaveError,
     handleSave,
+    posterFiles,
   };
 }

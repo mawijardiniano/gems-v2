@@ -31,7 +31,6 @@ export default function InsightTab({
   ageSampleSize,
   hasData,
   roleCounts,
-  statusCounts,
   genderDataChart,
   affiliationData,
   ageData,

@@ -7,6 +7,14 @@ import Project from "@/models/projects";
 import "@/models/event";
 import "@/models/profile";
 import GPB from "@/models/gpb";
+import {
+  PROJECT_TYPE_ORDER,
+  activityCellText,
+  fieldList,
+  fieldValue,
+  pdfPeso,
+  projectTypeLabel,
+} from "@/data/lib/reportFields";
 /* Side-effect import: `GPB.gaaBudgetId` refs the `GAABudget` model, and a
    populate for a model that was never registered throws
    `Schema hasn't been registered for model "GAABudget"`. Importing the module
@@ -29,57 +37,6 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const REPORT_CACHE_TTL = 60 * 1000;
-
-function fieldValue(field) {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-}
-
-function fieldList(field) {
-  const v = fieldValue(field);
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (v) return [v];
-  return [];
-}
-
-/* GAD activity titles with their description on the line below, inside the
-   single GAD Activity column of the report. Descriptions are index-paired with
-   the titles and are simply skipped when a project has none. */
-function activityCellText(project) {
-  const titles = fieldList(project.gad_activity);
-  const descriptions = fieldList(project.gad_activity_description);
-
-  return titles
-    .map((title, idx) => {
-      const description = descriptions[idx];
-      return description ? `${title}\n${description}` : title;
-    })
-    .join("\n");
-}
-
-function peso(n) {
-  return `Php ${Number(n || 0).toLocaleString("en-PH")}`;
-}
-
-const PROJECT_TYPE_ORDER = {
-  "Client Focused": 0,
-  "Organization Focused": 1,
-  "Attributed Program": 2,
-  Uncategorized: 3,
-};
-
-function projectTypeLabel(project) {
-  const rawType = project?.project_type;
-  const value =
-    rawType && typeof rawType === "object" ? rawType.value : rawType;
-  if (value === "Client Focused") return "Client Focused";
-  if (value === "Organization Focused") return "Organization Focused";
-  if (value === "Attributed Program") return "Attributed Program";
-  return "Uncategorized";
-}
 
 /**
  * The two names printed in the "Prepared By / Approved By" block, for one GPB
@@ -192,9 +149,9 @@ export async function GET(req) {
         const totalGAA = Number(gaa?.totalGAA) || 0;
         const originalBudget = Number(gaa?.gadAnnualBudget) || 0;
         const hasBudget = Boolean(gaa);
-        const totalGAADisplay = hasBudget ? peso(totalGAA) : "To follow";
+        const totalGAADisplay = hasBudget ? pdfPeso(totalGAA) : "To follow";
         const originalBudgetDisplay = hasBudget
-          ? peso(originalBudget)
+          ? pdfPeso(originalBudget)
           : "To follow";
         const utilPct =
           originalBudget > 0
@@ -284,7 +241,7 @@ export async function GET(req) {
           body: [
             [
               { content: "Actual GAD Expenditure", styles: labelStyle },
-              peso(totalExpenditures),
+              pdfPeso(totalExpenditures),
               { content: "Original Budget", styles: labelStyle },
               originalBudgetDisplay,
             ],
@@ -344,9 +301,9 @@ export async function GET(req) {
             activityCellText(project),
             fieldList(project.performance_indicator_target).join("\n"),
             isAttributedProgram ? "" : String(actualText || ""),
-            peso(fieldValue(project.gad_budget)),
+            pdfPeso(fieldValue(project.gad_budget)),
             project.actual_expenditures
-              ? peso(project.actual_expenditures)
+              ? pdfPeso(project.actual_expenditures)
               : "",
             fieldList(project.responsible_office).join("\n"),
           ]);
@@ -363,7 +320,7 @@ export async function GET(req) {
             },
           },
           {
-            content: peso(totalBudget),
+            content: pdfPeso(totalBudget),
             styles: {
               halign: "right",
               fontStyle: "bold",
@@ -371,7 +328,7 @@ export async function GET(req) {
             },
           },
           {
-            content: peso(totalExpenditures),
+            content: pdfPeso(totalExpenditures),
             styles: {
               halign: "right",
               fontStyle: "bold",

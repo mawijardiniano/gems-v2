@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { activityPillClasses } from "@/data/lib/activityTypeColors";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -18,6 +19,7 @@ import {
 import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 import { formatEventWhen } from "@/data/lib/eventDates";
 import { attendanceWindow } from "@/data/lib/eventStatus";
+import { APP_TIME_ZONE } from "@/data/lib/appTime";
 
 const EMPTY = {
   full_name: "",
@@ -33,16 +35,6 @@ const EMPTY = {
   section: "",
 };
 
-/* Same colour families the event cards use for type_of_activity. */
-const ACTIVITY_COLORS = {
-  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  GAD: "bg-pink-50 text-pink-700 border-pink-200",
-  Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
-};
 
 const PARTICIPANT_TYPES = [
   { value: "Student", label: "Student", icon: FaGraduationCap },
@@ -54,12 +46,14 @@ const helperCls = "mt-1 text-[11px] text-gray-400";
 
 const formatDateTime = (value) => {
   if (!value) return "";
+  /* Manila time, like the event's own dates. */
   return new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: APP_TIME_ZONE,
   });
 };
 
@@ -108,6 +102,8 @@ export default function AttendContent() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   /* Programs offered for the college typed above, used as datalist hints. */
   const programOptions = useMemo(() => {
@@ -124,16 +120,20 @@ export default function AttendContent() {
       if (!eventId) return;
       setLoading(true);
       try {
+        setLoadFailed(false);
         const res = await axios.get(`/api/events/public/${eventId}`);
         setEvent(res.data?.data || null);
       } catch (err) {
         setEvent(null);
+        /* Only a 404 means the QR code is wrong. Anything else (no signal,
+           a server error) told guests to rescan a code that was fine. */
+        setLoadFailed(err?.response?.status !== 404);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [eventId]);
+  }, [eventId, reloadKey]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -204,6 +204,28 @@ export default function AttendContent() {
         title="Loading event"
         message="Fetching the event details for this QR code."
       />
+    );
+  }
+
+  if (!event && loadFailed) {
+    return (
+      <div>
+        <StateCard
+          tone="red"
+          icon={<FaExclamationCircle size={22} />}
+          title="Couldn't load the event"
+          message="Check your internet connection, then try again."
+        />
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -380,8 +402,7 @@ export default function AttendContent() {
               {event.type_of_activity && (
                 <span
                   className={`badge mt-3 border bg-white/90 ${
-                    ACTIVITY_COLORS[event.type_of_activity] ||
-                    ACTIVITY_COLORS.Others
+                    activityPillClasses(event.type_of_activity)
                   }`}
                 >
                   {event.type_of_activity}

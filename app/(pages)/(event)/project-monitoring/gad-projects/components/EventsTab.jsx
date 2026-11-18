@@ -3,6 +3,7 @@
 import React from "react";
 import { FaPaperclip, FaUsers } from "react-icons/fa";
 import { formatPeso } from "@/data/lib/money";
+import { participantCount } from "@/data/lib/eventParticipants";
 import { aggregateIndicatorProgress } from "@/data/lib/performanceTracking";
 import ParticipantBreakdown from "../../components/ParticipantBreakdown";
 import ParticipantTargetProgress from "../../components/ParticipantTargetProgress";
@@ -100,7 +101,7 @@ function ParticipantsPerEvent({ project }) {
                     <span className="line-clamp-2">{ev?.title || "Untitled event"}</span>
                   </td>
                   <td className="py-2 text-center text-gray-800">
-                    {Array.isArray(ev?.attended_users) ? ev.attended_users.length : "—"}
+                    {participantCount(ev)}
                   </td>
                 </tr>
               ))}

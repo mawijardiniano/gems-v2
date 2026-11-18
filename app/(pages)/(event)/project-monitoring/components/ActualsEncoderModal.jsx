@@ -125,6 +125,8 @@ export default function ActualsEncoderModal({
       });
       /* Appended to the latest list, not the one captured when the upload
          started, so a file removed meanwhile does not come back. */
+      /* null: the modal closed while it ran; the files were deleted. */
+      if (!uploaded) return;
       commitEvidence((prev) => [...prev, ...uploaded]);
     } catch (err) {
       setError(err.message || "Failed to upload evidence files");

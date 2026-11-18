@@ -1,3 +1,8 @@
+import {
+  accountSex,
+  eventAttendanceParts,
+  guestSex,
+} from "./eventParticipants.js";
 const ACTIVITY_ALTERNATION = "Seminar|Training|Lecture";
 
 /* Spelled-out numbers are everywhere in real GPB indicator text
@@ -621,6 +626,10 @@ export function extractParticipantTarget(str) {
 }
 
 
+/* Participants of the project's linked events: account check-ins plus
+   approved guest-sheet rows, one count per person (data/lib/eventParticipants).
+   Guest rows used to be left out, so walk-ins never reached the GAD-AR. The
+   `key` option is kept for callers; only "attended_users" is used. */
 export function sumActualParticipants(project, { key = "attended_users", ignoreCancelled = true } = {}) {
   const events = Array.isArray(project?.events) ? project.events : [];
   let actualTotal = 0;
@@ -631,18 +640,16 @@ export function sumActualParticipants(project, { key = "attended_users", ignoreC
     if (!ev) return;
     if (ignoreCancelled && ev.status === "cancelled") return;
 
-    const list = Array.isArray(ev[key]) ? ev[key] : [];
-    list.forEach((entry) => {
-
-      const userObj = entry?.user_id || entry;
+    const { accounts, approvedGuests } = eventAttendanceParts(
+      key === "attended_users" ? ev : { attended_users: ev[key] },
+    );
+    const add = (sex) => {
       actualTotal += 1;
-
-      const sex = userObj?.personal_info_id?.gadData?.sexAtBirth;
-      if (typeof sex !== "string") return;
-      const normalized = sex.toLowerCase();
-      if (normalized === "female") actualFemale += 1;
-      else if (normalized === "male") actualMale += 1;
-    });
+      if (sex === "female") actualFemale += 1;
+      else if (sex === "male") actualMale += 1;
+    };
+    accounts.forEach((entry) => add(accountSex(entry)));
+    approvedGuests.forEach((row) => add(guestSex(row)));
   });
 
   return { actualTotal, actualFemale, actualMale };

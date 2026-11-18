@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { cacheOrSet } from "@/data/lib/cache";
-import { optionalAuth } from "@/data/lib/auth";
+import { requireAuth } from "@/data/lib/auth";
+import { canViewProjectDetails } from "@/data/lib/projectAccess";
 import Project from "@/models/projects";
 import Event from "@/models/event";
+import { effectiveStatus } from "@/data/lib/eventStatus";
 import AccomplishmentReport from "@/models/accomplishment_report";
 import GPB from "@/models/gpb";
 import {
@@ -23,8 +25,16 @@ function projectLabel(p) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await optionalAuth(req);
+    /* Project titles and events missing reports are for the GAD roles that
+       read the dashboard and Reports pages; this answered anonymous callers. */
+    const { error, status, user } = await requireAuth(req);
     if (error) return NextResponse.json({ error }, { status });
+    if (!canViewProjectDetails(user.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to view report readiness." },
+        { status: 403 },
+      );
+    }
 
     await connectDB();
 
@@ -81,10 +91,25 @@ export async function GET(req) {
           }
         });
 
-        const completedEvents = await Event.find(
-          { project: { $in: projectIds }, status: "completed" },
-          { title: 1, project: 1 },
+        /* Completed by date, not only by the stored flag: an event that
+           ended but was never marked completed was never flagged as missing
+           its report. Dates are loaded so effectiveStatus can decide. */
+        const linkedEvents = await Event.find(
+          { project: { $in: projectIds }, status: { $ne: "cancelled" } },
+          {
+            title: 1,
+            project: 1,
+            status: 1,
+            start_date: 1,
+            end_date: 1,
+            start_dates: 1,
+            end_dates: 1,
+            date: 1,
+          },
         ).lean();
+        const completedEvents = linkedEvents.filter(
+          (e) => effectiveStatus(e) === "completed",
+        );
 
         const eventIds = completedEvents.map((e) => e._id);
         const reports = await AccomplishmentReport.find(

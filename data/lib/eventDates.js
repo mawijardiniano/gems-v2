@@ -24,6 +24,19 @@ const toDate = (value) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+/** "November 17, 2026" for the Manila day of `value`, or `fallback`. */
+export function formatLongDay(value, fallback = "Invalid date") {
+  const d = toDate(value);
+  return d
+    ? d.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: APP_TIME_ZONE,
+      })
+    : fallback;
+}
+
 /** True when start is Manila midnight and end (if any) is Manila 23:59. */
 export function isWholeDayRange(start, end) {
   const s = appParts(toDate(start));

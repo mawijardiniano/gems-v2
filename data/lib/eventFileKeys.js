@@ -12,7 +12,7 @@ export const REPORT_FILE_FIELDS = [
 ];
 export const REPORT_FILE_LISTS = ["photos", "other_attachments"];
 
-const REPORT_FOLDERS = {
+export const REPORT_FOLDERS = {
   office_memorandum: "reports/memorandum",
   activity_design: "reports/activity-design",
   attendance_sheet: "reports/attendance",

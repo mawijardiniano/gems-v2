@@ -19,60 +19,16 @@ import {
 } from "@/data/lib/signatories";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  PROJECT_TYPE_ORDER,
+  activityCellText,
+  fieldList,
+  fieldValue,
+  pdfPeso,
+  projectTypeLabel,
+} from "@/data/lib/reportFields";
 
 const REPORT_CACHE_TTL = 60 * 1000;
-
-function fieldValue(field) {
-  if (!field) return "";
-  if (typeof field === "object" && !Array.isArray(field) && "value" in field) {
-    return field.value ?? "";
-  }
-  return field;
-}
-
-function fieldList(field) {
-  const v = fieldValue(field);
-  if (Array.isArray(v)) return v.filter(Boolean);
-  if (v) return [v];
-  return [];
-}
-
-/* The GAD Activity column stays a single column: each activity prints its
-   title with the description on the following line. */
-function activityCellText(project) {
-  const titles = fieldList(project.gad_activity);
-  const descriptions = fieldList(project.gad_activity_description);
-
-  return titles
-    .map((title, idx) => {
-      const description = descriptions[idx];
-      return description ? `${title}\n${description}` : title;
-    })
-    .join("\n");
-}
-
-/* "Php" rather than "₱": the PDF's Times font has no peso sign. Two
-   decimals, like every other screen (data/lib/money.js). */
-function peso(n) {
-  return `Php ${formatAmount(Number(n) || 0)}`;
-}
-
-const PROJECT_TYPE_ORDER = {
-  "Client Focused": 0,
-  "Organization Focused": 1,
-  "Attributed Program": 2,
-  Uncategorized: 3,
-};
-
-function projectTypeLabel(project) {
-  const rawType = project?.project_type;
-  const value =
-    rawType && typeof rawType === "object" ? rawType.value : rawType;
-  if (value === "Client Focused") return "Client Focused";
-  if (value === "Organization Focused") return "Organization Focused";
-  if (value === "Attributed Program") return "Attributed Program";
-  return "Uncategorized";
-}
 
 /**
  * The two names printed in the "Prepared By / Approved By" block, for one GPB
@@ -260,7 +216,7 @@ export async function GET(req) {
             String(fieldValue(project.relevant_agency) || ""),
             activityCellText(project),
             fieldList(project.performance_indicator_target).join("\n"),
-            peso(fieldValue(project.gad_budget)),
+            pdfPeso(fieldValue(project.gad_budget)),
             String(fieldValue(project.source_budget) || ""),
             fieldList(project.responsible_office).join("\n"),
           ]);
@@ -277,7 +233,7 @@ export async function GET(req) {
             },
           },
           {
-            content: peso(totalBudget),
+            content: pdfPeso(totalBudget),
             styles: {
               halign: "right",
               fontStyle: "bold",

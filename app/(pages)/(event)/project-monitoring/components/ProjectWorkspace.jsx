@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatPeso } from "@/data/lib/money";
+import { participantCount } from "@/data/lib/eventParticipants";
 import { MODULE_EDITOR_ROLES } from "@/data/lib/projectAccess";
 import {
   FaChevronDown,
@@ -608,10 +609,7 @@ export default function ProjectWorkspace({ config }) {
                         </span>
                       )}
                       <span className="text-gray-400">
-                        {Array.isArray(event.attended_users)
-                          ? event.attended_users.length
-                          : 0}{" "}
-                        attended
+                        {participantCount(event)} attended
                       </span>
                       {event.status && event.status !== "active" && (
                         <span className="text-gray-400">{event.status}</span>

@@ -8,6 +8,7 @@ import { requireAuth } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { applyRowPii, resolvePii } from "@/data/lib/profileBroker";
 import { extractPiiFromProfile, savePii } from "@/data/lib/vaultWriter";
+import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
 
 /*
  * Re-writes the vaulted copy of a profile's PII after an update.
@@ -243,10 +244,8 @@ export async function PUT(req, { params }) {
       console.log("✅ Logged activity: PROFILE_UPDATE");
     }
 
-    if (global.io) {
-      global.io.emit("profile:updated", updated);
-      console.log("✅ Emitted profile:updated", updated._id);
-    }
+    /* Staff dashboards only; whole profiles went to every socket. */
+    emitToRoles(PROFILE_WATCHER_ROLES, "profile:updated", updated);
 
     return NextResponse.json({ status: "success", data: updated });
   } catch (error) {
@@ -330,11 +329,9 @@ export async function DELETE(req, { params }) {
       },
     });
 
-    if (global.io) {
-      global.io.emit("profile:deleted", {
-        id: user.personal_info_id?.toString(),
-      });
-    }
+    emitToRoles(PROFILE_WATCHER_ROLES, "profile:deleted", {
+      id: user.personal_info_id?.toString(),
+    });
 
     return NextResponse.json({
       status: "success",

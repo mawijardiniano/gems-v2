@@ -5,6 +5,11 @@
  */
 
 import { sumActualParticipants } from "./performanceTracking.js";
+import {
+  accountSex,
+  eventAttendanceParts,
+  guestSex,
+} from "./eventParticipants.js";
 
 /* Legacy markers written by the old `[ref:<eventId>]` actuals rollup. */
 const ACTUAL_REF_PATTERN = /\s*\[ref:[^\]]+\]\s*/g;
@@ -70,25 +75,27 @@ export const summarizeProjectEvents = (project) => {
   const sex = { female: actualFemale, male: actualMale, unspecified: 0 };
   const sector = { student: 0, employee: 0, unspecified: 0 };
 
+  const addSector = (value) => {
+    const status = String(value || "").toLowerCase();
+    if (status === "student") sector.student += 1;
+    else if (status === "employee") sector.employee += 1;
+    else sector.unspecified += 1;
+  };
+
+  /* The same people sumActualParticipants counts: account check-ins not on
+     the guest sheet, plus approved sheet rows. */
   events.forEach((event) => {
-    const attended = Array.isArray(event?.attended_users)
-      ? event.attended_users
-      : [];
+    const { accounts, approvedGuests } = eventAttendanceParts(event);
 
-    attended.forEach((entry) => {
+    accounts.forEach((entry) => {
       const profile = readAttendanceProfile(entry);
+      if (!accountSex(entry)) sex.unspecified += 1;
+      addSector(profile?.personal?.currentStatus);
+    });
 
-      const sexAtBirth = String(
-        profile?.gadData?.sexAtBirth || "",
-      ).toLowerCase();
-      if (sexAtBirth !== "female" && sexAtBirth !== "male") {
-        sex.unspecified += 1;
-      }
-
-      const status = String(profile?.personal?.currentStatus || "").toLowerCase();
-      if (status === "student") sector.student += 1;
-      else if (status === "employee") sector.employee += 1;
-      else sector.unspecified += 1;
+    approvedGuests.forEach((row) => {
+      if (!guestSex(row)) sex.unspecified += 1;
+      addSector(row?.participant_type);
     });
   });
 
@@ -248,6 +255,14 @@ export const hydrateProjectAttendanceSex = async (project) => {
        the broker pulls in the vault models. Only the server routes reach this. */
     const { withResolvedAttendanceSex } = await import("./profileBroker.js");
     event.attended_users = await withResolvedAttendanceSex(event.attended_users);
+  }
+
+  /* Each event's guest sheet (sex, type, validation only), so approved
+     walk-ins and encoded attendees count in every summary. Same lazy import
+     reason as above: the loader pulls in the EventGuest model. */
+  if (events.length) {
+    const { attachGuestRows } = await import("./eventGuestRows.js");
+    await attachGuestRows(events);
   }
 
   return project;

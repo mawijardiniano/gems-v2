@@ -13,6 +13,14 @@ import {
 } from "react-icons/fa";
 import { defaultOrganizingUnit } from "@/data/lib/colleges";
 import { appDateInput, appDayRange } from "@/data/lib/appTime";
+import {
+  deleteUploadedFile,
+  uploadFile,
+  validateFiles,
+} from "@/data/lib/uploadClient";
+import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
+
+const POSTER_FOLDER = "events/posters";
 import EventFormFields from "../components/EventFormFields";
 
 const labelClass =
@@ -56,7 +64,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
         id="event-poster"
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.gif,.webp"
         onChange={onSelect}
         className="hidden"
       />
@@ -104,7 +112,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
                 Upload an event poster
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                Click to browse · PNG, JPG or GIF
+                Click to browse · JPG, PNG, GIF or WEBP
               </p>
             </div>
           </>
@@ -184,24 +192,32 @@ export default function CreateEventsContent() {
 
   const uploadPoster = async () => {
     if (!posterFile) return null;
-
-    const form = new FormData();
-    form.append("file", posterFile);
-    form.append("folder", "events/posters");
-
     setUploading(true);
     try {
-      const res = await axios.post("/api/upload", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return { url: res.data.url, key: res.data.key };
+      const { url, key } = await uploadFile(posterFile, POSTER_FOLDER);
+      return { url, key };
     } finally {
       setUploading(false);
     }
   };
 
+  /* Checked when picked, against the server's poster rule: a HEIC or SVG
+     used to be refused only at submit. */
   const handlePosterSelect = (e) => {
     const file = e.target.files[0];
+    const problem = file
+      ? validateFiles([file], {
+          folder: POSTER_FOLDER,
+          maxBytes: MAX_UPLOAD_FILE_BYTES,
+          label: "The poster",
+        })
+      : null;
+    if (problem) {
+      e.target.value = "";
+      setError(problem);
+      return;
+    }
+    setError("");
     setPosterFile(file);
     if (file) {
       const reader = new FileReader();
@@ -255,8 +271,11 @@ export default function CreateEventsContent() {
     const dayRange = appDayRange(formData.date);
     if (!dayRange) return fail("Invalid event date");
 
+    /* Uploaded on submit; deleted again if the event is not created, so a
+       failed attempt (or each retry) no longer leaves an orphan poster. */
+    let posterUrl = null;
     try {
-      const posterUrl = posterFile ? await uploadPoster() : null;
+      posterUrl = posterFile ? await uploadPoster() : null;
 
       const payload = {
         title: formData.title.trim(),
@@ -287,8 +306,11 @@ export default function CreateEventsContent() {
          click created a duplicate event with its own reference number. */
       setTimeout(() => router.push(redirectPath), 1200);
     } catch (err) {
+      if (posterUrl?.key) deleteUploadedFile(posterUrl.key);
       fail(
         err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
           "Error creating event. Please try again.",
       );
     }
