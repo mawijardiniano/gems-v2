@@ -98,6 +98,12 @@ const stagingRecordSchema = new Schema(
         type: String,
         default: "",
       },
+      /* How the row was linked to an existing profile, if it was. */
+      matched_on: {
+        type: String,
+        enum: [null, "student_id", "employee_id", "email", "name_birthday"],
+        default: null,
+      },
       changes: {
         type: [
           {
