@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { activityPillClasses } from "@/data/lib/activityTypeColors";
 import {
   FaBuilding,
   FaCalendarAlt,
@@ -18,15 +19,6 @@ import {
   eventTimeLabel,
 } from "../calendarDates";
 
-const ACTIVITY_COLORS = {
-  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  GAD: "bg-pink-50 text-pink-700 border-pink-200",
-  Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
-};
 
 const getStatusBadge = calendarStatus;
 const getTimeLabel = eventTimeLabel;
@@ -51,7 +43,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
   const timeLabel = getTimeLabel(event);
   const dateRange = fmtDateRange(event);
   const activityCls =
-    ACTIVITY_COLORS[event.type_of_activity] || ACTIVITY_COLORS.Others;
+    activityPillClasses(event.type_of_activity);
   const organizerName = getOrganizerName(event);
   const offices = [
     ...(event.organizing_office_unit || []),

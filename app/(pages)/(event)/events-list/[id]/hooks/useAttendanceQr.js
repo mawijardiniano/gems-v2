@@ -4,12 +4,12 @@ import QRCode from "qrcode";
 import { useCallback, useEffect, useState } from "react";
 
 /* The base URL guests reach the app on. A QR-specific override wins so a
-   LAN address can be printed while the app itself is served elsewhere. */
+   LAN address can be printed while the app itself is served elsewhere.
+   Only NEXT_PUBLIC_ variables reach the browser (a NEXT_QR_BASE_URL fallback
+   here was always undefined). */
 function resolveBaseUrl() {
   const picked =
-    process.env.NEXT_PUBLIC_QR_BASE_URL ||
-    process.env.NEXT_QR_BASE_URL ||
-    process.env.NEXT_PUBLIC_BASE_URL;
+    process.env.NEXT_PUBLIC_QR_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL;
   if (picked) return picked.replace(/\/$/, "");
   return typeof window !== "undefined" ? window.location.origin : "";
 }

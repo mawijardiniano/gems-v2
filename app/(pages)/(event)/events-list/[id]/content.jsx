@@ -269,7 +269,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           event={event}
           guests={attendance.attendanceGuests}
           guestsLoading={guestSheet.loading}
-          counts={guestSheet.counts}
           validationFilter={guestValidationFilter}
           setValidationFilter={setGuestValidationFilter}
           onValidate={guestSheet.validate}
@@ -288,7 +287,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setGuestSexFilter={setGuestSexFilter}
           guestSearch={guestSearch}
           setGuestSearch={setGuestSearch}
-          existingGuests={attendance.attendanceGuests}
           /* A manual encode changes both stores, so both are refreshed. */
           onEncoded={() => {
             guestSheet.reload();
@@ -306,7 +304,6 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           ageSampleSize={insights.ageSampleSize}
           hasData={attendance.hasInsightData}
           roleCounts={insights.roleCounts}
-          statusCounts={attendance.statusCounts}
           genderDataChart={insights.genderData}
           affiliationData={attendance.statusCounts}
           ageData={insights.ageData}

@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { activityBadgeColors } from "@/data/lib/activityTypeColors";
 import { formatEventWhen } from "@/data/lib/eventDates";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,6 @@ import {
   FaCalendar,
   FaLocationArrow,
   FaArrowRight,
-  FaClock,
   FaUsers,
   FaFilter,
   FaSearch,
@@ -20,49 +20,8 @@ import {
 import { eventPhaseStyle } from "@/data/lib/eventStatus";
 
 const ActivityTypeBadge = ({ type }) => {
-  const colorMap = {
-    Academic: {
-      bg: "bg-secondary-100",
-      text: "text-secondary-700",
-      dot: "bg-secondary-500",
-    },
-    Administrative: {
-      bg: "bg-secondary-100",
-      text: "text-secondary-700",
-      dot: "bg-secondary-500",
-    },
-    GAD: {
-      bg: "bg-emerald-100",
-      text: "text-emerald-700",
-      dot: "bg-emerald-500",
-    },
-    Extension: {
-      bg: "bg-secondary-100",
-      text: "text-secondary-700",
-      dot: "bg-secondary-500",
-    },
-    Research: {
-      bg: "bg-rose-100",
-      text: "text-rose-700",
-      dot: "bg-rose-500",
-    },
-    Students: {
-      bg: "bg-cyan-100",
-      text: "text-cyan-700",
-      dot: "bg-cyan-500",
-    },
-    Others: {
-      bg: "bg-gray-100",
-      text: "text-gray-700",
-      dot: "bg-gray-500",
-    },
-  };
-
-  const colors = colorMap[type] || {
-    bg: "bg-gray-100",
-    text: "text-gray-700",
-    dot: "bg-gray-500",
-  };
+  /* Shared with the calendar and the check-in page. */
+  const colors = activityBadgeColors(type);
 
   return (
     <span
@@ -232,7 +191,6 @@ export default function EventsListContent() {
   /* The API applies the creator, type and year filters, so the response is
      already what the organiser should see. This used to walk every event in the
      system on the client and discard almost all of them. */
-  const filteredEvents = events;
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
 
@@ -352,16 +310,16 @@ export default function EventsListContent() {
             )}
 
             <span className="ml-auto text-sm text-gray-400">
-              {total > filteredEvents.length
-                ? `Showing ${filteredEvents.length} of ${total} events`
-                : `${filteredEvents.length} event${filteredEvents.length !== 1 ? "s" : ""}`}
+              {total > events.length
+                ? `Showing ${events.length} of ${total} events`
+                : `${events.length} event${events.length !== 1 ? "s" : ""}`}
             </span>
           </div>
         </div>
 
         {/* Event Cards */}
         <section>
-          {filteredEvents.length === 0 ? (
+          {events.length === 0 ? (
             <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                 <FaSearch className="text-gray-400" size={24} />
@@ -375,7 +333,7 @@ export default function EventsListContent() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filteredEvents.map((evt, index) => (
+              {events.map((evt, index) => (
                 <div
                   key={evt._id}
                   className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
@@ -484,7 +442,7 @@ export default function EventsListContent() {
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1 || loading}
+                disabled={page <= 1}
                 className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Previous
@@ -495,7 +453,7 @@ export default function EventsListContent() {
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages || loading}
+                disabled={page >= totalPages}
                 className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next

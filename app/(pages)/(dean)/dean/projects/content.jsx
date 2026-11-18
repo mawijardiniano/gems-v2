@@ -8,7 +8,6 @@ import {
   FaCalendar,
   FaLocationArrow,
   FaArrowRight,
-  FaClock,
   FaUsers,
   FaFilter,
   FaSearch,

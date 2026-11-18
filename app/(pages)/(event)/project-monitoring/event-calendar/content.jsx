@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { canManageEvent as canManageEventRule } from "@/data/lib/eventAccess";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -18,18 +19,6 @@ const MONTH_LABELS = [
 ];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MAX_SPAN_DAYS = 62;
-
-/* created_by can be a populated object or a raw ObjectId */
-const getCreatorId = (e) => {
-  const creator = e?.created_by;
-  if (!creator) return "";
-  if (typeof creator === "object") {
-    return creator._id ? creator._id.toString() : "";
-  }
-  return creator.toString();
-};
-
-const isAdminRole = (role) => (role || "").toLowerCase() === "admin";
 
 const dateKey = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -102,11 +91,11 @@ export default function EventCalendarContent() {
     loadProfile();
   }, []);
 
+  /* The shared rule (creator or Admin), as the event API enforces it. */
   const canManageEvent = useCallback(
     (event) =>
       Boolean(currentUser?.id) &&
-      (getCreatorId(event) === currentUser.id ||
-        isAdminRole(currentUser.role)),
+      canManageEventRule({ _id: currentUser.id, role: currentUser.role }, event),
     [currentUser],
   );
 

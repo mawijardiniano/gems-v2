@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { activityPillClasses } from "@/data/lib/activityTypeColors";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -34,16 +35,6 @@ const EMPTY = {
   section: "",
 };
 
-/* Same colour families the event cards use for type_of_activity. */
-const ACTIVITY_COLORS = {
-  Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  GAD: "bg-pink-50 text-pink-700 border-pink-200",
-  Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
-};
 
 const PARTICIPANT_TYPES = [
   { value: "Student", label: "Student", icon: FaGraduationCap },
@@ -411,8 +402,7 @@ export default function AttendContent() {
               {event.type_of_activity && (
                 <span
                   className={`badge mt-3 border bg-white/90 ${
-                    ACTIVITY_COLORS[event.type_of_activity] ||
-                    ACTIVITY_COLORS.Others
+                    activityPillClasses(event.type_of_activity)
                   }`}
                 >
                   {event.type_of_activity}
