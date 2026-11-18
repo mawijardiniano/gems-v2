@@ -13,6 +13,7 @@ import mongoose from "mongoose";
 import { buildObjectUrl } from "@/data/lib/storage";
 import { isAcceptableKey } from "@/data/lib/eventFileKeys";
 import { canAccessGpb } from "@/data/lib/roleAccess";
+import { clearProjectReportCaches } from "@/data/lib/cache";
 
 const SCANNED_FOLDER = "status/scanned";
 const MAX_REASON_LENGTH = 500;
@@ -160,6 +161,8 @@ export async function POST(req, { params }) {
         { status: 409 },
       );
     }
+
+    clearProjectReportCaches();
 
     await logActivity({
       req,

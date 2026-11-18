@@ -5,6 +5,7 @@ import { requireAuth } from "@/data/lib/auth";
 import { canAccessGpb } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
+import { parseGpbYear } from "@/data/lib/gpbYear";
 import {
   computeYearBudgetSummary,
   yearProjectsMatch,
@@ -83,14 +84,13 @@ export async function GET(req) {
     await connectDB();
 
     const url = new URL(req.url);
-    const yearParam = url.searchParams.get("year")?.trim();
-    if (!yearParam || Number.isNaN(Number(yearParam))) {
+    const year = parseGpbYear(url.searchParams.get("year"));
+    if (year === null) {
       return NextResponse.json(
         { message: "Valid academic year is required." },
         { status: 400 },
       );
     }
-    const year = Number(yearParam);
 
     const result = await cacheOrSet(
       `gpb-matrix-report:${year}`,

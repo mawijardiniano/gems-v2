@@ -4,6 +4,9 @@ import { requireAuth } from "@/data/lib/auth";
 import { canAccessGpb } from "@/data/lib/roleAccess";
 import { cacheOrSet } from "@/data/lib/cache";
 import Project from "@/models/projects";
+import GPB from "@/models/gpb";
+import { parseGpbYear } from "@/data/lib/gpbYear";
+import { yearProjectsMatch } from "@/data/lib/yearBudgetSummary";
 import {
   buildOverallReport,
   buildPerProjectReport,
@@ -29,14 +32,13 @@ export async function GET(req) {
     await connectDB();
 
     const url = new URL(req.url);
-    const yearParam = url.searchParams.get("year")?.trim();
-    if (!yearParam || Number.isNaN(Number(yearParam))) {
+    const year = parseGpbYear(url.searchParams.get("year"));
+    if (year === null) {
       return NextResponse.json(
         { message: "Valid academic year is required." },
         { status: 400 },
       );
     }
-    const year = Number(yearParam);
 
     const modeParam = (url.searchParams.get("mode") || "overall").trim();
     const mode = MODES.includes(modeParam) ? modeParam : "overall";
@@ -63,8 +65,13 @@ export async function GET(req) {
       `gpb-progress-report:${year}:${mode}${quarter ? `:q${quarter}` : ""}`,
       async () => {
         /* Milestones are embedded in the project documents, so no extra
-           populate is needed for any of the report modes. */
-        const projects = await Project.find({ year }).lean();
+           populate is needed for any of the report modes. The projects are
+           the GPB's own, as in the matrix report, so the two reports cover
+           the same projects. */
+        const gpb = await GPB.findOne({ year }).select("projects").lean();
+        const projects = await Project.find(
+          yearProjectsMatch(gpb, year),
+        ).lean();
         if (!projects || projects.length === 0) {
           return {
             __empty: true,

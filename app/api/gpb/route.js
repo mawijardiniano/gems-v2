@@ -9,6 +9,8 @@ import { requireAuth } from "@/data/lib/auth";
 import { canAccessGpb } from "@/data/lib/roleAccess";
 import { isGpbManagerRole } from "@/data/lib/projectAccess";
 import { validateBudgetLink } from "@/data/lib/budgetLinking";
+import { parseGpbYear } from "@/data/lib/gpbYear";
+import { clearProjectReportCaches } from "@/data/lib/cache";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -74,10 +76,10 @@ export async function POST(req) {
 
     const body = (await req.json().catch(() => null)) || {};
 
-    const year = Number(body.year);
+    const year = parseGpbYear(body.year);
     const { gaaBudgetId } = body;
 
-    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+    if (year === null) {
       return Response.json(
         {
           success: false,
@@ -128,6 +130,8 @@ export async function POST(req) {
         },
       },
     });
+
+    clearProjectReportCaches();
 
     const populated = await GPB.findById(newGPB._id)
       .populate("gaaBudgetId")

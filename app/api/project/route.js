@@ -17,6 +17,7 @@ import {
   OVER_BUDGET_WARNING,
 } from "@/data/lib/budgetLinking";
 import { computeYearBudgetSummary } from "@/data/lib/yearBudgetSummary";
+import { clearProjectReportCaches } from "@/data/lib/cache";
 import {
   PROJECT_PICKER_FIELDS,
   canViewProjectDetails,
@@ -48,7 +49,27 @@ export async function GET(req) {
   return Response.json({ data: projects.map(withGeneratedAccomplishment) });
 }
 
+/* Bad input (a field of the wrong type) is the caller's 400; anything else is
+   a JSON 500 instead of an unhandled error. */
 export async function POST(req) {
+  try {
+    return await createProject(req);
+  } catch (err) {
+    console.error("POST project error:", err);
+    const clientError =
+      err?.name === "ValidationError" || err?.name === "CastError";
+    return Response.json(
+      {
+        message: clientError
+          ? "Invalid project data"
+          : "Unable to create the project.",
+      },
+      { status: clientError ? 400 : 500 },
+    );
+  }
+}
+
+async function createProject(req) {
   const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
@@ -261,6 +282,7 @@ export async function POST(req) {
     { _id: gpb._id },
     { $addToSet: { projects: project._id } },
   );
+  clearProjectReportCaches();
 
   let duplicateWarnings = [];
   try {

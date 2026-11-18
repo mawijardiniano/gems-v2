@@ -24,6 +24,7 @@ import Event from "@/models/event";
 import { NextResponse } from "next/server";
 import { parseAppDate } from "@/data/lib/appTime";
 import { buildObjectUrl } from "@/data/lib/storage";
+import { clearProjectReportCaches } from "@/data/lib/cache";
 import mongoose from "mongoose";
 import {
   GPB_LOCKED_MESSAGE,
@@ -434,21 +435,29 @@ export async function PUT(req, { params }) {
       },
     });
 
-    if (actor && normalizeRole(actor.role) !== "planning director") {
-      const planningDirectorIds = await getPlanningDirectorIds(actor._id);
+    clearProjectReportCaches();
 
-      await createNotifications({
-        recipientIds: planningDirectorIds,
-        senderId: actor._id,
-        type: "project_updated",
-        title: "Project updated",
-        message: `${actor.username} updated a GPB project for year ${project.year}.`,
-        projectId: project._id,
-        metadata: {
-          year: project.year,
-          updatedFields: Object.keys(body).filter((key) => key !== "userId"),
-        },
-      });
+    /* The edit is already saved, so a notification failure must not fail the
+       request. */
+    if (actor && normalizeRole(actor.role) !== "planning director") {
+      try {
+        const planningDirectorIds = await getPlanningDirectorIds(actor._id);
+
+        await createNotifications({
+          recipientIds: planningDirectorIds,
+          senderId: actor._id,
+          type: "project_updated",
+          title: "Project updated",
+          message: `${actor.username} updated a GPB project for year ${project.year}.`,
+          projectId: project._id,
+          metadata: {
+            year: project.year,
+            updatedFields: Object.keys(body).filter((key) => key !== "userId"),
+          },
+        });
+      } catch (notifyError) {
+        console.error("Project update notification failed:", notifyError);
+      }
     }
 
     let duplicateWarnings = [];
@@ -479,7 +488,29 @@ export async function PUT(req, { params }) {
   }
 }
 
-export async function GET(req, { params }) {
+/* GET and DELETE answer with JSON on any failure instead of an unhandled 500. */
+export async function GET(req, ctx) {
+  try {
+    return await getProject(req, ctx);
+  } catch (err) {
+    console.error("GET project error:", err);
+    return Response.json({ error: "Unable to load the project." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, ctx) {
+  try {
+    return await deleteProject(req, ctx);
+  } catch (err) {
+    console.error("DELETE project error:", err);
+    return Response.json(
+      { error: "Unable to delete the project." },
+      { status: 500 },
+    );
+  }
+}
+
+async function getProject(req, { params }) {
   const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
@@ -520,7 +551,7 @@ export async function GET(req, { params }) {
   return Response.json({ data: withGeneratedAccomplishment(projects) });
 }
 
-export async function DELETE(req, { params }) {
+async function deleteProject(req, { params }) {
   const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
@@ -556,7 +587,11 @@ export async function DELETE(req, { params }) {
 
   /* Unlink it from every GPB, remove the events it owns (with their files and
      reports) and delete the evidence + milestone proof files it stored. */
-  await GPB.updateMany({}, { $pull: { projects: project._id } });
+  await GPB.updateMany(
+    { projects: project._id },
+    { $pull: { projects: project._id } },
+  );
+  clearProjectReportCaches();
 
   /* Only events that point back at this project are its own. An id that
      merely sits in `project.events` (older data, or a client-supplied list)
