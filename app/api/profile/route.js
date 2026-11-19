@@ -7,7 +7,8 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
-import { requireStaff } from "@/data/lib/auth";
+import { requireStaff, invalidateUserCache } from "@/data/lib/auth";
+import { deleteProfilesCascade } from "@/data/lib/profileDelete";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { toTitleCase } from "@/app/api/integration/_utils/mapping";
 import {
@@ -28,7 +29,11 @@ import {
   searchIndexQuery,
   loadDecryptedPiiBatch,
 } from "@/data/lib/profileBroker";
-import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
+import {
+  emitToRoles,
+  disconnectUser,
+  PROFILE_WATCHER_ROLES,
+} from "@/data/lib/realtime";
 
 const PROFILE_LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
@@ -756,10 +761,22 @@ export async function DELETE(req) {
     const usersToDelete = await UserAuth.find({ role: "User" }).select(
       "personal_info_id",
     );
-    const profileIds = usersToDelete.map((u) => u.personal_info_id);
+    const profileIds = usersToDelete
+      .map((u) => u.personal_info_id)
+      .filter(Boolean);
 
-    await Profile.deleteMany({ _id: { $in: profileIds } });
-    await UserAuth.deleteMany({ role: "User" });
+    /* Terms and vault rows go with the profiles. This route used to delete
+       profiles only, leaving every term row and every encrypted identity of
+       the removed people behind. Accounts are deleted by the ids read above,
+       not by role again, so an account created in between is not removed
+       without its profile. */
+    const removed = await deleteProfilesCascade(profileIds);
+    const userIds = usersToDelete.map((u) => u._id);
+    await UserAuth.deleteMany({ _id: { $in: userIds } });
+    userIds.forEach((uid) => {
+      invalidateUserCache(String(uid));
+      disconnectUser(String(uid));
+    });
 
     cacheDelPrefix("profile:list:");
 
@@ -769,7 +786,12 @@ export async function DELETE(req) {
       description: `Bulk deleted ${usersToDelete.length} user(s) with role "User"`,
       resource_type: "profile",
       severity: "critical",
-      metadata: { count: usersToDelete.length },
+      metadata: {
+        count: usersToDelete.length,
+        profiles: removed.profiles,
+        terms_deleted: removed.terms,
+        vault_rows_deleted: removed.vault_rows,
+      },
     });
 
     emitToRoles(PROFILE_WATCHER_ROLES, "profile:deleted");

@@ -4,11 +4,22 @@ import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { logActivity, logPiiAccess } from "@/data/lib/activityLog";
-import { requireAuth } from "@/data/lib/auth";
+import { requireAuth, invalidateUserCache } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { applyRowPii, resolvePii } from "@/data/lib/profileBroker";
 import { extractPiiFromProfile, savePii } from "@/data/lib/vaultWriter";
-import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
+import {
+  emitToRoles,
+  disconnectUser,
+  PROFILE_WATCHER_ROLES,
+} from "@/data/lib/realtime";
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { deleteProfilesCascade } from "@/data/lib/profileDelete";
+import {
+  isSelf,
+  isValidObjectId,
+  wouldRemoveLastAdmin,
+} from "@/data/lib/adminGuards";
 
 /*
  * Re-writes the vaulted copy of a profile's PII after an update.
@@ -273,14 +284,16 @@ export async function PUT(req, { params }) {
  * used to be there. No plaintext PII is copied in (see models/activity_log.js).
  */
 export async function DELETE(req, { params }) {
-  const { error, status } = await requireAdmin(req);
-  if (error) return NextResponse.json({ error }, { status });
+  const auth = await requireAdmin(req);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
 
   const { id } = await params;
 
-  if (!id) {
+  if (!id || !isValidObjectId(id)) {
     return NextResponse.json(
-      { status: "error", message: "Missing user id" },
+      { status: "error", message: "Missing or invalid user id" },
       { status: 400 },
     );
   }
@@ -296,18 +309,33 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    /* Hoisted so the audit entry can report whether a linked profile was
-       actually removed, rather than assuming one existed. */
-    let profileDeleted = false;
-
-    if (user.personal_info_id) {
-      const deletedProfile = await Profile.findByIdAndDelete(
-        user.personal_info_id,
+    /* Same guards as the bulk delete: an Admin cannot delete their own
+       account, or the last active Admin. */
+    if (isSelf(auth.user, id)) {
+      return NextResponse.json(
+        { status: "error", message: "You cannot delete your own account." },
+        { status: 400 },
       );
-      profileDeleted = Boolean(deletedProfile);
+    }
+    if (await wouldRemoveLastAdmin([id])) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "This is the last active Admin; assign another Admin first.",
+        },
+        { status: 400 },
+      );
     }
 
+    /* The profile goes with its term history and vault row; deleting only
+       the profile orphaned both. */
+    const removed = await deleteProfilesCascade([user.personal_info_id]);
+    const profileDeleted = removed.profiles > 0;
+
     await UserAuth.findByIdAndDelete(id);
+    invalidateUserCache(id);
+    disconnectUser(id);
+    cacheDelPrefix("profile:list:");
 
     await logActivity({
       req,
@@ -326,6 +354,8 @@ export async function DELETE(req, { params }) {
           ? String(user.personal_info_id)
           : null,
         profile_deleted: profileDeleted,
+        terms_deleted: removed.terms,
+        vault_rows_deleted: removed.vault_rows,
       },
     });
 
