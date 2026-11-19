@@ -79,8 +79,13 @@ export async function GET(req) {
       return out;
     };
 
+    /* `vaultRef` is the key into the vault and `profileSearchIndex` holds the
+       blind-index digests; neither may reach the browser. This route runs on
+       every page load (layouts use it for the auth check). */
+    const { vaultRef: _vaultRef, profileSearchIndex: _digests, ...safeProfile } =
+      profile;
     const data = {
-      ...profile,
+      ...safeProfile,
       personal: overlay(profile.personal, revealed?.personal),
       gadData: overlay(profile.gadData, revealed?.gadData),
       contact: overlay(profile.contact, revealed?.contact),

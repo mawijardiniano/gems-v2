@@ -70,7 +70,51 @@ export async function requireAuth(req) {
     return { error: "This account has been deactivated", status: 401 };
   }
 
+  /* A password change (own or admin reset) must end sessions opened with the
+     old password. `passwordChangedAt` is stamped one second in the past on
+     save, so a token issued right after the change still passes. */
+  if (tokenPredatesPasswordChange(decoded, user)) {
+    return { error: "Session expired, please log in again", status: 401 };
+  }
+
   return { user };
+}
+
+export function tokenPredatesPasswordChange(decoded, user) {
+  if (!user?.passwordChangedAt || !decoded?.iat) return false;
+  const changedAt = new Date(user.passwordChangedAt).getTime();
+  return Number.isFinite(changedAt) && decoded.iat * 1000 < changedAt;
+}
+
+/* Roles that read other people's records (staff dashboards, rosters). The
+   plain `User` role — students and employees — only ever sees itself. */
+export const STAFF_ROLES = [
+  "Admin",
+  "GAD Focal Person",
+  "SUC President",
+  "GAD Coordinator",
+  "ICTU Director",
+  "Planning Director",
+  "Dean",
+  "Campus Director",
+];
+
+/* Roles whose reads are confined to their own college/office. */
+export const COLLEGE_SCOPED_ROLES = ["Dean", "GAD Coordinator"];
+
+/**
+ * Like requireAuth, but refuses the plain `User` role. Returns `scopeCollege`:
+ * the college a scoped role is confined to, taken from the database — never
+ * from the token or the query string.
+ */
+export async function requireStaff(req) {
+  const result = await requireRole(req, STAFF_ROLES);
+  if (result.error) return result;
+  const scoped = COLLEGE_SCOPED_ROLES.includes(result.user.role);
+  return {
+    user: result.user,
+    scopeCollege: scoped ? result.user.assignedCollege || "__none__" : null,
+  };
 }
 
 export async function optionalAuth(req) {

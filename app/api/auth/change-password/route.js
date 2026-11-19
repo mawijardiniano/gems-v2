@@ -100,10 +100,31 @@ export async function POST(req) {
       severity: "info",
     });
 
-    return NextResponse.json(
+    /* Every token issued before this change is now refused (requireAuth
+       compares iat with passwordChangedAt), which is the point: other
+       sessions end. This one gets a fresh token so the user stays signed in. */
+    const res = NextResponse.json(
       { success: true, message: "Password updated" },
       { status: 200 },
     );
+    const freshToken = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        assignedCollege: user.assignedCollege,
+        passwordChangedAt: user.passwordChangedAt?.getTime(),
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+    res.cookies.set("auth_token", freshToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+    return res;
   } catch (error) {
     console.error("POST /api/auth/change-password error:", error);
     return NextResponse.json(

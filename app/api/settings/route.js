@@ -1,13 +1,11 @@
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import { requireAuth } from "@/data/lib/auth";
 import { logActivity, diffFields } from "@/data/lib/activityLog";
 import { normalizeAcademicYear } from "@/data/lib/academicYear";
 import { SIGNATORY_SLOTS, withoutMiddleName } from "@/data/lib/signatories";
 
-const JWT_SECRET = process.env.JWT_SECRET;
 
 /* Roles allowed to write a setting, per key.
  *
@@ -24,26 +22,26 @@ const SETTING_WRITE_ROLES = {
   report_signatories: ["admin", "gad focal person"],
 };
 
+/* The only keys this generic route serves. Other SystemSetting rows have
+   their own routes and must not be reachable here: `hrmis_integration` holds
+   the HRMIS endpoint and its auth headers, and is read/written only through
+   /api/integration/config (masked, host-checked, audited). Any logged-in user
+   could previously GET it here, and an admin could PUT it unchecked. */
+const PUBLIC_SETTING_KEYS = ["active_term", "report_signatories"];
+
 /** Roles permitted to write `key`; defaults to system administrators only. */
 function writeRolesFor(key) {
   return SETTING_WRITE_ROLES[key] || ["admin", "ictu director"];
 }
 
 /**
- * Verifies the request's role and returns the writer's id when it may write
- * `key`, or null when it may not. Reading the role from the verified token
- * (never the body) keeps a caller from granting itself a role.
+ * Returns the writer's id when the caller may write `key`, or null. The role
+ * comes from the database user that requireAuth loaded — never the token,
+ * which keeps a demoted user's old role for up to a day, and never the body.
  */
-function getWriterId(req, key) {
-  const token = req.cookies.get("auth_token")?.value;
-  if (!token) return null;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const role = String(decoded.role || "").toLowerCase();
-    return writeRolesFor(key).includes(role) ? decoded.id : null;
-  } catch {
-    return null;
-  }
+function getWriterId(user, key) {
+  const role = String(user?.role || "").toLowerCase();
+  return writeRolesFor(key).includes(role) ? user._id : null;
 }
 
 // GET /api/settings?key=active_term
@@ -61,6 +59,12 @@ export async function GET(req) {
       return NextResponse.json(
         { success: false, error: "key query parameter is required" },
         { status: 400 },
+      );
+    }
+    if (!PUBLIC_SETTING_KEYS.includes(key)) {
+      return NextResponse.json(
+        { success: false, error: "Unknown setting key" },
+        { status: 404 },
       );
     }
 
@@ -101,7 +105,14 @@ export async function PUT(req) {
       );
     }
 
-    const writerId = getWriterId(req, key);
+    if (!PUBLIC_SETTING_KEYS.includes(key)) {
+      return NextResponse.json(
+        { success: false, error: "Unknown setting key" },
+        { status: 404 },
+      );
+    }
+
+    const writerId = getWriterId(user, key);
     if (!writerId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Admin access required." },

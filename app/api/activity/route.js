@@ -3,37 +3,40 @@ import mongoose from "mongoose";
 import { connectDB } from "@/data/lib/db";
 import ActivityLog from "@/models/activity_log";
 import { logActivity, redactActivityLog } from "@/data/lib/activityLog";
-import jwt from "jsonwebtoken";
 import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
+import { requireAuth } from "@/data/lib/auth";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const ACTIVITY_CACHE_TTL = 15 * 1000; // 15 seconds
+const MAX_LIMIT = 200;
 
-function authenticate(req) {
-  const token = req.cookies.get("auth_token")?.value;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch {
-    return null;
-  }
+function toInt(value, fallback) {
+  const n = parseInt(value ?? "", 10);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 export async function GET(req) {
   try {
-    await connectDB();
-
-    const decoded = authenticate(req);
-    if (!decoded) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    /* requireAuth, not a bare jwt.verify: the role and active state come
+       from the database, so a demoted or deactivated admin's unexpired token
+       no longer reads every user's activity. */
+    const { user, error, status, headers } = await requireAuth(req);
+    if (error) {
+      return NextResponse.json({ message: error }, { status, headers });
     }
+    const decoded = { id: String(user._id), role: user.role };
+
+    await connectDB();
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+    const page = Math.max(1, toInt(url.searchParams.get("page"), 1));
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, toInt(url.searchParams.get("limit"), 50)),
+    );
 
     const filter = {};
 
@@ -49,9 +52,20 @@ export async function GET(req) {
 
     if (action) filter.action = action;
     if (from || to) {
+      const fromDate = from ? new Date(from) : null;
+      const toDate = to ? new Date(to) : null;
+      if (
+        (fromDate && Number.isNaN(fromDate.getTime())) ||
+        (toDate && Number.isNaN(toDate.getTime()))
+      ) {
+        return NextResponse.json(
+          { message: "Invalid from/to date" },
+          { status: 400 },
+        );
+      }
       filter.createdAt = {};
-      if (from) filter.createdAt.$gte = new Date(from);
-      if (to) filter.createdAt.$lte = new Date(to);
+      if (fromDate) filter.createdAt.$gte = fromDate;
+      if (toDate) filter.createdAt.$lte = toDate;
     }
 
     // Build a cache key from the authenticated user + query params so
@@ -107,13 +121,19 @@ export async function DELETE(req) {
   try {
     await connectDB();
 
-    const decoded = authenticate(req);
-    if (!decoded || decoded.role !== "Admin") {
+    /* Database role, active account, current password — not the token. */
+    const auth = await requireAdmin(req);
+    if (auth.error) {
       return NextResponse.json(
-        { message: "Forbidden: Admin access required" },
-        { status: 403 },
+        { message: auth.error },
+        { status: auth.status, headers: auth.headers },
       );
     }
+    const decoded = {
+      id: auth.user._id,
+      username: auth.user.username,
+      role: auth.user.role,
+    };
 
     const url = new URL(req.url);
     const id = url.searchParams.get("id");

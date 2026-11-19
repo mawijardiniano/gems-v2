@@ -1,28 +1,32 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
-import jwt from "jsonwebtoken";
 import { logActivity } from "@/data/lib/activityLog";
 import { invalidateUserCache } from "@/data/lib/auth";
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { cacheDelPrefix } from "@/data/lib/cache";
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import {
+  isSelf,
+  isValidObjectId,
+  wouldRemoveLastAdmin,
+} from "@/data/lib/adminGuards";
 
 export async function PATCH(req, { params }) {
   try {
     await connectDB();
 
-    const { id } = await params;
-
-    const token = req.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return NextResponse.json({ message: "No token" }, { status: 401 });
+    /* Role and active state from the database, not the token. */
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json(
+        { message: auth.error },
+        { status: auth.status, headers: auth.headers },
+      );
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    if (decoded.role !== "Admin") {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    const { id } = await params;
+    if (!isValidObjectId(id)) {
+      return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
     }
 
     const user = await UserAuth.findById(id);
@@ -36,6 +40,18 @@ export async function PATCH(req, { params }) {
     if (action === "activate") {
       user.is_active = true;
     } else if (action === "deactivate") {
+      if (isSelf(auth.user, id)) {
+        return NextResponse.json(
+          { message: "You cannot deactivate your own account." },
+          { status: 400 },
+        );
+      }
+      if (user.role === "Admin" && (await wouldRemoveLastAdmin([id]))) {
+        return NextResponse.json(
+          { message: "This is the last active Admin and cannot be deactivated." },
+          { status: 400 },
+        );
+      }
       user.is_active = false;
     } else {
       return NextResponse.json({ message: "Invalid action" }, { status: 400 });
@@ -44,9 +60,12 @@ export async function PATCH(req, { params }) {
     await user.save();
 
     invalidateUserCache(id);
+    /* The user lists cache rows (including is_active) for 15 s. */
+    cacheDelPrefix("profile:list:");
 
     await logActivity({
       req,
+      user_id: auth.user._id,
       action: "STATUS_CHANGE",
       description: `User account ${action === "activate" ? "activated" : "deactivated"}`,
       resource_type: "user",
