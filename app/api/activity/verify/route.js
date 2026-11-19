@@ -5,6 +5,14 @@ import ActivityLog from "@/models/activity_log";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+/* When the one-at-a-time chain writer shipped (commit 0afa689). Forks dated
+   before this are the known concurrent-write defect; any fork after it is
+   reported as a break. Override with AUDIT_CHAIN_FORK_FIXED_AT (ISO time) if
+   a server picked the fix up later than this. */
+const CHAIN_FORK_FIXED_AT = new Date(
+  process.env.AUDIT_CHAIN_FORK_FIXED_AT || "2026-11-19T04:50:46Z",
+);
+
 /* Chain verification (NIST AU-9(2) — verification of audit record integrity).
  *
  * Walks the trail oldest-first and recomputes each hash, reporting the first
@@ -163,6 +171,21 @@ export async function GET(req) {
         .filter(Boolean),
     );
 
+    /* Known forks. Until CHAIN_FORK_FIXED_AT, two log writes at the same
+       moment could both read the same chain tip and both store it as
+       hash_prev (fixed in data/lib/activityLog.js by writing one at a time).
+       That leaves a row whose link does not match the row before it in time,
+       but whose parent exists and is shared with exactly one sibling. Such a
+       row is reported as `forked_pre_fix`, not as a break. A fork after the
+       fix, a parent that does not exist, or a missing row still count as
+       `link_broken`. The row's own content hash is checked as usual. */
+    const childrenOf = new Map();
+    for (const r of records) {
+      if (r.hash_prev) childrenOf.set(r.hash_prev, (childrenOf.get(r.hash_prev) || 0) + 1);
+    }
+    const seenHashes = new Map();
+    const forks = [];
+
     for (const record of records) {
       if (prevHash === null && windowStartsMidChain && record.hash_self) {
         prevHash = record.hash_prev || null;
@@ -185,8 +208,19 @@ export async function GET(req) {
       if ((record.hash_prev || null) !== prevHash) {
         const boundary =
           record.hash_prev && disposedThrough.has(record.hash_prev);
+        const parent = record.hash_prev ? seenHashes.get(record.hash_prev) : null;
+        const knownFork =
+          parent &&
+          new Date(record.createdAt) < CHAIN_FORK_FIXED_AT &&
+          childrenOf.get(record.hash_prev) === 2;
         if (boundary) {
           archived += 1;
+        } else if (knownFork) {
+          forks.push({
+            id: String(record._id),
+            createdAt: record.createdAt,
+            parent_id: String(parent._id),
+          });
         } else {
           problems.push({
             type: "link_broken",
@@ -237,6 +271,7 @@ export async function GET(req) {
       }
 
       prevHash = record.hash_self;
+      seenHashes.set(record.hash_self, record);
     }
 
     return NextResponse.json(
@@ -253,6 +288,9 @@ export async function GET(req) {
         redacted: redactedCount,
         /* Chained, links intact, but content not re-hashable (pre-fix rows). */
         content_unverifiable_legacy: contentUnverifiable,
+        /* Concurrent-write forks from before the fix; not tampering. */
+        forked_pre_fix: forks.length,
+        forks: forks.slice(0, 100),
         problems: problems.slice(0, 100),
         truncated,
       },
