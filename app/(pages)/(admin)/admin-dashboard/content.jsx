@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import useDashboardData from "@/hooks/useDashboardData";
 import useDashboardFilters from "@/hooks/useDashboardFilters";
 import { AnalyticsDashboardSkeleton } from "@/components/Skeleton";
+import LoadError from "@/components/LoadError";
 import Snapshot from "./components/snapshot";
 import GenderPanel from "./components/genderPanel";
 import Demographics from "./components/demographics";
@@ -20,7 +21,12 @@ import {
 const PERSON_TYPE_OPTIONS = ["Student", "Employee"];
 
 export default function Page() {
-  const { data: filters, loading: filtersLoading } = useDashboardFilters();
+  const {
+    data: filters,
+    loading: filtersLoading,
+    error: filtersError,
+    refresh: refreshFilters,
+  } = useDashboardFilters();
   /* Sample mode is the default view; the toggle swaps every panel back to the
      live API (and back) without leaving the page. */
   const [useSample, setUseSample] = useState(true);
@@ -120,7 +126,12 @@ export default function Page() {
 
   /* Live fetching stays parked while sample mode is on - the panels read the
      synthetic dataset instead. */
-  const { data: dashboardData, loading: dashboardLoading } = useDashboardData(
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refresh: refreshDashboard,
+  } = useDashboardData(
     dashboardFilters,
     filtersReady && !useSample,
   );
@@ -131,6 +142,12 @@ export default function Page() {
   );
   const activeData = useSample ? sampleData : dashboardData;
   const showDashboard = useSample || (!dashboardLoading && !!dashboardData);
+  /* Live data only: a failed request used to leave the skeleton up for good. */
+  const loadError = !useSample && (dashboardError || filtersError);
+  const retryLoad = () => {
+    if (filtersError) refreshFilters();
+    if (dashboardError) refreshDashboard();
+  };
 
   return (
     <div className="py-8 flex flex-col gap-4">
@@ -169,7 +186,9 @@ export default function Page() {
 
       {useSample && <SampleDataNotice />}
 
-      {!showDashboard ? (
+      {loadError ? (
+        <LoadError message={loadError} onRetry={retryLoad} />
+      ) : !showDashboard ? (
         <AnalyticsDashboardSkeleton />
       ) : (
         <>

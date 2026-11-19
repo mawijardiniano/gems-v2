@@ -6,6 +6,7 @@ import { getSocket } from "@/utils/socket";
 export default function useDashboardFilters() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -13,9 +14,11 @@ export default function useDashboardFilters() {
       if (!res.ok) throw new Error("Failed to fetch filter options");
       const json = await res.json();
       setData(json);
+      setError(null);
     } catch (err) {
       console.error(err);
       setData(null);
+      setError("Could not load the filter options.");
     } finally {
       setLoading(false);
     }
@@ -29,10 +32,16 @@ export default function useDashboardFilters() {
         const res = await fetch("/api/analytics/filters");
         if (!res.ok) throw new Error("Failed to fetch filter options");
         const json = await res.json();
-        if (!cancelled) setData(json);
+        if (!cancelled) {
+          setData(json);
+          setError(null);
+        }
       } catch (err) {
         console.error(err);
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(null);
+          setError("Could not load the filter options.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -62,5 +71,5 @@ export default function useDashboardFilters() {
     };
   }, [refresh]);
 
-  return { data, loading, refresh };
+  return { data, loading, error, refresh };
 }

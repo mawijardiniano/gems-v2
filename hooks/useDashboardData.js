@@ -7,6 +7,9 @@ import { getSocket } from "@/utils/socket";
 export default function useDashboardData(filters = {}, enabled = true) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  /* Set when the request fails, so the page can say so instead of keeping
+     its loading skeleton forever. */
+  const [error, setError] = useState(null);
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -30,9 +33,11 @@ export default function useDashboardData(filters = {}, enabled = true) {
       if (!res.ok) throw new Error("Failed to fetch dashboard data");
       const json = await res.json();
       setData(json);
+      setError(null);
     } catch (err) {
       console.error(err);
       setData(null);
+      setError("Could not load the dashboard.");
     } finally {
       setLoading(false);
     }
@@ -52,10 +57,16 @@ export default function useDashboardData(filters = {}, enabled = true) {
         const res = await fetch(buildQuery());
         if (!res.ok) throw new Error("Failed to fetch dashboard data");
         const json = await res.json();
-        if (!cancelled) setData(json);
+        if (!cancelled) {
+          setData(json);
+          setError(null);
+        }
       } catch (err) {
         console.error(err);
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(null);
+          setError("Could not load the dashboard.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,5 +98,5 @@ export default function useDashboardData(filters = {}, enabled = true) {
     };
   }, [refresh]);
 
-  return { data, loading, refresh };
+  return { data, loading, error, refresh };
 }

@@ -18,6 +18,7 @@ export default function useProfileList({
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(!initialData);
+  const [error, setError] = useState(null);
 
   const initializedRef = useRef(false);
   const didMountRef = useRef(false);
@@ -70,9 +71,12 @@ export default function useProfileList({
         setTotal(json.total || 0);
         setTotalPages(json.totalPages || 1);
         setPage(json.page || pageNum);
+        setError(null);
       } catch (err) {
         console.error(err);
         setData([]);
+        /* An empty list alone reads as "no matches"; say it failed. */
+        setError("Could not load the list.");
       } finally {
         setLoading(false);
       }
@@ -114,5 +118,5 @@ export default function useProfileList({
     [page, totalPages, fetchPage],
   );
 
-  return { data, total, totalPages, page, loading, goToPage };
+  return { data, total, totalPages, page, loading, error, goToPage };
 }
