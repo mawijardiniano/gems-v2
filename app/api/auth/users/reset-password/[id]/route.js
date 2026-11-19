@@ -1,28 +1,28 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
-import jwt from "jsonwebtoken";
 import { logActivity } from "@/data/lib/activityLog";
 import { invalidateUserCache } from "@/data/lib/auth";
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { isValidObjectId } from "@/data/lib/adminGuards";
 
 export async function PATCH(req, { params }) {
   try {
     await connectDB();
 
-    const { id } = await params;
-
-    const token = req.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return NextResponse.json({ message: "No token" }, { status: 401 });
+    /* Role from the database, not the token: a demoted or deactivated admin's
+       unexpired token used to keep this power for up to a day. */
+    const auth = await requireAdmin(req);
+    if (auth.error) {
+      return NextResponse.json(
+        { message: auth.error },
+        { status: auth.status, headers: auth.headers },
+      );
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    if (decoded.role !== "Admin") {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    const { id } = await params;
+    if (!isValidObjectId(id)) {
+      return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
     }
 
     const user = await UserAuth.findById(id).select("+password");
@@ -41,6 +41,7 @@ export async function PATCH(req, { params }) {
 
     await logActivity({
       req,
+      user_id: auth.user._id,
       action: "RESET_PASSWORD",
       description: "User password was reset to default",
       resource_type: "user",

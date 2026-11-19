@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { logActivity } from "@/data/lib/activityLog";
-import { requireAuth } from "@/data/lib/auth";
+import { requireStaff } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { toTitleCase } from "@/app/api/integration/_utils/mapping";
 import {
@@ -237,23 +237,16 @@ export function rosterRowForClient(user, resolvedByRef) {
 
 export async function GET(req) {
   try {
-    const { error, status } = await requireAuth(req);
+    /* Staff only, and the role/college come from the database. Any logged-in
+       user used to get every profile here (unpaginated), and the scope was
+       read from the token, which keeps a reassigned Dean's old college. */
+    const { error, status, user, scopeCollege } = await requireStaff(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
 
-    const token = req.cookies.get("auth_token")?.value;
-    let decoded = null;
-    if (token) {
-      try {
-        decoded = jwt.verify(token, JWT_SECRET);
-      } catch {
-        decoded = null;
-      }
-    }
-
-    const assignedCollege = decoded?.assignedCollege || null;
-    const role = decoded?.role || null;
+    const assignedCollege = scopeCollege;
+    const role = user?.role || null;
     /* `role` is part of the key because the rows this route returns are
        masked or revealed by it, and `assignedCollege` alone does not separate
        the two: a Dean and an Admin in the same college would otherwise share

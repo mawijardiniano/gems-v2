@@ -4,7 +4,7 @@ import { connectDB } from "@/data/lib/db";
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import ProfileTerm from "@/models/profileTerm";
-import { requireAuth } from "@/data/lib/auth";
+import { requireStaff } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
 import { applyRowPii, resolvePiiBatch } from "@/data/lib/profileBroker";
 
@@ -67,13 +67,19 @@ function sortStudentYearLevels(rows) {
 
 export async function GET(req) {
   try {
-    const { error, status, user } = await requireAuth(req);
+    /* Staff only. Narrow filters (office + appointment + sex) return counts
+       small enough to identify one person, so the plain `User` role — which
+       has no dashboard — must not reach this. */
+    const { error, status, user, scopeCollege } = await requireStaff(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
 
     const url = new URL(req.url);
-    const college = url.searchParams.get("college")?.trim() || null;
+    /* A Dean / GAD Coordinator sees their own college only, whatever the
+       query asks for. */
+    const college =
+      scopeCollege || url.searchParams.get("college")?.trim() || null;
     const schoolYear = url.searchParams.get("school_year")?.trim() || null;
     const semester = url.searchParams.get("semester")?.trim() || null;
     const sex = url.searchParams.get("sex")?.trim() || null;

@@ -3,9 +3,8 @@ import Profile from "@/models/profile";
 import ProfileTerm from "@/models/profileTerm";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { requireAuth } from "@/data/lib/auth";
+import { requireStaff } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
 import { logPiiAccess } from "@/data/lib/activityLog";
 import {
@@ -15,7 +14,6 @@ import {
   applyRowPii,
 } from "@/data/lib/profileBroker";
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const LIST_CACHE_TTL = 15 * 1000; // 15 seconds
 
 function parseListParam(value) {
@@ -29,7 +27,9 @@ function parseListParam(value) {
 
 export async function GET(req) {
   try {
-    const { error, status, user } = await requireAuth(req);
+    /* Staff only: this route pages through every account. It used to accept
+       any logged-in user, so a student could list all ~10,800 people. */
+    const { error, status, user, scopeCollege } = await requireStaff(req);
     if (error) return NextResponse.json({ error }, { status });
 
     await connectDB();
@@ -57,18 +57,11 @@ export async function GET(req) {
     const search = url.searchParams.get("search")?.trim() || null;
 
     const role = user?.role || null;
-    /* The payload carries `assignedCollege`, which the account document does
-       not; the token itself is already verified by requireAuth above. */
-    const token = req.cookies.get("auth_token")?.value;
-    let decoded = null;
-    if (token) {
-      try {
-        decoded = jwt.verify(token, JWT_SECRET);
-      } catch {
-        decoded = null;
-      }
-    }
-    const scopedCollege = college || decoded?.assignedCollege || null;
+    /* A college-scoped role (Dean, GAD Coordinator) is confined to its own
+       college from the database; the `college` query parameter only narrows
+       unscoped staff. It used to override the scope, so a Dean could read any
+       college by passing ?college=. */
+    const scopedCollege = scopeCollege || college || null;
 
     /* `role` is part of the key: the response is masked or revealed by role,
        so serving one caller's cached page to another would leak a name. */
