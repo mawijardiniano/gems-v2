@@ -11,6 +11,7 @@ import {
   buildIdentityDedupeKey,
 } from "@/app/api/integration/_utils/mapping";
 import { blindIndex } from "@/data/lib/identityVault";
+import { matchByNameBirthday } from "@/app/api/integration/_utils/profileMatch";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -117,7 +118,33 @@ export async function POST(req, { params }) {
       }
     }
 
-    const profileIds = [...new Set(existingProfiles.map((p) => String(p._id)))];
+    const idOrEmailMatch = (identity) =>
+      (identity.student_id && profileByStudent.get(identity.student_id)) ||
+      (identity.employee_id && profileByEmployee.get(identity.employee_id)) ||
+      (identity.email && profileByEmail.get(identity.email)) ||
+      null;
+
+    /* Rows no ID or email matched still get merged into an existing person
+       when name + birthday match (same rule as migrate). That is the weakest
+       match, so it is surfaced here, before approval, as a warning. */
+    const nameMatchByRecord = await matchByNameBirthday(
+      GemsProfile,
+      records
+        .filter((r) => !idOrEmailMatch(r.identity || {}))
+        .map((r) => ({
+          key: String(r._id),
+          mapped: r.mapped_payload || {},
+          identity: r.identity || {},
+        })),
+    );
+
+    const profileIds = [
+      ...new Set(
+        [...existingProfiles, ...nameMatchByRecord.values()].map((p) =>
+          String(p._id),
+        ),
+      ),
+    ];
     const existingTerms = profileIds.length
       ? await ProfileTerm.find({ profile_id: { $in: profileIds } })
           .select("profile_id school_year semester")
@@ -183,12 +210,21 @@ export async function POST(req, { params }) {
       }
 
       if (errors.length === 0) {
-        const profile =
-          (identity.student_id && profileByStudent.get(identity.student_id)) ||
-          (identity.employee_id &&
-            profileByEmployee.get(identity.employee_id)) ||
-          (identity.email && profileByEmail.get(identity.email)) ||
-          null;
+        const strongMatch = idOrEmailMatch(identity);
+        const nameMatch = strongMatch
+          ? null
+          : nameMatchByRecord.get(String(record._id)) || null;
+        const profile = strongMatch || nameMatch;
+
+        if (nameMatch) {
+          errors.push({
+            field: "identity",
+            code: "matched_by_name_birthday",
+            level: "warning",
+            message:
+              "No ID or email matched, but an existing person has the same name and birthday — importing will merge this row into that person. Check it is the same person before approving.",
+          });
+        }
 
         if (profile) {
           const termKey = `${String(profile._id)}|${record.school_year}|${record.semester}`;

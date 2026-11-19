@@ -70,14 +70,80 @@ export async function findExistingProfileForRecord(record, GemsProfile) {
         candidates.map((p) => p.vaultRef),
         { fields: ["birthday"] },
       );
-      const match = candidates.find((p) =>
-        sameDay(piiByRef.get(String(p.vaultRef))?.birthday, birthday),
+      const match = candidates.find(
+        (p) =>
+          !idConflicts(p, identity) &&
+          sameDay(piiByRef.get(String(p.vaultRef))?.birthday, birthday),
       );
       if (match) return { profile: match, matchedOn: "name_birthday" };
     }
   }
 
   return null;
+}
+
+/* A name + birthday candidate is a different person when both sides carry
+   the same kind of ID and the IDs differ. Merging into it would overwrite
+   that person's student or employee number with this row's. */
+export function idConflicts(profile, identity = {}) {
+  const sid = profile?.affiliation?.academic_information?.student_id;
+  const eid = profile?.affiliation?.employment_information?.employee_id;
+  if (identity.student_id && sid && sid !== identity.student_id) return true;
+  if (identity.employee_id && eid && eid !== identity.employee_id) return true;
+  return false;
+}
+
+/**
+ * Batched name + birthday lookup for many rows at once (the validate route).
+ * `items` are `{ key, mapped, identity }`; returns `Map<key, profile>` for the
+ * rows that would be merged into an existing person on name + birthday alone.
+ * Uses the same rules as `findExistingProfileForRecord`.
+ */
+export async function matchByNameBirthday(GemsProfile, items) {
+  const wanted = [];
+  for (const item of items) {
+    const first = blindIndex(item.mapped?.personal?.first_name);
+    const last = blindIndex(item.mapped?.personal?.last_name);
+    const birthday = item.mapped?.personal?.birthday
+      ? new Date(item.mapped.personal.birthday)
+      : null;
+    if (!first || !last || !birthday || Number.isNaN(birthday.getTime())) {
+      continue;
+    }
+    wanted.push({ ...item, first, last, birthday });
+  }
+  const out = new Map();
+  if (!wanted.length) return out;
+
+  const candidates = await GemsProfile.find({
+    $and: [
+      { profileSearchIndex: { $in: [...new Set(wanted.map((w) => w.first))] } },
+      { profileSearchIndex: { $in: [...new Set(wanted.map((w) => w.last))] } },
+    ],
+    vaultRef: { $exists: true, $ne: null },
+  })
+    .select("vaultRef profileSearchIndex affiliation")
+    .lean();
+  if (!candidates.length) return out;
+
+  const piiByRef = await loadDecryptedPiiBatch(
+    candidates.map((p) => p.vaultRef),
+    { fields: ["birthday"] },
+  );
+
+  for (const w of wanted) {
+    const match = candidates.find((p) => {
+      const index = p.profileSearchIndex || [];
+      return (
+        index.includes(w.first) &&
+        index.includes(w.last) &&
+        !idConflicts(p, w.identity) &&
+        sameDay(piiByRef.get(String(p.vaultRef))?.birthday, w.birthday)
+      );
+    });
+    if (match) out.set(w.key, match);
+  }
+  return out;
 }
 
 /* Birthdays may have been stored as local midnight (+08:00) or UTC
