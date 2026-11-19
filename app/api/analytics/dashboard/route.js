@@ -6,7 +6,31 @@ import UserAuth from "@/models/user";
 import ProfileTerm from "@/models/profileTerm";
 import { requireStaff } from "@/data/lib/auth";
 import { cacheOrSet } from "@/data/lib/cache";
-import { applyRowPii, resolvePiiBatch } from "@/data/lib/profileBroker";
+import { loadDecryptedPiiBatch } from "@/data/lib/profileBroker";
+
+/* The only vault fields the dashboard counts. Reading these alone keeps
+   names, contacts and addresses encrypted (the full read decrypted ~20
+   fields for every one of ~10,800 people on each filter change). */
+const DEMOGRAPHIC_FIELDS = [
+  "sexAtBirth",
+  "gender_preference",
+  "isPWD",
+  "isIndigenousPerson",
+  "birthday",
+  "civil_status",
+  "religion",
+];
+
+/* Vault values win when present; a profile with no vault row keeps its
+   legacy values. */
+function overlay(base, pii, keys) {
+  const out = { ...(base || {}) };
+  for (const key of keys) {
+    const v = pii?.[key];
+    if (v !== null && v !== undefined && v !== "") out[key] = v;
+  }
+  return out;
+}
 
 const DASHBOARD_CACHE_TTL = 15 * 1000;
 
@@ -191,10 +215,14 @@ export async function GET(req) {
            absent from the profile once the legacy fields are stripped. One
            batched read covers the whole result set; rows with no vault entry
            yet keep their legacy values. */
-        const piiByRef = await resolvePiiBatch({
-          vaultRefs: users.map((u) => u.personal_info_id?.vaultRef),
-          role,
-        });
+        /* Counted from the decrypted values for every staff role. The old
+           masked read nulled gender preference, civil status and religion for
+           roles that may not see PII, so their dashboard showed 100% "Not
+           specified" / "Unknown". Only aggregate numbers leave this route. */
+        const piiByRef = await loadDecryptedPiiBatch(
+          users.map((u) => u.personal_info_id?.vaultRef),
+          { fields: DEMOGRAPHIC_FIELDS },
+        );
 
         let total = 0;
         let femaleCount = 0;
@@ -236,18 +264,20 @@ export async function GET(req) {
           const acad = p.affiliation?.academic_information || {};
           const emp = p.affiliation?.employment_information || {};
 
-          /* The vault holds the counts' inputs. `identity` is the masked or
-             revealed row shape; this route only reads the values it counts, so
-             the two are interchangeable here. `affiliation` is passed in so
-             `applyRowPii` can read `person_type` — with it omitted the status
-             would be read as empty and every user would land in the
-             unspecified bucket. */
-          const identity = applyRowPii(
-            { personal, gadData: gad, contact: p.contact || {}, affiliation },
-            piiByRef.get(String(p.vaultRef || "")),
-          );
-          const vPersonal = identity.personal || {};
-          const vGad = identity.gadData || {};
+          /* Demographic inputs come from the vault (see DEMOGRAPHIC_FIELDS);
+             student/employee status comes from `affiliation.person_type`. */
+          const pii = piiByRef.get(String(p.vaultRef || ""));
+          const vPersonal = overlay(personal, pii, [
+            "birthday",
+            "civil_status",
+            "religion",
+          ]);
+          const vGad = overlay(gad, pii, [
+            "sexAtBirth",
+            "gender_preference",
+            "isPWD",
+            "isIndigenousPerson",
+          ]);
 
           /* The sex filter runs here, not in the query: the value is encrypted
              in the vault, so the database cannot match on it. A row that does
@@ -268,7 +298,7 @@ export async function GET(req) {
           else if (pref === "LGBTQIA+") prefCounts["LGBTQIA+"] += 1;
           else unspecifiedCount += 1;
 
-          const age = identity.age ?? calcAge(vPersonal?.birthday);
+          const age = calcAge(vPersonal?.birthday);
           if (age !== null) {
             const bucket = Math.floor(age / 10) * 10;
             const label = `${bucket}–${bucket + 9}`;
@@ -282,7 +312,7 @@ export async function GET(req) {
           religionCounts[religion] = (religionCounts[religion] || 0) + 1;
 
           const status = (
-            identity.affiliation?.person_type ||
+            affiliation.person_type ||
             vPersonal?.currentStatus ||
             ""
           ).toLowerCase();

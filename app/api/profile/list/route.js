@@ -10,6 +10,7 @@ import { logPiiAccess } from "@/data/lib/activityLog";
 import {
   canViewPII,
   resolvePiiBatch,
+  loadDecryptedPiiBatch,
   searchIndexQuery,
   applyRowPii,
 } from "@/data/lib/profileBroker";
@@ -190,8 +191,13 @@ export async function GET(req) {
         }
         countPipeline.push({ $count: "total" });
 
-        const [countResult] = await UserAuth.aggregate(countPipeline);
-        const total = countResult?.total || 0;
+        /* With a sex filter the count is taken after the vault filter below,
+           so the count query would be wasted work. */
+        let total = 0;
+        if (!sex) {
+          const [countResult] = await UserAuth.aggregate(countPipeline);
+          total = countResult?.total || 0;
+        }
 
         const dataPipeline = [
           {
@@ -252,7 +258,27 @@ export async function GET(req) {
           },
         });
 
-        const data = await UserAuth.aggregate(dataPipeline);
+        let data = await UserAuth.aggregate(dataPipeline);
+
+        /* Sex filter: decrypt only `sexAtBirth` for the matching set, filter,
+           then slice the page — terms and the full identity are resolved for
+           that page alone. This used to resolve terms and decrypt every field
+           of every matching person (~10k on "Female") before slicing, and the
+           masked read gave non-PII roles no sex to match on at all. */
+        if (sexFilteredInMemory) {
+          const sexByRef = await loadDecryptedPiiBatch(
+            data.map((u) => u.personal_info_id?.vaultRef),
+            { fields: ["sexAtBirth"] },
+          );
+          const matched = data.filter(
+            (u) =>
+              sexByRef.get(String(u.personal_info_id?.vaultRef || ""))
+                ?.sexAtBirth === sex,
+          );
+          total = matched.length;
+          const start = (page - 1) * limit;
+          data = matched.slice(start, start + limit);
+        }
 
         const profileIds = data
           .map((u) => u.personal_info_id?._id)
@@ -360,24 +386,6 @@ export async function GET(req) {
             },
           };
         });
-
-        /* With a sex filter the set returned above is the whole match, so the
-           vault-backed value is known for every row and the page can be sliced
-           here. `total` comes from this same filtered set, keeping the page
-           count and the pagination controls in agreement. */
-        if (sexFilteredInMemory) {
-          const matched = dataWithPii.filter(
-            (user) => user.personal_info_id?.gadData?.sexAtBirth === sex,
-          );
-          const start = (page - 1) * limit;
-          return {
-            data: matched.slice(start, start + limit),
-            total: matched.length,
-            page,
-            limit,
-            totalPages: Math.max(1, Math.ceil(matched.length / limit)),
-          };
-        }
 
         return {
           data: dataWithPii,
