@@ -69,31 +69,10 @@ tests/*
 scripts/*
 # exception: needed by the "postinstall" hook so a fresh clone can build PDFs
 !scripts/copy-pdf-worker.mjs
-# exception: the audit-trail tests and the retention script are not dev
-# scratch. They are the enforcement of a compliance control (tamper-evidence,
-# retention, disposal): a clone without them gets the hardening and none of the
-# checks, so it can rot silently. Everything else under tests/ stays local.
-#
-# Matched by name pattern rather than a single file so a new audit test is
-# covered without editing this file. Note `audit*` covers tests/audit*.test.mjs;
-# `activityLog*` covers the activity-log UI tests, which are part of the same
-# control. A file that matches neither stays local.
-!tests/audit*.test.mjs
-!tests/activityLog*.test.mjs
-
-# exception: storage env handling is the difference between a working
-# deployment and one that fails with a message that never mentions storage.
-# A trailing newline on a credential is signed into a request header, which
-# HTTP forbids, and the resulting TypeError names neither the variable nor
-# the cause. Kept for the same reason as the audit tests: a clone without
-# it has the hardening and none of the checks.
-!tests/storageEnv*.test.mjs
-# exception: the text-size preference is the app's only accessibility control.
-# Its ceiling (150%) exists so the fixed 20rem sidebar does not eat two thirds
-# of a tablet, and its storage readers swallow corrupt or blocked localStorage.
-# Both are rules a later edit could bend silently; kept for the same reason as
-# the storage tests - a clone without it has the control and none of the checks.
-!tests/textScale*.test.mjs
+# No test file is ever tracked: tests stay on developer machines only
+# (decided 2026-11-19). The former audit/activityLog/storageEnv/textScale
+# exceptions were removed.
+# exception: the retention script is the disposal control itself.
 !scripts/audit-retention.mjs
 data/sample-profiles.json
 
