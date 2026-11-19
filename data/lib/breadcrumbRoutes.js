@@ -14,7 +14,6 @@ export const BREADCRUMB_ROUTE_PREVIEW = [
   /* ── (admin) ─────────────────────────────────────────────── */
   { path: "/admin-dashboard", role: "admin" },
   { path: "/integration", role: "admin" },
-  { path: "/integration-staging", role: "admin" },
   { path: "/manual-upload", role: "admin" },
   { path: "/activity-logs", role: "admin" },
   { path: "/user-lists", role: "admin" },

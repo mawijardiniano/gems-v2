@@ -23,7 +23,6 @@ export const BREADCRUMB_LABELS = {
   /* (admin) */
   "/admin-dashboard": "Dashboard",
   "/integration": "Data Integration",
-  "/integration-staging": "Staging Workspace",
   "/manual-upload": "Manual Upload",
   "/activity-logs": "Audit Trail",
   "/user-lists": "User Lists",
