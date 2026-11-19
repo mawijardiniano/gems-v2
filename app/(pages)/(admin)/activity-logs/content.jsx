@@ -710,6 +710,16 @@ export default function ActivityLogsContent() {
           </div>
         )}
 
+        {integrity?.forked_pre_fix > 0 && (
+          <p className="mt-3 text-xs text-amber-700">
+            {integrity.forked_pre_fix} record
+            {integrity.forked_pre_fix === 1 ? " was" : "s were"} written at the
+            same moment as another and linked to the same earlier record. This
+            was a known defect in the log writer, fixed on 19 Nov 2026; it is
+            not tampering, and each record&apos;s own content was still checked.
+          </p>
+        )}
+
         {integrity?.unlinked_degraded > 0 && (
           <p className="mt-3 text-xs text-red-700">
             {integrity.unlinked_degraded} record
