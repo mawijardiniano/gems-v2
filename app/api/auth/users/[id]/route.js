@@ -5,6 +5,7 @@ import { SCOPED_ROLES } from "@/data/lib/colleges";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { invalidateUserCache } from "@/data/lib/auth";
+import { disconnectUser } from "@/data/lib/realtime";
 import {
   ROLE_VALUES,
   isSelf,
@@ -145,6 +146,7 @@ export async function PUT(req, { params }) {
     }
 
     invalidateUserCache(id);
+    disconnectUser(id);
 
     await logActivity({
       req,
@@ -221,6 +223,7 @@ export async function DELETE(req, { params }) {
     }
 
     invalidateUserCache(id);
+    disconnectUser(id);
 
     await logActivity({
       req,

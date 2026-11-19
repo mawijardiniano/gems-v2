@@ -6,7 +6,7 @@ import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
-import { emitToRoles, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
+import { emitToRoles, disconnectUser, PROFILE_WATCHER_ROLES } from "@/data/lib/realtime";
 import { invalidateUserCache } from "@/data/lib/auth";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import {
@@ -74,7 +74,10 @@ export async function DELETE(req) {
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ _id: { $in: ids } });
 
-    ids.forEach((id) => invalidateUserCache(id));
+    ids.forEach((id) => {
+      invalidateUserCache(id);
+      disconnectUser(id);
+    });
     /* Deleted users otherwise reappear in the cached lists for 15 s. */
     cacheDelPrefix("profile:list:");
 
