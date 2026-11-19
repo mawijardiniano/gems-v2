@@ -715,7 +715,9 @@ export async function POST(req) {
     await logActivity({
       req,
       action: "PROFILE_CREATE",
-      description: `Profile created for ${personal.first_name} ${personal.last_name} (role: ${role})`,
+      /* Public id, never the name: the audit trail must not hold plaintext
+         PII (every Admin reads it, and retention keeps it for years). */
+      description: `Profile created for ${createdProfile.gemsPublicId || createdProfile._id} (role: ${role})`,
       resource_type: "profile",
       resource_id: createdProfile._id,
       severity: "info",

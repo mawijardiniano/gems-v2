@@ -91,6 +91,9 @@ async function resolveActor({ user_id, req, actor }) {
 function resolveIp(req) {
   if (!req) return null;
   const headers = req.headers;
+  /* Set by server.js from the real TCP peer; cannot be forged by a client. */
+  const trusted = headers?.get?.("x-gems-client-ip");
+  if (trusted) return trusted;
   const cf = headers?.get?.("cf-connecting-ip");
   if (cf) return cf;
   const real = headers?.get?.("x-real-ip");

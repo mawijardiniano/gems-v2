@@ -6,6 +6,7 @@ import { logActivity, redactActivityLog } from "@/data/lib/activityLog";
 import { cacheOrSet, cacheDelPrefix } from "@/data/lib/cache";
 import { requireAuth } from "@/data/lib/auth";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
+import { appStartOfDay, appEndOfDay } from "@/data/lib/appTime";
 
 const ACTIVITY_CACHE_TTL = 15 * 1000; // 15 seconds
 const MAX_LIMIT = 200;
@@ -52,8 +53,20 @@ export async function GET(req) {
 
     if (action) filter.action = action;
     if (from || to) {
-      const fromDate = from ? new Date(from) : null;
-      const toDate = to ? new Date(to) : null;
+      /* A bare "YYYY-MM-DD" is a Manila calendar day: `from` starts at its
+         00:00, `to` ends at its 23:59:59.999. new Date("YYYY-MM-DD") is UTC
+         midnight — 08:00 in Manila — which cut eight hours off both ends. */
+      const isDay = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "").trim());
+      const fromDate = from
+        ? isDay(from)
+          ? new Date(appStartOfDay(`${from.trim()}T12:00:00+08:00`))
+          : new Date(from)
+        : null;
+      const toDate = to
+        ? isDay(to)
+          ? new Date(appEndOfDay(`${to.trim()}T12:00:00+08:00`))
+          : new Date(to)
+        : null;
       if (
         (fromDate && Number.isNaN(fromDate.getTime())) ||
         (toDate && Number.isNaN(toDate.getTime()))
