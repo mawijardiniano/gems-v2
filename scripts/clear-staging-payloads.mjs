@@ -17,6 +17,11 @@ import path from "node:path";
  *   node scripts/clear-staging-payloads.mjs            dry run, counts only
  *   node scripts/clear-staging-payloads.mjs --apply    back up, then clear
  *
+ * --failed targets batches with status "failed" instead (every row in them):
+ * imports that were abandoned and will never be migrated, whose plain-text
+ * rows would otherwise be kept forever.
+ *   node scripts/clear-staging-payloads.mjs --failed [--apply]
+ *
  * --apply writes every affected row in full to scripts/backups/ (gitignored)
  * first. That file holds the plain text: delete it once the result is checked.
  */
@@ -34,28 +39,30 @@ registerHooks({
 });
 
 const APPLY = process.argv.includes("--apply");
+const FAILED = process.argv.includes("--failed");
+const BATCH_STATUS = FAILED ? "failed" : "completed";
 const { connectDB } = await import("@/data/lib/db");
 const { logActivity } = await import("@/data/lib/activityLog");
 const m = await connectDB();
 const db = m.connection.db;
 const recs = db.collection("stagingrecords");
-console.log(`[clear] database: ${db.databaseName}  mode: ${APPLY ? "APPLY" : "dry run"}`);
+console.log(`[clear] database: ${db.databaseName}  mode: ${APPLY ? "APPLY" : "dry run"}  batches: ${BATCH_STATUS}`);
 
 const batches = await db
   .collection("importbatches")
-  .find({ status: "completed" }, { projection: { source_name: 1, createdAt: 1 } })
+  .find({ status: BATCH_STATUS }, { projection: { source_name: 1, createdAt: 1 } })
   .sort({ createdAt: 1 })
   .toArray();
 const filter = {
   batch_id: { $in: batches.map((b) => b._id) },
-  status: "migrated",
+  ...(FAILED ? {} : { status: "migrated" }),
   payload_cleared_at: { $in: [null, undefined] },
 };
 
 let total = 0;
 for (const b of batches) {
   const n = await recs.countDocuments({ ...filter, batch_id: b._id });
-  const notMigrated = await recs.countDocuments({ batch_id: b._id, status: { $ne: "migrated" } });
+  const notMigrated = FAILED ? 0 : await recs.countDocuments({ batch_id: b._id, status: { $ne: "migrated" } });
   total += n;
   console.log(
     `   ${b.createdAt?.toISOString().slice(0, 10)}  ${String(b.source_name).padEnd(28)} to clear: ${n}` +
@@ -94,16 +101,17 @@ console.log(`[clear] cleared: ${res.modifiedCount}`);
 await logActivity({
   actor: { user_id: null, username: "script:clear-staging-payloads", role: "system", auth_method: "script" },
   action: "STAGING_PAYLOAD_CLEAR",
-  description: `Cleared personal data from ${res.modifiedCount} migrated staging row(s) in ${batches.length} completed batch(es)`,
+  description: `Cleared personal data from ${res.modifiedCount} ${FAILED ? "" : "migrated "}staging row(s) in ${batches.length} ${BATCH_STATUS} batch(es)`,
   severity: "warning",
   resource_type: "import_batch",
   module: "integration",
   metadata: {
     batches: batches.map((b) => String(b._id)),
     rows_cleared: res.modifiedCount,
+    batch_status: BATCH_STATUS,
   },
 });
 
 const left = await recs.countDocuments({ ...filter });
-console.log(`[clear] remaining uncleared migrated rows in completed batches: ${left}`);
+console.log(`[clear] remaining uncleared rows in ${BATCH_STATUS} batches: ${left}`);
 await m.disconnect();
