@@ -188,6 +188,17 @@ export function diffPii(existingPii = {}, incomingPii = {}) {
   const changes = [];
   for (const [key, value] of Object.entries(incomingPii)) {
     if (equalValues(existingPii?.[key], value)) continue;
+    /* Emails match case-insensitively (that is how the row was matched),
+       so a source that upper-cases addresses must not rewrite the stored
+       one. */
+    if (
+      key === "email" &&
+      typeof value === "string" &&
+      typeof existingPii?.[key] === "string" &&
+      value.trim().toLowerCase() === existingPii[key].trim().toLowerCase()
+    ) {
+      continue;
+    }
     changedPii[key] = value;
     changes.push({ field: `pii.${key}`, from: null, to: null });
   }
