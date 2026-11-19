@@ -147,8 +147,13 @@ export async function optionalAuth(req) {
       return { user: null };
     }
 
+    /* Same account checks as requireAuth, but failing them means "anonymous"
+       rather than an error: a deactivated account or a session from before a
+       password change must not keep its role-based view. */
     const user = await getCachedUser(decoded.id);
-    return { user: user || null };
+    if (!user || user.is_active === false) return { user: null };
+    if (tokenPredatesPasswordChange(decoded, user)) return { user: null };
+    return { user };
   } catch (err) {
     console.error("optionalAuth lookup failed:", err);
     return { user: null };

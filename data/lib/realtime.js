@@ -32,3 +32,13 @@ export function emitToRoles(roles, event, payload) {
   const rooms = (roles || []).map(roleRoom);
   if (rooms.length) global.io.to(rooms).emit(event, payload);
 }
+
+/** Closes every open socket of one user. The server puts a socket in its
+    role room once, at connect time, so after a role change, deactivation,
+    password reset or delete the old sockets would keep receiving events
+    meant for the old role. A fresh page load reconnects with the account's
+    current role (or is refused). */
+export function disconnectUser(userId) {
+  if (!global.io || !userId) return;
+  global.io.in(userRoom(userId)).disconnectSockets(true);
+}

@@ -2,6 +2,7 @@ const { createServer } = require('http');
 const next = require('next');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -75,6 +76,35 @@ function resolveClientIp(req) {
   return hops.length ? stripIpv4Mapped(hops[hops.length - 1]) : peer;
 }
 
+/* A small connection of its own for the socket handshake: this file is
+   plain CommonJS outside the Next bundle, so it cannot share the app's
+   connectDB(). Opened on the first handshake, after Next has loaded .env. */
+let socketDb = null;
+function findSocketUser(id) {
+  if (!socketDb) {
+    socketDb = mongoose.createConnection(process.env.MONGODB_URI, {
+      maxPoolSize: 2,
+      serverSelectionTimeoutMS: 10000,
+    });
+    socketDb.on('error', (err) => console.error('[socket] db error:', err.message));
+  }
+  const db = socketDb;
+  return db.asPromise().catch((err) => {
+    /* Retry the connection on the next handshake instead of keeping a
+       dead one; this handshake is refused. */
+    if (socketDb === db) socketDb = null;
+    db.close().catch(() => {});
+    throw err;
+  }).then((conn) =>
+    conn
+      .collection('userauths')
+      .findOne(
+        { _id: new mongoose.Types.ObjectId(String(id)) },
+        { projection: { role: 1, is_active: 1, passwordChangedAt: 1 } },
+      ),
+  );
+}
+
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     req.headers[CLIENT_IP_HEADER] = resolveClientIp(req);
@@ -89,16 +119,33 @@ app.prepare().then(() => {
      connected socket, anonymous ones included; routes now send to a user's
      or a role's room (data/lib/realtime.js). The token is checked the same
      way requireAuth checks it. */
-  io.use((socket, nextFn) => {
+  /* The role room comes from the account as stored now, not from the role
+     inside the token: a token keeps its role until it expires, so a demoted
+     or deactivated user used to keep receiving admin events. Same rules as
+     requireAuth: the account must exist, be active, and the token must not
+     predate the last password change. */
+  io.use(async (socket, nextFn) => {
     const token = readCookie(socket.handshake.headers.cookie, 'auth_token');
     if (!token || !process.env.JWT_SECRET) {
       return nextFn(new Error('unauthorized'));
     }
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (!decoded?.id) return nextFn(new Error('unauthorized'));
-      socket.data.userId = String(decoded.id);
-      socket.data.role = String(decoded.role || '').trim().toLowerCase();
+      if (!decoded?.id || !mongoose.isValidObjectId(decoded.id)) {
+        return nextFn(new Error('unauthorized'));
+      }
+      const user = await findSocketUser(decoded.id);
+      if (!user || user.is_active === false) {
+        return nextFn(new Error('unauthorized'));
+      }
+      const changedAt = user.passwordChangedAt
+        ? new Date(user.passwordChangedAt).getTime()
+        : NaN;
+      if (Number.isFinite(changedAt) && decoded.iat * 1000 < changedAt) {
+        return nextFn(new Error('unauthorized'));
+      }
+      socket.data.userId = String(user._id);
+      socket.data.role = String(user.role || '').trim().toLowerCase();
       return nextFn();
     } catch {
       return nextFn(new Error('unauthorized'));

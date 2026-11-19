@@ -3,6 +3,7 @@ import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/data/lib/activityLog";
 import { invalidateUserCache } from "@/data/lib/auth";
+import { disconnectUser } from "@/data/lib/realtime";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { isValidObjectId } from "@/data/lib/adminGuards";
 
@@ -38,6 +39,7 @@ export async function PATCH(req, { params }) {
     await user.save();
 
     invalidateUserCache(id);
+    disconnectUser(id);
 
     await logActivity({
       req,

@@ -3,6 +3,7 @@ import { connectDB } from "@/data/lib/db";
 import UserAuth from "@/models/user";
 import { logActivity } from "@/data/lib/activityLog";
 import { invalidateUserCache } from "@/data/lib/auth";
+import { disconnectUser } from "@/data/lib/realtime";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import {
@@ -60,6 +61,7 @@ export async function PATCH(req, { params }) {
     await user.save();
 
     invalidateUserCache(id);
+    disconnectUser(id);
     /* The user lists cache rows (including is_active) for 15 s. */
     cacheDelPrefix("profile:list:");
 

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import UserAuth from "@/models/user";
+import { connectDB } from "@/data/lib/db";
 import { rateLimiters } from "@/data/lib/rateLimit";
 import { tokenPredatesPasswordChange } from "@/data/lib/auth";
 
@@ -36,6 +37,9 @@ async function requireDbRole(req, allowedRoles, forbiddenMessage) {
     return { error: "Invalid token payload", status: 401 };
   }
 
+  /* Routes connect after auth, so on a fresh server the first admin request
+     hit a model with no connection and timed out (mongoose buffering). */
+  await connectDB();
   const user = await UserAuth.findById(decoded.id).select("-password").lean();
   if (!user) {
     return { error: "User not found", status: 401 };

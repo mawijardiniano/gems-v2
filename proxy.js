@@ -17,12 +17,12 @@ export function proxy(req) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      jwt.verify(token, JWT_SECRET);
 
-      if (pathname.startsWith("/api/auth") && decoded.role !== "Admin") {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-
+      /* No role check here: the role inside a token is the role at login,
+         so it let a demoted Admin past and blocked a newly promoted one.
+         Each route checks the account's current role in the database
+         (requireAdmin / requireRole / requireStaff). */
       return NextResponse.next();
     } catch (err) {
       return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
