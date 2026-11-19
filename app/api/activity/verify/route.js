@@ -75,16 +75,65 @@ export async function GET(req) {
     );
     const since = url.searchParams.get("since");
 
+    const FIELDS =
+      "_id user_id action severity resource_type resource_id description outcome changes metadata createdAt created_at hash_prev hash_self hash_version redacted";
+
+    /* Without `since`, check the most recent rows: after an incident the tail
+       is what matters, and checking the oldest N meant new tampering was never
+       looked at once the trail outgrew the cap. One extra row is read to know
+       whether older rows exist beyond the window. */
     const query = since ? { createdAt: { $gte: new Date(since) } } : {};
-    const records = await ActivityLog.find(query)
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(limit)
-      .select(
-        "_id user_id action severity resource_type resource_id description outcome changes metadata createdAt hash_prev hash_self",
-      )
+    const fetched = await ActivityLog.find(query)
+      .sort(since ? { createdAt: 1, _id: 1 } : { createdAt: -1, _id: -1 })
+      .limit(limit + 1)
+      .select(FIELDS)
       .lean();
+    const byTime = (a, b) =>
+      new Date(a.createdAt) - new Date(b.createdAt) ||
+      String(a._id).localeCompare(String(b._id));
+    fetched.sort(byTime);
+    const truncated = fetched.length > limit;
+    /* Truncated tail: drop the oldest extra row. Truncated `since` window:
+       drop the newest extra row. */
+    const records = truncated
+      ? since
+        ? fetched.slice(0, limit)
+        : fetched.slice(fetched.length - limit)
+      : fetched;
+
+    /* A window that does not start at the beginning of the trail starts mid-
+       chain: its first link points at a row outside the window, which is not
+       a break. */
+    const windowStartsMidChain = Boolean(since) || (truncated && !since);
+
+    /* Redacted rows have had hashed content blanked by redactActivityLog, so
+       their hash cannot be recomputed. They are accepted only when the
+       redaction itself was audited (an AUDIT_REDACT entry naming the row) —
+       otherwise "redacted: true" would be a free pass for tampering. */
+    const redactedIds = records
+      .filter((r) => r.redacted)
+      .map((r) => String(r._id));
+    const redactionEvidence = new Set();
+    if (redactedIds.length) {
+      const evidence = await ActivityLog.find({
+        action: "AUDIT_REDACT",
+        resource_id: { $in: redactedIds },
+      })
+        .select("action resource_id")
+        .lean();
+      for (const e of evidence) {
+        if (e.action === "AUDIT_REDACT" && e.resource_id) {
+          redactionEvidence.add(String(e.resource_id));
+        }
+      }
+    }
 
     const problems = [];
+    let redactedCount = 0;
+    /* Chained rows written before hash_version 2: created_at was never stored,
+       so their content cannot be re-hashed. Links are still checked. */
+    let contentUnverifiable = 0;
+    let seenCurrentVersion = false;
     let unlinked = 0;
     let archived = 0;
     let prevHash = null;
@@ -115,6 +164,9 @@ export async function GET(req) {
     );
 
     for (const record of records) {
+      if (prevHash === null && windowStartsMidChain && record.hash_self) {
+        prevHash = record.hash_prev || null;
+      }
       if (!record.hash_self) {
         if (record?.metadata?.link_error) {
           degradedUnlinked += 1;
@@ -146,19 +198,42 @@ export async function GET(req) {
         }
       }
 
-      const { createHash } = await import("node:crypto");
-      const expected = createHash("sha256")
-        .update(`${record.hash_prev || ""}|${canonical(record)}`)
-        .digest("hex");
+      if (record.redacted) {
+        redactedCount += 1;
+        if (!redactionEvidence.has(String(record._id))) {
+          problems.push({
+            type: "redaction_unrecorded",
+            id: String(record._id),
+            createdAt: record.createdAt,
+          });
+        }
+      } else if ((record.hash_version || 0) >= 2) {
+        seenCurrentVersion = true;
+        const { createHash } = await import("node:crypto");
+        const expected = createHash("sha256")
+          .update(`${record.hash_prev || ""}|${canonical(record)}`)
+          .digest("hex");
 
-      if (expected !== record.hash_self) {
+        if (expected !== record.hash_self) {
+          problems.push({
+            type: "hash_mismatch",
+            id: String(record._id),
+            createdAt: record.createdAt,
+            expected_self: expected,
+            actual_self: record.hash_self,
+          });
+        }
+      } else if (seenCurrentVersion) {
+        /* Every row written after the fix carries hash_version 2; a chained
+           row without it after one that has it was altered to dodge the
+           content check. */
         problems.push({
-          type: "hash_mismatch",
+          type: "version_downgrade",
           id: String(record._id),
           createdAt: record.createdAt,
-          expected_self: expected,
-          actual_self: record.hash_self,
         });
+      } else {
+        contentUnverifiable += 1;
       }
 
       prevHash = record.hash_self;
@@ -175,8 +250,11 @@ export async function GET(req) {
         unlinked_legacy: legacyUnlinked,
         unlinked_degraded: degradedUnlinked,
         archived,
+        redacted: redactedCount,
+        /* Chained, links intact, but content not re-hashable (pre-fix rows). */
+        content_unverifiable_legacy: contentUnverifiable,
         problems: problems.slice(0, 100),
-        truncated: records.length === limit,
+        truncated,
       },
       { status: 200 },
     );

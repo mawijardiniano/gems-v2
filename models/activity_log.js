@@ -126,6 +126,15 @@ const ActivityLogSchema = new mongoose.Schema(
        before the chain existed. */
     hash_prev: { type: String, default: null },
     hash_self: { type: String, default: null },
+    /* The instant the hash covers, stored exactly as hashed. It was hashed
+       but never declared here, so strict mode dropped it on insert and no
+       chained row could be re-hashed — verification reported every one as
+       tampered. */
+    created_at: { type: String, default: null },
+    /* 2 = hashed over the document as stored (created_at kept, schema
+       defaults applied). Rows without it predate the fix: their content can
+       no longer be re-hashed, only their links checked. */
+    hash_version: { type: Number, default: null },
     /* Set by redactActivityLog(). The record survives; its content does not. */
     redacted: { type: Boolean, default: false },
     redacted_at: { type: String, default: null },

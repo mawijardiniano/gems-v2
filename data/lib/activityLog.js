@@ -190,6 +190,20 @@ async function writeLog(entry) {
   }
 }
 
+export const CURRENT_HASH_VERSION = 2;
+
+/* The entry passed through the model's casting, defaults and minimisation —
+   what Mongo will hold once inserted, so the verifier, reading the stored
+   row, hashes the same values. Falls back to the raw entry when the model
+   cannot be constructed (test stubs). */
+function asStored(entry) {
+  try {
+    return new ActivityLog(entry).toObject();
+  } catch {
+    return entry;
+  }
+}
+
 /* The hash is computed over a deliberately explicit projection rather than the
    raw document: `_id` and server-added fields differ between a dry run and the
    insert, which would make every entry's hash unverifiable. */
@@ -290,8 +304,13 @@ export function logActivity({
       created_at: new Date().toISOString(),
     };
 
-    const hashes = await linkHash(entry);
-    return writeLog({ ...entry, ...hashes });
+    /* Hash the record as it will be stored, not as it was passed in. Mongoose
+       fills schema defaults (a change's `redacted: false`, outcome fields),
+       casts ids and drops empty objects (`metadata: {}`) on insert; hashing
+       the raw input made the stored row disagree with its own hash. */
+    const versioned = { ...entry, hash_version: CURRENT_HASH_VERSION };
+    const hashes = await linkHash(asStored(versioned));
+    return writeLog({ ...versioned, ...hashes });
   })();
 
   /* Info-level successes stay fire-and-forget so a log write never adds latency
