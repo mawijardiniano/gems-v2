@@ -183,6 +183,20 @@ export default function StudentsUserListContent({
         return 0;
       });
     }
+    /* The College header toggled `collegeSort` but nothing sorted on it. */
+    if (collegeSort) {
+      data = [...data].sort((a, b) => {
+        const colA = (
+          a.personal_info_id?.affiliation?.academic_information?.college || ""
+        ).toLowerCase();
+        const colB = (
+          b.personal_info_id?.affiliation?.academic_information?.college || ""
+        ).toLowerCase();
+        if (colA < colB) return collegeSort === "asc" ? -1 : 1;
+        if (colA > colB) return collegeSort === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
     if (campusSort) {
       data = [...data].sort((a, b) => {
         const acadA =
@@ -241,6 +255,7 @@ export default function StudentsUserListContent({
     studentsData,
     nameSort,
     sexSort,
+    collegeSort,
     campusSort,
     courseSort,
     yearSort,

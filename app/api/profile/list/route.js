@@ -240,7 +240,13 @@ export async function GET(req) {
             role: 1,
             assignedCollege: 1,
             is_active: 1,
+            /* The list's "Date Added" column and the detail panel's
+               Created / Updated rows read these; without them every row
+               showed "—". */
+            createdAt: 1,
+            updatedAt: 1,
             "personal_info_id._id": 1,
+            "personal_info_id.createdAt": 1,
             /* `vaultRef` is the pointer into the identity vault. It is needed
                here to resolve the identity below, but it is stripped from the
                response before it is returned — it must never reach the
