@@ -37,7 +37,16 @@ export async function rateLimit(req, {
   const realIp = req.headers.get("x-real-ip");
   const cfConnectingIp = req.headers.get("cf-connecting-ip");
   
-  const ip = cfConnectingIp || realIp || (forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown");
+  /* server.js decides the client address from the real TCP peer and passes
+     it as x-gems-client-ip (see resolveClientIp there); the raw forwarding
+     headers below are caller-controlled and only used when the app runs
+     without server.js (`next dev`). */
+  const trustedIp = req.headers.get("x-gems-client-ip");
+  const ip =
+    trustedIp ||
+    cfConnectingIp ||
+    realIp ||
+    (forwardedFor ? forwardedFor.split(",")[0].trim() : "unknown");
 
   
   let userId = null;

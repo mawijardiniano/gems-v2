@@ -360,8 +360,11 @@ export default function ActivityLogsContent() {
       params.set("limit", limit.toString());
       if (searchUserId) params.set("user_id", searchUserId);
       if (searchAction) params.set("action", searchAction);
-      if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
-      if (dateTo) params.set("to", new Date(dateTo).toISOString());
+      /* Sent as the picked "YYYY-MM-DD"; the API reads it as a whole Manila
+         day. Converting here with new Date() meant UTC midnight (08:00 in
+         Manila), so a From/To on the same day matched almost nothing. */
+      if (dateFrom) params.set("from", dateFrom);
+      if (dateTo) params.set("to", dateTo);
 
       const res = await fetch(`/api/activity?${params.toString()}`, {
         credentials: "include",

@@ -1,5 +1,7 @@
 import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
+import ProfileTerm from "@/models/profileTerm";
+import IdentityVault from "@/models/identityVault";
 import { connectDB } from "@/data/lib/db";
 import { NextResponse } from "next/server";
 import { logActivity } from "@/data/lib/activityLog";
@@ -53,6 +55,22 @@ export async function DELETE(req) {
 
     const users = await UserAuth.find({ _id: { $in: ids } });
     const profileIds = users.map((u) => u.personal_info_id).filter(Boolean);
+    const vaultRefs = (
+      await Profile.find({ _id: { $in: profileIds } }, { vaultRef: 1 }).lean()
+    )
+      .map((p) => p.vaultRef)
+      .filter(Boolean);
+
+    /* A deleted person's encrypted identity and term history go with them.
+       Deleting only the account and profile left the vault row — name,
+       birthday, contact, GAD data — stored indefinitely with nothing pointing
+       at it, and orphaned every ProfileTerm. */
+    const termsResult = await ProfileTerm.deleteMany({
+      profile_id: { $in: profileIds },
+    });
+    const vaultResult = vaultRefs.length
+      ? await IdentityVault.deleteMany({ vaultRef: { $in: vaultRefs } })
+      : { deletedCount: 0 };
     await Profile.deleteMany({ _id: { $in: profileIds } });
     await UserAuth.deleteMany({ _id: { $in: ids } });
 
@@ -67,7 +85,12 @@ export async function DELETE(req) {
       description: `Bulk deleted ${ids.length} user(s) and linked profiles`,
       resource_type: "profile",
       severity: "critical",
-      metadata: { ids },
+      metadata: {
+        ids,
+        profiles: profileIds.length,
+        terms_deleted: termsResult.deletedCount || 0,
+        vault_rows_deleted: vaultResult.deletedCount || 0,
+      },
     });
 
     profileIds.forEach((pid) => {
