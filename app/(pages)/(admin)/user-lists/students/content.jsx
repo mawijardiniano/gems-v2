@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "flowbite-react";
 import useProfileList from "@/hooks/useProfileList";
+import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
+import LoadError from "@/components/LoadError";
 import useSampleProfileList, {
   sampleListFilterOptions,
 } from "@/hooks/useSampleProfileList";
@@ -45,7 +47,6 @@ export default function StudentsUserListContent({
   const [filterCollege, setFilterCollege] = useState([]);
   const [selected, setSelected] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
   const [nameSort, setNameSort] = useState(null);
   const [sexSort, setSexSort] = useState(null);
   const [collegeSort, setCollegeSort] = useState(null);
@@ -81,6 +82,7 @@ export default function StudentsUserListContent({
   ]);
 
   const [useSample, setUseSample] = useState(true);
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
 
   const liveList = useProfileList({
     initialData: users,
@@ -98,6 +100,7 @@ export default function StudentsUserListContent({
   const {
     data: rawData,
     loading,
+    error: listError,
     page: serverPage,
     total: serverTotal,
     totalPages: serverTotalPages,
@@ -285,47 +288,56 @@ export default function StudentsUserListContent({
     setShowConfirmModal(true);
   };
   const confirmBulkDelete = async () => {
+    setShowConfirmModal(false);
+    if (useSample) {
+      showToast("Sample data is shown: this change is disabled. Turn off sample data to manage real accounts.", "info");
+      return;
+    }
     try {
       await axios.delete("/api/profile/delete-bulk", {
         data: { ids: selected },
       });
+      showToast(`Deleted ${selected.length} student${selected.length === 1 ? "" : "s"}.`);
       setSelected([]);
-      setShowConfirmModal(false);
-      window.location.reload();
+      goToServerPage(serverPage);
     } catch (err) {
-      setShowConfirmModal(false);
-      setShowErrorModal(true);
+      /* The server refuses deleting yourself or the last Admin; say why. */
+      showToast(errorText(err, "Delete failed."), "error");
     }
   };
 
   const handleToggleStatus = async (id, isActive) => {
+    if (useSample) {
+      showToast("Sample data is shown: this change is disabled. Turn off sample data to manage real accounts.", "info");
+      return;
+    }
     try {
-      console.log("Toggle ID:", id);
-
-      const res = await axios.patch(
+      await axios.patch(
         `/api/auth/users/toggle-status/${id}`,
-        {
-          action: isActive ? "deactivate" : "activate",
-        },
+        { action: isActive ? "deactivate" : "activate" },
         { withCredentials: true },
       );
-
-      console.log("Toggle response:", res.data);
-      window.location.reload();
+      showToast(isActive ? "Account deactivated." : "Account activated.");
+      goToServerPage(serverPage);
     } catch (err) {
-      console.error("Toggle error:", err.response?.data || err);
+      showToast(errorText(err, "Could not change the account status."), "error");
     }
   };
 
   const handleResetPassword = async (id) => {
+    if (useSample) {
+      showToast("Sample data is shown: this change is disabled. Turn off sample data to manage real accounts.", "info");
+      return;
+    }
     try {
       await axios.patch(
         `/api/auth/users/reset-password/${id}`,
         {},
         { withCredentials: true },
       );
+      showToast("Password reset to the default password.");
     } catch (err) {
-      console.error(err);
+      showToast(errorText(err, "Could not reset the password."), "error");
     }
   };
 
@@ -561,6 +573,13 @@ export default function StudentsUserListContent({
 
   return (
     <div className="p-6">
+      <ActionToast toast={toast} onClose={hideToast} />
+      {!useSample && listError && (
+        <LoadError
+          message={listError}
+          onRetry={() => goToServerPage(serverPage)}
+        />
+      )}
       <div className="mb-3 flex items-center justify-between gap-3">
         <SampleToggle
           useSample={useSample}
@@ -613,7 +632,7 @@ export default function StudentsUserListContent({
               className="border px-3 py-2 rounded w-full max-w-sm"
             />
           </div>
-          {selected.length > 0 && (
+          {selected.length > 0 && !useSample && (
             <button
               className="bg-red-500 px-4 py-1 text-white rounded-md"
               onClick={handleBulkDelete}

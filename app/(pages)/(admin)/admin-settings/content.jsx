@@ -158,6 +158,7 @@ export default function AdminSettings() {
       setTermMessage(null);
       try {
         const res = await fetch("/api/settings?key=active_term");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.success && data.data?.value) {
           setTermSchoolYear(data.data.value.school_year || "");
@@ -168,6 +169,11 @@ export default function AdminSettings() {
         }
       } catch (e) {
         console.error("Failed to fetch active term:", e);
+        /* Blank selects otherwise look like "no term set". */
+        setTermMessage({
+          type: "error",
+          text: "Could not load the active term. Reload the page before saving.",
+        });
       } finally {
         setTermLoading(false);
       }

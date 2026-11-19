@@ -14,11 +14,17 @@ import {
   SampleToggle,
 } from "../../../(event)/gender-statistics/components/SampleToggle";
 import { AnalyticsDashboardSkeleton } from "@/components/Skeleton";
+import LoadError from "@/components/LoadError";
 import { useSelector } from "react-redux";
 
 export default function DeanDashboardContent() {
   const college = useSelector((state) => state.auth.college);
-  const { data: filters, loading: filtersLoading } = useDashboardFilters();
+  const {
+    data: filters,
+    loading: filtersLoading,
+    error: filtersError,
+    refresh: refreshFilters,
+  } = useDashboardFilters();
   /* Sample mode is the default view; the toggle swaps every panel back to the
      live API (and back) without leaving the page. The dean's college scope is
      applied to both sources. */
@@ -90,7 +96,12 @@ export default function DeanDashboardContent() {
 
   /* Live fetching stays parked while sample mode is on - the panels read the
      synthetic dataset instead, scoped to the dean's own college. */
-  const { data: dashboardData, loading: dashboardLoading } = useDashboardData(
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refresh: refreshDashboard,
+  } = useDashboardData(
     dashboardFilters,
     filtersReady && !useSample,
   );
@@ -101,6 +112,12 @@ export default function DeanDashboardContent() {
   );
   const activeData = useSample ? sampleData : dashboardData;
   const showDashboard = useSample || (!dashboardLoading && !!dashboardData);
+  /* Live data only: a failed request used to leave the skeleton up for good. */
+  const loadError = !useSample && (dashboardError || filtersError);
+  const retryLoad = () => {
+    if (filtersError) refreshFilters();
+    if (dashboardError) refreshDashboard();
+  };
 
   return (
     <div>
@@ -144,7 +161,9 @@ export default function DeanDashboardContent() {
       <div className="flex flex-col gap-4">
         {useSample && <SampleDataNotice />}
 
-        {!showDashboard ? (
+        {loadError ? (
+          <LoadError message={loadError} onRetry={retryLoad} />
+        ) : !showDashboard ? (
           <AnalyticsDashboardSkeleton />
         ) : (
           <>
