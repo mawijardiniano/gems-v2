@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { COLLEGES, SCOPED_ROLES } from "@/data/lib/colleges";
 import {
   HiOutlineShieldCheck,
@@ -146,13 +146,28 @@ export default function ManageRoleContent() {
   const [editingUser, setEditingUser] = useState(null);
   const ITEMS_PER_PAGE = 10;
 
+  /* Role holders come from the server, filtered by role. The table used to
+     load 100 arbitrary accounts and filter them here, so most Deans, Focal
+     Persons and Directors never showed up. Refetched after every save so a
+     newly assigned role appears. */
+  const loadRoleHolders = useCallback(async () => {
+    const roles = encodeURIComponent(ROLES.slice(1).join(","));
+    try {
+      const res = await fetch(`/api/profile/search?roles=${roles}&limit=500`, {
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || "Failed to load role holders");
+      setUsers(data.data || []);
+    } catch (err) {
+      showToast(err.message || "Failed to load role holders", "error");
+    }
+  }, []);
+
   useEffect(() => {
     setPageLoading(true);
-    fetch("/api/profile/search?limit=100")
-      .then((res) => res.json())
-      .then((data) => setUsers(data.data || []))
-      .finally(() => setPageLoading(false));
-  }, []);
+    loadRoleHolders().finally(() => setPageLoading(false));
+  }, [loadRoleHolders]);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(modalSearch), 300);
@@ -265,20 +280,8 @@ export default function ManageRoleContent() {
             : "Role assigned successfully!",
           "success",
         );
-        setUsers((prev) =>
-          prev.map((u) =>
-            u._id === selectedUser._id
-              ? {
-                  ...u,
-                  role: selectedRole,
-                  assignedCollege: SCOPED_ROLES.includes(selectedRole)
-                    ? assignedCollege
-                    : u.assignedCollege,
-                }
-              : u,
-          ),
-        );
         closeModal();
+        await loadRoleHolders();
       } else {
         showToast(data.message || "Failed to assign role", "error");
       }

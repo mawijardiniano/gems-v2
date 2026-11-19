@@ -81,6 +81,20 @@ export async function runAnalyticsAggregation({
 }
 
 /**
+ * Student / Employee for an aggregated row. The status lives on
+ * `affiliation.person_type`; `personal.currentStatus` was removed with the
+ * PII strip, so reading it alone counted 0 students and 0 employees.
+ */
+export function personTypeOf(row) {
+  const profile = row?.personal_info_id;
+  return (
+    profile?.affiliation?.person_type ||
+    profile?.personal?.currentStatus ||
+    null
+  );
+}
+
+/**
  * Writes the vault's `sexAtBirth` back onto each aggregated row's profile so
  * downstream filters and tallies read the real value.
  *
@@ -98,7 +112,8 @@ async function hydrateAnalyticsSex(rows) {
   let piiByRef;
   try {
     const { loadDecryptedPiiBatch } = await import("./profileBroker.js");
-    piiByRef = await loadDecryptedPiiBatch(refs);
+    /* Only the field this report needs: names and contacts stay encrypted. */
+    piiByRef = await loadDecryptedPiiBatch(refs, { fields: ["sexAtBirth"] });
   } catch (err) {
     console.error("hydrateAnalyticsSex vault read failed:", err);
     return;

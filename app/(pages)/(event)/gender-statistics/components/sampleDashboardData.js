@@ -120,17 +120,22 @@ export function sampleDashboardFilterOptions() {
   };
 }
 
+const asList = (value) =>
+  (Array.isArray(value) ? value : [value]).filter(Boolean);
+
 /* ---------- Matching (mirrors the API's $match stages) -------------------- */
 
 /* Students are narrowed through their term history, exactly like the live
    ProfileTerm lookup. They have no employment columns, so an employment or
    appointment filter excludes them - their live profiles fail the same match. */
 function studentMatches(record, filters) {
-  if (filters.college && record.college !== filters.college) return false;
+  if (filters.college.length && !filters.college.includes(record.college)) {
+    return false;
+  }
   if (filters.year_level && record.yearLevel !== filters.year_level) {
     return false;
   }
-  if (filters.employment || filters.appointment) return false;
+  if (filters.employment || filters.appointment.length) return false;
   if (filters.school_year || filters.semester) {
     const terms = record.terms || [];
     const enrolled = terms.some(
@@ -147,12 +152,17 @@ function studentMatches(record, filters) {
    one entry per school year, so a semester filter narrows students only. They
    have no academic year level, which excludes them when one is chosen. */
 function employeeMatches(record, filters) {
-  if (filters.college && record.office !== filters.college) return false;
+  if (filters.college.length && !filters.college.includes(record.office)) {
+    return false;
+  }
   if (filters.year_level) return false;
   if (filters.employment && record.personnelType !== filters.employment) {
     return false;
   }
-  if (filters.appointment && record.appointmentStatus !== filters.appointment) {
+  if (
+    filters.appointment.length &&
+    !filters.appointment.includes(record.appointmentStatus)
+  ) {
     return false;
   }
   if (
@@ -173,14 +183,15 @@ function employeeMatches(record, filters) {
  */
 export function buildSampleDashboardData(filters = {}) {
   const f = {
-    college: filters.college || "",
+    /* College and appointment are multi-select: a string or an array. */
+    college: asList(filters.college),
     school_year: filters.school_year || "",
     semester: filters.semester || "",
     sex: filters.sex || "",
     person_type: filters.person_type || "",
     year_level: filters.year_level || "",
     employment: filters.employment || "",
-    appointment: filters.appointment || "",
+    appointment: asList(filters.appointment),
   };
 
   const sexMatches = (record) => !f.sex || record.sex === f.sex;
