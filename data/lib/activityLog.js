@@ -260,6 +260,23 @@ async function linkHash(entry) {
   }
 }
 
+/* Read-the-tip then insert must not interleave. Two writes at the same moment
+   (a bulk delete logging per user, an import, two admins at once) both read
+   the same newest hash_self and both stored it as hash_prev, forking the
+   chain: the verifier then reports a break that is not tampering. Writes in
+   this process run one at a time, in call order. A failed write does not
+   stall the queue (writeLog and linkHash never throw, and the tail swallows
+   errors regardless). */
+const CHAIN_KEY = Symbol.for("gems.activityLog.chainTail");
+function inChainOrder(fn) {
+  /* On globalThis so every bundle that loads this module (dev reloads,
+     separate route chunks) shares one queue. */
+  const tail = globalThis[CHAIN_KEY] || Promise.resolve();
+  const run = tail.then(fn);
+  globalThis[CHAIN_KEY] = run.catch(() => {});
+  return run;
+}
+
 export function logActivity({
   user_id = null,
   actor = null,
@@ -312,8 +329,10 @@ export function logActivity({
        casts ids and drops empty objects (`metadata: {}`) on insert; hashing
        the raw input made the stored row disagree with its own hash. */
     const versioned = { ...entry, hash_version: CURRENT_HASH_VERSION };
-    const hashes = await linkHash(asStored(versioned));
-    return writeLog({ ...versioned, ...hashes });
+    return inChainOrder(async () => {
+      const hashes = await linkHash(asStored(versioned));
+      return writeLog({ ...versioned, ...hashes });
+    });
   })();
 
   /* Info-level successes stay fire-and-forget so a log write never adds latency
