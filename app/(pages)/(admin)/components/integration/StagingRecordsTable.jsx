@@ -9,6 +9,7 @@ function recordIdentity(r) {
 }
 
 function recordName(r) {
+  if (r.payload_cleared_at) return "(cleared after import)";
   const p = r.mapped_payload?.personal;
   if (!p) return "-";
   return [p.last_name, p.first_name].filter(Boolean).join(", ") || "-";
