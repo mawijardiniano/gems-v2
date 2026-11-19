@@ -80,6 +80,13 @@ const stagingRecordSchema = new Schema(
     reviewed_at: {
       type: Date,
     },
+    /* Set when raw_payload and mapped_payload were emptied after the batch
+       completed (scripts/clear-staging-payloads.mjs): the person is in the
+       encrypted vault by then, and the plain-text copy here was redundant. */
+    payload_cleared_at: {
+      type: Date,
+      default: null,
+    },
     migration_result: {
       action: {
         type: String,

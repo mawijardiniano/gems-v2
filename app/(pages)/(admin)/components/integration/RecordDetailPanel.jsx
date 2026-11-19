@@ -109,7 +109,16 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
         </div>
       )}
 
-      {record.raw_payload && (
+      {record.payload_cleared_at && (
+        <div className="rounded border border-gray-200 bg-gray-50 p-1.5 text-[11px] text-gray-600">
+          Personal data in this row was cleared on{" "}
+          {new Date(record.payload_cleared_at).toLocaleDateString()} after the
+          batch was imported. The person&apos;s details are kept encrypted in
+          their profile.
+        </div>
+      )}
+
+      {record.raw_payload && !record.payload_cleared_at && (
         <div>
           <div className="font-semibold text-gray-900 mb-1">Raw Data:</div>
           <div className="bg-gray-50 border border-gray-200 rounded p-1.5 overflow-auto max-h-24">
@@ -120,7 +129,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
         </div>
       )}
 
-      {record.mapped_payload && (
+      {record.mapped_payload && !record.payload_cleared_at && (
         <div>
           <div className="font-semibold text-gray-900 mb-1">
             Normalized Data:
