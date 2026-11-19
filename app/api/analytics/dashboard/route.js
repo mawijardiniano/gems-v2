@@ -78,15 +78,21 @@ export async function GET(req) {
     const url = new URL(req.url);
     /* A Dean / GAD Coordinator sees their own college only, whatever the
        query asks for. */
-    const college =
-      scopeCollege || url.searchParams.get("college")?.trim() || null;
+    /* Multi-select filters arrive as repeated params (?college=A&college=B).
+       Only the first used to be read, so ticking three colleges showed the
+       numbers for one. A scoped role always gets exactly its own college. */
+    const listParam = (name) =>
+      [...new Set(url.searchParams.getAll(name).map((v) => v.trim()).filter(Boolean))].sort();
+    const colleges = scopeCollege ? [scopeCollege] : listParam("college");
+    const college = colleges.length ? colleges.join(",") : null;
     const schoolYear = url.searchParams.get("school_year")?.trim() || null;
     const semester = url.searchParams.get("semester")?.trim() || null;
     const sex = url.searchParams.get("sex")?.trim() || null;
     const personType = url.searchParams.get("person_type")?.trim() || null;
     const yearLevel = url.searchParams.get("year_level")?.trim() || null;
     const employment = url.searchParams.get("employment")?.trim() || null;
-    const appointment = url.searchParams.get("appointment")?.trim() || null;
+    const appointments = listParam("appointment");
+    const appointment = appointments.length ? appointments.join(",") : null;
 
     const role = user?.role || null;
     /* The counts this route returns are identical for every role — the vault
@@ -136,15 +142,17 @@ export async function GET(req) {
             ),
           };
         }
-        if (college) {
+        if (colleges.length) {
           match.$or = [
             {
-              "personal_info_id.affiliation.academic_information.college":
-                college,
+              "personal_info_id.affiliation.academic_information.college": {
+                $in: colleges,
+              },
             },
             {
-              "personal_info_id.affiliation.employment_information.office":
-                college,
+              "personal_info_id.affiliation.employment_information.office": {
+                $in: colleges,
+              },
             },
           ];
         }
@@ -166,10 +174,10 @@ export async function GET(req) {
             "personal_info_id.affiliation.employment_information.employment_status"
           ] = employment;
         }
-        if (appointment) {
+        if (appointments.length) {
           match[
             "personal_info_id.affiliation.employment_information.employment_appointment_status"
-          ] = appointment;
+          ] = { $in: appointments };
         }
 
         if (Object.keys(match).length > 0) {

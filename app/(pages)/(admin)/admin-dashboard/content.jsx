@@ -96,14 +96,15 @@ export default function Page() {
 
   const dashboardFilters = useMemo(
     () => ({
-      college: filterCollege?.length ? filterCollege[0] : "",
+      /* Arrays: the hook sends each value, the route filters with $in. */
+      college: filterCollege || [],
       school_year: filterSchoolYear,
       semester: filterSemester,
       sex: filterSex,
       person_type: filterPersonType,
       year_level: filterYearLevel,
       employment: filterEmployment,
-      appointment: filterAppointment?.length ? filterAppointment[0] : "",
+      appointment: filterAppointment || [],
     }),
     [
       filterCollege,

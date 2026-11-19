@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { cacheOrSet } from "@/data/lib/cache";
-import { runAnalyticsAggregation } from "@/data/lib/analytics";
+import { runAnalyticsAggregation, personTypeOf } from "@/data/lib/analytics";
 import { optionalAuth } from "@/data/lib/auth";
 import { SCOPED_ROLES } from "@/data/lib/colleges";
 
@@ -51,10 +51,10 @@ export async function GET(req) {
         }
 
         const employees = users.filter(
-          (u) => u.personal_info_id?.personal?.currentStatus === "Employee",
+          (u) => personTypeOf(u) === "Employee",
         );
         const students = users.filter(
-          (u) => u.personal_info_id?.personal?.currentStatus === "Student",
+          (u) => personTypeOf(u) === "Student",
         );
 
         const employeeCounts = {};

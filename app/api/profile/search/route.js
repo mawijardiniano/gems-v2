@@ -3,6 +3,7 @@ import Profile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/data/lib/auth";
+import { ROLE_VALUES } from "@/data/lib/adminGuards";
 import { cacheOrSet } from "@/data/lib/cache";
 import { logPiiAccess } from "@/data/lib/activityLog";
 import {
@@ -31,21 +32,40 @@ export async function GET(req) {
        from the query string — `?role=Admin` was caller-supplied, so any
        authenticated user could ask for the Admin view. */
     const role = user?.role || null;
+    /* `roles` narrows to holders of the given roles (Manage Role table). The
+       table used to load 100 arbitrary accounts and filter in the browser, so
+       most role holders never appeared. Admin stays excluded as before. */
+    const roles = [
+      ...new Set(
+        (url.searchParams.get("roles") || "")
+          .split(",")
+          .map((r) => r.trim())
+          .filter((r) => r && r !== "Admin" && ROLE_VALUES.includes(r)),
+      ),
+    ].sort();
+    const maxLimit = roles.length ? 500 : 100;
     const limit = Math.min(
-      100,
-      Math.max(1, parseInt(url.searchParams.get("limit") || "30", 10)),
+      maxLimit,
+      Math.max(1, parseInt(url.searchParams.get("limit") || "30", 10) || 30),
     );
 
     /* `role` belongs in the key because the rows are masked or revealed by
        it: a Dean's search must never be served an Admin's cached names. */
-    const cacheKey = `profile:search:${q || "all"}:${role || "anon"}:${limit}`;
+    const cacheKey = `profile:search:${q || "all"}:${roles.join(",") || "any"}:${role || "anon"}:${limit}`;
 
     const data = await cacheOrSet(
       cacheKey,
       async () => {
-        const match = { role: { $ne: "Admin" } };
+        const match = roles.length
+          ? { role: { $in: roles } }
+          : { role: { $ne: "Admin" } };
 
-        const pipeline = [
+        /* Filter and limit on the account itself, then join. The join used to
+           run first and overwrite `personal_info_id` with the profile, so the
+           name-search clause below (an ObjectId $in on that field) never
+           matched — names were unsearchable — and every search joined all
+           ~10,800 profiles before limiting. */
+        const lookupStages = [
           {
             $lookup: {
               from: Profile.collection.name,
@@ -61,6 +81,7 @@ export async function GET(req) {
             },
           },
         ];
+        const pipeline = [];
 
         if (q) {
           /* Usernames are not PII and stay searchable directly. */
@@ -84,12 +105,9 @@ export async function GET(req) {
           }
         }
 
-        if (Object.keys(match).length > 0) {
-          pipeline.push({ $match: match });
-        }
+        pipeline.push({ $match: match }, { $limit: limit }, ...lookupStages);
 
         pipeline.push(
-          { $limit: limit },
           {
             $project: {
               _id: 1,
