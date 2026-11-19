@@ -150,9 +150,9 @@ function Filter({
     } else if (filterPersonType === "Employee") {
       setFilterYearLevel("");
     } else {
+      /* School year and semester apply to every status, so choosing "All
+         Status" keeps them; it used to wipe them. */
       setFilterYearLevel("");
-      setFilterSchoolYear("");
-      setFilterSemester("");
       setFilterEmployment("");
       setFilterAppointment([]);
     }
@@ -203,14 +203,14 @@ function Filter({
       )}
 
       <Select
-        label="School Year"
+        label="All School Years"
         value={filterSchoolYear}
         onChange={setFilterSchoolYear}
         options={schoolYearOptions}
       />
 
       <Select
-        label="Semester"
+        label="All Semesters"
         value={filterSemester}
         onChange={setFilterSemester}
         options={semesterOptions}

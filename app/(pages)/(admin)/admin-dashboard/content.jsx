@@ -77,22 +77,22 @@ export default function Page() {
     [useSample, sampleOptions, filters],
   );
 
-  /* The selected school year is re-seeded whenever the option list changes -
-     including when the toggle switches datasets - so the page is never pinned
-     to a year the current dataset does not contain. */
+  /* "" is "All school years" and is the default. The year used to be forced
+     to the newest option, so "All" could never be chosen and the dashboard
+     opened on the newest term alone (a few hundred people out of ~10k). A
+     year is only cleared when the current dataset does not have it, e.g.
+     after switching between sample and live data. */
   useEffect(() => {
     if (
+      filterSchoolYear &&
       schoolYearOptions.length > 0 &&
       !schoolYearOptions.includes(filterSchoolYear)
     ) {
-      setFilterSchoolYear(schoolYearOptions[0]);
+      setFilterSchoolYear("");
     }
   }, [schoolYearOptions, filterSchoolYear]);
 
-  const filtersReady =
-    useSample ||
-    (!filtersLoading &&
-      (schoolYearOptions.length === 0 || filterSchoolYear !== ""));
+  const filtersReady = useSample || !filtersLoading;
 
   const dashboardFilters = useMemo(
     () => ({

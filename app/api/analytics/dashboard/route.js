@@ -158,7 +158,11 @@ export async function GET(req) {
           },
         ];
 
-        const match = {};
+        /* Only accounts with a profile are people to count. The lookup keeps
+           profile-less accounts (unwind preserves them), so they were added to
+           the snapshot total but to neither students nor employees, and the
+           headline total disagreed with the panels. */
+        const match = { "personal_info_id._id": { $ne: null } };
         if (termProfileIds) {
           match["personal_info_id._id"] = {
             $in: [...termProfileIds].map(
