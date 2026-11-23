@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import {
   FiAlertCircle,
   FiBriefcase,
@@ -268,7 +268,7 @@ export default function ManualEncodeModal({
   const closeIfIdle = () => {
     if (!saving) onClose?.();
   };
-  useEscapeKey(open, closeIfIdle);
+  const dialogRef = useDialog(closeIfIdle);
 
   if (!open) return null;
 
@@ -280,6 +280,7 @@ export default function ManualEncodeModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
       <div
+        ref={dialogRef}
         className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl"
         role="dialog"
         aria-modal="true"

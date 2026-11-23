@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { useDialog } from "@/hooks/useDialog";
 
 export default function BatchActionBar({
   batch,
@@ -15,6 +16,8 @@ export default function BatchActionBar({
 }) {
   const [confirmingMigrate, setConfirmingMigrate] = useState(false);
   const busy = busyAction !== "";
+  const migrateTitleId = useId();
+  const migrateDialogRef = useDialog(() => setConfirmingMigrate(false));
 
   const finished = ["migrating", "completed"].includes(batch?.status);
   const canValidate = !busy && !finished;
@@ -79,9 +82,15 @@ export default function BatchActionBar({
             className="absolute inset-0 bg-black/40"
             onClick={() => setConfirmingMigrate(false)}
           />
-          <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4">
+          <div
+            ref={migrateDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={migrateTitleId}
+            className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4"
+          >
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 id={migrateTitleId} className="text-base font-semibold text-gray-900">
                 Confirm Migration
               </h3>
               <p className="text-sm text-gray-600 mt-1">

@@ -2,7 +2,7 @@
 
 import { appDateInput } from "@/data/lib/appTime";
 import { useMemo, useState } from "react";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import { FaExclamationTriangle, FaSpinner, FaTimes } from "react-icons/fa";
 import {
   FieldRenderer,
@@ -97,7 +97,7 @@ export default function EditProjectModal({
   );
   const [saving, setSaving] = useState(false);
 
-  useEscapeKey(!saving, onClose);
+  const dialogRef = useDialog(saving ? null : onClose);
   const [error, setError] = useState("");
 
   const sections = useMemo(() => {
@@ -210,6 +210,7 @@ export default function EditProjectModal({
         aria-hidden="true"
       />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl"
         role="dialog"
         aria-modal="true"

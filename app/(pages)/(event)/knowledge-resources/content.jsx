@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   FaBook,
@@ -28,6 +28,7 @@ import {
   FaUpload,
   FaUser,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 import {
   KNOWLEDGE_CATEGORIES,
   KNOWLEDGE_ALLOWED_EXTS,
@@ -328,6 +329,13 @@ export default function KnowledgeResourcesContent() {
     }
   };
 
+  const uploadTitleId = useId();
+  const deleteTitleId = useId();
+  const uploadDialogRef = useDialog(uploading ? null : closeUploadModal);
+  const deleteDialogRef = useDialog(
+    deleting ? null : () => setDeleteTarget(null),
+  );
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -523,14 +531,20 @@ export default function KnowledgeResourcesContent() {
       {/* ── Upload modal ────────────────────────────────────────── */}
       {uploadOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl animate-slide-up">
+          <div
+            ref={uploadDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={uploadTitleId}
+            className="w-full max-w-lg rounded-2xl bg-white shadow-xl animate-slide-up"
+          >
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                   <FaCloudUploadAlt className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">
+                  <h2 id={uploadTitleId} className="text-base font-semibold text-gray-900">
                     Upload Document
                   </h2>
                   <p className="text-xs text-gray-500">
@@ -540,6 +554,8 @@ export default function KnowledgeResourcesContent() {
                 </div>
               </div>
               <button
+                type="button"
+                aria-label="Close"
                 onClick={closeUploadModal}
                 className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
@@ -652,12 +668,18 @@ export default function KnowledgeResourcesContent() {
       {/* ── Delete confirmation ─────────────────────────────────── */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 text-center shadow-xl animate-slide-up">
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteTitleId}
+            className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 text-center shadow-xl animate-slide-up"
+          >
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
               <FaTrashAlt className="text-2xl text-red-500" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 id={deleteTitleId} className="text-xl font-bold text-gray-900">
                 Delete Document
               </h2>
               <p className="text-sm text-gray-500">

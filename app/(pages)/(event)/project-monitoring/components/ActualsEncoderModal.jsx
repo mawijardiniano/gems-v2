@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import { formatPeso } from "@/data/lib/money";
 import { fileKeyOf } from "@/data/lib/eventFileKeys";
 import {
@@ -79,7 +79,7 @@ export default function ActualsEncoderModal({
     fileLifecycle.syncCurrent(next.map((f) => f?.key));
   };
 
-  useEscapeKey(true, () => closeAndCleanup());
+  const dialogRef = useDialog(saving ? null : () => closeAndCleanup());
 
   useEffect(() => {
     if (!project) return;
@@ -218,6 +218,7 @@ export default function ActualsEncoderModal({
         aria-hidden="true"
       />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl animate-fade-in"
         role="dialog"
         aria-modal="true"

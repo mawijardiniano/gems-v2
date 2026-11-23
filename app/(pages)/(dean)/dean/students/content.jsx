@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useId } from "react";
 
 import axios from "axios";
 import {
@@ -27,6 +27,7 @@ import {
   FaGraduationCap,
   FaMapMarkerAlt,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 
 export default function StudentsUserListContent({ college }) {
   /* Sample mode is the default view; live fetching stays parked while on. */
@@ -581,6 +582,14 @@ export default function StudentsUserListContent({ college }) {
     }
   };
 
+  const viewTitleId = useId();
+  const confirmTitleId = useId();
+  const viewDialogRef = useDialog(() => {
+    setViewModalUser(null);
+    setViewTab("personal");
+  });
+  const confirmDialogRef = useDialog(() => setConfirmAction(null));
+
   const renderViewModal = () => {
     if (!viewModalUser) return null;
     const p = viewModalUser.personal_info_id || {};
@@ -772,7 +781,13 @@ export default function StudentsUserListContent({ college }) {
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-xs">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+        <div
+          ref={viewDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={viewTitleId}
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4"
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -780,7 +795,7 @@ export default function StudentsUserListContent({ college }) {
                 {(personal.last_name?.[0] || "").toUpperCase()}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 id={viewTitleId} className="text-lg font-semibold text-gray-900">
                   {personal.first_name || ""}{" "}
                   {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
                   {personal.last_name || ""}
@@ -793,6 +808,8 @@ export default function StudentsUserListContent({ college }) {
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Close"
               onClick={() => {
                 setViewModalUser(null);
                 setViewTab("personal");
@@ -1273,8 +1290,14 @@ export default function StudentsUserListContent({ college }) {
 
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg font-semibold mb-3">
+          <div
+            ref={confirmDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={confirmTitleId}
+            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
+          >
+            <h2 id={confirmTitleId} className="text-lg font-semibold mb-3">
               {confirmAction.type === "reset"
                 ? "Reset Password"
                 : confirmAction.isActive

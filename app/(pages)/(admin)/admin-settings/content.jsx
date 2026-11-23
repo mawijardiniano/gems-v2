@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useId } from "react";
 import axios from "axios";
+import { useDialog } from "@/hooks/useDialog";
 import {
   FaSignInAlt,
   FaUserEdit,
@@ -357,6 +358,11 @@ export default function AdminSettings() {
 
   const passwordChangedAt = userInfo?.passwordChangedAt;
   const lastLogin = userInfo?.lastLogin;
+
+  const passwordTitleId = useId();
+  const passwordDialogRef = useDialog(closePasswordModal);
+  const confirmTitleId = useId();
+  const confirmDialogRef = useDialog(() => setConfirmOpen(false));
 
   return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
@@ -767,10 +773,16 @@ export default function AdminSettings() {
             className="absolute inset-0 bg-black/40"
             onClick={closePasswordModal}
           />
-          <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+          <div
+            ref={passwordDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={passwordTitleId}
+            className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden"
+          >
             <div className="p-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 id={passwordTitleId} className="text-lg font-semibold text-gray-900">
                   Change Password
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
@@ -888,9 +900,15 @@ export default function AdminSettings() {
             className="absolute inset-0 bg-black/40"
             onClick={() => setConfirmOpen(false)}
           />
-          <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+          <div
+            ref={confirmDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={confirmTitleId}
+            className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden"
+          >
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 id={confirmTitleId} className="text-lg font-semibold text-gray-900">
                 Confirm Password Change
               </h3>
               <p className="text-sm text-gray-600 mt-2">

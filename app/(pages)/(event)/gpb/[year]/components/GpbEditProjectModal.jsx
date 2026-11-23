@@ -3,6 +3,7 @@
 import { alignActivityDescriptions, emptyIndicator, isAttributedProgram, isEditRowValid } from "../lib/projectForm";
 import PerformanceIndicatorInput from "./PerformanceIndicatorInput";
 import OfficeMultiSelect from "../../../components/OfficeMultiSelect";
+import { useDialog } from "@/hooks/useDialog";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -19,9 +20,12 @@ export default function GpbEditProjectModal({
   handleRemoveEditActivityRow,
   saveEdit,
 }) {
+  const dialogRef = useDialog(editLoading ? null : cancelEdit);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div
+        ref={dialogRef}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative flex flex-col max-h-[92vh]"
         role="dialog"
         aria-modal="true"

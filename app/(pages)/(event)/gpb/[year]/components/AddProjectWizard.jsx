@@ -5,6 +5,7 @@ import { alignActivityDescriptions, isAttributedProgram, isStep1Valid, isStep2Va
 import PerformanceIndicatorInput from "./PerformanceIndicatorInput";
 import OfficeMultiSelect from "../../../components/OfficeMultiSelect";
 import { toOfficeArray } from "@/data/lib/colleges";
+import { useDialog } from "@/hooks/useDialog";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -30,9 +31,12 @@ export default function AddProjectWizard({
   wizardStep,
   year,
 }) {
+  const dialogRef = useDialog(addLoading ? null : () => setShowWizard(false));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div
+        ref={dialogRef}
         className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"

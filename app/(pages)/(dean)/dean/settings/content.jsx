@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useId } from "react";
 import axios from "axios";
 import {
   FaSignInAlt,
@@ -22,6 +22,7 @@ import {
   FaExclamationCircle,
   FaHistory,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -96,6 +97,10 @@ export default function Settings() {
   const [showFilters, setShowFilters] = useState(false);
 
   const firstInputRef = useRef(null);
+  const passwordTitleId = useId();
+  const confirmTitleId = useId();
+  const passwordDialogRef = useDialog(closePasswordModal);
+  const confirmDialogRef = useDialog(() => setConfirmOpen(false));
 
   useEffect(() => {
     if (passwordModalOpen && firstInputRef.current) {
@@ -514,10 +519,10 @@ export default function Settings() {
       {passwordModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={closePasswordModal} />
-          <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+          <div ref={passwordDialogRef} role="dialog" aria-modal="true" aria-labelledby={passwordTitleId} className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                <h3 id={passwordTitleId} className="text-lg font-semibold text-gray-900">Change Password</h3>
                 <p className="text-sm text-gray-500 mt-1">Update your account password</p>
               </div>
 
@@ -618,9 +623,9 @@ export default function Settings() {
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
-          <div className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+          <div ref={confirmDialogRef} role="dialog" aria-modal="true" aria-labelledby={confirmTitleId} className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Confirm Password Change</h3>
+              <h3 id={confirmTitleId} className="text-lg font-semibold text-gray-900">Confirm Password Change</h3>
               <p className="text-sm text-gray-600 mt-2">
                 Are you sure you want to change your password? This action will update your account credentials immediately.
               </p>

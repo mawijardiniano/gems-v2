@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useId } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import { formatAmount } from "@/data/lib/money";
 import {
   FaFileAlt,
@@ -192,7 +192,8 @@ export default function GADARContent() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [evidenceViewer]);
-  useEscapeKey(Boolean(evidenceViewer), () => setEvidenceViewer(null));
+  const viewerTitleId = useId();
+  const viewerDialogRef = useDialog(() => setEvidenceViewer(null));
 
   /* en-PH, two decimals, like every other screen; it followed the
      browser's locale and printed "NaN" for a blank amount. */
@@ -550,6 +551,10 @@ export default function GADARContent() {
       {evidenceViewer && viewerFile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div
+            ref={viewerDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={viewerTitleId}
             className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in flex flex-col"
             style={{ maxHeight: "90vh" }}
           >
@@ -559,7 +564,7 @@ export default function GADARContent() {
                   <FaPaperclip className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-sm font-semibold text-gray-900 truncate">
+                  <h2 id={viewerTitleId} className="text-sm font-semibold text-gray-900 truncate">
                     {viewerFile.name || "Evidence file"}
                   </h2>
                   <p className="text-xs text-gray-500 truncate">
@@ -578,6 +583,8 @@ export default function GADARContent() {
                   Download
                 </button>
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={() => setEvidenceViewer(null)}
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
                 >

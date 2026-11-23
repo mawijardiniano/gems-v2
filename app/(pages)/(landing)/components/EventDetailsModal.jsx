@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useId, useState } from "react";
 import {
   FaTimes,
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaBuilding,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 
 const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
@@ -44,18 +45,8 @@ export default function EventDetailsModal({ event, onClose }) {
   const lastEnd = endDates[endDates.length - 1] || event?.start_dates?.[0];
   const hasEnded = lastEnd ? new Date(lastEnd).getTime() < Date.now() : false;
 
-  // Lock body scroll while open + close on Escape
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [onClose]);
+  const titleId = useId();
+  const dialogRef = useDialog(onClose);
 
   const scheduleRows = event.start_dates || [];
 
@@ -66,10 +57,15 @@ export default function EventDetailsModal({ event, onClose }) {
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close"
           className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md transition-colors hover:bg-white hover:text-gray-900"
@@ -91,7 +87,7 @@ export default function EventDetailsModal({ event, onClose }) {
         {/* Scrollable details */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-lg leading-snug font-bold text-gray-900">
+            <h2 id={titleId} className="text-lg leading-snug font-bold text-gray-900">
               {event.title}
             </h2>
             {event.type_of_activity && (

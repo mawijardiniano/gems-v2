@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFileUploads } from "@/hooks/useFileUploads";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 import { readJson } from "@/data/lib/uploadClient";
 import { fileKeyOf } from "@/data/lib/eventFileKeys";
@@ -46,7 +45,6 @@ export function useAccomplishmentReport({
      that finishes after Cancel is deleted instead of landing in a closed
      form. */
   const fileLifecycle = useFileUploads({ rollbackOnUnmount: true });
-  useEscapeKey(Boolean(previewImg), () => setPreviewImg(null));
 
   /* Replace the file list outright (start/end of an edit session). */
   const setFiles = (next) => {

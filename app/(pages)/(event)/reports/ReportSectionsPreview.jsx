@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 import {
   SECTION,
   sectionRowCount,
@@ -144,15 +145,11 @@ export default function ReportSectionsPreview({
   downloading = false,
 }) {
   const closeRef = useRef(null);
+  const dialogRef = useDialog(onClose);
 
   useEffect(() => {
     closeRef.current?.focus();
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, []);
 
   if (!Array.isArray(sections)) return null;
 
@@ -162,6 +159,7 @@ export default function ReportSectionsPreview({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-report-preview-title"

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { SECTIONS } from "../gfps-config";
 import { isManualKey, nextManualKey } from "../officials";
+import { useDialog } from "@/hooks/useDialog";
 
-function ModalHeader({ editingSection, onClose }) {
+function ModalHeader({ editingSection, onClose, titleId }) {
   return (
     <div className="px-6 py-5 border-b border-gray-100">
       <div className="flex items-center justify-between">
@@ -15,7 +16,7 @@ function ModalHeader({ editingSection, onClose }) {
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 id={titleId} className="text-lg font-semibold text-gray-900">
               {editingSection ? "Edit Section" : "Add Member"}
             </h2>
             <p className="text-sm text-gray-500">
@@ -27,6 +28,7 @@ function ModalHeader({ editingSection, onClose }) {
         </div>
         <button
           type="button"
+          aria-label="Close"
           onClick={onClose}
           className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
         >
@@ -287,6 +289,8 @@ export default function EditMemberModal({
      independent of Organizational Structure, so the chart cannot change
      because a roster term was retired or a holder was replaced. */
   const manualKeys = selectedOfficials.filter(isManualKey);
+  const titleId = useId();
+  const dialogRef = useDialog(onClose);
 
   const addManualRow = () => {
     const key = nextManualKey();
@@ -336,10 +340,14 @@ export default function EditMemberModal({
           off-screen on short ones. The height stays bounded either way: the body
           scrolls rather than the dialog growing with its content. */}
       <form
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         onSubmit={onSubmit}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[min(90vh,calc(100dvh-2rem))] flex flex-col"
       >
-        <ModalHeader editingSection={editingSection} onClose={onClose} />
+        <ModalHeader editingSection={editingSection} onClose={onClose} titleId={titleId} />
 
         {/* Modal Body */}
         <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
