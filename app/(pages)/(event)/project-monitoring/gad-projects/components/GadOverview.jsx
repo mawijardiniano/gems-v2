@@ -89,7 +89,7 @@ export function GadFilterBar({ list }) {
   return (
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-3">
       <div className="flex items-center gap-2 lg:w-44">
-        <FaRegCalendarAlt className="text-gray-400 shrink-0" />
+        <FaRegCalendarAlt className="text-gray-500 shrink-0" />
         <select
           value={filters.yearFilter}
           onChange={(e) => list.setYearFilter(e.target.value)}
@@ -134,7 +134,7 @@ export function GadFilterBar({ list }) {
       </select>
 
       <div className="relative flex-1">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         <input
           type="text"
           value={filters.search}
@@ -147,7 +147,7 @@ export function GadFilterBar({ list }) {
             type="button"
             onClick={() => list.setSearch("")}
             aria-label="Clear search"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
           >
             <FaTimes className="h-3.5 w-3.5" />
           </button>

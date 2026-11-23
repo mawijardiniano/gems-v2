@@ -22,7 +22,7 @@ function ExecutiveGroupedBody({ members }) {
     <div className="space-y-4">
       {chairs.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
             Chair
           </p>
           <div className="space-y-2.5">
@@ -39,7 +39,7 @@ function ExecutiveGroupedBody({ members }) {
       )}
       {regulars.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
             Members
           </p>
           <div className="space-y-2.5">

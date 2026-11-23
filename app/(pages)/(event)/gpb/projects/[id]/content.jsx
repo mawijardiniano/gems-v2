@@ -339,7 +339,7 @@ export default function ProjectContent() {
                       </td>
                       <td className="py-3 px-6 text-sm text-gray-600">
                         <span className="inline-flex items-center gap-1.5">
-                          <FiMapPin className="h-3.5 w-3.5 text-gray-400" />
+                          <FiMapPin className="h-3.5 w-3.5 text-gray-500" />
                           {event.venue || "-"}
                         </span>
                       </td>
@@ -355,11 +355,11 @@ export default function ProjectContent() {
                       </td>
                       <td className="py-3 px-6 text-right">
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-                          <FiUsers className="h-3.5 w-3.5 text-gray-400" />
+                          <FiUsers className="h-3.5 w-3.5 text-gray-500" />
                           {participantCount(event)}
                         </span>
                         <span
-                          className="ml-1 inline-flex items-center text-[11px] text-gray-400"
+                          className="ml-1 inline-flex items-center text-[11px] text-gray-500"
                           title="Check-ins"
                         >
                           attended
@@ -376,7 +376,7 @@ export default function ProjectContent() {
                 <FiCalendar className="h-8 w-8 text-gray-300" />
               </div>
               <p className="text-gray-500 font-medium">No events found</p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-gray-500 text-sm mt-1">
                 This project has no associated events yet.
               </p>
             </div>

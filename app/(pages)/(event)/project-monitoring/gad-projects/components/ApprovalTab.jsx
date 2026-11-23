@@ -126,7 +126,7 @@ export default function ApprovalTab({ project, canManage, onSaved }) {
               value={otherDetails}
             />
             {!canManage && (
-              <p className="text-[11px] text-gray-400 italic">
+              <p className="text-[11px] text-gray-500 italic">
                 Only the project creator or a GAD Focal Person can update the
                 approval details.
               </p>

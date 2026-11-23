@@ -41,7 +41,7 @@ export default function CommentModal({
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Fields{" "}
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-500">
               (select one or more)
             </span>
           </label>

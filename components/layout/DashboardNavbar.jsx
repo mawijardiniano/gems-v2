@@ -154,7 +154,7 @@ export default function DashboardNavbar({
             </div>
             <FaChevronDown
               size={10}
-              className={`text-gray-400 transition-transform duration-200 ${
+              className={`text-gray-500 transition-transform duration-200 ${
                 dropdownOpen ? "rotate-180" : ""
               }`}
             />
@@ -177,7 +177,7 @@ export default function DashboardNavbar({
                       {displayName}
                     </p>
                     {email && (
-                      <p className="text-xs text-gray-400 truncate">{email}</p>
+                      <p className="text-xs text-gray-500 truncate">{email}</p>
                     )}
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function DashboardNavbar({
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                 >
-                  <FaCog size={14} className="text-gray-400" />
+                  <FaCog size={14} className="text-gray-500" />
                   Settings
                 </button>
               </div>

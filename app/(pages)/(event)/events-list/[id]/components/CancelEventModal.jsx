@@ -66,7 +66,7 @@ export default function CancelEventModal({
             placeholder="e.g. Venue double-booked with the Regional Research Congress"
             className="mt-1 w-full rounded-lg border border-gray-200 p-3 text-sm text-gray-800 focus:border-red-400 focus:outline-none disabled:bg-gray-50"
           />
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-gray-500">
             {reason.trim().length === 0
               ? "A reason is required."
               : `${reason.trim().length}/500 characters`}

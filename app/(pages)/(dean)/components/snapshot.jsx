@@ -153,9 +153,9 @@ export default function Snapshot({
           <StatCard card={statCards[1]}>
             <div className="flex items-baseline gap-2">
               <span className="text-secondary-600">{femaleCount}</span>
-              <span className="text-sm font-normal text-gray-400">·</span>
+              <span className="text-sm font-normal text-gray-500">·</span>
               <span className="text-secondary-600">{maleCount}</span>
-              <span className="text-xs font-normal text-gray-400">(F · M)</span>
+              <span className="text-xs font-normal text-gray-500">(F · M)</span>
             </div>
             {total > 0 && (
               <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -197,7 +197,7 @@ export default function Snapshot({
               <h3 className="text-sm font-semibold text-gray-700">
                 Students by Year Level
               </h3>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 ({yearRows.reduce((s, r) => s + (r.total || 0), 0).toLocaleString()} total students)
               </span>
             </div>
@@ -206,9 +206,9 @@ export default function Snapshot({
                 <StatCard key={row.label} card={yearLevelStatCards[i]}>
                   <div className="flex items-baseline gap-2">
                     <span className="text-secondary-600">{row.Female || 0}</span>
-                    <span className="text-sm font-normal text-gray-400">·</span>
+                    <span className="text-sm font-normal text-gray-500">·</span>
                     <span className="text-secondary-600">{row.Male || 0}</span>
-                    <span className="text-xs font-normal text-gray-400">
+                    <span className="text-xs font-normal text-gray-500">
                       (F · M)
                     </span>
                   </div>
@@ -324,9 +324,9 @@ export default function Snapshot({
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
             <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-gray-400">·</span>
+            <span className="text-sm font-normal text-gray-500">·</span>
             <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-gray-400">(F · M)</span>
+            <span className="text-xs font-normal text-gray-500">(F · M)</span>
           </div>
           {total > 0 && (
             <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
@@ -369,7 +369,7 @@ export default function Snapshot({
             <h3 className="text-sm font-semibold text-gray-700">
               Students by Year Level
             </h3>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-500">
               ({students.length.toLocaleString()} total students)
             </span>
           </div>
@@ -378,9 +378,9 @@ export default function Snapshot({
               <StatCard key={row.label} card={yearLevelStatCards[i]}>
                 <div className="flex items-baseline gap-2">
                   <span className="text-secondary-600">{row.Female}</span>
-                  <span className="text-sm font-normal text-gray-400">·</span>
+                  <span className="text-sm font-normal text-gray-500">·</span>
                   <span className="text-secondary-600">{row.Male}</span>
-                  <span className="text-xs font-normal text-gray-400">
+                  <span className="text-xs font-normal text-gray-500">
                     (F · M)
                   </span>
                 </div>

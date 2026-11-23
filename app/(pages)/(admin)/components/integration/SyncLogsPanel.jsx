@@ -112,7 +112,7 @@ function TechnicalDetails({ details }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="text-[11px] text-gray-400 underline hover:text-gray-600"
+        className="text-[11px] text-gray-500 underline hover:text-gray-600"
       >
         {open ? "Hide technical details" : "Technical details"}
       </button>

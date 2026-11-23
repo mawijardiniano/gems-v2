@@ -40,7 +40,7 @@ export default function Progress() {
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
                       : isActive
                       ? "bg-secondary-600 text-white shadow-md shadow-secondary-200 ring-4 ring-secondary-100"
-                      : "bg-gray-100 text-gray-400"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {isCompleted ? (
@@ -55,7 +55,7 @@ export default function Progress() {
                       ? "text-secondary-600"
                       : isCompleted
                       ? "text-emerald-600"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }`}
                 >
                   {step.label}

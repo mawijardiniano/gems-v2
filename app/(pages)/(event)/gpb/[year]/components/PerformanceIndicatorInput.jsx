@@ -18,7 +18,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
       <div className="flex flex-col gap-2 w-full">
         {/* Format toggle */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-400">Format:</span>
+          <span className="text-gray-500">Format:</span>
           <button
             type="button"
             onClick={() => onChange(emptyIndicator())}
@@ -57,7 +57,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
     <div className="flex flex-col gap-2 w-full">
       {/* Format toggle */}
       <div className="flex items-center gap-2 text-xs">
-        <span className="text-gray-400">Format:</span>
+        <span className="text-gray-500">Format:</span>
         <button
           type="button"
           className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
@@ -75,7 +75,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
 
       <div className="flex gap-3">
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">
+          <label className="text-xs text-gray-500 mb-0.5">
             Type of Activity{" "}
             {hasActivityCount && <span className="text-red-500">*</span>}
           </label>
@@ -98,7 +98,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         </div>
 
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">
+          <label className="text-xs text-gray-500 mb-0.5">
             No. of Activity{" "}
             {hasActivityType && <span className="text-red-500">*</span>}
           </label>
@@ -118,7 +118,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">Male</label>
+          <label className="text-xs text-gray-500 mb-0.5">Male</label>
           <input
             type="number"
             min={0}
@@ -129,7 +129,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-400 mb-0.5">Female</label>
+          <label className="text-xs text-gray-500 mb-0.5">Female</label>
           <input
             type="number"
             min={0}

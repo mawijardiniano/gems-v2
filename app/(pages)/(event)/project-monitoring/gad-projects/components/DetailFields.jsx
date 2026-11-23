@@ -13,7 +13,7 @@ export function StatCard({ icon: Icon, iconClass, label, value, sub, children })
         <div className="min-w-0">
           <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-          {sub && <p className="mt-0.5 text-xs text-gray-400">{sub}</p>}
+          {sub && <p className="mt-0.5 text-xs text-gray-500">{sub}</p>}
         </div>
         <div
           className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}
@@ -29,7 +29,7 @@ export function StatCard({ icon: Icon, iconClass, label, value, sub, children })
 /* A span (not a <p>) so it can also sit inside a <label>. */
 export const FieldLabel = ({ children, className = "" }) => (
   <span
-    className={`block text-[11px] font-semibold uppercase tracking-wider text-gray-400 ${className}`}
+    className={`block text-[11px] font-semibold uppercase tracking-wider text-gray-500 ${className}`}
   >
     {children}
   </span>

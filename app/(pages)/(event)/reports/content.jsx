@@ -842,21 +842,21 @@ export default function ReportsContent({ scopeCollege = "" }) {
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Data Readiness
           </h3>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             {year ? `AY ${year}` : "Select a year"} — what's still missing
             before this report is complete.
           </p>
 
           {readinessLoading ? (
-            <p className="text-xs text-gray-400">Checking…</p>
+            <p className="text-xs text-gray-500">Checking…</p>
           ) : !readiness ? (
-            <p className="text-xs text-gray-400 italic">
+            <p className="text-xs text-gray-500 italic">
               Select an academic year to check readiness.
             </p>
           ) : (
             <ul className="space-y-2.5">
               {readinessItems.length === 0 && (
-                <li className="text-xs text-gray-400 italic">
+                <li className="text-xs text-gray-500 italic">
                   Nothing to check yet.
                 </li>
               )}
@@ -910,7 +910,7 @@ export default function ReportsContent({ scopeCollege = "" }) {
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
             Available Reports
           </h3>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             {scoped
               ? `One-click downloads for ${scopeCollege}; the sample-based reports are built in the browser from the sample datasets.`
               : "One-click downloads; the GAR opens the print preview workspace and the sample-based reports are built in the browser from the sample datasets."}
@@ -922,7 +922,7 @@ export default function ReportsContent({ scopeCollege = "" }) {
                 className="py-2.5 flex items-center justify-between gap-3"
               >
                 <span className="text-sm text-gray-700 flex items-center gap-2 min-w-0">
-                  <FaFileAlt size={11} className="text-gray-400 shrink-0" />
+                  <FaFileAlt size={11} className="text-gray-500 shrink-0" />
                   <span className="truncate">{t.label}</span>
                 </span>
                 <span className="flex items-center gap-1.5 shrink-0">

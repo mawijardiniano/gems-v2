@@ -42,7 +42,7 @@ function DonutCard({ title, total, data, colors }) {
   return (
     <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-xs text-gray-400 mb-3">
+      <p className="text-xs text-gray-500 mb-3">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={240}>

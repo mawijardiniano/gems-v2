@@ -306,7 +306,7 @@ function Pagination({ list }) {
           </button>
           {pageWindow(currentPage, totalPages).map((p, i) =>
             p === null ? (
-              <span key={`gap-${i}`} className="px-1 text-xs text-gray-400">
+              <span key={`gap-${i}`} className="px-1 text-xs text-gray-500">
                 …
               </span>
             ) : (

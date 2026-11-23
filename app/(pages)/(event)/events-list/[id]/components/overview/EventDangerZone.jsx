@@ -70,7 +70,7 @@ export default function EventDangerZone({
                       : "Reinstating puts the event back to active."}
                 </p>
                 {event.cancel_reason && (
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Cancelled because: {event.cancel_reason}
                   </p>
                 )}

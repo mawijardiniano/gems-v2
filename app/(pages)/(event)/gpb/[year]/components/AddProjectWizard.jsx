@@ -73,7 +73,7 @@ export default function AddProjectWizard({
                     ? "text-secondary-600"
                     : wizardStep > i + 1
                       ? "text-green-600"
-                      : "text-gray-400"
+                      : "text-gray-500"
                 }`}
               >
                 <div
@@ -318,7 +318,7 @@ export default function AddProjectWizard({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 GAD Activity <span className="text-red-500">*</span>
               </label>
-              <p className="text-xs text-gray-400 mb-2">
+              <p className="text-xs text-gray-500 mb-2">
                 Type the activity title, then its description underneath.
                 Both print inside the single GAD Activity column.
               </p>

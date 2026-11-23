@@ -151,7 +151,7 @@ const PieCard = memo(function PieCard({
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -193,7 +193,7 @@ const HorzBarCard = memo(function HorzBarCard({
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -238,7 +238,7 @@ const VertBarCard = memo(function VertBarCard({ title, data, height = 240 }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -277,7 +277,7 @@ const GenderBarCard = memo(function GenderBarCard({ title, data, height = 260 })
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -343,7 +343,7 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total · {data.length} offices
       </p>
       <ResponsiveContainer width="100%" height={chartHeight}>

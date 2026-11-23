@@ -30,7 +30,7 @@ function ModalHeader({ editingSection, onClose, titleId }) {
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -190,7 +190,7 @@ function ManualEntries({
       </div>
 
       {manualKeys.length === 0 ? (
-        <p className="text-xs text-gray-400 border border-dashed border-gray-200 rounded-xl px-3.5 py-3">
+        <p className="text-xs text-gray-500 border border-dashed border-gray-200 rounded-xl px-3.5 py-3">
           Add the person by name.
         </p>
       ) : (
@@ -227,7 +227,7 @@ function ManualEntries({
                     type="button"
                     onClick={() => onRemove(key)}
                     title="Remove"
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -252,7 +252,7 @@ function ManualEntries({
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                   {locked && (
-                    <p className="mt-1 text-[11px] text-gray-400">
+                    <p className="mt-1 text-[11px] text-gray-500">
                       Seat fixed by the GFPS memorandum.
                     </p>
                   )}

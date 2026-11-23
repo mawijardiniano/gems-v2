@@ -164,7 +164,7 @@ function UserSearchField({
   return (
     <div className="relative">
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
         <input
           type="text"
           className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
@@ -198,7 +198,7 @@ function UserSearchField({
             </button>
           )}
           {filteredUsers.length === 0 && !search.trim() ? (
-            <div className="px-3 py-2 text-sm text-gray-400">
+            <div className="px-3 py-2 text-sm text-gray-500">
               No users found
             </div>
           ) : (
@@ -226,7 +226,7 @@ function UserSearchField({
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-medium">{getUserFullName(u)}</p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-500 truncate">
                     @{u.username}
                   </p>
                 </div>
@@ -424,7 +424,7 @@ function OfficialModal({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -447,7 +447,7 @@ function OfficialModal({
               <div className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
                 {form.name || ""}
               </div>
-              <p className="mt-1.5 text-xs text-gray-400">{form.header}</p>
+              <p className="mt-1.5 text-xs text-gray-500">{form.header}</p>
             </div>
           ) : (
             <>
@@ -466,7 +466,7 @@ function OfficialModal({
                   busy={officeBusy}
                 />
                 {assignedCounts && form.header ? (
-                  <p className="mt-1.5 text-xs text-gray-400">
+                  <p className="mt-1.5 text-xs text-gray-500">
                     {assignedCounts.map[form.header] || 0} assigned official
                     {(assignedCounts.map[form.header] || 0) === 1
                       ? ""
@@ -612,9 +612,9 @@ function HeaderCard({
             Assigned only
           </span>
           {expanded ? (
-            <FaChevronDown className="h-3.5 w-3.5 text-gray-400" />
+            <FaChevronDown className="h-3.5 w-3.5 text-gray-500" />
           ) : (
-            <FaChevronRight className="h-3.5 w-3.5 text-gray-400" />
+            <FaChevronRight className="h-3.5 w-3.5 text-gray-500" />
           )}
         </div>
       </button>
@@ -1258,7 +1258,7 @@ export default function UniversityOfficialsContent() {
       {!loading && assignments.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
             <input
               type="text"
               value={search}

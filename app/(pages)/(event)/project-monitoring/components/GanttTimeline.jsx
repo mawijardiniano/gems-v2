@@ -36,7 +36,7 @@ export default function GanttTimeline({ activities, year }) {
             key={blockYear}
             className="rounded-lg border border-gray-200 bg-white p-3"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
               {blockYear} Timeline
             </p>
             <div className="grid grid-cols-12 text-center text-[10px] text-gray-500 border-b border-gray-100 pb-1">
@@ -86,7 +86,7 @@ export default function GanttTimeline({ activities, year }) {
                 );
               })}
               {!hasBars && (
-                <p className="relative py-3 text-center text-xs italic text-gray-400">
+                <p className="relative py-3 text-center text-xs italic text-gray-500">
                   No activity falls within {blockYear}.
                 </p>
               )}

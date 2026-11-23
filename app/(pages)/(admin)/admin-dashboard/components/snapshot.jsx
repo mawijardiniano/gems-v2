@@ -119,9 +119,9 @@ function Snapshot({ data, snapshot }) {
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
             <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-gray-400">·</span>
+            <span className="text-sm font-normal text-gray-500">·</span>
             <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-gray-400">(F · M)</span>
+            <span className="text-xs font-normal text-gray-500">(F · M)</span>
           </div>
           {/* Mini bar */}
           {total > 0 && (

@@ -138,7 +138,7 @@ function PieCard({
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -180,7 +180,7 @@ function HorzBarCard({
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -225,7 +225,7 @@ function VertBarCard({ title, data, height = 240 }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -264,7 +264,7 @@ function GenderBarCard({ title, data, height = 260 }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -312,7 +312,7 @@ function GenderHorzBarCard({ title, data, height = 300 }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-400">
+      <p className="mb-3 text-xs text-gray-500">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -425,7 +425,7 @@ export default function Demographics({
               <h3 className="text-sm font-semibold text-gray-900 mb-1">
                 Students by Year Level and Course
               </h3>
-              <p className="mb-3 text-xs text-gray-400">
+              <p className="mb-3 text-xs text-gray-500">
                 {(studentCount || 0).toLocaleString()} total
               </p>
               <ResponsiveContainer width="100%" height={280}>
@@ -673,7 +673,7 @@ export default function Demographics({
             <h3 className="text-sm font-semibold text-gray-900 mb-1">
               Students by Year Level and Course
             </h3>
-            <p className="mb-3 text-xs text-gray-400">
+            <p className="mb-3 text-xs text-gray-500">
               {collegeFilteredStudents.length.toLocaleString()} total
             </p>
             <ResponsiveContainer width="100%" height={280}>

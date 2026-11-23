@@ -96,7 +96,7 @@ export default function OfficeMultiSelect({
                 ? selected[0]
                 : `${selected.length} offices selected`}
           </span>
-          <FaChevronDown className="h-2.5 w-2.5 shrink-0 text-gray-400" />
+          <FaChevronDown className="h-2.5 w-2.5 shrink-0 text-gray-500" />
         </button>
 
         {open && (
@@ -222,7 +222,7 @@ export default function OfficeMultiSelect({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">No office selected yet</p>
+          <p className="text-xs text-gray-500 italic">No office selected yet</p>
         )}
         {selected.length > 0 && !disabled && (
           <button

@@ -177,7 +177,7 @@ export default function InsightTab({
                     {card.value}
                   </p>
                   {card.sub && (
-                    <p className="mt-0.5 text-xs text-gray-400">{card.sub}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">{card.sub}</p>
                   )}
                 </div>
               </div>

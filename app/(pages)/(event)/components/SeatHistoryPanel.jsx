@@ -58,7 +58,7 @@ export default function SeatHistoryPanel({ header, name }) {
   return (
     <div className="bg-gray-50/70 border-t border-gray-100 px-6 py-4">
       <div className="flex items-center gap-2 mb-3">
-        <FaHistory className="h-3.5 w-3.5 text-gray-400" />
+        <FaHistory className="h-3.5 w-3.5 text-gray-500" />
         <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
           Tenure history — {name}
         </h4>
@@ -102,7 +102,7 @@ export default function SeatHistoryPanel({ header, name }) {
           <ul className="space-y-1.5">
             {turnover.map((event) => (
               <li key={String(event._id)} className="text-xs text-gray-600">
-                <span className="text-gray-400">
+                <span className="text-gray-500">
                   {formatDate(event.createdAt)}
                 </span>
                 {" — "}
@@ -110,7 +110,7 @@ export default function SeatHistoryPanel({ header, name }) {
                   ? `${event.prev_name} → ${event.new_name}`
                   : event.description || event.action}
                 {event.academic_year ? (
-                  <span className="text-gray-400">
+                  <span className="text-gray-500">
                     {" "}
                     (AY {event.academic_year})
                   </span>
@@ -135,7 +135,7 @@ function HistoryRow({ entry }) {
         {entry.official_text ? (
           (person[0] || "?").toUpperCase()
         ) : (
-          <FaUserTie className="h-3 w-3 text-gray-400" />
+          <FaUserTie className="h-3 w-3 text-gray-500" />
         )}
       </div>
       <div className="min-w-0">

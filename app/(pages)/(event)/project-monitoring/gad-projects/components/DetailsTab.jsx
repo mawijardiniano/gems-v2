@@ -144,7 +144,7 @@ function ScheduleSection({ project, canManage, onSaved }) {
             </span>
           </div>
           {!canManage && (
-            <p className="text-[11px] text-gray-400 italic">
+            <p className="text-[11px] text-gray-500 italic">
               Only the project creator or a GAD Focal Person can set the schedule
               and status.
             </p>
@@ -160,7 +160,7 @@ export default function DetailsTab({ project, canManage, onSaved }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in" role="tabpanel">
       <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
           Project Information
         </p>
         <DetailRow

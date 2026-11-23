@@ -175,13 +175,13 @@ export default function AcademicInformation() {
           </div>
           <div className="p-12 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaGraduationCap className="text-gray-400 text-2xl" />
+              <FaGraduationCap className="text-gray-500 text-2xl" />
             </div>
             <p className="text-gray-600 font-medium">
               This section is available when Current Status is set to{" "}
               <span className="font-semibold text-secondary-600">Student</span>.
             </p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-gray-500 text-sm mt-1">
               Please go back to Personal Information to update your status.
             </p>
           </div>
@@ -243,7 +243,7 @@ export default function AcademicInformation() {
                   />
                   {idChecking && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FaSpinner className="animate-spin text-gray-400" />
+                      <FaSpinner className="animate-spin text-gray-500" />
                     </div>
                   )}
                   {idError && (

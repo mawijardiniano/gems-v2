@@ -16,7 +16,7 @@ function StatusRow({ ok, warn, label, hint }) {
       <Icon className={`mt-0.5 shrink-0 ${color}`} size={14} />
       <div className="min-w-0">
         <p className="text-xs font-medium text-gray-800">{label}</p>
-        {hint && <p className="text-[11px] text-gray-400">{hint}</p>}
+        {hint && <p className="text-[11px] text-gray-500">{hint}</p>}
       </div>
     </li>
   );
@@ -53,7 +53,7 @@ function ComplianceTracker({ compliance, useSample }) {
               <p className="text-xs font-medium text-gray-500">
                 Budget, GPB & project readiness — live data only
               </p>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-500">
                 No sample exists for approvals or spending. Toggle to Live data
                 to review real compliance.
               </p>

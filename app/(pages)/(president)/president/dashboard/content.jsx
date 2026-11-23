@@ -41,7 +41,7 @@ function HeaderBar({
             Marinduque State University · University-wide scope
             {updatedAt ? ` · Updated ${updatedAt.toLocaleTimeString()}` : ""}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
             <SampleToggle
               useSample={useSample}
               onToggle={onToggleSample}

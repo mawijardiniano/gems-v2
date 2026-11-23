@@ -176,7 +176,7 @@ body {
   @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
 }
 .input {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 outline-none;
+  @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 outline-none;
 }
 .input:focus {
   @apply border-secondary-500 ring-4 ring-secondary-500/10;

@@ -83,13 +83,13 @@ export default function ProjectDeleteModal({
             {project?.reference_number && (
               <>
                 <br />
-                <span className="text-xs text-gray-400 font-mono">
+                <span className="text-xs text-gray-500 font-mono">
                   {project.reference_number}
                 </span>
               </>
             )}
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-500">
             The project and its budget entries will be permanently removed.
             Linked events stay in the calendar. This cannot be undone.
           </p>

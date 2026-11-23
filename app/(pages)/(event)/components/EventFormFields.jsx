@@ -295,7 +295,7 @@ export default function EventFormFields({
         <div>
           <p className={labelClass} id={id("type-label")}>
             <FaTag
-              className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5"
+              className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
               aria-hidden="true"
             />
             Type of Activity <span className="text-red-500">*</span>
@@ -327,13 +327,13 @@ export default function EventFormFields({
           <div>
             <label className={labelClass} htmlFor={id("gad-activity")}>
               <FaProjectDiagram
-                className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5"
+                className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
                 aria-hidden="true"
               />
               GAD Activity <span className="text-red-500">*</span>
             </label>
             {projects.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">
+              <p className="text-xs text-gray-500 italic">
                 No projects with GAD activities found. Please create a GPB
                 project first.
               </p>
@@ -370,7 +370,7 @@ export default function EventFormFields({
                 })}
               </select>
             )}
-            <p className="text-xs text-gray-400 mt-1.5">
+            <p className="text-xs text-gray-500 mt-1.5">
               This activity is required because the event type is GAD.
               {activityPrefill
                 ? " Selecting one fills in the event title and your office/unit."
@@ -463,7 +463,7 @@ export default function EventFormFields({
         <div>
           <label className={labelClass} htmlFor={id("venue")}>
             <FaMapMarkerAlt
-              className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5"
+              className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
               aria-hidden="true"
             />
             Venue

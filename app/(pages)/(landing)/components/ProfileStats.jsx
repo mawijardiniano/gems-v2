@@ -67,7 +67,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-secondary-600)]" />
           <span className="text-gray-600">Male</span>
           <span className="ml-auto font-semibold text-gray-900">{male}</span>
-          <span className="text-xs text-gray-400">({malePct}%)</span>
+          <span className="text-xs text-gray-500">({malePct}%)</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
@@ -80,7 +80,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-accent-500)]" />
           <span className="text-gray-600">Female</span>
           <span className="ml-auto font-semibold text-gray-900">{female}</span>
-          <span className="text-xs text-gray-400">({femalePct}%)</span>
+          <span className="text-xs text-gray-500">({femalePct}%)</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
@@ -94,7 +94,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
             <span className="h-2.5 w-2.5 rounded-full bg-[#94a3b8]" />
             <span className="text-gray-600">Unspecified</span>
             <span className="ml-auto font-semibold text-gray-900">{unspecified}</span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-500">
               ({total ? ((unspecified / total) * 100).toFixed(1) : 0}%)
             </span>
           </div>
@@ -605,7 +605,7 @@ export default function ProfileStats() {
           </div>
 
           {selectedSchoolYear && selectedSemester && (
-            <p className="text-sm text-gray-400 mt-3">
+            <p className="text-sm text-gray-500 mt-3">
               Showing {useSample ? "sample data" : "data"} for{" "}
               <span className="font-semibold text-gray-600">
                 {selectedSchoolYear}
@@ -720,7 +720,7 @@ export default function ProfileStats() {
                             <p className="text-lg font-bold text-gray-900">
                               {d.value}
                             </p>
-                            <p className="text-xs text-gray-400">{pct}% of total</p>
+                            <p className="text-xs text-gray-500">{pct}% of total</p>
                           </div>
                         );
                       }}
@@ -754,7 +754,7 @@ export default function ProfileStats() {
                       <span className="text-sm font-semibold text-gray-900 w-12 text-right">
                         {entry.value}
                       </span>
-                      <span className="text-xs text-gray-400 w-10 text-right">
+                      <span className="text-xs text-gray-500 w-10 text-right">
                         {pct}%
                       </span>
                     </div>
@@ -825,7 +825,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-400"
+                          className="px-4 py-8 text-center text-sm text-gray-500"
                         >
                           No office data available
                         </td>
@@ -943,7 +943,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-400"
+                          className="px-4 py-8 text-center text-sm text-gray-500"
                         >
                           No college data available
                         </td>
@@ -1061,7 +1061,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-400"
+                          className="px-4 py-8 text-center text-sm text-gray-500"
                         >
                           No year level data available
                         </td>

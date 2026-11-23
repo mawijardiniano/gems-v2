@@ -42,7 +42,7 @@ export default function GpbEditProjectModal({
                 </span>
               )}
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               All fields marked <span className="text-red-500">*</span> are
               required
             </p>
@@ -135,7 +135,7 @@ export default function GpbEditProjectModal({
                     {(editRow.cause_gender_issue || [""]).map(
                       (val, idx) => (
                         <div key={idx} className="flex gap-2 items-start">
-                          <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                          <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
                             {idx + 1}.
                           </span>
                           <textarea
@@ -221,7 +221,7 @@ export default function GpbEditProjectModal({
                   <div className="space-y-2">
                     {(editRow.gad_objective || [""]).map((val, idx) => (
                       <div key={idx} className="flex gap-2 items-start">
-                        <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                        <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
                           {idx + 1}.
                         </span>
                         <textarea
@@ -319,7 +319,7 @@ export default function GpbEditProjectModal({
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   GAD Activity <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-gray-400 mb-2">
+                <p className="text-xs text-gray-500 mb-2">
                   Type the activity title, then its description underneath.
                   Both print inside the single GAD Activity column.
                 </p>
@@ -329,7 +329,7 @@ export default function GpbEditProjectModal({
                       key={idx}
                       className="flex gap-2 items-start rounded-xl border border-gray-200 bg-gray-50 p-2"
                     >
-                      <span className="mt-2 text-xs text-gray-400 w-5 text-right shrink-0">
+                      <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
                         {idx + 1}.
                       </span>
                       <div className="flex-1 space-y-2">
@@ -470,7 +470,7 @@ export default function GpbEditProjectModal({
                     GAD Budget <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                       ₱
                     </span>
                     <input

@@ -36,7 +36,7 @@ export default function GanttReadOnly({ project, compact = false }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
           Gantt Activities{compact ? ` (${activities.length})` : ""}
         </p>
         <PrintGantt
@@ -49,7 +49,7 @@ export default function GanttReadOnly({ project, compact = false }) {
         />
       </div>
       {activities.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           No Gantt activities encoded yet.
         </p>
       ) : compact ? (
@@ -60,7 +60,7 @@ export default function GanttReadOnly({ project, compact = false }) {
                 <span className="font-medium text-gray-800">
                   {i + 1}. {row.activity}
                 </span>
-                <div className="text-gray-400">
+                <div className="text-gray-500">
                   {fmt(row.start_date)} → {fmt(row.end_date)} ·{" "}
                   {calcDurationDays(row.start_date, row.end_date)} days
                   {row.person_responsible ? ` · ${row.person_responsible}` : ""}

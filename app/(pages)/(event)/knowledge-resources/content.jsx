@@ -406,14 +406,14 @@ export default function KnowledgeResourcesContent() {
         <div className="relative w-full lg:w-72">
           <FaSearch
             size={13}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title, file, or uploader..."
-            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
           />
         </div>
       </div>
@@ -460,20 +460,20 @@ export default function KnowledgeResourcesContent() {
 
                 <div className="mt-4 space-y-1.5 text-xs text-gray-500">
                   <p className="flex items-center gap-2">
-                    <FaFileAlt className="shrink-0 text-gray-400" size={11} />
+                    <FaFileAlt className="shrink-0 text-gray-500" size={11} />
                     <span className="truncate">
                       {item.file?.name || "Document"}
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <FaUser className="shrink-0 text-gray-400" size={11} />
+                    <FaUser className="shrink-0 text-gray-500" size={11} />
                     <span className="truncate">
                       {item.uploaded_by_name || "Unknown"}
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
                     <FaCalendarAlt
-                      className="shrink-0 text-gray-400"
+                      className="shrink-0 text-gray-500"
                       size={11}
                     />
                     {formatDate(item.createdAt)} ·{" "}
@@ -557,7 +557,7 @@ export default function KnowledgeResourcesContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeUploadModal}
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <FaTimes size={14} />
               </button>
@@ -573,7 +573,7 @@ export default function KnowledgeResourcesContent() {
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g. GAD Training Module 2026"
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
               </div>
 
@@ -615,7 +615,7 @@ export default function KnowledgeResourcesContent() {
                     <span className="flex items-center justify-center gap-2 text-sm text-gray-700">
                       <FaFileAlt className="text-rose-500" />
                       <span className="truncate">{formFile.name}</span>
-                      <span className="shrink-0 text-xs text-gray-400">
+                      <span className="shrink-0 text-xs text-gray-500">
                         ({formatBytes(formFile.size)})
                       </span>
                     </span>

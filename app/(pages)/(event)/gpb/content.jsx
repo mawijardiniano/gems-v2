@@ -532,7 +532,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                             type="button"
                             aria-label={`Actions for GPB ${item.year}`}
                             aria-expanded={openMenuId === item._id}
-                            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+                            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition"
                           >
                             <FaEllipsisV className="h-4 w-4" />
                           </button>
@@ -653,7 +653,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     </Link>
 
                     <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
                         Quick Reports
                       </p>
                       <div className="flex items-center gap-2">
@@ -797,7 +797,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   type="button"
                   aria-label="Close"
                   onClick={closeModal}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -811,7 +811,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   GPB Year
                 </label>
                 <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
                   <input
                     type="number"
                     min="2000"
@@ -843,7 +843,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
                   Link GAA Budget{" "}
-                  <span className="normal-case font-normal text-gray-400">
+                  <span className="normal-case font-normal text-gray-500">
                     (optional)
                   </span>
                 </label>
@@ -953,7 +953,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   type="button"
                   aria-label="Close"
                   onClick={closeAttachModal}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>

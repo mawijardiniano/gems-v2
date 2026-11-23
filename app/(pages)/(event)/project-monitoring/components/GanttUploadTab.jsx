@@ -83,9 +83,9 @@ export default function GanttUploadTab({ onApply }) {
           dragging ? "border-rose-400 bg-rose-50" : "border-gray-300 bg-gray-50"
         }`}
       >
-        <FaUpload className="text-gray-400" size={22} />
+        <FaUpload className="text-gray-500" size={22} />
         <p className="text-sm text-gray-600">Drag and drop your file here</p>
-        <p className="text-xs text-gray-400">or</p>
+        <p className="text-xs text-gray-500">or</p>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -103,7 +103,7 @@ export default function GanttUploadTab({ onApply }) {
             e.target.value = "";
           }}
         />
-        <p className="text-[11px] text-gray-400">Supported: CSV (.csv)</p>
+        <p className="text-[11px] text-gray-500">Supported: CSV (.csv)</p>
       </div>
 
       <button
@@ -127,14 +127,14 @@ export default function GanttUploadTab({ onApply }) {
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <FaFileAlt className="text-emerald-600" />
               <span className="font-medium">{file.name}</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 {formatSize(file.size)} · {rows.length} activities
               </span>
             </div>
             <button
               type="button"
               onClick={reset}
-              className="text-gray-400 hover:text-red-500"
+              className="text-gray-500 hover:text-red-500"
               aria-label="Remove file"
             >
               <FaTimes size={12} />

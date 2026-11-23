@@ -86,7 +86,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
             <span className="font-medium">{status.label}</span>
           </span>
         </span>
-        <span className="mt-1 shrink-0 text-gray-400">
+        <span className="mt-1 shrink-0 text-gray-500">
           {expanded ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
         </span>
       </button>
@@ -119,29 +119,29 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
           <div className="space-y-2">
             {dateRange && (
               <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-400" />
+                <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-500" />
                 <span>{dateRange}</span>
               </div>
             )}
             <div className="flex items-start gap-2 text-xs text-gray-600">
-              <FaRegClock className="mt-0.5 shrink-0 text-gray-400" />
+              <FaRegClock className="mt-0.5 shrink-0 text-gray-500" />
               <span>{timeLabel || "Time TBD"}</span>
             </div>
             {offices.length > 0 && (
               <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaBuilding className="mt-0.5 shrink-0 text-gray-400" />
+                <FaBuilding className="mt-0.5 shrink-0 text-gray-500" />
                 <span>{offices.join(", ")}</span>
               </div>
             )}
             {registeredCount > 0 && (
               <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaUsers className="mt-0.5 shrink-0 text-gray-400" />
+                <FaUsers className="mt-0.5 shrink-0 text-gray-500" />
                 <span>{registeredCount} registered</span>
               </div>
             )}
             {organizerName && (
               <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaUserTag className="mt-0.5 shrink-0 text-gray-400" />
+                <FaUserTag className="mt-0.5 shrink-0 text-gray-500" />
                 <span>Organized by {organizerName}</span>
               </div>
             )}
@@ -185,7 +185,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
               Manage event
             </button>
           ) : (
-            <p className="text-center text-[11px] text-gray-400">
+            <p className="text-center text-[11px] text-gray-500">
               Only the event organizer can manage this event.
             </p>
           )}
@@ -216,7 +216,7 @@ export default function DayDetailsPanel({
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
           Selected date
         </p>
         <h3 className="mt-0.5 text-sm font-semibold text-gray-900">
@@ -244,13 +244,13 @@ export default function DayDetailsPanel({
           <p className="mt-3 text-sm font-medium text-gray-600">
             No events on this day.
           </p>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-gray-500">
             Select another date on the calendar to see its events.
           </p>
         </div>
       ) : (
         <>
-          <p className="px-5 pt-4 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="px-5 pt-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
             {events.length} event{events.length === 1 ? "" : "s"}
           </p>
           <ul className="space-y-3 p-5">

@@ -110,7 +110,7 @@ function EventCard({ event, onClick, compact = false }) {
             {event.title}
           </h4>
           {event.reference_number && (
-            <div className="mt-1 font-mono text-[10px] font-medium text-gray-400">
+            <div className="mt-1 font-mono text-[10px] font-medium text-gray-500">
               {event.reference_number}
             </div>
           )}
@@ -119,13 +119,13 @@ function EventCard({ event, onClick, compact = false }) {
             <span>{getEventDateSummary(event)}</span>
           </div>
           {event.venue && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
               <FaMapMarkerAlt className="shrink-0" />
               <span className="truncate">{event.venue}</span>
             </div>
           )}
           {event.type_of_activity && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
               <FaTag className="shrink-0" />
               <span>{event.type_of_activity}</span>
             </div>
@@ -359,7 +359,7 @@ export default function DashboardContent({ profile, userId }) {
                   />
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-500">
                   <FaCalendarAlt className="mx-auto text-3xl mb-2 opacity-40" />
                   <p className="text-sm">No events to discover right now.</p>
                 </div>
@@ -391,7 +391,7 @@ export default function DashboardContent({ profile, userId }) {
                   />
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-500">
                   <FaCalendarCheck className="mx-auto text-3xl mb-2 opacity-40" />
                   <p className="text-sm">No past events yet.</p>
                 </div>

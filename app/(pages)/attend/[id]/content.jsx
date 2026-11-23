@@ -42,7 +42,7 @@ const PARTICIPANT_TYPES = [
   { value: "Stakeholder", label: "Stakeholder", icon: FaUsers },
 ];
 
-const helperCls = "mt-1 text-[11px] text-gray-400";
+const helperCls = "mt-1 text-[11px] text-gray-500";
 
 const formatDateTime = (value) => {
   if (!value) return "";
@@ -75,7 +75,7 @@ function SectionTitle({ step, title }) {
 /* Centered state card used while loading and for not-found / cancelled. */
 function StateCard({ icon, tone = "gray", title, message }) {
   const tones = {
-    gray: "bg-gray-50 text-gray-400",
+    gray: "bg-gray-50 text-gray-500",
     red: "bg-red-50 text-red-500",
   };
   return (
@@ -554,7 +554,7 @@ export default function AttendContent() {
                         />
                         <Icon
                           className={
-                            active ? "text-secondary-600" : "text-gray-400"
+                            active ? "text-secondary-600" : "text-gray-500"
                           }
                           size={16}
                         />
@@ -686,7 +686,7 @@ export default function AttendContent() {
                 </>
               )}
             </button>
-            <p className="mt-3 text-center text-[11px] text-gray-400">
+            <p className="mt-3 text-center text-[11px] text-gray-500">
               Your details are used only for this event&apos;s attendance
               report.
             </p>

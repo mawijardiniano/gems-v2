@@ -18,7 +18,7 @@ function BudgetUtilization({ project, canManage, onEditActuals }) {
   return (
     <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
           Budget Utilization
         </p>
         {canManage && <EditButton onClick={onEditActuals}>Update</EditButton>}
@@ -37,7 +37,7 @@ function BudgetUtilization({ project, canManage, onEditActuals }) {
         />
       </div>
       {budget === 0 && (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           No GAD budget set for this project.
         </p>
       )}
@@ -51,7 +51,7 @@ function ExpenditureEvidence({ project }) {
     : [];
   return (
     <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
         <FaPaperclip className="h-3 w-3" />
         Expenditure Evidence
       </p>
@@ -64,7 +64,7 @@ function ExpenditureEvidence({ project }) {
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           No expenditure evidence uploaded.
         </p>
       )}
@@ -79,17 +79,17 @@ function ParticipantsPerEvent({ project }) {
   const indicatorProgress = aggregateIndicatorProgress(project);
   return (
     <section className="rounded-xl bg-white border border-gray-100 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
         <FaUsers className="h-3 w-3" />
         Participants per Event
       </p>
       {events.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No linked events yet.</p>
+        <p className="text-xs text-gray-500 italic">No linked events yet.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[10px] uppercase tracking-wider text-gray-400">
+              <tr className="text-[10px] uppercase tracking-wider text-gray-500">
                 <th className="text-left py-1.5 font-semibold">Event</th>
                 <th className="text-center py-1.5 font-semibold w-16">Attended</th>
               </tr>

@@ -211,7 +211,7 @@ export default function AttendanceTab(props) {
 
       <div className="flex flex-col sm:flex-row justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
           <input
             className="input !pl-9 !rounded-lg"
             type="text"
@@ -340,7 +340,7 @@ export default function AttendanceTab(props) {
             <p className="font-semibold text-gray-900 text-sm">
               {validationFilter === "all" ? "Attendance" : STATUS_META[validationFilter]?.label} — {activeRoleLabel} ({filtered.length})
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               {validationFilter === "pending"
                 ? "Check-ins waiting for organizer validation."
                 : "Only approved guests are counted in attendance and reports."}
@@ -348,7 +348,7 @@ export default function AttendanceTab(props) {
           </div>
         </div>
         {guestsLoading ? (
-          <p className="p-8 text-center text-sm text-gray-400">Loading attendance...</p>
+          <p className="p-8 text-center text-sm text-gray-500">Loading attendance...</p>
         ) : rows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="table">
@@ -433,7 +433,7 @@ export default function AttendanceTab(props) {
                           {meta.label}
                         </span>
                         {st !== "pending" && g.validation_note && (
-                          <p className="mt-1 text-[10px] text-gray-400 max-w-[140px] truncate mx-auto" title={g.validation_note}>
+                          <p className="mt-1 text-[10px] text-gray-500 max-w-[140px] truncate mx-auto" title={g.validation_note}>
                             {g.validation_note}
                           </p>
                         )}
@@ -442,9 +442,9 @@ export default function AttendanceTab(props) {
                       <td className="text-center">
                         <div className="inline-flex items-center gap-1.5">
                           {!editable ? (
-                            <span className="text-[11px] text-gray-400">—</span>
+                            <span className="text-[11px] text-gray-500">—</span>
                           ) : busyId === g._id ? (
-                            <FiLoader className="animate-spin text-gray-400" size={14} />
+                            <FiLoader className="animate-spin text-gray-500" size={14} />
                           ) : (
                             <>
                               {st !== "approved" && (
@@ -505,7 +505,7 @@ export default function AttendanceTab(props) {
                         ? "No employee attendance yet."
                         : "No attendance recorded yet."}
             </p>
-            <p className="text-gray-400 text-sm mt-1">Check-ins appear here as guests scan the QR.</p>
+            <p className="text-gray-500 text-sm mt-1">Check-ins appear here as guests scan the QR.</p>
           </div>
         )}
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
