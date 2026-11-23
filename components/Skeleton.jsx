@@ -6,7 +6,7 @@ const Skeleton = ({ className = "rounded-md", style }) => (
 
 export function StatCardSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5">
+    <div className="relative overflow-hidden rounded-xl border border-line-subtle bg-white p-5">
       <div className="skeleton absolute inset-x-0 top-0 h-1" />
       <div className="flex items-start gap-4">
         <Skeleton className="h-12 w-12 shrink-0 rounded-lg" />
@@ -30,7 +30,7 @@ export function PanelHeaderSkeleton({ className = "" }) {
 
 export function DonutChartSkeleton() {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
+    <div className="bg-white p-5 rounded-xl border border-line-subtle w-full shadow-sm">
       <Skeleton className="h-4 w-28" />
       <Skeleton className="mt-2 h-3 w-20" />
       <div className="relative mx-auto mt-4 h-[240px] w-[240px]">
@@ -53,7 +53,7 @@ export function DonutChartSkeleton() {
 
 export function BarChartSkeleton() {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
+    <div className="bg-white p-5 rounded-xl border border-line-subtle w-full shadow-sm">
       <Skeleton className="h-4 w-36" />
       <Skeleton className="mt-2 h-3 w-24" />
       <div className="mt-6 flex h-[260px] items-end gap-3 px-2">
@@ -67,7 +67,7 @@ export function BarChartSkeleton() {
 
 function PanelCardSkeleton({ children }) {
   return (
-    <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="w-full rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <PanelHeaderSkeleton />
       {children}
     </div>
@@ -105,7 +105,7 @@ export function EventCardSkeletonList({ count = 4 }) {
       {[...Array(count)].map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-xl border border-gray-100 p-4"
+          className="bg-white rounded-xl border border-line-subtle p-4"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0 space-y-2.5">

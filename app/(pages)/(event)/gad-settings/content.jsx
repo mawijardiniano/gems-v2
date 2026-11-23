@@ -123,7 +123,7 @@ const ACTION_CONFIG = {
  * reads group → card → content, never heading → heading. */
 function GroupHeading({ children }) {
   return (
-    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+    <h3 className="text-xs font-semibold uppercase tracking-wide text-fg-muted mb-3">
       {children}
     </h3>
   );
@@ -132,7 +132,7 @@ function GroupHeading({ children }) {
 function ActivityIcon({ action }) {
   const cfg = ACTION_CONFIG[action] || {
     icon: <FaSignInAlt />,
-    color: "bg-gray-100 text-gray-600",
+    color: "bg-muted text-fg-4",
   };
   return (
     <div
@@ -681,8 +681,8 @@ export default function Settings() {
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-fg">Account Settings</h1>
+        <p className="text-sm text-fg-muted mt-1">
           Your account security, the shared directory every report draws on, the
           signature block those reports print, and your activity log
         </p>
@@ -696,17 +696,17 @@ export default function Settings() {
 
         {/* Security Section */}
         <section className="mb-0">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-50">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-line-faint">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
                   <FaLock />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">
+                  <h2 className="text-base font-semibold text-fg">
                     Security
                   </h2>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-muted">
                     Manage your password and account security
                   </p>
                 </div>
@@ -716,26 +716,27 @@ export default function Settings() {
               {/* Password Info & Change Button */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-3">
-                  <button
+                  <Button
+                    variant="primary"
                     onClick={openPasswordModal}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700 transition-colors shadow-sm hover:shadow-md"
+                    className="rounded-lg"
                   >
                     <FaLock className="text-xs" />
                     Change Password
-                  </button>
-                  <div className="text-xs text-gray-500">
+                  </Button>
+                  <div className="text-xs text-fg-muted">
                     {userInfoLoading ? (
-                      <span className="text-gray-500">
+                      <span className="text-fg-muted">
                         Loading security info...
                       </span>
                     ) : (
                       <div className="space-y-2 mt-1">
                         {passwordChangedAt ? (
                           <div className="flex items-center gap-2">
-                            <FaHistory className="text-gray-500 shrink-0" />
+                            <FaHistory className="text-fg-muted shrink-0" />
                             <span>
                               Last changed:{" "}
-                              <span className="font-medium text-gray-700">
+                              <span className="font-medium text-fg-3">
                                 {formatDateTime(passwordChangedAt)}
                               </span>
                             </span>
@@ -750,10 +751,10 @@ export default function Settings() {
                         )}
                         {lastLogin && (
                           <div className="flex items-center gap-2">
-                            <FaSignInAlt className="text-gray-500 shrink-0" />
+                            <FaSignInAlt className="text-fg-muted shrink-0" />
                             <span>
                               Last login:{" "}
-                              <span className="font-medium text-gray-700">
+                              <span className="font-medium text-fg-3">
                                 {formatDateTime(lastLogin)}
                               </span>
                             </span>
@@ -847,17 +848,17 @@ export default function Settings() {
         <div id="report-output" className="mb-8 scroll-mt-24">
           <GroupHeading>Report output · printed signature block</GroupHeading>
           <section id="signatories" className="mb-0 scroll-mt-24">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50">
+            <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden">
+              <div className="px-6 py-5 border-b border-line-faint">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                     <FaUserEdit />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-fg">
                       Report Signatories
                     </h2>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-muted">
                       Names printed on the GPB and GAD-AR signature block
                     </p>
                   </div>
@@ -865,7 +866,7 @@ export default function Settings() {
               </div>
               <div className="px-6 py-5">
                 {sigLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-2 text-sm text-fg-muted">
                     <FaSpinner className="animate-spin" />
                     Loading signatories...
                   </div>
@@ -879,31 +880,31 @@ export default function Settings() {
                       name can never be lost by opening a second row. */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-gray-700">
+                        <h3 className="text-sm font-medium text-fg-3">
                           Configured years
                         </h3>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-fg-muted">
                           {sigRows.length} academic year
                           {sigRows.length === 1 ? "" : "s"}
                         </span>
                       </div>
-                      <div className="overflow-x-auto rounded-lg border border-gray-100">
+                      <div className="overflow-x-auto rounded-lg border border-line-subtle">
                         <table className="w-full text-sm">
-                          <thead className="bg-gray-50 border-b border-gray-100">
+                          <thead className="bg-subtle border-b border-line-subtle">
                             <tr>
-                              <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              <th className="text-left px-4 py-2.5 font-medium text-fg-4">
                                 Academic Year
                               </th>
-                              <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              <th className="text-left px-4 py-2.5 font-medium text-fg-4">
                                 Prepared By
                               </th>
-                              <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                              <th className="text-left px-4 py-2.5 font-medium text-fg-4">
                                 Approved By
                               </th>
                               <th className="w-20 px-4 py-2.5" />
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-50">
+                          <tbody className="divide-y divide-line-faint">
                             {sigRows.map((row) => {
                               /* The row being edited is tinted so the link between
                                the table and the form below is visible without
@@ -915,11 +916,11 @@ export default function Settings() {
                                   className={
                                     active
                                       ? "bg-secondary-50/50"
-                                      : "hover:bg-gray-50"
+                                      : "hover:bg-subtle"
                                   }
                                 >
                                   <td
-                                    className={`px-4 py-2.5 whitespace-nowrap ${active ? "font-medium text-gray-900" : "text-gray-700"}`}
+                                    className={`px-4 py-2.5 whitespace-nowrap ${active ? "font-medium text-fg" : "text-fg-3"}`}
                                   >
                                     {row.year}
                                   </td>
@@ -927,14 +928,14 @@ export default function Settings() {
                                     (name, i) => (
                                       <td key={i} className="px-4 py-2.5">
                                         {name ? (
-                                          <span className="text-gray-900">
+                                          <span className="text-fg">
                                             {name}
                                           </span>
                                         ) : (
                                           /* Same meaning as the underscore rule the
                                          reports print, in a form that reads as
                                          "not set" rather than as a name. */
-                                          <span className="text-gray-500 italic">
+                                          <span className="text-fg-muted italic">
                                             —
                                           </span>
                                         )}
@@ -972,13 +973,13 @@ export default function Settings() {
                       className="space-y-4 scroll-mt-24"
                     >
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-fg-3 mb-1">
                           Academic Year
                         </label>
                         <select
                           value={sigYear}
                           onChange={(e) => selectSigYear(e.target.value)}
-                          className="w-full sm:w-64 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                          className="w-full sm:w-64 rounded-lg border border-line px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                         >
                           <option value="">Select Academic Year</option>
                           {sigRows.map((row) => (
@@ -1006,7 +1007,7 @@ export default function Settings() {
                         },
                       ].map((field) => (
                         <div key={field.slot}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-fg-3 mb-1">
                             {field.label}
                           </label>
                           {/* ONE control, not two. The box holds the name you will
@@ -1033,11 +1034,11 @@ export default function Settings() {
                                 setTimeout(() => setSigOpenPicker(""), 150);
                               }}
                               placeholder="Type a name, or search the directory"
-                              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                              className="w-full rounded-lg border border-line px-3 py-2.5 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
                               <FaSearch
-                                className="text-xs text-gray-500"
+                                className="text-xs text-fg-muted"
                                 aria-hidden
                               />
                               {field.value && (
@@ -1046,7 +1047,7 @@ export default function Settings() {
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => field.setValue("")}
                                   aria-label={`Clear ${field.label}`}
-                                  className="touch-target p-1.5 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
+                                  className="touch-target p-1.5 rounded-md text-fg-muted hover:text-fg-4 hover:bg-muted"
                                 >
                                   <FaTimesCircle className="text-xs" />
                                 </button>
@@ -1055,10 +1056,10 @@ export default function Settings() {
 
                             {sigOpenPicker === field.slot &&
                               sigQuery.trim().length >= 2 && (
-                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-white shadow-lg">
                                   <div className="max-h-56 overflow-y-auto">
                                     {sigSearching ? (
-                                      <div className="px-3 py-2 text-xs text-gray-500 flex items-center gap-2">
+                                      <div className="px-3 py-2 text-xs text-fg-muted flex items-center gap-2">
                                         <FaSpinner className="animate-spin" />{" "}
                                         Searching...
                                       </div>
@@ -1082,7 +1083,7 @@ export default function Settings() {
                                         </button>
                                       ))
                                     ) : (
-                                      <div className="px-3 py-2 text-xs text-gray-500">
+                                      <div className="px-3 py-2 text-xs text-fg-muted">
                                         No directory match — the typed name will
                                         be used as is.
                                       </div>
@@ -1091,7 +1092,7 @@ export default function Settings() {
                                 </div>
                               )}
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-fg-muted">
                             {field.role} — pick from the directory or just type
                             a name.
                           </p>
@@ -1110,7 +1111,7 @@ export default function Settings() {
                         </div>
                       )}
 
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-fg-muted">
                         Pick a person from the directory, or type a name for
                         someone without a GEMS profile. A blank field prints an
                         underscore rule. Names are stored per academic year, so
@@ -1152,18 +1153,18 @@ export default function Settings() {
       <div id="activity" className="mb-8 scroll-mt-24">
         <GroupHeading>Your activity</GroupHeading>
         <section className="mb-0">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-50">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-line-faint">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                     <FaClipboardList />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-fg">
                       Activity Log
                     </h2>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-muted">
                       {pagination.total > 0
                         ? `${pagination.total} activity record${pagination.total !== 1 ? "s" : ""} found`
                         : "Track your recent account activity"}
@@ -1175,7 +1176,7 @@ export default function Settings() {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                     showFilters
                       ? "bg-rose-50 border-rose-200 text-rose-700"
-                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                      : "bg-white border-line text-fg-4 hover:bg-subtle"
                   }`}
                 >
                   <FaFilter className="text-xs" />
@@ -1186,16 +1187,16 @@ export default function Settings() {
 
             {/* Filters */}
             {showFilters && (
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+              <div className="px-6 py-4 bg-subtle border-b border-line-subtle">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-fg-4 mb-1">
                       Action Type
                     </label>
                     <select
                       value={filterAction}
                       onChange={(e) => setFilterAction(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white"
                     >
                       <option value="">All Actions</option>
                       <option value="LOGIN">Login</option>
@@ -1210,38 +1211,39 @@ export default function Settings() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-fg-4 mb-1">
                       From
                     </label>
                     <input
                       type="date"
                       value={filterFrom}
                       onChange={(e) => setFilterFrom(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-fg-4 mb-1">
                       To
                     </label>
                     <input
                       type="date"
                       value={filterTo}
                       onChange={(e) => setFilterTo(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
                     />
                   </div>
                   <div className="flex items-end gap-2">
-                    <button
+                    <Button
+                      variant="primary"
                       onClick={() => fetchActivities(1)}
-                      className="px-3 py-2 bg-rose-600 text-white text-xs font-medium rounded-lg hover:bg-rose-700 transition-colors"
+                      className="px-3 py-2 text-xs rounded-lg"
                     >
                       Apply
-                    </button>
+                    </Button>
                     {(filterAction || filterFrom || filterTo) && (
                       <button
                         onClick={resetFilters}
-                        className="px-3 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
+                        className="px-3 py-2 bg-white border border-line text-fg-4 text-xs font-medium rounded-lg hover:bg-subtle transition-colors flex items-center gap-1"
                       >
                         <FaRedo className="text-xs" />
                         Reset
@@ -1261,21 +1263,21 @@ export default function Settings() {
                       key={i}
                       className="flex items-center gap-3 animate-pulse"
                     >
-                      <div className="w-9 h-9 rounded-full bg-gray-200" />
+                      <div className="w-9 h-9 rounded-full bg-emphasis" />
                       <div className="flex-1 space-y-1.5">
-                        <div className="h-3 bg-gray-200 rounded w-3/4" />
-                        <div className="h-2.5 bg-gray-100 rounded w-1/4" />
+                        <div className="h-3 bg-emphasis rounded w-3/4" />
+                        <div className="h-2.5 bg-muted rounded w-1/4" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : activities.length === 0 ? (
                 <div className="text-center py-8">
-                  <FaClipboardList className="mx-auto text-gray-300 text-3xl mb-3" />
-                  <p className="text-sm text-gray-500">
+                  <FaClipboardList className="mx-auto text-fg-faint text-3xl mb-3" />
+                  <p className="text-sm text-fg-muted">
                     No activity records found.
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-fg-muted mt-1">
                     {filterAction || filterFrom || filterTo
                       ? "Try adjusting your filters."
                       : "Activity will appear here as you use the platform."}
@@ -1290,18 +1292,18 @@ export default function Settings() {
                     return (
                       <li
                         key={a._id}
-                        className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-b-0"
+                        className="flex items-start gap-3 py-3 border-b border-line-faint last:border-b-0"
                       >
                         <ActivityIcon action={a.action} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-fg">
                             {description}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-fg-muted mt-0.5">
                             {timeAgo(a.createdAt)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-2xs font-medium text-gray-500 uppercase tracking-wider">
+                        <span className="shrink-0 text-2xs font-medium text-fg-muted uppercase tracking-wider">
                           {ACTION_CONFIG[a.action]?.label || a.action}
                         </span>
                       </li>
@@ -1313,8 +1315,8 @@ export default function Settings() {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
-                <p className="text-xs text-gray-500">
+              <div className="px-6 py-4 border-t border-line-faint flex items-center justify-between">
+                <p className="text-xs text-fg-muted">
                   Page {pagination.page} of {pagination.totalPages}
                 </p>
                 <div className="flex items-center gap-1 pointer-coarse:gap-3">
@@ -1322,7 +1324,7 @@ export default function Settings() {
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page <= 1}
                     aria-label="Previous page"
-                    className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="touch-target p-1.5 rounded-lg border border-line text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaChevronLeft className="text-xs" aria-hidden="true" />
                   </button>
@@ -1341,7 +1343,7 @@ export default function Settings() {
                     .map((p, idx, arr) => (
                       <React.Fragment key={p}>
                         {idx > 0 && arr[idx - 1] !== p - 1 && (
-                          <span className="px-1 text-gray-500 text-xs">
+                          <span className="px-1 text-fg-muted text-xs">
                             ...
                           </span>
                         )}
@@ -1350,7 +1352,7 @@ export default function Settings() {
                           className={`w-7 h-7 rounded-lg text-xs font-medium ${
                             p === pagination.page
                               ? "bg-rose-600 text-white"
-                              : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                              : "border border-line text-fg-4 hover:bg-subtle"
                           }`}
                         >
                           {p}
@@ -1361,7 +1363,7 @@ export default function Settings() {
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page >= pagination.totalPages}
                     aria-label="Next page"
-                    className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="touch-target p-1.5 rounded-lg border border-line text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaChevronRight className="text-xs" aria-hidden="true" />
                   </button>
@@ -1388,10 +1390,10 @@ export default function Settings() {
           >
             <div className="p-6">
               <div className="mb-4">
-                <h3 id={passwordTitleId} className="text-lg font-semibold text-gray-900">
+                <h3 id={passwordTitleId} className="text-lg font-semibold text-fg">
                   Change Password
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-fg-muted mt-1">
                   Update your account password
                 </p>
               </div>
@@ -1411,7 +1413,7 @@ export default function Settings() {
 
               <form onSubmit={handleModalSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-fg-3">
                     Current Password
                   </label>
                   <div className="mt-1 relative">
@@ -1420,12 +1422,12 @@ export default function Settings() {
                       type={showCurrent ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrent((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-rose-600 hover:text-rose-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-700 hover:text-secondary-800"
                     >
                       {showCurrent ? "Hide" : "Show"}
                     </button>
@@ -1433,7 +1435,7 @@ export default function Settings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-fg-3">
                     New Password
                   </label>
                   <div className="mt-1 relative">
@@ -1441,23 +1443,23 @@ export default function Settings() {
                       type={showNew ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNew((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-rose-600 hover:text-rose-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-700 hover:text-secondary-800"
                     >
                       {showNew ? "Hide" : "Show"}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-fg-muted mt-1">
                     At least 8 characters. Include letters and numbers.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-fg-3">
                     Confirm New Password
                   </label>
                   <div className="mt-1 relative">
@@ -1465,12 +1467,12 @@ export default function Settings() {
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-rose-600 hover:text-rose-700"
+                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-700 hover:text-secondary-800"
                     >
                       {showConfirm ? "Hide" : "Show"}
                     </button>
@@ -1485,13 +1487,14 @@ export default function Settings() {
                   >
                     Cancel
                   </Button>
-                  <button
+                  <Button
+                    variant="primary"
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2.5 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
+                    className="rounded-lg"
                   >
                     {loading ? "Saving..." : "Change Password"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -1514,7 +1517,6 @@ export default function Settings() {
             </Button>
             <Button
               variant="primary"
-              className="bg-rose-600 hover:bg-rose-700"
               onClick={performChange}
             >
               Confirm
@@ -1522,7 +1524,7 @@ export default function Settings() {
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           Are you sure you want to change your password? This action will
           update your account credentials immediately.
         </p>

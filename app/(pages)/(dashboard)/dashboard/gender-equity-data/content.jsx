@@ -34,14 +34,14 @@ const PWD_TYPES = [
 
 function DetailCard({ icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-xl border border-line-subtle p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-          <p className="text-base font-semibold text-gray-900 mt-1 truncate">{value || "—"}</p>
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">{label}</p>
+          <p className="text-base font-semibold text-fg mt-1 truncate">{value || "—"}</p>
         </div>
       </div>
     </div>
@@ -190,7 +190,7 @@ export default function GenderEquityDataContent({ profile }) {
     if (!isEditing) return null;
     return (
       <select
-        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+        className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         value={value}
         onChange={(e) => handleChange(key, e.target.value)}
       >
@@ -207,7 +207,7 @@ export default function GenderEquityDataContent({ profile }) {
     if (!isEditing) return null;
     return (
       <select
-        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+        className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         value={value}
         onChange={(e) => handleChange(key, e.target.value)}
       >
@@ -238,8 +238,8 @@ export default function GenderEquityDataContent({ profile }) {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gender and Development (GAD) Data</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your gender equity and demographic information</p>
+            <h1 className="text-2xl font-bold text-fg">Gender and Development (GAD) Data</h1>
+            <p className="text-sm text-fg-muted mt-1">Manage your gender equity and demographic information</p>
           </div>
           <div className="flex items-center gap-3">
             {isEditing && (
@@ -255,7 +255,7 @@ export default function GenderEquityDataContent({ profile }) {
               }}
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
-                  ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? "bg-white border-line text-fg-4 hover:bg-subtle"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
@@ -276,7 +276,7 @@ export default function GenderEquityDataContent({ profile }) {
             <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaBalanceScale />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">GAD Profile</h2>
+            <h2 className="text-lg font-semibold text-fg">GAD Profile</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {gadCards.map((card, i) => (
@@ -288,53 +288,53 @@ export default function GenderEquityDataContent({ profile }) {
 
       {/* Edit Mode */}
       {isEditing && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="px-8 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+          <div className="px-8 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaBalanceScale />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">GAD Information</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Update your gender equity and demographic details</p>
+                <h2 className="text-base font-semibold text-fg">GAD Information</h2>
+                <p className="text-xs text-fg-muted mt-0.5">Update your gender equity and demographic details</p>
               </div>
             </div>
           </div>
           <div className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Sex at Birth <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Sex at Birth <span className="text-red-400">*</span></label>
                 {renderSelect("Sex at Birth", "sexAtBirth", SEX_AT_BIRTH)}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Gender Preference <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Gender Preference <span className="text-red-400">*</span></label>
                 {renderSelect("Gender Preference", "gender_preference", GENDER_PREFERENCE)}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">PWD <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">PWD <span className="text-red-400">*</span></label>
                 {renderYesNo("PWD", "isPWD")}
               </div>
               {formData.isPWD === "true" && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">PWD Type</label>
+                  <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">PWD Type</label>
                   {renderSelect("PWD Type", "pwd_type", PWD_TYPES)}
                 </div>
               )}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Indigenous Person <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Indigenous Person <span className="text-red-400">*</span></label>
                 {renderYesNo("Indigenous Person", "isIndigenousPerson")}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Socio-economic Status <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Socio-economic Status <span className="text-red-400">*</span></label>
                 {renderSelect("Socio-economic Status", "socioEconomicStatus", SOCIO_ECONOMIC)}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Head of Household <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Head of Household <span className="text-red-400">*</span></label>
                 {!isEditing ? (
-                  <p className="text-sm font-semibold text-gray-900 py-3">{formData.headOfHousehold || "—"}</p>
+                  <p className="text-sm font-semibold text-fg py-3">{formData.headOfHousehold || "—"}</p>
                 ) : (
                   <input
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                    className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.headOfHousehold}
                     onChange={(e) => handleChange("headOfHousehold", e.target.value)}
                   />

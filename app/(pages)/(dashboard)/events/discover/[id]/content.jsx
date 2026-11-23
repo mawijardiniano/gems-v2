@@ -83,7 +83,7 @@ export default function DiscoverEventContent() {
 
   if (loading) {
     return (
-      <div className="p-6 text-center text-gray-500">Loading event...</div>
+      <div className="p-6 text-center text-fg-muted">Loading event...</div>
     );
   }
 
@@ -96,7 +96,7 @@ export default function DiscoverEventContent() {
 
         <button
           onClick={() => router.push("/events/discover")}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
+          className="px-4 py-2 border rounded hover:bg-muted"
         >
           Back to Discover
         </button>
@@ -106,7 +106,7 @@ export default function DiscoverEventContent() {
 
   if (!event) {
     return (
-      <div className="p-6 text-center text-gray-500">Event not found.</div>
+      <div className="p-6 text-center text-fg-muted">Event not found.</div>
     );
   }
 
@@ -172,14 +172,14 @@ export default function DiscoverEventContent() {
 
           <div className=" space-y-3">
             {isPast(event) && (
-              <p className="text-sm text-gray-500">This event has ended.</p>
+              <p className="text-sm text-fg-muted">This event has ended.</p>
             )}
           </div>
 
           {event.description && (
-            <div className="p-4 bg-white rounded border border-gray-200">
+            <div className="p-4 bg-white rounded border border-line">
               <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line">
+              <p className="text-fg-3 whitespace-pre-line">
                 {event.description}
               </p>
             </div>

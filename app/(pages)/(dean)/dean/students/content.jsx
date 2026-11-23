@@ -630,10 +630,10 @@ export default function StudentsUserListContent({ college }) {
           { label: "Blood Type", value: personal.bloodType },
         ].map((field) => (
           <div key={field.label}>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
               {field.label}
             </label>
-            <p className="mt-1 text-sm font-medium text-gray-900">
+            <p className="mt-1 text-sm font-medium text-fg">
               {field.value || "—"}
             </p>
           </div>
@@ -645,25 +645,25 @@ export default function StudentsUserListContent({ college }) {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
               Email
             </label>
-            <p className="mt-1 text-sm font-medium text-gray-900">
+            <p className="mt-1 text-sm font-medium text-fg">
               {contact.email || "—"}
             </p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
               Mobile Number
             </label>
-            <p className="mt-1 text-sm font-medium text-gray-900">
+            <p className="mt-1 text-sm font-medium text-fg">
               {contact.mobileNumber || "—"}
             </p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-fg-3 mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-secondary-500"></span>
             Permanent Address
           </h4>
@@ -675,10 +675,10 @@ export default function StudentsUserListContent({ college }) {
               { label: "Barangay", value: permanentAddr.barangay?.name },
             ].map((field) => (
               <div key={field.label}>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
                   {field.label}
                 </label>
-                <p className="mt-1 text-sm font-medium text-gray-900">
+                <p className="mt-1 text-sm font-medium text-fg">
                   {field.value || "—"}
                 </p>
               </div>
@@ -687,7 +687,7 @@ export default function StudentsUserListContent({ college }) {
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-fg-3 mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
             Current Address
           </h4>
@@ -699,10 +699,10 @@ export default function StudentsUserListContent({ college }) {
               { label: "Barangay", value: currentAddr.barangay?.name },
             ].map((field) => (
               <div key={field.label}>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
                   {field.label}
                 </label>
-                <p className="mt-1 text-sm font-medium text-gray-900">
+                <p className="mt-1 text-sm font-medium text-fg">
                   {field.value || "—"}
                 </p>
               </div>
@@ -739,10 +739,10 @@ export default function StudentsUserListContent({ college }) {
           { label: "Head of Household", value: gad.headOfHousehold },
         ].map((field) => (
           <div key={field.label}>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
               {field.label}
             </label>
-            <p className="mt-1 text-sm font-medium text-gray-900">
+            <p className="mt-1 text-sm font-medium text-fg">
               {field.value || "—"}
             </p>
           </div>
@@ -761,10 +761,10 @@ export default function StudentsUserListContent({ college }) {
           { label: "Scholarship Status", value: acad.isScholar },
         ].map((field) => (
           <div key={field.label}>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-fg-muted uppercase tracking-wide">
               {field.label}
             </label>
-            <p className="mt-1 text-sm font-medium text-gray-900">
+            <p className="mt-1 text-sm font-medium text-fg">
               {field.value || "—"}
             </p>
           </div>
@@ -788,19 +788,19 @@ export default function StudentsUserListContent({ college }) {
           aria-labelledby={viewTitleId}
           className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4"
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line-subtle sticky top-0 bg-white z-10 rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                 {(personal.first_name?.[0] || "").toUpperCase()}
                 {(personal.last_name?.[0] || "").toUpperCase()}
               </div>
               <div>
-                <h2 id={viewTitleId} className="text-lg font-semibold text-gray-900">
+                <h2 id={viewTitleId} className="text-lg font-semibold text-fg">
                   {personal.first_name || ""}{" "}
                   {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
                   {personal.last_name || ""}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-fg-muted">
                   {acad.college || ""}
                   {acad.course ? ` • ${acad.course}` : ""}
                   {acad.year_level ? ` • ${acad.year_level}` : ""}
@@ -814,14 +814,14 @@ export default function StudentsUserListContent({ college }) {
                 setViewModalUser(null);
                 setViewTab("personal");
               }}
-              className="touch-target w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+              className="touch-target w-8 h-8 rounded-full bg-muted hover:bg-emphasis flex items-center justify-center text-fg-muted hover:text-fg-3 transition"
             >
               <FaTimes size={14} />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="px-6 border-b border-gray-100">
+          <div className="px-6 border-b border-line-subtle">
             <div className="flex gap-1 -mb-px">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -832,7 +832,7 @@ export default function StudentsUserListContent({ college }) {
                     className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
                       viewTab === tab.id
                         ? "border-secondary-600 text-secondary-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        : "border-transparent text-fg-muted hover:text-fg-3 hover:border-line-strong"
                     }`}
                   >
                     <Icon size={14} />
@@ -845,7 +845,7 @@ export default function StudentsUserListContent({ college }) {
 
           <div className="px-6 py-5">{tabContent[viewTab]}</div>
 
-          <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+          <div className="px-6 py-4 border-t border-line-subtle flex justify-end">
             <Button
               variant="secondary"
               onClick={() => {
@@ -898,14 +898,14 @@ export default function StudentsUserListContent({ college }) {
         </div>
       </div>
       <div className="flex items-center justify-between mb-2">
-        <div className="text-sm text-gray-500">
-          <span className="font-medium text-gray-700">{totalRows}</span> student
+        <div className="text-sm text-fg-muted">
+          <span className="font-medium text-fg-3">{totalRows}</span> student
           {totalRows !== 1 ? "s" : ""}
         </div>
         <div className="relative w-full max-w-xs">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
-              className="w-4 h-4 text-gray-500"
+              className="w-4 h-4 text-fg-muted"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -923,11 +923,11 @@ export default function StudentsUserListContent({ college }) {
             placeholder="Search by name..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-secondary-400 focus:ring-2 focus:ring-secondary-100 outline-none transition"
+            className="w-full pl-10 pr-4 py-2 border border-line rounded-lg text-sm text-fg-3 placeholder-gray-400 bg-white focus:border-secondary-400 focus:ring-2 focus:ring-secondary-100 outline-none transition"
           />
         </div>
       </div>
-      <div className="flex items-center justify-between mb-3 p-3 bg-white border border-gray-200 rounded-lg">
+      <div className="flex items-center justify-between mb-3 p-3 bg-white border border-line rounded-lg">
         <div>
           <p className="text-sm font-medium text-black">
             Generate Sex-Disaggregated Data Report (Students)
@@ -957,9 +957,9 @@ export default function StudentsUserListContent({ college }) {
           </Button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-line">
         <Table className="bg-white" striped={false} color="none">
-          <TableHead className="bg-white text-gray-500 border-b border-gray-200">
+          <TableHead className="bg-white text-fg-muted border-b border-line">
             <TableRow>
               <TableHeadCell
                 className="cursor-pointer select-none px-4 py-3 text-xs font-semibold uppercase tracking-wider"
@@ -971,14 +971,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      nameSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      nameSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      nameSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      nameSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -995,14 +995,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      sexSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      sexSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      sexSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      sexSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -1019,14 +1019,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      collegeSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      collegeSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      collegeSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      collegeSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -1043,14 +1043,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      campusSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      campusSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      campusSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      campusSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -1067,14 +1067,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      courseSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      courseSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      courseSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      courseSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -1091,14 +1091,14 @@ export default function StudentsUserListContent({ college }) {
                 <span className="ml-1.5 text-xs">
                   <span
                     className={
-                      yearSort === "asc" ? "text-secondary-600" : "text-gray-300"
+                      yearSort === "asc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▲
                   </span>
                   <span
                     className={
-                      yearSort === "desc" ? "text-secondary-600" : "text-gray-300"
+                      yearSort === "desc" ? "text-secondary-600" : "text-fg-faint"
                     }
                   >
                     ▼
@@ -1115,7 +1115,7 @@ export default function StudentsUserListContent({ college }) {
               )}
             </TableRow>
           </TableHead>
-          <TableBody className="divide-y divide-gray-100">
+          <TableBody className="divide-y divide-line-subtle">
             {paginatedData.map((user, index) => {
               const p = user.personal_info_id || {};
               const personal = p.personal || {};
@@ -1124,9 +1124,9 @@ export default function StudentsUserListContent({ college }) {
               return (
                 <TableRow
                   key={user._id || index}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-subtle transition-colors"
                 >
-                  <TableCell className="px-4 py-3 text-sm text-gray-800">
+                  <TableCell className="px-4 py-3 text-sm text-fg-2">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-secondary-50 flex items-center justify-center text-xs font-semibold text-secondary-600 shrink-0">
                         {(personal.first_name?.[0] || "?").toUpperCase()}
@@ -1137,7 +1137,7 @@ export default function StudentsUserListContent({ college }) {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-gray-600">
+                  <TableCell className="px-4 py-3 text-sm text-fg-4">
                     {gad.sexAtBirth
                       ? gad.sexAtBirth.toLowerCase() === "male"
                         ? "Male"
@@ -1146,22 +1146,22 @@ export default function StudentsUserListContent({ college }) {
                           : gad.sexAtBirth
                       : "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-gray-600 max-w-[160px] truncate">
+                  <TableCell className="px-4 py-3 text-sm text-fg-4 max-w-[160px] truncate">
                     {acad.college || "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-gray-600">
+                  <TableCell className="px-4 py-3 text-sm text-fg-4">
                     {acad.campus || "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-gray-600 max-w-[180px] truncate">
+                  <TableCell className="px-4 py-3 text-sm text-fg-4 max-w-[180px] truncate">
                     {acad.course || "—"}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-gray-600">
+                  <TableCell className="px-4 py-3 text-sm text-fg-4">
                     {acad.year_level || "—"}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-center">
                     <button
                       onClick={() => setViewModalUser(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-fg-4 border border-line hover:bg-subtle hover:border-line-strong transition"
                     >
                       <FaEye size={12} />
                       View
@@ -1172,7 +1172,7 @@ export default function StudentsUserListContent({ college }) {
                       <div className="flex items-center gap-1.5 justify-center">
                         <button
                           onClick={() => handleEdit(user._id)}
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-fg-4 border border-line hover:bg-subtle transition"
                         >
                           Edit
                         </button>
@@ -1229,8 +1229,8 @@ export default function StudentsUserListContent({ college }) {
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <p className="text-sm text-gray-500">No students found</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm text-fg-muted">No students found</p>
+                    <p className="text-xs text-fg-muted">
                       Try adjusting your search or filters
                     </p>
                   </div>
@@ -1242,7 +1242,7 @@ export default function StudentsUserListContent({ college }) {
       </div>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Rows per page:</span>
+          <span className="text-sm text-fg-muted">Rows per page:</span>
           <input
             type="number"
             min={1}
@@ -1260,22 +1260,22 @@ export default function StudentsUserListContent({ college }) {
             onKeyDown={(e) => {
               if (e.key === "Enter") e.target.blur();
             }}
-            className="w-16 border border-gray-200 rounded px-2 py-1 text-sm"
+            className="w-16 border border-line rounded px-2 py-1 text-sm"
           />
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
+            className="px-3 py-1.5 text-sm border border-line rounded-lg disabled:opacity-40 hover:bg-subtle transition"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
             Prev
           </button>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-fg-4">
             Page {page} of {totalPages}
           </span>
           <button
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
+            className="px-3 py-1.5 text-sm border border-line rounded-lg disabled:opacity-40 hover:bg-subtle transition"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >
@@ -1326,7 +1326,7 @@ export default function StudentsUserListContent({ college }) {
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           {confirmAction?.type === "reset"
             ? "This will reset the user's password to the default value."
             : confirmAction?.isActive

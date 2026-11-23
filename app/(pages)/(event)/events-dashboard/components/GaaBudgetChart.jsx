@@ -23,18 +23,18 @@ export default function GaaBudgetChart({ dashboard }) {
   } = dashboard;
 
   return (
-    <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-gray-50">
+    <div className="lg:col-span-2 rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
+      <div className="p-5 border-b border-line-faint">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-secondary-600" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-fg">
                 GAA Budget per Year
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Budget attached to each year's GPB
               </p>
             </div>

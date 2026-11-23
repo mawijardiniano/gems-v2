@@ -287,7 +287,7 @@ export default function ManualEncodeModal({
         aria-modal="true"
         aria-labelledby="manual-encode-title"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-line-subtle px-5 py-4">
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
               <FiUserPlus size={16} />
@@ -295,11 +295,11 @@ export default function ManualEncodeModal({
             <div>
               <h2
                 id="manual-encode-title"
-                className="text-sm font-semibold text-gray-900"
+                className="text-sm font-semibold text-fg"
               >
                 Manual Encode
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Record attendance without a QR scan
                 {eventTitle ? ` for ${eventTitle}` : ""}.
               </p>
@@ -310,7 +310,7 @@ export default function ManualEncodeModal({
             aria-label="Close manual encode"
             onClick={closeIfIdle}
             disabled={saving}
-            className="touch-target rounded-lg p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-600"
+            className="touch-target rounded-lg p-1.5 text-fg-muted transition hover:bg-muted hover:text-fg-4"
           >
             <FiX size={16} />
           </button>
@@ -333,7 +333,7 @@ export default function ManualEncodeModal({
                   className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
                     active
                       ? "border-secondary-600 bg-secondary-50 text-secondary-700"
-                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                      : "border-line bg-white text-fg-muted hover:border-line-strong hover:text-fg-3"
                   }`}
                 >
                   <Icon size={13} />
@@ -341,7 +341,7 @@ export default function ManualEncodeModal({
                 </button>
               );
             })}
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-fg-muted">
               {TYPES.find((t) => t.key === type)?.hint}
             </span>
           </div>
@@ -349,7 +349,7 @@ export default function ManualEncodeModal({
           {/* Search */}
           <div className="relative">
             <FiSearch
-              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
               size={14}
             />
             <input
@@ -367,7 +367,7 @@ export default function ManualEncodeModal({
             />
             {searching && (
               <FiLoader
-                className="absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-gray-500"
+                className="absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-fg-muted"
                 size={14}
               />
             )}
@@ -377,20 +377,20 @@ export default function ManualEncodeModal({
 
 
           {/* Results */}
-          <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-100">
+          <div className="max-h-72 overflow-y-auto rounded-xl border border-line-subtle">
             {term.length < MIN_QUERY ? (
-              <p className="px-4 py-10 text-center text-sm text-gray-500">
+              <p className="px-4 py-10 text-center text-sm text-fg-muted">
                 Type at least {MIN_QUERY} letters to search {type.toLowerCase()}{" "}
                 records.
               </p>
             ) : visibleResults.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-gray-500">
+              <p className="px-4 py-10 text-center text-sm text-fg-muted">
                 {searching
                   ? "Searching records..."
                   : `No matching ${type.toLowerCase()} records.`}
               </p>
             ) : (
-              <ul className="divide-y divide-gray-100">
+              <ul className="divide-y divide-line-subtle">
                 {visibleResults.map((person) => {
                   const name =
                     fullNameOf(person) || person.username || "Unknown";
@@ -404,10 +404,10 @@ export default function ManualEncodeModal({
                       }`}
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-gray-900">
+                        <p className="truncate text-sm font-medium text-fg">
                           {name}
                         </p>
-                        <p className="truncate text-xs text-gray-500">
+                        <p className="truncate text-xs text-fg-muted">
                           {[person.username, details]
                             .filter(Boolean)
                             .join(" • ") || "No details on record"}
@@ -422,7 +422,7 @@ export default function ManualEncodeModal({
                         className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                           active
                             ? "border-secondary-600 bg-secondary-600 text-white"
-                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800"
+                            : "border-line bg-white text-fg-4 hover:border-line-strong hover:text-fg-2"
                         }`}
                       >
                         {active ? (
@@ -499,7 +499,7 @@ export default function ManualEncodeModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-slate-50 px-5 py-3">
+        <div className="flex items-center justify-end gap-2 border-t border-line-subtle bg-slate-50 px-5 py-3">
           <Button
             type="button"
             onClick={closeIfIdle}

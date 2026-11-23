@@ -55,13 +55,13 @@ const EventStatusBadge = ({ event }) => {
 const PAGE_SIZE = 60;
 
 const SkeletonCard = () => (
-  <div className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse">
-    <div className="h-44 bg-gray-200" />
+  <div className="rounded-xl border border-line-subtle bg-white overflow-hidden animate-pulse">
+    <div className="h-44 bg-emphasis" />
     <div className="p-5 space-y-3">
-      <div className="h-5 bg-gray-200 rounded w-3/4" />
-      <div className="h-4 bg-gray-200 rounded w-1/2" />
-      <div className="h-4 bg-gray-200 rounded w-full" />
-      <div className="h-4 bg-gray-200 rounded w-2/3" />
+      <div className="h-5 bg-emphasis rounded w-3/4" />
+      <div className="h-4 bg-emphasis rounded w-1/2" />
+      <div className="h-4 bg-emphasis rounded w-full" />
+      <div className="h-4 bg-emphasis rounded w-2/3" />
     </div>
   </div>
 );
@@ -200,8 +200,8 @@ export default function EventsListContent() {
     const when = formatEventWhen(evt);
     if (!when) return null;
     return (
-      <div className="flex items-center gap-2 text-gray-600">
-        <FaCalendar className="text-gray-500 shrink-0" size={12} />
+      <div className="flex items-center gap-2 text-fg-4">
+        <FaCalendar className="text-fg-muted shrink-0" size={12} />
         <span>{when}</span>
       </div>
     );
@@ -211,8 +211,8 @@ export default function EventsListContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-secondary-50 p-6">
         <div className="max-w-8xl mx-auto space-y-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-          <div className="h-5 w-64 bg-gray-200 rounded animate-pulse" />
+          <div className="h-8 w-48 bg-emphasis rounded animate-pulse" />
+          <div className="h-5 w-64 bg-emphasis rounded animate-pulse" />
           <div className="grid gap-6 md:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <SkeletonCard key={i} />
@@ -229,10 +229,10 @@ export default function EventsListContent() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg">
               Events
             </h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-fg-muted text-sm mt-1">
               Browse and manage your university events
             </p>
           </div>
@@ -255,12 +255,12 @@ export default function EventsListContent() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm p-4">
           <div className="flex flex-wrap gap-3 items-center">
-            <FaFilter className="text-gray-500" size={14} />
+            <FaFilter className="text-fg-muted" size={14} />
             <div className="relative">
               <select
-                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
+                className="appearance-none bg-subtle border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
                 aria-label="Filter by year"
@@ -273,14 +273,14 @@ export default function EventsListContent() {
                 ))}
               </select>
               <FaChevronDown
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
                 size={12}
               />
             </div>
 
             <div className="relative">
               <select
-                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
+                className="appearance-none bg-subtle border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
                 aria-label="Filter by activity type"
@@ -293,7 +293,7 @@ export default function EventsListContent() {
                 ))}
               </select>
               <FaChevronDown
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
                 size={12}
               />
             </div>
@@ -304,13 +304,13 @@ export default function EventsListContent() {
                   setActivityType("");
                   setSelectedYear("");
                 }}
-                className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2"
+                className="text-xs text-fg-muted hover:text-fg-3 underline underline-offset-2"
               >
                 Clear filters
               </button>
             )}
 
-            <span className="ml-auto text-sm text-gray-500">
+            <span className="ml-auto text-sm text-fg-muted">
               {total > events.length
                 ? `Showing ${events.length} of ${total} events`
                 : `${events.length} event${events.length !== 1 ? "s" : ""}`}
@@ -322,13 +322,13 @@ export default function EventsListContent() {
         <section>
           {events.length === 0 ? (
             <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <FaSearch className="text-gray-500" size={24} />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <FaSearch className="text-fg-muted" size={24} />
               </div>
-              <p className="text-gray-500 text-lg font-medium">
+              <p className="text-fg-muted text-lg font-medium">
                 No events found
               </p>
-              <p className="text-gray-500 text-sm mt-1">
+              <p className="text-fg-muted text-sm mt-1">
                 Try adjusting your filters or create a new event
               </p>
             </div>
@@ -337,7 +337,7 @@ export default function EventsListContent() {
               {events.map((evt, index) => (
                 <div
                   key={evt._id}
-                  className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl transition duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
+                  className="group relative bg-white rounded-xl border border-line-subtle shadow-sm hover:shadow-xl transition duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Top color accent bar */}
@@ -362,11 +362,11 @@ export default function EventsListContent() {
                     {/* Title + Type Badge */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-secondary-600 transition-colors line-clamp-2">
+                        <h3 className="text-lg font-semibold leading-snug text-fg group-hover:text-secondary-600 transition-colors line-clamp-2">
                           {evt.title}
                         </h3>
                         {evt.reference_number && (
-                          <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
+                          <span className="mt-1 inline-block rounded border border-line bg-subtle px-1.5 py-0.5 font-mono text-2xs font-medium text-fg-muted">
                             {evt.reference_number}
                           </span>
                         )}
@@ -386,9 +386,9 @@ export default function EventsListContent() {
 
                     {/* Venue */}
                     {evt.venue && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-sm text-fg-muted">
                         <FaLocationArrow
-                          className="text-gray-500 shrink-0"
+                          className="text-fg-muted shrink-0"
                           size={12}
                         />
                         <span className="truncate">{evt.venue}</span>
@@ -398,10 +398,10 @@ export default function EventsListContent() {
                     {/* GAD Activity */}
                     {evt.gad_activity && (
                       <div className="text-sm">
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium text-fg-3">
                           GAD Activity:
                         </span>{" "}
-                        <span className="text-gray-500">
+                        <span className="text-fg-muted">
                           {evt.gad_activity}
                         </span>
                       </div>
@@ -409,14 +409,14 @@ export default function EventsListContent() {
 
                     {/* Description */}
                     {evt.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                      <p className="text-sm text-fg-muted line-clamp-2 leading-relaxed">
                         {evt.description}
                       </p>
                     )}
 
                     {/* Manage Button */}
                     <div className="pt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <div className="flex items-center gap-1.5 text-xs text-fg-muted">
                         <FaUsers size={12} />
                         <span>
                           {evt.attended_count || 0} participant
@@ -444,18 +444,18 @@ export default function EventsListContent() {
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-fg-3 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-fg-muted">
                 Page {page} of {totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-fg-3 transition-colors hover:border-secondary-300 hover:text-secondary-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
               </button>

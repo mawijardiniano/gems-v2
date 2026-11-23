@@ -135,12 +135,12 @@ export default function SubmitProfile() {
   };
 
   const SummaryCard = ({ icon, title, children }) => (
-    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-      <div className="flex items-center gap-2 px-5 py-3 bg-gray-50 border-b border-gray-100">
+    <div className="bg-white border border-line-subtle rounded-xl overflow-hidden shadow-sm">
+      <div className="flex items-center gap-2 px-5 py-3 bg-subtle border-b border-line-subtle">
         <div className="w-7 h-7 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
           {icon}
         </div>
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        <h3 className="text-sm font-semibold text-fg-2">{title}</h3>
       </div>
       <div className="px-5 py-3">
         {children}
@@ -149,9 +149,9 @@ export default function SubmitProfile() {
   );
 
   const Field = ({ label, value }) => (
-    <div className="flex justify-between py-1.5 border-b border-gray-50 last:border-0">
-      <span className="text-xs text-gray-500">{label}</span>
-      <span className="text-xs font-medium text-gray-800 text-right max-w-[60%] truncate">{value || "—"}</span>
+    <div className="flex justify-between py-1.5 border-b border-line-faint last:border-0">
+      <span className="text-xs text-fg-muted">{label}</span>
+      <span className="text-xs font-medium text-fg-2 text-right max-w-[60%] truncate">{value || "—"}</span>
     </div>
   );
 
@@ -159,7 +159,7 @@ export default function SubmitProfile() {
     return (
       <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
         <div className="w-full max-w-lg">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 py-8 text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                 <FaCheckCircle className="text-white text-2xl" />
@@ -176,12 +176,12 @@ export default function SubmitProfile() {
                 </p>
                 <div className="space-y-3">
                   <div className="bg-white rounded-lg px-4 py-3 border border-secondary-100">
-                    <p className="text-xs text-gray-500">Username</p>
-                    <p className="text-sm font-bold text-gray-900 font-mono">{credentials.username}</p>
+                    <p className="text-xs text-fg-muted">Username</p>
+                    <p className="text-sm font-bold text-fg font-mono">{credentials.username}</p>
                   </div>
                   <div className="bg-white rounded-lg px-4 py-3 border border-secondary-100">
-                    <p className="text-xs text-gray-500">Temporary Password</p>
-                    <p className="text-sm font-bold text-gray-900 font-mono">{credentials.temporary_password}</p>
+                    <p className="text-xs text-fg-muted">Temporary Password</p>
+                    <p className="text-sm font-bold text-fg font-mono">{credentials.temporary_password}</p>
                   </div>
                 </div>
                 <p className="text-xs text-secondary-600 mt-3">
@@ -209,7 +209,7 @@ export default function SubmitProfile() {
       <div className="max-w-4xl mx-auto">
         <Progress />
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
@@ -293,7 +293,7 @@ export default function SubmitProfile() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+          <div className="px-6 py-4 bg-subtle border-t border-line-subtle flex justify-between items-center">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}

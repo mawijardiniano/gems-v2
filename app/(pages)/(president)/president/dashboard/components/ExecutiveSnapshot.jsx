@@ -16,18 +16,18 @@ const fmt = (n) =>
 
 function Card({ icon: Icon, label, value, sub, bar, href, linkLabel, tint }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-xl border border-line-subtle bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${tint}`} />
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-transform duration-300 group-hover:scale-110">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-subtle text-fg-4 transition-transform duration-300 group-hover:scale-110">
           <Icon className="text-lg" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
             {label}
           </p>
-          <div className="mt-1 text-2xl font-bold text-gray-900">{value}</div>
-          {sub && <p className="mt-1 text-xs text-gray-500">{sub}</p>}
+          <div className="mt-1 text-2xl font-bold text-fg">{value}</div>
+          {sub && <p className="mt-1 text-xs text-fg-muted">{sub}</p>}
           {bar}
           {href && (
             <Link
@@ -46,7 +46,7 @@ function Card({ icon: Icon, label, value, sub, bar, href, linkLabel, tint }) {
 function MiniBar({ pct, from = "bg-secondary-500", to = "bg-secondary-500" }) {
   if (pct === null || pct === undefined) return null;
   return (
-    <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+    <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
       <div
         className={`${from} transition-all duration-500`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
@@ -72,12 +72,12 @@ function ExecutiveSnapshot({ snapshot, useSample }) {
       ? `${fmt(Math.round(((s.femaleStudentsPct || 0) / 100) * s.totalStudents))} F students of ${fmt(s.totalStudents)}${s.lgbtqia ? ` · ${fmt(s.lgbtqia)} LGBTQIA+` : ""}`
       : `${fmt(s.femaleCount)} F · ${fmt(s.maleCount)} M${s.lgbtqia ? ` · ${fmt(s.lgbtqia)} LGBTQIA+` : ""}`;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Executive Snapshot
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           {useSample
             ? "Sample headcount and parity — project & budget cards are live-only and hidden"
             : "University-wide headcount, parity and GAD delivery at a glance"}
@@ -113,9 +113,9 @@ function ExecutiveSnapshot({ snapshot, useSample }) {
           tint="from-secondary-600 to-secondary-400"
         />
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-fg-muted">
         <span>
-          <FaUsers className="mr-1 inline text-gray-500" />
+          <FaUsers className="mr-1 inline text-fg-muted" />
           Total population {fmt(total)}
         </span>
         <span>PWD {fmt(s.pwdCount)}</span>

@@ -82,13 +82,13 @@ export default function ParticipantBreakdown({ project }) {
   const colors = tab === "sex" ? SEX_COLORS : SECTOR_COLORS;
 
   return (
-    <section className="rounded-xl bg-white border border-gray-100 p-4">
+    <section className="rounded-xl bg-white border border-line-subtle p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted flex items-center gap-1.5">
           <FaChartPie className="h-3 w-3" />
           Participant Breakdown
         </p>
-        <div className="inline-flex rounded-lg bg-gray-100 p-0.5">
+        <div className="inline-flex rounded-lg bg-muted p-0.5">
           {TABS.map((item) => (
             <button
               key={item.key}
@@ -100,7 +100,7 @@ export default function ParticipantBreakdown({ project }) {
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 tab === item.key
                   ? "bg-white text-rose-700 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-fg-muted hover:text-fg-3"
               }`}
             >
               {item.label}
@@ -110,7 +110,7 @@ export default function ParticipantBreakdown({ project }) {
       </div>
 
       {breakdown.totalAttended === 0 ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           {breakdown.eventCount === 0
             ? "No linked events yet."
             : "No attendance recorded yet for this project's events."}
@@ -152,10 +152,10 @@ export default function ParticipantBreakdown({ project }) {
               />
             </PieChart>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-fg">
                 {breakdown.totalAttended}
               </span>
-              <span className="text-2xs uppercase tracking-wider text-gray-500">
+              <span className="text-2xs uppercase tracking-wider text-fg-muted">
                 Total
               </span>
             </div>
@@ -165,17 +165,17 @@ export default function ParticipantBreakdown({ project }) {
             {data.map((row) => (
               <li
                 key={row.name}
-                className="flex items-center gap-2 text-xs text-gray-700"
+                className="flex items-center gap-2 text-xs text-fg-3"
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: colors[row.name] || SERIES.slate }}
                 />
                 <span>{row.name}</span>
-                <span className="ml-auto font-semibold text-gray-900">
+                <span className="ml-auto font-semibold text-fg">
                   {row.value}
                 </span>
-                <span className="w-14 text-right text-gray-500">
+                <span className="w-14 text-right text-fg-muted">
                   {pct(row.value, breakdown.totalAttended)}%
                 </span>
               </li>
@@ -188,7 +188,7 @@ export default function ParticipantBreakdown({ project }) {
         breakdown.eventCount > 0 ||
         indicatorProgress.needsEncoding) && (
         <ParticipantTargetProgress
-          className="mt-4 border-t border-gray-100 pt-3"
+          className="mt-4 border-t border-line-subtle pt-3"
           actual={indicatorProgress.actualTotal}
           target={indicatorProgress.targetTotal}
           emptyMessage={targetEmptyMessage}
@@ -196,7 +196,7 @@ export default function ParticipantBreakdown({ project }) {
       )}
 
       {breakdown.totalAttended > 0 && (
-        <p className="mt-3 text-xs text-gray-500">
+        <p className="mt-3 text-xs text-fg-muted">
           Aggregated from {breakdown.eventCount} linked event
           {breakdown.eventCount !== 1 ? "s" : ""}
           {tab === "sector"

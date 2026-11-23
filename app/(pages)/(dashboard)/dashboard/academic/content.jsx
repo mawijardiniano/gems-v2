@@ -93,14 +93,14 @@ const SCHOLAR_STATUS = ["Yes", "No"];
 
 function DetailCard({ icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-xl border border-line-subtle p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-          <p className="text-base font-semibold text-gray-900 mt-1 truncate">{value || "—"}</p>
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">{label}</p>
+          <p className="text-base font-semibold text-fg mt-1 truncate">{value || "—"}</p>
         </div>
       </div>
     </div>
@@ -237,7 +237,7 @@ export default function AcademicContent() {
   if (loading) return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3 text-gray-500">
+        <div className="flex items-center gap-3 text-fg-muted">
           <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm">Loading academic information...</p>
         </div>
@@ -248,7 +248,7 @@ export default function AcademicContent() {
   if (!profile) return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       <div className="text-center py-20">
-        <p className="text-gray-500">No profile found.</p>
+        <p className="text-fg-muted">No profile found.</p>
       </div>
     </div>
   );
@@ -284,8 +284,8 @@ export default function AcademicContent() {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Academic Information</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your student academic details</p>
+            <h1 className="text-2xl font-bold text-fg">Academic Information</h1>
+            <p className="text-sm text-fg-muted mt-1">Manage your student academic details</p>
           </div>
           <div className="flex items-center gap-3">
             {isEditing && (
@@ -310,7 +310,7 @@ export default function AcademicContent() {
               }}
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
-                  ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? "bg-white border-line text-fg-4 hover:bg-subtle"
                   : "bg-success-subtle border-success-border text-success hover:bg-emerald-100 hover:border-emerald-300"
               }`}
             >
@@ -331,7 +331,7 @@ export default function AcademicContent() {
             <div className="w-10 h-10 rounded-xl bg-success-subtle flex items-center justify-center text-success">
               <FaGraduationCap />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Academic Profile</h2>
+            <h2 className="text-lg font-semibold text-fg">Academic Profile</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {academicCards.map((card, i) => (
@@ -343,32 +343,32 @@ export default function AcademicContent() {
 
       {/* Edit Mode */}
       {isEditing && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="px-8 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+          <div className="px-8 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-success-subtle flex items-center justify-center text-success">
                 <FaGraduationCap />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Academic Details</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Update your student academic information</p>
+                <h2 className="text-base font-semibold text-fg">Academic Details</h2>
+                <p className="text-xs text-fg-muted mt-0.5">Update your student academic information</p>
               </div>
             </div>
           </div>
           <div className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Student ID <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Student ID <span className="text-red-400">*</span></label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.student_id}
                   onChange={(e) => handleChange("student_id", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Campus <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Campus <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.campus}
                   onChange={(e) => handleChange("campus", e.target.value)}
                 >
@@ -377,9 +377,9 @@ export default function AcademicContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">College <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">College <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.college}
                   onChange={(e) => handleCollegeChange(e.target.value)}
                 >
@@ -388,9 +388,9 @@ export default function AcademicContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Course <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Course <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   value={formData.course}
                   onChange={(e) => handleChange("course", e.target.value)}
                   disabled={!formData.college}
@@ -402,9 +402,9 @@ export default function AcademicContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Year Level <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Year Level <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.year_level}
                   onChange={(e) => handleChange("year_level", e.target.value)}
                 >
@@ -413,9 +413,9 @@ export default function AcademicContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Scholarship Status <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Scholarship Status <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.isScholar}
                   onChange={(e) => handleChange("isScholar", e.target.value)}
                 >

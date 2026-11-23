@@ -7,34 +7,34 @@ function CollegeRanking({ ranking }) {
   const rows = Array.isArray(ranking) ? ranking : [];
   const max = rows.reduce((m, r) => Math.max(m, r.total || 0), 0) || 1;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-fg">
           Largest Colleges & Offices
         </h2>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <p className="mt-0.5 text-xs text-fg-muted">
           Headcount by unit — female share highlighted
         </p>
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No units to rank.</p>
+        <p className="text-xs text-fg-muted italic">No units to rank.</p>
       ) : (
         <ul className="space-y-3">
           {rows.map((r, i) => (
             <li key={`${r.kind}-${r.unit}`}>
               <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="min-w-0 truncate font-medium text-gray-800">
-                  <span className="mr-1.5 text-gray-500">{i + 1}.</span>
+                <span className="min-w-0 truncate font-medium text-fg-2">
+                  <span className="mr-1.5 text-fg-muted">{i + 1}.</span>
                   {r.unit}
-                  <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">
+                  <span className="ml-1.5 rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-fg-muted">
                     {r.kind}
                   </span>
                 </span>
-                <span className="shrink-0 text-gray-500">
+                <span className="shrink-0 text-fg-muted">
                   {(r.total || 0).toLocaleString()} · {r.pctFemale}% F
                 </span>
               </div>
-              <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="bg-secondary-500"
                   style={{ width: `${((r.female || 0) / max) * 100}%` }}
@@ -48,7 +48,7 @@ function CollegeRanking({ ranking }) {
           ))}
         </ul>
       )}
-      <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
+      <div className="mt-3 flex items-center gap-3 text-xs text-fg-muted">
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />Female</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-400" />Male</span>
       </div>

@@ -240,7 +240,7 @@ function formatDate(dateStr) {
 
 function DetailCard({ icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-xl border border-line-subtle p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div
           className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}
@@ -248,10 +248,10 @@ function DetailCard({ icon, label, value, color }) {
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-base font-semibold text-gray-900 mt-1 truncate">
+          <p className="text-base font-semibold text-fg mt-1 truncate">
             {value || "—"}
           </p>
         </div>
@@ -528,7 +528,7 @@ export default function PersonalInformationContent({ profile }) {
         <select
           value={value || ""}
           onChange={(e) => handleChange(key, e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+          className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         >
           <option value="">Select {label}</option>
           {options.map((opt) => (
@@ -546,7 +546,7 @@ export default function PersonalInformationContent({ profile }) {
     return (
       <input
         type={inputType}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+        className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         value={value || ""}
         onChange={(e) => handleChange(key, e.target.value)}
         {...(key === "birthday" ? { max: maxDate } : {})}
@@ -570,7 +570,7 @@ export default function PersonalInformationContent({ profile }) {
           : "focus:ring-secondary-200 focus:border-secondary-300";
     return isEditing ? (
       <select
-        className={`w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition disabled:opacity-60 disabled:cursor-not-allowed`}
+        className={`w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition disabled:opacity-60 disabled:cursor-not-allowed`}
         value={value}
         onChange={onChange}
         disabled={disabled}
@@ -585,7 +585,7 @@ export default function PersonalInformationContent({ profile }) {
         ))}
       </select>
     ) : (
-      <p className="text-sm font-semibold text-gray-900 py-2.5">
+      <p className="text-sm font-semibold text-fg py-2.5">
         {value || "—"}
       </p>
     );
@@ -600,12 +600,12 @@ export default function PersonalInformationContent({ profile }) {
           : "focus:ring-secondary-200 focus:border-secondary-300";
     return isEditing ? (
       <input
-        className={`w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition`}
+        className={`w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 ${focusRing} transition`}
         value={value}
         onChange={onChange}
       />
     ) : (
-      <p className="text-sm font-semibold text-gray-900 py-2.5">
+      <p className="text-sm font-semibold text-fg py-2.5">
         {value || "—"}
       </p>
     );
@@ -680,10 +680,10 @@ export default function PersonalInformationContent({ profile }) {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-fg">
               Personal Information
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-fg-muted mt-1">
               Manage your personal profile details
             </p>
           </div>
@@ -706,7 +706,7 @@ export default function PersonalInformationContent({ profile }) {
               }}
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
-                  ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? "bg-white border-line text-fg-4 hover:bg-subtle"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
@@ -731,7 +731,7 @@ export default function PersonalInformationContent({ profile }) {
             <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaUser />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-fg">
               Basic Information
             </h2>
           </div>
@@ -745,17 +745,17 @@ export default function PersonalInformationContent({ profile }) {
 
       {/* Personal Information - Edit Mode */}
       {isEditing && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="px-8 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+          <div className="px-8 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaUser />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-fg">
                   Basic Information
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-fg-muted mt-0.5">
                   Update your personal details
                 </p>
               </div>
@@ -764,41 +764,41 @@ export default function PersonalInformationContent({ profile }) {
           <div className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   First Name <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.first_name}
                   onChange={(e) => handleChange("first_name", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Middle Name
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.middle_name}
                   onChange={(e) => handleChange("middle_name", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Last Name <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.last_name}
                   onChange={(e) => handleChange("last_name", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Civil Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.civil_status}
                   onChange={(e) => handleChange("civil_status", e.target.value)}
                 >
@@ -811,11 +811,11 @@ export default function PersonalInformationContent({ profile }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Religion <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.religion}
                   onChange={(e) => handleChange("religion", e.target.value)}
                 >
@@ -829,11 +829,11 @@ export default function PersonalInformationContent({ profile }) {
               </div>
               {formData.religion === "Other" && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                     Specify Religion
                   </label>
                   <input
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                    className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     placeholder="Please specify your religion"
                     value={formData.religion_other || ""}
                     onChange={(e) =>
@@ -843,21 +843,21 @@ export default function PersonalInformationContent({ profile }) {
                 </div>
               )}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Nationality
                 </label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.nationality}
                   onChange={(e) => handleChange("nationality", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Current Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.currentStatus}
                   onChange={(e) =>
                     handleChange("currentStatus", e.target.value)
@@ -872,23 +872,23 @@ export default function PersonalInformationContent({ profile }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Birthday <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="date"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.birthday}
                   onChange={(e) => handleChange("birthday", e.target.value)}
                   max={new Date().toISOString().split("T")[0]}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Blood Type <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.bloodType}
                   onChange={(e) => handleChange("bloodType", e.target.value)}
                 >
@@ -907,17 +907,17 @@ export default function PersonalInformationContent({ profile }) {
 
       {/* Academic Information */}
       {(isEditing ? formData.currentStatus === "Student" : statusChanged) && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="px-8 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+          <div className="px-8 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-success-subtle flex items-center justify-center text-success">
                 <FaGraduationCap />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-fg">
                   Academic Information
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-fg-muted mt-0.5">
                   Student academic details
                 </p>
               </div>
@@ -926,7 +926,7 @@ export default function PersonalInformationContent({ profile }) {
           <div className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Student ID
                 </label>
                 {renderInput(
@@ -937,7 +937,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Campus
                 </label>
                 {renderSelect(
@@ -949,7 +949,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   College
                 </label>
                 {renderSelect(
@@ -961,7 +961,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Course
                 </label>
                 {renderSelect(
@@ -974,7 +974,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Year Level
                 </label>
                 {renderSelect(
@@ -986,7 +986,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Scholarship Status
                 </label>
                 {renderSelect(
@@ -1004,17 +1004,17 @@ export default function PersonalInformationContent({ profile }) {
 
       {/* Employment Information */}
       {(isEditing ? formData.currentStatus === "Employee" : statusChanged) && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="px-8 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+          <div className="px-8 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaBriefcase />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-fg">
                   Employment Information
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-fg-muted mt-0.5">
                   Employee work details
                 </p>
               </div>
@@ -1023,7 +1023,7 @@ export default function PersonalInformationContent({ profile }) {
           <div className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Employee ID
                 </label>
                 {renderInput(
@@ -1034,7 +1034,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Office
                 </label>
                 {renderSelect(
@@ -1046,7 +1046,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Employment Status
                 </label>
                 {renderSelect(
@@ -1061,7 +1061,7 @@ export default function PersonalInformationContent({ profile }) {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">
                   Appointment Status
                 </label>
                 {renderSelect(

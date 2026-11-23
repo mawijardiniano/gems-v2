@@ -76,21 +76,21 @@ export default function ProjectDeleteModal({
         </div>
 
         <div className="space-y-2">
-          <h2 id="project-delete-title" className="text-xl font-bold text-gray-900">
+          <h2 id="project-delete-title" className="text-xl font-bold text-fg">
             Delete this project?
           </h2>
-          <p className="text-sm text-gray-600 break-words">
-            <span className="font-medium text-gray-900">{title}</span>
+          <p className="text-sm text-fg-4 break-words">
+            <span className="font-medium text-fg">{title}</span>
             {project?.reference_number && (
               <>
                 <br />
-                <span className="text-xs text-gray-500 font-mono">
+                <span className="text-xs text-fg-muted font-mono">
                   {project.reference_number}
                 </span>
               </>
             )}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-fg-muted">
             The project and its budget entries will be permanently removed.
             Linked events stay in the calendar. This cannot be undone.
           </p>

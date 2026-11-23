@@ -73,7 +73,7 @@ export default function ApprovalTab({ project, canManage, onSaved }) {
 
   return (
     <div className="max-w-3xl animate-fade-in" role="tabpanel">
-      <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+      <section className="rounded-xl bg-white border border-line-subtle p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <FieldLabel>Approval Details</FieldLabel>
           {canManage && !editing && (
@@ -126,7 +126,7 @@ export default function ApprovalTab({ project, canManage, onSaved }) {
               value={otherDetails}
             />
             {!canManage && (
-              <p className="text-xs text-gray-500 italic">
+              <p className="text-xs text-fg-muted italic">
                 Only the project creator or a GAD Focal Person can update the
                 approval details.
               </p>

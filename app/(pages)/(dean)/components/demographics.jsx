@@ -104,7 +104,7 @@ function InlineLegend({ data, colors }) {
       {data.map((entry, i) => (
         <div
           key={entry.name}
-          className="flex items-center gap-1.5 text-xs text-gray-600"
+          className="flex items-center gap-1.5 text-xs text-fg-4"
         >
           <span
             className="inline-block h-2 w-2 rounded-full shrink-0"
@@ -130,9 +130,9 @@ function PieCard({
 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -172,9 +172,9 @@ function HorzBarCard({
 }) {
   const total = data.reduce((s, d) => s + (d[dataKey] || 0), 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -217,9 +217,9 @@ function HorzBarCard({
 function VertBarCard({ title, data, height = 240 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -256,9 +256,9 @@ function GenderBarCard({ title, data, height = 260 }) {
     0,
   );
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -304,9 +304,9 @@ function GenderHorzBarCard({ title, data, height = 300 }) {
     0,
   );
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -376,12 +376,12 @@ export default function Demographics({
     });
 
     return (
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-fg">
             Demographic & Employment Profile
           </h2>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <p className="mt-0.5 text-sm text-fg-muted">
             Personnel and occupational overview
           </p>
         </div>
@@ -411,11 +411,11 @@ export default function Demographics({
 
         {!isEmployeeFilter && serverStudentYearCourseData && serverStudentYearCourseData.length > 0 && (
           <div className="mb-6">
-            <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-fg mb-1">
                 Students by Year Level and Course
               </h3>
-              <p className="mb-3 text-xs text-gray-500">
+              <p className="mb-3 text-xs text-fg-muted">
                 {(studentCount || 0).toLocaleString()} total
               </p>
               <ResponsiveContainer width="100%" height={280}>
@@ -621,12 +621,12 @@ export default function Demographics({
   );
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Demographic & Employment Profile
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Personnel and occupational overview
         </p>
       </div>
@@ -655,11 +655,11 @@ export default function Demographics({
 
       {!isEmployeeFilter && (
         <div className="mb-6">
-          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+          <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-fg mb-1">
               Students by Year Level and Course
             </h3>
-            <p className="mb-3 text-xs text-gray-500">
+            <p className="mb-3 text-xs text-fg-muted">
               {collegeFilteredStudents.length.toLocaleString()} total
             </p>
             <ResponsiveContainer width="100%" height={280}>

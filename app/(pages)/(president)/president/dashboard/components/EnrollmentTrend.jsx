@@ -23,18 +23,18 @@ function EnrollmentTrend({ trend }) {
       ? Math.round(((last.students - first.students) / first.students) * 1000) / 10
       : null;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-fg">
           5-Year Population Trend
         </h2>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <p className="mt-0.5 text-xs text-fg-muted">
           Students + employees per school year
           {growth !== null ? ` · ${growth >= 0 ? "+" : ""}${growth}% students since ${first.year}` : ""}
         </p>
       </div>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No trend data.</p>
+        <p className="text-xs text-fg-muted italic">No trend data.</p>
       ) : (
         <div className="h-[240px]">
           <ResponsiveContainer width="100%" height="100%">

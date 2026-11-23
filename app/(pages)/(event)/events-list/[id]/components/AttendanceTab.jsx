@@ -209,7 +209,7 @@ export default function AttendanceTab(props) {
 
       <div className="flex flex-col sm:flex-row justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted" size={14} />
           <input
             className="input !pl-9 !rounded-lg"
             type="text"
@@ -263,12 +263,12 @@ export default function AttendanceTab(props) {
             className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
               guestTypeFilter === role.key
                 ? "border-secondary-600 bg-secondary-50 text-secondary-700"
-                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                : "border-line bg-white text-fg-muted hover:border-line-strong hover:text-fg-3"
             }`}
           >
             {role.label}
             <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
-              guestTypeFilter === role.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
+              guestTypeFilter === role.key ? "bg-secondary-600 text-white" : "bg-muted text-fg-4"
             }`}>
               {roleCounts[role.key] || 0}
             </span>
@@ -289,12 +289,12 @@ export default function AttendanceTab(props) {
             className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
               validationFilter === tab.key
                 ? "border-secondary-600 bg-secondary-50 text-secondary-700"
-                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                : "border-line bg-white text-fg-muted hover:border-line-strong hover:text-fg-3"
             }`}
           >
             {tab.label}
             <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
-              validationFilter === tab.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
+              validationFilter === tab.key ? "bg-secondary-600 text-white" : "bg-muted text-fg-4"
             }`}>
               {tab.count}
             </span>
@@ -321,7 +321,7 @@ export default function AttendanceTab(props) {
               disabled={bulkBusy || selected.length === 0}
               onClick={() => { setRejectTarget(selected); setRejectNote(""); }}
               variant="secondary"
-              className="!py-2 !px-3 !text-xs !rounded-lg !text-rose-600"
+              className="!py-2 !px-3 !text-xs !rounded-lg !text-danger"
             >
               <FiX size={13} /> Reject selected
             </Button>
@@ -331,16 +331,16 @@ export default function AttendanceTab(props) {
 
       {actionError && <div className="alert-error text-sm">{actionError}</div>}
 
-      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+      <div className="rounded-xl border border-line-subtle bg-white shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-line-subtle">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success-subtle text-success">
             <FiUsers size={16} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-sm">
+            <p className="font-semibold text-fg text-sm">
               {validationFilter === "all" ? "Attendance" : STATUS_META[validationFilter]?.label} — {activeRoleLabel} ({filtered.length})
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-fg-muted">
               {validationFilter === "pending"
                 ? "Check-ins waiting for organizer validation."
                 : "Only approved guests are counted in attendance and reports."}
@@ -348,7 +348,7 @@ export default function AttendanceTab(props) {
           </div>
         </div>
         {guestsLoading ? (
-          <p className="p-8 text-center text-sm text-gray-500">Loading attendance...</p>
+          <p className="p-8 text-center text-sm text-fg-muted">Loading attendance...</p>
         ) : rows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="table">
@@ -405,8 +405,8 @@ export default function AttendanceTab(props) {
                           />
                         ) : null}
                       </td>
-                      <td className="text-gray-500">{(currentPage - 1) * pageSize + idx + 1}</td>
-                      <td className="font-medium text-gray-900">
+                      <td className="text-fg-muted">{(currentPage - 1) * pageSize + idx + 1}</td>
+                      <td className="font-medium text-fg">
                         {g.full_name}
                         {g.source === "manual-encode" && (
                           <span className="ml-2 inline-flex items-center rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-xs font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
@@ -433,7 +433,7 @@ export default function AttendanceTab(props) {
                           {meta.label}
                         </span>
                         {st !== "pending" && g.validation_note && (
-                          <p className="mt-1 text-xs text-gray-500 max-w-[140px] truncate mx-auto" title={g.validation_note}>
+                          <p className="mt-1 text-xs text-fg-muted max-w-[140px] truncate mx-auto" title={g.validation_note}>
                             {g.validation_note}
                           </p>
                         )}
@@ -442,9 +442,9 @@ export default function AttendanceTab(props) {
                       <td className="text-center">
                         <div className="inline-flex items-center gap-1.5 pointer-coarse:gap-3">
                           {!editable ? (
-                            <span className="text-xs text-gray-500">—</span>
+                            <span className="text-xs text-fg-muted">—</span>
                           ) : busyId === g._id ? (
-                            <FiLoader className="animate-spin text-gray-500" size={14} />
+                            <FiLoader className="animate-spin text-fg-muted" size={14} />
                           ) : (
                             <>
                               {st !== "approved" && (
@@ -462,7 +462,7 @@ export default function AttendanceTab(props) {
                                   title="Reject"
                                   aria-label={`Reject ${g.full_name}`}
                                   onClick={() => { setRejectTarget([g._id]); setRejectNote(""); }}
-                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-danger-border bg-danger-subtle text-danger hover:bg-red-100"
                                 >
                                   <FiX size={13} />
                                 </button>
@@ -472,7 +472,7 @@ export default function AttendanceTab(props) {
                                   title="Return to pending"
                                   aria-label={`Return ${g.full_name} to pending`}
                                   onClick={() => handleSingle(g._id, "reset")}
-                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-subtle text-fg-muted hover:bg-muted"
                                 >
                                   <FiClock size={13} />
                                 </button>
@@ -492,7 +492,7 @@ export default function AttendanceTab(props) {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-success-subtle mb-4">
               <FaUserCheck className="text-emerald-500" size={24} />
             </div>
-            <p className="text-gray-500 font-medium">
+            <p className="text-fg-muted font-medium">
               {validationFilter === "pending"
                 ? "No check-ins awaiting validation."
                 : validationFilter === "rejected"
@@ -505,11 +505,11 @@ export default function AttendanceTab(props) {
                         ? "No employee attendance yet."
                         : "No attendance recorded yet."}
             </p>
-            <p className="text-gray-500 text-sm mt-1">Check-ins appear here as guests scan the QR.</p>
+            <p className="text-fg-muted text-sm mt-1">Check-ins appear here as guests scan the QR.</p>
           </div>
         )}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+        <div className="flex items-center justify-between px-4 py-3 border-t border-line-subtle">
+          <span className="text-sm text-fg-muted">Page {currentPage} of {totalPages}</span>
           <div className="flex items-center gap-2">
             <Button variant="secondary" className="touch-target !py-1.5 !px-2.5 !rounded-lg" aria-label="Previous page" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
               <FiChevronLeft size={14} aria-hidden="true" />
@@ -542,8 +542,8 @@ export default function AttendanceTab(props) {
               Cancel
             </Button>
             <Button
-              variant="primary"
-              className="!rounded-lg !bg-rose-600"
+              variant="danger"
+              className="!rounded-lg"
               disabled={rejecting}
               onClick={async () => {
                 if (rejecting) return;

@@ -46,17 +46,17 @@ export default function ReportForm({ report }) {
     <div className="space-y-6 animate-fade-in">
       <form
         onSubmit={handleSubmit}
-        className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm space-y-8"
+        className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm space-y-8"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
             <FiFileText size={18} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-fg">
               Post-Activity Report
             </h3>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-0.5 text-sm text-fg-muted">
               Submit the official report for this event
             </p>
           </div>
@@ -101,14 +101,14 @@ export default function ReportForm({ report }) {
         </div>
 
         <div>
-          <p className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-500">
+          <p className="mb-4 text-xs font-medium uppercase tracking-wider text-fg-muted">
             Required Documents
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {singleFileFields.map((field) => (
               <div
                 key={field.key}
-                className="rounded-xl border border-gray-100 bg-slate-50/50 p-4"
+                className="rounded-xl border border-line-subtle bg-slate-50/50 p-4"
               >
                 <label className="label">
                   {field.label} <span className="text-danger">*</span>
@@ -139,7 +139,7 @@ export default function ReportForm({ report }) {
                     <FileThumb
                       file={files[field.key]}
                       alt={field.label}
-                      className="w-24 h-24 object-cover rounded-xl border border-gray-200 shadow-sm"
+                      className="w-24 h-24 object-cover rounded-xl border border-line shadow-sm"
                     />
                     <button
                       type="button"
@@ -187,7 +187,7 @@ export default function ReportForm({ report }) {
                 <div key={i} className="relative group">
                   <img
                     src={p.url}
-                    className="w-24 h-24 object-cover rounded-xl border border-gray-200 shadow-sm"
+                    className="w-24 h-24 object-cover rounded-xl border border-line shadow-sm"
                     alt={`photo-${i}`}
                   />
                   <button
@@ -206,7 +206,7 @@ export default function ReportForm({ report }) {
         <div>
           <label className="label">
             Other Attachments{" "}
-            <span className="text-gray-500 font-normal">(optional)</span>
+            <span className="text-fg-muted font-normal">(optional)</span>
           </label>
           <div className="file-input">
             <input
@@ -230,9 +230,9 @@ export default function ReportForm({ report }) {
               {files.other_attachments.map((file, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm bg-white"
+                  className="flex items-center gap-3 rounded-xl border border-line px-4 py-3 text-sm bg-white"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-subtle text-fg-muted">
                     <FiPaperclip size={14} />
                   </span>
                   <a
@@ -256,7 +256,7 @@ export default function ReportForm({ report }) {
           )}
         </div>
 
-        <div className="flex gap-3 justify-end pt-5 border-t border-gray-100">
+        <div className="flex gap-3 justify-end pt-5 border-t border-line-subtle">
           {isEditing && (
             <Button
               type="button"

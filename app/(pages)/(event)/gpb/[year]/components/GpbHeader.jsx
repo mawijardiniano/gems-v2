@@ -45,7 +45,7 @@ export default function GpbHeader({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h2 className="text-2xl sm:text-3xl font-bold text-fg">
               GPB Year {year}
             </h2>
             {gpbStatus?.scanned_copy?.url && (
@@ -67,10 +67,10 @@ export default function GpbHeader({
           </div>
 
           {gpbStatus?.reason && (
-            <p className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
-              <FiInfo className="h-3.5 w-3.5 text-gray-500 shrink-0 mt-0.5" />
+            <p className="flex items-start gap-1.5 text-sm text-fg-muted mt-2">
+              <FiInfo className="h-3.5 w-3.5 text-fg-muted shrink-0 mt-0.5" />
               <span>
-                <span className="font-medium text-gray-600">Reason:</span>{" "}
+                <span className="font-medium text-fg-4">Reason:</span>{" "}
                 {gpbStatus.reason}
               </span>
             </p>

@@ -40,7 +40,7 @@ export default function Progress() {
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
                       : isActive
                       ? "bg-secondary-600 text-white shadow-md shadow-secondary-200 ring-4 ring-secondary-100"
-                      : "bg-gray-100 text-gray-500"
+                      : "bg-muted text-fg-muted"
                   }`}
                 >
                   {isCompleted ? (
@@ -55,7 +55,7 @@ export default function Progress() {
                       ? "text-secondary-600"
                       : isCompleted
                       ? "text-success"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }`}
                 >
                   {step.label}
@@ -64,7 +64,7 @@ export default function Progress() {
               {idx < STEPS.length - 1 && (
                 <div
                   className={`flex-1 h-0.5 mx-3 rounded transition-all duration-500 ${
-                    idx < visualIndex ? "bg-emerald-400" : "bg-gray-200"
+                    idx < visualIndex ? "bg-emerald-400" : "bg-emphasis"
                   }`}
                 />
               )}
@@ -76,7 +76,7 @@ export default function Progress() {
       {/* Mobile progress indicator */}
       <div className="md:hidden">
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="flex-1 h-2 bg-emphasis rounded-full overflow-hidden">
             <div
               className="h-full bg-secondary-600 transition-all duration-500 ease-out rounded-full"
               style={{ width: `${(visualIndex / (STEPS.length - 1)) * 100}%` }}
@@ -86,7 +86,7 @@ export default function Progress() {
             {visualIndex + 1}/{STEPS.length}
           </span>
         </div>
-        <p className="text-xs text-gray-500 font-medium text-center">
+        <p className="text-xs text-fg-muted font-medium text-center">
           {STEPS[visualIndex]?.label || "Step"}
         </p>
       </div>

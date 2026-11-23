@@ -117,7 +117,7 @@ export default function EmployeeFilterTable({
         {collegeOpen && (
           <div className="absolute z-10 mt-1 w-64 bg-white border rounded shadow max-h-48 overflow-auto p-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">Select Offices</span>
+              <span className="text-sm text-fg-4">Select Offices</span>
               <button
                 type="button"
                 onClick={() => setFilterCollege([])}
@@ -129,7 +129,7 @@ export default function EmployeeFilterTable({
             {collegeOptions.map((c) => (
               <label
                 key={c}
-                className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded"
+                className="flex items-center gap-2 p-1 hover:bg-subtle rounded"
               >
                 <input
                   type="checkbox"
@@ -184,7 +184,7 @@ export default function EmployeeFilterTable({
         {appointmentOpen && (
           <div className="absolute z-10 mt-1 w-64 bg-white border rounded shadow max-h-48 overflow-auto p-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-fg-4">
                 Select Appointment Status
               </span>
               <button
@@ -198,7 +198,7 @@ export default function EmployeeFilterTable({
             {appointmentOptions.map((a) => (
               <label
                 key={a}
-                className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded"
+                className="flex items-center gap-2 p-1 hover:bg-subtle rounded"
               >
                 <input
                   type="checkbox"

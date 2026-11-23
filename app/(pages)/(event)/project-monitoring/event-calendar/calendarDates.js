@@ -57,8 +57,8 @@ const STATUS_STYLES = {
   past: {
     label: "Past",
     dot: "bg-gray-400",
-    chip: "bg-gray-50 text-gray-600 hover:bg-gray-100",
-    cls: "bg-gray-50 text-gray-600 border-gray-200",
+    chip: "bg-subtle text-fg-4 hover:bg-muted",
+    cls: "bg-subtle text-fg-4 border-line",
   },
   ongoing: {
     label: "Ongoing",
@@ -75,8 +75,8 @@ const STATUS_STYLES = {
   unknown: {
     label: "Unknown",
     dot: "bg-gray-400",
-    chip: "bg-gray-50 text-gray-600 hover:bg-gray-100",
-    cls: "bg-gray-50 text-gray-600 border-gray-200",
+    chip: "bg-subtle text-fg-4 hover:bg-muted",
+    cls: "bg-subtle text-fg-4 border-line",
   },
 };
 

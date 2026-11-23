@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 import { formatPeso } from "@/data/lib/money";
 import { fileKeyOf } from "@/data/lib/eventFileKeys";
 import {
@@ -225,14 +226,14 @@ export default function ActualsEncoderModal({
         aria-labelledby="actuals-modal-title"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h3 id="actuals-modal-title" className="text-base font-bold text-gray-900">
+        <div className="sticky top-0 bg-white border-b border-line-subtle px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+          <h3 id="actuals-modal-title" className="text-base font-bold text-fg">
             Update Actuals
           </h3>
           <button
             type="button"
             onClick={closeAndCleanup}
-            className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="touch-target h-8 w-8 rounded-lg text-fg-muted hover:bg-muted hover:text-fg-4 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />
@@ -248,16 +249,16 @@ export default function ActualsEncoderModal({
           )}
 
           {/* Budget Utilization — planned vs actual, expenditure and evidence */}
-          <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
             Budget Utilization
           </p>
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="rounded-lg bg-subtle border border-line-subtle px-3 py-2.5">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                 {budgetLabel}
               </p>
-              <p className="text-sm font-bold text-gray-900 mt-0.5">
+              <p className="text-sm font-bold text-fg mt-0.5">
                 {fmtPeso(plannedBudget)}
               </p>
             </div>
@@ -295,7 +296,7 @@ export default function ActualsEncoderModal({
 
           {plannedBudget > 0 && (
             <div>
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <div className="flex justify-between text-xs text-fg-muted mb-1">
                 <span>Utilization</span>
                 <span
                   className={`font-semibold ${
@@ -305,7 +306,7 @@ export default function ActualsEncoderModal({
                   {utilization}%
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     utilization > 100 ? "bg-red-500" : "bg-emerald-500"
@@ -318,7 +319,7 @@ export default function ActualsEncoderModal({
 
           {/* Expenditures */}
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+            <label className="text-xs font-medium text-fg-muted mb-1.5 block">
               Actual Expenditures (₱) <span className="text-danger">*</span>
             </label>
             <input
@@ -327,7 +328,7 @@ export default function ActualsEncoderModal({
               step="0.01"
               value={expenditures}
               onChange={(e) => setExpenditures(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
               placeholder="0.00"
             />
             {spent > 0 && evidence.length === 0 && (
@@ -340,13 +341,13 @@ export default function ActualsEncoderModal({
 
           {/* Evidence */}
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+            <label className="text-xs font-medium text-fg-muted mb-1.5 block">
               Expenditure Evidence{" "}
-              <span className="text-gray-500">
+              <span className="text-fg-muted">
                 (PDF, JPG, PNG — up to 10MB each)
               </span>
             </label>
-            <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
+            <label className="inline-flex items-center gap-2 rounded-lg border border-dashed border-line-strong px-4 py-2 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 cursor-pointer transition-colors">
               {evidenceUploading ? (
                 <FaSpinner
                   className="animate-spin text-secondary-500"
@@ -371,17 +372,17 @@ export default function ActualsEncoderModal({
                 {evidence.map((file, i) => (
                   <li
                     key={file.key || i}
-                    className="flex items-center gap-2 pointer-coarse:gap-5 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2"
+                    className="flex items-center gap-2 pointer-coarse:gap-5 rounded-lg border border-line-subtle bg-subtle/60 px-3 py-2"
                   >
-                    <FaPaperclip size={11} className="text-gray-500 shrink-0" />
-                    <span className="text-xs text-gray-700 truncate flex-1">
+                    <FaPaperclip size={11} className="text-fg-muted shrink-0" />
+                    <span className="text-xs text-fg-3 truncate flex-1">
                       {file.name || file.key}
                     </span>
                     <a
                       href={getEvidenceDownloadUrl(file) || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="touch-target text-gray-500 hover:text-secondary-600 transition-colors"
+                      className="touch-target text-fg-muted hover:text-secondary-600 transition-colors"
                       title="Download"
                     >
                       <FaDownload size={11} />
@@ -389,7 +390,7 @@ export default function ActualsEncoderModal({
                     <button
                       type="button"
                       onClick={() => removeEvidenceFile(file)}
-                      className="touch-target text-gray-500 hover:text-danger transition-colors"
+                      className="touch-target text-fg-muted hover:text-danger transition-colors"
                       title="Remove"
                     >
                       <FaTrash size={11} />
@@ -401,11 +402,11 @@ export default function ActualsEncoderModal({
           </div>
 
           {/* Actual Accomplishment — auto-generated from linked events unless overridden */}
-          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5 space-y-2.5">
+          <div className="rounded-xl border border-line-subtle bg-subtle/50 p-3.5 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <label className="text-xs font-medium text-gray-600">
+              <label className="text-xs font-medium text-fg-4">
                 Actual Accomplishment{" "}
-                <span className="text-gray-500 normal-case">
+                <span className="text-fg-muted normal-case">
                   (
                   {isOverride
                     ? "custom text saved"
@@ -423,7 +424,7 @@ export default function ActualsEncoderModal({
                       ? "Replace the custom text with the auto-generated summary"
                       : "No linked events to generate from yet"
                   }
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-medium text-fg-4 transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaRedo size={9} />
                   Reset to auto-generated
@@ -442,11 +443,11 @@ export default function ActualsEncoderModal({
                 /* Any edit becomes the project owner's custom version. */
                 setIsOverride(true);
               }}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
               placeholder="Actual accomplishments for this project…"
             />
             {!isOverride && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Updates automatically whenever a linked event is added, edited
                 or cancelled. Type in the box to keep a custom version instead.
               </p>
@@ -454,23 +455,23 @@ export default function ActualsEncoderModal({
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
-          <button
-            type="button"
+        <div className="sticky bottom-0 bg-white border-t border-line-subtle px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
+          <Button
+            variant="secondary"
             onClick={closeAndCleanup}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            className="rounded-lg"
           >
             Cancel
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={saveActuals}
             disabled={saving || evidenceUploading}
-            className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="rounded-lg"
           >
             {saving && <FaSpinner className="animate-spin" size={12} />}
             {saving ? "Saving…" : "Save Actuals"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

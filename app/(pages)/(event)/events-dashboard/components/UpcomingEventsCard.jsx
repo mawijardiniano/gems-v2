@@ -23,18 +23,18 @@ export default function UpcomingEventsCard({ dashboard }) {
   } = dashboard;
 
   return (
-    <div className=" rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-gray-50">
+    <div className=" rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
+      <div className="p-5 border-b border-line-faint">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-success-subtle flex items-center justify-center">
               <CalendarDays className="h-5 w-5 text-success" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-fg">
                 Upcoming Events
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Next {upcomingEvents.length} active events · {eventStats.active} active · {eventStats.completed} completed · {selectedYearLabel}
               </p>
             </div>
@@ -56,10 +56,10 @@ export default function UpcomingEventsCard({ dashboard }) {
                 key={i}
                 className="animate-pulse flex items-center gap-4"
               >
-                <div className="h-10 w-10 rounded-lg bg-gray-200" />
+                <div className="h-10 w-10 rounded-lg bg-emphasis" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-4 w-48 bg-gray-200 rounded" />
-                  <div className="h-3 w-32 bg-gray-200 rounded" />
+                  <div className="h-4 w-48 bg-emphasis rounded" />
+                  <div className="h-3 w-32 bg-emphasis rounded" />
                 </div>
               </div>
             ))}
@@ -101,7 +101,7 @@ export default function UpcomingEventsCard({ dashboard }) {
               return (
                 <div
                   key={event._id || idx}
-                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition duration-200 cursor-pointer"
+                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-subtle transition duration-200 cursor-pointer"
                   onClick={() =>
                     router.push(`/events-list/${event._id}`)
                   }
@@ -126,27 +126,27 @@ export default function UpcomingEventsCard({ dashboard }) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-secondary-600 transition-colors">
+                    <p className="text-sm font-medium text-fg truncate group-hover:text-secondary-600 transition-colors">
                       {event.title}
                     </p>
                     {event.reference_number && (
-                      <span className="mt-0.5 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
+                      <span className="mt-0.5 inline-block rounded border border-line bg-subtle px-1.5 py-0.5 font-mono text-2xs font-medium text-fg-muted">
                         {event.reference_number}
                       </span>
                     )}
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="text-xs text-fg-muted flex items-center gap-1">
                         <Building2 className="h-3 w-3" />
                         {event.venue || "Venue TBD"}
                       </span>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="text-xs text-fg-muted flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {registrations} registered
                       </span>
                     </div>
                   </div>
 
-                  <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-secondary-500 transition-colors shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-fg-faint group-hover:text-secondary-500 transition-colors shrink-0" />
                 </div>
               );
             })}

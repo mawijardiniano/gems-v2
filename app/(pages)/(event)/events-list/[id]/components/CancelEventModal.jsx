@@ -45,16 +45,16 @@ export default function CancelEventModal({
         </>
       }
     >
-      <div className="text-sm text-gray-700">
+      <div className="text-sm text-fg-3">
         <p>Are you sure you want to cancel this event?</p>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-fg-muted">
           Participants will no longer be able to check in, and the event drops
           out of Discover. You can reinstate it later if plans change.
         </p>
 
         <label
           htmlFor="cancel-reason"
-          className="mt-4 block text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="mt-4 block text-xs font-semibold uppercase tracking-wider text-fg-muted"
         >
           Reason for cancelling
         </label>
@@ -66,9 +66,9 @@ export default function CancelEventModal({
           maxLength={500}
           disabled={loading}
           placeholder="e.g. Venue double-booked with the Regional Research Congress"
-          className="mt-1 w-full rounded-lg border border-gray-200 p-3 text-sm text-gray-800 focus:border-red-400 focus:outline-none disabled:bg-gray-50"
+          className="mt-1 w-full rounded-lg border border-line p-3 text-sm text-fg-2 focus:border-red-400 focus:outline-none disabled:bg-subtle"
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-fg-muted">
           {reason.trim().length === 0
             ? "A reason is required."
             : `${reason.trim().length}/500 characters`}

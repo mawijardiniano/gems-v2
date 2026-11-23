@@ -166,10 +166,10 @@ function UserSearchField({
   return (
     <div className="relative">
       <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
         <input
           type="text"
-          className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
+          className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
           placeholder="Search user, or type a name..."
           value={search || selectedName}
           onChange={(e) => {
@@ -184,7 +184,7 @@ function UserSearchField({
         />
       </div>
       {showDropdown && (
-        <div className="absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+        <div className="absolute z-20 w-full bg-white border border-line rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
           {search.trim() && (
             <button
               type="button"
@@ -200,7 +200,7 @@ function UserSearchField({
             </button>
           )}
           {filteredUsers.length === 0 && !search.trim() ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
+            <div className="px-3 py-2 text-sm text-fg-muted">
               No users found
             </div>
           ) : (
@@ -211,7 +211,7 @@ function UserSearchField({
                 className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 ${
                   selectedUserId === u._id
                     ? "bg-secondary-50 text-secondary-700"
-                    : "text-gray-700"
+                    : "text-fg-3"
                 }`}
                 onClick={() => {
                   onChange({ userId: u._id, nameText: "" });
@@ -219,7 +219,7 @@ function UserSearchField({
                   setShowDropdown(false);
                 }}
               >
-                <div className="h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600 shrink-0">
+                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-fg-4 shrink-0">
                   {(
                     u.personal_info_id?.personal?.first_name?.[0] ||
                     u.username?.[0] ||
@@ -228,7 +228,7 @@ function UserSearchField({
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-medium">{getUserFullName(u)}</p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-fg-muted truncate">
                     @{u.username}
                   </p>
                 </div>
@@ -293,7 +293,7 @@ function OfficeSelect({
             }
             onChange(e.target.value);
           }}
-          className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
+          className="flex-1 min-w-0 px-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
         >
           <option value="">Select office / group</option>
           {options.map((office) => (
@@ -354,12 +354,12 @@ function OfficeSelect({
         </div>
       )}
 
-      <label className="inline-flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">
+      <label className="inline-flex items-center gap-2 text-xs text-fg-muted cursor-pointer select-none">
         <input
           type="checkbox"
           checked={includeInactive}
           onChange={(e) => onToggleInactive(e.target.checked)}
-          className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-100"
+          className="h-3.5 w-3.5 rounded border-line-strong text-secondary-600 focus:ring-secondary-100"
         />
         Show inactive offices
       </label>
@@ -403,7 +403,7 @@ function OfficialModal({
         aria-labelledby={titleId}
         className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
       >
-        <div className="px-6 py-5 border-b border-gray-100">
+        <div className="px-6 py-5 border-b border-line-subtle">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
@@ -414,10 +414,10 @@ function OfficialModal({
                 )}
               </div>
               <div>
-                <h2 id={titleId} className="text-base font-semibold text-gray-900">
+                <h2 id={titleId} className="text-base font-semibold text-fg">
                   {isEdit ? "Reassign Seat" : "Assign Official"}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-fg-muted">
                   {isEdit
                     ? "Assign a different person to this seat"
                     : "Pick a seat from the MarSU chart, then the person who fills it"}
@@ -428,7 +428,7 @@ function OfficialModal({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -445,18 +445,18 @@ function OfficialModal({
 
           {isEdit ? (
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                 Seat
               </label>
-              <div className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+              <div className="w-full px-3 py-2.5 text-sm border border-line rounded-lg bg-subtle text-fg-3">
                 {form.name || ""}
               </div>
-              <p className="mt-1.5 text-xs text-gray-500">{form.header}</p>
+              <p className="mt-1.5 text-xs text-fg-muted">{form.header}</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                   Office / Group
                 </label>
                 <OfficeSelect
@@ -470,7 +470,7 @@ function OfficialModal({
                   busy={officeBusy}
                 />
                 {assignedCounts && form.header ? (
-                  <p className="mt-1.5 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-fg-muted">
                     {assignedCounts.map[form.header] || 0} assigned official
                     {(assignedCounts.map[form.header] || 0) === 1
                       ? ""
@@ -481,7 +481,7 @@ function OfficialModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                   Seat (type manually)
                 </label>
                 <input
@@ -492,7 +492,7 @@ function OfficialModal({
                   required
                   disabled={!form.header}
                   placeholder="e.g. Secretary of the University and of the Board of Regents"
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white disabled:bg-gray-50 disabled:text-gray-400"
+                  className="w-full px-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white disabled:bg-subtle disabled:text-fg-disabled"
                 />
                 <datalist id="official-seat-suggestions">
                   {(positionSuggestions || []).map((p) => (
@@ -504,7 +504,7 @@ function OfficialModal({
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
               Official (pick a user or type a name)
             </label>
             <UserSearchField
@@ -526,13 +526,13 @@ function OfficialModal({
               concurrent designation can be filed on a seat that already has a
               substantive holder is enforced server-side, not here. */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
               Status
             </label>
             <select
               value={form.status || "substantive"}
               onChange={(e) => onFormChange("status", e.target.value)}
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
+              className="w-full px-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
             >
               <option value="substantive">Substantive — regular holder</option>
               <option value="acting">Acting — temporary designation</option>
@@ -542,7 +542,7 @@ function OfficialModal({
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-2 border-t border-line-subtle">
             <Button
               variant="secondary"
               type="button"
@@ -593,10 +593,10 @@ function HeaderCard({
     setHistoryFor((prev) => ({ ...prev, [seatName]: !prev[seatName] }));
 
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden mb-5 transition duration-200 hover:shadow-md">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden mb-5 transition duration-200 hover:shadow-md">
       <button
         onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-subtle/50 transition"
       >
         <div className="flex items-center gap-3">
           <div
@@ -605,8 +605,8 @@ function HeaderCard({
             <Icon className="h-4 w-4" />
           </div>
           <div className="text-left">
-            <h3 className="text-sm font-semibold text-gray-900">{header}</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="text-sm font-semibold text-fg">{header}</h3>
+            <p className="text-xs text-fg-muted">
               {filled} assigned official{total !== 1 ? "s" : ""}
             </p>
           </div>
@@ -616,35 +616,35 @@ function HeaderCard({
             Assigned only
           </span>
           {expanded ? (
-            <FaChevronDown className="h-3.5 w-3.5 text-gray-500" />
+            <FaChevronDown className="h-3.5 w-3.5 text-fg-muted" />
           ) : (
-            <FaChevronRight className="h-3.5 w-3.5 text-gray-500" />
+            <FaChevronRight className="h-3.5 w-3.5 text-fg-muted" />
           )}
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-50 overflow-x-auto">
+        <div className="border-t border-line-faint overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-subtle/50 border-b border-line-subtle">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Seat
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Status
                 </th>
                 {/* Always present now: the History button lives in this column
                     and is offered to every role. */}
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-line-faint">
               {seats.map((seat) => {
                 const official = seat.official;
                 const person = official
@@ -660,9 +660,9 @@ function HeaderCard({
                   : null;
                 return (
                   <React.Fragment key={seat.key}>
-                    <tr className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                    <tr className="hover:bg-subtle/80 transition-colors duration-150 group">
                       <td className="px-6 py-3.5">
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-fg-3">
                           {seat.name}
                         </span>
                       </td>
@@ -671,7 +671,7 @@ function HeaderCard({
                           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-secondary-50 to-secondary-100 border border-secondary-200 flex items-center justify-center text-xs font-bold text-secondary-700 shrink-0">
                             {(person[0] || "?").toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-fg">
                             {person}
                           </span>
                         </div>
@@ -686,7 +686,7 @@ function HeaderCard({
                         ) : (
                           /* The seat exists but nobody holds it. Previously every
                              row printed "Assigned", vacancy included. */
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-fg-muted">
                             Vacant
                           </span>
                         )}
@@ -701,8 +701,8 @@ function HeaderCard({
                             aria-expanded={historyOpen}
                             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition ${
                               historyOpen
-                                ? "text-gray-700 bg-gray-100 border-gray-300"
-                                : "text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                                ? "text-fg-3 bg-muted border-line-strong"
+                                : "text-fg-4 bg-white border-line hover:bg-subtle hover:border-line-strong"
                             }`}
                           >
                             <FaHistory className="h-3 w-3" />
@@ -1137,10 +1137,10 @@ export default function UniversityOfficialsContent() {
             <FaUniversity className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-fg">
               University Officials
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-fg-muted mt-0.5">
               Manage the MarSU offices and administrative designations per
               academic year
             </p>
@@ -1152,14 +1152,14 @@ export default function UniversityOfficialsContent() {
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
               <Link
                 href="/gad-settings#offices"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-medium text-fg-4 transition hover:border-line-strong hover:bg-subtle hover:text-fg-2"
               >
                 <FaCog className="h-3 w-3" />
                 Manage Offices
               </Link>
               <Link
                 href="/gad-settings#positions"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-medium text-fg-4 transition hover:border-line-strong hover:bg-subtle hover:text-fg-2"
               >
                 <FaSitemap className="h-3 w-3" />
                 Manage Positions
@@ -1169,7 +1169,7 @@ export default function UniversityOfficialsContent() {
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <label
                   htmlFor="officials-year"
-                  className="text-xs font-medium text-gray-500"
+                  className="text-xs font-medium text-fg-muted"
                 >
                   Academic Year
                 </label>
@@ -1177,7 +1177,7 @@ export default function UniversityOfficialsContent() {
                   id="officials-year"
                   value={academicYear}
                   onChange={(e) => setAcademicYear(e.target.value)}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                  className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
@@ -1270,19 +1270,19 @@ export default function UniversityOfficialsContent() {
       {!loading && assignments.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name or seat..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-line rounded-xl focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
             />
           </div>
           <select
             value={headerFilter}
             onChange={(e) => setHeaderFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
+            className="px-3 py-2 text-sm border border-line rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
           >
             <option value="all">All offices</option>
             {activeHeaders.map((h) => (
@@ -1297,31 +1297,31 @@ export default function UniversityOfficialsContent() {
       {/* ── Summary ─────────────────────────────────────────────── */}
       {!loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-secondary-50 flex items-center justify-center">
                 <FaUserTie className="h-6 w-6 text-secondary-600" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Assigned Officials
                 </p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-fg">
                   {chart.stats.filled}
                 </p>
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-success-subtle flex items-center justify-center">
                 <FaCheckCircle className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
                   Offices Shown
                 </p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-fg">
                   {chart.byHeader.length}
                 </p>
               </div>
@@ -1336,7 +1336,7 @@ export default function UniversityOfficialsContent() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-16 rounded-2xl bg-white border border-gray-100 shadow-sm animate-pulse"
+              className="h-16 rounded-2xl bg-white border border-line-subtle shadow-sm animate-pulse"
             />
           ))}
         </div>

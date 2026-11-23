@@ -35,7 +35,7 @@ function TableSection({ item }) {
 
   if (!sectionRowCount(item)) {
     return (
-      <p className="py-2 text-sm italic text-gray-500">
+      <p className="py-2 text-sm italic text-fg-muted">
         {emptyLabel || "No data available."}
       </p>
     );
@@ -44,13 +44,13 @@ function TableSection({ item }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
-        <thead className="bg-gray-50">
-          <tr className="border-b border-gray-200">
+        <thead className="bg-subtle">
+          <tr className="border-b border-line">
             {head.map((label, i) => (
               <th
                 key={i}
                 scope="col"
-                className={`whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 ${
+                className={`whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide text-fg-4 ${
                   i >= statFrom ? "text-right" : "text-left"
                 }`}
               >
@@ -67,8 +67,8 @@ function TableSection({ item }) {
                 key={r}
                 className={
                   isTotal
-                    ? "border-t-2 border-gray-300 bg-gray-50"
-                    : "border-b border-gray-100 hover:bg-secondary-50/40"
+                    ? "border-t-2 border-line-strong bg-subtle"
+                    : "border-b border-line-subtle hover:bg-secondary-50/40"
                 }
               >
                 {row.map((cell, c) => (
@@ -79,7 +79,7 @@ function TableSection({ item }) {
                       c >= statFrom
                         ? "whitespace-nowrap text-right tabular-nums"
                         : "text-left",
-                      isTotal ? "font-semibold text-gray-900" : "text-gray-700",
+                      isTotal ? "font-semibold text-fg" : "text-fg-3",
                     ].join(" ")}
                   >
                     {cell}
@@ -100,7 +100,7 @@ function Section({ item }) {
 
   if (item.type === SECTION.HEADING) {
     return (
-      <h3 className="mt-5 mb-2 text-sm font-bold text-gray-900">
+      <h3 className="mt-5 mb-2 text-sm font-bold text-fg">
         {item.text}
       </h3>
     );
@@ -108,14 +108,14 @@ function Section({ item }) {
 
   if (item.type === SECTION.PARAGRAPH) {
     return (
-      <p className="mb-3 text-sm leading-relaxed text-gray-700">{item.text}</p>
+      <p className="mb-3 text-sm leading-relaxed text-fg-3">{item.text}</p>
     );
   }
 
   if (item.type === SECTION.BULLETS) {
     if (!item.items?.length) return null;
     return (
-      <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-gray-700">
+      <ul className="mb-3 list-disc space-y-1 pl-5 text-sm leading-relaxed text-fg-3">
         {item.items.map((text, i) => (
           <li key={i}>{text}</li>
         ))}
@@ -128,7 +128,7 @@ function Section({ item }) {
   return (
     <div className="mb-4">
       {item.title ? (
-        <h3 className="mt-5 mb-2 text-sm font-bold text-gray-900">
+        <h3 className="mt-5 mb-2 text-sm font-bold text-fg">
           {item.title}
         </h3>
       ) : null}
@@ -156,7 +156,7 @@ export default function ReportSectionsPreview({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-inverse/50 p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -167,16 +167,16 @@ export default function ReportSectionsPreview({
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-white shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-line-subtle px-6 py-4">
           <div className="min-w-0">
             <h2
               id="quick-report-preview-title"
-              className="text-base font-semibold text-gray-900"
+              className="text-base font-semibold text-fg"
             >
               {title} — Preview
             </h2>
             {scope ? (
-              <p className="mt-0.5 text-xs text-gray-500">{scope}</p>
+              <p className="mt-0.5 text-xs text-fg-muted">{scope}</p>
             ) : null}
           </div>
           <button
@@ -184,7 +184,7 @@ export default function ReportSectionsPreview({
             type="button"
             onClick={onClose}
             aria-label="Close preview"
-            className="touch-target shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="touch-target shrink-0 rounded-lg p-1.5 text-fg-muted transition-colors hover:bg-muted hover:text-fg-4"
           >
             <FaTimes size={16} />
           </button>
@@ -192,7 +192,7 @@ export default function ReportSectionsPreview({
 
         <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
           {sections.length === 0 ? (
-            <p className="py-10 text-center text-sm italic text-gray-500">
+            <p className="py-10 text-center text-sm italic text-fg-muted">
               No records match the selected filters.
             </p>
           ) : (
@@ -200,8 +200,8 @@ export default function ReportSectionsPreview({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
-          <p className="text-xs text-gray-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-subtle px-6 py-4">
+          <p className="text-xs text-fg-muted">
             Preview of the PDF — the download contains the same sections.
           </p>
           <div className="flex items-center gap-2">

@@ -105,22 +105,22 @@ export default function OverviewTab({
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm animate-slide-up">
+      <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm animate-slide-up">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
               <FiEdit2 size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-fg">
                 Event Details
                 {event.reference_number && (
-                  <span className="ml-2 align-middle rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
+                  <span className="ml-2 align-middle rounded border border-line bg-subtle px-1.5 py-0.5 font-mono text-2xs font-medium text-fg-muted">
                     {event.reference_number}
                   </span>
                 )}
               </h2>
-              <p className="mt-0.5 text-sm text-gray-500">
+              <p className="mt-0.5 text-sm text-fg-muted">
                 Core information about this event
               </p>
             </div>

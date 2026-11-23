@@ -11,8 +11,8 @@ export default function BatchTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm border border-gray-200">
-        <thead className="bg-gray-50">
+      <table className="w-full text-sm border border-line">
+        <thead className="bg-subtle">
           <tr>
             <th className="text-left px-3 py-2">Source</th>
             <th className="text-left px-3 py-2">Type</th>
@@ -35,7 +35,7 @@ export default function BatchTable({
             return (
               <tr
                 key={batch._id}
-                className={`border-t border-gray-100 ${
+                className={`border-t border-line-subtle ${
                   selectedBatchId === batch._id ? "bg-secondary-50" : ""
                 }`}
               >
@@ -65,7 +65,7 @@ export default function BatchTable({
                     <button
                       type="button"
                       onClick={() => onSelect(batch._id)}
-                      className="px-2 py-1 rounded border border-gray-300 text-xs"
+                      className="px-2 py-1 rounded border border-line-strong text-xs"
                     >
                       {selectedBatchId === batch._id ? "Selected" : "Select"}
                     </button>
@@ -84,7 +84,7 @@ export default function BatchTable({
           })}
           {batches.length === 0 && (
             <tr>
-              <td className="px-3 py-4 text-gray-500" colSpan={11}>
+              <td className="px-3 py-4 text-fg-muted" colSpan={11}>
                 {loading ? "Loading batches..." : "No batches yet."}
               </td>
             </tr>

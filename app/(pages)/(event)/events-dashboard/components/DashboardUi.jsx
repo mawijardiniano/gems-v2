@@ -16,13 +16,13 @@ import { formatAmount } from "@/data/lib/money";
 export function SkeletonCard({ className = "" }) {
   return (
     <div
-      className={`animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-100 p-6 ${className}`}
+      className={`animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-line-subtle p-6 ${className}`}
     >
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl bg-gray-200" />
+        <div className="h-12 w-12 rounded-xl bg-emphasis" />
         <div className="flex-1 space-y-2">
-          <div className="h-3 w-20 bg-gray-200 rounded" />
-          <div className="h-5 w-32 bg-gray-200 rounded" />
+          <div className="h-3 w-20 bg-emphasis rounded" />
+          <div className="h-5 w-32 bg-emphasis rounded" />
         </div>
       </div>
     </div>
@@ -34,10 +34,10 @@ export function SkeletonTable({ rows = 4 }) {
     <div className="animate-pulse space-y-3">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex gap-4">
-          <div className="h-4 w-16 bg-gray-200 rounded" />
-          <div className="h-4 w-24 bg-gray-200 rounded" />
-          <div className="h-4 w-12 bg-gray-200 rounded" />
-          <div className="h-4 w-28 bg-gray-200 rounded" />
+          <div className="h-4 w-16 bg-emphasis rounded" />
+          <div className="h-4 w-24 bg-emphasis rounded" />
+          <div className="h-4 w-12 bg-emphasis rounded" />
+          <div className="h-4 w-28 bg-emphasis rounded" />
         </div>
       ))}
     </div>
@@ -50,7 +50,7 @@ export function SkeletonChart() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex-1 bg-gray-200 rounded-t-lg"
+          className="flex-1 bg-emphasis rounded-t-lg"
           style={{ height: `${30 + Math.random() * 60}%` }}
         />
       ))}
@@ -89,7 +89,7 @@ export function StatusBadge({ status }) {
   return (
     <span
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${
-        styles[s] || "bg-gray-50 text-gray-600 border-gray-200"
+        styles[s] || "bg-subtle text-fg-4 border-line"
       }`}
     >
       <Icon className="h-3 w-3" />
@@ -102,11 +102,11 @@ export function StatusBadge({ status }) {
 export function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="h-16 w-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
-        <Icon className="h-8 w-8 text-gray-300" />
+      <div className="h-16 w-16 rounded-2xl bg-subtle border border-line-subtle flex items-center justify-center mb-4">
+        <Icon className="h-8 w-8 text-fg-faint" />
       </div>
-      <p className="text-sm font-medium text-gray-900 mb-1">{title}</p>
-      <p className="text-xs text-gray-500 text-center max-w-xs mb-4">
+      <p className="text-sm font-medium text-fg mb-1">{title}</p>
+      <p className="text-xs text-fg-muted text-center max-w-xs mb-4">
         {description}
       </p>
       {action}
@@ -143,7 +143,7 @@ export function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl bg-white border border-gray-100 shadow-sm p-5 ${
+      className={`rounded-2xl bg-white border border-line-subtle shadow-sm p-5 ${
         clickable
           ? "cursor-pointer transition duration-200 hover:shadow-md hover:-translate-y-0.5"
           : ""
@@ -151,15 +151,15 @@ export function StatCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 truncate">
+          <p className="text-xs font-medium text-fg-muted truncate">
             {label}
             {source ? <SourceTag sample={source === "sample"} /> : null}
           </p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-gray-900">
+          <p className="mt-1 text-2xl font-bold tracking-tight text-fg">
             {value}
           </p>
           {hint ? (
-            <p className="mt-1 text-xs text-gray-500 truncate">{hint}</p>
+            <p className="mt-1 text-xs text-fg-muted truncate">{hint}</p>
           ) : null}
           {typeof barPercent === "number" ? (
             <div className="mt-2">
@@ -180,7 +180,7 @@ export function StatCard({
 export function MiniBar({ percent, barClass = "bg-secondary-500" }) {
   const safe = Math.max(0, Math.min(Number(percent) || 0, 100));
   return (
-    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
       <div
         className={`h-full rounded-full transition-all duration-500 ${barClass}`}
         style={{ width: `${safe}%` }}
@@ -193,11 +193,11 @@ export function SnapshotRow({ icon: Icon, label, value, percent, barClass }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="flex items-center gap-1.5 text-gray-600 min-w-0">
-          {Icon ? <Icon className="h-3.5 w-3.5 text-gray-500 shrink-0" /> : null}
+        <span className="flex items-center gap-1.5 text-fg-4 min-w-0">
+          {Icon ? <Icon className="h-3.5 w-3.5 text-fg-muted shrink-0" /> : null}
           <span className="truncate">{label}</span>
         </span>
-        <span className="font-semibold text-gray-900 shrink-0">{value}</span>
+        <span className="font-semibold text-fg shrink-0">{value}</span>
       </div>
       {typeof percent === "number" && (
         <MiniBar percent={percent} barClass={barClass} />
@@ -212,10 +212,10 @@ export function SnapshotSkeleton({ rows = 3 }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="h-3 w-28 bg-gray-200 rounded" />
-            <div className="h-3 w-10 bg-gray-200 rounded" />
+            <div className="h-3 w-28 bg-emphasis rounded" />
+            <div className="h-3 w-10 bg-emphasis rounded" />
           </div>
-          <div className="h-1.5 w-full bg-gray-100 rounded-full" />
+          <div className="h-1.5 w-full bg-muted rounded-full" />
         </div>
       ))}
     </div>
@@ -224,8 +224,8 @@ export function SnapshotSkeleton({ rows = 3 }) {
 
 export function CardShell({ icon: Icon, iconClass, title, subtitle, action, children }) {
   return (
-    <div className="flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-gray-50">
+    <div className="flex flex-col rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
+      <div className="p-5 border-b border-line-faint">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div
@@ -234,10 +234,10 @@ export function CardShell({ icon: Icon, iconClass, title, subtitle, action, chil
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-gray-900 truncate">
+              <h2 className="text-sm font-semibold text-fg truncate">
                 {title}
               </h2>
-              <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+              <p className="text-xs text-fg-muted truncate">{subtitle}</p>
             </div>
           </div>
           {action}
@@ -259,11 +259,11 @@ export function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpe
           <AlertCircle className="h-4 w-4 text-secondary-500 shrink-0 mt-0.5" />
         )}
         <div className="min-w-0">
-          <p className={`text-sm ${clear ? "text-gray-500" : "text-gray-800"}`}>
+          <p className={`text-sm ${clear ? "text-fg-muted" : "text-fg-2"}`}>
             {clear ? clearLabel : `${count} ${label}`}
           </p>
           {!clear && hint ? (
-            <p className="text-xs text-gray-500 mt-0.5">{hint}</p>
+            <p className="text-xs text-fg-muted mt-0.5">{hint}</p>
           ) : null}
           {!clear && onOpen ? (
             <button
@@ -283,16 +283,16 @@ export function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpe
 export function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg p-3 text-sm">
-      <p className="font-semibold text-gray-900 mb-2">{label}</p>
+    <div className="bg-white/95 backdrop-blur-sm border border-line rounded-xl shadow-lg p-3 text-sm">
+      <p className="font-semibold text-fg mb-2">{label}</p>
       {payload.map((entry, idx) => (
         <div key={idx} className="flex items-center gap-2 text-xs">
           <span
             className="h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-gray-600">{entry.name}:</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-fg-4">{entry.name}:</span>
+          <span className="font-medium text-fg">
             {entry.value == null ? "To follow" : `₱ ${formatAmount(entry.value)}`}
           </span>
         </div>

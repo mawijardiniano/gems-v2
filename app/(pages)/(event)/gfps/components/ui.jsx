@@ -30,27 +30,27 @@ export function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+        <div key={i} className="bg-white rounded-2xl border border-line overflow-hidden animate-pulse">
+          <div className="px-5 py-4 border-b border-line-subtle flex items-center gap-3">
+            <div className="w-10 h-10 bg-emphasis rounded-lg" />
             <div className="space-y-2 flex-1">
-              <div className="h-4 bg-gray-200 rounded w-32" />
-              <div className="h-3 bg-gray-100 rounded w-20" />
+              <div className="h-4 bg-emphasis rounded w-32" />
+              <div className="h-3 bg-muted rounded w-20" />
             </div>
           </div>
           <div className="px-5 py-4 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-full" />
+              <div className="w-8 h-8 bg-muted rounded-full" />
               <div className="space-y-1.5 flex-1">
-                <div className="h-3.5 bg-gray-100 rounded w-3/4" />
-                <div className="h-3 bg-gray-50 rounded w-1/2" />
+                <div className="h-3.5 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-subtle rounded w-1/2" />
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-full" />
+              <div className="w-8 h-8 bg-muted rounded-full" />
               <div className="space-y-1.5 flex-1">
-                <div className="h-3.5 bg-gray-100 rounded w-2/3" />
-                <div className="h-3 bg-gray-50 rounded w-1/3" />
+                <div className="h-3.5 bg-muted rounded w-2/3" />
+                <div className="h-3 bg-subtle rounded w-1/3" />
               </div>
             </div>
           </div>
@@ -63,13 +63,13 @@ export function LoadingSkeleton() {
 export function EmptyState({ onAdd }) {
   return (
     <div className="text-center py-16">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-        <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+        <svg className="w-8 h-8 text-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-1">No GFPS Members Yet</h3>
-      <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+      <h3 className="text-lg font-semibold text-fg mb-1">No GFPS Members Yet</h3>
+      <p className="text-sm text-fg-muted mb-6 max-w-sm mx-auto">
         Get started by adding members to the Gender and Development Focal Point System.
       </p>
       {onAdd && (
@@ -139,13 +139,13 @@ export function OfficialRow({ member, avatarBg, avatarText }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-700 truncate">{headline}</p>
+          <p className="text-sm text-fg-3 truncate">{headline}</p>
           {/* A manual row is a typed name, not a live roster seat. Said plainly
               rather than hidden, so an unlinked member is not mistaken for a
               broken link. `manual` is derived on read (lib/gfpsServer.js) — every
               GFPS row is typed by hand now, so it is never stored. */}
           {m.manual && (
-            <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+            <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-fg-muted">
               Manual
             </span>
           )}
@@ -158,10 +158,10 @@ export function OfficialRow({ member, avatarBg, avatarText }) {
         {/* The seat is shown beneath the name whenever both are known, so the
             memo's structure stays visible next to the appointee. */}
         {name && position && (
-          <p className="text-xs text-gray-500 truncate">{position}</p>
+          <p className="text-xs text-fg-muted truncate">{position}</p>
         )}
         {m.role === "chair" && (
-          <p className="text-xs text-gray-500 truncate">Chair</p>
+          <p className="text-xs text-fg-muted truncate">Chair</p>
         )}
       </div>
     </div>

@@ -51,7 +51,7 @@ export default function LogoutConfirmModal({
         <div className="w-16 h-16 mx-auto rounded-full bg-danger-subtle flex items-center justify-center">
           <FaSignOutAlt className="text-2xl text-danger" aria-hidden="true" />
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-fg-muted">
           Are you sure you want to log out? You will need to sign in again
           to access your account.
         </p>

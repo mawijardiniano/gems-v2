@@ -50,7 +50,7 @@ const statCards = [
 function StatCard({ card, children }) {
   const Icon = card.icon;
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-xl border border-line-subtle bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
       <div
         className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.gradient}`}
       />
@@ -62,10 +62,10 @@ function StatCard({ card, children }) {
           <Icon className="text-lg" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
             {card.label}
           </p>
-          <div className="mt-1 text-2xl font-bold text-gray-900">
+          <div className="mt-1 text-2xl font-bold text-fg">
             {children}
           </div>
         </div>
@@ -137,12 +137,12 @@ export default function Snapshot({
     }));
 
     return (
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-fg">
             Executive Snapshot
           </h2>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <p className="mt-0.5 text-sm text-fg-muted">
             Overview of key indicators and demographic gaps
           </p>
         </div>
@@ -153,12 +153,12 @@ export default function Snapshot({
           <StatCard card={statCards[1]}>
             <div className="flex items-baseline gap-2">
               <span className="text-secondary-600">{femaleCount}</span>
-              <span className="text-sm font-normal text-gray-500">·</span>
+              <span className="text-sm font-normal text-fg-muted">·</span>
               <span className="text-secondary-600">{maleCount}</span>
-              <span className="text-xs font-normal text-gray-500">(F · M)</span>
+              <span className="text-xs font-normal text-fg-muted">(F · M)</span>
             </div>
             {total > 0 && (
-              <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="bg-secondary-500 transition-all duration-500"
                   style={{ width: `${(femaleCount / total) * 100}%` }}
@@ -174,7 +174,7 @@ export default function Snapshot({
           <StatCard card={statCards[2]}>
             {pwdCount}
             {pwdCount === 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+              <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
                 No declaration
               </span>
             )}
@@ -183,7 +183,7 @@ export default function Snapshot({
           <StatCard card={statCards[3]}>
             {ipCount}
             {ipCount === 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+              <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
                 No declaration
               </span>
             )}
@@ -193,11 +193,11 @@ export default function Snapshot({
         {yearRows.length > 0 && (
           <div className="mt-6">
             <div className="mb-3 flex items-center gap-2">
-              <FaGraduationCap className="text-sm text-gray-500" />
-              <h3 className="text-sm font-semibold text-gray-700">
+              <FaGraduationCap className="text-sm text-fg-muted" />
+              <h3 className="text-sm font-semibold text-fg-3">
                 Students by Year Level
               </h3>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-fg-muted">
                 ({yearRows.reduce((s, r) => s + (r.total || 0), 0).toLocaleString()} total students)
               </span>
             </div>
@@ -206,14 +206,14 @@ export default function Snapshot({
                 <StatCard key={row.label} card={yearLevelStatCards[i]}>
                   <div className="flex items-baseline gap-2">
                     <span className="text-secondary-600">{row.Female || 0}</span>
-                    <span className="text-sm font-normal text-gray-500">·</span>
+                    <span className="text-sm font-normal text-fg-muted">·</span>
                     <span className="text-secondary-600">{row.Male || 0}</span>
-                    <span className="text-xs font-normal text-gray-500">
+                    <span className="text-xs font-normal text-fg-muted">
                       (F · M)
                     </span>
                   </div>
                   {row.total > 0 && (
-                    <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="bg-secondary-500 transition-all duration-500"
                         style={{ width: `${((row.Female || 0) / row.total) * 100}%` }}
@@ -308,12 +308,12 @@ export default function Snapshot({
   }));
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Executive Snapshot
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Overview of key indicators and demographic gaps
         </p>
       </div>
@@ -324,12 +324,12 @@ export default function Snapshot({
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
             <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-gray-500">·</span>
+            <span className="text-sm font-normal text-fg-muted">·</span>
             <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-gray-500">(F · M)</span>
+            <span className="text-xs font-normal text-fg-muted">(F · M)</span>
           </div>
           {total > 0 && (
-            <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(femaleCount / total) * 100}%` }}
@@ -345,7 +345,7 @@ export default function Snapshot({
         <StatCard card={statCards[2]}>
           {pwdCount}
           {pwdCount === 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
               No declaration
             </span>
           )}
@@ -354,7 +354,7 @@ export default function Snapshot({
         <StatCard card={statCards[3]}>
           {ipCount}
           {ipCount === 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
               No declaration
             </span>
           )}
@@ -365,11 +365,11 @@ export default function Snapshot({
       {studentYearGenderData.length > 0 && (
         <div className="mt-6">
           <div className="mb-3 flex items-center gap-2">
-            <FaGraduationCap className="text-sm text-gray-500" />
-            <h3 className="text-sm font-semibold text-gray-700">
+            <FaGraduationCap className="text-sm text-fg-muted" />
+            <h3 className="text-sm font-semibold text-fg-3">
               Students by Year Level
             </h3>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-fg-muted">
               ({students.length.toLocaleString()} total students)
             </span>
           </div>
@@ -378,14 +378,14 @@ export default function Snapshot({
               <StatCard key={row.label} card={yearLevelStatCards[i]}>
                 <div className="flex items-baseline gap-2">
                   <span className="text-secondary-600">{row.Female}</span>
-                  <span className="text-sm font-normal text-gray-500">·</span>
+                  <span className="text-sm font-normal text-fg-muted">·</span>
                   <span className="text-secondary-600">{row.Male}</span>
-                  <span className="text-xs font-normal text-gray-500">
+                  <span className="text-xs font-normal text-fg-muted">
                     (F · M)
                   </span>
                 </div>
                 {row.total > 0 && (
-                  <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="bg-secondary-500 transition-all duration-500"
                       style={{ width: `${(row.Female / row.total) * 100}%` }}

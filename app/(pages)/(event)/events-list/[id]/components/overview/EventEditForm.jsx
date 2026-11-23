@@ -42,7 +42,7 @@ function PosterEditor({ poster, onChange, posterFiles }) {
   return (
     <div>
       <label
-        className="block text-sm font-medium text-gray-700 mb-2"
+        className="block text-sm font-medium text-fg-3 mb-2"
         htmlFor="edit-event-poster"
       >
         Event Poster
@@ -53,7 +53,7 @@ function PosterEditor({ poster, onChange, posterFiles }) {
             <img
               src={poster.url}
               alt="Event poster"
-              className="w-40 h-40 object-cover rounded-xl border border-gray-200 shadow-sm"
+              className="w-40 h-40 object-cover rounded-xl border border-line shadow-sm"
             />
             <button
               type="button"
@@ -133,7 +133,7 @@ export default function EventEditForm({
           {saveError}
         </p>
       )}
-      <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
+      <div className="flex gap-3 justify-end pt-6 border-t border-line-subtle mt-8">
         <Button onClick={onCancel} variant="secondary" className="!rounded-lg">
           Cancel
         </Button>

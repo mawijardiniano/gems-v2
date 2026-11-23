@@ -25,7 +25,7 @@ function MilestoneTable({ project }) {
 
   if (milestones.length === 0) {
     return (
-      <p className="text-xs text-gray-500 italic">
+      <p className="text-xs text-fg-muted italic">
         No milestones recorded yet. Only the project creator or a GAD Focal
         Person can add milestones.
       </p>
@@ -34,9 +34,9 @@ function MilestoneTable({ project }) {
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-gray-100">
+      <div className="overflow-x-auto rounded-lg border border-line-subtle">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
+          <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
             <tr>
               <th className="px-2 py-1.5 font-semibold">Milestone / Activity</th>
               <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
@@ -58,12 +58,12 @@ function MilestoneTable({ project }) {
                 (file) => file && (file.url || file.key),
               );
               return (
-                <tr key={m._id || i} className="border-t border-gray-100">
-                  <td className="px-2 py-2 text-xs text-gray-700">{m.title}</td>
-                  <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                <tr key={m._id || i} className="border-t border-line-subtle">
+                  <td className="px-2 py-2 text-xs text-fg-3">{m.title}</td>
+                  <td className="px-2 py-2 text-xs text-fg-4 whitespace-nowrap">
                     {formatDate(m.target_date) || "—"}
                   </td>
-                  <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                  <td className="px-2 py-2 text-xs text-fg-4 whitespace-nowrap">
                     {formatDate(m.actual_date) || "—"}
                   </td>
                   <td className="px-2 py-2">
@@ -83,10 +83,10 @@ function MilestoneTable({ project }) {
                         Missing proof
                       </span>
                     ) : (
-                      <span className="text-xs text-gray-500">—</span>
+                      <span className="text-xs text-fg-muted">—</span>
                     )}
                   </td>
-                  <td className="px-2 py-2 text-xs text-gray-600">
+                  <td className="px-2 py-2 text-xs text-fg-4">
                     {m.source_activity || "—"}
                   </td>
                 </tr>
@@ -95,9 +95,9 @@ function MilestoneTable({ project }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-fg-muted">
         Progress:{" "}
-        <span className="font-medium text-gray-700">
+        <span className="font-medium text-fg-3">
           {progress.done}/{progress.total} ({progress.percent}%)
         </span>
       </p>
@@ -119,7 +119,7 @@ function Accomplishments({ project }) {
 
   if (events.length === 0 && accomplishments.length === 0) {
     return (
-      <p className="text-xs text-gray-500 italic">
+      <p className="text-xs text-fg-muted italic">
         No linked events or accomplishment entries yet.
       </p>
     );
@@ -135,16 +135,16 @@ function Accomplishments({ project }) {
             return (
               <li key={ev?._id || i} className="relative flex gap-3 pb-4 last:pb-0">
                 {i < events.length - 1 && (
-                  <span className="absolute left-[7px] top-4 h-full w-px bg-gray-200" />
+                  <span className="absolute left-[7px] top-4 h-full w-px bg-emphasis" />
                 )}
                 <span
                   className={`h-4 w-4 rounded-full mt-0.5 shrink-0 ring-4 ring-white ${meta.dot}`}
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 break-words">
+                  <p className="text-sm font-medium text-fg break-words">
                     {ev?.title || "Untitled event"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-muted">
                     {start ? formatDate(start) : "No date set"}
                     {ev?.venue ? ` • ${ev.venue}` : ""}
                   </p>
@@ -159,7 +159,7 @@ function Accomplishments({ project }) {
       )}
       {accomplishments.length > 0 && (
         <div>
-          <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex flex-wrap items-center gap-2">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted mb-1.5 flex flex-wrap items-center gap-2">
             Actual Accomplishment
             <span
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium normal-case tracking-normal ${
@@ -173,7 +173,7 @@ function Accomplishments({ project }) {
           </p>
           <ul className="space-y-1">
             {accomplishments.map((a, i) => (
-              <li key={i} className="text-xs text-gray-700 flex gap-2">
+              <li key={i} className="text-xs text-fg-3 flex gap-2">
                 <FaCheckCircle className="h-3 w-3 text-emerald-500 mt-0.5 shrink-0" />
                 <span>{a}</span>
               </li>
@@ -197,10 +197,10 @@ export default function MilestonesTab({
   const milestoneCount = getMilestones(project).length;
   return (
     <section
-      className="rounded-xl bg-white border border-gray-100 p-4 animate-fade-in"
+      className="rounded-xl bg-white border border-line-subtle p-4 animate-fade-in"
       role="tabpanel"
     >
-      <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-fg-muted">
         Milestones &amp; Accomplishments
       </p>
 
@@ -224,8 +224,8 @@ export default function MilestonesTab({
         )}
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
-        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-t border-line-subtle pt-3">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
           Actual Accomplishments
         </p>
         {canManage && <EditButton onClick={onEditActuals}>Update Actuals</EditButton>}

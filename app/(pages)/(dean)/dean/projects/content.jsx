@@ -25,7 +25,7 @@ const ActivityTypeBadge = ({ type }) => {
     Extension: "bg-secondary-100 text-secondary-700",
     Research: "bg-rose-100 text-rose-700",
     Students: "bg-cyan-100 text-cyan-700",
-    Others: "bg-gray-100 text-gray-700",
+    Others: "bg-muted text-fg-3",
   };
   const classes = colorMap[type] || colorMap.Others;
   return (
@@ -45,7 +45,7 @@ const EventStatusBadge = ({ event }) => {
         : null) ||
       event.start_date ||
       event.date;
-    if (!end) return { label: "Unknown", classes: "bg-gray-100 text-gray-600" };
+    if (!end) return { label: "Unknown", classes: "bg-muted text-fg-4" };
 
     const now = new Date();
     const endDate = new Date(end);
@@ -72,12 +72,12 @@ const EventStatusBadge = ({ event }) => {
 };
 
 const SkeletonCard = () => (
-  <div className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse">
-    <div className="h-44 bg-gray-200" />
+  <div className="rounded-xl border border-line-subtle bg-white overflow-hidden animate-pulse">
+    <div className="h-44 bg-emphasis" />
     <div className="p-5 space-y-3">
-      <div className="h-5 bg-gray-200 rounded w-3/4" />
-      <div className="h-4 bg-gray-200 rounded w-1/2" />
-      <div className="h-4 bg-gray-200 rounded w-full" />
+      <div className="h-5 bg-emphasis rounded w-3/4" />
+      <div className="h-4 bg-emphasis rounded w-1/2" />
+      <div className="h-4 bg-emphasis rounded w-full" />
     </div>
   </div>
 );
@@ -178,8 +178,8 @@ export default function DeanProjectsContent() {
         : null;
 
     return (
-      <div className="flex items-center gap-2 text-gray-600">
-        <FaCalendar className="text-gray-500 shrink-0" size={12} />
+      <div className="flex items-center gap-2 text-fg-4">
+        <FaCalendar className="text-fg-muted shrink-0" size={12} />
         <span>
           {startStr} at {timeStart}
           {timeEnd ? ` – ${timeEnd}` : ""}
@@ -192,7 +192,7 @@ export default function DeanProjectsContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 p-6">
         <div className="max-w-8xl mx-auto space-y-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-8 w-48 bg-emphasis rounded animate-pulse" />
           <div className="grid gap-6 md:grid-cols-3">
             {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
           </div>
@@ -211,8 +211,8 @@ export default function DeanProjectsContent() {
               <FaFolder className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Projects</h1>
-              <p className="text-gray-500 text-sm mt-1">Events you have created and manage</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg">Projects</h1>
+              <p className="text-fg-muted text-sm mt-1">Events you have created and manage</p>
             </div>
           </div>
 
@@ -234,12 +234,12 @@ export default function DeanProjectsContent() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm p-4">
           <div className="flex flex-wrap gap-3 items-center">
-            <FaFilter className="text-gray-500" size={14} />
+            <FaFilter className="text-fg-muted" size={14} />
             <div className="relative">
               <select
-                className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
+                className="appearance-none bg-subtle border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
               >
@@ -248,19 +248,19 @@ export default function DeanProjectsContent() {
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
-              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={12} />
+              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none" size={12} />
             </div>
 
             {activityType && (
               <button
                 onClick={() => setActivityType("")}
-                className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2"
+                className="text-xs text-fg-muted hover:text-fg-3 underline underline-offset-2"
               >
                 Clear filters
               </button>
             )}
 
-            <span className="ml-auto text-sm text-gray-500">
+            <span className="ml-auto text-sm text-fg-muted">
               {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -270,18 +270,18 @@ export default function DeanProjectsContent() {
         <section>
           {filteredEvents.length === 0 ? (
             <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <FaSearch className="text-gray-500" size={24} />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <FaSearch className="text-fg-muted" size={24} />
               </div>
-              <p className="text-gray-500 text-lg font-medium">No projects found</p>
-              <p className="text-gray-500 text-sm mt-1">Create your first event to get started</p>
+              <p className="text-fg-muted text-lg font-medium">No projects found</p>
+              <p className="text-fg-muted text-sm mt-1">Create your first event to get started</p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredEvents.map((evt, index) => (
                 <div
                   key={evt._id}
-                  className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
+                  className="group relative bg-white rounded-xl border border-line-subtle shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-600" />
@@ -302,7 +302,7 @@ export default function DeanProjectsContent() {
 
                   <div className="p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-success transition-colors line-clamp-2">
+                      <h3 className="text-lg font-semibold leading-snug text-fg group-hover:text-success transition-colors line-clamp-2">
                         {evt.title}
                       </h3>
                       {evt.type_of_activity && <ActivityTypeBadge type={evt.type_of_activity} />}
@@ -312,25 +312,25 @@ export default function DeanProjectsContent() {
                     <div className="space-y-1">{formatRange(evt)}</div>
 
                     {evt.venue && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <FaLocationArrow className="text-gray-500 shrink-0" size={12} />
+                      <div className="flex items-center gap-2 text-sm text-fg-muted">
+                        <FaLocationArrow className="text-fg-muted shrink-0" size={12} />
                         <span className="truncate">{evt.venue}</span>
                       </div>
                     )}
 
                     {evt.gad_activity && (
                       <div className="text-sm">
-                        <span className="font-medium text-gray-700">GAD Activity:</span>{" "}
-                        <span className="text-gray-500">{evt.gad_activity}</span>
+                        <span className="font-medium text-fg-3">GAD Activity:</span>{" "}
+                        <span className="text-fg-muted">{evt.gad_activity}</span>
                       </div>
                     )}
 
                     {evt.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">{evt.description}</p>
+                      <p className="text-sm text-fg-muted line-clamp-2 leading-relaxed">{evt.description}</p>
                     )}
 
                     <div className="pt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <div className="flex items-center gap-1.5 text-xs text-fg-muted">
                         <FaUsers size={12} />
                         <span>
                           {evt.attended_count || 0} participant

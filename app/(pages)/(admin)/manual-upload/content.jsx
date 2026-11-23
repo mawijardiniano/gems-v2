@@ -44,16 +44,16 @@ export default function ManualUploadContent() {
 
   return (
     <div className="py-8 space-y-4">
-      <div className="bg-white border border-gray-200 rounded-md p-4">
-        <h1 className="text-lg font-semibold text-gray-900">Manual Upload</h1>
-        <p className="text-sm text-gray-600">
+      <div className="bg-white border border-line rounded-md p-4">
+        <h1 className="text-lg font-semibold text-fg">Manual Upload</h1>
+        <p className="text-sm text-fg-4">
           Upload SIS/ARO CSV files into the staging area, validate, review, and
           migrate into production. XLSX support is not enabled yet.
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-md p-4 space-y-3">
-        <h2 className="text-base font-medium text-gray-900">
+      <div className="bg-white border border-line rounded-md p-4 space-y-3">
+        <h2 className="text-base font-medium text-fg">
           Upload CSV to Staging
         </h2>
         <form
@@ -64,12 +64,12 @@ export default function ManualUploadContent() {
             type="file"
             accept=".csv"
             onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-line-strong rounded px-3 py-2 text-sm"
           />
           <select
             value={schoolYear}
             onChange={(e) => setSchoolYear(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-line-strong rounded px-3 py-2 text-sm"
           >
             <option value="">Default school year</option>
             {buildSchoolYearOptions().map((sy) => (
@@ -81,7 +81,7 @@ export default function ManualUploadContent() {
           <select
             value={semester}
             onChange={(e) => setSemester(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-line-strong rounded px-3 py-2 text-sm"
           >
             <option value="">Default semester</option>
             <option value="1st">1st</option>
@@ -104,8 +104,8 @@ export default function ManualUploadContent() {
 
       <MessageBanner message={d.message} />
 
-      <div className="bg-white border border-gray-200 rounded-md">
-        <div className="flex gap-1 border-b border-gray-200 px-4 pt-3">
+      <div className="bg-white border border-line rounded-md">
+        <div className="flex gap-1 border-b border-line px-4 pt-3">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -114,7 +114,7 @@ export default function ManualUploadContent() {
               className={`px-3 py-2 text-sm rounded-t-md -mb-px border-b-2 ${
                 tab === t.id
                   ? "border-secondary-600 text-secondary-700 font-medium"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  : "border-transparent text-fg-muted hover:text-fg-3"
               }`}
             >
               {t.label}
@@ -127,7 +127,7 @@ export default function ManualUploadContent() {
             <div>
               {d.selectedBatch ? (
                 <>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="text-xs text-fg-muted mb-2">
                     Sync logs for batch:{" "}
                     <span className="font-semibold">
                       {d.selectedBatch.source_name || d.selectedBatch._id}
@@ -140,7 +140,7 @@ export default function ManualUploadContent() {
                   />
                 </>
               ) : (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-fg-muted">
                   Select a batch in the Staging Areas tab to view its
                   synchronization logs.
                 </p>

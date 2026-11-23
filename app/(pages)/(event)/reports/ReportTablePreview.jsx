@@ -14,7 +14,7 @@ const cellClass = (isStat, isTotal) =>
   [
     "px-3 py-2 align-top whitespace-nowrap",
     isStat ? "text-right tabular-nums" : "text-left",
-    isTotal ? "font-semibold text-gray-900" : "text-gray-700",
+    isTotal ? "font-semibold text-fg" : "text-fg-3",
   ].join(" ");
 
 export default function ReportTablePreview({
@@ -38,7 +38,7 @@ export default function ReportTablePreview({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-inverse/50 p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -49,15 +49,15 @@ export default function ReportTablePreview({
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl bg-white shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-line-subtle px-6 py-4">
           <div className="min-w-0">
             <h2
               id="report-preview-title"
-              className="text-base font-semibold text-gray-900"
+              className="text-base font-semibold text-fg"
             >
               Gender Profile Report — Preview
             </h2>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <p className="mt-0.5 text-xs text-fg-muted">
               {scope}
               {mode === "masterlist" && (
                 <>
@@ -72,7 +72,7 @@ export default function ReportTablePreview({
             type="button"
             onClick={onClose}
             aria-label="Close preview"
-            className="touch-target shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="touch-target shrink-0 rounded-lg p-1.5 text-fg-muted transition-colors hover:bg-muted hover:text-fg-4"
           >
             <FaTimes size={16} />
           </button>
@@ -80,18 +80,18 @@ export default function ReportTablePreview({
 
         <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
           {body.length === 0 ? (
-            <p className="py-10 text-center text-sm text-gray-500 italic">
+            <p className="py-10 text-center text-sm text-fg-muted italic">
               No records match the selected filters.
             </p>
           ) : (
             <table className="w-full border-collapse text-sm">
-              <thead className="sticky top-0 z-10 bg-gray-50">
-                <tr className="border-b border-gray-200">
+              <thead className="sticky top-0 z-10 bg-subtle">
+                <tr className="border-b border-line">
                   {head.map((label, i) => (
                     <th
                       key={i}
                       scope="col"
-                      className={`px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600 ${
+                      className={`px-3 py-2 text-xs font-semibold uppercase tracking-wide text-fg-4 ${
                         i >= statFrom ? "text-right" : "text-left"
                       }`}
                     >
@@ -108,8 +108,8 @@ export default function ReportTablePreview({
                       key={r}
                       className={
                         isTotal
-                          ? "border-t-2 border-gray-300 bg-gray-50"
-                          : "border-b border-gray-100 hover:bg-secondary-50/40"
+                          ? "border-t-2 border-line-strong bg-subtle"
+                          : "border-b border-line-subtle hover:bg-secondary-50/40"
                       }
                     >
                       {row.map((cell, c) => (
@@ -128,8 +128,8 @@ export default function ReportTablePreview({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
-          <p className="text-xs text-gray-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-subtle px-6 py-4">
+          <p className="text-xs text-fg-muted">
             Built from the sample dataset — the downloaded PDF is marked “Sample
             data”.
           </p>

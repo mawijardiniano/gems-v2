@@ -60,14 +60,14 @@ export default function FieldMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+        className="w-full flex items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-fg-3 hover:border-line-strong focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span className="truncate text-left">
           {selected.length
             ? selected.map((f) => f.label).join(", ")
             : "Select fields"}
         </span>
-        <span className="shrink-0 text-xs text-gray-500">
+        <span className="shrink-0 text-xs text-fg-muted">
           {selected.length} of {available.length} ▾
         </span>
       </button>
@@ -80,7 +80,7 @@ export default function FieldMultiSelect({
       />
 
       {open && (
-        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white p-2 shadow-lg max-h-96 overflow-y-auto">
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-line bg-white p-2 shadow-lg max-h-96 overflow-y-auto">
           {fields.map((field) => {
             const options = field.available ? filterOptions[field.value] : null;
             const isFlag = flagFields.includes(field.value);
@@ -90,8 +90,8 @@ export default function FieldMultiSelect({
                 <div
                   className={`flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
                     field.available
-                      ? "text-gray-700 hover:bg-secondary-50"
-                      : "text-gray-300"
+                      ? "text-fg-3 hover:bg-secondary-50"
+                      : "text-fg-faint"
                   }`}
                 >
                   <label
@@ -108,12 +108,12 @@ export default function FieldMultiSelect({
                     />
                     <span className="truncate">{field.label}</span>
                     {field.note && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-fg-muted">
                         {field.note}
                       </span>
                     )}
                     {field.available && field.listOnly && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-fg-muted">
                         list only
                       </span>
                     )}

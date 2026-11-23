@@ -109,7 +109,7 @@ export default function DashboardNavbar({
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/80 flex justify-between items-center px-4 z-30 sm:z-40 shadow-sm"
+      className="fixed top-0 left-0 w-full h-16 bg-white/80 backdrop-blur-md border-b border-line/80 flex justify-between items-center px-4 z-30 sm:z-40 shadow-sm"
     >
       {/* Left section — the brand lockup and the collapse/expand control both
           live in the sidebar header now. On desktop the sidebar (z-50) covers
@@ -119,7 +119,7 @@ export default function DashboardNavbar({
       <div className="flex min-w-0 items-center space-x-3 sm:space-x-4">
         <button
           onClick={toggleSidebar}
-          className="touch-target shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:hidden"
+          className="touch-target shrink-0 rounded-lg p-2 text-fg-muted transition-colors hover:bg-muted hover:text-fg-2 sm:hidden"
           aria-label="Toggle sidebar"
         >
           <FaBars size={18} />
@@ -139,7 +139,7 @@ export default function DashboardNavbar({
           <button
             ref={triggerRef}
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-muted transition-colors group"
             aria-label="User menu"
             aria-haspopup="true"
             aria-expanded={dropdownOpen}
@@ -154,15 +154,15 @@ export default function DashboardNavbar({
             </div>
             <FaChevronDown
               size={10}
-              className={`text-gray-500 transition-transform duration-200 ${
+              className={`text-fg-muted transition-transform duration-200 ${
                 dropdownOpen ? "rotate-180" : ""
               }`}
             />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-dropdown">
-              <div className="px-4 pt-4 pb-3 border-b border-gray-50">
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden animate-dropdown">
+              <div className="px-4 pt-4 pb-3 border-b border-line-faint">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0"
@@ -173,11 +173,11 @@ export default function DashboardNavbar({
                     {getInitials()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className="text-sm font-semibold text-fg truncate">
                       {displayName}
                     </p>
                     {email && (
-                      <p className="text-xs text-gray-500 truncate">{email}</p>
+                      <p className="text-xs text-fg-muted truncate">{email}</p>
                     )}
                   </div>
                 </div>
@@ -189,14 +189,14 @@ export default function DashboardNavbar({
                     setDropdownOpen(false);
                     router.push(settingsHref);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-fg-4 hover:bg-subtle hover:text-fg transition-colors"
                 >
-                  <FaCog size={14} className="text-gray-500" />
+                  <FaCog size={14} className="text-fg-muted" />
                   Settings
                 </button>
               </div>
 
-              <div className="border-t border-gray-50 py-1.5">
+              <div className="border-t border-line-faint py-1.5">
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}

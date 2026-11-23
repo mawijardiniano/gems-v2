@@ -61,7 +61,7 @@ export default function EmploymentInformation() {
   if (personal.currentStatus !== "Employee") {
     return (
       <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
-        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -74,17 +74,17 @@ export default function EmploymentInformation() {
             </div>
           </div>
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaBriefcase className="text-gray-500 text-2xl" />
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaBriefcase className="text-fg-muted text-2xl" />
             </div>
-            <p className="text-gray-600 font-medium">
+            <p className="text-fg-4 font-medium">
               This section is available when Current Status is set to <span className="font-semibold text-secondary-600">Employee</span>.
             </p>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-fg-muted text-sm mt-1">
               Please go back to Personal Information to update your status.
             </p>
           </div>
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}
@@ -105,7 +105,7 @@ export default function EmploymentInformation() {
   return (
     <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -123,11 +123,11 @@ export default function EmploymentInformation() {
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Employee ID <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={employment?.employee_id || ""}
                   onChange={(e) => update("employee_id", e.target.value)}
                   placeholder="Enter Employee ID"
@@ -135,11 +135,11 @@ export default function EmploymentInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Office <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={employment?.office || ""}
                   onChange={(e) => update("office", e.target.value)}
                 >
@@ -193,11 +193,11 @@ export default function EmploymentInformation() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Employment Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={employment?.employment_status || ""}
                   onChange={(e) => {
                     update("employment_status", e.target.value);
@@ -211,11 +211,11 @@ export default function EmploymentInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Appointment Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={employment?.employment_appointment_status || ""}
                   onChange={(e) =>
                     update("employment_appointment_status", e.target.value)
@@ -233,7 +233,7 @@ export default function EmploymentInformation() {
             </div>
           </div>
 
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}

@@ -51,7 +51,7 @@ export default function TextSizeMenu({ scaleId, percent, presets, onSelect }) {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+        className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-fg-muted transition-colors hover:bg-muted hover:text-fg-2"
         aria-label="Text size"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -67,10 +67,10 @@ export default function TextSizeMenu({ scaleId, percent, presets, onSelect }) {
         <div
           role="menu"
           aria-label="Text size"
-          className="fixed right-4 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl animate-dropdown sm:absolute sm:right-0"
+          className="fixed right-4 mt-2 w-56 overflow-hidden rounded-2xl border border-line-subtle bg-white shadow-xl animate-dropdown sm:absolute sm:right-0"
         >
-          <div className="border-b border-gray-50 px-4 pb-2 pt-3">
-            <p className="text-2xs font-semibold uppercase tracking-widest text-gray-500">
+          <div className="border-b border-line-faint px-4 pb-2 pt-3">
+            <p className="text-2xs font-semibold uppercase tracking-widest text-fg-muted">
               Text size
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function TextSizeMenu({ scaleId, percent, presets, onSelect }) {
                   className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors ${
                     active
                       ? "bg-secondary-50 font-semibold text-secondary-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      : "text-fg-4 hover:bg-subtle hover:text-fg"
                   }`}
                 >
                   <span>{preset.label}</span>

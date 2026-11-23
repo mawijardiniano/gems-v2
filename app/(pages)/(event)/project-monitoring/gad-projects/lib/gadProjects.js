@@ -19,7 +19,7 @@ export const getProjectStatus = (project) =>
 export const PROJECT_STATUS_META = {
   "for-review": {
     label: "For Review",
-    classes: "bg-gray-50 text-gray-700 border-gray-200",
+    classes: "bg-subtle text-fg-3 border-line",
   },
   ongoing: {
     label: "Ongoing",
@@ -34,7 +34,7 @@ export const PROJECT_STATUS_META = {
 export const MILESTONE_STATUS_META = {
   pending: {
     label: "Pending",
-    classes: "bg-gray-50 text-gray-700 border-gray-200",
+    classes: "bg-subtle text-fg-3 border-line",
   },
   ongoing: {
     label: "Ongoing",

@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import GADActivityCell from "./GADActivityCell";
 import { formatAmount } from "@/data/lib/money";
 import { toOfficeArray } from "@/data/lib/colleges";
+import Button from "@/components/ui/Button";
 import { canManageProject } from "@/data/lib/projectAccess";
 import {
   alignActivityDescriptions,
@@ -115,7 +116,7 @@ export default function GpbProjectsTable({
               }}
             >
               <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-900 border text-white">
+                <tr className="bg-inverse border text-white">
                   <th className="py-2 border-b text-center w-10 text-sm">
                     No.
                   </th>
@@ -228,7 +229,7 @@ export default function GpbProjectsTable({
                         (_, rowIdx) => (
                           <tr
                             key={project._id + "-" + rowIdx}
-                            className="hover:bg-gray-50 border"
+                            className="hover:bg-subtle border"
                           >
                             {rowIdx === 0 && (
                               <>
@@ -241,7 +242,7 @@ export default function GpbProjectsTable({
                                   </div>
                                   {project.reference_number && (
                                     <div
-                                      className="mt-1 font-mono text-2xs leading-tight text-gray-500 whitespace-nowrap"
+                                      className="mt-1 font-mono text-2xs leading-tight text-fg-muted whitespace-nowrap"
                                       title="Project reference number"
                                     >
                                       {project.reference_number}
@@ -391,10 +392,10 @@ export default function GpbProjectsTable({
                                   >
                                     <div className="flex items-center gap-2 w-16">
                                       <div className="min-w-0">
-                                        <p className="text-xs font-medium text-gray-900 truncate">
+                                        <p className="text-xs font-medium text-fg truncate">
                                           {getCreatorName(project)}
                                         </p>
-                                        <p className="text-xs text-gray-500 capitalize">
+                                        <p className="text-xs text-fg-muted capitalize">
                                           {getCreatorRole(project)}
                                         </p>
                                       </div>
@@ -438,7 +439,7 @@ export default function GpbProjectsTable({
                                                     .join(", ")}
                                                   :
                                                 </span>
-                                                <span className="text-gray-700">
+                                                <span className="text-fg-3">
                                                   {c.message}
                                                 </span>
                                                 {role
@@ -494,9 +495,9 @@ export default function GpbProjectsTable({
                                         <>
                                           {role !== "planning director" && (
                                             <div className="flex flex-col items-center gap-2">
-                                              <button
-                                                type="button"
-                                                className="px-3 py-1 bg-secondary-500 text-white rounded hover:bg-secondary-600 transition"
+                                              <Button
+                                                variant="primary"
+                                                className="px-3 py-1 rounded"
                                                 onClick={() =>
                                                   router.push(
                                                     `/gpb/projects/${project._id}`,
@@ -504,7 +505,7 @@ export default function GpbProjectsTable({
                                                 }
                                               >
                                                 View
-                                              </button>
+                                              </Button>
                                               {canChange(project) && (
                                                   <button
                                                     type="button"
@@ -575,7 +576,7 @@ export default function GpbProjectsTable({
           per page
         </label>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-fg-4">
             Page {page} of {totalPages}
           </span>
           <div className="flex gap-2">

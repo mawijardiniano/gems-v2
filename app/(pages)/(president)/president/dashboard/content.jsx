@@ -28,20 +28,20 @@ function HeaderBar({
   year,
 }) {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wider text-secondary-600">
             SUC President · Executive Overview
           </p>
-          <h1 className="mt-1 text-xl font-bold text-gray-900">
+          <h1 className="mt-1 text-xl font-bold text-fg">
             Welcome back{profileName ? `, ${profileName}` : ""}
           </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <p className="mt-0.5 text-sm text-fg-muted">
             Marinduque State University · University-wide scope
             {updatedAt ? ` · Updated ${updatedAt.toLocaleTimeString()}` : ""}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-fg-muted">
             <SampleToggle
               useSample={useSample}
               onToggle={onToggleSample}
@@ -53,7 +53,7 @@ function HeaderBar({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs font-medium text-gray-500">
+          <label className="text-xs font-medium text-fg-muted">
             AY
             <select
               value={filters.schoolYear}
@@ -61,7 +61,7 @@ function HeaderBar({
               disabled={
                 filtersLoading || filters.schoolYearOptions.length === 0
               }
-              className="ml-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700"
+              className="ml-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-fg-3"
             >
               {filters.schoolYearOptions.length === 0 && (
                 <option value="">—</option>
@@ -73,13 +73,13 @@ function HeaderBar({
               ))}
             </select>
           </label>
-          <label className="text-xs font-medium text-gray-500">
+          <label className="text-xs font-medium text-fg-muted">
             Sem
             <select
               value={filters.semester}
               onChange={(e) => filters.setSemester(e.target.value)}
               disabled={filtersLoading}
-              className="ml-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700"
+              className="ml-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-fg-3"
             >
               <option value="">All</option>
               {filters.semesterOptions.map((s) => (
@@ -93,7 +93,7 @@ function HeaderBar({
             type="button"
             onClick={onRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle disabled:opacity-50"
             title="Refresh overview"
           >
             <FaSyncAlt size={11} className={refreshing ? "animate-spin" : ""} />

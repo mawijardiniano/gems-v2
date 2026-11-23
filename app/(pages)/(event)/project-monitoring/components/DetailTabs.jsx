@@ -34,7 +34,7 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
     <div
       role="tablist"
       aria-label="Project sections"
-      className={`flex gap-1.5 overflow-x-auto rounded-2xl border border-gray-200 bg-gray-100/80 p-1.5 ${className}`}
+      className={`flex gap-1.5 overflow-x-auto rounded-2xl border border-line bg-muted/80 p-1.5 ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = active === tab.key;
@@ -50,13 +50,13 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
             className={`whitespace-nowrap inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 ${
               isActive
                 ? "border-rose-600 bg-rose-600 text-white shadow-md shadow-rose-200"
-                : "border-gray-200 bg-white text-gray-600 shadow-sm hover:border-rose-300 hover:bg-rose-50/60 hover:text-rose-700"
+                : "border-line bg-white text-fg-4 shadow-sm hover:border-rose-300 hover:bg-rose-50/60 hover:text-rose-700"
             }`}
           >
             {Icon && (
               <Icon
                 className={`h-3.5 w-3.5 shrink-0 ${
-                  isActive ? "text-white" : "text-gray-500"
+                  isActive ? "text-white" : "text-fg-muted"
                 }`}
               />
             )}
@@ -66,7 +66,7 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
                 className={`rounded-full px-2 py-0.5 text-xs font-bold leading-none ${
                   isActive
                     ? "bg-white/25 text-white"
-                    : "bg-gray-100 text-gray-600"
+                    : "bg-muted text-fg-4"
                 }`}
               >
                 {tab.count}

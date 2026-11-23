@@ -51,14 +51,14 @@ function ProgressBar({ project }) {
   const progress = getMilestoneProgress(project);
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 shrink-0 rounded-full bg-gray-200 overflow-hidden">
+      <div className="h-1.5 w-16 shrink-0 rounded-full bg-emphasis overflow-hidden">
         <div
           className="h-full rounded-full bg-rose-500 transition-all duration-300"
           style={{ width: `${progress.percent}%` }}
         />
       </div>
       <span
-        className="text-xs font-medium text-gray-600 whitespace-nowrap"
+        className="text-xs font-medium text-fg-4 whitespace-nowrap"
         title={
           progress.total > 0
             ? `${progress.done} of ${progress.total} milestones completed`
@@ -96,7 +96,7 @@ function ProjectPanel({ project, access, list, viewer, actions }) {
   return (
     <div className="p-4 sm:p-5 animate-fade-in space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-fg flex items-center gap-2">
           <FaFileAlt className="text-rose-500" />
           Project Details
           <span className="ml-2">
@@ -106,7 +106,7 @@ function ProjectPanel({ project, access, list, viewer, actions }) {
         <button
           type="button"
           onClick={list.closeProject}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition"
+          className="inline-flex items-center gap-1 text-xs text-fg-muted hover:text-fg-3 transition"
         >
           <FaTimes className="h-3 w-3" />
           Close
@@ -168,7 +168,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
       isOwnProject(project, viewer.userId),
   };
 
-  const cell = "px-3 py-4 align-top text-xs text-gray-800";
+  const cell = "px-3 py-4 align-top text-xs text-fg-2";
 
   return (
     <>
@@ -176,14 +176,14 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
         id={`gad-project-${project._id}`}
         onClick={() => list.toggleExpand(project._id)}
         className={`transition-colors ${
-          isExpanded ? "bg-rose-50/40" : "hover:bg-gray-50 cursor-pointer"
+          isExpanded ? "bg-rose-50/40" : "hover:bg-subtle cursor-pointer"
         }`}
       >
-        <td className="px-3 py-4 text-center text-xs font-medium text-gray-800 align-top">
+        <td className="px-3 py-4 text-center text-xs font-medium text-fg-2 align-top">
           <div>{displayIndex}</div>
           {project.reference_number && (
             <div
-              className="mt-1 font-mono text-2xs font-normal text-gray-500 whitespace-nowrap"
+              className="mt-1 font-mono text-2xs font-normal text-fg-muted whitespace-nowrap"
               title="Project reference number"
             >
               {project.reference_number}
@@ -236,8 +236,8 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
             aria-expanded={isExpanded}
             className={`touch-target inline-flex items-center justify-center h-8 w-8 rounded-lg border transition ${
               isExpanded
-                ? "bg-rose-600 border-rose-600 text-white hover:bg-rose-700"
-                : "bg-white border-gray-200 text-gray-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                ? "bg-secondary-600 border-secondary-600 text-white hover:bg-secondary-700"
+                : "bg-white border-line text-fg-muted hover:bg-secondary-50 hover:text-secondary-700 hover:border-secondary-200"
             }`}
           >
             <FaEye className="h-3.5 w-3.5" />
@@ -247,7 +247,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
 
       {isExpanded && (
         <tr>
-          <td colSpan={showBudget ? 10 : 9} className="p-0 bg-gray-50/60">
+          <td colSpan={showBudget ? 10 : 9} className="p-0 bg-subtle/60">
             <ProjectPanel
               project={project}
               access={access}
@@ -270,21 +270,21 @@ function Pagination({ list }) {
   const pageStart = count === 0 ? 0 : (currentPage - 1) * PROJECTS_PER_PAGE + 1;
   const pageEnd = Math.min(currentPage * PROJECTS_PER_PAGE, count);
   const navButton =
-    "touch-target p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+    "touch-target p-1.5 rounded-lg border border-line bg-white text-fg-4 hover:bg-subtle transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
   return (
-    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <p className="text-xs text-gray-500">
+    <div className="px-4 py-3 border-t border-line-subtle bg-subtle/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <p className="text-xs text-fg-muted">
         {expandedId ? (
           <>
-            Viewing <span className="font-medium text-gray-700">1</span> of {count}{" "}
+            Viewing <span className="font-medium text-fg-3">1</span> of {count}{" "}
             project{plural}
             {yearNote} — close the details to show the rest
           </>
         ) : (
           <>
             Showing{" "}
-            <span className="font-medium text-gray-700">
+            <span className="font-medium text-fg-3">
               {pageStart}–{pageEnd}
             </span>{" "}
             of {count} project{plural}
@@ -306,7 +306,7 @@ function Pagination({ list }) {
           </button>
           {pageWindow(currentPage, totalPages).map((p, i) =>
             p === null ? (
-              <span key={`gap-${i}`} className="px-1 text-xs text-gray-500">
+              <span key={`gap-${i}`} className="px-1 text-xs text-fg-muted">
                 …
               </span>
             ) : (
@@ -318,7 +318,7 @@ function Pagination({ list }) {
                 className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
                   p === currentPage
                     ? "bg-rose-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    : "border border-line bg-white text-fg-4 hover:bg-subtle"
                 }`}
               >
                 {p}
@@ -351,12 +351,12 @@ export default function GadProjectsTable({ list, viewer, budgetView, actions }) 
   return (
     <div
       id="gad-projects-table"
-      className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+      className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden"
     >
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-gray-600">
+            <tr className="bg-subtle text-fg-4">
               {HEADERS.filter((h) => showBudget || !h.budget).map((h) => (
                 <th
                   key={h.label}
@@ -369,7 +369,7 @@ export default function GadProjectsTable({ list, viewer, budgetView, actions }) 
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-line-subtle">
             {list.visibleProjects.map((project, idx) => (
               <ProjectRow
                 key={project._id || idx}

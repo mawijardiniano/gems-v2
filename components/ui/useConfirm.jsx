@@ -71,7 +71,7 @@ export function useConfirm() {
         </>
       }
     >
-      {message && <p className="text-sm text-gray-600">{message}</p>}
+      {message && <p className="text-sm text-fg-4">{message}</p>}
     </Modal>
   );
 

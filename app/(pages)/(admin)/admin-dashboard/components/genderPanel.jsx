@@ -48,9 +48,9 @@ const tooltipContentStyle = {
 
 const DonutCard = memo(function DonutCard({ title, total, data }) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-xs text-gray-500 mb-3">
+    <div className="bg-white p-5 rounded-xl border border-line-subtle w-full shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-1">{title}</h3>
+      <p className="text-xs text-fg-muted mb-3">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={240}>
@@ -84,7 +84,7 @@ const DonutCard = memo(function DonutCard({ title, total, data }) {
         {data.map((entry, i) => (
           <div
             key={entry.name}
-            className="flex items-center gap-1.5 text-xs text-gray-600"
+            className="flex items-center gap-1.5 text-xs text-fg-4"
           >
             <span
               className="inline-block h-2 w-2 rounded-full"
@@ -149,12 +149,12 @@ function GenderPanel({ data, genderPanel }) {
   const prefTotal = preferenceData.reduce((a, b) => a + b.value, 0);
 
   return (
-    <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="w-full rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Gender, Sex & Identity Panel
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Used for gender analysis, equity monitoring, and GAD compliance
         </p>
       </div>

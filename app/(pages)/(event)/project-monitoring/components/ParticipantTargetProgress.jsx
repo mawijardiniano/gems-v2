@@ -14,20 +14,20 @@ export default function ParticipantTargetProgress({
 
   return (
     <div className={className}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5 mb-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted flex items-center gap-1.5 mb-2">
         <FaBullseye className="h-3 w-3" />
         {label}
       </p>
 
       {progress.target === 0 ? (
-        <p className="text-xs text-gray-500 italic">{emptyMessage}</p>
+        <p className="text-xs text-fg-muted italic">{emptyMessage}</p>
       ) : (
         <>
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-fg">
               {progress.actual}
             </span>
-            <span className="text-gray-500">of {progress.target} target</span>
+            <span className="text-fg-muted">of {progress.target} target</span>
             <span
               className={`font-bold ${
                 progress.isOver ? "text-danger" : "text-success"
@@ -36,7 +36,7 @@ export default function ParticipantTargetProgress({
               {progress.percent}%
             </span>
           </div>
-          <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full ${
                 progress.isOver ? "bg-red-500" : "bg-emerald-500"

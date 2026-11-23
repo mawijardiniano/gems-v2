@@ -80,7 +80,7 @@ function ScheduleSection({ project, canManage, onSaved }) {
     setDraft((d) => ({ ...d, [field]: e.target.value }));
 
   return (
-    <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+    <section className="rounded-xl bg-white border border-line-subtle p-4 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <FieldLabel>Schedule &amp; Status</FieldLabel>
         {canManage && !editing && (
@@ -144,7 +144,7 @@ function ScheduleSection({ project, canManage, onSaved }) {
             </span>
           </div>
           {!canManage && (
-            <p className="text-xs text-gray-500 italic">
+            <p className="text-xs text-fg-muted italic">
               Only the project creator or a GAD Focal Person can set the schedule
               and status.
             </p>
@@ -159,8 +159,8 @@ function ScheduleSection({ project, canManage, onSaved }) {
 export default function DetailsTab({ project, canManage, onSaved }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in" role="tabpanel">
-      <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+      <section className="rounded-xl bg-white border border-line-subtle p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
           Project Information
         </p>
         <DetailRow

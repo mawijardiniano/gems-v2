@@ -41,7 +41,7 @@ export default function PageBreadcrumbs({
 
   return (
     <nav aria-label="Breadcrumb" className={`min-w-0 py-3 ${className}`}>
-      <ol className="flex items-center gap-1.5 text-xs text-gray-500 sm:text-sm">
+      <ol className="flex items-center gap-1.5 text-xs text-fg-muted sm:text-sm">
         {crumbs.map((crumb, index) => {
           const isFirst = index === 0;
           const isLast = index === crumbs.length - 1;
@@ -56,14 +56,14 @@ export default function PageBreadcrumbs({
               {!isFirst && (
                 <FaChevronRight
                   aria-hidden="true"
-                  className="flex-shrink-0 text-[0.5rem] text-gray-300"
+                  className="flex-shrink-0 text-[0.5rem] text-fg-faint"
                 />
               )}
 
               {crumb.href && !isLast ? (
                 <Link
                   href={crumb.href}
-                  className="flex min-w-0 items-center gap-1.5 rounded font-medium text-gray-500 transition-colors hover:text-secondary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 focus-visible:ring-offset-1"
+                  className="flex min-w-0 items-center gap-1.5 rounded font-medium text-fg-muted transition-colors hover:text-secondary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary-400 focus-visible:ring-offset-1"
                 >
                   {showIcon && (
                     <FaHome
@@ -78,8 +78,8 @@ export default function PageBreadcrumbs({
                   aria-current={isLast ? "page" : undefined}
                   className={`flex min-w-0 items-center gap-1.5 ${
                     isLast
-                      ? "font-semibold text-gray-900"
-                      : "font-medium text-gray-500"
+                      ? "font-semibold text-fg"
+                      : "font-medium text-fg-muted"
                   }`}
                 >
                   {showIcon && (

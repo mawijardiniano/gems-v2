@@ -25,7 +25,7 @@ import EventFormFields from "../components/EventFormFields";
 import Button from "@/components/ui/Button";
 
 const labelClass =
-  "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
+  "block text-sm font-medium text-fg-3 mb-2 gap-2 flex items-center";
 
 function AlertBanner({ type = "error", message }) {
   const isError = type === "error";
@@ -56,7 +56,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
     <div>
       <label className={labelClass} htmlFor="event-poster">
         <FaImage
-          className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
+          className="inline h-4 w-4 mr-1.5 text-fg-muted -mt-0.5"
           aria-hidden="true"
         />
         Event Poster
@@ -83,7 +83,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
         className={`flex items-center gap-4 rounded-xl border-2 border-dashed p-4 cursor-pointer transition ${
           posterPreview
             ? "border-secondary-200 bg-secondary-50/40"
-            : "border-gray-200 hover:border-secondary-300 hover:bg-secondary-50/30"
+            : "border-line hover:border-secondary-300 hover:bg-secondary-50/30"
         }`}
       >
         {posterPreview ? (
@@ -92,27 +92,27 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
             <img
               src={posterPreview}
               alt="Poster preview"
-              className="h-20 w-20 rounded-lg object-cover border border-gray-200"
+              className="h-20 w-20 rounded-lg object-cover border border-line"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">
+              <p className="text-sm font-medium text-fg-2 truncate">
                 {posterFile?.name}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Click to change the poster
               </p>
             </div>
           </>
         ) : (
           <>
-            <div className="h-14 w-14 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
-              <FaUpload className="h-5 w-5 text-gray-300" aria-hidden="true" />
+            <div className="h-14 w-14 rounded-xl bg-subtle border border-line-subtle flex items-center justify-center shrink-0">
+              <FaUpload className="h-5 w-5 text-fg-faint" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-fg-3">
                 Upload an event poster
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Click to browse · JPG, PNG, GIF or WEBP
               </p>
             </div>
@@ -322,7 +322,7 @@ export default function CreateEventsContent() {
       <button
         type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-secondary-600 mb-4 transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium text-fg-muted hover:text-secondary-600 mb-4 transition-colors"
       >
         <FaArrowLeft className="h-4 w-4" aria-hidden="true" />
         Back
@@ -333,8 +333,8 @@ export default function CreateEventsContent() {
           <FaCalendarAlt className="h-6 w-6 text-white" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Event</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-fg">Create Event</h1>
+          <p className="text-fg-muted text-sm mt-0.5">
             Fill out the details below to schedule a new event.
           </p>
         </div>

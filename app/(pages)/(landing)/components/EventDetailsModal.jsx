@@ -16,7 +16,7 @@ const ACTIVITY_COLORS = {
   Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
+  Others: "bg-subtle text-fg-3 border-line",
 };
 
 function formatDate(dateStr) {
@@ -68,7 +68,7 @@ export default function EventDetailsModal({ event, onClose }) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="touch-target absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md transition-colors hover:bg-white hover:text-gray-900"
+          className="touch-target absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-fg-4 shadow-md transition-colors hover:bg-white hover:text-fg"
         >
           <FaTimes size={14} />
         </button>
@@ -87,14 +87,14 @@ export default function EventDetailsModal({ event, onClose }) {
         {/* Scrollable details */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-3">
-            <h2 id={titleId} className="text-lg leading-snug font-bold text-gray-900">
+            <h2 id={titleId} className="text-lg leading-snug font-bold text-fg">
               {event.title}
             </h2>
             {event.type_of_activity && (
               <span
                 className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                   ACTIVITY_COLORS[event.type_of_activity] ||
-                  "bg-gray-50 text-gray-700 border-gray-200"
+                  "bg-subtle text-fg-3 border-line"
                 }`}
               >
                 {event.type_of_activity}
@@ -104,12 +104,12 @@ export default function EventDetailsModal({ event, onClose }) {
 
           {/* Schedule - every day with times */}
           <div className="mt-4 space-y-1.5">
-            <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+            <p className="text-xs font-semibold tracking-wide text-fg-muted uppercase">
               Schedule
             </p>
             {scheduleRows.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm text-gray-500">
-                <FaCalendarAlt className="shrink-0 text-gray-300" />
+              <p className="flex items-center gap-2 text-sm text-fg-muted">
+                <FaCalendarAlt className="shrink-0 text-fg-faint" />
                 No date set
               </p>
             ) : (
@@ -120,11 +120,11 @@ export default function EventDetailsModal({ event, onClose }) {
                 return (
                   <div
                     key={i}
-                    className="flex items-start gap-2 text-sm text-gray-600"
+                    className="flex items-start gap-2 text-sm text-fg-4"
                   >
-                    <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-500" />
+                    <FaCalendarAlt className="mt-0.5 shrink-0 text-fg-muted" />
                     <span>
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-fg-2">
                         Day {i + 1}:
                       </span>{" "}
                       {formatDate(start)}, {formatTime(start)}
@@ -141,25 +141,25 @@ export default function EventDetailsModal({ event, onClose }) {
 
           {/* Venue */}
           {event.venue && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-              <FaMapMarkerAlt className="shrink-0 text-gray-500" />
+            <div className="mt-4 flex items-center gap-2 text-sm text-fg-4">
+              <FaMapMarkerAlt className="shrink-0 text-fg-muted" />
               <span>Venue: {event.venue}</span>
             </div>
           )}
 
           {/* Organizing office(s) */}
           {(event.organizing_office_unit || []).length > 0 && (
-            <div className="mt-2 flex items-start gap-2 text-sm text-gray-600">
-              <FaBuilding className="mt-0.5 shrink-0 text-gray-500" />
+            <div className="mt-2 flex items-start gap-2 text-sm text-fg-4">
+              <FaBuilding className="mt-0.5 shrink-0 text-fg-muted" />
               <span>{event.organizing_office_unit.join(", ")}</span>
             </div>
           )}
 
           {/* Full description - collapsed by default for long texts */}
           {event.description && (
-            <div className="mt-4 border-t border-gray-100 pt-4">
+            <div className="mt-4 border-t border-line-subtle pt-4">
               <p
-                className={`text-sm leading-relaxed whitespace-pre-line text-gray-600 ${
+                className={`text-sm leading-relaxed whitespace-pre-line text-fg-4 ${
                   descExpanded ? "" : "line-clamp-5"
                 }`}
               >
@@ -177,7 +177,7 @@ export default function EventDetailsModal({ event, onClose }) {
           )}
         </div>
         {/* Footer / Attendance CTA (no login — QR form) */}
-        <div className="shrink-0 border-t border-gray-100 p-4">
+        <div className="shrink-0 border-t border-line-subtle p-4">
           <a
             href={isCancelled || hasEnded ? undefined : `/attend/${event._id}`}
             aria-disabled={isCancelled || hasEnded}
@@ -186,7 +186,7 @@ export default function EventDetailsModal({ event, onClose }) {
             }}
             className={`block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition ${
               isCancelled || hasEnded
-                ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                ? "cursor-not-allowed bg-muted text-fg-disabled"
                 : "bg-gradient-to-r from-secondary-700 to-secondary-500 text-white shadow-md hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
             }`}
           >
@@ -197,7 +197,7 @@ export default function EventDetailsModal({ event, onClose }) {
                 : "Mark Attendance"}
           </a>
           {!hasEnded && !isCancelled && (
-            <p className="mt-2 text-center text-xs text-gray-500">
+            <p className="mt-2 text-center text-xs text-fg-muted">
               No login needed — scan the event QR at the venue and fill the form.
             </p>
           )}

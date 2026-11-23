@@ -50,10 +50,10 @@ export const EVENT_ACTIVITY_TYPES = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
+  "w-full rounded-lg border border-line bg-subtle/50 px-3.5 py-2.5 text-sm text-fg placeholder-gray-400 transition focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
 
 const labelClass =
-  "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
+  "block text-sm font-medium text-fg-3 mb-2 gap-2 flex items-center";
 
 const SECTION_COLORS = {
   blue: "bg-secondary-50 text-secondary-600",
@@ -71,7 +71,7 @@ function Section({ variant, icon: Icon, color = "blue", title, subtitle, childre
     );
   }
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+    <section className="bg-white rounded-2xl border border-line-subtle shadow-sm p-6 space-y-6">
       <div className="flex items-center gap-3">
         <div
           className={`h-10 w-10 rounded-xl ${SECTION_COLORS[color] || SECTION_COLORS.blue} flex items-center justify-center shrink-0`}
@@ -79,8 +79,8 @@ function Section({ variant, icon: Icon, color = "blue", title, subtitle, childre
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
-          {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+          <h2 className="text-sm font-semibold text-fg">{title}</h2>
+          {subtitle && <p className="text-xs text-fg-muted mt-0.5">{subtitle}</p>}
         </div>
       </div>
       {children}
@@ -257,13 +257,13 @@ export default function EventFormFields({
                   className={`rounded-xl border p-4 text-left transition ${
                     active
                       ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-500/20 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                      : "border-line bg-white hover:border-line-strong hover:bg-subtle"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span
                       className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                        active ? "border-secondary-600" : "border-gray-300"
+                        active ? "border-secondary-600" : "border-line-strong"
                       }`}
                       aria-hidden="true"
                     >
@@ -271,11 +271,11 @@ export default function EventFormFields({
                         <span className="h-2.5 w-2.5 rounded-full bg-secondary-600" />
                       )}
                     </span>
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-fg">
                       {source.label}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-xs text-gray-500">
+                  <p className="mt-1.5 text-xs text-fg-muted">
                     {source.description}
                   </p>
                 </button>
@@ -295,7 +295,7 @@ export default function EventFormFields({
         <div>
           <p className={labelClass} id={id("type-label")}>
             <FaTag
-              className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
+              className="inline h-4 w-4 mr-1.5 text-fg-muted -mt-0.5"
               aria-hidden="true"
             />
             Type of Activity <span className="text-danger">*</span>
@@ -314,7 +314,7 @@ export default function EventFormFields({
                 className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
                   values.type_of_activity === type
                     ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-2 ring-secondary-500/20 shadow-sm"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    : "border-line bg-white text-fg-4 hover:border-line-strong hover:bg-subtle"
                 }`}
               >
                 {type}
@@ -327,13 +327,13 @@ export default function EventFormFields({
           <div>
             <label className={labelClass} htmlFor={id("gad-activity")}>
               <FaProjectDiagram
-                className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
+                className="inline h-4 w-4 mr-1.5 text-fg-muted -mt-0.5"
                 aria-hidden="true"
               />
               GAD Activity <span className="text-danger">*</span>
             </label>
             {projects.length === 0 ? (
-              <p className="text-xs text-gray-500 italic">
+              <p className="text-xs text-fg-muted italic">
                 No projects with GAD activities found. Please create a GPB
                 project first.
               </p>
@@ -370,7 +370,7 @@ export default function EventFormFields({
                 })}
               </select>
             )}
-            <p className="text-xs text-gray-500 mt-1.5">
+            <p className="text-xs text-fg-muted mt-1.5">
               This activity is required because the event type is GAD.
               {activityPrefill
                 ? " Selecting one fills in the event title and your office/unit."
@@ -453,7 +453,7 @@ export default function EventFormFields({
             placeholder="Add a detailed event description..."
           />
           {!canGenerate && (
-            <p className="text-xs text-gray-500 mt-1.5">
+            <p className="text-xs text-fg-muted mt-1.5">
               Fill in the event title, date and GAD activity (for GAD events)
               to enable AI description generation.
             </p>
@@ -463,7 +463,7 @@ export default function EventFormFields({
         <div>
           <label className={labelClass} htmlFor={id("venue")}>
             <FaMapMarkerAlt
-              className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
+              className="inline h-4 w-4 mr-1.5 text-fg-muted -mt-0.5"
               aria-hidden="true"
             />
             Venue

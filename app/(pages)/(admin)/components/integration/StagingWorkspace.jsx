@@ -66,16 +66,16 @@ export default function StagingWorkspace({ d }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4">
+      <div className="bg-white border border-line rounded-md p-4 space-y-4">
         <div className="flex flex-wrap gap-2 items-center justify-between">
-          <h2 className="text-base font-medium text-gray-900">
+          <h2 className="text-base font-medium text-fg">
             Import Batches
           </h2>
           <button
             type="button"
             onClick={d.loadBatches}
             disabled={d.loadingBatches}
-            className="px-3 py-1.5 rounded border border-gray-300 text-sm"
+            className="px-3 py-1.5 rounded border border-line-strong text-sm"
           >
             {d.loadingBatches ? "Refreshing..." : "Refresh"}
           </button>
@@ -93,13 +93,13 @@ export default function StagingWorkspace({ d }) {
         />
       </div>
       {batch && (
-        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-4">
+        <div className="bg-white border border-line rounded-md p-4 space-y-4">
           <div className="flex flex-wrap gap-2 items-center justify-between">
             <div>
-              <h2 className="text-base font-medium text-gray-900">
+              <h2 className="text-base font-medium text-fg">
                 Selected Batch: {batch.source_name || batch._id}
               </h2>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-fg-muted mt-1">
                 Uploaded by:{" "}
                 <span className="font-semibold">
                   {batch.created_by_username || "Unknown"}
@@ -120,7 +120,7 @@ export default function StagingWorkspace({ d }) {
                     batch.totals?.identical > 0 &&
                     " · "}
                   {batch.totals?.identical > 0 && (
-                    <span className="text-gray-500 font-medium">
+                    <span className="text-fg-muted font-medium">
                       {batch.totals.identical} were identical (no changes made)
                     </span>
                   )}
@@ -170,7 +170,7 @@ export default function StagingWorkspace({ d }) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="recordFilter" className="text-sm text-gray-700">
+            <label htmlFor="recordFilter" className="text-sm text-fg-3">
               Filter records:
             </label>
             <select
@@ -180,7 +180,7 @@ export default function StagingWorkspace({ d }) {
                 d.setRecordsFilter(e.target.value);
                 d.loadBatchDetails(batch._id, e.target.value);
               }}
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="border border-line-strong rounded px-2 py-1 text-sm"
             >
               <option value="">All</option>
               <option value="pending">pending</option>
@@ -196,7 +196,7 @@ export default function StagingWorkspace({ d }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              <h3 className="text-sm font-semibold text-fg mb-2">
                 Staging Records
               </h3>
               <StagingRecordsTable
@@ -213,11 +213,11 @@ export default function StagingWorkspace({ d }) {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              <h3 className="text-sm font-semibold text-fg mb-2">
                 {d.selectedRecord ? "Record Details" : "Sync Logs"}
               </h3>
               {d.selectedRecord ? (
-                <div className="max-h-80 overflow-auto border border-gray-200 rounded p-2">
+                <div className="max-h-80 overflow-auto border border-line rounded p-2">
                   <RecordDetailPanel
                     record={d.selectedRecord}
                     allRecords={d.records}
@@ -250,7 +250,7 @@ export default function StagingWorkspace({ d }) {
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           This will permanently delete batch
           <span className="font-semibold">
             {" "}

@@ -189,7 +189,7 @@ export default function LoginForm({ redirect, compact = false }) {
                 <h1 className="text-2xl sm:text-3xl font-bold text-black">
                   Welcome back
                 </h1>
-                <p className="mt-2 text-sm text-gray-800">
+                <p className="mt-2 text-sm text-fg-2">
                   Enter your credentials to access your account
                 </p>
               </div>
@@ -204,7 +204,7 @@ export default function LoginForm({ redirect, compact = false }) {
               <div>
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-800"
+                  className="block text-sm font-medium text-fg-2"
                 >
                   Username
                 </label>
@@ -218,7 +218,7 @@ export default function LoginForm({ redirect, compact = false }) {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter your username"
-                    className="appearance-none block w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent text-sm"
+                    className="appearance-none block w-full px-3 py-2.5 bg-white border border-line-strong rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent text-sm"
                   />
                 </div>
               </div>
@@ -226,7 +226,7 @@ export default function LoginForm({ redirect, compact = false }) {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-800"
+                  className="block text-sm font-medium text-fg-2"
                 >
                   Password
                 </label>
@@ -240,7 +240,7 @@ export default function LoginForm({ redirect, compact = false }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="appearance-none block w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent text-sm"
+                    className="appearance-none block w-full px-3 py-2.5 bg-white border border-line-strong rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent text-sm"
                   />
                 </div>
               </div>
@@ -281,10 +281,10 @@ export default function LoginForm({ redirect, compact = false }) {
               <>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
+                    <div className="w-full border-t border-line-strong" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">
+                    <span className="px-2 bg-white text-fg-muted">
                       Quick Sign In
                     </span>
                   </div>
@@ -297,7 +297,7 @@ export default function LoginForm({ redirect, compact = false }) {
                       type="button"
                       disabled={loading}
                       onClick={(e) => handleQuickLogin(e, acc)}
-                      className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-secondary-50 hover:border-secondary-300 hover:text-secondary-900 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-2.5 border border-line-strong rounded-lg text-sm font-medium text-fg-3 bg-white hover:bg-secondary-50 hover:border-secondary-300 hover:text-secondary-900 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {acc.label}
                     </button>

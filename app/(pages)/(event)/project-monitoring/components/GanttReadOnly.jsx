@@ -36,31 +36,31 @@ export default function GanttReadOnly({ project, compact = false }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
           Gantt Activities{compact ? ` (${activities.length})` : ""}
         </p>
         <PrintGantt
           project={project}
           className={
             compact
-              ? "inline-flex shrink-0 items-center gap-1 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs font-medium text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              ? "inline-flex shrink-0 items-center gap-1 rounded border border-line bg-white px-1.5 py-0.5 text-xs font-medium text-fg-muted hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           }
         />
       </div>
       {activities.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           No Gantt activities encoded yet.
         </p>
       ) : compact ? (
         <>
-          <ol className="space-y-1.5 text-xs text-gray-600">
+          <ol className="space-y-1.5 text-xs text-fg-4">
             {activities.map((row, i) => (
               <li key={i}>
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-fg-2">
                   {i + 1}. {row.activity}
                 </span>
-                <div className="text-gray-500">
+                <div className="text-fg-muted">
                   {fmt(row.start_date)} → {fmt(row.end_date)} ·{" "}
                   {calcDurationDays(row.start_date, row.end_date)} days
                   {row.person_responsible ? ` · ${row.person_responsible}` : ""}
@@ -75,9 +75,9 @@ export default function GanttReadOnly({ project, compact = false }) {
         </>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
+          <div className="overflow-x-auto rounded-lg border border-line-subtle">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
+              <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
                 <tr>
                   <th className="px-2 py-1.5 font-semibold">#</th>
                   <th className="px-2 py-1.5 font-semibold">Activity</th>
@@ -91,11 +91,11 @@ export default function GanttReadOnly({ project, compact = false }) {
                   <th className="px-2 py-1.5 font-semibold">Person</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-xs text-gray-700">
+              <tbody className="divide-y divide-line-subtle text-xs text-fg-3">
                 {activities.map((row, i) => (
                   <tr key={i}>
                     <td className="px-2 py-1.5">{i + 1}</td>
-                    <td className="px-2 py-1.5 font-medium text-gray-800">
+                    <td className="px-2 py-1.5 font-medium text-fg-2">
                       {row.activity}
                     </td>
                     <td className="px-2 py-1.5 whitespace-nowrap">

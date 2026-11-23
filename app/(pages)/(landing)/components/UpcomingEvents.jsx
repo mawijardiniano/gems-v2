@@ -18,7 +18,7 @@ const ACTIVITY_COLORS = {
   Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
+  Others: "bg-subtle text-fg-3 border-line",
 };
 
 const MAX_EVENTS = 6;
@@ -98,14 +98,14 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
       <div className="flex flex-1 flex-col gap-3 p-5">
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 transition-colors group-hover:text-secondary-600">
+          <h3 className="text-base font-semibold text-fg line-clamp-2 transition-colors group-hover:text-secondary-600">
             {event.title}
           </h3>
           {event.type_of_activity && (
             <span
               className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                 ACTIVITY_COLORS[event.type_of_activity] ||
-                "bg-gray-50 text-gray-700 border-gray-200"
+                "bg-subtle text-fg-3 border-line"
               }`}
             >
               {event.type_of_activity}
@@ -115,23 +115,23 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
 
         {/* Date */}
         {dateLabel && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaCalendarAlt className="shrink-0 text-gray-500" />
+          <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <FaCalendarAlt className="shrink-0 text-fg-muted" />
             <span>{dateLabel}</span>
           </div>
         )}
 
         {/* Venue */}
         {event.venue && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaMapMarkerAlt className="shrink-0 text-gray-500" />
+          <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <FaMapMarkerAlt className="shrink-0 text-fg-muted" />
             <span className="truncate">{event.venue}</span>
           </div>
         )}
 
         {/* Description */}
         {event.description && (
-          <p className="text-xs leading-relaxed text-gray-500 line-clamp-2">
+          <p className="text-xs leading-relaxed text-fg-muted line-clamp-2">
             {event.description}
           </p>
         )}
@@ -205,7 +205,7 @@ export default function UpcomingEvents() {
 
   if (loading) {
     return (
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-subtle">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <UpcomingEventsSkeleton />
         </div>
@@ -217,7 +217,7 @@ export default function UpcomingEvents() {
   if (hidden || events.length === 0) return null;
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-subtle">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Section header */}
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -225,8 +225,8 @@ export default function UpcomingEvents() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-secondary-600">
               What&apos;s on campus
             </p>
-            <h2 className="text-3xl font-bold text-gray-900">Upcoming Events</h2>
-            <p className="mt-2 text-gray-600">
+            <h2 className="text-3xl font-bold text-fg">Upcoming Events</h2>
+            <p className="mt-2 text-fg-4">
               GAD activities, trainings, and university-wide gatherings you can
               join.
             </p>

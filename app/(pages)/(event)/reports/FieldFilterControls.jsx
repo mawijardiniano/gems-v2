@@ -9,7 +9,7 @@ export function FlagSelect({ selected, onChange }) {
     <select
       value={selected?.[0] || ""}
       onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
-      className="rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600"
+      className="rounded border border-line bg-white px-2 py-1 text-xs text-fg-4"
     >
       <option value="">All</option>
       <option value="Yes">Yes</option>
@@ -26,7 +26,7 @@ export function FilterButton({ active, onClick }) {
       className={`rounded border px-2.5 py-1 text-xs ${
         active
           ? "border-secondary-300 bg-secondary-50 text-secondary-700"
-          : "border-gray-200 text-gray-500 hover:bg-gray-50"
+          : "border-line text-fg-muted hover:bg-subtle"
       }`}
     >
       Filter…
@@ -60,8 +60,8 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
         : [...selected, option],
     );
   return (
-    <div className="ml-7 mb-1 rounded border border-gray-100 bg-gray-50 p-2">
-      <p className="text-xs text-gray-500 mb-1">Include only:</p>
+    <div className="ml-7 mb-1 rounded border border-line-subtle bg-subtle p-2">
+      <p className="text-xs text-fg-muted mb-1">Include only:</p>
       {searchable && (
         <input
           type="search"
@@ -69,14 +69,14 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={`Search ${options.length} options…`}
           aria-label="Search options"
-          className="mb-1 w-full rounded border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 focus:border-secondary-500 focus:outline-none"
+          className="mb-1 w-full rounded border border-line bg-white px-2 py-1 text-xs text-fg-3 focus:border-secondary-500 focus:outline-none"
         />
       )}
       <div className="max-h-56 overflow-y-auto">
         {visible.map((option) => (
           <label
             key={option.value}
-            className="flex items-center gap-2 py-1 text-xs text-gray-700 cursor-pointer"
+            className="flex items-center gap-2 py-1 text-xs text-fg-3 cursor-pointer"
           >
             <input
               type="checkbox"
@@ -85,20 +85,20 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
               className="accent-secondary-600"
             />
             <span className="truncate">{option.value}</span>
-            <span className="ml-auto text-xs text-gray-500">
+            <span className="ml-auto text-xs text-fg-muted">
               ({option.count.toLocaleString("en-US")})
             </span>
           </label>
         ))}
         {!visible.length && (
-          <p className="py-1 text-xs italic text-gray-500">No matches.</p>
+          <p className="py-1 text-xs italic text-fg-muted">No matches.</p>
         )}
       </div>
       <div className="mt-1 flex gap-3 text-xs">
         <button
           type="button"
           onClick={() => onChange([])}
-          className="text-gray-500 hover:underline"
+          className="text-fg-muted hover:underline"
         >
           Clear
         </button>

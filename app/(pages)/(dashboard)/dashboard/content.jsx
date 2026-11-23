@@ -71,7 +71,7 @@ function getEventDateSummary(event) {
 
 function StatCard({ icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-xl border border-line-subtle p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div
           className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg ${color}`}
@@ -79,10 +79,10 @@ function StatCard({ icon, label, value, color }) {
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-base font-semibold text-gray-900 truncate mt-0.5">
+          <p className="text-base font-semibold text-fg truncate mt-0.5">
             {value || "—"}
           </p>
         </div>
@@ -101,31 +101,31 @@ function EventCard({ event, onClick, compact = false }) {
     <div
       onClick={() => onClick(event._id)}
       className={`group cursor-pointer bg-white rounded-xl border ${
-        isCancelled ? "border-red-100" : "border-gray-100"
+        isCancelled ? "border-red-100" : "border-line-subtle"
       } p-4 hover:border-secondary-200 hover:shadow-md transition-all duration-200`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-sm text-gray-900 group-hover:text-secondary-600 transition-colors truncate">
+          <h4 className="font-semibold text-sm text-fg group-hover:text-secondary-600 transition-colors truncate">
             {event.title}
           </h4>
           {event.reference_number && (
-            <div className="mt-1 font-mono text-2xs font-medium text-gray-500">
+            <div className="mt-1 font-mono text-2xs font-medium text-fg-muted">
               {event.reference_number}
             </div>
           )}
-          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-fg-muted">
             <FaCalendarAlt className="shrink-0" />
             <span>{getEventDateSummary(event)}</span>
           </div>
           {event.venue && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-fg-muted">
               <FaMapMarkerAlt className="shrink-0" />
               <span className="truncate">{event.venue}</span>
             </div>
           )}
           {event.type_of_activity && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-fg-muted">
               <FaTag className="shrink-0" />
               <span>{event.type_of_activity}</span>
             </div>
@@ -136,7 +136,7 @@ function EventCard({ event, onClick, compact = false }) {
             isCancelled
               ? "bg-danger-subtle text-danger"
               : isPast
-                ? "bg-gray-100 text-gray-500"
+                ? "bg-muted text-fg-muted"
                 : "bg-success-subtle text-success"
           }`}
         >
@@ -302,10 +302,10 @@ export default function DashboardContent({ profile, userId }) {
             {initials || "U"}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-fg">
               Welcome back{fullName ? `, ${fullName.split(" ")[0]}` : ""}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-fg-muted mt-0.5">
               Here's what's happening with your account today.
             </p>
           </div>
@@ -314,7 +314,7 @@ export default function DashboardContent({ profile, userId }) {
 
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-fg">
             Profile Overview
           </h2>
           <button
@@ -335,9 +335,9 @@ export default function DashboardContent({ profile, userId }) {
       <section className="mb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Discover Events */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between p-5 border-b border-gray-50">
-              <h2 className="text-base font-semibold text-gray-900">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm">
+            <div className="flex items-center justify-between p-5 border-b border-line-faint">
+              <h2 className="text-base font-semibold text-fg">
                 Discover Events
               </h2>
               <button
@@ -359,7 +359,7 @@ export default function DashboardContent({ profile, userId }) {
                   />
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-fg-muted">
                   <FaCalendarAlt className="mx-auto text-3xl mb-2 opacity-40" />
                   <p className="text-sm">No events to discover right now.</p>
                 </div>
@@ -367,9 +367,9 @@ export default function DashboardContent({ profile, userId }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between p-5 border-b border-gray-50">
-              <h2 className="text-base font-semibold text-gray-900">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm">
+            <div className="flex items-center justify-between p-5 border-b border-line-faint">
+              <h2 className="text-base font-semibold text-fg">
                 Your Events
               </h2>
               <button
@@ -391,7 +391,7 @@ export default function DashboardContent({ profile, userId }) {
                   />
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-fg-muted">
                   <FaCalendarCheck className="mx-auto text-3xl mb-2 opacity-40" />
                   <p className="text-sm">No past events yet.</p>
                 </div>

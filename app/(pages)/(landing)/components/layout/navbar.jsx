@@ -36,7 +36,7 @@ export default function Navbar() {
       <nav
         className={`fixed top-0 left-0 w-full h-16 z-50 flex items-center transition-all duration-300 ${
           scrolled
-            ? "bg-white/90 backdrop-blur-xl border-b border-gray-100/80 shadow-sm"
+            ? "bg-white/90 backdrop-blur-xl border-b border-line-subtle/80 shadow-sm"
             : "bg-transparent"
         }`}
       >
@@ -99,12 +99,12 @@ export default function Navbar() {
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute top-16 left-0 right-0 mx-4 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-slide-down">
+          <div className="absolute top-16 left-0 right-0 mx-4 mt-2 bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden animate-slide-down">
             <div className="p-4 space-y-2">
               {/* <Link
                 href="/profile-registration"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-secondary-50 hover:text-secondary-700 rounded-xl transition-colors"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-fg-3 hover:bg-secondary-50 hover:text-secondary-700 rounded-xl transition-colors"
               >
                 <FaUserPlus size={16} className="text-secondary-500" />
                 Sign up
@@ -140,7 +140,7 @@ export default function Navbar() {
           >
             <button
               type="button"
-              className="touch-target absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors z-10"
+              className="touch-target absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-md border border-line-subtle flex items-center justify-center text-fg-muted hover:text-fg-3 hover:bg-subtle transition-colors z-10"
               onClick={() => setShowSignIn(false)}
               aria-label="Close"
             >

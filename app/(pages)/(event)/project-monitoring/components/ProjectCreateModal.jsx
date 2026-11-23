@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 import {
   FaCheck,
   FaChevronLeft,
@@ -82,7 +83,7 @@ const formatFieldValue = (field, value) => {
 
 /* Numbered stepper — desktop shows the full trail, mobile a compact summary. */
 const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
-  <div className="px-6 pt-4 pb-3 border-b border-gray-100">
+  <div className="px-6 pt-4 pb-3 border-b border-line-subtle">
     <ol className="hidden sm:flex items-center gap-2">
       {titles.map((title, index) => {
         const done = index < currentIndex;
@@ -104,7 +105,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold border shrink-0 ${
                   done || active
                     ? "bg-rose-600 border-rose-600 text-white"
-                    : "bg-white border-gray-200 text-gray-500"
+                    : "bg-white border-line text-fg-muted"
                 }`}
               >
                 {done ? <FaCheck size={9} /> : index + 1}
@@ -114,8 +115,8 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                   active
                     ? "text-rose-700"
                     : done
-                      ? "text-gray-700"
-                      : "text-gray-500"
+                      ? "text-fg-3"
+                      : "text-fg-muted"
                 }`}
               >
                 {title}
@@ -124,7 +125,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
             {index < titles.length - 1 && (
               <span
                 className={`flex-1 h-px ${
-                  done ? "bg-rose-300" : "bg-gray-200"
+                  done ? "bg-rose-300" : "bg-emphasis"
                 }`}
               />
             )}
@@ -134,7 +135,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
     </ol>
 
     <div className="sm:hidden flex items-center justify-between gap-3">
-      <p className="text-xs font-semibold text-gray-700 truncate">
+      <p className="text-xs font-semibold text-fg-3 truncate">
         Step {currentIndex + 1} of {titles.length} — {titles[currentIndex]}
       </p>
       <div className="flex gap-1 shrink-0">
@@ -146,7 +147,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                 ? "bg-rose-600"
                 : index < currentIndex
                   ? "bg-rose-300"
-                  : "bg-gray-200"
+                  : "bg-emphasis"
             }`}
           />
         ))}
@@ -156,15 +157,15 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
 );
 
 const ReviewGroup = ({ title, entries, onEdit }) => (
-  <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
+  <div className="rounded-xl border border-line-subtle bg-subtle/50 p-3.5">
     <div className="flex items-center justify-between gap-2 mb-2">
-      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+      <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
         {title}
       </p>
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 transition-colors"
+        className="inline-flex items-center gap-1 text-xs font-medium text-secondary-700 hover:text-secondary-800 transition-colors"
       >
         <FaPen size={9} />
         Edit
@@ -173,10 +174,10 @@ const ReviewGroup = ({ title, entries, onEdit }) => (
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
       {entries.map(({ label, value }) => (
         <div key={label} className="min-w-0">
-          <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+          <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
             {label}
           </dt>
-          <dd className="text-sm text-gray-800 break-words">{value}</dd>
+          <dd className="text-sm text-fg-2 break-words">{value}</dd>
         </div>
       ))}
     </dl>
@@ -356,22 +357,22 @@ export default function ProjectCreateModal({
         aria-modal="true"
         aria-labelledby="project-create-title"
       >
-        <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-2xl">
+        <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-line-subtle rounded-t-2xl">
           <div>
-            <h3 id="project-create-title" className="text-base font-bold text-gray-900">
+            <h3 id="project-create-title" className="text-base font-bold text-fg">
               {/* config.title is plural ("Academic Projects"); this read
                   "New Academic Projects Project". */}
               New {String(config.title || "").replace(/\s*Projects?$/i, "")}{" "}
               Project
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-fg-muted mt-0.5">
               Fields marked <span className="text-rose-500">*</span> are required.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="touch-target h-8 w-8 rounded-lg text-fg-muted hover:bg-muted hover:text-fg-4 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />
@@ -434,33 +435,33 @@ export default function ProjectCreateModal({
           )}
         </div>
 
-        <div className="shrink-0 border-t border-gray-100 px-6 py-4 flex items-center justify-between gap-3 rounded-b-2xl">
-          <button
-            type="button"
+        <div className="shrink-0 border-t border-line-subtle px-6 py-4 flex items-center justify-between gap-3 rounded-b-2xl">
+          <Button
+            variant="secondary"
             onClick={onClose}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            className="rounded-lg"
           >
             Cancel
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
             {stepIndex > 0 && (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={goBack}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                className="gap-1.5 rounded-lg"
               >
                 <FaChevronLeft size={10} />
                 Back
-              </button>
+              </Button>
             )}
 
             {isReview ? (
-              <button
-                type="button"
+              <Button
+                variant="primary"
                 onClick={handleCreate}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg"
               >
                 {saving ? (
                   <FaSpinner className="animate-spin" size={12} />
@@ -468,16 +469,16 @@ export default function ProjectCreateModal({
                   <FaCheck size={11} />
                 )}
                 {saving ? "Creating…" : "Create Project"}
-              </button>
+              </Button>
             ) : (
-              <button
-                type="button"
+              <Button
+                variant="primary"
                 onClick={goNext}
-                className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors"
+                className="rounded-lg"
               >
                 Next
                 <FaChevronRight size={10} />
-              </button>
+              </Button>
             )}
           </div>
         </div>

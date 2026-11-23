@@ -8,6 +8,7 @@ import {
   officeOptionList,
   toOfficeArray,
 } from "@/data/lib/colleges";
+import Button from "@/components/ui/Button";
 
 function useOutsideClose(onClose) {
   const ref = useRef(null);
@@ -90,7 +91,7 @@ export default function OfficeMultiSelect({
           type="button"
           disabled={disabled}
           onClick={() => setOpen((prev) => !prev)}
-          className="flex w-48 items-center justify-between gap-2 border rounded px-2 py-1 text-xs text-left text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          className="flex w-48 items-center justify-between gap-2 border rounded px-2 py-1 text-xs text-left text-fg-3 bg-white hover:bg-subtle disabled:opacity-50"
         >
           <span className="truncate">
             {selected.length === 0
@@ -99,15 +100,15 @@ export default function OfficeMultiSelect({
                 ? selected[0]
                 : `${selected.length} offices selected`}
           </span>
-          <FaChevronDown className="h-2.5 w-2.5 shrink-0 text-gray-500" />
+          <FaChevronDown className="h-2.5 w-2.5 shrink-0 text-fg-muted" />
         </button>
 
         {open && (
-          <div className="absolute z-30 mt-1 w-64 max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg p-2">
+          <div className="absolute z-30 mt-1 w-64 max-h-56 overflow-y-auto rounded-lg border border-line bg-white shadow-lg p-2">
             {options.map((office) => (
               <label
                 key={office}
-                className="flex items-start gap-2 rounded px-1.5 py-1 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer"
+                className="flex items-start gap-2 rounded px-1.5 py-1 text-xs text-fg-3 hover:bg-subtle cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -121,7 +122,7 @@ export default function OfficeMultiSelect({
             ))}
 
             {!disabled && (
-              <div className="mt-2 flex items-center gap-1 border-t border-gray-100 pt-2">
+              <div className="mt-2 flex items-center gap-1 border-t border-line-subtle pt-2">
                 <input
                   type="text"
                   value={draft}
@@ -133,23 +134,23 @@ export default function OfficeMultiSelect({
                     }
                   }}
                   placeholder="Type an office not listed..."
-                  className="min-w-0 flex-1 rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:border-rose-400"
+                  className="min-w-0 flex-1 rounded border border-line px-2 py-1 text-xs focus:outline-none focus:border-rose-400"
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={addDraft}
                   disabled={!draft.trim()}
-                  className="flex shrink-0 items-center gap-1 rounded border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                  className="shrink-0 gap-1 rounded px-2 py-1 text-xs"
                 >
                   <FaPlus className="h-2.5 w-2.5" /> Add
-                </button>
+                </Button>
               </div>
             )}
 
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="mt-1 w-full rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200"
+              className="mt-1 w-full rounded bg-muted px-2 py-1 text-xs text-fg-4 hover:bg-emphasis"
             >
               Done
             </button>
@@ -170,14 +171,14 @@ export default function OfficeMultiSelect({
   return (
     <div>
       <div
-        className={`border border-gray-300 rounded-xl p-3 max-h-44 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 ${
-          disabled ? "bg-gray-50" : "bg-white"
+        className={`border border-line-strong rounded-xl p-3 max-h-44 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 ${
+          disabled ? "bg-subtle" : "bg-white"
         }`}
       >
         {options.map((office) => (
           <label
             key={office}
-            className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer"
+            className="flex items-start gap-2 text-sm text-fg-3 cursor-pointer"
           >
             <input
               type="checkbox"
@@ -204,16 +205,16 @@ export default function OfficeMultiSelect({
               }
             }}
             placeholder="Type an office not listed..."
-            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-rose-400"
+            className="min-w-0 flex-1 rounded-lg border border-line-strong px-3 py-1.5 text-sm focus:outline-none focus:border-rose-400"
           />
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={addDraft}
             disabled={!draft.trim()}
-            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+            className="shrink-0 gap-1.5 rounded-lg px-3 py-1.5 text-xs"
           >
             <FaPlus className="h-3 w-3" /> Add
-          </button>
+          </Button>
         </div>
       )}
 
@@ -225,13 +226,13 @@ export default function OfficeMultiSelect({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-gray-500 italic">No office selected yet</p>
+          <p className="text-xs text-fg-muted italic">No office selected yet</p>
         )}
         {selected.length > 0 && !disabled && (
           <button
             type="button"
             onClick={() => onChange([])}
-            className="mt-1 text-xs text-gray-500 underline hover:text-gray-700"
+            className="mt-1 text-xs text-fg-muted underline hover:text-fg-3"
           >
             Clear all
           </button>

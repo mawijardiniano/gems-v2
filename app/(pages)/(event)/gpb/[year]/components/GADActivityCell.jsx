@@ -7,9 +7,9 @@ export default function GADActivityCell({ title, description }) {
   if (!title && !description) return null;
   return (
     <div>
-      <div className="text-xs text-gray-900">{title}</div>
+      <div className="text-xs text-fg">{title}</div>
       {description ? (
-        <div className="mt-1 text-xs text-gray-900">{description}</div>
+        <div className="mt-1 text-xs text-fg">{description}</div>
       ) : null}
     </div>
   );

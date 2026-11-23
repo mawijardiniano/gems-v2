@@ -117,7 +117,7 @@ const InlineLegend = memo(function InlineLegend({ data, colors }) {
       {data.map((entry, i) => (
         <div
           key={entry.name}
-          className="flex items-center gap-1.5 text-xs text-gray-600"
+          className="flex items-center gap-1.5 text-xs text-fg-4"
         >
           <span
             className="inline-block h-2 w-2 rounded-full shrink-0"
@@ -143,9 +143,9 @@ const PieCard = memo(function PieCard({
 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -185,9 +185,9 @@ const HorzBarCard = memo(function HorzBarCard({
 }) {
   const total = data.reduce((s, d) => s + (d[dataKey] || 0), 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -230,9 +230,9 @@ const HorzBarCard = memo(function HorzBarCard({
 const VertBarCard = memo(function VertBarCard({ title, data, height = 240 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -269,9 +269,9 @@ const GenderBarCard = memo(function GenderBarCard({ title, data, height = 260 })
     0,
   );
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total
       </p>
       <ResponsiveContainer width="100%" height={height}>
@@ -335,9 +335,9 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
   // stays readable instead of collapsing into a fixed 300px block.
   const chartHeight = height ?? Math.max(260, data.length * rowHeight + 70);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mb-3 text-xs text-gray-500">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg">{title}</h3>
+      <p className="mb-3 text-xs text-fg-muted">
         {total.toLocaleString()} total · {data.length} offices
       </p>
       <ResponsiveContainer width="100%" height={chartHeight}>
@@ -550,12 +550,12 @@ function Demographics({ data, personTypeFilter = "", demographics }) {
   }, [data, demographics]);
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Demographic & Employment Profile
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Personnel and occupational overview
         </p>
       </div>
