@@ -61,7 +61,7 @@ export default function PrivacyConsent() {
             .
           </p>
 
-          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
             <p className="font-semibold text-gray-900 mb-1">
               1. Purpose of Data Collection
             </p>
@@ -81,7 +81,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
             <p className="font-semibold text-gray-900 mb-1">
               2. Types of Information Collected
             </p>
@@ -99,7 +99,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-lg">
+          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
             <p className="font-semibold text-gray-900 mb-1">
               3. Data Security & Retention
             </p>
@@ -118,7 +118,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-secondary-50 border-l-4 border-secondary-500 p-4 rounded-r-lg">
+          <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
             <p className="font-semibold text-gray-900 mb-1">
               4. Your Rights
             </p>

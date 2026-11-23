@@ -253,6 +253,10 @@ th {
 }
 
 
+/* Shared primitives (.card, .btn-*, .input, .modal*, .table, …) live in the
+   components layer so a Tailwind utility on the same element wins, e.g.
+   <Button className="w-full"> or <Modal size="sm">. */
+@layer components {
 .card {
   @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
 }
@@ -433,4 +437,5 @@ select.input {
 }
 .file-input input[type="file"] {
   @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-secondary-50 file:text-secondary-700 hover:file:bg-secondary-100 transition-colors;
+}
 }

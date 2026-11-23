@@ -177,6 +177,13 @@ function LoadingSkeleton() {
   );
 }
 
+/* Long office/college names collide on a rotated axis. Cap them; the full
+   name stays in the tooltip and the Table view. */
+const truncateAxisLabel = (value) => {
+  const text = String(value ?? "");
+  return text.length > 24 ? `${text.slice(0, 23)}…` : text;
+};
+
 export default function ProfileStats() {
   const [useSample, setUseSample] = useState(true);
   const [data, setData] = useState(null);
@@ -845,14 +852,15 @@ export default function ProfileStats() {
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart
                   data={officeData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 60 }}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
                 >
                   <XAxis
                     dataKey="office"
-                    angle={-20}
+                    angle={-60}
                     interval={0}
                     textAnchor="end"
-                    height={80}
+                    height={150}
+                    tickFormatter={truncateAxisLabel}
                     tick={{ fontSize: 11, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
@@ -963,14 +971,15 @@ export default function ProfileStats() {
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart
                   data={collegeData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 60 }}
+                  margin={{ top: 10, right: 10, left: 60, bottom: 10 }}
                 >
                   <XAxis
                     dataKey="college"
-                    angle={-20}
+                    angle={-45}
                     interval={0}
                     textAnchor="end"
-                    height={80}
+                    height={130}
+                    tickFormatter={truncateAxisLabel}
                     tick={{ fontSize: 11, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
