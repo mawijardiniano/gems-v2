@@ -30,7 +30,7 @@ export default function ConfirmDeleteModal({
         <button
           type="button"
           aria-label="Close"
-          className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
+          className="touch-target absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
           onClick={() => setDeleteModal({ open: false, project: null })}
         >
           &times;

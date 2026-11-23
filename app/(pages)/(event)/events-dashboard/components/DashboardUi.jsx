@@ -145,7 +145,7 @@ export function StatCard({
       onClick={onClick}
       className={`rounded-2xl bg-white border border-gray-100 shadow-sm p-5 ${
         clickable
-          ? "cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+          ? "cursor-pointer transition duration-200 hover:shadow-md hover:-translate-y-0.5"
           : ""
       }`}
     >

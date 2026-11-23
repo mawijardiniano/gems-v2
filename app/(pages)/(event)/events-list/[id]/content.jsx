@@ -25,6 +25,7 @@ import { useEventGuests } from "./hooks/useEventGuests";
 import { useEventAttendance } from "./hooks/useEventAttendance";
 import { useAttendanceQr } from "./hooks/useAttendanceQr";
 import { useMyProjects } from "./hooks/useMyProjects";
+import Button from "@/components/ui/Button";
 
 const TABS = [
   { key: "overview", label: "Overview" },
@@ -120,9 +121,9 @@ export default function EventManageContent({ backPath = "/events-list" }) {
     return (
       <div className="page-container">
         <div className="alert-error mb-4">{error}</div>
-        <button onClick={() => router.push(backPath)} className="btn-secondary">
+        <Button onClick={() => router.push(backPath)} variant="secondary">
           <FiArrowLeft aria-hidden="true" /> Back to Events
-        </button>
+        </Button>
       </div>
     );
   }
@@ -139,13 +140,14 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
-      <button
+      <Button
         onClick={() => router.push(backPath)}
-        className="btn-ghost !px-3 !py-2 !rounded-lg"
+        variant="ghost"
+        className="!px-3 !py-2 !rounded-lg"
         aria-label="Back to events"
       >
         <FiArrowLeft aria-hidden="true" /> Back to Events
-      </button>
+      </Button>
 
       <div className="card p-6 !rounded-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -182,7 +184,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
             role="tab"
             aria-selected={currentTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`whitespace-nowrap px-4 py-2.5 -mb-px border-b-2 text-sm font-medium transition-all duration-200 ${
+            className={`whitespace-nowrap px-4 py-2.5 -mb-px border-b-2 text-sm font-medium transition duration-200 ${
               currentTab === tab.key
                 ? "border-secondary-600 text-secondary-700"
                 : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"

@@ -291,7 +291,7 @@ export default function AcademicContent() {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -311,7 +311,7 @@ export default function AcademicContent() {
                 }
                 setIsEditing(!isEditing);
               }}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300"
@@ -363,7 +363,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Student ID <span className="text-red-400">*</span></label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.student_id}
                   onChange={(e) => handleChange("student_id", e.target.value)}
                 />
@@ -371,7 +371,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Campus <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.campus}
                   onChange={(e) => handleChange("campus", e.target.value)}
                 >
@@ -382,7 +382,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">College <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.college}
                   onChange={(e) => handleCollegeChange(e.target.value)}
                 >
@@ -393,7 +393,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Course <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   value={formData.course}
                   onChange={(e) => handleChange("course", e.target.value)}
                   disabled={!formData.college}
@@ -407,7 +407,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Year Level <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.year_level}
                   onChange={(e) => handleChange("year_level", e.target.value)}
                 >
@@ -418,7 +418,7 @@ export default function AcademicContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Scholarship Status <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition"
                   value={formData.isScholar}
                   onChange={(e) => handleChange("isScholar", e.target.value)}
                 >

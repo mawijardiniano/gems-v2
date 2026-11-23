@@ -69,7 +69,7 @@ export default function GpbOverviewCard({ dashboard }) {
               return (
                 <div
                   key={gpb._id || idx}
-                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition duration-200 cursor-pointer"
                   onClick={() => router.push(`/gpb/${gpb.year}`)}
                 >
                   <div className="space-y-0.5">
@@ -95,7 +95,7 @@ export default function GpbOverviewCard({ dashboard }) {
           <div className="mt-3 pt-3 border-t border-gray-50">
             <button
               onClick={() => router.push("/gpb")}
-              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition duration-200"
             >
               View All GPB
               <ArrowRight className="h-3.5 w-3.5" />

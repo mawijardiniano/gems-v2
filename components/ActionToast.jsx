@@ -48,7 +48,7 @@ export default function ActionToast({ toast, onClose }) {
         type="button"
         onClick={onClose}
         aria-label="Dismiss"
-        className="text-current opacity-60 hover:opacity-100"
+        className="touch-target text-current opacity-60 hover:opacity-100"
       >
         ×
       </button>

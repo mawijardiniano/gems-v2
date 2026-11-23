@@ -263,7 +263,7 @@ export default function EmploymentContent() {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -281,7 +281,7 @@ export default function EmploymentContent() {
                 }
                 setIsEditing(!isEditing);
               }}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
@@ -333,7 +333,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Employee ID <span className="text-red-400">*</span></label>
                 <input
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.employee_id}
                   onChange={(e) => handleChange("employee_id", e.target.value)}
                 />
@@ -341,7 +341,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Office <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.office}
                   onChange={(e) => handleChange("office", e.target.value)}
                 >
@@ -352,7 +352,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Employment Status <span className="text-red-400">*</span></label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                   value={formData.employment_status}
                   onChange={(e) => handleChange("employment_status", e.target.value)}
                 >
@@ -363,7 +363,7 @@ export default function EmploymentContent() {
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Appointment Status</label>
                 <select
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
                   value={formData.employment_appointment_status}
                   onChange={(e) => handleChange("employment_appointment_status", e.target.value)}
                   disabled={!formData.employment_status}

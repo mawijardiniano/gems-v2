@@ -180,7 +180,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
             <button
               type="button"
               onClick={() => onManage(event)}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 py-2.5 text-xs font-semibold text-white shadow-md transition-all hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 py-2.5 text-xs font-semibold text-white shadow-md transition hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
             >
               Manage event
             </button>

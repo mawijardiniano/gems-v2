@@ -82,7 +82,7 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
 
   return (
     <div
-      className={`rounded-2xl border ${style.border} ${style.bg} overflow-hidden transition-all duration-200 hover:shadow-lg`}
+      className={`rounded-2xl border ${style.border} ${style.bg} overflow-hidden transition duration-200 hover:shadow-lg`}
     >
    
       <div className={`px-5 py-4 border-b border-white/50 ${style.headerBg} flex items-center justify-between`}>

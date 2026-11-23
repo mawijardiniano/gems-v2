@@ -232,7 +232,7 @@ export default function AcademicInformation() {
                 </label>
                 <div className="relative">
                   <input
-                    className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all bg-gray-50 hover:bg-white ${
+                    className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition bg-gray-50 hover:bg-white ${
                       idError
                         ? "border-red-400 focus:ring-red-200 focus:border-red-400"
                         : "border-gray-200 focus:ring-secondary-200 focus:border-secondary-400"
@@ -259,7 +259,7 @@ export default function AcademicInformation() {
                   Campus <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={academic?.campus || ""}
                   onChange={(e) => update("campus", e.target.value)}
                 >
@@ -276,7 +276,7 @@ export default function AcademicInformation() {
                   College <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={academic?.college || ""}
                   onChange={(e) => handleCollegeChange(e.target.value)}
                 >
@@ -296,7 +296,7 @@ export default function AcademicInformation() {
                   Course <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
                   value={academic?.course || ""}
                   onChange={(e) => update("course", e.target.value)}
                   disabled={!academic?.college}
@@ -319,7 +319,7 @@ export default function AcademicInformation() {
                   Year Level <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={academic?.year_level || ""}
                   onChange={(e) => update("year_level", e.target.value)}
                 >
@@ -345,7 +345,7 @@ export default function AcademicInformation() {
                 Are you a scholar? <span className="text-red-400">*</span>
               </label>
               <select
-                className="w-full md:w-1/3 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                className="w-full md:w-1/3 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                 value={academic?.isScholar || ""}
                 onChange={(e) => update("isScholar", e.target.value)}
               >
@@ -366,7 +366,7 @@ export default function AcademicInformation() {
             <button
               onClick={() => !isNextDisabled && dispatch(nextStep())}
               disabled={isNextDisabled}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"

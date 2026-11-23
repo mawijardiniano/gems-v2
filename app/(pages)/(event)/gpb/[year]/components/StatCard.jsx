@@ -19,7 +19,7 @@ export default function StatCard({
 
   return (
     <div
-      className={`rounded-2xl border shadow-sm p-5 transition-all duration-200 ${
+      className={`rounded-2xl border shadow-sm p-5 transition duration-200 ${
         danger
           ? "border-red-200 bg-red-50/50 hover:shadow-md"
           : "bg-white border-gray-100 hover:shadow-md"

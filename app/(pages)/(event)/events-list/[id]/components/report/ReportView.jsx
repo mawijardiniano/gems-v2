@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 import { isPdfFile } from "./FileThumb";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* The submitted report, read-only, with an Edit button for those allowed. */
 export default function ReportView({ report, canSubmit, viewerId }) {
@@ -74,16 +75,17 @@ export default function ReportView({ report, canSubmit, viewerId }) {
             (viewerId &&
               String(showReport?.submitted_by?._id ?? showReport?.submitted_by) ===
                 String(viewerId))) && (
-          <button
+          <Button
             onClick={() => {
               setSuccess("");
               handleEdit();
             }}
-            className="btn-secondary !py-2 !px-4 !rounded-lg !text-xs shrink-0"
+            variant="secondary"
+            className="!py-2 !px-4 !rounded-lg !text-xs shrink-0"
           >
             <FiEdit2 size={13} />
             Edit
-          </button>
+          </Button>
           )}
         </div>
 
@@ -108,7 +110,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
                     <FileThumb
                       file={showReport[field.key]}
                       alt={field.label}
-                      className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
+                      className="h-40 w-full object-cover rounded-xl border border-gray-200 transition duration-200 group-hover:opacity-90 group-hover:shadow-md"
                     />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
                       <div className="flex gap-2">
@@ -153,7 +155,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
                     <img
                       src={p.url}
                       alt={`Event photo ${i + 1}`}
-                      className="h-40 w-full object-cover rounded-xl border border-gray-200 transition-all duration-200 group-hover:opacity-90 group-hover:shadow-md"
+                      className="h-40 w-full object-cover rounded-xl border border-gray-200 transition duration-200 group-hover:opacity-90 group-hover:shadow-md"
                     />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-xl">
                       <div className="flex gap-2">

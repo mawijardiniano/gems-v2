@@ -38,7 +38,7 @@ export default function UpdateStatusModal({
             type="button"
             aria-label="Close"
             onClick={() => setUpdateStatusModal(false)}
-            className="text-gray-500 hover:text-gray-700 text-3xl"
+            className="touch-target text-gray-500 hover:text-gray-700 text-3xl"
           >
             ×
           </button>

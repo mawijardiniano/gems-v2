@@ -79,7 +79,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
       aria-label={`View details for ${event.title}`}
       onClick={() => onOpen(event)}
       onKeyDown={handleKeyDown}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] outline-none transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-secondary-500"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] outline-none transition duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] focus-visible:ring-2 focus-visible:ring-secondary-500"
     >
       {/* Poster */}
       {posterUrl ? (

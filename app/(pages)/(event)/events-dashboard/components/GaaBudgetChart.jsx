@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART, SERIES } from "@/data/lib/chartColors";
 
 /* GAA and GAD budget per year, from the budget attached to each GPB. */
 export default function GaaBudgetChart({ dashboard }) {
@@ -58,7 +59,7 @@ export default function GaaBudgetChart({ dashboard }) {
                   dataKey="year"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12, fill: "#6b7280" }}
+                  tick={{ fontSize: 12, fill: CHART.axisText }}
                 />
                 <YAxis
                   tickFormatter={(value) =>
@@ -66,7 +67,7 @@ export default function GaaBudgetChart({ dashboard }) {
                   }
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12, fill: "#6b7280" }}
+                  tick={{ fontSize: 12, fill: CHART.axisText }}
                 />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend
@@ -85,13 +86,13 @@ export default function GaaBudgetChart({ dashboard }) {
                     formatter={(value) =>
                       value == null ? "" : `₱${(value / 1000000).toFixed(1)}M`
                     }
-                    style={{ fontSize: "10px", fill: "#6b7280" }}
+                    style={{ fontSize: "10px", fill: CHART.axisText }}
                   />
                 </Bar>
                 <Bar
                   dataKey="gad"
                   name="GAD Budget"
-                  fill="#16a34a"
+                  fill={SERIES.mint}
                   radius={[6, 6, 0, 0]}
                   maxBarSize={48}
                 >
@@ -101,7 +102,7 @@ export default function GaaBudgetChart({ dashboard }) {
                     formatter={(value) =>
                       value == null ? "" : `₱${(value / 1000000).toFixed(1)}M`
                     }
-                    style={{ fontSize: "10px", fill: "#6b7280" }}
+                    style={{ fontSize: "10px", fill: CHART.axisText }}
                   />
                 </Bar>
               </BarChart>

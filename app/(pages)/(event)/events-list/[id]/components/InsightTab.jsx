@@ -158,7 +158,7 @@ export default function InsightTab({
           return (
             <div
               key={card.label}
-              className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 transition duration-300 hover:shadow-lg hover:-translate-y-0.5"
             >
               <div
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.gradient}`}

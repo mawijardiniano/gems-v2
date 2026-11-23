@@ -13,6 +13,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 /* Stakeholders are not in the profile records — they only enter through the QR
    guest form, so manual encoding is limited to these two types. */
@@ -309,7 +310,7 @@ export default function ManualEncodeModal({
             aria-label="Close manual encode"
             onClick={closeIfIdle}
             disabled={saving}
-            className="rounded-lg p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-600"
+            className="touch-target rounded-lg p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-600"
           >
             <FiX size={16} />
           </button>
@@ -499,15 +500,16 @@ export default function ManualEncodeModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-slate-50 px-5 py-3">
-          <button
+          <Button
             type="button"
             onClick={closeIfIdle}
             disabled={saving}
-            className="btn-secondary !py-2 !px-4 !text-xs !rounded-lg"
+            variant="secondary"
+            className="!py-2 !px-4 !text-xs !rounded-lg"
           >
             {feedback?.tone === "ok" ? "Done" : "Cancel"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             disabled={!picked || saving || pickedSexMissing}
             title={
@@ -516,7 +518,8 @@ export default function ManualEncodeModal({
                 : undefined
             }
             onClick={handleEncode}
-            className="btn-primary !py-2 !px-4 !text-xs !rounded-lg"
+            variant="primary"
+            className="!py-2 !px-4 !text-xs !rounded-lg"
           >
             {saving ? (
               <FiLoader className="animate-spin" size={13} />
@@ -524,7 +527,7 @@ export default function ManualEncodeModal({
               <FiUserPlus size={13} />
             )}
             Record Attendance
-          </button>
+          </Button>
         </div>
       </div>
     </div>

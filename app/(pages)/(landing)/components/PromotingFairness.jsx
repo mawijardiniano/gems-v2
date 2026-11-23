@@ -56,9 +56,9 @@ export default function PromotingFairness() {
               {pillars.map((pillar) => (
                 <div
                   key={pillar}
-                  className="group relative overflow-hidden rounded-xl bg-white/10 p-4 border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
+                  className="group relative overflow-hidden rounded-xl bg-white/10 p-4 border border-white/10 backdrop-blur-sm transition duration-300 hover:bg-white/20"
                 >
-                  <div className="absolute -top-6 -right-6 w-12 h-12 bg-white/5 rounded-full transition-all duration-300 group-hover:scale-150" />
+                  <div className="absolute -top-6 -right-6 w-12 h-12 bg-white/5 rounded-full transition duration-300 group-hover:scale-150" />
                   <div className="relative">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 text-white mb-3">
                       <svg

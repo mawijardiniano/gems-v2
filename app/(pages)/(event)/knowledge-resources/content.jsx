@@ -436,7 +436,7 @@ export default function KnowledgeResourcesContent() {
             return (
               <div
                 key={item._id}
-                className="flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-200"
+                className="flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition duration-200"
               >
                 <div className="flex items-start gap-4">
                   <div className="h-12 w-12 shrink-0 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -516,7 +516,7 @@ export default function KnowledgeResourcesContent() {
                     <button
                       onClick={() => setDeleteTarget(item)}
                       title="Delete document"
-                      className="mt-1 rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
+                      className="touch-target mt-1 rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
                     >
                       <FaTrashAlt size={13} />
                     </button>
@@ -557,7 +557,7 @@ export default function KnowledgeResourcesContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeUploadModal}
-                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="touch-target rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <FaTimes size={14} />
               </button>

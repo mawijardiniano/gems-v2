@@ -20,6 +20,7 @@ import { COLLEGE_TO_PROGRAMS, YEAR_LEVELS } from "@/data/lib/colleges";
 import { formatEventWhen } from "@/data/lib/eventDates";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 import { APP_TIME_ZONE } from "@/data/lib/appTime";
+import Button from "@/components/ui/Button";
 
 const EMPTY = {
   full_name: "",
@@ -324,17 +325,18 @@ export default function AttendContent() {
                 {formatDateTime(done.at)}
               </p>
             )}
-            <button
+            <Button
               type="button"
               onClick={() => {
                 setForm(EMPTY);
                 setDone(null);
                 setError("");
               }}
-              className="btn-secondary mt-6 w-full"
+              variant="secondary"
+              className="mt-6 w-full"
             >
               Check in another guest
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -538,7 +540,7 @@ export default function AttendContent() {
                     return (
                       <label
                         key={value}
-                        className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium transition-all duration-200 ${
+                        className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium transition duration-200 ${
                           active
                             ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-4 ring-secondary-500/10"
                             : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
@@ -669,10 +671,11 @@ export default function AttendContent() {
               )}
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={submitting}
-              className="btn-primary mt-7 w-full py-3 text-sm font-semibold"
+              variant="primary"
+              className="mt-7 w-full py-3 text-sm font-semibold"
             >
               {submitting ? (
                 <>
@@ -685,7 +688,7 @@ export default function AttendContent() {
                   Confirm Attendance
                 </>
               )}
-            </button>
+            </Button>
             <p className="mt-3 text-center text-xs text-gray-500">
               Your details are used only for this event&apos;s attendance
               report.

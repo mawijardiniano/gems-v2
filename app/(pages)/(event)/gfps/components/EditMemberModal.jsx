@@ -30,7 +30,7 @@ function ModalHeader({ editingSection, onClose, titleId }) {
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors"
+          className="touch-target p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -54,7 +54,7 @@ function SectionSelect({ section, editingSection, onChange }) {
           if (!editingSection) onChange(e.target.value);
         }}
         disabled={!!editingSection}
-        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
       >
         {SECTIONS.map((s) => (
           <option key={s.key} value={s.key}>
@@ -221,15 +221,15 @@ function ManualEntries({
                       onManualTextsChange((prev) => ({ ...prev, [key]: e.target.value }))
                     }
                     placeholder="e.g. Dela Cruz, Juan"
-                    className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all"
+                    className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition"
                   />
                   <button
                     type="button"
                     onClick={() => onRemove(key)}
                     title="Remove"
-                    className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    className="touch-target p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -249,7 +249,7 @@ function ManualEntries({
                     }
                     disabled={locked}
                     placeholder="e.g. Director, Research"
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                   {locked && (
                     <p className="mt-1 text-xs text-gray-500">

@@ -48,7 +48,7 @@ export default function Navbar() {
               className="shadow-md transition-shadow group-hover:shadow-lg"
             />
             <span
-              className={`text-lg font-bold transition-all duration-300 ${
+              className={`text-lg font-bold transition duration-300 ${
                 scrolled
                   ? "bg-gradient-to-r from-secondary-800 to-secondary-500 bg-clip-text text-transparent"
                   : "text-white drop-shadow-sm"
@@ -61,7 +61,7 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center gap-3">
             {/* <Link
               href="/profile-registration"
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition duration-200 ${
                 scrolled
                   ? "text-secondary-700 hover:text-secondary-900 hover:bg-secondary-50"
                   : "text-white/90 hover:text-white hover:bg-white/10"
@@ -72,7 +72,7 @@ export default function Navbar() {
             </Link> */}
             <button
               onClick={() => setShowSignIn(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-700 to-secondary-500 rounded-xl hover:from-secondary-700 hover:to-secondary-700 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-700 to-secondary-500 rounded-xl hover:from-secondary-700 hover:to-secondary-700 shadow-md hover:shadow-lg transition duration-200 active:scale-[0.98]"
             >
               <FaSignInAlt size={14} />
               Sign in
@@ -81,7 +81,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
+            className={`touch-target sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${
               scrolled
                 ? "text-secondary-700 hover:bg-secondary-50"
                 : "text-white hover:bg-white/10"
@@ -140,7 +140,7 @@ export default function Navbar() {
           >
             <button
               type="button"
-              className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors z-10"
+              className="touch-target absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors z-10"
               onClick={() => setShowSignIn(false)}
               aria-label="Close"
             >

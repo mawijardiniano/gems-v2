@@ -47,7 +47,7 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.key)}
-            className={`whitespace-nowrap inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 ${
+            className={`whitespace-nowrap inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 ${
               isActive
                 ? "border-rose-600 bg-rose-600 text-white shadow-md shadow-rose-200"
                 : "border-gray-200 bg-white text-gray-600 shadow-sm hover:border-rose-300 hover:bg-rose-50/60 hover:text-rose-700"

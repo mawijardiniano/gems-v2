@@ -541,7 +541,7 @@ export default function GFPSManager() {
             <button
               onClick={handleCopyForward}
               disabled={copying}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition-all font-medium text-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-50 text-secondary-700 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition font-medium text-sm disabled:opacity-50"
             >
               {copying ? "Copying..." : "Copy from previous year"}
             </button>
@@ -549,7 +549,7 @@ export default function GFPSManager() {
           {canEdit && (
             <button
               onClick={openAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white rounded-xl hover:bg-secondary-700 transition-all font-medium text-sm shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white rounded-xl hover:bg-secondary-700 transition font-medium text-sm shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
             >
               <svg
                 className="w-4 h-4"
@@ -594,7 +594,7 @@ export default function GFPSManager() {
           <button
             onClick={handleAssignLegacy}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Assigning..." : `Assign to AY ${academicYear}`}
           </button>
@@ -610,7 +610,7 @@ export default function GFPSManager() {
           <button
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
           </button>

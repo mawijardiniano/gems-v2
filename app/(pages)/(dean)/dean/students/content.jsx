@@ -512,7 +512,7 @@ export default function StudentsUserListContent({ college }) {
             td { padding: 5px 8px; text-align: center; border: 1px solid #b0bec5; font-size: 10pt; color: #000; }
             tr:nth-child(even) { background-color: #f5f5f5; }
             .total-row { background-color: #e3f2fd !important; font-weight: bold; }
-            .interpretation { margin-top: 6px; padding: 8px 10px; background: #f5f5f5; border-left: 4px solid #1565c0; border-radius: 4px; }
+            .interpretation { margin-top: 6px; padding: 8px 10px; background: #f5f5f5; border: 1px solid #1565c0; border-radius: 4px; }
             .interpretation p { margin: 3px 0; font-size: 10pt; color: #000; }
             .interpretation strong { color: #000; }
             .summary-section { margin-top: 24px; }
@@ -814,7 +814,7 @@ export default function StudentsUserListContent({ college }) {
                 setViewModalUser(null);
                 setViewTab("personal");
               }}
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+              className="touch-target w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
             >
               <FaTimes size={14} />
             </button>
@@ -923,7 +923,7 @@ export default function StudentsUserListContent({ college }) {
             placeholder="Search by name..."
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-secondary-400 focus:ring-2 focus:ring-secondary-100 outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 bg-white focus:border-secondary-400 focus:ring-2 focus:ring-secondary-100 outline-none transition"
           />
         </div>
       </div>
@@ -1165,7 +1165,7 @@ export default function StudentsUserListContent({ college }) {
                   <TableCell className="px-4 py-3 text-center">
                     <button
                       onClick={() => setViewModalUser(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition"
                     >
                       <FaEye size={12} />
                       View
@@ -1176,7 +1176,7 @@ export default function StudentsUserListContent({ college }) {
                       <div className="flex items-center gap-1.5 justify-center">
                         <button
                           onClick={() => handleEdit(user._id)}
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition"
                         >
                           Edit
                         </button>
@@ -1188,7 +1188,7 @@ export default function StudentsUserListContent({ college }) {
                               isActive: user.is_active,
                             })
                           }
-                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
                             user.is_active
                               ? "bg-white text-red-600 border-red-200 hover:bg-red-50"
                               : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50"
@@ -1203,7 +1203,7 @@ export default function StudentsUserListContent({ college }) {
                               userId: user._id,
                             })
                           }
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-secondary-600 border border-secondary-200 hover:bg-secondary-50 transition-all"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-secondary-600 border border-secondary-200 hover:bg-secondary-50 transition"
                         >
                           Reset
                         </button>
@@ -1269,7 +1269,7 @@ export default function StudentsUserListContent({ college }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all"
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
@@ -1279,7 +1279,7 @@ export default function StudentsUserListContent({ college }) {
             Page {page} of {totalPages}
           </span>
           <button
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all"
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >

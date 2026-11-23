@@ -145,7 +145,7 @@ export default function PrivacyConsent() {
                 className="sr-only"
               />
               <div
-                className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
+                className={`w-5 h-5 rounded border-2 transition duration-200 flex items-center justify-center ${
                   checked
                     ? "bg-secondary-600 border-secondary-600"
                     : "border-gray-300 group-hover:border-secondary-400"
@@ -163,7 +163,7 @@ export default function PrivacyConsent() {
           <button
             onClick={handleNext}
             disabled={!checked}
-            className={`mt-5 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+            className={`mt-5 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition duration-200 ${
               checked
                 ? "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"

@@ -71,7 +71,7 @@ export default function ReportTablePreview({
             type="button"
             onClick={onClose}
             aria-label="Close preview"
-            className="shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="touch-target shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
           >
             <FaTimes size={16} />
           </button>

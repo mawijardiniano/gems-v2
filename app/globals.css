@@ -101,6 +101,61 @@ th {
   font-variant-numeric: tabular-nums;
 }
 
+/* ─── Touch targets ────────────────────────────────────────────────
+   .touch-target grows a small icon button's hit area to at least 44px
+   (2.75rem) without changing how it looks: an invisible ::after centred on
+   the button. Lives in the components layer so a utility such as
+   `absolute` on the same element still wins over `position: relative`.
+   Only on coarse pointers (touch); mouse users keep exact hit boxes, so
+   tightly packed row actions never steal each other's clicks on desktop. */
+@layer components {
+  .touch-target {
+    position: relative;
+  }
+  @media (pointer: coarse) {
+    .touch-target::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/* ─── Reduced motion ───────────────────────────────────────────────
+   Not a global kill switch. Movement goes; meaning stays:
+   - entrance animations (slide, scale, dropdown) become a plain fade,
+   - transitions keep colour, opacity and shadow feedback but stop
+     animating transforms and layout (hover lifts, press scales, sidebar
+     width) — those changes apply instantly instead,
+   - bouncing/pinging attention loops stop; spinners and skeleton pulses
+     stay because they report that work is in progress. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-slide-in,
+  .animate-slide-in-left,
+  .animate-slide-down,
+  .animate-scale-in,
+  .animate-dropdown,
+  .modal {
+    animation: fade-in 0.15s ease-out !important;
+  }
+  .animate-bounce,
+  .animate-ping {
+    animation: none !important;
+  }
+  *,
+  ::before,
+  ::after {
+    transition-property: color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ─── Animations ───────────────────────────────────────────────── */
 @keyframes slide-up {
   from {
@@ -202,7 +257,7 @@ th {
   @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
 }
 .input {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 transition-all duration-200 outline-none;
+  @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 transition duration-200 outline-none;
 }
 .input:focus {
   @apply border-secondary-500 ring-4 ring-secondary-500/10;
@@ -223,22 +278,22 @@ select.input {
 
 /* Button variants */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
 }
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-secondary-600 text-white shadow-sm shadow-secondary-200 hover:bg-secondary-700 hover:shadow-md active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-secondary-600 text-white shadow-sm shadow-secondary-200 hover:bg-secondary-700 hover:shadow-md active:scale-[0.98];
 }
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98];
 }
 .btn-danger {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white shadow-sm shadow-red-200 hover:bg-red-700 active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white shadow-sm shadow-red-200 hover:bg-red-700 active:scale-[0.98];
 }
 .btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
 }
 .btn-success {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white shadow-sm shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white shadow-sm shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98];
 }
 
 /* Keyboard focus for the shared buttons. .btn* strips the browser outline,

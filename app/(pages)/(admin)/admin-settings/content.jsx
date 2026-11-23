@@ -719,13 +719,14 @@ export default function AdminSettings() {
               <p className="text-xs text-gray-500">
                 Page {pagination.page} of {pagination.totalPages}
               </p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 pointer-coarse:gap-3">
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page <= 1}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
+                  className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <FaChevronLeft className="text-xs" />
+                  <FaChevronLeft className="text-xs" aria-hidden="true" />
                 </button>
                 {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
                   .filter((p) => {
@@ -756,9 +757,10 @@ export default function AdminSettings() {
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Next page"
+                  className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <FaChevronRight className="text-xs" />
+                  <FaChevronRight className="text-xs" aria-hidden="true" />
                 </button>
               </div>
             </div>

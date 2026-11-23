@@ -13,6 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { CHART, SERIES } from "@/data/lib/chartColors";
 import {
   HiOutlineUserGroup,
   HiOutlineBriefcase,
@@ -64,7 +65,7 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-secondary-600)]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-series-male" />
           <span className="text-gray-600">Male</span>
           <span className="ml-auto font-semibold text-gray-900">{male}</span>
           <span className="text-xs text-gray-500">({malePct}%)</span>
@@ -72,12 +73,12 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${malePct}%`, background: "var(--color-secondary-600)" }}
+            style={{ width: `${malePct}%`, background: SERIES.male }}
           />
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-accent-500)]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-series-female" />
           <span className="text-gray-600">Female</span>
           <span className="ml-auto font-semibold text-gray-900">{female}</span>
           <span className="text-xs text-gray-500">({femalePct}%)</span>
@@ -85,13 +86,13 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         <div className="h-1.5 w-full rounded-full bg-gray-100">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${femalePct}%`, background: "var(--color-accent-500)" }}
+            style={{ width: `${femalePct}%`, background: SERIES.female }}
           />
         </div>
 
         {unspecified > 0 && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#94a3b8]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-series-slate" />
             <span className="text-gray-600">Unspecified</span>
             <span className="ml-auto font-semibold text-gray-900">{unspecified}</span>
             <span className="text-xs text-gray-500">
@@ -129,7 +130,7 @@ function SegmentedToggle({ active, onChange }) {
     <div className="inline-flex rounded-xl bg-gray-100 p-1">
       <button
         onClick={() => onChange("chart")}
-        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${
           active === "chart"
             ? "bg-white text-secondary-700 shadow-sm"
             : "text-gray-500 hover:text-gray-700"
@@ -140,7 +141,7 @@ function SegmentedToggle({ active, onChange }) {
       </button>
       <button
         onClick={() => onChange("table")}
-        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+        className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${
           active === "table"
             ? "bg-white text-secondary-700 shadow-sm"
             : "text-gray-500 hover:text-gray-700"
@@ -457,11 +458,11 @@ export default function ProfileStats() {
     totalMaleStudent + totalFemaleStudent + totalUnspecifiedStudent;
 
   const overallPieData = [
-    { name: "Male", value: totalMale, color: "var(--color-secondary-600)" },
-    { name: "Female", value: totalFemale, color: "var(--color-accent-500)" },
+    { name: "Male", value: totalMale, color: SERIES.male },
+    { name: "Female", value: totalFemale, color: SERIES.female },
   ];
   if (totalUnspecified > 0) {
-    overallPieData.push({ name: "Unspecified", value: totalUnspecified, color: "#94a3b8" });
+    overallPieData.push({ name: "Unspecified", value: totalUnspecified, color: SERIES.slate });
   }
 
   const officeData = (activeData?.employees?.officeSex || [])
@@ -505,7 +506,7 @@ export default function ProfileStats() {
     }, [])
     .sort((a, b) => yearOrder.indexOf(a.year) - yearOrder.indexOf(b.year));
 
-  const CHART_COLORS = { Male: "var(--color-secondary-600)", Female: "var(--color-accent-500)" };
+  const CHART_COLORS = { Male: SERIES.male, Female: SERIES.female };
 
  
   return (
@@ -539,7 +540,7 @@ export default function ProfileStats() {
                 id="school-year-select"
                 value={selectedSchoolYear}
                 onChange={handleSchoolYearChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
               >
                 {activeSchoolYears.length === 0 && (
                   <option value="">No terms available</option>
@@ -563,7 +564,7 @@ export default function ProfileStats() {
                 id="semester-select"
                 value={selectedSemester}
                 onChange={handleSemesterChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
               >
                 {availableSemesters.length === 0 && (
                   <option value="">No semesters available</option>
@@ -630,26 +631,32 @@ export default function ProfileStats() {
             </div>
           )}
 
-          <PrintSummaryButton
-            totalPopulation={totalPopulation}
-            totalMale={totalMale}
-            totalFemale={totalFemale}
-            totalUnspecified={totalUnspecified}
-            totalEmployee={totalEmployee}
-            totalMaleEmployee={totalMaleEmployee}
-            totalFemaleEmployee={totalFemaleEmployee}
-            totalUnspecifiedEmployee={totalUnspecifiedEmployee}
-            totalStudent={totalStudent}
-            totalMaleStudent={totalMaleStudent}
-            totalFemaleStudent={totalFemaleStudent}
-            totalUnspecifiedStudent={totalUnspecifiedStudent}
-            yearLineData={yearLineData}
-            collegeData={collegeData}
-            officeData={officeData}
-            isSample={useSample}
-            schoolYear={selectedSchoolYear}
-            semester={selectedSemester}
-          />
+          {/* The Print button positions itself absolutely. Below sm this
+              wrapper is its positioning box, so it gets its own row under the
+              heading block; from sm up the wrapper is static and the button
+              pins to the header's top-right corner as before. */}
+          <div className="relative mt-4 h-10 sm:static sm:mt-0 sm:h-0">
+            <PrintSummaryButton
+              totalPopulation={totalPopulation}
+              totalMale={totalMale}
+              totalFemale={totalFemale}
+              totalUnspecified={totalUnspecified}
+              totalEmployee={totalEmployee}
+              totalMaleEmployee={totalMaleEmployee}
+              totalFemaleEmployee={totalFemaleEmployee}
+              totalUnspecifiedEmployee={totalUnspecifiedEmployee}
+              totalStudent={totalStudent}
+              totalMaleStudent={totalMaleStudent}
+              totalFemaleStudent={totalFemaleStudent}
+              totalUnspecifiedStudent={totalUnspecifiedStudent}
+              yearLineData={yearLineData}
+              collegeData={collegeData}
+              officeData={officeData}
+              isSample={useSample}
+              schoolYear={selectedSchoolYear}
+              semester={selectedSemester}
+            />
+          </div>
         </div>
 
         {/* ──── OVERALL STAT CARDS ──── */}
@@ -846,13 +853,13 @@ export default function ProfileStats() {
                     interval={0}
                     textAnchor="end"
                     height={80}
-                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    tick={{ fontSize: 11, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: "#9ca3af" }}
+                    tick={{ fontSize: 12, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -964,13 +971,13 @@ export default function ProfileStats() {
                     interval={0}
                     textAnchor="end"
                     height={80}
-                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    tick={{ fontSize: 11, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: "#9ca3af" }}
+                    tick={{ fontSize: 12, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -1078,13 +1085,13 @@ export default function ProfileStats() {
                 >
                   <XAxis
                     dataKey="year"
-                    tick={{ fontSize: 12, fill: "#6b7280" }}
+                    tick={{ fontSize: 12, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: "#9ca3af" }}
+                    tick={{ fontSize: 12, fill: CHART.axisText }}
                     axisLine={false}
                     tickLine={false}
                   />

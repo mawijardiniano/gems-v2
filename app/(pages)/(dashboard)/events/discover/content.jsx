@@ -68,7 +68,7 @@ function EventCard({ event, onClick }) {
 
   return (
     <div
-      className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer"
+      className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-lg transition duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
       role="link"
       tabIndex={0}
@@ -256,9 +256,10 @@ export default function DiscoverContent() {
           {error}
           <button
             onClick={() => setError("")}
-            className="ml-auto text-red-400 hover:text-red-600"
+            aria-label="Dismiss error"
+            className="touch-target ml-auto text-red-400 hover:text-red-600"
           >
-            <FaTimes className="text-xs" />
+            <FaTimes className="text-xs" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -273,7 +274,7 @@ export default function DiscoverContent() {
             aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
           />
         </div>
         <div className="relative">
@@ -281,7 +282,7 @@ export default function DiscoverContent() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="appearance-none pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all cursor-pointer min-w-[140px]"
+            className="appearance-none pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition cursor-pointer min-w-[140px]"
           >
             {ACTIVITY_TYPES.map((type) => (
               <option key={type} value={type}>

@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "@/data/lib/chartColors";
 
 function EnrollmentTrend({ trend }) {
   const data = Array.isArray(trend) ? trend : [];
@@ -38,9 +39,9 @@ function EnrollmentTrend({ trend }) {
         <div className="h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} tickLine={false} axisLine={{ stroke: "#e5e7eb" }} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
+              <XAxis dataKey="year" tick={{ fontSize: 11, fill: CHART.axisText }} tickLine={false} axisLine={{ stroke: CHART.axisLine }} />
+              <YAxis tick={{ fontSize: 11, fill: CHART.axisText }} tickLine={false} axisLine={false} />
               <Tooltip formatter={(v) => [Number(v).toLocaleString(), ""]} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="students" name="Students" stroke="var(--color-secondary-500)" strokeWidth={2.5} dot={false} />

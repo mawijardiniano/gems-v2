@@ -16,7 +16,7 @@ const fmt = (n) =>
 
 function Card({ icon: Icon, label, value, sub, bar, href, linkLabel, tint }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${tint}`} />
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-transform duration-300 group-hover:scale-110">

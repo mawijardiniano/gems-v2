@@ -5,6 +5,7 @@ import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 import { FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import EventFormFields from "../../../../components/EventFormFields";
+import Button from "@/components/ui/Button";
 
 /* Editing uploads a new poster straight away (and can remove the saved one)
    through the editor's poster session (useEventEditor): a poster replaced or
@@ -56,7 +57,7 @@ function PosterEditor({ poster, onChange, posterFiles }) {
             />
             <button
               type="button"
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+              className="touch-target absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
               onClick={() => replaceWith("")}
               aria-label="Remove poster"
             >
@@ -133,13 +134,14 @@ export default function EventEditForm({
         </p>
       )}
       <div className="flex gap-3 justify-end pt-6 border-t border-gray-100 mt-8">
-        <button onClick={onCancel} className="btn-secondary !rounded-lg">
+        <Button onClick={onCancel} variant="secondary" className="!rounded-lg">
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onSave}
           disabled={saving || posterUploading}
-          className="btn-primary !rounded-lg"
+          variant="primary"
+          className="!rounded-lg"
         >
           {saving ? (
             <>
@@ -148,7 +150,7 @@ export default function EventEditForm({
           ) : (
             "Save Changes"
           )}
-        </button>
+        </Button>
       </div>
     </>
   );

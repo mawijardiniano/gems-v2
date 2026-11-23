@@ -66,7 +66,7 @@ export function GadStatCards({ totals, yearFilter, budgetView, budgetSummary }) 
         >
           <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
+              className={`h-full rounded-full transition duration-500 ${
                 overBudget ? "bg-red-500" : "bg-emerald-500"
               }`}
               style={{
@@ -147,7 +147,7 @@ export function GadFilterBar({ list }) {
             type="button"
             onClick={() => list.setSearch("")}
             aria-label="Clear search"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
+            className="touch-target absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
           >
             <FaTimes className="h-3.5 w-3.5" />
           </button>

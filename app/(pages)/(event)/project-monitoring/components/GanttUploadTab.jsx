@@ -134,7 +134,7 @@ export default function GanttUploadTab({ onApply }) {
             <button
               type="button"
               onClick={reset}
-              className="text-gray-500 hover:text-red-500"
+              className="touch-target text-gray-500 hover:text-red-500"
               aria-label="Remove file"
             >
               <FaTimes size={12} />

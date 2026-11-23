@@ -427,7 +427,7 @@ export default function MilestonesModal({
               <button
                 type="button"
                 onClick={closeAndCleanup}
-                className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+                className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
                 <FaTimes size={14} />
@@ -700,7 +700,7 @@ export default function MilestonesModal({
                                           <button
                                             type="button"
                                             onClick={() => removeProof(i, file)}
-                                            className="text-gray-500 hover:text-red-500 transition-colors"
+                                            className="touch-target text-gray-500 hover:text-red-500 transition-colors"
                                             title="Remove proof"
                                           >
                                             <FaTimes size={9} />
@@ -754,7 +754,7 @@ export default function MilestonesModal({
                               <button
                                 type="button"
                                 onClick={() => removeRow(i)}
-                                className="text-gray-500 hover:text-red-500 transition-colors"
+                                className="touch-target text-gray-500 hover:text-red-500 transition-colors"
                                 title="Remove milestone"
                               >
                                 <FaTrash size={12} />

@@ -214,7 +214,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Region</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
             value={addr.region.code}
             onChange={(e) => handleAddressChange(which, "region", e.target.value)}
           >
@@ -227,7 +227,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Province</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.province.code}
             onChange={(e) => handleAddressChange(which, "province", e.target.value)}
             disabled={!addr.region.code}
@@ -241,7 +241,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">City/Municipality</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.city.code}
             onChange={(e) => handleAddressChange(which, "city", e.target.value)}
             disabled={!addr.province.code}
@@ -255,7 +255,7 @@ export default function ContactInformationContent({ profile }) {
         <div>
           <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Barangay</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.barangay.code}
             onChange={(e) => handleAddressChange(which, "barangay", e.target.value)}
             disabled={!addr.city.code}
@@ -291,7 +291,7 @@ export default function ContactInformationContent({ profile }) {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -302,7 +302,7 @@ export default function ContactInformationContent({ profile }) {
                 if (isEditing && originalData) setFormData(originalData);
                 setIsEditing(!isEditing);
               }}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
@@ -357,7 +357,7 @@ export default function ContactInformationContent({ profile }) {
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Email Address <span className="text-red-400">*</span></label>
                   <input
                     type="email"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                   />
@@ -366,7 +366,7 @@ export default function ContactInformationContent({ profile }) {
                   <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
                   <input
                     type="number"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.mobileNumber}
                     onChange={(e) => handleChange("mobileNumber", e.target.value)}
                   />

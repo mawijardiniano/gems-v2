@@ -12,19 +12,20 @@ import {
   Cell,
   CartesianGrid,
 } from "recharts";
+import { CATEGORICAL, CHART, colorForSex } from "@/data/lib/chartColors";
 
-const COLORS = ["var(--color-primary-600)", "#f97316", "#10b981", "#a855f7", "#06b6d4", "#ef4444", "var(--color-accent-500)"];
+const COLORS = CATEGORICAL;
 
 const chartTooltipStyle = {
   borderRadius: 10,
-  border: "1px solid #e5e7eb",
+  border: `1px solid ${CHART.tooltipBorder}`,
   boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
   fontSize: 12,
   padding: "8px 12px",
 };
 
-const axisTick = { fontSize: 11, fill: "#9CA3AF" };
-const axisLabel = { fontSize: 11, fill: "#6B7280" };
+const axisTick = { fontSize: 11, fill: CHART.axisText };
+const axisLabel = { fontSize: 11, fill: CHART.axisText };
 
 function InlineLegend({ data, colors }) {
   return (
@@ -80,7 +81,7 @@ function ChartCard({ title, subtitle, total, height = 240, children }) {
 }
 
 /* ── Pie / Donut charts ─────────────────────────────────────────── */
-function DonutChart({ data, height = 200, innerRadius = 40, outerRadius = 70 }) {
+function DonutChart({ data, colors = COLORS, height = 200, innerRadius = 40, outerRadius = 70 }) {
   return (
     <>
       <ResponsiveContainer width="100%" height={height}>
@@ -97,7 +98,7 @@ function DonutChart({ data, height = 200, innerRadius = 40, outerRadius = 70 }) 
             stroke="none"
           >
             {data.map((entry, i) => (
-              <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+              <Cell key={`cell-${i}`} fill={colors[i % colors.length]} />
             ))}
           </Pie>
           <Tooltip
@@ -106,7 +107,7 @@ function DonutChart({ data, height = 200, innerRadius = 40, outerRadius = 70 }) 
           />
         </PieChart>
       </ResponsiveContainer>
-      <InlineLegend data={data} colors={COLORS} />
+      <InlineLegend data={data} colors={colors} />
     </>
   );
 }
@@ -120,7 +121,10 @@ export function SexChart({ data }) {
       {!hasValues(safeData, total) ? (
         <NoData />
       ) : (
-        <DonutChart data={safeData} />
+        <DonutChart
+          data={safeData}
+          colors={safeData.map((d) => colorForSex(d.name))}
+        />
       )}
     </ChartCard>
   );
@@ -149,7 +153,7 @@ function HorzBarChart({ data, height = 280, yWidth = 140 }) {
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 16 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#f3f4f6"
+            stroke={CHART.grid}
             horizontal={false}
           />
           <XAxis
@@ -227,7 +231,7 @@ export function AgeChart({ data }) {
         <>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={safeData} margin={{ left: 0, right: 0 }} barSize={36}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
               <XAxis
                 dataKey="name"
                 tick={axisLabel}

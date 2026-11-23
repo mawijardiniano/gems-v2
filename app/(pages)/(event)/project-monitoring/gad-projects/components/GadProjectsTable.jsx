@@ -234,7 +234,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
             }}
             title={isExpanded ? "Hide details" : "View details"}
             aria-expanded={isExpanded}
-            className={`inline-flex items-center justify-center h-8 w-8 rounded-lg border transition ${
+            className={`touch-target inline-flex items-center justify-center h-8 w-8 rounded-lg border transition ${
               isExpanded
                 ? "bg-rose-600 border-rose-600 text-white hover:bg-rose-700"
                 : "bg-white border-gray-200 text-gray-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
@@ -270,7 +270,7 @@ function Pagination({ list }) {
   const pageStart = count === 0 ? 0 : (currentPage - 1) * PROJECTS_PER_PAGE + 1;
   const pageEnd = Math.min(currentPage * PROJECTS_PER_PAGE, count);
   const navButton =
-    "p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+    "touch-target p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
   return (
     <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -294,7 +294,7 @@ function Pagination({ list }) {
       </p>
 
       {!expandedId && totalPages > 1 && (
-        <div className="flex items-center gap-1 self-start sm:self-auto">
+        <div className="flex items-center gap-1 pointer-coarse:gap-3 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => list.goToPage(currentPage - 1)}

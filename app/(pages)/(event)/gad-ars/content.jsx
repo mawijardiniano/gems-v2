@@ -586,7 +586,7 @@ export default function GADARContent() {
                   type="button"
                   aria-label="Close"
                   onClick={() => setEvidenceViewer(null)}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -689,7 +689,8 @@ export default function GADARContent() {
                       setPreviewError("");
                     }}
                     disabled={viewerIndex === 0}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Previous file"
+                    className="touch-target absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <FaChevronLeft className="h-4 w-4" />
                   </button>
@@ -703,7 +704,8 @@ export default function GADARContent() {
                       setPreviewError("");
                     }}
                     disabled={viewerIndex === viewerFiles.length - 1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Next file"
+                    className="touch-target absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <FaChevronRight className="h-4 w-4" />
                   </button>

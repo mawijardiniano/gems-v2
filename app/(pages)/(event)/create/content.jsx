@@ -79,7 +79,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
             inputRef.current?.click();
           }
         }}
-        className={`flex items-center gap-4 rounded-xl border-2 border-dashed p-4 cursor-pointer transition-all ${
+        className={`flex items-center gap-4 rounded-xl border-2 border-dashed p-4 cursor-pointer transition ${
           posterPreview
             ? "border-secondary-200 bg-secondary-50/40"
             : "border-gray-200 hover:border-secondary-300 hover:bg-secondary-50/30"
@@ -369,14 +369,14 @@ export default function CreateEventsContent() {
                 userRole === "dean" ? "/dean/projects" : "/events-list",
               )
             }
-            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
+            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading || uploading}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 text-sm font-medium text-white shadow-lg shadow-secondary-500/25 transition-all hover:shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 text-sm font-medium text-white shadow-lg shadow-secondary-500/25 transition hover:shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {loading || uploading ? "Creating..." : "Create Event"}
           </button>

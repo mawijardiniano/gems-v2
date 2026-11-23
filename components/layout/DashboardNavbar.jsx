@@ -119,7 +119,7 @@ export default function DashboardNavbar({
       <div className="flex min-w-0 items-center space-x-3 sm:space-x-4">
         <button
           onClick={toggleSidebar}
-          className="shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:hidden"
+          className="touch-target shrink-0 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 sm:hidden"
           aria-label="Toggle sidebar"
         >
           <FaBars size={18} />

@@ -53,7 +53,7 @@ export default function AddProjectWizard({
             type="button"
             aria-label="Close"
             onClick={() => setShowWizard(false)}
-            className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+            className="touch-target text-gray-500 hover:text-gray-700 text-3xl leading-none"
           >
             &times;
           </button>
