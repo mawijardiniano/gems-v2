@@ -76,14 +76,14 @@ export default function EventOfficeDropdown({
       <p className={labelClass}>
         {Icon && (
           <Icon
-            className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5"
+            className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
             aria-hidden="true"
           />
         )}
         {label} {required && <span className="text-red-500">*</span>}
       </p>
       {description && (
-        <p className="text-xs text-gray-400 mb-2">{description}</p>
+        <p className="text-xs text-gray-500 mb-2">{description}</p>
       )}
 
       <button
@@ -99,14 +99,14 @@ export default function EventOfficeDropdown({
           open
             ? "border-secondary-500 bg-secondary-50/50"
             : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
-        } ${selected.length === 0 ? "text-gray-400" : "text-gray-900"}`}
+        } ${selected.length === 0 ? "text-gray-500" : "text-gray-900"}`}
       >
         <span className="flex items-center gap-2 truncate pr-2">
           {selected.length === 0 ? "Select options..." : selected.join(", ")}
         </span>
         <FaChevronDown
           aria-hidden="true"
-          className={`h-3.5 w-3.5 text-gray-400 shrink-0 transition-transform ${
+          className={`h-3.5 w-3.5 text-gray-500 shrink-0 transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />

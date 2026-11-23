@@ -670,7 +670,7 @@ export default function StudentsUserListContent({
                     className={
                       nameSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -679,7 +679,7 @@ export default function StudentsUserListContent({
                     className={
                       nameSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼
@@ -698,7 +698,7 @@ export default function StudentsUserListContent({
                     className={
                       sexSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -707,7 +707,7 @@ export default function StudentsUserListContent({
                     className={
                       sexSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼
@@ -726,7 +726,7 @@ export default function StudentsUserListContent({
                     className={
                       collegeSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -735,7 +735,7 @@ export default function StudentsUserListContent({
                     className={
                       collegeSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼
@@ -754,7 +754,7 @@ export default function StudentsUserListContent({
                     className={
                       campusSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -763,7 +763,7 @@ export default function StudentsUserListContent({
                     className={
                       campusSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼
@@ -782,7 +782,7 @@ export default function StudentsUserListContent({
                     className={
                       courseSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -791,7 +791,7 @@ export default function StudentsUserListContent({
                     className={
                       courseSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼
@@ -810,7 +810,7 @@ export default function StudentsUserListContent({
                     className={
                       yearSort === "asc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▲
@@ -819,7 +819,7 @@ export default function StudentsUserListContent({
                     className={
                       yearSort === "desc"
                         ? "text-secondary-600 font-bold"
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }
                   >
                     ▼

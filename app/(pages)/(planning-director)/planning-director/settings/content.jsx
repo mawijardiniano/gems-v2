@@ -273,12 +273,12 @@ export default function PlanningDirectorSettings() {
                 </button>
                 <div className="text-xs text-gray-500">
                   {userInfoLoading ? (
-                    <span className="text-gray-400">Loading security info...</span>
+                    <span className="text-gray-500">Loading security info...</span>
                   ) : (
                     <div className="space-y-2 mt-1">
                       {passwordChangedAt ? (
                         <div className="flex items-center gap-2">
-                          <FaHistory className="text-gray-400 shrink-0" />
+                          <FaHistory className="text-gray-500 shrink-0" />
                           <span>
                             Last changed:{" "}
                             <span className="font-medium text-gray-700">
@@ -294,7 +294,7 @@ export default function PlanningDirectorSettings() {
                       )}
                       {lastLogin && (
                         <div className="flex items-center gap-2">
-                          <FaSignInAlt className="text-gray-400 shrink-0" />
+                          <FaSignInAlt className="text-gray-500 shrink-0" />
                           <span>
                             Last login:{" "}
                             <span className="font-medium text-gray-700">
@@ -430,7 +430,7 @@ export default function PlanningDirectorSettings() {
               <div className="text-center py-8">
                 <FaClipboardList className="mx-auto text-gray-300 text-3xl mb-3" />
                 <p className="text-sm text-gray-500">No activity records found.</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   {filterAction || filterFrom || filterTo
                     ? "Try adjusting your filters."
                     : "Activity will appear here as you use the platform."}
@@ -454,7 +454,7 @@ export default function PlanningDirectorSettings() {
                           {timeAgo(a.createdAt)}
                         </p>
                       </div>
-                      <span className="shrink-0 text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                      <span className="shrink-0 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                         {ACTION_CONFIG[a.action]?.label || a.action}
                       </span>
                     </li>
@@ -486,7 +486,7 @@ export default function PlanningDirectorSettings() {
                   .map((p, idx, arr) => (
                     <React.Fragment key={p}>
                       {idx > 0 && arr[idx - 1] !== p - 1 && (
-                        <span className="px-1 text-gray-400 text-xs">...</span>
+                        <span className="px-1 text-gray-500 text-xs">...</span>
                       )}
                       <button
                         onClick={() => handlePageChange(p)}
@@ -573,7 +573,7 @@ export default function PlanningDirectorSettings() {
                       {showNew ? "Hide" : "Show"}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">At least 8 characters. Include letters and numbers.</p>
+                  <p className="text-xs text-gray-500 mt-1">At least 8 characters. Include letters and numbers.</p>
                 </div>
 
                 <div>

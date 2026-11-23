@@ -85,7 +85,7 @@ export default function GaaBudgetTable({ dashboard }) {
                     ) : (
                       <td
                         colSpan={3}
-                        className="py-3 pl-4 text-right text-sm italic text-gray-400"
+                        className="py-3 pl-4 text-right text-sm italic text-gray-500"
                       >
                         To follow
                       </td>

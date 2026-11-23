@@ -58,7 +58,7 @@ export default function GADProjectsMonitoringContent() {
             actuals as activities are conducted
           </p>
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-500">
           {list.totals.listed} project{list.totals.listed !== 1 ? "s" : ""} listed
         </p>
       </div>

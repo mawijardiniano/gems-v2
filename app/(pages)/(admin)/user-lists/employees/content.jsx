@@ -665,7 +665,7 @@ export default function EmployeeListPageContent({
                   className={
                     nameSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▲
@@ -674,7 +674,7 @@ export default function EmployeeListPageContent({
                   className={
                     nameSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▼
@@ -693,7 +693,7 @@ export default function EmployeeListPageContent({
                   className={
                     sexSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▲
@@ -702,7 +702,7 @@ export default function EmployeeListPageContent({
                   className={
                     sexSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▼
@@ -721,7 +721,7 @@ export default function EmployeeListPageContent({
                   className={
                     officeSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▲
@@ -730,7 +730,7 @@ export default function EmployeeListPageContent({
                   className={
                     officeSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▼
@@ -749,7 +749,7 @@ export default function EmployeeListPageContent({
                   className={
                     employmentSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▲
@@ -758,7 +758,7 @@ export default function EmployeeListPageContent({
                   className={
                     employmentSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▼
@@ -777,7 +777,7 @@ export default function EmployeeListPageContent({
                   className={
                     appointmentSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▲
@@ -786,7 +786,7 @@ export default function EmployeeListPageContent({
                   className={
                     appointmentSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-400"
+                      : "text-gray-500"
                   }
                 >
                   ▼

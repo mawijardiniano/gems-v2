@@ -57,7 +57,7 @@ export default function GenderStatsCard({ dashboard }) {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="text-gray-600">
                     {row.label}
-                    <span className="text-gray-400"> · {row.scope}</span>
+                    <span className="text-gray-500"> · {row.scope}</span>
                   </span>
                   <span className="font-semibold text-gray-900">
                     {row.totals
@@ -69,7 +69,7 @@ export default function GenderStatsCard({ dashboard }) {
                   percent={row.totals?.pctFemale || 0}
                   barClass="bg-pink-500"
                 />
-                <div className="flex items-center justify-between text-[11px] text-gray-400">
+                <div className="flex items-center justify-between text-[11px] text-gray-500">
                   <span>
                     {row.totals
                       ? `${row.totals.Female.toLocaleString()} female · ${row.totals.Male.toLocaleString()} male`

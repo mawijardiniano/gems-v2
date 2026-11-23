@@ -35,11 +35,11 @@ const ACTIVITY_COLORS = {
 function DateRangeDisplay({ event }) {
   const when = formatEventWhen(event);
   if (!when) {
-    return <span className="text-gray-400 text-xs">No date set</span>;
+    return <span className="text-gray-500 text-xs">No date set</span>;
   }
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
-      <FaCalendar className="shrink-0 text-gray-400" />
+      <FaCalendar className="shrink-0 text-gray-500" />
       <span>{when}</span>
     </div>
   );
@@ -108,7 +108,7 @@ function EventCard({ event, onClick, isPast }) {
               {event.title}
             </h3>
             {event.reference_number && (
-              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-400">
+              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
                 {event.reference_number}
               </span>
             )}
@@ -128,7 +128,7 @@ function EventCard({ event, onClick, isPast }) {
         {/* Venue */}
         {event.venue && (
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaLocationArrow className="shrink-0 text-gray-400" />
+            <FaLocationArrow className="shrink-0 text-gray-500" />
             <span className="truncate">{event.venue}</span>
           </div>
         )}
@@ -251,7 +251,7 @@ export default function EventContent({
       </div>
       <p className="text-sm font-medium text-gray-500">{title}</p>
       {description && (
-        <p className="text-xs text-gray-400 mt-1">{description}</p>
+        <p className="text-xs text-gray-500 mt-1">{description}</p>
       )}
     </div>
   );
@@ -262,7 +262,7 @@ export default function EventContent({
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-secondary-200 border-t-indigo-500 rounded-full animate-spin" />
-            <p className="text-sm text-gray-400">Loading events...</p>
+            <p className="text-sm text-gray-500">Loading events...</p>
           </div>
         </div>
       </div>
@@ -395,7 +395,7 @@ export default function EventContent({
 
         {/* Search */}
         <div className="relative">
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
           <input
             type="text"
             placeholder="Search events by title, description, venue..."

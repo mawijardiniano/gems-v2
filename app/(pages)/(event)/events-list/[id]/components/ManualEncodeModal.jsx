@@ -298,7 +298,7 @@ export default function ManualEncodeModal({
               >
                 Manual Encode
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Record attendance without a QR scan
                 {eventTitle ? ` for ${eventTitle}` : ""}.
               </p>
@@ -309,7 +309,7 @@ export default function ManualEncodeModal({
             aria-label="Close manual encode"
             onClick={closeIfIdle}
             disabled={saving}
-            className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-600"
           >
             <FiX size={16} />
           </button>
@@ -340,7 +340,7 @@ export default function ManualEncodeModal({
                 </button>
               );
             })}
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-gray-500">
               {TYPES.find((t) => t.key === type)?.hint}
             </span>
           </div>
@@ -348,7 +348,7 @@ export default function ManualEncodeModal({
           {/* Search */}
           <div className="relative">
             <FiSearch
-              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500"
               size={14}
             />
             <input
@@ -366,7 +366,7 @@ export default function ManualEncodeModal({
             />
             {searching && (
               <FiLoader
-                className="absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-gray-400"
+                className="absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-gray-500"
                 size={14}
               />
             )}
@@ -378,12 +378,12 @@ export default function ManualEncodeModal({
           {/* Results */}
           <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-100">
             {term.length < MIN_QUERY ? (
-              <p className="px-4 py-10 text-center text-sm text-gray-400">
+              <p className="px-4 py-10 text-center text-sm text-gray-500">
                 Type at least {MIN_QUERY} letters to search {type.toLowerCase()}{" "}
                 records.
               </p>
             ) : visibleResults.length === 0 ? (
-              <p className="px-4 py-10 text-center text-sm text-gray-400">
+              <p className="px-4 py-10 text-center text-sm text-gray-500">
                 {searching
                   ? "Searching records..."
                   : `No matching ${type.toLowerCase()} records.`}
@@ -406,7 +406,7 @@ export default function ManualEncodeModal({
                         <p className="truncate text-sm font-medium text-gray-900">
                           {name}
                         </p>
-                        <p className="truncate text-xs text-gray-400">
+                        <p className="truncate text-xs text-gray-500">
                           {[person.username, details]
                             .filter(Boolean)
                             .join(" • ") || "No details on record"}

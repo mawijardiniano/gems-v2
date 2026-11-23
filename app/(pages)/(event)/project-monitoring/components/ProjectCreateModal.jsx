@@ -104,7 +104,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold border shrink-0 ${
                   done || active
                     ? "bg-rose-600 border-rose-600 text-white"
-                    : "bg-white border-gray-200 text-gray-400"
+                    : "bg-white border-gray-200 text-gray-500"
                 }`}
               >
                 {done ? <FaCheck size={9} /> : index + 1}
@@ -115,7 +115,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                     ? "text-rose-700"
                     : done
                       ? "text-gray-700"
-                      : "text-gray-400"
+                      : "text-gray-500"
                 }`}
               >
                 {title}
@@ -158,7 +158,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
 const ReviewGroup = ({ title, entries, onEdit }) => (
   <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
     <div className="flex items-center justify-between gap-2 mb-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
         {title}
       </p>
       <button
@@ -173,7 +173,7 @@ const ReviewGroup = ({ title, entries, onEdit }) => (
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
       {entries.map(({ label, value }) => (
         <div key={label} className="min-w-0">
-          <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
             {label}
           </dt>
           <dd className="text-sm text-gray-800 break-words">{value}</dd>
@@ -364,14 +364,14 @@ export default function ProjectCreateModal({
               New {String(config.title || "").replace(/\s*Projects?$/i, "")}{" "}
               Project
             </h3>
-            <p className="text-[11px] text-gray-400 mt-0.5">
+            <p className="text-[11px] text-gray-500 mt-0.5">
               Fields marked <span className="text-rose-500">*</span> are required.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />

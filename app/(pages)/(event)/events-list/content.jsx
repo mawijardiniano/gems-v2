@@ -200,7 +200,7 @@ export default function EventsListContent() {
     if (!when) return null;
     return (
       <div className="flex items-center gap-2 text-gray-600">
-        <FaCalendar className="text-gray-400 shrink-0" size={12} />
+        <FaCalendar className="text-gray-500 shrink-0" size={12} />
         <span>{when}</span>
       </div>
     );
@@ -256,7 +256,7 @@ export default function EventsListContent() {
         {/* Filters */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <div className="flex flex-wrap gap-3 items-center">
-            <FaFilter className="text-gray-400" size={14} />
+            <FaFilter className="text-gray-500" size={14} />
             <div className="relative">
               <select
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
@@ -272,7 +272,7 @@ export default function EventsListContent() {
                 ))}
               </select>
               <FaChevronDown
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
                 size={12}
               />
             </div>
@@ -292,7 +292,7 @@ export default function EventsListContent() {
                 ))}
               </select>
               <FaChevronDown
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
                 size={12}
               />
             </div>
@@ -309,7 +309,7 @@ export default function EventsListContent() {
               </button>
             )}
 
-            <span className="ml-auto text-sm text-gray-400">
+            <span className="ml-auto text-sm text-gray-500">
               {total > events.length
                 ? `Showing ${events.length} of ${total} events`
                 : `${events.length} event${events.length !== 1 ? "s" : ""}`}
@@ -322,12 +322,12 @@ export default function EventsListContent() {
           {events.length === 0 ? (
             <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <FaSearch className="text-gray-400" size={24} />
+                <FaSearch className="text-gray-500" size={24} />
               </div>
               <p className="text-gray-500 text-lg font-medium">
                 No events found
               </p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-gray-500 text-sm mt-1">
                 Try adjusting your filters or create a new event
               </p>
             </div>
@@ -387,7 +387,7 @@ export default function EventsListContent() {
                     {evt.venue && (
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <FaLocationArrow
-                          className="text-gray-400 shrink-0"
+                          className="text-gray-500 shrink-0"
                           size={12}
                         />
                         <span className="truncate">{evt.venue}</span>
@@ -415,7 +415,7 @@ export default function EventsListContent() {
 
                     {/* Manage Button */}
                     <div className="pt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
                         <FaUsers size={12} />
                         <span>
                           {evt.attended_count || 0} participant

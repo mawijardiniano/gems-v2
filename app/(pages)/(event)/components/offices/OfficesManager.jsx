@@ -75,7 +75,7 @@ function OfficeRow({ office, canEdit, busy, onDeactivate, onReactivate }) {
           </span>
           <OfficePill active={active} />
         </div>
-        <p className="mt-0.5 text-xs text-gray-400">
+        <p className="mt-0.5 text-xs text-gray-500">
           {active
             ? `${assigned} assigned`
             : `Hidden from the Office / Group picker on the University Officials page — past years keep their assignments.`}
@@ -194,7 +194,7 @@ export default function OfficesManager({
         </form>
       ) : (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-          <FaLock className="mt-0.5 shrink-0 text-gray-400" />
+          <FaLock className="mt-0.5 shrink-0 text-gray-500" />
           <span>
             Read-only: only the GAD focal person can add or deactivate offices.
           </span>
@@ -237,7 +237,7 @@ export default function OfficesManager({
       </div>
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
-        <p className="mt-2 text-[11px] text-gray-400">
+        <p className="mt-2 text-[11px] text-gray-500">
           {summary.inactive} inactive office(s) hidden. A name that is refused
           as a duplicate may be one of them — tick “Show inactive offices” or
           open the Inactive tab to reactivate it.
@@ -263,7 +263,7 @@ export default function OfficesManager({
         )}
       </ul>
 
-      <p className="mt-3 text-[11px] text-gray-400">
+      <p className="mt-3 text-[11px] text-gray-500">
         Offices are never deleted — past academic years, prints and reports keep
         referencing them.
       </p>

@@ -14,13 +14,13 @@ export default function ParticipantTargetProgress({
 
   return (
     <div className={className}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 mb-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5 mb-2">
         <FaBullseye className="h-3 w-3" />
         {label}
       </p>
 
       {progress.target === 0 ? (
-        <p className="text-xs text-gray-400 italic">{emptyMessage}</p>
+        <p className="text-xs text-gray-500 italic">{emptyMessage}</p>
       ) : (
         <>
           <div className="flex items-center justify-between text-sm">

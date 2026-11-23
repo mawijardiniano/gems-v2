@@ -242,14 +242,14 @@ function SeatRow({
             )}
           </div>
 
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
             {showHeader && (
               <>
                 <span className="font-medium text-gray-500">{seat.header}</span>
                 <span aria-hidden="true">Â·</span>
               </>
             )}
-            <span className={assigned ? "text-gray-500" : "text-gray-400"}>
+            <span className={assigned ? "text-gray-500" : "text-gray-500"}>
               {assignedLabel(seat)}
             </span>
             <span aria-hidden="true">Â·</span>
@@ -479,7 +479,7 @@ export default function PositionsManager({
           >
             <FaChevronRight
               aria-hidden="true"
-              className={`h-2.5 w-2.5 shrink-0 text-gray-400 transition-transform ${
+              className={`h-2.5 w-2.5 shrink-0 text-gray-500 transition-transform ${
                 open ? "rotate-90" : ""
               }`}
             />
@@ -612,7 +612,7 @@ export default function PositionsManager({
         </form>
       ) : (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-          <FaLock className="mt-0.5 shrink-0 text-gray-400" />
+          <FaLock className="mt-0.5 shrink-0 text-gray-500" />
           <span>
             Read-only: only the GAD focal person can add, rename or deactivate
             positions.
@@ -651,7 +651,7 @@ export default function PositionsManager({
         >
           <FaChevronDown
             aria-hidden="true"
-            className={`h-2.5 w-2.5 text-gray-400 transition-transform ${
+            className={`h-2.5 w-2.5 text-gray-500 transition-transform ${
               allGroupsOpen ? "rotate-180" : ""
             }`}
           />
@@ -671,7 +671,7 @@ export default function PositionsManager({
       </div>
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
-        <p className="mt-2 text-[11px] text-gray-400">
+        <p className="mt-2 text-[11px] text-gray-500">
           {summary.inactive} inactive seat(s) hidden. A name refused as a
           duplicate may be one of them — tick “Show inactive seats” or open the
           Inactive tab to reactivate it.
@@ -688,7 +688,7 @@ export default function PositionsManager({
         </div>
       )}
 
-      <p className="mt-3 text-[11px] text-gray-400">
+      <p className="mt-3 text-[11px] text-gray-500">
         Positions are never deleted — term history and previously printed charts
         keep referencing them. Deactivate a seat you no longer use instead.
       </p>

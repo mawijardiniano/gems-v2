@@ -104,7 +104,7 @@ export default function EventDetailsModal({ event, onClose }) {
 
           {/* Schedule - every day with times */}
           <div className="mt-4 space-y-1.5">
-            <p className="text-xs font-semibold tracking-wide text-gray-400 uppercase">
+            <p className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
               Schedule
             </p>
             {scheduleRows.length === 0 ? (
@@ -122,7 +122,7 @@ export default function EventDetailsModal({ event, onClose }) {
                     key={i}
                     className="flex items-start gap-2 text-sm text-gray-600"
                   >
-                    <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-400" />
+                    <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-500" />
                     <span>
                       <span className="font-medium text-gray-800">
                         Day {i + 1}:
@@ -142,7 +142,7 @@ export default function EventDetailsModal({ event, onClose }) {
           {/* Venue */}
           {event.venue && (
             <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-              <FaMapMarkerAlt className="shrink-0 text-gray-400" />
+              <FaMapMarkerAlt className="shrink-0 text-gray-500" />
               <span>Venue: {event.venue}</span>
             </div>
           )}
@@ -150,7 +150,7 @@ export default function EventDetailsModal({ event, onClose }) {
           {/* Organizing office(s) */}
           {(event.organizing_office_unit || []).length > 0 && (
             <div className="mt-2 flex items-start gap-2 text-sm text-gray-600">
-              <FaBuilding className="mt-0.5 shrink-0 text-gray-400" />
+              <FaBuilding className="mt-0.5 shrink-0 text-gray-500" />
               <span>{event.organizing_office_unit.join(", ")}</span>
             </div>
           )}
@@ -197,7 +197,7 @@ export default function EventDetailsModal({ event, onClose }) {
                 : "Mark Attendance"}
           </a>
           {!hasEnded && !isCancelled && (
-            <p className="mt-2 text-center text-xs text-gray-400">
+            <p className="mt-2 text-center text-xs text-gray-500">
               No login needed — scan the event QR at the venue and fill the form.
             </p>
           )}

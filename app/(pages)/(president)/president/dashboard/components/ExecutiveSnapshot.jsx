@@ -115,7 +115,7 @@ function ExecutiveSnapshot({ snapshot, useSample }) {
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
         <span>
-          <FaUsers className="mr-1 inline text-gray-400" />
+          <FaUsers className="mr-1 inline text-gray-500" />
           Total population {fmt(total)}
         </span>
         <span>PWD {fmt(s.pwdCount)}</span>

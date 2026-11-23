@@ -427,7 +427,7 @@ export default function MilestonesModal({
               <button
                 type="button"
                 onClick={closeAndCleanup}
-                className="h-8 w-8 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+                className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
                 <FaTimes size={14} />
@@ -447,7 +447,7 @@ export default function MilestonesModal({
           {stats.total > 0 && (
             <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                   Milestone Progress
                 </p>
                 <p className="text-sm font-bold text-gray-900 mt-0.5">
@@ -569,7 +569,7 @@ export default function MilestonesModal({
                   <label className="text-xs font-medium text-gray-500">
                     Milestones &amp; Activities
                   </label>
-                  <span className="text-[11px] text-gray-400">
+                  <span className="text-[11px] text-gray-500">
                     {rows.length}/{MAX_MILESTONES}
                   </span>
                 </div>
@@ -604,7 +604,7 @@ export default function MilestonesModal({
                         <tr>
                           <td
                             colSpan={7}
-                            className="px-2.5 py-5 text-center text-xs text-gray-400 italic"
+                            className="px-2.5 py-5 text-center text-xs text-gray-500 italic"
                           >
                             No milestones yet — click “Add Milestone” to start.
                           </td>
@@ -635,7 +635,7 @@ export default function MilestonesModal({
                                   {row.source_activity}
                                 </span>
                               ) : (
-                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500">
                                   Manual
                                 </span>
                               )}
@@ -689,7 +689,7 @@ export default function MilestonesModal({
                                         >
                                           <FaPaperclip
                                             size={9}
-                                            className="shrink-0 text-gray-400"
+                                            className="shrink-0 text-gray-500"
                                           />
                                           <span
                                             className="max-w-[120px] truncate"
@@ -700,7 +700,7 @@ export default function MilestonesModal({
                                           <button
                                             type="button"
                                             onClick={() => removeProof(i, file)}
-                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                            className="text-gray-500 hover:text-red-500 transition-colors"
                                             title="Remove proof"
                                           >
                                             <FaTimes size={9} />
@@ -743,7 +743,7 @@ export default function MilestonesModal({
                                   </>
                                 ) : (
                                   (row.proofs || []).length === 0 && (
-                                    <span className="text-[11px] text-gray-300">
+                                    <span className="text-[11px] text-gray-500">
                                       —
                                     </span>
                                   )
@@ -754,7 +754,7 @@ export default function MilestonesModal({
                               <button
                                 type="button"
                                 onClick={() => removeRow(i)}
-                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                className="text-gray-500 hover:text-red-500 transition-colors"
                                 title="Remove milestone"
                               >
                                 <FaTrash size={12} />

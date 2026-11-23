@@ -15,7 +15,7 @@ function MiniDonut({ title, female, male }) {
   return (
     <div className="flex-1 min-w-[180px]">
       <p className="text-xs font-semibold text-gray-700">{title}</p>
-      <p className="text-[11px] text-gray-400">{total.toLocaleString()} counted</p>
+      <p className="text-[11px] text-gray-500">{total.toLocaleString()} counted</p>
       <div className="h-[150px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -63,7 +63,7 @@ function GenderGlance({ snapshot, parityGaps }) {
             {gaps.map((g, i) => (
               <li key={i} className="text-xs text-gray-700">
                 <span className="font-medium">{g.unit}</span>
-                <span className="text-gray-400"> · {g.kind} · </span>
+                <span className="text-gray-500"> · {g.kind} · </span>
                 {g.malePct}% male ({Number(g.total).toLocaleString()})
               </li>
             ))}

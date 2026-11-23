@@ -179,7 +179,7 @@ export default function DeanProjectsContent() {
 
     return (
       <div className="flex items-center gap-2 text-gray-600">
-        <FaCalendar className="text-gray-400 shrink-0" size={12} />
+        <FaCalendar className="text-gray-500 shrink-0" size={12} />
         <span>
           {startStr} at {timeStart}
           {timeEnd ? ` – ${timeEnd}` : ""}
@@ -236,7 +236,7 @@ export default function DeanProjectsContent() {
         {/* Filters */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <div className="flex flex-wrap gap-3 items-center">
-            <FaFilter className="text-gray-400" size={14} />
+            <FaFilter className="text-gray-500" size={14} />
             <div className="relative">
               <select
                 className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
@@ -248,7 +248,7 @@ export default function DeanProjectsContent() {
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
-              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
+              <FaChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={12} />
             </div>
 
             {activityType && (
@@ -260,7 +260,7 @@ export default function DeanProjectsContent() {
               </button>
             )}
 
-            <span className="ml-auto text-sm text-gray-400">
+            <span className="ml-auto text-sm text-gray-500">
               {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -271,10 +271,10 @@ export default function DeanProjectsContent() {
           {filteredEvents.length === 0 ? (
             <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <FaSearch className="text-gray-400" size={24} />
+                <FaSearch className="text-gray-500" size={24} />
               </div>
               <p className="text-gray-500 text-lg font-medium">No projects found</p>
-              <p className="text-gray-400 text-sm mt-1">Create your first event to get started</p>
+              <p className="text-gray-500 text-sm mt-1">Create your first event to get started</p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -313,7 +313,7 @@ export default function DeanProjectsContent() {
 
                     {evt.venue && (
                       <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <FaLocationArrow className="text-gray-400 shrink-0" size={12} />
+                        <FaLocationArrow className="text-gray-500 shrink-0" size={12} />
                         <span className="truncate">{evt.venue}</span>
                       </div>
                     )}
@@ -330,7 +330,7 @@ export default function DeanProjectsContent() {
                     )}
 
                     <div className="pt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
                         <FaUsers size={12} />
                         <span>
                           {evt.attended_count || 0} participant

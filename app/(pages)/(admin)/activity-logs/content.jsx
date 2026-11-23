@@ -194,9 +194,9 @@ function describeActor(log) {
  * than blank, because "cleared" and "never set" read very differently in a
  * dispute and a blank cell conflates them. */
 function formatChangeValue(value, redacted) {
-  if (redacted) return <span className="italic text-gray-400">[vaulted]</span>;
+  if (redacted) return <span className="italic text-gray-500">[vaulted]</span>;
   if (value === null || value === undefined || value === "") {
-    return <span className="italic text-gray-400">(empty)</span>;
+    return <span className="italic text-gray-500">(empty)</span>;
   }
   if (typeof value === "object") return <span className="font-mono">{JSON.stringify(value)}</span>;
   return <span className="font-mono">{String(value)}</span>;
@@ -212,7 +212,7 @@ function ChangeList({ changes }) {
           <span className="text-red-700 line-through decoration-red-300">
             {formatChangeValue(c.before, c.redacted)}
           </span>
-          <span className="mx-1 text-gray-400">→</span>
+          <span className="mx-1 text-gray-500">→</span>
           <span className="text-green-700">
             {formatChangeValue(c.after, c.redacted)}
           </span>
@@ -227,7 +227,7 @@ function DetailItem({ label, children }) {
   if (children === null || children === undefined || children === "") return null;
   return (
     <div>
-      <dt className="text-[10px] uppercase tracking-wide text-gray-400">{label}</dt>
+      <dt className="text-[10px] uppercase tracking-wide text-gray-500">{label}</dt>
       <dd className="text-xs text-gray-700 break-words">{children}</dd>
     </div>
   );
@@ -272,7 +272,7 @@ function LogDetail({ log }) {
           {log.hash_prev ? (
             <span className="font-mono text-[10px]">{log.hash_prev}</span>
           ) : (
-            <span className="italic text-gray-400">none (chain start)</span>
+            <span className="italic text-gray-500">none (chain start)</span>
           )}
         </DetailItem>
         <DetailItem label="Record ID">
@@ -282,14 +282,14 @@ function LogDetail({ log }) {
 
       {log.changes?.length > 0 && (
         <div className="mt-3">
-          <div className="text-[10px] uppercase tracking-wide text-gray-400">Changes</div>
+          <div className="text-[10px] uppercase tracking-wide text-gray-500">Changes</div>
           <ChangeList changes={log.changes} />
         </div>
       )}
 
       {log.redacted && (
         <div className="mt-3 text-xs">
-          <span className="text-[10px] uppercase tracking-wide text-gray-400">
+          <span className="text-[10px] uppercase tracking-wide text-gray-500">
             Redaction
           </span>
           <div className="text-red-700">
@@ -306,7 +306,7 @@ function LogDetail({ log }) {
         </div>
       )}
 
-      <div className="mt-3 text-[10px] text-gray-400">
+      <div className="mt-3 text-[10px] text-gray-500">
         Actor snapshot: {[actor.primary, ...actor.secondary].filter(Boolean).join(" · ") || "unknown"}
         {actor.id ? ` · user ${actor.id}` : ""}
       </div>
@@ -655,7 +655,7 @@ export default function ActivityLogsContent() {
             <FaShieldAlt
               className={
                 !integrity
-                  ? "text-lg text-gray-400"
+                  ? "text-lg text-gray-500"
                   : integrity.status === "intact"
                     ? "text-lg text-green-600"
                     : "text-lg text-red-600"
@@ -791,7 +791,7 @@ export default function ActivityLogsContent() {
                           aria-expanded={isOpen}
                           aria-label={isOpen ? "Hide details" : "Show details"}
                           title={isOpen ? "Hide details" : "Show details"}
-                          className="text-gray-400 hover:text-gray-700"
+                          className="text-gray-500 hover:text-gray-700"
                         >
                           <FaChevronRight
                             className={`transition-transform ${isOpen ? "rotate-90" : ""}`}
@@ -817,7 +817,7 @@ export default function ActivityLogsContent() {
                           {actor.primary || "—"}
                         </span>
                         {actor.secondary.length > 0 && (
-                          <span className="block text-[10px] text-gray-400">
+                          <span className="block text-[10px] text-gray-500">
                             {actor.secondary.join(" · ")}
                           </span>
                         )}
@@ -828,7 +828,7 @@ export default function ActivityLogsContent() {
                       <td className="px-4 py-3 max-w-md">
                         <span
                           className={`block ${isOpen ? "" : "truncate"} ${
-                            log.redacted ? "italic text-gray-400" : ""
+                            log.redacted ? "italic text-gray-500" : ""
                           }`}
                           title={log.description}
                         >
@@ -857,7 +857,7 @@ export default function ActivityLogsContent() {
                             actually happens, so the control cannot be mistaken for
                             the removal it deliberately is not. */}
                         {log.redacted ? (
-                          <span className="text-[10px] text-gray-400">—</span>
+                          <span className="text-[10px] text-gray-500">—</span>
                         ) : (
                           <button
                             onClick={() => setDeleteId(log._id)}

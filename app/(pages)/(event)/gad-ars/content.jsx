@@ -469,11 +469,11 @@ export default function GADARContent() {
                           {actual ? (
                             actual
                           ) : !actualReported ? (
-                            <span className="text-gray-400 italic">
+                            <span className="text-gray-500 italic">
                               Not reported for Attributed Programs
                             </span>
                           ) : (
-                            <span className="text-gray-400 italic">
+                            <span className="text-gray-500 italic">
                               Encode actuals in Project Monitoring → GAD
                               Projects
                             </span>
@@ -506,7 +506,7 @@ export default function GADARContent() {
                               )}
                           </div>
                           {hasActuals && (
-                            <span className="block mt-1 text-[10px] font-normal text-gray-400">
+                            <span className="block mt-1 text-[10px] font-normal text-gray-500">
                               Variance: ₱{" "}
                               {fmt(
                                 (Number(getFieldValue(project.gad_budget)) ||
@@ -586,7 +586,7 @@ export default function GADARContent() {
                   type="button"
                   aria-label="Close"
                   onClick={() => setEvidenceViewer(null)}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>

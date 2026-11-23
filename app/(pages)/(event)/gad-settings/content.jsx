@@ -121,7 +121,7 @@ const ACTION_CONFIG = {
  * reads group → card → content, never heading → heading. */
 function GroupHeading({ children }) {
   return (
-    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
       {children}
     </h3>
   );
@@ -725,14 +725,14 @@ export default function Settings() {
                   </button>
                   <div className="text-xs text-gray-500">
                     {userInfoLoading ? (
-                      <span className="text-gray-400">
+                      <span className="text-gray-500">
                         Loading security info...
                       </span>
                     ) : (
                       <div className="space-y-2 mt-1">
                         {passwordChangedAt ? (
                           <div className="flex items-center gap-2">
-                            <FaHistory className="text-gray-400 shrink-0" />
+                            <FaHistory className="text-gray-500 shrink-0" />
                             <span>
                               Last changed:{" "}
                               <span className="font-medium text-gray-700">
@@ -750,7 +750,7 @@ export default function Settings() {
                         )}
                         {lastLogin && (
                           <div className="flex items-center gap-2">
-                            <FaSignInAlt className="text-gray-400 shrink-0" />
+                            <FaSignInAlt className="text-gray-500 shrink-0" />
                             <span>
                               Last login:{" "}
                               <span className="font-medium text-gray-700">
@@ -934,7 +934,7 @@ export default function Settings() {
                                           /* Same meaning as the underscore rule the
                                          reports print, in a form that reads as
                                          "not set" rather than as a name. */
-                                          <span className="text-gray-400 italic">
+                                          <span className="text-gray-500 italic">
                                             —
                                           </span>
                                         )}
@@ -1037,7 +1037,7 @@ export default function Settings() {
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
                               <FaSearch
-                                className="text-xs text-gray-400"
+                                className="text-xs text-gray-500"
                                 aria-hidden
                               />
                               {field.value && (
@@ -1046,7 +1046,7 @@ export default function Settings() {
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => field.setValue("")}
                                   aria-label={`Clear ${field.label}`}
-                                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                  className="p-1.5 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
                                 >
                                   <FaTimesCircle className="text-xs" />
                                 </button>
@@ -1275,7 +1275,7 @@ export default function Settings() {
                   <p className="text-sm text-gray-500">
                     No activity records found.
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {filterAction || filterFrom || filterTo
                       ? "Try adjusting your filters."
                       : "Activity will appear here as you use the platform."}
@@ -1301,7 +1301,7 @@ export default function Settings() {
                             {timeAgo(a.createdAt)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        <span className="shrink-0 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                           {ACTION_CONFIG[a.action]?.label || a.action}
                         </span>
                       </li>
@@ -1340,7 +1340,7 @@ export default function Settings() {
                     .map((p, idx, arr) => (
                       <React.Fragment key={p}>
                         {idx > 0 && arr[idx - 1] !== p - 1 && (
-                          <span className="px-1 text-gray-400 text-xs">
+                          <span className="px-1 text-gray-500 text-xs">
                             ...
                           </span>
                         )}
@@ -1449,7 +1449,7 @@ export default function Settings() {
                       {showNew ? "Hide" : "Show"}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     At least 8 characters. Include letters and numbers.
                   </p>
                 </div>

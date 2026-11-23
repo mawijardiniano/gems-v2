@@ -204,7 +204,7 @@ export default function ReportForm({ report }) {
         <div>
           <label className="label">
             Other Attachments{" "}
-            <span className="text-gray-400 font-normal">(optional)</span>
+            <span className="text-gray-500 font-normal">(optional)</span>
           </label>
           <div className="file-input">
             <input

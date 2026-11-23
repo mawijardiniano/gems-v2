@@ -450,7 +450,7 @@ export default function EmployeeGenderStatsContent() {
             </button>
           )}
         </div>
-        <p className="text-[11px] text-gray-400">
+        <p className="text-[11px] text-gray-500">
           {useSample
             ? `Filters re-aggregate the sample records in your browser â€” ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
             : "Live data can be filtered by personnel type, college/office, employment status and one academic year. Department and Position Level are available with sample data only."}
@@ -548,7 +548,7 @@ export default function EmployeeGenderStatsContent() {
                 rowsOf={(s) => s.demographics}
                 nameKey="label"
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Insights and quick reports below describe the combined selection
                 ({selectedYears.join(", ")}).
               </p>
@@ -567,7 +567,7 @@ export default function EmployeeGenderStatsContent() {
               the Faculty row appears in both with identical figures, and side
               by side they read as a double count. */}
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
                   Teaching vs Non-Teaching
                 </p>
                 <SexTable
@@ -578,7 +578,7 @@ export default function EmployeeGenderStatsContent() {
                 />
               </div>
 
-              <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Detailed Breakdown
               </p>
 
@@ -792,7 +792,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
         </a>
       </div>
       {useSample && (
-        <p className="text-[11px] text-gray-400 mt-2">
+        <p className="text-[11px] text-gray-500 mt-2">
           Generated in your browser from the sample dataset â€” no database
           reads or writes.
         </p>
@@ -811,7 +811,7 @@ function KeyInsightsCard({ insights }) {
         Key Insights
       </h3>
       {list.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           No insights available for the current data.
         </p>
       ) : (

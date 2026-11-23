@@ -17,14 +17,14 @@ function CollegeRanking({ ranking }) {
         </p>
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No units to rank.</p>
+        <p className="text-xs text-gray-500 italic">No units to rank.</p>
       ) : (
         <ul className="space-y-3">
           {rows.map((r, i) => (
             <li key={`${r.kind}-${r.unit}`}>
               <div className="flex items-baseline justify-between gap-2 text-xs">
                 <span className="min-w-0 truncate font-medium text-gray-800">
-                  <span className="mr-1.5 text-gray-400">{i + 1}.</span>
+                  <span className="mr-1.5 text-gray-500">{i + 1}.</span>
                   {r.unit}
                   <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">
                     {r.kind}

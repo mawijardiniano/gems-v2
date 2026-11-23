@@ -905,7 +905,7 @@ export default function StudentsUserListContent({ college }) {
         <div className="relative w-full max-w-xs">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
-              className="w-4 h-4 text-gray-400"
+              className="w-4 h-4 text-gray-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -1234,7 +1234,7 @@ export default function StudentsUserListContent({ college }) {
                       />
                     </svg>
                     <p className="text-sm text-gray-500">No students found</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Try adjusting your search or filters
                     </p>
                   </div>

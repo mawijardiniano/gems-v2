@@ -55,7 +55,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
     <div>
       <label className={labelClass} htmlFor="event-poster">
         <FaImage
-          className="inline h-4 w-4 mr-1.5 text-gray-400 -mt-0.5"
+          className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
           aria-hidden="true"
         />
         Event Poster
@@ -111,7 +111,7 @@ function PosterPicker({ posterFile, posterPreview, onSelect }) {
               <p className="text-sm font-medium text-gray-700">
                 Upload an event poster
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 Click to browse · JPG, PNG, GIF or WEBP
               </p>
             </div>

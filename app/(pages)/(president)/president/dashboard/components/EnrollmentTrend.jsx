@@ -33,7 +33,7 @@ function EnrollmentTrend({ trend }) {
         </p>
       </div>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No trend data.</p>
+        <p className="text-xs text-gray-500 italic">No trend data.</p>
       ) : (
         <div className="h-[240px]">
           <ResponsiveContainer width="100%" height="100%">

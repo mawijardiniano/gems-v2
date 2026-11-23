@@ -332,7 +332,7 @@ export default function ManageRoleContent() {
       </div>
 
       <div className="relative mb-6">
-        <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
         <input
           type="text"
           placeholder="Search by name, role, or college..."
@@ -400,7 +400,7 @@ export default function ManageRoleContent() {
                               {firstName} {lastName}
                             </p>
                             {user.username && (
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-gray-500">
                                 @{user.username}
                               </p>
                             )}
@@ -466,7 +466,7 @@ export default function ManageRoleContent() {
                 .map((p, idx, arr) => (
                   <React.Fragment key={p}>
                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                      <span className="px-1 text-gray-400">...</span>
+                      <span className="px-1 text-gray-500">...</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(p)}
@@ -528,7 +528,7 @@ export default function ManageRoleContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeModal}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <HiOutlineX className="h-5 w-5" />
               </button>
@@ -540,7 +540,7 @@ export default function ManageRoleContent() {
                   Select User
                 </label>
                 <div className="relative">
-                  <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <input
                     type="text"
                     placeholder="Search by name or username..."
@@ -551,7 +551,7 @@ export default function ManageRoleContent() {
                 </div>
                 <div className="mt-2 max-h-40 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
                   {filteredModalUsers.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-400">
+                    <div className="p-4 text-center text-sm text-gray-500">
                       No users found
                     </div>
                   ) : (
@@ -584,7 +584,7 @@ export default function ManageRoleContent() {
                               {fn} {ln}
                             </p>
                             {u.role && (
-                              <p className="text-xs text-gray-400 truncate">
+                              <p className="text-xs text-gray-500 truncate">
                                 Current: {u.role}
                               </p>
                             )}
@@ -619,7 +619,7 @@ export default function ManageRoleContent() {
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-secondary-500" : "text-gray-400"
+                            isActive ? "text-secondary-500" : "text-gray-500"
                           }`}
                         />
                         <span className="truncate">{role}</span>

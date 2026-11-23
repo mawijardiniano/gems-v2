@@ -56,7 +56,7 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
             {Icon && (
               <Icon
                 className={`h-3.5 w-3.5 shrink-0 ${
-                  isActive ? "text-white" : "text-gray-400"
+                  isActive ? "text-white" : "text-gray-500"
                 }`}
               />
             )}

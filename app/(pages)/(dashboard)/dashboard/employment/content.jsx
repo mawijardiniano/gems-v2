@@ -226,7 +226,7 @@ export default function EmploymentContent() {
   if (loading) return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3 text-gray-400">
+        <div className="flex items-center gap-3 text-gray-500">
           <div className="w-5 h-5 border-2 border-secondary-400 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm">Loading employment information...</p>
         </div>

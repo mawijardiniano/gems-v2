@@ -116,7 +116,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
         {/* Date */}
         {dateLabel && (
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaCalendarAlt className="shrink-0 text-gray-400" />
+            <FaCalendarAlt className="shrink-0 text-gray-500" />
             <span>{dateLabel}</span>
           </div>
         )}
@@ -124,7 +124,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
         {/* Venue */}
         {event.venue && (
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaMapMarkerAlt className="shrink-0 text-gray-400" />
+            <FaMapMarkerAlt className="shrink-0 text-gray-500" />
             <span className="truncate">{event.venue}</span>
           </div>
         )}

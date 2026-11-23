@@ -83,7 +83,7 @@ export default function ParticipantBreakdown({ project }) {
   return (
     <section className="rounded-xl bg-white border border-gray-100 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
           <FaChartPie className="h-3 w-3" />
           Participant Breakdown
         </p>
@@ -109,7 +109,7 @@ export default function ParticipantBreakdown({ project }) {
       </div>
 
       {breakdown.totalAttended === 0 ? (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           {breakdown.eventCount === 0
             ? "No linked events yet."
             : "No attendance recorded yet for this project's events."}
@@ -154,7 +154,7 @@ export default function ParticipantBreakdown({ project }) {
               <span className="text-xl font-bold text-gray-900">
                 {breakdown.totalAttended}
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-gray-400">
+              <span className="text-[10px] uppercase tracking-wider text-gray-500">
                 Total
               </span>
             </div>
@@ -174,7 +174,7 @@ export default function ParticipantBreakdown({ project }) {
                 <span className="ml-auto font-semibold text-gray-900">
                   {row.value}
                 </span>
-                <span className="w-14 text-right text-gray-400">
+                <span className="w-14 text-right text-gray-500">
                   {pct(row.value, breakdown.totalAttended)}%
                 </span>
               </li>
@@ -195,7 +195,7 @@ export default function ParticipantBreakdown({ project }) {
       )}
 
       {breakdown.totalAttended > 0 && (
-        <p className="mt-3 text-[11px] text-gray-400">
+        <p className="mt-3 text-[11px] text-gray-500">
           Aggregated from {breakdown.eventCount} linked event
           {breakdown.eventCount !== 1 ? "s" : ""}
           {tab === "sector"

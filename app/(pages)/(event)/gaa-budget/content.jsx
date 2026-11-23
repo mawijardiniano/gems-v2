@@ -388,7 +388,7 @@ export default function GAABudgetContent() {
           <div className="flex items-center gap-3">
             {/* Search */}
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search budgets..."
@@ -717,7 +717,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -740,7 +740,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                 Budget Year
               </label>
               <div className="relative">
-                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
                 <input
                   type="number"
                   value={year}
@@ -760,7 +760,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                 Total GAA (₱)
               </label>
               <div className="relative">
-                <FaPiggyBank className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <FaPiggyBank className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
                 <input
                   type="number"
                   value={totalGAA}
@@ -782,7 +782,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                 GAD Percentage (%)
               </label>
               <div className="relative">
-                <FaPercent className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <FaPercent className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
                 <input
                   type="number"
                   value={gadPercent}
@@ -796,7 +796,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Recommended: 5% of total GAA
               </p>
             </div>

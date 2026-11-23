@@ -56,9 +56,9 @@ export default function BreadcrumbsPreview() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Filter by path…"
-          className="mt-4 w-full max-w-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-200"
+          className="mt-4 w-full max-w-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-200"
         />
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-gray-500">
           Showing {total} of {BREADCRUMB_ROUTE_PREVIEW.length} routes
         </p>
       </header>
@@ -70,7 +70,7 @@ export default function BreadcrumbsPreview() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-secondary-700">
                 {group.role}
               </h2>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 home: {group.home.label} → {group.home.href}
               </span>
             </div>
@@ -118,7 +118,7 @@ export default function BreadcrumbsPreview() {
                             className="py-0"
                           />
                         </td>
-                        <td className="px-4 py-2 align-middle text-xs text-gray-400">
+                        <td className="px-4 py-2 align-middle text-xs text-gray-500">
                           {plain}
                         </td>
                       </tr>

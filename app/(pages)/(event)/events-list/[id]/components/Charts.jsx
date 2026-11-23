@@ -64,9 +64,9 @@ function ChartCard({ title, subtitle, total, height = 240, children }) {
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-gray-400">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
         {total !== undefined && (
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-gray-500">
             <span className="font-semibold text-gray-700">
               {total.toLocaleString()}
             </span>{" "}

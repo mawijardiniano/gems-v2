@@ -159,7 +159,7 @@ export function StatCard({
             {value}
           </p>
           {hint ? (
-            <p className="mt-1 text-xs text-gray-400 truncate">{hint}</p>
+            <p className="mt-1 text-xs text-gray-500 truncate">{hint}</p>
           ) : null}
           {typeof barPercent === "number" ? (
             <div className="mt-2">
@@ -194,7 +194,7 @@ export function SnapshotRow({ icon: Icon, label, value, percent, barClass }) {
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="flex items-center gap-1.5 text-gray-600 min-w-0">
-          {Icon ? <Icon className="h-3.5 w-3.5 text-gray-400 shrink-0" /> : null}
+          {Icon ? <Icon className="h-3.5 w-3.5 text-gray-500 shrink-0" /> : null}
           <span className="truncate">{label}</span>
         </span>
         <span className="font-semibold text-gray-900 shrink-0">{value}</span>
@@ -263,7 +263,7 @@ export function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpe
             {clear ? clearLabel : `${count} ${label}`}
           </p>
           {!clear && hint ? (
-            <p className="text-[11px] text-gray-400 mt-0.5">{hint}</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">{hint}</p>
           ) : null}
           {!clear && onOpen ? (
             <button

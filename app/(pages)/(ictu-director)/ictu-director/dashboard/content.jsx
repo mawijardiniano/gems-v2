@@ -366,7 +366,7 @@ export default function IctuDashboard() {
                           {ACTION_LABELS[log.action] || log.action}
                         </p>
                         <p className="text-xs text-gray-600">{log.message}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-gray-500 mt-0.5">
                           By {log.executed_by_username || "Unknown"} ·{" "}
                           {formatDateTime(log.executed_at || log.createdAt)}
                         </p>

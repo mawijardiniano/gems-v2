@@ -41,7 +41,7 @@ export default function GanttEncodeTab({
             <tr>
               <td
                 colSpan={7}
-                className="px-2.5 py-5 text-center text-xs italic text-gray-400"
+                className="px-2.5 py-5 text-center text-xs italic text-gray-500"
               >
                 No activities yet — click “Add Activity”.
               </td>
@@ -119,7 +119,7 @@ export default function GanttEncodeTab({
                             onChange(activities.filter((_, idx) => idx !== i));
                             setEditing(null);
                           }}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-gray-500 hover:text-red-500 transition-colors"
                           title="Remove activity"
                         >
                           <FaTrash size={12} />

@@ -487,7 +487,7 @@ export default function StudentGenderStatsContent() {
 
       {!useSample && error && <ErrorState message={error} onRetry={refetch} />}
 
-      <p className="text-xs text-gray-400 -mt-2">
+      <p className="text-xs text-gray-500 -mt-2">
         Students enrolled in both semesters of the same academic year are
         counted once per year.
       </p>
@@ -569,7 +569,7 @@ export default function StudentGenderStatsContent() {
                 rowsOf={(s) => s.demographics}
                 nameKey="label"
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Insights and quick reports below describe the latest selected
                 year (AY {schoolYear}).
               </p>
@@ -670,12 +670,12 @@ function TopProgramsTable({ rows }) {
         Top 10 Programs by Gender Population
       </h3>
       {safeRows.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
                 <th className="py-2 pr-3 font-medium">#</th>
                 <th className="py-2 pr-3 font-medium">Program</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
@@ -690,7 +690,7 @@ function TopProgramsTable({ rows }) {
                   key={r.program}
                   className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60"
                 >
-                  <td className="py-2.5 pr-3 text-gray-400">{i + 1}</td>
+                  <td className="py-2.5 pr-3 text-gray-500">{i + 1}</td>
                   <td className="py-2.5 pr-3 font-medium text-gray-800">
                     {r.program}
                   </td>
@@ -725,7 +725,7 @@ function KeyInsightsCard({ insights }) {
         Key Insights
       </h3>
       {list.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">
+        <p className="text-xs text-gray-500 italic">
           No insights available for the current data.
         </p>
       ) : (

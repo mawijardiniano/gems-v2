@@ -56,7 +56,7 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
           </span>
         )}
         <HiChevronDown
-          className={`ml-auto text-gray-400 transition-transform duration-150 ${
+          className={`ml-auto text-gray-500 transition-transform duration-150 ${
             open ? "rotate-180" : ""
           }`}
         />

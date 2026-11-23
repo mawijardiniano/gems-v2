@@ -394,7 +394,7 @@ export default function GpbProjectsTable({
                                         <p className="text-xs font-medium text-gray-900 truncate">
                                           {getCreatorName(project)}
                                         </p>
-                                        <p className="text-[10px] text-gray-400 capitalize">
+                                        <p className="text-[10px] text-gray-500 capitalize">
                                           {getCreatorRole(project)}
                                         </p>
                                       </div>

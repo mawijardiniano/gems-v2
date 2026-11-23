@@ -279,7 +279,7 @@ export default function ContactInformation() {
                       onChange={(e) => handleCopyChecked(e.target.checked)}
                       className="sr-only"
                     />
-                    <FaCopy className={`${copyChecked ? "text-secondary-500" : "text-gray-400"}`} />
+                    <FaCopy className={`${copyChecked ? "text-secondary-500" : "text-gray-500"}`} />
                     <span className="font-medium">Same as Permanent</span>
                   </label>
                 </div>

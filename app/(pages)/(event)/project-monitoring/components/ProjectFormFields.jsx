@@ -94,6 +94,6 @@ export const FieldRenderer = ({ field, value, onChange }) => (
       />
     )}
 
-    {field.help && <p className="text-[11px] text-gray-400">{field.help}</p>}
+    {field.help && <p className="text-[11px] text-gray-500">{field.help}</p>}
   </div>
 );

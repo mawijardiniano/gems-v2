@@ -216,7 +216,7 @@ export default function EventCalendarContent() {
       </div>
 
       <div className="lg:col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
-        <span className="font-medium text-gray-400 uppercase tracking-wider">
+        <span className="font-medium text-gray-500 uppercase tracking-wider">
           {loading ? "Loading…" : `${monthEventCount} event${monthEventCount === 1 ? "" : "s"} this month`}
         </span>
         {[
@@ -258,7 +258,7 @@ export default function EventCalendarContent() {
         </div>
 
         {loading ? (
-          <div className="p-8 flex items-center justify-center gap-3 text-gray-400 text-sm">
+          <div className="p-8 flex items-center justify-center gap-3 text-gray-500 text-sm">
             <FaSpinner className="animate-spin text-secondary-500" size={18} />
             Loading calendar…
           </div>
@@ -283,7 +283,7 @@ export default function EventCalendarContent() {
                         ? "bg-secondary-600 text-white"
                         : cell.inMonth
                           ? "text-gray-700"
-                          : "text-gray-300"
+                          : "text-gray-500"
                     }`}
                   >
                     {cell.date.getDate()}
@@ -308,7 +308,7 @@ export default function EventCalendarContent() {
                     );
                   })}
                   {dayEvents.length > 2 && (
-                    <span className="mt-0.5 block text-[10px] text-gray-400 font-medium">
+                    <span className="mt-0.5 block text-[10px] text-gray-500 font-medium">
                       +{dayEvents.length - 2} more
                     </span>
                   )}

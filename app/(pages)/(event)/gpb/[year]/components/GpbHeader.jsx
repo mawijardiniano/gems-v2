@@ -68,7 +68,7 @@ export default function GpbHeader({
 
           {gpbStatus?.reason && (
             <p className="flex items-start gap-1.5 text-sm text-gray-500 mt-2">
-              <FiInfo className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+              <FiInfo className="h-3.5 w-3.5 text-gray-500 shrink-0 mt-0.5" />
               <span>
                 <span className="font-medium text-gray-600">Reason:</span>{" "}
                 {gpbStatus.reason}

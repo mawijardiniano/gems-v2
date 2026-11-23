@@ -134,7 +134,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-40 w-full rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                  <div className="h-40 w-full rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-500 text-sm">
                     No file uploaded
                   </div>
                 )}
@@ -177,7 +177,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-400 text-sm">
+              <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-500 text-sm">
                 No photos uploaded
               </div>
             )}
@@ -217,7 +217,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-400 text-sm">
+              <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-500 text-sm">
                 No attachments uploaded
               </div>
             )}

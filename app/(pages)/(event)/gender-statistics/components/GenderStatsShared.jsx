@@ -68,7 +68,7 @@ export const GENDER_IDENTITY_COLORS = {
 
 export function LoadingState({ label = "Loading statistics…" }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-10 flex items-center justify-center gap-3 text-gray-400 text-sm">
+    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-10 flex items-center justify-center gap-3 text-gray-500 text-sm">
       <span className="h-5 w-5 rounded-full border-2 border-secondary-500 border-t-transparent animate-spin" />
       {label}
     </div>
@@ -155,7 +155,7 @@ export function SummaryCards({ totals, what, deltas }) {
               <p className="mt-1 text-2xl font-bold text-gray-900 leading-tight">
                 {c.value == null ? "—" : c.value.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {c.pct === "—" ? "not recorded" : `${c.pct} of total`}
                 {c.sex && deltas?.[c.sex] != null && (
                   <span
@@ -186,7 +186,7 @@ export function SexDonut({ totals }) {
     <div className={CARD_CLS}>
       <SectionTitle>Sex Distribution</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="relative">
           <ResponsiveContainer width="100%" height={220}>
@@ -213,7 +213,7 @@ export function SexDonut({ totals }) {
             <span className="text-2xl font-bold text-gray-900">
               {totals.total.toLocaleString()}
             </span>
-            <span className="text-[11px] text-gray-400">Total</span>
+            <span className="text-[11px] text-gray-500">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
@@ -242,7 +242,7 @@ export function StackedSexBar({ title, data, nameKey, height }) {
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height || safeData.length * 42 + 60}>
           <BarChart
@@ -286,7 +286,7 @@ export function GenderIdentityDonut({ rows }) {
     <div className={CARD_CLS}>
       <SectionTitle>Gender Identity</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="relative">
           <ResponsiveContainer width="100%" height={220}>
@@ -316,7 +316,7 @@ export function GenderIdentityDonut({ rows }) {
             <span className="text-2xl font-bold text-gray-900">
               {total.toLocaleString()}
             </span>
-            <span className="text-[11px] text-gray-400">Total</span>
+            <span className="text-[11px] text-gray-500">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
@@ -344,7 +344,7 @@ export function StackedSexBarVertical({ title, data, nameKey, height = 260 }) {
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={safeData} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
@@ -368,12 +368,12 @@ export function DemographicTable({ rows, total }) {
     <div className={CARD_CLS}>
       <SectionTitle>Demographic Profile (Institutional Data)</SectionTitle>
       {safeRows.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
                 <th className="py-2 pr-3 font-medium">Category</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -388,7 +388,7 @@ export function DemographicTable({ rows, total }) {
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">{r.Female}</td>
                   <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">{r.Male}</td>
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">{r.total}</td>
-                  <td className="py-2.5 text-right text-xs text-gray-400">
+                  <td className="py-2.5 text-right text-xs text-gray-500">
                     {total ? `${Math.round((r.total / total) * 1000) / 10}%` : "—"}
                   </td>
                 </tr>
@@ -423,16 +423,16 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
         <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
         {subtitle && (
-          <span className="text-xs text-gray-400">{subtitle}</span>
+          <span className="text-xs text-gray-500">{subtitle}</span>
         )}
       </div>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
                 <th className="py-2 pr-3 font-medium">{nameHeader}</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -458,7 +458,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
                     {rowTotal(r).toLocaleString()}
                   </td>
-                  <td className="py-2.5 text-right text-xs text-gray-400">
+                  <td className="py-2.5 text-right text-xs text-gray-500">
                     {r.pctFemale != null
                       ? `${r.pctFemale}%`
                       : pct(r.Female || 0, rowTotal(r))}
@@ -478,7 +478,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                 <td className="py-2.5 pr-3 text-right">
                   {totals.total.toLocaleString()}
                 </td>
-                <td className="py-2.5 text-right text-xs text-gray-400">
+                <td className="py-2.5 text-right text-xs text-gray-500">
                   {pct(totals.Female, totals.total)}
                 </td>
               </tr>
@@ -587,7 +587,7 @@ export function YearMultiSelect({ options, value, onChange }) {
         className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
-        <span className="text-xs text-gray-400">▾</span>
+        <span className="text-xs text-gray-500">▾</span>
       </button>
       {open && (
         <>
@@ -606,7 +606,7 @@ export function YearMultiSelect({ options, value, onChange }) {
                 AY {year}
               </label>
             ))}
-            <p className="px-2 pt-1 text-[11px] text-gray-400">
+            <p className="px-2 pt-1 text-[11px] text-gray-500">
               Select two or more years to compare them.
             </p>
           </div>
@@ -656,7 +656,7 @@ export function MultiSelect({
         className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
-        <span className="text-xs text-gray-400">v</span>
+        <span className="text-xs text-gray-500">v</span>
       </button>
       {open && (
         <>
@@ -724,7 +724,7 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+            <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
               <th className="py-2 pr-3 font-medium">Academic Year</th>
               <th className="py-2 pr-3 font-medium text-right">Female</th>
               <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -759,13 +759,13 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
                   <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
                     {t.total.toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right text-xs text-gray-400">
+                  <td className="py-2.5 pr-3 text-right text-xs text-gray-500">
                     {t.pctFemale != null ? `${t.pctFemale}%` : "—"}
                   </td>
                   <td
                     className={`py-2.5 text-right text-xs font-medium ${
                       change == null
-                        ? "text-gray-300"
+                        ? "text-gray-500"
                         : change < 0
                           ? "text-red-500"
                           : "text-emerald-600"
@@ -851,7 +851,7 @@ export function YearGroupedBars({
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={data} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
@@ -911,12 +911,12 @@ export function YearComparisonTable({
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {names.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No data available.</p>
+        <p className="text-xs text-gray-500 italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wider text-gray-400">
+              <tr className="text-xs uppercase tracking-wider text-gray-500">
                 <th rowSpan={2} className="py-2 pr-3 font-medium align-bottom">
                   {nameHeader}
                 </th>
@@ -934,7 +934,7 @@ export function YearComparisonTable({
                   Change
                 </th>
               </tr>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
                 {perYear.map(({ year }) => (
                   <Fragment key={year}>
                     <th className="px-2 pb-2 font-medium text-right">F</th>
@@ -978,7 +978,7 @@ export function YearComparisonTable({
                           ? "text-red-500"
                           : diff > 0
                             ? "text-emerald-600"
-                            : "text-gray-400"
+                            : "text-gray-500"
                       }`}
                     >
                       {signed(diff)}

@@ -89,13 +89,13 @@ const StatCard = ({ icon, iconClass, label, value, sub }) => (
       {icon}
     </span>
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
         {label}
       </p>
       <p className="text-lg font-bold text-gray-900 leading-tight truncate">
         {value}
       </p>
-      {sub && <p className="text-[11px] text-gray-400 truncate">{sub}</p>}
+      {sub && <p className="text-[11px] text-gray-500 truncate">{sub}</p>}
     </div>
   </div>
 );
@@ -122,7 +122,7 @@ const DetailRow = ({ label, value }) => {
       <dt className="text-xs text-gray-500">{label}</dt>
       <dd
         className={`text-sm font-medium text-right break-words min-w-0 ${
-          muted ? "text-gray-300" : "text-gray-900"
+          muted ? "text-gray-500" : "text-gray-900"
         }`}
       >
         {value || "—"}
@@ -134,7 +134,7 @@ const DetailRow = ({ label, value }) => {
 /* One titled block of detail rows; rows flow into two columns on wide screens. */
 const DetailSection = ({ title, children }) => (
   <div>
-    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 pb-1.5 border-b border-gray-100">
+    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 pb-1.5 border-b border-gray-100">
       {title}
     </p>
     <dl className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10">{children}</dl>
@@ -165,7 +165,7 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
           style={{ width: `${capped}%` }}
         />
       </div>
-      {caption && <p className="text-[11px] text-gray-400 mt-1">{caption}</p>}
+      {caption && <p className="text-[11px] text-gray-500 mt-1">{caption}</p>}
     </div>
   );
 };
@@ -409,7 +409,7 @@ export default function ProjectWorkspace({ config }) {
         >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-mono font-semibold text-gray-400">
+              <span className="text-[11px] font-mono font-semibold text-gray-500">
                 {project.reference_number || "—"}
               </span>
               {badgeValue && (
@@ -442,7 +442,7 @@ export default function ProjectWorkspace({ config }) {
               )}
             </div>
           </div>
-          <span className="text-gray-400 mt-1">
+          <span className="text-gray-500 mt-1">
             {isExpanded ? (
               <FaChevronUp size={12} />
             ) : (
@@ -527,7 +527,7 @@ export default function ProjectWorkspace({ config }) {
                 )}
 
                 <p
-                  className={`text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2 ${
+                  className={`text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 ${
                     managementAllowed ? "hidden" : ""
                   }`}
                 >
@@ -553,10 +553,10 @@ export default function ProjectWorkspace({ config }) {
                       <span className="font-medium text-gray-800">
                         {milestone.title}
                       </span>
-                      <span className="text-gray-400">{milestone.status}</span>
+                      <span className="text-gray-500">{milestone.status}</span>
                       {(formatDate(milestone.actual_date) ||
                         formatDate(milestone.target_date)) && (
-                        <span className="text-gray-400">
+                        <span className="text-gray-500">
                           ·{" "}
                           {formatDate(milestone.actual_date) ||
                             formatDate(milestone.target_date)}
@@ -564,12 +564,12 @@ export default function ProjectWorkspace({ config }) {
                       )}
                       {Array.isArray(milestone.proofs) &&
                         milestone.proofs.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-gray-400">
+                          <span className="inline-flex items-center gap-1 text-gray-500">
                             <FaPaperclip size={9} /> {milestone.proofs.length}
                           </span>
                         )}
                       {milestone.source_activity && (
-                        <span className="basis-full pl-3.5 text-[11px] text-gray-400">
+                        <span className="basis-full pl-3.5 text-[11px] text-gray-500">
                           from: {milestone.source_activity}
                         </span>
                       )}
@@ -577,7 +577,7 @@ export default function ProjectWorkspace({ config }) {
                   ))}
                 </ul>
                 {milestones.length === 0 && !managementAllowed && (
-                  <p className="text-xs text-gray-400 italic">
+                  <p className="text-xs text-gray-500 italic">
                     No milestones recorded yet.
                   </p>
                 )}
@@ -586,11 +586,11 @@ export default function ProjectWorkspace({ config }) {
 
             {detailTab === "events" && (
               <div className="animate-fade-in" role="tabpanel">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
                   Linked Events
                 </p>
                 {events.length === 0 && (
-                  <p className="text-xs text-gray-400 italic">
+                  <p className="text-xs text-gray-500 italic">
                     No linked events yet.
                   </p>
                 )}
@@ -604,15 +604,15 @@ export default function ProjectWorkspace({ config }) {
                         {event.title}
                       </span>
                       {getEventStart(event) && (
-                        <span className="text-gray-400">
+                        <span className="text-gray-500">
                           {formatDate(getEventStart(event))}
                         </span>
                       )}
-                      <span className="text-gray-400">
+                      <span className="text-gray-500">
                         {participantCount(event)} attended
                       </span>
                       {event.status && event.status !== "active" && (
-                        <span className="text-gray-400">{event.status}</span>
+                        <span className="text-gray-500">{event.status}</span>
                       )}
                     </li>
                   ))}
@@ -634,7 +634,7 @@ export default function ProjectWorkspace({ config }) {
                     </p>
                   )}
 
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                     Actual Accomplishment
                   </p>
                   <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
@@ -643,7 +643,7 @@ export default function ProjectWorkspace({ config }) {
                   {canSeeBudget &&
                     Array.isArray(project.expenditure_evidence) &&
                     project.expenditure_evidence.length > 0 && (
-                      <p className="text-[11px] text-gray-400 mt-2 inline-flex items-center gap-1">
+                      <p className="text-[11px] text-gray-500 mt-2 inline-flex items-center gap-1">
                         <FaPaperclip size={9} />{" "}
                         {project.expenditure_evidence.length} evidence file
                         {project.expenditure_evidence.length === 1 ? "" : "s"}
@@ -806,13 +806,13 @@ export default function ProjectWorkspace({ config }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or reference no."
-            className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-2 text-sm text-gray-700 placeholder:text-gray-500 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-gray-400">
+        <div className="flex items-center justify-center py-16 text-gray-500">
           <FaSpinner className="animate-spin" size={20} />
         </div>
       ) : error ? (
