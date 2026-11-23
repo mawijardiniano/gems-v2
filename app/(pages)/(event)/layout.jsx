@@ -36,8 +36,6 @@ export default function DashboardLayout({ children }) {
         const role = data.user.role.toLowerCase();
         setUserRole(role);
 
-        const currentPage = pathname.split("/").filter(Boolean).pop();
-
         const segments = pathname.split("/").filter(Boolean);
         const basePage = segments[0];
 
@@ -59,9 +57,16 @@ export default function DashboardLayout({ children }) {
   }, [router, pathname]);
 
   useEffect(() => {
+    // Phones start with the drawer closed (the other role layouts do the
+    // same); after that the user's open/closed choice is left alone.
+    let initialCheckDone = false;
     const handleResize = () => {
       const mobile = window.innerWidth < 640;
       setIsMobile(mobile);
+      if (!initialCheckDone) {
+        if (mobile) setSidebarOpen(false);
+        initialCheckDone = true;
+      }
     };
 
     handleResize();
