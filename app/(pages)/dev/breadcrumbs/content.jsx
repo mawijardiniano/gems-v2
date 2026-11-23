@@ -45,7 +45,7 @@ export default function BreadcrumbsPreview() {
         <h1 className="text-2xl font-bold text-gray-900">Breadcrumb preview</h1>
         <p className="mt-1 text-sm text-gray-500">
           Every route rendered with the real{" "}
-          <code className="rounded bg-gray-200 px-1 py-0.5 text-[11px]">
+          <code className="rounded bg-gray-200 px-1 py-0.5 text-xs">
             PageBreadcrumbs
           </code>{" "}
           component. Development only.
@@ -79,13 +79,13 @@ export default function BreadcrumbsPreview() {
               <table className="w-full text-left">
                 <thead className="border-b border-gray-100 bg-gray-50/70">
                   <tr>
-                    <th className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
                       Route
                     </th>
-                    <th className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
                       Breadcrumb
                     </th>
-                    <th className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
                       Plain text
                     </th>
                   </tr>
@@ -105,7 +105,7 @@ export default function BreadcrumbsPreview() {
                           {route.group && (
                             <span
                               title="Navigation group with no page — its crumb is not a link"
-                              className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
+                              className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-700"
                             >
                               group
                             </span>

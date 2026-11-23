@@ -390,7 +390,7 @@ export default function KnowledgeResourcesContent() {
               >
                 {cat === "all" ? "All" : cat}
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     isActive
                       ? "bg-rose-100 text-rose-700"
                       : "bg-gray-100 text-gray-600"
@@ -447,7 +447,7 @@ export default function KnowledgeResourcesContent() {
                       {item.title}
                     </p>
                     <span
-                      className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${
+                      className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
                         CATEGORY_STYLES[item.category] ||
                         "bg-gray-100 text-gray-700 ring-gray-500/20"
                       }`}

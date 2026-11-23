@@ -32,7 +32,7 @@ const renderOutsideLabel = ({
       fill="currentColor"
       textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
-      className="fill-gray-500 text-[11px]"
+      className="fill-gray-500 text-xs"
     >
       {`${(percent * 100).toFixed(0)}%`}
     </text>

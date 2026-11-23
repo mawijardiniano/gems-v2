@@ -42,12 +42,12 @@ const TITLE = "Offices & Groups — University Officials";
 
 function OfficePill({ active }) {
   return active ? (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-500">
+    <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
       <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
       Inactive
     </span>
@@ -165,7 +165,7 @@ export default function OfficesManager({
             </p>
           </div>
         </div>
-        <span className="shrink-0 self-start rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">
+        <span className="shrink-0 self-start rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600">
           {summary.total} total
         </span>
       </div>
@@ -237,7 +237,7 @@ export default function OfficesManager({
       </div>
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
-        <p className="mt-2 text-[11px] text-gray-500">
+        <p className="mt-2 text-xs text-gray-500">
           {summary.inactive} inactive office(s) hidden. A name that is refused
           as a duplicate may be one of them — tick “Show inactive offices” or
           open the Inactive tab to reactivate it.
@@ -263,7 +263,7 @@ export default function OfficesManager({
         )}
       </ul>
 
-      <p className="mt-3 text-[11px] text-gray-500">
+      <p className="mt-3 text-xs text-gray-500">
         Offices are never deleted — past academic years, prints and reports keep
         referencing them.
       </p>

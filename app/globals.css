@@ -1,10 +1,18 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Inter is self-hosted by next/font in app/layout.js, which sets
+     --font-inter on <html> (with metric-matched fallback). */
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Type roles below text-xs. All sizes are rem so the in-app text-size
+     setting (root font-size) scales them; never use px font sizes.
+     text-2xs = uppercase micro-labels, count badges, mono IDs only.
+     Readable content text stays at text-xs (12px) or larger. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
 
   /* ─── Brand palette (prototype purple, "Option A") ─────────────
      secondary = brand. Everything chrome-facing (buttons, links,
@@ -73,6 +81,24 @@ body {
   font-family: var(--font-sans);
   background: var(--color-surface);
   color: var(--color-ink);
+}
+
+/* Line breaks: balanced headings, no orphaned last words in paragraphs.
+   Both are progressive; unsupported browsers keep the default wrap. */
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Data tables: digits line up down a column. */
+td,
+th {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── Animations ───────────────────────────────────────────────── */

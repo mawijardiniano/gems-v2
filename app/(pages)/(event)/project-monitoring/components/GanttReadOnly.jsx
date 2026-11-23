@@ -36,15 +36,15 @@ export default function GanttReadOnly({ project, compact = false }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
           Gantt Activities{compact ? ` (${activities.length})` : ""}
         </p>
         <PrintGantt
           project={project}
           className={
             compact
-              ? "inline-flex shrink-0 items-center gap-1 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              ? "inline-flex shrink-0 items-center gap-1 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs font-medium text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              : "inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           }
         />
       </div>
@@ -77,7 +77,7 @@ export default function GanttReadOnly({ project, compact = false }) {
         <>
           <div className="overflow-x-auto rounded-lg border border-gray-100">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+              <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-2 py-1.5 font-semibold">#</th>
                   <th className="px-2 py-1.5 font-semibold">Activity</th>

@@ -112,12 +112,12 @@ function TechnicalDetails({ details }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="text-[11px] text-gray-500 underline hover:text-gray-600"
+        className="text-xs text-gray-500 underline hover:text-gray-600"
       >
         {open ? "Hide technical details" : "Technical details"}
       </button>
       {open && (
-        <pre className="mt-1 rounded bg-gray-50 border border-gray-200 p-1.5 text-[10px] text-gray-600 whitespace-pre-wrap">
+        <pre className="mt-1 rounded bg-gray-50 border border-gray-200 p-1.5 text-xs text-gray-600 whitespace-pre-wrap">
           {JSON.stringify(details, null, 2)}
         </pre>
       )}
@@ -172,7 +172,7 @@ export default function SyncLogsPanel({ logs, loading, records = [] }) {
               <div className="text-xs text-gray-600 mt-0.5">{rowContext}</div>
             )}
             <FriendlyDetails details={log.details} />
-            <div className="text-[11px] text-gray-500 mt-1">
+            <div className="text-xs text-gray-500 mt-1">
               By {log.executed_by_username || "Unknown"} ·{" "}
               {new Date(log.executed_at || log.createdAt).toLocaleString()}
             </div>

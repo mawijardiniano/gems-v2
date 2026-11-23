@@ -41,7 +41,7 @@ function HeaderBar({
             Marinduque State University · University-wide scope
             {updatedAt ? ` · Updated ${updatedAt.toLocaleTimeString()}` : ""}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <SampleToggle
               useSample={useSample}
               onToggle={onToggleSample}
@@ -53,7 +53,7 @@ function HeaderBar({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="text-[11px] font-medium text-gray-500">
+          <label className="text-xs font-medium text-gray-500">
             AY
             <select
               value={filters.schoolYear}
@@ -73,7 +73,7 @@ function HeaderBar({
               ))}
             </select>
           </label>
-          <label className="text-[11px] font-medium text-gray-500">
+          <label className="text-xs font-medium text-gray-500">
             Sem
             <select
               value={filters.semester}

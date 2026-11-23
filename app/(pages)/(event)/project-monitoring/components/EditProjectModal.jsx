@@ -221,7 +221,7 @@ export default function EditProjectModal({
             <h3 id="project-edit-title" className="text-base font-bold text-gray-900">
               Edit Project
             </h3>
-            <p className="text-[11px] text-gray-500 mt-0.5 truncate">
+            <p className="text-xs text-gray-500 mt-0.5 truncate">
               {project?.reference_number ? `${project.reference_number} · ` : ""}
               {getFieldValue(project?.title) || "(untitled project)"}
             </p>
@@ -247,7 +247,7 @@ export default function EditProjectModal({
 
             {sections.map((section) => (
               <div key={section.step}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 pb-2 border-b border-gray-100 mb-3">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 pb-2 border-b border-gray-100 mb-3">
                   {section.title}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

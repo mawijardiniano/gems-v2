@@ -157,7 +157,7 @@ export default function Sidebar({ open, setOpen, role }) {
                 <span className="block text-lg font-bold leading-tight tracking-tight text-white">
                   {BRAND_NAME}
                 </span>
-                <span className="block truncate text-[11px] font-medium leading-tight text-accent-300">
+                <span className="block truncate text-xs font-medium leading-tight text-accent-300">
                   {BRAND_TAGLINE}
                 </span>
               </span>
@@ -209,7 +209,7 @@ export default function Sidebar({ open, setOpen, role }) {
                 <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
-                <p className="text-[11px] font-medium text-accent-300 truncate mt-0.5 uppercase tracking-wider">
+                <p className="text-2xs font-medium text-accent-300 truncate mt-0.5 uppercase tracking-wider">
                   SUC President
                 </p>
               </div>
@@ -232,7 +232,7 @@ export default function Sidebar({ open, setOpen, role }) {
           }`}
         >
           {open && (
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
+            <p className="px-3 pb-1 text-2xs font-semibold uppercase tracking-widest text-secondary-200/85">
               SUC President
             </p>
           )}

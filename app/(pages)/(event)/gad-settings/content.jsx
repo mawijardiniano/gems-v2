@@ -955,7 +955,7 @@ export default function Settings() {
                                       }}
                                       className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
                                     >
-                                      <FaEdit className="text-[10px]" />
+                                      <FaEdit className="text-xs" />
                                       Edit
                                     </button>
                                   </td>
@@ -1178,7 +1178,7 @@ export default function Settings() {
                       : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  <FaFilter className="text-[10px]" />
+                  <FaFilter className="text-xs" />
                   Filters
                 </button>
               </div>
@@ -1243,7 +1243,7 @@ export default function Settings() {
                         onClick={resetFilters}
                         className="px-3 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
                       >
-                        <FaRedo className="text-[10px]" />
+                        <FaRedo className="text-xs" />
                         Reset
                       </button>
                     )}
@@ -1301,7 +1301,7 @@ export default function Settings() {
                             {timeAgo(a.createdAt)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+                        <span className="shrink-0 text-2xs font-medium text-gray-500 uppercase tracking-wider">
                           {ACTION_CONFIG[a.action]?.label || a.action}
                         </span>
                       </li>
@@ -1323,7 +1323,7 @@ export default function Settings() {
                     disabled={pagination.page <= 1}
                     className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <FaChevronLeft className="text-[10px]" />
+                    <FaChevronLeft className="text-xs" />
                   </button>
                   {Array.from(
                     { length: pagination.totalPages },
@@ -1361,7 +1361,7 @@ export default function Settings() {
                     disabled={pagination.page >= pagination.totalPages}
                     className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <FaChevronRight className="text-[10px]" />
+                    <FaChevronRight className="text-xs" />
                   </button>
                 </div>
               </div>

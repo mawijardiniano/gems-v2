@@ -110,7 +110,7 @@ function EventCard({ event, onClick, compact = false }) {
             {event.title}
           </h4>
           {event.reference_number && (
-            <div className="mt-1 font-mono text-[10px] font-medium text-gray-500">
+            <div className="mt-1 font-mono text-2xs font-medium text-gray-500">
               {event.reference_number}
             </div>
           )}
@@ -132,7 +132,7 @@ function EventCard({ event, onClick, compact = false }) {
           )}
         </div>
         <span
-          className={`shrink-0 ml-3 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+          className={`shrink-0 ml-3 px-2.5 py-0.5 rounded-full text-2xs font-semibold uppercase tracking-wider ${
             isCancelled
               ? "bg-red-50 text-red-600"
               : isPast
@@ -321,7 +321,7 @@ export default function DashboardContent({ profile, userId }) {
             onClick={() => router.push("/dashboard/personal-information")}
             className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
           >
-            View Profile <FaArrowRight className="text-[10px]" />
+            View Profile <FaArrowRight className="text-xs" />
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -344,7 +344,7 @@ export default function DashboardContent({ profile, userId }) {
                 onClick={() => router.push("/events/discover")}
                 className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
               >
-                View All <FaArrowRight className="text-[10px]" />
+                View All <FaArrowRight className="text-xs" />
               </button>
             </div>
             <div className="p-4 space-y-2">
@@ -376,7 +376,7 @@ export default function DashboardContent({ profile, userId }) {
                 onClick={() => router.push("/events")}
                 className="text-sm font-medium text-secondary-600 hover:text-secondary-700 flex items-center gap-1"
               >
-                View All <FaArrowRight className="text-[10px]" />
+                View All <FaArrowRight className="text-xs" />
               </button>
             </div>
             <div className="p-4 space-y-2">

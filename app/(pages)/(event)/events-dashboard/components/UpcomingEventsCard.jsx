@@ -129,7 +129,7 @@ export default function UpcomingEventsCard({ dashboard }) {
                       {event.title}
                     </p>
                     {event.reference_number && (
-                      <span className="mt-0.5 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
+                      <span className="mt-0.5 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
                         {event.reference_number}
                       </span>
                     )}

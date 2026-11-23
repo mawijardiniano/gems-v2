@@ -138,7 +138,7 @@ export default function Sidebar({ open, setOpen }) {
                 <span className="block text-lg font-bold leading-tight tracking-tight text-white">
                   {BRAND_NAME}
                 </span>
-                <span className="block truncate text-[11px] font-medium leading-tight text-accent-300">
+                <span className="block truncate text-xs font-medium leading-tight text-accent-300">
                   {BRAND_TAGLINE}
                 </span>
               </span>
@@ -191,7 +191,7 @@ export default function Sidebar({ open, setOpen }) {
                 <p className="text-sm font-semibold text-white truncate">
                   {getDisplayName()}
                 </p>
-                <p className="text-[11px] text-secondary-200/85 font-medium tracking-wide uppercase truncate">
+                <p className="text-2xs text-secondary-200/85 font-medium tracking-wide uppercase truncate">
                   ICTU Director
                 </p>
               </div>

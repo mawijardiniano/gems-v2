@@ -972,7 +972,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 Name
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       nameSort === "asc" ? "text-secondary-600" : "text-gray-300"
@@ -996,7 +996,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 Sex
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       sexSort === "asc" ? "text-secondary-600" : "text-gray-300"
@@ -1020,7 +1020,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 College
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       collegeSort === "asc" ? "text-secondary-600" : "text-gray-300"
@@ -1044,7 +1044,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 Campus
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       campusSort === "asc" ? "text-secondary-600" : "text-gray-300"
@@ -1068,7 +1068,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 Course
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       courseSort === "asc" ? "text-secondary-600" : "text-gray-300"
@@ -1092,7 +1092,7 @@ export default function StudentsUserListContent({ college }) {
                 }
               >
                 Year Level
-                <span className="ml-1.5 text-[10px]">
+                <span className="ml-1.5 text-xs">
                   <span
                     className={
                       yearSort === "asc" ? "text-secondary-600" : "text-gray-300"

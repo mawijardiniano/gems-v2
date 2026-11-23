@@ -83,13 +83,13 @@ export default function StagingRecordsTable({
                   />
                 </td>
                 <td className="px-2 py-1">{r.row_number}</td>
-                <td className="px-2 py-1 text-[11px]">{recordIdentity(r)}</td>
-                <td className="px-2 py-1 text-[11px]">{recordName(r)}</td>
-                <td className="px-2 py-1 text-[11px]">
+                <td className="px-2 py-1 text-xs">{recordIdentity(r)}</td>
+                <td className="px-2 py-1 text-xs">{recordName(r)}</td>
+                <td className="px-2 py-1 text-xs">
                   {mapped.gadData?.sexAtBirth || "-"}
                 </td>
-                <td className="px-2 py-1 text-[11px]">{position}</td>
-                <td className="px-2 py-1 text-[11px]">
+                <td className="px-2 py-1 text-xs">{position}</td>
+                <td className="px-2 py-1 text-xs">
                   {`${r.school_year || "-"} ${r.semester || ""}`.trim()}
                 </td>
                 <td className="px-2 py-1">

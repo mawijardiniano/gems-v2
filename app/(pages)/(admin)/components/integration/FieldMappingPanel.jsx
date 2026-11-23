@@ -88,10 +88,10 @@ export default function FieldMappingPanel() {
         <tbody>
           {FIELD_MAPPINGS.map((m) => (
             <tr key={m.target} className="border-t border-gray-100">
-              <td className="px-3 py-1.5 font-mono text-[11px] text-gray-700">
+              <td className="px-3 py-1.5 font-mono text-2xs text-gray-700">
                 {m.source}
               </td>
-              <td className="px-3 py-1.5 font-mono text-[11px] text-secondary-700">
+              <td className="px-3 py-1.5 font-mono text-2xs text-secondary-700">
                 {m.target}
               </td>
             </tr>

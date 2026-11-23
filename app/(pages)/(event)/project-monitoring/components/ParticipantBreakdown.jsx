@@ -96,7 +96,7 @@ export default function ParticipantBreakdown({ project }) {
                 e.stopPropagation();
                 setTab(item.key);
               }}
-              className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 tab === item.key
                   ? "bg-white text-rose-700 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
@@ -154,7 +154,7 @@ export default function ParticipantBreakdown({ project }) {
               <span className="text-xl font-bold text-gray-900">
                 {breakdown.totalAttended}
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-gray-500">
+              <span className="text-2xs uppercase tracking-wider text-gray-500">
                 Total
               </span>
             </div>
@@ -195,7 +195,7 @@ export default function ParticipantBreakdown({ project }) {
       )}
 
       {breakdown.totalAttended > 0 && (
-        <p className="mt-3 text-[11px] text-gray-500">
+        <p className="mt-3 text-xs text-gray-500">
           Aggregated from {breakdown.eventCount} linked event
           {breakdown.eventCount !== 1 ? "s" : ""}
           {tab === "sector"

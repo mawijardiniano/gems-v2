@@ -15,7 +15,7 @@ function MiniDonut({ title, female, male }) {
   return (
     <div className="flex-1 min-w-[180px]">
       <p className="text-xs font-semibold text-gray-700">{title}</p>
-      <p className="text-[11px] text-gray-500">{total.toLocaleString()} counted</p>
+      <p className="text-xs text-gray-500">{total.toLocaleString()} counted</p>
       <div className="h-[150px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -27,7 +27,7 @@ function MiniDonut({ title, female, male }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex items-center gap-3 text-[11px] text-gray-600">
+      <div className="flex items-center gap-3 text-xs text-gray-600">
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />F {f.toLocaleString()}</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />M {m.toLocaleString()}</span>
       </div>
@@ -53,7 +53,7 @@ function GenderGlance({ snapshot, parityGaps }) {
         <MiniDonut title="Employees" female={s.totalEmployees !== null && s.totalEmployees !== undefined ? Math.round(((s.femaleEmployeesPct || 0) / 100) * s.totalEmployees) : null} male={s.totalEmployees !== null && s.totalEmployees !== undefined ? Math.round(((100 - (s.femaleEmployeesPct || 0)) / 100) * s.totalEmployees) : null} />
       </div>
       <div className="mt-4 rounded-lg bg-secondary-50/60 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary-700">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-secondary-700">
           Parity gaps to watch
         </p>
         {gaps.length === 0 ? (
@@ -69,7 +69,7 @@ function GenderGlance({ snapshot, parityGaps }) {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-[11px] text-gray-500">
+        <p className="mt-2 text-xs text-gray-500">
           PWD {Number(s.pwdCount || 0).toLocaleString()} · IP {Number(s.ipCount || 0).toLocaleString()} · LGBTQIA+ {Number(s.lgbtqia || 0).toLocaleString()}
         </p>
       </div>

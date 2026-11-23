@@ -59,7 +59,7 @@ export default function OfficeMultiSelect({
   const Chip = ({ office, small }) => (
     <span
       className={`inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 ${
-        small ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
+        small ? "px-1.5 py-0.5 text-xs" : "px-2 py-0.5 text-xs"
       }`}
     >
       <span

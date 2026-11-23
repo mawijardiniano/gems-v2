@@ -89,7 +89,7 @@ function QuickReportButton({
       onClick={onClick}
       disabled={disabled || loading}
       title={title}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-600 ${accentClass} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 ${accentClass} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {loading ? (
         <>
@@ -653,7 +653,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     </Link>
 
                     <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      <p className="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                         Quick Reports
                       </p>
                       <div className="flex items-center gap-2">

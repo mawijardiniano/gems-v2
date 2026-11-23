@@ -36,10 +36,10 @@ export default function GanttTimeline({ activities, year }) {
             key={blockYear}
             className="rounded-lg border border-gray-200 bg-white p-3"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
               {blockYear} Timeline
             </p>
-            <div className="grid grid-cols-12 text-center text-[10px] text-gray-500 border-b border-gray-100 pb-1">
+            <div className="grid grid-cols-12 text-center text-xs text-gray-500 border-b border-gray-100 pb-1">
               {TIMELINE_MONTHS.map((month) => (
                 <span key={month}>{month}</span>
               ))}
@@ -58,7 +58,7 @@ export default function GanttTimeline({ activities, year }) {
                       <>
                         {bar.continuesBefore && (
                           <span
-                            className="absolute left-0 top-1 z-10 text-[10px] leading-4 text-gray-500"
+                            className="absolute left-0 top-1 z-10 text-xs leading-4 text-gray-500"
                             title={`Started before ${blockYear}`}
                           >
                             ◀
@@ -74,7 +74,7 @@ export default function GanttTimeline({ activities, year }) {
                         />
                         {bar.continuesAfter && (
                           <span
-                            className="absolute right-0 top-1 z-10 text-[10px] leading-4 text-gray-500"
+                            className="absolute right-0 top-1 z-10 text-xs leading-4 text-gray-500"
                             title={`Continues into ${blockYear + 1}`}
                           >
                             ▶

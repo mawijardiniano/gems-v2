@@ -89,7 +89,7 @@ function ParticipantsPerEvent({ project }) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[10px] uppercase tracking-wider text-gray-500">
+              <tr className="text-2xs uppercase tracking-wider text-gray-500">
                 <th className="text-left py-1.5 font-semibold">Event</th>
                 <th className="text-center py-1.5 font-semibold w-16">Attended</th>
               </tr>

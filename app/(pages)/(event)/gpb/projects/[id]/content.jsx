@@ -359,7 +359,7 @@ export default function ProjectContent() {
                           {participantCount(event)}
                         </span>
                         <span
-                          className="ml-1 inline-flex items-center text-[11px] text-gray-500"
+                          className="ml-1 inline-flex items-center text-xs text-gray-500"
                           title="Check-ins"
                         >
                           attended

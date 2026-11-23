@@ -96,7 +96,7 @@ export default function SeatHistoryPanel({ header, name }) {
 
       {turnover.length > 0 && (
         <div className="mt-4 pt-3 border-t border-gray-200">
-          <h5 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          <h5 className="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
             Recorded handovers
           </h5>
           <ul className="space-y-1.5">
@@ -131,7 +131,7 @@ function HistoryRow({ entry }) {
     : "Vacant";
   return (
     <li className="flex items-start gap-3">
-      <div className="h-7 w-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shrink-0 mt-0.5">
+      <div className="h-7 w-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0 mt-0.5">
         {entry.official_text ? (
           (person[0] || "?").toUpperCase()
         ) : (
@@ -150,12 +150,12 @@ function HistoryRow({ entry }) {
             {person}
           </span>
           {entry.status && entry.status !== "substantive" ? (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary-50 text-secondary-700 capitalize">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-secondary-50 text-secondary-700 capitalize">
               {entry.status}
             </span>
           ) : null}
           {entry.isOpen ? (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
               Current
             </span>
           ) : null}

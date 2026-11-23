@@ -241,7 +241,7 @@ export default function GpbProjectsTable({
                                   </div>
                                   {project.reference_number && (
                                     <div
-                                      className="mt-1 font-mono text-[9px] leading-tight text-gray-500 whitespace-nowrap"
+                                      className="mt-1 font-mono text-2xs leading-tight text-gray-500 whitespace-nowrap"
                                       title="Project reference number"
                                     >
                                       {project.reference_number}
@@ -394,7 +394,7 @@ export default function GpbProjectsTable({
                                         <p className="text-xs font-medium text-gray-900 truncate">
                                           {getCreatorName(project)}
                                         </p>
-                                        <p className="text-[10px] text-gray-500 capitalize">
+                                        <p className="text-xs text-gray-500 capitalize">
                                           {getCreatorRole(project)}
                                         </p>
                                       </div>

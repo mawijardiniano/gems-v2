@@ -175,7 +175,7 @@ export default function Sidebar({ open, setOpen }) {
                 <span className="block text-lg font-bold leading-tight tracking-tight text-white">
                   {BRAND_NAME}
                 </span>
-                <span className="block truncate text-[11px] font-medium leading-tight text-accent-300">
+                <span className="block truncate text-xs font-medium leading-tight text-accent-300">
                   {BRAND_TAGLINE}
                 </span>
               </span>
@@ -230,7 +230,7 @@ export default function Sidebar({ open, setOpen }) {
                   {getDisplayName()}
                 </p>
                 {getEmail() && (
-                  <p className="text-[11px] text-secondary-200/85 truncate mt-0.5">
+                  <p className="text-xs text-secondary-200/85 truncate mt-0.5">
                     {getEmail()}
                   </p>
                 )}
@@ -259,7 +259,7 @@ export default function Sidebar({ open, setOpen }) {
           {/* ===== OVERVIEW SECTION ===== */}
           <div>
             {open && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
+              <p className="px-3 pb-1 text-2xs font-semibold uppercase tracking-widest text-secondary-200/85">
                 Main Menu
               </p>
             )}
@@ -391,7 +391,7 @@ export default function Sidebar({ open, setOpen }) {
           {/* ===== EVENTS SECTION ===== */}
           <div>
             {open && (
-              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-secondary-200/85">
+              <p className="px-3 pb-1 text-2xs font-semibold uppercase tracking-widest text-secondary-200/85">
                 Engagement
               </p>
             )}

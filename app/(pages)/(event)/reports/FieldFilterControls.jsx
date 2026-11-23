@@ -61,7 +61,7 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
     );
   return (
     <div className="ml-7 mb-1 rounded border border-gray-100 bg-gray-50 p-2">
-      <p className="text-[11px] text-gray-500 mb-1">Include only:</p>
+      <p className="text-xs text-gray-500 mb-1">Include only:</p>
       {searchable && (
         <input
           type="search"
@@ -85,7 +85,7 @@ export function FilterChecklist({ options, selected = [], onChange, onDone }) {
               className="accent-secondary-600"
             />
             <span className="truncate">{option.value}</span>
-            <span className="ml-auto text-[11px] text-gray-500">
+            <span className="ml-auto text-xs text-gray-500">
               ({option.count.toLocaleString("en-US")})
             </span>
           </label>

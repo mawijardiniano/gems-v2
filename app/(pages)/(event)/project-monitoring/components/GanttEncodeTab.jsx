@@ -25,7 +25,7 @@ export default function GanttEncodeTab({
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="w-full text-left">
-        <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+        <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
           <tr>
             <th className="px-2.5 py-1.5 w-8">#</th>
             <th className="px-2.5 py-1.5">Activity / Deliverable</th>
@@ -108,7 +108,7 @@ export default function GanttEncodeTab({
                         <button
                           type="button"
                           onClick={() => setEditing(null)}
-                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
                         >
                           <FaCheck size={9} />
                           Done
@@ -129,7 +129,7 @@ export default function GanttEncodeTab({
                       <button
                         type="button"
                         onClick={() => setEditing(i)}
-                        className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
                       >
                         <FaPen size={9} />
                         Edit

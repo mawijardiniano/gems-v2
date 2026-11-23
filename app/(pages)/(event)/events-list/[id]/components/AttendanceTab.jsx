@@ -269,7 +269,7 @@ export default function AttendanceTab(props) {
             }`}
           >
             {role.label}
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+            <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
               guestTypeFilter === role.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
             }`}>
               {roleCounts[role.key] || 0}
@@ -295,7 +295,7 @@ export default function AttendanceTab(props) {
             }`}
           >
             {tab.label}
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+            <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
               validationFilter === tab.key ? "bg-secondary-600 text-white" : "bg-gray-100 text-gray-600"
             }`}>
               {tab.count}
@@ -409,13 +409,13 @@ export default function AttendanceTab(props) {
                       <td className="font-medium text-gray-900">
                         {g.full_name}
                         {g.source === "manual-encode" && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-[10px] font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
+                          <span className="ml-2 inline-flex items-center rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-xs font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
                             Manual
                           </span>
                         )}
                         {!editable && (
                           <span
-                            className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 align-middle text-[10px] font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20"
+                            className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 align-middle text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20"
                             title="Signed-in QR check-in — counted, with no guest record to validate"
                           >
                             QR / Account
@@ -428,12 +428,12 @@ export default function AttendanceTab(props) {
                       <td className="text-center">{g.department_office_org || "-"}</td>
                       <td className="text-center">{g.program_year_section || g.position_designation || "-"}</td>
                       <td className="text-center">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${meta.pill}`}>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${meta.pill}`}>
                           <StatusIcon size={11} />
                           {meta.label}
                         </span>
                         {st !== "pending" && g.validation_note && (
-                          <p className="mt-1 text-[10px] text-gray-500 max-w-[140px] truncate mx-auto" title={g.validation_note}>
+                          <p className="mt-1 text-xs text-gray-500 max-w-[140px] truncate mx-auto" title={g.validation_note}>
                             {g.validation_note}
                           </p>
                         )}
@@ -442,7 +442,7 @@ export default function AttendanceTab(props) {
                       <td className="text-center">
                         <div className="inline-flex items-center gap-1.5">
                           {!editable ? (
-                            <span className="text-[11px] text-gray-500">—</span>
+                            <span className="text-xs text-gray-500">—</span>
                           ) : busyId === g._id ? (
                             <FiLoader className="animate-spin text-gray-500" size={14} />
                           ) : (

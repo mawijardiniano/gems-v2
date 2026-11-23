@@ -42,7 +42,7 @@ const PARTICIPANT_TYPES = [
   { value: "Stakeholder", label: "Stakeholder", icon: FaUsers },
 ];
 
-const helperCls = "mt-1 text-[11px] text-gray-500";
+const helperCls = "mt-1 text-xs text-gray-500";
 
 const formatDateTime = (value) => {
   if (!value) return "";
@@ -61,7 +61,7 @@ const formatDateTime = (value) => {
 function SectionTitle({ step, title }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-500">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
         {step}
       </span>
       <h2 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
@@ -686,7 +686,7 @@ export default function AttendContent() {
                 </>
               )}
             </button>
-            <p className="mt-3 text-center text-[11px] text-gray-500">
+            <p className="mt-3 text-center text-xs text-gray-500">
               Your details are used only for this event&apos;s attendance
               report.
             </p>

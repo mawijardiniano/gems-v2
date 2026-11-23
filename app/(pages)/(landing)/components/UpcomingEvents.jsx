@@ -103,7 +103,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
           </h3>
           {event.type_of_activity && (
             <span
-              className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+              className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                 ACTIVITY_COLORS[event.type_of_activity] ||
                 "bg-gray-50 text-gray-700 border-gray-200"
               }`}
@@ -138,8 +138,8 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
 
         {/* Registered pill */}
         {isRegistered && (
-          <div className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
-            <FaCheckCircle className="text-[10px]" />
+          <div className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+            <FaCheckCircle className="text-xs" />
             Registered ✓
           </div>
         )}

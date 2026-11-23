@@ -213,7 +213,7 @@ export function SexDonut({ totals }) {
             <span className="text-2xl font-bold text-gray-900">
               {totals.total.toLocaleString()}
             </span>
-            <span className="text-[11px] text-gray-500">Total</span>
+            <span className="text-xs text-gray-500">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
@@ -316,7 +316,7 @@ export function GenderIdentityDonut({ rows }) {
             <span className="text-2xl font-bold text-gray-900">
               {total.toLocaleString()}
             </span>
-            <span className="text-[11px] text-gray-500">Total</span>
+            <span className="text-xs text-gray-500">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
@@ -606,7 +606,7 @@ export function YearMultiSelect({ options, value, onChange }) {
                 AY {year}
               </label>
             ))}
-            <p className="px-2 pt-1 text-[11px] text-gray-500">
+            <p className="px-2 pt-1 text-xs text-gray-500">
               Select two or more years to compare them.
             </p>
           </div>
@@ -679,7 +679,7 @@ export function MultiSelect({
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="px-2 pt-1 text-[11px] text-secondary-600 hover:underline"
+                className="px-2 pt-1 text-xs text-secondary-600 hover:underline"
               >
                 Clear selection
               </button>

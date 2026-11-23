@@ -68,7 +68,7 @@ export default function GadProjectsCard({ dashboard }) {
         <>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="rounded-xl bg-gray-50/70 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
                 Accomplished
               </p>
               <p className="text-lg font-bold text-gray-900">
@@ -76,7 +76,7 @@ export default function GadProjectsCard({ dashboard }) {
               </p>
             </div>
             <div className="rounded-xl bg-gray-50/70 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
                 Milestones
               </p>
               <p className="text-lg font-bold text-gray-900">

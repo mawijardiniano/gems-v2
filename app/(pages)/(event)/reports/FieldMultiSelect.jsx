@@ -108,12 +108,12 @@ export default function FieldMultiSelect({
                     />
                     <span className="truncate">{field.label}</span>
                     {field.note && (
-                      <span className="text-[11px] text-gray-500">
+                      <span className="text-xs text-gray-500">
                         {field.note}
                       </span>
                     )}
                     {field.available && field.listOnly && (
-                      <span className="text-[11px] text-gray-500">
+                      <span className="text-xs text-gray-500">
                         list only
                       </span>
                     )}
