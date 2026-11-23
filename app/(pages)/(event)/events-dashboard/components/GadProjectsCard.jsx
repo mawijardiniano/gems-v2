@@ -115,7 +115,7 @@ export default function GadProjectsCard({ dashboard }) {
               onClick={() =>
                 router.push("/project-monitoring/gad-projects")
               }
-              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition duration-200"
             >
               Open Project Monitoring
               <ArrowRight className="h-3.5 w-3.5" />

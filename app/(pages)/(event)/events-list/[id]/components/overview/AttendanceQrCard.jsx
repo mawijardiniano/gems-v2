@@ -8,6 +8,7 @@ import {
   FiExternalLink,
 } from "react-icons/fi";
 import { FaClipboardCheck, FaSpinner } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 /* Attendance QR — single QR: scan → no-login form → recorded as pending. */
 export default function AttendanceQrCard({
@@ -60,14 +61,15 @@ export default function AttendanceQrCard({
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={onDownload}
             disabled={!attendanceQrDataUrl}
-            className="btn-success !py-2 !px-4 !rounded-lg !text-xs shrink-0"
+            variant="success"
+            className="!py-2 !px-4 !rounded-lg !text-xs shrink-0"
           >
             <FiDownload size={13} />
             Download
-          </button>
+          </Button>
         </div>
         {attendanceQrDataUrl ? (
           <div className="flex items-center gap-6 flex-wrap">
@@ -89,11 +91,12 @@ export default function AttendanceQrCard({
                 → Opens the attendance form — no login needed
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={handleCopyAttendanceLink}
                   disabled={!attendanceUrl}
-                  className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg"
+                  variant="secondary"
+                  className="!py-2 !px-3 !text-xs !rounded-lg"
                 >
                   {linkCopied ? (
                     <>
@@ -106,7 +109,7 @@ export default function AttendanceQrCard({
                       Copy Link
                     </>
                   )}
-                </button>
+                </Button>
                 <a
                   href={attendanceUrl || undefined}
                   target="_blank"

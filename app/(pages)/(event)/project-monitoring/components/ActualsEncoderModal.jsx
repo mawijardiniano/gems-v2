@@ -232,7 +232,7 @@ export default function ActualsEncoderModal({
           <button
             type="button"
             onClick={closeAndCleanup}
-            className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />
@@ -371,7 +371,7 @@ export default function ActualsEncoderModal({
                 {evidence.map((file, i) => (
                   <li
                     key={file.key || i}
-                    className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2"
+                    className="flex items-center gap-2 pointer-coarse:gap-5 rounded-lg border border-gray-100 bg-gray-50/60 px-3 py-2"
                   >
                     <FaPaperclip size={11} className="text-gray-500 shrink-0" />
                     <span className="text-xs text-gray-700 truncate flex-1">
@@ -381,7 +381,7 @@ export default function ActualsEncoderModal({
                       href={getEvidenceDownloadUrl(file) || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-gray-500 hover:text-secondary-600 transition-colors"
+                      className="touch-target text-gray-500 hover:text-secondary-600 transition-colors"
                       title="Download"
                     >
                       <FaDownload size={11} />
@@ -389,7 +389,7 @@ export default function ActualsEncoderModal({
                     <button
                       type="button"
                       onClick={() => removeEvidenceFile(file)}
-                      className="text-gray-500 hover:text-red-500 transition-colors"
+                      className="touch-target text-gray-500 hover:text-red-500 transition-colors"
                       title="Remove"
                     >
                       <FaTrash size={11} />

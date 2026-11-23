@@ -101,7 +101,7 @@ export default function GaaBudgetTable({ dashboard }) {
           <div className="mt-3 pt-3 border-t border-gray-50">
             <button
               onClick={() => router.push("/gaa-budget")}
-              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition-all duration-200"
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition duration-200"
             >
               View All Budgets
               <ArrowRight className="h-3.5 w-3.5" />

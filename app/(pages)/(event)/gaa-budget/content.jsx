@@ -81,7 +81,7 @@ function StatCard({ icon: Icon, label, value, sub, color = "blue" }) {
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-200">
+    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition duration-200">
       <div className="flex items-center gap-4">
         <div
           className={`h-12 w-12 rounded-xl ${colorMap[color] || colorMap.blue} flex items-center justify-center shrink-0`}
@@ -310,7 +310,7 @@ export default function GAABudgetContent() {
                 setEditBudget(null);
                 setModalOpen(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add Budget
@@ -498,14 +498,14 @@ export default function GAABudgetContent() {
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button
                             onClick={() => handleEdit(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition"
                           >
                             <FaEdit className="h-3 w-3" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteClick(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition"
                           >
                             <FaTrash className="h-3 w-3" />
                             Delete
@@ -515,15 +515,17 @@ export default function GAABudgetContent() {
                         <div className="sm:hidden flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition-all"
+                            aria-label="Edit budget"
+                            className="touch-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 transition"
                           >
-                            <FaEdit className="h-3 w-3" />
+                            <FaEdit className="h-3 w-3" aria-hidden="true" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-all"
+                            aria-label="Delete budget"
+                            className="touch-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition"
                           >
-                            <FaTrash className="h-3 w-3" />
+                            <FaTrash className="h-3 w-3" aria-hidden="true" />
                           </button>
                         </div>
                       </td>
@@ -572,7 +574,7 @@ export default function GAABudgetContent() {
                 type="button"
                 aria-label="Close"
                 onClick={cancelDelete}
-                className="text-red-400 hover:text-red-600 transition-colors"
+                className="touch-target text-red-400 hover:text-red-600 transition-colors"
               >
                 <FaTimes className="h-4 w-4" />
               </button>
@@ -717,7 +719,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>

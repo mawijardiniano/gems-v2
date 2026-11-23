@@ -424,7 +424,7 @@ function OfficialModal({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -589,7 +589,7 @@ function HeaderCard({
     setHistoryFor((prev) => ({ ...prev, [seatName]: !prev[seatName] }));
 
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden mb-5 transition-all duration-200 hover:shadow-md">
+    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden mb-5 transition duration-200 hover:shadow-md">
       <button
         onClick={onToggle}
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition"
@@ -695,7 +695,7 @@ function HeaderCard({
                           <button
                             onClick={() => toggleHistory(seat.name)}
                             aria-expanded={historyOpen}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-all ${
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition ${
                               historyOpen
                                 ? "text-gray-700 bg-gray-100 border-gray-300"
                                 : "text-gray-600 bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300"
@@ -705,17 +705,17 @@ function HeaderCard({
                             {historyOpen ? "Hide" : "History"}
                           </button>
                           {!isCoordinator && (
-                            <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                               <button
                                 onClick={() => onEdit(official)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition-all"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition"
                               >
                                 <FaEdit className="h-3 w-3" />
                                 Reassign
                               </button>
                               <button
                                 onClick={() => onVacate(official)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition"
                               >
                                 <FaTrash className="h-3 w-3" />
                                 Remove
@@ -1197,7 +1197,7 @@ export default function UniversityOfficialsContent() {
             <button
               onClick={handleCopyForward}
               disabled={copying}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition-all duration-200 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition duration-200 disabled:opacity-50"
             >
               {copying ? "Copying..." : "Copy from previous year"}
             </button>
@@ -1205,7 +1205,7 @@ export default function UniversityOfficialsContent() {
           {canEdit && (
             <button
               onClick={() => openAssign(null)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Assign Official
@@ -1233,7 +1233,7 @@ export default function UniversityOfficialsContent() {
           <button
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
           </button>

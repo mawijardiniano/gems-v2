@@ -82,7 +82,7 @@ export default function GpbProjectsTable({
           </div>
         )}
         <div
-          className="transition-all duration-300 w-full"
+          className="transition duration-300 w-full"
           style={{
             maxWidth: sidebarOpen
               ? "calc(100vw - 360px)"
@@ -453,7 +453,7 @@ export default function GpbProjectsTable({
                                                         c._id,
                                                       )
                                                     }
-                                                    className="ml-1 text-red-400 hover:text-red-600 text-xs"
+                                                    className="touch-target ml-1 text-red-400 hover:text-red-600 text-xs"
                                                     title="Delete comment"
                                                   >
                                                     ✕

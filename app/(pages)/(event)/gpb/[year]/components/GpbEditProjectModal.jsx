@@ -51,7 +51,7 @@ export default function GpbEditProjectModal({
             type="button"
             aria-label="Close"
             onClick={cancelEdit}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-3xl transition"
+            className="touch-target w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-3xl transition"
           >
             ×
           </button>
@@ -153,7 +153,7 @@ export default function GpbEditProjectModal({
                               );
                             }}
                           />
-                          <div className="flex flex-col gap-1 mt-1 shrink-0">
+                          <div className="flex flex-col gap-1 pointer-coarse:gap-3 mt-1 shrink-0">
                             {(editRow.cause_gender_issue || []).length >
                               1 && (
                               <button
@@ -168,7 +168,8 @@ export default function GpbEditProjectModal({
                                     arr,
                                   );
                                 }}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                                aria-label="Remove cause"
+                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                               >
                                 −
                               </button>
@@ -187,7 +188,8 @@ export default function GpbEditProjectModal({
                                     ],
                                   )
                                 }
-                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                                aria-label="Add cause"
+                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
                               >
                                 +
                               </button>
@@ -236,7 +238,7 @@ export default function GpbEditProjectModal({
                             handleEditRowChange("gad_objective", arr);
                           }}
                         />
-                        <div className="flex flex-col gap-1 mt-1 shrink-0">
+                        <div className="flex flex-col gap-1 pointer-coarse:gap-3 mt-1 shrink-0">
                           {(editRow.gad_objective || []).length > 1 && (
                             <button
                               type="button"
@@ -245,7 +247,8 @@ export default function GpbEditProjectModal({
                                 arr.splice(idx, 1);
                                 handleEditRowChange("gad_objective", arr);
                               }}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              aria-label="Remove objective"
+                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                             >
                               −
                             </button>
@@ -260,7 +263,8 @@ export default function GpbEditProjectModal({
                                   "",
                                 ])
                               }
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              aria-label="Add objective"
+                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
                             >
                               +
                             </button>
@@ -363,12 +367,13 @@ export default function GpbEditProjectModal({
                           }
                         />
                       </div>
-                      <div className="flex flex-col gap-1 mt-1 shrink-0">
+                      <div className="flex flex-col gap-1 pointer-coarse:gap-3 mt-1 shrink-0">
                         {(editRow.gad_activity || []).length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveEditActivityRow(idx)}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                            aria-label="Remove activity"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                           >
                             −
                           </button>
@@ -378,7 +383,8 @@ export default function GpbEditProjectModal({
                           <button
                             type="button"
                             onClick={handleAddEditActivityRow}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                            aria-label="Add activity"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
                           >
                             +
                           </button>
@@ -418,7 +424,7 @@ export default function GpbEditProjectModal({
                           }}
                         />
                       </div>
-                      <div className="flex flex-col gap-1 shrink-0">
+                      <div className="flex flex-col gap-1 pointer-coarse:gap-3 shrink-0">
                         {(editRow.performance_indicator_target || [])
                           .length > 1 && (
                           <button
@@ -433,7 +439,8 @@ export default function GpbEditProjectModal({
                                 arr,
                               );
                             }}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                            aria-label="Remove indicator"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
                           >
                             −
                           </button>
@@ -454,7 +461,8 @@ export default function GpbEditProjectModal({
                                 ],
                               )
                             }
-                            className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                            aria-label="Add indicator"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
                           >
                             +
                           </button>

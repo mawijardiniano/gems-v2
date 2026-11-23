@@ -124,8 +124,12 @@ function Toast({ message, type, onClose }) {
     >
       <Icon className="h-5 w-5 shrink-0" />
       <p className="text-sm font-medium">{message}</p>
-      <button onClick={onClose} className="ml-2 shrink-0">
-        <HiOutlineX className="h-4 w-4" />
+      <button
+        onClick={onClose}
+        aria-label="Dismiss notification"
+        className="touch-target ml-2 shrink-0"
+      >
+        <HiOutlineX className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -324,7 +328,7 @@ export default function ManageRoleContent() {
         </div>
         <button
           onClick={openAssignModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-secondary-600 to-secondary-700 text-white text-sm font-semibold rounded-xl shadow-md hover:from-secondary-700 hover:to-secondary-800 hover:shadow-lg transition-all duration-200 active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-secondary-600 to-secondary-700 text-white text-sm font-semibold rounded-xl shadow-md hover:from-secondary-700 hover:to-secondary-800 hover:shadow-lg transition duration-200 active:scale-[0.98]"
         >
           <HiOutlineShieldCheck className="h-5 w-5" />
           Assign Role
@@ -338,7 +342,7 @@ export default function ManageRoleContent() {
           placeholder="Search by name, role, or college..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all duration-200"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition duration-200"
         />
       </div>
 
@@ -528,7 +532,7 @@ export default function ManageRoleContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeModal}
-                className="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="touch-target p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <HiOutlineX className="h-5 w-5" />
               </button>
@@ -544,7 +548,7 @@ export default function ManageRoleContent() {
                   <input
                     type="text"
                     placeholder="Search by name or username..."
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
                     value={modalSearch}
                     onChange={(e) => setModalSearch(e.target.value)}
                   />
@@ -611,7 +615,7 @@ export default function ManageRoleContent() {
                       <button
                         key={role}
                         onClick={() => setSelectedRole(role)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 ${
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition duration-150 ${
                           isActive
                             ? "bg-secondary-50 border-secondary-200 text-secondary-700 ring-1 ring-secondary-200"
                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
@@ -637,7 +641,7 @@ export default function ManageRoleContent() {
                   <select
                     value={assignedCollege}
                     onChange={(e) => setAssignedCollege(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition-all"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
                   >
                     <option value="">Select a college...</option>
                     {COLLEGES.map((c) => (
@@ -664,7 +668,7 @@ export default function ManageRoleContent() {
                   loading ||
                   (SCOPED_ROLES.includes(selectedRole) && !assignedCollege)
                 }
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-lg shadow-sm hover:from-secondary-700 hover:to-secondary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-lg shadow-sm hover:from-secondary-700 hover:to-secondary-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-[0.98]"
               >
                 {loading ? (
                   <>

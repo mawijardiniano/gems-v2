@@ -50,7 +50,7 @@ export const EVENT_ACTIVITY_TYPES = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
+  "w-full rounded-lg border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500";
 
 const labelClass =
   "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
@@ -254,7 +254,7 @@ export default function EventFormFields({
                   key={source.value}
                   onClick={() => chooseSource(source.value)}
                   aria-pressed={active}
-                  className={`rounded-xl border p-4 text-left transition-all ${
+                  className={`rounded-xl border p-4 text-left transition ${
                     active
                       ? "border-secondary-500 bg-secondary-50 ring-2 ring-secondary-500/20 shadow-sm"
                       : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
@@ -311,7 +311,7 @@ export default function EventFormFields({
                 key={type}
                 onClick={() => chooseType(type)}
                 aria-pressed={values.type_of_activity === type}
-                className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
                   values.type_of_activity === type
                     ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-2 ring-secondary-500/20 shadow-sm"
                     : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
@@ -438,7 +438,7 @@ export default function EventFormFields({
               type="button"
               onClick={generateDescription}
               disabled={generating || !canGenerate}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-secondary-500 to-fuchsia-500 px-3 py-1.5 text-xs font-medium text-black shadow-sm transition-all hover:shadow-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-secondary-500 to-fuchsia-500 px-3 py-1.5 text-xs font-medium text-black shadow-sm transition hover:shadow-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <FaMagic className="h-3 w-3" aria-hidden="true" />
               {generating ? "Generating..." : "Generate with AI"}

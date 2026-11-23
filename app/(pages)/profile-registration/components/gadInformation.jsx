@@ -38,7 +38,7 @@ export default function GadInformation() {
       {options.map((opt) => (
         <label
           key={opt.label}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition ${
             value === opt.value
               ? "border-secondary-500 bg-secondary-50 text-secondary-700"
               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
@@ -98,7 +98,7 @@ export default function GadInformation() {
                   </label>
                 </div>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={gadData.sexAtBirth}
                   onChange={(e) => update("sexAtBirth", e.target.value)}
                 >
@@ -116,7 +116,7 @@ export default function GadInformation() {
                   </label>
                 </div>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={gadData.gender_preference}
                   onChange={(e) => update("gender_preference", e.target.value)}
                 >
@@ -137,7 +137,7 @@ export default function GadInformation() {
                 </label>
               </div>
               <select
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                 value={gadData.socioEconomicStatus}
                 onChange={(e) => update("socioEconomicStatus", e.target.value)}
               >
@@ -170,7 +170,7 @@ export default function GadInformation() {
                 />
                 {gadData.isPWD === true && (
                   <select
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white mt-3"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white mt-3"
                     value={gadData.pwd_type}
                     onChange={(e) => update("pwd_type", e.target.value)}
                   >
@@ -223,7 +223,7 @@ export default function GadInformation() {
                 </label>
               </div>
               <input
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                 value={gadData.headOfHousehold}
                 onChange={(e) => update("headOfHousehold", e.target.value)}
                 placeholder="e.g., Self, Spouse, Parent"
@@ -242,7 +242,7 @@ export default function GadInformation() {
             <button
               onClick={() => !isNextDisabled && dispatch(nextStep())}
               disabled={isNextDisabled}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"

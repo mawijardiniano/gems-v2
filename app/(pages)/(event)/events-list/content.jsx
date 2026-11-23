@@ -238,7 +238,7 @@ export default function EventsListContent() {
 
           <button
             onClick={() => router.push("/create")}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-secondary-200 hover:shadow-xl hover:from-secondary-700 hover:to-secondary-600 transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-secondary-200 hover:shadow-xl hover:from-secondary-700 hover:to-secondary-600 transition duration-200"
           >
             <FaPlus size={14} />
             Create Event
@@ -336,7 +336,7 @@ export default function EventsListContent() {
               {events.map((evt, index) => (
                 <div
                   key={evt._id}
-                  className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
+                  className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl transition duration-300 hover:-translate-y-1 overflow-hidden animate-slide-up"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   {/* Top color accent bar */}

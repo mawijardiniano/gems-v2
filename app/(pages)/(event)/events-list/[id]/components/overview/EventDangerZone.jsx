@@ -5,6 +5,7 @@ import { FaSpinner } from "react-icons/fa";
 import { effectiveStatus, canTransition } from "@/data/lib/eventStatus";
 import { useDialog } from "@/hooks/useDialog";
 import CancelEventModal from "../CancelEventModal";
+import Button from "@/components/ui/Button";
 
 /* Cancel / reinstate and delete, with their confirmation dialogs.
 
@@ -115,13 +116,14 @@ export default function EventDangerZone({
                 </p>
               </div>
             </div>
-            <button
-              className="btn-danger !py-2 !px-4 !rounded-lg !text-xs shrink-0"
+            <Button
+              variant="danger"
+              className="!py-2 !px-4 !rounded-lg !text-xs shrink-0"
               onClick={() => setShowDeleteModal(true)}
             >
               <FiTrash2 size={13} />
               Delete Event
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -152,14 +154,15 @@ export default function EventDangerZone({
               >
                 Delete Event
               </h2>
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="btn-ghost !p-2"
+                variant="ghost"
+                className="touch-target !p-2"
                 aria-label="Close"
               >
                 <FiX />
-              </button>
+              </Button>
             </div>
             <div className="modal-body">
               <div className="flex items-start gap-4">
@@ -181,17 +184,17 @@ export default function EventDangerZone({
               </div>
             </div>
             <div className="modal-footer">
-              <button
+              <Button
                 onClick={() => setShowDeleteModal(false)}
-                className="btn-secondary"
+                variant="secondary"
                 disabled={deleting}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleDeleteEvent}
                 disabled={deleting}
-                className="btn-danger"
+                variant="danger"
               >
                 {deleting ? (
                   <>
@@ -200,7 +203,7 @@ export default function EventDangerZone({
                 ) : (
                   "Yes, delete"
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

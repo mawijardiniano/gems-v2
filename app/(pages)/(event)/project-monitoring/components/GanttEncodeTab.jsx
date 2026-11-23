@@ -119,7 +119,7 @@ export default function GanttEncodeTab({
                             onChange(activities.filter((_, idx) => idx !== i));
                             setEditing(null);
                           }}
-                          className="text-gray-500 hover:text-red-500 transition-colors"
+                          className="touch-target text-gray-500 hover:text-red-500 transition-colors"
                           title="Remove activity"
                         >
                           <FaTrash size={12} />

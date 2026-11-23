@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useId } from "react";
-import { useDialog } from "@/hooks/useDialog";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import BrandMark from "@/components/BrandMark";
+import LogoutConfirmModal from "@/components/layout/LogoutConfirmModal";
 import useMyProfile from "@/data/lib/useMyProfile";
 import {
   FaBars,
   FaHome,
   FaCog,
-  FaSignOutAlt,
   FaChevronDown,
   FaUserGraduate,
   FaBriefcase,
@@ -44,8 +43,6 @@ const TooltipWrapper = ({ label, children, collapsed }) => {
 
 export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const logoutTitleId = useId();
-  const logoutDialogRef = useDialog(() => setShowLogoutModal(false));
   const [userListOpen, setUserListOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const { profile, user } = useMyProfile();
@@ -332,7 +329,7 @@ export default function Sidebar({ open, setOpen, role }) {
                   <Link
                     href={link.href}
                     onClick={handleMobileClose}
-                    className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+                    className={`relative flex items-center gap-3 rounded-xl transition duration-200 group ${
                       open ? "p-2.5" : "p-3 justify-center mx-1.5"
                     } ${
                       linkActive
@@ -368,7 +365,7 @@ export default function Sidebar({ open, setOpen, role }) {
                       if (isUserList) setUserListOpen((prev) => !prev);
                       if (isReports) setReportsOpen((prev) => !prev);
                     }}
-                    className={`relative flex items-center justify-between rounded-xl transition-all duration-200 group w-full text-left ${
+                    className={`relative flex items-center justify-between rounded-xl transition duration-200 group w-full text-left ${
                       open ? "p-2.5" : "p-3 justify-center mx-1.5"
                     } ${
                       linkActive
@@ -393,7 +390,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     </div>
                     {open && (
                       <span
-                        className={`flex-shrink-0 transition-all duration-200 ${
+                        className={`flex-shrink-0 transition duration-200 ${
                           isOpen ? "rotate-0" : "-rotate-90"
                         } ${linkActive ? "text-accent-300" : "text-white/50"}`}
                       >
@@ -426,7 +423,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           <Link
                             href={child.href}
                             onClick={handleMobileClose}
-                            className={`relative flex items-center gap-3 rounded-lg transition-all duration-150 ${
+                            className={`relative flex items-center gap-3 rounded-lg transition duration-150 ${
                               open ? "p-2" : "p-2.5 justify-center mx-1"
                             } ${
                               childActive
@@ -472,7 +469,7 @@ export default function Sidebar({ open, setOpen, role }) {
             <Link
               href="/admin-settings"
               onClick={handleMobileClose}
-              className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group ${
+              className={`relative flex items-center gap-3 rounded-xl transition duration-200 group ${
                 open ? "p-2.5" : "p-3 justify-center mx-1.5"
               } ${
                 pathname === "/admin-settings"
@@ -493,7 +490,7 @@ export default function Sidebar({ open, setOpen, role }) {
           <TooltipWrapper label="Logout" collapsed={!open}>
             <button
               onClick={() => setShowLogoutModal(true)}
-              className={`relative flex items-center gap-3 rounded-xl transition-all duration-200 group w-full ${
+              className={`relative flex items-center gap-3 rounded-xl transition duration-200 group w-full ${
                 open ? "p-2.5" : "p-3 justify-center mx-0"
               } text-accent-300 hover:bg-white/5 hover:text-accent-300`}
             >
@@ -507,44 +504,11 @@ export default function Sidebar({ open, setOpen, role }) {
       </aside>
 
       {/* ===== LOGOUT MODAL ===== */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div
-            ref={logoutDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={logoutTitleId}
-            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 space-y-6 text-center animate-slide-up"
-          >
-            <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
-              <FaSignOutAlt className="text-2xl text-red-500" />
-            </div>
-            <div className="space-y-2">
-              <h2 id={logoutTitleId} className="text-xl font-bold text-gray-900">
-                Confirm Logout
-              </h2>
-              <p className="text-sm text-gray-500">
-                Are you sure you want to log out? You will need to sign in again
-                to access your account.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-sm font-medium text-white hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LogoutConfirmModal
+        open={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </>
   );
 }

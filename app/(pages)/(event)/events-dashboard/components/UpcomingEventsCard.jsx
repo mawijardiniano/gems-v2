@@ -100,7 +100,7 @@ export default function UpcomingEventsCard({ dashboard }) {
               return (
                 <div
                   key={event._id || idx}
-                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition duration-200 cursor-pointer"
                   onClick={() =>
                     router.push(`/events-list/${event._id}`)
                   }

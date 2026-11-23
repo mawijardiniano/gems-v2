@@ -6,11 +6,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { CHART, SERIES, colorForSex } from "@/data/lib/chartColors";
 
-const COLORS = ["var(--color-secondary-500)", "var(--color-primary-500)", "#F59E0B", "#10B981", "#EF4444"];
-
-const SEX_COLORS = [COLORS[0], COLORS[1]];
-const PREFERENCE_COLORS = [COLORS[0], COLORS[1], COLORS[2], COLORS[3]];
+/* Slices are colored by name so Female / Male read the same in every chart. */
+const colorForGenderRow = (name) =>
+  name === "LGBTQIA+" ? SERIES.amber : colorForSex(name);
 
 const RADIAN = Math.PI / 180;
 
@@ -41,12 +41,12 @@ const renderOutsideLabel = ({
 
 const tooltipContentStyle = {
   borderRadius: 8,
-  border: "1px solid #f3f4f6",
+  border: `1px solid ${CHART.tooltipBorder}`,
   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   fontSize: 12,
 };
 
-const DonutCard = memo(function DonutCard({ title, total, data, colors }) {
+const DonutCard = memo(function DonutCard({ title, total, data }) {
   return (
     <div className="bg-white p-5 rounded-xl border border-gray-100 w-full shadow-sm">
       <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
@@ -69,7 +69,7 @@ const DonutCard = memo(function DonutCard({ title, total, data, colors }) {
             {data.map((entry, index) => (
               <Cell
                 key={entry.name}
-                fill={colors[index % colors.length]}
+                fill={colorForGenderRow(entry.name)}
                 stroke="transparent"
               />
             ))}
@@ -88,7 +88,7 @@ const DonutCard = memo(function DonutCard({ title, total, data, colors }) {
           >
             <span
               className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: colors[i % colors.length] }}
+              style={{ backgroundColor: colorForGenderRow(entry.name) }}
             />
             {entry.name}:{" "}
             <span className="font-semibold">
@@ -164,13 +164,11 @@ function GenderPanel({ data, genderPanel }) {
           title="Sex at Birth"
           total={sexTotal}
           data={genderData}
-          colors={SEX_COLORS}
         />
         <DonutCard
           title="Gender Identity / Preference"
           total={prefTotal}
           data={preferenceData}
-          colors={PREFERENCE_COLORS}
         />
       </div>
     </div>

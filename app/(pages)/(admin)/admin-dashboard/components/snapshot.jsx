@@ -48,7 +48,7 @@ const statCards = [
 const StatCard = memo(function StatCard({ card, children }) {
   const Icon = card.icon;
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
       <div
         className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.gradient}`}
       />

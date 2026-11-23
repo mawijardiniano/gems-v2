@@ -419,7 +419,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               type="button"
               onClick={openModal}
               disabled={openingModal}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200 disabled:opacity-60 disabled:cursor-wait"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200 disabled:opacity-60 disabled:cursor-wait"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add GPB
@@ -489,7 +489,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               return (
                 <div
                   key={item._id}
-                  className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+                  className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-200 overflow-hidden"
                 >
                 
                   <div className={`h-1.5 w-full ${
@@ -532,7 +532,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                             type="button"
                             aria-label={`Actions for GPB ${item.year}`}
                             aria-expanded={openMenuId === item._id}
-                            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition"
+                            className="touch-target flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition"
                           >
                             <FaEllipsisV className="h-4 w-4" />
                           </button>
@@ -721,13 +721,13 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 </select>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 pointer-coarse:gap-3">
                 <button
                   type="button"
                   aria-label="Previous page"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <FaChevronLeft className="h-3.5 w-3.5" />
                 </button>
@@ -761,7 +761,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   aria-label="Next page"
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <FaChevronRight className="h-3.5 w-3.5" />
                 </button>
@@ -797,7 +797,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   type="button"
                   aria-label="Close"
                   onClick={closeModal}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -953,7 +953,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   type="button"
                   aria-label="Close"
                   onClick={closeAttachModal}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>

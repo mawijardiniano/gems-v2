@@ -310,7 +310,7 @@ export default function SubmitProfile() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
                   isSubmitting
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"

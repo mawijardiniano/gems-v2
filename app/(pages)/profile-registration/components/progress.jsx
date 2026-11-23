@@ -35,7 +35,7 @@ export default function Progress() {
             <div key={step.label} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition duration-300 ${
                     isCompleted
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
                       : isActive

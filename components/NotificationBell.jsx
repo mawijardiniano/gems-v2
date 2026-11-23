@@ -173,7 +173,7 @@ export default function NotificationBell() {
           setOpen(next);
           if (next) fetchNotifications();
         }}
-        className="relative p-2 rounded-full hover:bg-gray-100 text-gray-700"
+        className="touch-target relative p-2 rounded-full hover:bg-gray-100 text-gray-700"
         title="Notifications"
       >
         <FaBell size={18} />

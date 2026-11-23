@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import { FaMagic } from "react-icons/fa";
 import { EMPTY_FILES } from "../../hooks/useAccomplishmentReport";
+import Button from "@/components/ui/Button";
 
 /* The report form: narrative (with AI draft), required files, photos and attachments. */
 export default function ReportForm({ report }) {
@@ -79,15 +80,16 @@ export default function ReportForm({ report }) {
             <label className="label !mb-0">
               Narrative Report <span className="text-red-500">*</span>
             </label>
-            <button
+            <Button
               type="button"
               onClick={generateNarrative}
               disabled={generating}
-              className="btn-secondary !py-1.5 !px-3 !text-xs !rounded-lg"
+              variant="secondary"
+              className="!py-1.5 !px-3 !text-xs !rounded-lg"
             >
               <FaMagic className="text-secondary-500" size={12} />
               {generating ? "Generating..." : "Generate Narrative"}
-            </button>
+            </Button>
           </div>
           <textarea
             name="narrative"
@@ -141,7 +143,7 @@ export default function ReportForm({ report }) {
                     />
                     <button
                       type="button"
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+                      className="touch-target absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
                       aria-label={`Remove ${field.label}`}
                       onClick={() => {
                         const old = filesRef.current[field.key];
@@ -190,7 +192,7 @@ export default function ReportForm({ report }) {
                   />
                   <button
                     type="button"
-                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+                    className="touch-target absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
                     aria-label={`Remove photo ${i + 1}`}
                     onClick={() => removePhoto(i)}
                   >
@@ -256,7 +258,7 @@ export default function ReportForm({ report }) {
 
         <div className="flex gap-3 justify-end pt-5 border-t border-gray-100">
           {isEditing && (
-            <button
+            <Button
               type="button"
               onClick={async () => {
                 await fileLifecycle.rollback();
@@ -266,15 +268,17 @@ export default function ReportForm({ report }) {
                 setFiles(EMPTY_FILES);
                 setError("");
               }}
-              className="btn-secondary !rounded-lg"
+              variant="secondary"
+              className="!rounded-lg"
             >
               Cancel
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="submit"
             disabled={submitting || isUploading}
-            className="btn-primary !rounded-lg"
+            variant="primary"
+            className="!rounded-lg"
           >
             {submitting ? (
               <>
@@ -286,7 +290,7 @@ export default function ReportForm({ report }) {
                 {isEditing ? "Update Report" : "Submit Report"}
               </>
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

@@ -371,7 +371,7 @@ export default function ProjectCreateModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />

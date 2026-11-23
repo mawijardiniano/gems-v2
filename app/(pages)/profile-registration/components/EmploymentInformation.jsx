@@ -127,7 +127,7 @@ export default function EmploymentInformation() {
                   Employee ID <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={employment?.employee_id || ""}
                   onChange={(e) => update("employee_id", e.target.value)}
                   placeholder="Enter Employee ID"
@@ -139,7 +139,7 @@ export default function EmploymentInformation() {
                   Office <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={employment?.office || ""}
                   onChange={(e) => update("office", e.target.value)}
                 >
@@ -197,7 +197,7 @@ export default function EmploymentInformation() {
                   Employment Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={employment?.employment_status || ""}
                   onChange={(e) => {
                     update("employment_status", e.target.value);
@@ -215,7 +215,7 @@ export default function EmploymentInformation() {
                   Appointment Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
                   value={employment?.employment_appointment_status || ""}
                   onChange={(e) =>
                     update("employment_appointment_status", e.target.value)
@@ -243,7 +243,7 @@ export default function EmploymentInformation() {
             <button
               onClick={() => !isNextDisabled && dispatch(nextStep())}
               disabled={isNextDisabled}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"

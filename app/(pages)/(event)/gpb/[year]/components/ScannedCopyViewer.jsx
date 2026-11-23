@@ -60,7 +60,7 @@ export default function ScannedCopyViewer({
               type="button"
               aria-label="Close"
               onClick={closeScannedViewer}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
             >
               <FiX className="h-4 w-4" />
             </button>

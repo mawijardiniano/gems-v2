@@ -19,9 +19,10 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-600"
+          aria-label="Close record details"
+          className="touch-target text-gray-500 hover:text-gray-600"
         >
-          ✕
+          <span aria-hidden="true">✕</span>
         </button>
       </div>
 

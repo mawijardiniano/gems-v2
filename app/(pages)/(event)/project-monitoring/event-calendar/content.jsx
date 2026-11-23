@@ -189,7 +189,7 @@ export default function EventCalendarContent() {
           <button
             type="button"
             onClick={goPrev}
-            className="h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
+            className="touch-target h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
             aria-label="Previous month"
           >
             <FaChevronLeft size={13} />
@@ -200,7 +200,7 @@ export default function EventCalendarContent() {
           <button
             type="button"
             onClick={goNext}
-            className="h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
+            className="touch-target h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
             aria-label="Next month"
           >
             <FaChevronRight size={13} />

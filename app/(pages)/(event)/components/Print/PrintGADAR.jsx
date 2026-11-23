@@ -867,7 +867,7 @@ export default function PrintGADAR({ year, projects, gaaBudget }) {
       disabled={
         projects.length === 0 || eventAttachments === null || renderingPdfs
       }
-      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-all duration-200 shadow-sm shadow-secondary-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <FaPrint className="h-3.5 w-3.5" />
       {eventAttachments === null

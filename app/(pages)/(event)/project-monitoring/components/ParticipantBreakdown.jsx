@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
+import { CHART, SERIES } from "@/data/lib/chartColors";
 import { FaChartPie } from "react-icons/fa";
 import { getParticipantBreakdown } from "@/data/lib/accomplishmentSummary";
 import { aggregateIndicatorProgress } from "@/data/lib/performanceTracking";
@@ -15,15 +16,15 @@ const INNER_RADIUS = 56;
 
 /* Colours mirror the event attendance insights so the same slice always reads the same way. */
 const SEX_COLORS = {
-  Female: "var(--color-accent-500)",
-  Male: "var(--color-primary-500)",
-  Unspecified: "#9ca3af",
+  Female: SERIES.female,
+  Male: SERIES.male,
+  Unspecified: SERIES.slate,
 };
 
 const SECTOR_COLORS = {
-  Student: "var(--color-secondary-500)",
-  Employee: "#14b8a6",
-  Unspecified: "#9ca3af",
+  Student: SERIES.blue,
+  Employee: SERIES.mint,
+  Unspecified: SERIES.slate,
 };
 
 const TABS = [
@@ -33,7 +34,7 @@ const TABS = [
 
 const tooltipStyle = {
   borderRadius: 10,
-  border: "1px solid #e5e7eb",
+  border: `1px solid ${CHART.tooltipBorder}`,
   boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
   fontSize: 12,
 };
@@ -138,7 +139,7 @@ export default function ParticipantBreakdown({ project }) {
                 {data.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={colors[entry.name] || "#9ca3af"}
+                    fill={colors[entry.name] || SERIES.slate}
                   />
                 ))}
               </Pie>
@@ -168,7 +169,7 @@ export default function ParticipantBreakdown({ project }) {
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: colors[row.name] || "#9ca3af" }}
+                  style={{ backgroundColor: colors[row.name] || SERIES.slate }}
                 />
                 <span>{row.name}</span>
                 <span className="ml-auto font-semibold text-gray-900">

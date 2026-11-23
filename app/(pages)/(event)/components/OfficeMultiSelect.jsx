@@ -72,9 +72,12 @@ export default function OfficeMultiSelect({
           type="button"
           onClick={() => remove(office)}
           aria-label={`Remove ${office}`}
-          className="text-rose-400 hover:text-rose-700"
+          className="touch-target text-rose-400 hover:text-rose-700"
         >
-          <FaTimes className={small ? "h-2 w-2" : "h-2.5 w-2.5"} />
+          <FaTimes
+            className={small ? "h-2 w-2" : "h-2.5 w-2.5"}
+            aria-hidden="true"
+          />
         </button>
       )}
     </span>

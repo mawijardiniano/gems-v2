@@ -791,7 +791,7 @@ export default function ActivityLogsContent() {
                           aria-expanded={isOpen}
                           aria-label={isOpen ? "Hide details" : "Show details"}
                           title={isOpen ? "Hide details" : "Show details"}
-                          className="text-gray-500 hover:text-gray-700"
+                          className="touch-target text-gray-500 hover:text-gray-700"
                         >
                           <FaChevronRight
                             className={`transition-transform ${isOpen ? "rotate-90" : ""}`}

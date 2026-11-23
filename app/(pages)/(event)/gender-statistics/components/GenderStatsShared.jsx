@@ -15,6 +15,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { CATEGORICAL, CHART, SERIES } from "@/data/lib/chartColors";
 
 export function useGenderStats(type, params) {
   const [data, setData] = useState(null);
@@ -51,19 +52,19 @@ export const CARD_CLS = "rounded-xl border border-gray-100 bg-white p-5 shadow-s
 
 const tooltipStyle = {
   borderRadius: 10,
-  border: "1px solid #e5e7eb",
+  border: `1px solid ${CHART.tooltipBorder}`,
   boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
   fontSize: 12,
   padding: "8px 12px",
 };
 
-export const SEX_COLORS = { Female: "var(--color-accent-500)", Male: "var(--color-primary-500)" };
+export const SEX_COLORS = { Female: SERIES.female, Male: SERIES.male };
 
 export const GENDER_IDENTITY_COLORS = {
-  Male: "var(--color-primary-500)",
-  Female: "var(--color-accent-500)",
-  "LGBTQIA+": "var(--color-secondary-500)",
-  "Not specified": "#9ca3af",
+  Male: SERIES.male,
+  Female: SERIES.female,
+  "LGBTQIA+": SERIES.amber,
+  "Not specified": SERIES.slate,
 };
 
 export function LoadingState({ label = "Loading statistics…" }) {
@@ -250,13 +251,13 @@ export function StackedSexBar({ title, data, nameKey, height }) {
             layout="vertical"
             margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11, fill: CHART.axisText }} axisLine={false} tickLine={false} allowDecimals={false} />
             <YAxis
               type="category"
               dataKey={nameKey}
               width={190}
-              tick={{ fontSize: 10, fill: "#6B7280" }}
+              tick={{ fontSize: 10, fill: CHART.axisText }}
               axisLine={false}
               tickLine={false}
             />
@@ -305,7 +306,7 @@ export function GenderIdentityDonut({ rows }) {
                 {data.map((d) => (
                   <Cell
                     key={d.name}
-                    fill={GENDER_IDENTITY_COLORS[d.name] || "#cbd5e1"}
+                    fill={GENDER_IDENTITY_COLORS[d.name] || SERIES.slate}
                   />
                 ))}
               </Pie>
@@ -326,7 +327,7 @@ export function GenderIdentityDonut({ rows }) {
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: GENDER_IDENTITY_COLORS[d.name] || "#cbd5e1" }}
+                  style={{ backgroundColor: GENDER_IDENTITY_COLORS[d.name] || SERIES.slate }}
                 />
                 {d.name}: {d.value.toLocaleString()} ({pctOf(d.value)}%)
               </span>
@@ -348,9 +349,9 @@ export function StackedSexBarVertical({ title, data, nameKey, height = 260 }) {
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={safeData} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis dataKey={nameKey} tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
+            <XAxis dataKey={nameKey} tick={{ fontSize: 11, fill: CHART.axisText }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: CHART.axisText }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(243,244,246,0.5)" }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Bar dataKey="Female" stackId="sex" fill={SEX_COLORS.Female} radius={[0, 0, 6, 6]} />
@@ -493,13 +494,11 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
 
 /* == Multi-year comparison ============================================= */
 
-export const YEAR_COLORS = [
-  "var(--color-secondary-600)",
-  "#f59e0b",
-  "#10b981",
-  "#ef4444",
-  "var(--color-secondary-500)",
-];
+/* Years are categories, so the female/male hues and the "no data" slate are
+   left out to keep year bars from reading as a sex series. */
+export const YEAR_COLORS = CATEGORICAL.filter(
+  (c) => c !== SERIES.female && c !== SERIES.male && c !== SERIES.slate,
+);
 
 const yearColor = (index) => YEAR_COLORS[index % YEAR_COLORS.length];
 
@@ -855,10 +854,10 @@ export function YearGroupedBars({
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={data} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 11, fill: "#6B7280" }}
+              tick={{ fontSize: 11, fill: CHART.axisText }}
               axisLine={false}
               tickLine={false}
               interval={0}
@@ -867,7 +866,7 @@ export function YearGroupedBars({
               }
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#9CA3AF" }}
+              tick={{ fontSize: 11, fill: CHART.axisText }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
@@ -924,9 +923,13 @@ export function YearComparisonTable({
                   <th
                     key={year}
                     colSpan={3}
-                    className="px-2 pt-2 text-center font-semibold"
-                    style={{ color: yearColor(i) }}
+                    className="px-2 pt-2 text-center font-semibold text-gray-700"
                   >
+                    <span
+                      className="mr-1.5 inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: yearColor(i) }}
+                      aria-hidden="true"
+                    />
                     AY {year}
                   </th>
                 ))}

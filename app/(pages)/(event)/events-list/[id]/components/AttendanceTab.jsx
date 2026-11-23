@@ -18,6 +18,7 @@ import {
 import { FaUserCheck } from "react-icons/fa";
 import ManualEncodeModal from "./ManualEncodeModal";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 const STATUS_META = {
   pending: {
@@ -200,13 +201,14 @@ export default function AttendanceTab(props) {
             </p>
           </div>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => setShowManualEncode(true)}
-          className="btn-primary !py-2.5 !px-5 !text-sm !rounded-lg shrink-0 inline-flex items-center justify-center gap-2"
+          variant="primary"
+          className="!py-2.5 !px-5 !text-sm !rounded-lg shrink-0 inline-flex items-center justify-center gap-2"
         >
           <FiUserPlus size={15} /> Encode Attendance
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-3">
@@ -245,15 +247,15 @@ export default function AttendanceTab(props) {
             <option value="approved">Approved</option>
             <option value="rejected">Not approved</option>
           </select>
-          <button onClick={() => props.handleDownloadGuestsPdf(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          <Button onClick={() => props.handleDownloadGuestsPdf(filtered)} variant="secondary" className="!py-2 !px-3 !text-xs !rounded-lg">
             <FiDownload size={14} /> Download
-          </button>
-          <button onClick={() => props.handleDownloadBlankGuestsPdf()} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          </Button>
+          <Button onClick={() => props.handleDownloadBlankGuestsPdf()} variant="secondary" className="!py-2 !px-3 !text-xs !rounded-lg">
             Blank Sheet
-          </button>
-          <button onClick={() => props.handlePrintGuests(filtered)} className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg">
+          </Button>
+          <Button onClick={() => props.handlePrintGuests(filtered)} variant="secondary" className="!py-2 !px-3 !text-xs !rounded-lg">
             <FiPrinter size={14} /> Print
-          </button>
+          </Button>
         </div>
       </div>
       {/* Role sub-tabs: Student / Employee / Stakeholder */}
@@ -310,21 +312,23 @@ export default function AttendanceTab(props) {
             <span className="font-semibold">{pendingCount}</span> check-in{pendingCount === 1 ? "" : "s"} awaiting validation. Approved guests count toward attendance and reports.
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               disabled={bulkBusy || selected.length === 0}
               onClick={() => handleBulk("approve")}
-              className="btn-primary !py-2 !px-3 !text-xs !rounded-lg"
+              variant="primary"
+              className="!py-2 !px-3 !text-xs !rounded-lg"
             >
               {bulkBusy ? <FiLoader className="animate-spin" size={13} /> : <FiCheck size={13} />}
               Approve selected ({selected.length})
-            </button>
-            <button
+            </Button>
+            <Button
               disabled={bulkBusy || selected.length === 0}
               onClick={() => { setRejectTarget(selected); setRejectNote(""); }}
-              className="btn-secondary !py-2 !px-3 !text-xs !rounded-lg !text-rose-600"
+              variant="secondary"
+              className="!py-2 !px-3 !text-xs !rounded-lg !text-rose-600"
             >
               <FiX size={13} /> Reject selected
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -440,7 +444,7 @@ export default function AttendanceTab(props) {
                       </td>
                       <td className="text-center text-emerald-700 font-medium">{fmtTime(g.attended_at)}</td>
                       <td className="text-center">
-                        <div className="inline-flex items-center gap-1.5">
+                        <div className="inline-flex items-center gap-1.5 pointer-coarse:gap-3">
                           {!editable ? (
                             <span className="text-xs text-gray-500">—</span>
                           ) : busyId === g._id ? (
@@ -452,7 +456,7 @@ export default function AttendanceTab(props) {
                                   title="Approve"
                                   aria-label={`Approve ${g.full_name}`}
                                   onClick={() => handleSingle(g._id, "approve")}
-                                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                                 >
                                   <FiCheck size={13} />
                                 </button>
@@ -462,7 +466,7 @@ export default function AttendanceTab(props) {
                                   title="Reject"
                                   aria-label={`Reject ${g.full_name}`}
                                   onClick={() => { setRejectTarget([g._id]); setRejectNote(""); }}
-                                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
                                 >
                                   <FiX size={13} />
                                 </button>
@@ -472,7 +476,7 @@ export default function AttendanceTab(props) {
                                   title="Return to pending"
                                   aria-label={`Return ${g.full_name} to pending`}
                                   onClick={() => handleSingle(g._id, "reset")}
-                                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
                                 >
                                   <FiClock size={13} />
                                 </button>
@@ -511,12 +515,12 @@ export default function AttendanceTab(props) {
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
           <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
           <div className="flex items-center gap-2">
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
-              <FiChevronLeft size={14} />
-            </button>
-            <button className="btn-secondary !py-1.5 !px-2.5 !rounded-lg" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
-              <FiChevronRight size={14} />
-            </button>
+            <Button variant="secondary" className="touch-target !py-1.5 !px-2.5 !rounded-lg" aria-label="Previous page" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
+              <FiChevronLeft size={14} aria-hidden="true" />
+            </Button>
+            <Button variant="secondary" className="touch-target !py-1.5 !px-2.5 !rounded-lg" aria-label="Next page" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
+              <FiChevronRight size={14} aria-hidden="true" />
+            </Button>
           </div>
         </div>
       </div>
@@ -547,14 +551,16 @@ export default function AttendanceTab(props) {
               onChange={(e) => setRejectNote(e.target.value)}
             />
             <div className="mt-5 flex justify-end gap-3">
-              <button
-                className="btn-secondary !rounded-lg"
+              <Button
+                variant="secondary"
+                className="!rounded-lg"
                 onClick={() => { setRejectTarget(null); setRejectNote(""); }}
               >
                 Cancel
-              </button>
-              <button
-                className="btn-primary !rounded-lg !bg-rose-600"
+              </Button>
+              <Button
+                variant="primary"
+                className="!rounded-lg !bg-rose-600"
                 disabled={rejecting}
                 onClick={async () => {
                   if (rejecting) return;
@@ -575,7 +581,7 @@ export default function AttendanceTab(props) {
                 }}
               >
                 <FiX size={13} /> Reject
-              </button>
+              </Button>
             </div>
           </div>
         </div>

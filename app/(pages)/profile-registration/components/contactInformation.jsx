@@ -129,7 +129,7 @@ export default function ContactInformation() {
     return (
       <div className="space-y-3">
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
           value={region}
           onChange={(e) => {
             update(`${prefix}.region`, e.target.value);
@@ -146,7 +146,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
           value={province}
           onChange={(e) => {
             update(`${prefix}.province`, e.target.value);
@@ -163,7 +163,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
           value={city}
           onChange={(e) => {
             update(`${prefix}.city`, e.target.value);
@@ -179,7 +179,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
           value={contact[prefix]?.barangay || ""}
           onChange={(e) => update(`${prefix}.barangay`, e.target.value)}
           disabled={!city}
@@ -228,7 +228,7 @@ export default function ContactInformation() {
                 </div>
                 <input
                   type="email"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={contact.email}
                   onChange={(e) => update("email", e.target.value)}
                   placeholder="example@email.com"
@@ -242,7 +242,7 @@ export default function ContactInformation() {
                   </label>
                 </div>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   type="number"
                   value={contact.mobileNumber}
                   onChange={(e) => update("mobileNumber", e.target.value)}
@@ -305,7 +305,7 @@ export default function ContactInformation() {
                 }
               }}
               disabled={isNextDisabled}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
                 isNextDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"

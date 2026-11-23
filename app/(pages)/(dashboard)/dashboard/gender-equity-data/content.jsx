@@ -189,7 +189,7 @@ export default function GenderEquityDataContent({ profile }) {
     if (!isEditing) return null;
     return (
       <select
-        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         value={value}
         onChange={(e) => handleChange(key, e.target.value)}
       >
@@ -206,7 +206,7 @@ export default function GenderEquityDataContent({ profile }) {
     if (!isEditing) return null;
     return (
       <select
-        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
         value={value}
         onChange={(e) => handleChange(key, e.target.value)}
       >
@@ -245,7 +245,7 @@ export default function GenderEquityDataContent({ profile }) {
               <button
                 onClick={handleSave}
                 disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-600 text-white text-sm font-semibold rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 shadow-sm hover:shadow-md"
               >
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
@@ -256,7 +256,7 @@ export default function GenderEquityDataContent({ profile }) {
                 if (isEditing && originalData) setFormData(originalData);
                 setIsEditing(!isEditing);
               }}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition-all ${
+              className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
                   ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
@@ -337,7 +337,7 @@ export default function GenderEquityDataContent({ profile }) {
                   <p className="text-sm font-semibold text-gray-900 py-3">{formData.headOfHousehold || "—"}</p>
                 ) : (
                   <input
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.headOfHousehold}
                     onChange={(e) => handleChange("headOfHousehold", e.target.value)}
                   />

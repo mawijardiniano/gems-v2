@@ -260,7 +260,7 @@ export default function ProjectContent() {
                 </div>
                 <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${
+                    className={`h-full rounded-full transition ${
                       aggregateExceeded ? "bg-emerald-500" : "bg-secondary-500"
                     }`}
                     style={{

@@ -75,7 +75,7 @@ export default function SimplifyGender() {
               {features.map((feature) => (
                 <div
                   key={feature.label}
-                  className="flex items-center gap-4 rounded-xl bg-white/10 px-5 py-3.5 border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 hover:translate-x-1"
+                  className="flex items-center gap-4 rounded-xl bg-white/10 px-5 py-3.5 border border-white/10 backdrop-blur-sm transition duration-300 hover:bg-white/15 hover:translate-x-1"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-white shrink-0">
                     {feature.icon}

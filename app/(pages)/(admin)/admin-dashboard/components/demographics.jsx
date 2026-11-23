@@ -12,19 +12,13 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+import { CATEGORICAL, CHART, SERIES } from "@/data/lib/chartColors";
 
-const PIE_COLORS = [
-  "var(--color-secondary-500)",
-  "var(--color-primary-500)",
-  "#F59E0B",
-  "#10B981",
-  "#EF4444",
-  "var(--color-accent-500)",
-];
+const PIE_COLORS = CATEGORICAL;
 const GENDER_BAR_COLORS = {
-  Male: "var(--color-primary-500)",
-  Female: "var(--color-accent-500)",
-  Other: "#A3E635",
+  Male: SERIES.male,
+  Female: SERIES.female,
+  Other: SERIES.slate,
 };
 
 const get = (obj, path, fallback = null) => {
@@ -111,7 +105,7 @@ const sortStudentYearLevels = (rows) => {
 
 const chartTooltipStyle = {
   borderRadius: 8,
-  border: "1px solid #f3f4f6",
+  border: `1px solid ${CHART.tooltipBorder}`,
   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   fontSize: 12,
 };
@@ -200,12 +194,12 @@ const HorzBarCard = memo(function HorzBarCard({
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#f3f4f6"
+            stroke={CHART.grid}
             horizontal={false}
           />
           <XAxis
             type="number"
-            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
           />
@@ -213,7 +207,7 @@ const HorzBarCard = memo(function HorzBarCard({
             dataKey="name"
             type="category"
             width={120}
-            tick={{ fontSize: 11, fill: "#6B7280" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
           />
@@ -243,15 +237,15 @@ const VertBarCard = memo(function VertBarCard({ title, data, height = 240 }) {
       </p>
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} margin={{ left: 0, right: 0 }} barSize={24}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 11, fill: "#6B7280" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -282,15 +276,15 @@ const GenderBarCard = memo(function GenderBarCard({ title, data, height = 260 })
       </p>
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} barSize={20} margin={{ left: 0, right: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 11, fill: "#6B7280" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
@@ -355,12 +349,12 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#f3f4f6"
+            stroke={CHART.grid}
             horizontal={false}
           />
           <XAxis
             type="number"
-            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             axisLine={false}
             tickLine={false}
           />
@@ -369,7 +363,7 @@ const GenderHorzBarCard = memo(function GenderHorzBarCard({
             type="category"
             width={190}
             interval={0}
-            tick={{ fontSize: 11, fill: "#6B7280" }}
+            tick={{ fontSize: 11, fill: CHART.axisText }}
             tickFormatter={shortenLabel}
             axisLine={false}
             tickLine={false}

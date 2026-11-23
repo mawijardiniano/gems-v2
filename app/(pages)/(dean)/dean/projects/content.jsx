@@ -218,7 +218,7 @@ export default function DeanProjectsContent() {
 
           <button
             onClick={() => router.push("/dean/projects/create")}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-emerald-200 hover:shadow-xl hover:from-emerald-700 hover:to-teal-600 transition-all duration-200"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-emerald-200 hover:shadow-xl hover:from-emerald-700 hover:to-teal-600 transition duration-200"
           >
             <FaPlus size={14} />
             Create Event

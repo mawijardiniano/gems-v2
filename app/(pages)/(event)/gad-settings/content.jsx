@@ -665,7 +665,7 @@ export default function Settings() {
           type="button"
           onClick={() => setMessage(null)}
           aria-label="Dismiss"
-          className="shrink-0 text-red-400 transition hover:text-red-600"
+          className="touch-target shrink-0 text-red-400 transition hover:text-red-600"
         >
           <FaTimesCircle />
         </button>
@@ -1046,7 +1046,7 @@ export default function Settings() {
                                   onMouseDown={(e) => e.preventDefault()}
                                   onClick={() => field.setValue("")}
                                   aria-label={`Clear ${field.label}`}
-                                  className="p-1.5 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
+                                  className="touch-target p-1.5 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
                                 >
                                   <FaTimesCircle className="text-xs" />
                                 </button>
@@ -1317,13 +1317,14 @@ export default function Settings() {
                 <p className="text-xs text-gray-500">
                   Page {pagination.page} of {pagination.totalPages}
                 </p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 pointer-coarse:gap-3">
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page <= 1}
-                    className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Previous page"
+                    className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <FaChevronLeft className="text-xs" />
+                    <FaChevronLeft className="text-xs" aria-hidden="true" />
                   </button>
                   {Array.from(
                     { length: pagination.totalPages },
@@ -1359,9 +1360,10 @@ export default function Settings() {
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page >= pagination.totalPages}
-                    className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label="Next page"
+                    className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <FaChevronRight className="text-xs" />
+                    <FaChevronRight className="text-xs" aria-hidden="true" />
                   </button>
                 </div>
               </div>

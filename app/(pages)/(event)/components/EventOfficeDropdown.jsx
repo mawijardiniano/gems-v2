@@ -95,7 +95,7 @@ export default function EventOfficeDropdown({
         aria-label={`${label}: ${
           selected.length ? selected.join(", ") : "none selected"
         }`}
-        className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 ${
+        className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 ${
           open
             ? "border-secondary-500 bg-secondary-50/50"
             : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
@@ -124,7 +124,7 @@ export default function EventOfficeDropdown({
                 type="button"
                 onClick={() => toggleOption(item)}
                 aria-label={`Remove ${item}`}
-                className="hover:text-secondary-900 transition-colors"
+                className="touch-target hover:text-secondary-900 transition-colors"
               >
                 <FaTimes className="h-2.5 w-2.5" aria-hidden="true" />
               </button>
@@ -185,7 +185,7 @@ export default function EventOfficeDropdown({
                 type="button"
                 onClick={addDraft}
                 disabled={!draft.trim()}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition-all hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaPlus className="h-3 w-3" aria-hidden="true" /> Add
               </button>

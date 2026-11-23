@@ -68,7 +68,7 @@ export default function EventDetailsModal({ event, onClose }) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md transition-colors hover:bg-white hover:text-gray-900"
+          className="touch-target absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-md transition-colors hover:bg-white hover:text-gray-900"
         >
           <FaTimes size={14} />
         </button>
@@ -184,7 +184,7 @@ export default function EventDetailsModal({ event, onClose }) {
             onClick={(e) => {
               if (isCancelled || hasEnded) e.preventDefault();
             }}
-            className={`block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition-all ${
+            className={`block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition ${
               isCancelled || hasEnded
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
                 : "bg-gradient-to-r from-secondary-700 to-secondary-500 text-white shadow-md hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
