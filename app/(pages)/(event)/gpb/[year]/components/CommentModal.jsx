@@ -131,7 +131,7 @@ export default function CommentModal({
           <option value="revision">Needs Revision</option>
         </select>
         {commentError && (
-          <p className="mb-2 text-sm text-red-700" role="alert">
+          <p className="mb-2 text-sm text-danger" role="alert">
             {commentError}
           </p>
         )}
@@ -139,7 +139,7 @@ export default function CommentModal({
           <button
             onClick={handleSubmitComment}
             disabled={commentSaving}
-            className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="bg-success-solid text-white px-4 py-2 rounded disabled:opacity-50"
           >
             {commentSaving ? "Saving..." : "Submit"}
           </button>

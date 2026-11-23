@@ -63,13 +63,13 @@ export default function ReportForm({ report }) {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center gap-3">
+          <div className="rounded-xl border border-danger-border bg-danger-subtle p-4 text-sm text-danger flex items-center gap-3">
             <FiAlertCircle size={16} className="shrink-0" />
             {error}
           </div>
         )}
         {success && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-center gap-3">
+          <div className="rounded-xl border border-success-border bg-success-subtle p-4 text-sm text-success flex items-center gap-3">
             <FiCheckCircle size={16} className="shrink-0" />
             {success}
           </div>
@@ -78,7 +78,7 @@ export default function ReportForm({ report }) {
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="label !mb-0">
-              Narrative Report <span className="text-red-500">*</span>
+              Narrative Report <span className="text-danger">*</span>
             </label>
             <Button
               type="button"
@@ -111,7 +111,7 @@ export default function ReportForm({ report }) {
                 className="rounded-xl border border-gray-100 bg-slate-50/50 p-4"
               >
                 <label className="label">
-                  {field.label} <span className="text-red-500">*</span>
+                  {field.label} <span className="text-danger">*</span>
                 </label>
                 <div className="file-input">
                   <input
@@ -143,7 +143,7 @@ export default function ReportForm({ report }) {
                     />
                     <button
                       type="button"
-                      className="touch-target absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+                      className="touch-target absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-danger-solid transition-colors"
                       aria-label={`Remove ${field.label}`}
                       onClick={() => {
                         const old = filesRef.current[field.key];
@@ -162,7 +162,7 @@ export default function ReportForm({ report }) {
 
         <div>
           <label className="label">
-            Event Photos <span className="text-red-500">*</span>
+            Event Photos <span className="text-danger">*</span>
           </label>
           <div className="file-input">
             <input
@@ -192,7 +192,7 @@ export default function ReportForm({ report }) {
                   />
                   <button
                     type="button"
-                    className="touch-target absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
+                    className="touch-target absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-sm hover:bg-danger-solid transition-colors"
                     aria-label={`Remove photo ${i + 1}`}
                     onClick={() => removePhoto(i)}
                   >
@@ -245,7 +245,7 @@ export default function ReportForm({ report }) {
                   </a>
                   <button
                     type="button"
-                    className="text-red-500 hover:text-red-700 text-xs font-medium px-2 shrink-0"
+                    className="text-danger hover:text-danger text-xs font-medium px-2 shrink-0"
                     onClick={() => removeOtherAttachment(i)}
                   >
                     Remove

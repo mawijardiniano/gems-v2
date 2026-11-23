@@ -266,14 +266,14 @@ function Toast({ message, type, visible }) {
       <div
         className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-lg border ${
           type === "success"
-            ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-            : "bg-red-50 border-red-200 text-red-800"
+            ? "bg-success-subtle border-success-border text-success"
+            : "bg-danger-subtle border-danger-border text-danger"
         }`}
       >
         {type === "success" ? (
           <FaCheckCircle className="text-emerald-500 shrink-0 text-lg" />
         ) : (
-          <FaTimes className="text-red-500 shrink-0 text-lg" />
+          <FaTimes className="text-danger shrink-0 text-lg" />
         )}
         <p className="text-sm font-semibold">{message}</p>
       </div>
@@ -667,7 +667,7 @@ export default function PersonalInformationContent({ profile }) {
       icon: <FaTint />,
       label: "Blood Type",
       value: formData.bloodType,
-      color: "bg-red-50 text-red-600",
+      color: "bg-danger-subtle text-danger",
     },
   ];
 
@@ -913,7 +913,7 @@ export default function PersonalInformationContent({ profile }) {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
           <div className="px-8 py-5 border-b border-gray-50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <div className="w-10 h-10 rounded-xl bg-success-subtle flex items-center justify-center text-success">
                 <FaGraduationCap />
               </div>
               <div>

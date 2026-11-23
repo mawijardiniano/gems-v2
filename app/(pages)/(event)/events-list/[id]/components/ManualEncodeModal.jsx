@@ -445,13 +445,13 @@ export default function ManualEncodeModal({
               className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${
                 pickedSexMissing
                   ? "border-secondary-200 bg-secondary-50"
-                  : "border-emerald-200 bg-emerald-50"
+                  : "border-success-border bg-success-subtle"
               }`}
             >
               {pickedSexMissing ? (
                 <FiAlertCircle className="mt-0.5 shrink-0 text-secondary-600" size={14} />
               ) : (
-                <FiCheck className="mt-0.5 shrink-0 text-emerald-600" size={14} />
+                <FiCheck className="mt-0.5 shrink-0 text-success" size={14} />
               )}
               <div className="min-w-0">
                 <p
@@ -463,7 +463,7 @@ export default function ManualEncodeModal({
                 </p>
                 <p
                   className={`truncate text-xs ${
-                    pickedSexMissing ? "text-secondary-700" : "text-emerald-700"
+                    pickedSexMissing ? "text-secondary-700" : "text-success"
                   }`}
                 >
                   {[chosenId, chosenDetails || type].filter(Boolean).join(" • ")}
@@ -486,7 +486,7 @@ export default function ManualEncodeModal({
                   ? "border-rose-200 bg-rose-50 text-rose-700"
                   : feedback.tone === "warn"
                     ? "border-secondary-200 bg-secondary-50 text-secondary-800"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-success-border bg-success-subtle text-success"
               }`}
             >
               {feedback.tone === "ok" ? (

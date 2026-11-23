@@ -43,7 +43,7 @@ export default function GpbEditProjectModal({
               )}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              All fields marked <span className="text-red-500">*</span> are
+              All fields marked <span className="text-danger">*</span> are
               required
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function GpbEditProjectModal({
         {/* Scrollable body */}
         <div className="overflow-y-auto px-6 py-5 space-y-8 flex-1">
           {editError && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+            <div className="p-3 rounded-lg bg-danger-subtle border border-danger-border text-danger text-sm">
               {editError}
             </div>
           )}
@@ -77,7 +77,7 @@ export default function GpbEditProjectModal({
             </div>
             <div className="space-y-4 pl-8">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Type <span className="text-red-500">*</span>
+                Project Type <span className="text-danger">*</span>
               </label>
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
@@ -102,7 +102,7 @@ export default function GpbEditProjectModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Gender Issue / GAD Mandate{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
@@ -129,7 +129,7 @@ export default function GpbEditProjectModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Cause of the Gender Issue{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="space-y-2">
                     {(editRow.cause_gender_issue || [""]).map(
@@ -169,7 +169,7 @@ export default function GpbEditProjectModal({
                                   );
                                 }}
                                 aria-label="Remove cause"
-                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-danger hover:bg-red-200 text-base font-bold transition"
                               >
                                 −
                               </button>
@@ -189,7 +189,7 @@ export default function GpbEditProjectModal({
                                   )
                                 }
                                 aria-label="Add cause"
-                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                                className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-success hover:bg-green-200 text-base font-bold transition"
                               >
                                 +
                               </button>
@@ -218,7 +218,7 @@ export default function GpbEditProjectModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     GAD Result Statement / GAD Objective{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="space-y-2">
                     {(editRow.gad_objective || [""]).map((val, idx) => (
@@ -248,7 +248,7 @@ export default function GpbEditProjectModal({
                                 handleEditRowChange("gad_objective", arr);
                               }}
                               aria-label="Remove objective"
-                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-danger hover:bg-red-200 text-base font-bold transition"
                             >
                               −
                             </button>
@@ -264,7 +264,7 @@ export default function GpbEditProjectModal({
                                 ])
                               }
                               aria-label="Add objective"
-                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                              className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-success hover:bg-green-200 text-base font-bold transition"
                             >
                               +
                             </button>
@@ -293,7 +293,7 @@ export default function GpbEditProjectModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Relevant Agency MFO/PAP{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
@@ -321,7 +321,7 @@ export default function GpbEditProjectModal({
             <div className="space-y-4 pl-8">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                  GAD Activity <span className="text-red-500">*</span>
+                  GAD Activity <span className="text-danger">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
                   Type the activity title, then its description underneath.
@@ -373,7 +373,7 @@ export default function GpbEditProjectModal({
                             type="button"
                             onClick={() => handleRemoveEditActivityRow(idx)}
                             aria-label="Remove activity"
-                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-danger hover:bg-red-200 text-base font-bold transition"
                           >
                             −
                           </button>
@@ -384,7 +384,7 @@ export default function GpbEditProjectModal({
                             type="button"
                             onClick={handleAddEditActivityRow}
                             aria-label="Add activity"
-                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-success hover:bg-green-200 text-base font-bold transition"
                           >
                             +
                           </button>
@@ -440,7 +440,7 @@ export default function GpbEditProjectModal({
                               );
                             }}
                             aria-label="Remove indicator"
-                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 text-base font-bold transition"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 text-danger hover:bg-red-200 text-base font-bold transition"
                           >
                             −
                           </button>
@@ -462,7 +462,7 @@ export default function GpbEditProjectModal({
                               )
                             }
                             aria-label="Add indicator"
-                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600 hover:bg-green-200 text-base font-bold transition"
+                            className="touch-target w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-success hover:bg-green-200 text-base font-bold transition"
                           >
                             +
                           </button>
@@ -475,7 +475,7 @@ export default function GpbEditProjectModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
-                    GAD Budget <span className="text-red-500">*</span>
+                    GAD Budget <span className="text-danger">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -497,7 +497,7 @@ export default function GpbEditProjectModal({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Source of Budget <span className="text-red-500">*</span>
+                    Source of Budget <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
@@ -512,7 +512,7 @@ export default function GpbEditProjectModal({
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   Responsible Unit/Office{" "}
-                  <span className="text-red-500">*</span>
+                  <span className="text-danger">*</span>
                 </label>
                 <OfficeMultiSelect
                   value={editRow.responsible_office}
@@ -535,7 +535,7 @@ export default function GpbEditProjectModal({
           </button>
           <div className="flex flex-col items-end gap-1">
             {!isEditRowValid(editRow) && (
-              <span className="text-xs text-red-500">
+              <span className="text-xs text-danger">
                 Please fill in all required fields.
               </span>
             )}

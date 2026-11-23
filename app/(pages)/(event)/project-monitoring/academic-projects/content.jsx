@@ -14,7 +14,7 @@ const BADGE_CLASSES = {
   "Curriculum Development": "bg-secondary-100 text-secondary-700",
   "Instructional Materials": "bg-secondary-100 text-secondary-700",
   "Accreditation (AACCUP/ISO)": "bg-secondary-100 text-secondary-700",
-  "Faculty Development": "bg-emerald-100 text-emerald-700",
+  "Faculty Development": "bg-emerald-100 text-success",
   "Student Development": "bg-cyan-100 text-cyan-700",
   "Instruction / Pedagogy": "bg-rose-100 text-rose-700",
   Others: "bg-gray-100 text-gray-700",

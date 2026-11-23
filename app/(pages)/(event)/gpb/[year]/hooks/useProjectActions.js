@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 /* Reviewer comments on a project: the "add comment" modal and deleting a
    comment from a row. The author is taken from the session by the API. */
-export function useProjectComments({ onChanged }) {
+export function useProjectComments({ onChanged, confirm }) {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [comment, setComment] = useState("");
   const [commentType, setCommentType] = useState("approval");
@@ -68,7 +68,15 @@ export function useProjectComments({ onChanged }) {
   /* One delete at a time, and only after the reviewer confirms. */
   const handleDeleteComment = async (projectId, commentId) => {
     if (deletingCommentRef.current) return;
-    if (!window.confirm("Delete this comment?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this comment?",
+        confirmLabel: "Delete",
+        tone: "danger",
+      }))
+    ) {
+      return;
+    }
     deletingCommentRef.current = true;
     setCommentError("");
     try {

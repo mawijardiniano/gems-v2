@@ -90,7 +90,7 @@ export default function DiscoverEventContent() {
   if (error) {
     return (
       <div className="p-6 space-y-4 max-w-5xl mx-auto">
-        <div className="p-4 rounded border border-red-300 bg-red-50 text-red-700">
+        <div className="p-4 rounded border border-red-300 bg-danger-subtle text-danger">
           {error}
         </div>
 
@@ -161,7 +161,7 @@ export default function DiscoverEventContent() {
                 {isAttendanceAllowed(event) && !isPast(event) && (
                   <a
                     href={`/attend/${event._id}`}
-                    className="inline-block mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
+                    className="inline-block mt-2 px-4 py-2 bg-success-solid text-white rounded-lg text-sm font-semibold hover:bg-emerald-700"
                   >
                     Mark Attendance (scan QR at venue)
                   </a>

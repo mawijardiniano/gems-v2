@@ -45,10 +45,10 @@ export default function AttendanceQrCard({
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div className="rounded-xl border border-emerald-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-success-border bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-subtle text-success">
               <FaClipboardCheck size={18} />
             </div>
             <div>
@@ -87,7 +87,7 @@ export default function AttendanceQrCard({
               <p className="break-all text-xs text-gray-500 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
                 {attendanceUrl}
               </p>
-              <p className="text-xs text-emerald-600 font-medium mt-2">
+              <p className="text-xs text-success font-medium mt-2">
                 → Opens the attendance form — no login needed
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -100,7 +100,7 @@ export default function AttendanceQrCard({
                 >
                   {linkCopied ? (
                     <>
-                      <FiCheck size={13} className="text-emerald-600" />
+                      <FiCheck size={13} className="text-success" />
                       Copied!
                     </>
                   ) : (

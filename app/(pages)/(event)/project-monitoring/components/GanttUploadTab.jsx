@@ -116,7 +116,7 @@ export default function GanttUploadTab({ onApply }) {
       </button>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p className="rounded-lg border border-danger-border bg-danger-subtle px-3 py-2 text-xs text-danger">
           {error}
         </p>
       )}
@@ -125,7 +125,7 @@ export default function GanttUploadTab({ onApply }) {
         <div className="rounded-lg border border-gray-200 p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm text-gray-700">
-              <FaFileAlt className="text-emerald-600" />
+              <FaFileAlt className="text-success" />
               <span className="font-medium">{file.name}</span>
               <span className="text-xs text-gray-500">
                 {formatSize(file.size)} · {rows.length} activities
@@ -134,7 +134,7 @@ export default function GanttUploadTab({ onApply }) {
             <button
               type="button"
               onClick={reset}
-              className="touch-target text-gray-500 hover:text-red-500"
+              className="touch-target text-gray-500 hover:text-danger"
               aria-label="Remove file"
             >
               <FaTimes size={12} />

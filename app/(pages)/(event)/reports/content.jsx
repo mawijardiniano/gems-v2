@@ -822,13 +822,13 @@ export default function ReportsContent({ scopeCollege = "" }) {
           </div>
 
           {status && (
-            <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+            <p className="text-xs text-success flex items-center gap-1.5">
               <FaCheckCircle size={11} />
               {status}
             </p>
           )}
           {error && (
-            <p className="text-xs text-red-600 flex items-center gap-1.5">
+            <p className="text-xs text-danger flex items-center gap-1.5">
               <FaExclamationTriangle size={11} />
               {error}
             </p>
@@ -885,7 +885,7 @@ export default function ReportsContent({ scopeCollege = "" }) {
                       item.level === "warning"
                         ? "text-secondary-700"
                         : item.level === "ok"
-                          ? "text-emerald-700"
+                          ? "text-success"
                           : "text-gray-600"
                     }
                   >

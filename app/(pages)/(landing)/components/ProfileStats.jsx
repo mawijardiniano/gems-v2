@@ -427,14 +427,14 @@ export default function ProfileStats() {
   if (error && !activeData) {
     return (
       <section className="my-20 px-4 text-center">
-        <div className="mx-auto max-w-md rounded-2xl border border-red-100 bg-red-50 p-8">
+        <div className="mx-auto max-w-md rounded-2xl border border-red-100 bg-danger-subtle p-8">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-            <FiDownload className="h-8 w-8 text-red-500" />
+            <FiDownload className="h-8 w-8 text-danger" />
           </div>
-          <h3 className="text-lg font-semibold text-red-800 mb-2">
+          <h3 className="text-lg font-semibold text-danger mb-2">
             Unable to Load Statistics
           </h3>
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-danger">
             We couldn't retrieve the gender equality data. Please try
             selecting a different term or refresh the page.
           </p>

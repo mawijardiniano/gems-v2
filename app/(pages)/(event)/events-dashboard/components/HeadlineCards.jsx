@@ -61,7 +61,7 @@ export default function HeadlineCards({ dashboard }) {
           icon={AlertCircle}
           iconClass={
             useSample && sampleImpact && sampleImpact.gaps.length === 0
-              ? "bg-emerald-50 text-emerald-600"
+              ? "bg-success-subtle text-success"
               : "bg-secondary-50 text-secondary-600"
           }
           label="Participation Gaps"
@@ -89,7 +89,7 @@ export default function HeadlineCards({ dashboard }) {
         />
         <StatCard
           icon={PiggyBank}
-          iconClass="bg-emerald-50 text-emerald-600"
+          iconClass="bg-success-subtle text-success"
           label="Budget Utilized"
           source="live"
           value={`${projectsSnapshot.utilizationPct}%`}

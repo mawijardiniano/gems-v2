@@ -80,7 +80,7 @@ export default function EventsDashboardContent() {
       </div>
 
       {eventsError && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{eventsError}</span>
         </div>

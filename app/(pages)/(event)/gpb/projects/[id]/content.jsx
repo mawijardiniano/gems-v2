@@ -56,8 +56,8 @@ export default function ProjectContent() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-        <div className="bg-white rounded-2xl border border-red-200 p-8 text-center max-w-md w-full">
-          <p className="text-red-600 font-medium mb-4">{error}</p>
+        <div className="bg-white rounded-2xl border border-danger-border p-8 text-center max-w-md w-full">
+          <p className="text-danger font-medium mb-4">{error}</p>
           <button
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-600 bg-secondary-50 rounded-lg hover:bg-secondary-100 transition"
@@ -149,7 +149,7 @@ export default function ProjectContent() {
     if (type === "Client Focused")
       return "bg-secondary-100 text-secondary-700 border-secondary-200";
     if (type === "Organization Focused")
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      return "bg-emerald-100 text-success border-success-border";
     if (type === "Attributed Program")
       return "bg-secondary-100 text-secondary-700 border-secondary-200";
     return "bg-gray-100 text-gray-600 border-gray-200";
@@ -220,7 +220,7 @@ export default function ProjectContent() {
               <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
                 <FiCalendar className="h-3.5 w-3.5" /> GAD Budget
               </div>
-              <p className="text-2xl font-bold text-emerald-600">
+              <p className="text-2xl font-bold text-success">
                 ₱{" "}
                 {Number(
                   project.gad_budget?.value || project.gad_budget || 0,
@@ -271,7 +271,7 @@ export default function ProjectContent() {
                 <p
                   className={`mt-1.5 text-xs font-medium ${
                     aggregateExceeded
-                      ? "text-emerald-600"
+                      ? "text-success"
                       : "text-secondary-600"
                   }`}
                 >

@@ -102,7 +102,7 @@ export default function StagingRecordsTable({
                         (e) => e.level !== "warning",
                       ) && (
                         <span
-                          className="text-xs text-red-600 font-semibold"
+                          className="text-xs text-danger font-semibold"
                           title="Validation errors"
                         >
                           !

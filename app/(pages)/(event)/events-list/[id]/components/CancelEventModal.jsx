@@ -38,7 +38,7 @@ export default function CancelEventModal({
         aria-labelledby="cancel-event-title"
       >
         <div className="border-b border-gray-200 px-6 py-4">
-          <h2 id="cancel-event-title" className="text-lg font-semibold text-red-600">
+          <h2 id="cancel-event-title" className="text-lg font-semibold text-danger">
             Cancel Event
           </h2>
         </div>
@@ -72,7 +72,7 @@ export default function CancelEventModal({
               : `${reason.trim().length}/500 characters`}
           </p>
 
-          {error && <p className="text-red-600 mt-2">{error}</p>}
+          {error && <p className="text-danger mt-2">{error}</p>}
         </div>
 
         <div className="px-6 py-4 flex justify-end gap-3">
@@ -87,7 +87,7 @@ export default function CancelEventModal({
           <button
             onClick={onConfirm}
             disabled={!canSubmit}
-            className="px-4 py-2 bg-red-600 text-white rounded text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-danger-solid text-white rounded text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             {loading ? "Cancelling..." : "Yes, cancel"}
           </button>

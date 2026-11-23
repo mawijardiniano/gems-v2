@@ -54,7 +54,7 @@ export default function EventDangerZone({
         <div className="rounded-xl border border-amber-100 bg-white p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning-subtle text-warning">
                 <FiX size={18} />
               </div>
               <div>
@@ -80,7 +80,7 @@ export default function EventDangerZone({
 
             {canCancel ? (
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 shrink-0"
+                className="inline-flex items-center gap-2 rounded-lg border border-warning-border bg-warning-subtle px-4 py-2 text-xs font-semibold text-warning transition-colors hover:bg-amber-100 shrink-0"
                 onClick={() => setShowCancelModal(true)}
               >
                 <FiX size={13} />
@@ -88,7 +88,7 @@ export default function EventDangerZone({
               </button>
             ) : (
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 shrink-0 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-success-border bg-success-subtle px-4 py-2 text-xs font-semibold text-success transition-colors hover:bg-emerald-100 shrink-0 disabled:opacity-50"
                 onClick={handleReinstateEvent}
                 disabled={reinstating}
               >
@@ -105,7 +105,7 @@ export default function EventDangerZone({
         <div className="rounded-xl border border-red-100 bg-white p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger-subtle text-danger">
                 <FiTrash2 size={18} />
               </div>
               <div>
@@ -166,8 +166,8 @@ export default function EventDangerZone({
             </div>
             <div className="modal-body">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                  <FiTrash2 className="text-red-500" size={20} />
+                <div className="w-12 h-12 rounded-full bg-danger-subtle flex items-center justify-center shrink-0">
+                  <FiTrash2 className="text-danger" size={20} />
                 </div>
                 <div>
                   <p className="text-md font-medium text-gray-900">

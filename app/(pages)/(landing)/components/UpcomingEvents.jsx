@@ -15,7 +15,7 @@ const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
-  Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
@@ -138,7 +138,7 @@ function UpcomingEventCard({ event, onOpen, isRegistered = false }) {
 
         {/* Registered pill */}
         {isRegistered && (
-          <div className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          <div className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-success-subtle px-2.5 py-1 text-xs font-medium text-success">
             <FaCheckCircle className="text-xs" />
             Registered ✓
           </div>

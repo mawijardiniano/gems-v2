@@ -70,7 +70,7 @@ export default function SeatHistoryPanel({ header, name }) {
           Loading history…
         </p>
       ) : state.status === "error" ? (
-        <div className="text-sm text-red-600">
+        <div className="text-sm text-danger">
           {state.error}
           <button
             type="button"
@@ -155,7 +155,7 @@ function HistoryRow({ entry }) {
             </span>
           ) : null}
           {entry.isOpen ? (
-            <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-success-subtle text-success">
               Current
             </span>
           ) : null}

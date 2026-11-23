@@ -91,7 +91,7 @@ export default function ManualUploadContent() {
             <button
               type="submit"
               disabled={d.busyAction !== ""}
-              className="px-4 py-2 rounded bg-emerald-600 text-white text-sm disabled:opacity-50"
+              className="px-4 py-2 rounded bg-success-solid text-white text-sm disabled:opacity-50"
             >
               {d.busyAction === "Upload to Staging"
                 ? "Uploading..."

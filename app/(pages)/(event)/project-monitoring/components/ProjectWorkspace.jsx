@@ -151,7 +151,7 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
         <dt className="text-xs text-gray-500">{label}</dt>
         <dd
           className={`text-sm font-medium text-right ${
-            over ? "text-red-600" : "text-gray-900"
+            over ? "text-danger" : "text-gray-900"
           }`}
         >
           {percent}%
@@ -679,7 +679,7 @@ export default function ProjectWorkspace({ config }) {
                   <button
                     type="button"
                     onClick={() => setDeletingProject(project)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg border border-danger-border bg-white px-3.5 py-2 text-xs font-medium text-danger hover:bg-danger-subtle transition-colors"
                   >
                     <FaTrash size={11} />
                     Delete
@@ -734,7 +734,7 @@ export default function ProjectWorkspace({ config }) {
         />
         <StatCard
           icon={<FaCheckCircle size={14} />}
-          iconClass="bg-emerald-50 text-emerald-600"
+          iconClass="bg-success-subtle text-success"
           label="Completed"
           value={stats.completed}
         />
@@ -816,7 +816,7 @@ export default function ProjectWorkspace({ config }) {
           <FaSpinner className="animate-spin" size={20} />
         </div>
       ) : error ? (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="flex items-start gap-2 rounded-xl border border-danger-border bg-danger-subtle px-4 py-3 text-sm text-danger">
           <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
           {error}
         </div>

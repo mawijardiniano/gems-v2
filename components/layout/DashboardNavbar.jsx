@@ -200,7 +200,7 @@ export default function DashboardNavbar({
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-danger-subtle transition-colors disabled:opacity-50"
                 >
                   <FaSignOutAlt size={14} />
                   {loggingOut ? "Logging out..." : "Log out"}

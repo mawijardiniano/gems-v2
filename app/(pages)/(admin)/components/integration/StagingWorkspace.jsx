@@ -273,7 +273,7 @@ export default function StagingWorkspace({ d }) {
               <button
                 type="button"
                 onClick={confirmDeleteBatch}
-                className="px-3 py-1.5 rounded bg-red-600 text-white text-sm"
+                className="px-3 py-1.5 rounded bg-danger-solid text-white text-sm"
               >
                 Delete Batch
               </button>

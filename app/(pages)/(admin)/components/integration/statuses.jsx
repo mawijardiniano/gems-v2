@@ -2,13 +2,13 @@
 
 export const RECORD_STATUS_STYLES = {
   pending: "bg-gray-100 text-gray-700",
-  valid: "bg-green-100 text-green-700",
-  invalid: "bg-red-100 text-red-700",
+  valid: "bg-green-100 text-success",
+  invalid: "bg-red-100 text-danger",
   approved: "bg-secondary-100 text-secondary-700",
   rejected: "bg-orange-100 text-orange-700",
-  duplicate: "bg-yellow-100 text-yellow-700",
-  migrated: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
+  duplicate: "bg-yellow-100 text-warning",
+  migrated: "bg-emerald-100 text-success",
+  failed: "bg-red-100 text-danger",
 };
 
 export const BATCH_STATUS_STYLES = {
@@ -16,8 +16,8 @@ export const BATCH_STATUS_STYLES = {
   validating: "bg-secondary-100 text-secondary-700",
   ready: "bg-secondary-100 text-secondary-700",
   migrating: "bg-secondary-100 text-secondary-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  failed: "bg-red-100 text-red-700",
+  completed: "bg-emerald-100 text-success",
+  failed: "bg-red-100 text-danger",
 };
 
 export default function StatusBadge({ status, styles = RECORD_STATUS_STYLES }) {
@@ -36,9 +36,9 @@ export function MessageBanner({ message }) {
   if (!message) return null;
   const style =
     message.type === "error"
-      ? "bg-red-50 border-red-300 text-red-700"
+      ? "bg-danger-subtle border-red-300 text-danger"
       : message.type === "success"
-        ? "bg-green-50 border-green-300 text-green-700"
+        ? "bg-success-subtle border-green-300 text-success"
         : "bg-slate-100 border-slate-300 text-slate-700";
   return (
     <div className={`border rounded px-4 py-3 text-sm ${style}`}>

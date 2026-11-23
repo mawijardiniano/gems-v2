@@ -8,7 +8,7 @@ import {
 } from "@/data/lib/uploadClient";
 
 /* The "Update Status" modal: status, reason and an optional scanned copy. */
-export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
+export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated, onError }) {
   const [open, setOpen] = useState(false);
   const [statusType, setStatusType] = useState("approved");
   const [reasonField, setReasonField] = useState("");
@@ -79,7 +79,7 @@ export function useGpbStatusUpdate({ gpbId, gpbStatus, onUpdated }) {
       console.error(error);
       // The new upload is not linked to anything if the update failed.
       if (uploadedKey) await deleteUploadedFile(uploadedKey);
-      alert(error.message);
+      onError?.(error.message);
     } finally {
       setSaving(false);
     }

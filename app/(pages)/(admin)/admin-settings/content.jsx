@@ -67,22 +67,22 @@ const ACTION_CONFIG = {
   },
   EVENT_REGISTER: {
     icon: <FaCalendarCheck />,
-    color: "bg-emerald-100 text-emerald-600",
+    color: "bg-emerald-100 text-success",
     label: "Event Registration",
   },
   EVENT_CREATE: {
     icon: <FaPlusCircle />,
-    color: "bg-green-100 text-green-600",
+    color: "bg-green-100 text-success",
     label: "Event Created",
   },
   EVENT_STATUS_UPDATE: {
     icon: <FaTimesCircle />,
-    color: "bg-red-100 text-red-600",
+    color: "bg-red-100 text-danger",
     label: "Event Status Change",
   },
   EVENT_UPDATE: {
     icon: <FaEdit />,
-    color: "bg-yellow-100 text-yellow-600",
+    color: "bg-yellow-100 text-warning",
     label: "Event Updated",
   },
   CHANGE_PASSWORD: {
@@ -443,9 +443,9 @@ export default function AdminSettings() {
                 </div>
               </div>
               {passwordChangedAt && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-100 shrink-0">
+                <div className="flex items-center gap-2 px-3 py-2 bg-success-subtle rounded-lg border border-emerald-100 shrink-0">
                   <FaCheckCircle className="text-emerald-500 text-xs" />
-                  <span className="text-xs text-emerald-700 font-medium">
+                  <span className="text-xs text-success font-medium">
                     Password is active
                   </span>
                 </div>
@@ -519,8 +519,8 @@ export default function AdminSettings() {
                   <div
                     className={`p-3 rounded-lg text-sm ${
                       termMessage.type === "error"
-                        ? "bg-red-50 text-red-700 border border-red-100"
-                        : "bg-green-50 text-green-700 border border-green-100"
+                        ? "bg-danger-subtle text-danger border border-red-100"
+                        : "bg-success-subtle text-success border border-green-100"
                     }`}
                   >
                     {termMessage.text}
@@ -797,8 +797,8 @@ export default function AdminSettings() {
                   role="alert"
                   className={`mb-3 p-3 rounded-lg text-sm ${
                     message.type === "error"
-                      ? "bg-red-50 text-red-700 border border-red-100"
-                      : "bg-green-50 text-green-700 border border-green-100"
+                      ? "bg-danger-subtle text-danger border border-red-100"
+                      : "bg-success-subtle text-success border border-green-100"
                   }`}
                 >
                   {message.text}

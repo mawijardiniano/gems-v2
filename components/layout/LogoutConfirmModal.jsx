@@ -48,8 +48,8 @@ export default function LogoutConfirmModal({
       }
     >
       <div className="space-y-4 text-center">
-        <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
-          <FaSignOutAlt className="text-2xl text-red-500" aria-hidden="true" />
+        <div className="w-16 h-16 mx-auto rounded-full bg-danger-subtle flex items-center justify-center">
+          <FaSignOutAlt className="text-2xl text-danger" aria-hidden="true" />
         </div>
         <p className="text-sm text-gray-500">
           Are you sure you want to log out? You will need to sign in again

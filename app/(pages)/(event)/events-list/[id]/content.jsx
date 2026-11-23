@@ -26,6 +26,7 @@ import { useEventAttendance } from "./hooks/useEventAttendance";
 import { useAttendanceQr } from "./hooks/useAttendanceQr";
 import { useMyProjects } from "./hooks/useMyProjects";
 import Button from "@/components/ui/Button";
+import ActionToast, { useActionToast } from "@/components/ActionToast";
 
 const TABS = [
   { key: "overview", label: "Overview" },
@@ -54,6 +55,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
   const [guestSexFilter, setGuestSexFilter] = useState("all");
   const [guestSearch, setGuestSearch] = useState("");
   const [guestValidationFilter, setGuestValidationFilter] = useState("all");
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
 
   const record = useEventRecord(eventId);
   const { event, userId, userRole, loading, error } = record;
@@ -208,7 +210,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
 
       {guestSheet.error && (
         <div
-          className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="flex items-center justify-between gap-3 rounded-xl border border-danger-border bg-danger-subtle px-4 py-3 text-sm text-danger"
           role="alert"
         >
           <span>
@@ -217,7 +219,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           <button
             type="button"
             onClick={guestSheet.reload}
-            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-danger hover:bg-red-100"
           >
             Retry
           </button>
@@ -275,10 +277,12 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           setValidationFilter={setGuestValidationFilter}
           onValidate={guestSheet.validate}
           handleDownloadGuestsPdf={(list) =>
-            handleDownloadGuestsPdf(list, event, buildRows)
+            handleDownloadGuestsPdf(list, event, buildRows, (msg) =>
+              showToast(msg, "error"),
+            )
           }
           handleDownloadBlankGuestsPdf={() =>
-            handleDownloadBlankGuestsPdf(event)
+            handleDownloadBlankGuestsPdf(event, (msg) => showToast(msg, "error"))
           }
           handlePrintGuests={(list) =>
             handlePrintGuests(list, event, buildRows)
@@ -323,6 +327,7 @@ export default function EventManageContent({ backPath = "/events-list" }) {
           viewerId={userId}
         />
       )}
+      <ActionToast toast={toast} onClose={hideToast} />
     </div>
   );
 }

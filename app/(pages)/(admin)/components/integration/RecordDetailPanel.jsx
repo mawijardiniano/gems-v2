@@ -13,7 +13,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
         <span className="font-semibold text-gray-900">
           Row {record.row_number}
           {record.status === "duplicate" && (
-            <span className="ml-2 text-yellow-600">(Duplicate)</span>
+            <span className="ml-2 text-warning">(Duplicate)</span>
           )}
         </span>
         <button
@@ -27,7 +27,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
       </div>
 
       {record.duplicate_of && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-yellow-700">
+        <div className="bg-warning-subtle border border-warning-border rounded p-2 text-warning">
           <div className="font-semibold mb-1">Duplicate Of:</div>
           <div>
             •{" "}
@@ -42,11 +42,11 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
         <>
           {record.validation_errors.filter((e) => e.level !== "warning")
             .length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded p-2">
-              <div className="font-semibold text-red-700 mb-1">
+            <div className="bg-danger-subtle border border-danger-border rounded p-2">
+              <div className="font-semibold text-danger mb-1">
                 Validation Errors:
               </div>
-              <div className="space-y-1 text-red-600">
+              <div className="space-y-1 text-danger">
                 {record.validation_errors
                   .filter((e) => e.level !== "warning")
                   .map((err, idx) => (

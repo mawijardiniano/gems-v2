@@ -158,14 +158,14 @@ export default function IctuDashboard() {
     {
       label: "Completed",
       value: stats.byStatus.completed,
-      icon: <FaCheckCircle className="text-emerald-600" />,
-      color: "bg-emerald-50",
+      icon: <FaCheckCircle className="text-success" />,
+      color: "bg-success-subtle",
     },
     {
       label: "Failed",
       value: stats.byStatus.failed,
-      icon: <FaExclamationTriangle className="text-red-600" />,
-      color: "bg-red-50",
+      icon: <FaExclamationTriangle className="text-danger" />,
+      color: "bg-danger-subtle",
     },
   ];
 
@@ -224,7 +224,7 @@ export default function IctuDashboard() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+          <div className="rounded-md bg-danger-subtle border border-danger-border p-4 text-sm text-danger">
             {error}
           </div>
         )}

@@ -16,7 +16,7 @@ import GadProjectsTable from "./components/GadProjectsTable";
 
 const ErrorBanner = ({ children }) => (
   <div
-    className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up"
+    className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up"
     role="alert"
   >
     <FaExclamationTriangle className="h-5 w-5 shrink-0" />

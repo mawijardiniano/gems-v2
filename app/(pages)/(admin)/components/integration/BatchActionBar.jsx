@@ -68,7 +68,7 @@ export default function BatchActionBar({
           type="button"
           disabled={!canMigrate}
           onClick={() => setConfirmingMigrate(true)}
-          className="px-3 py-1.5 rounded bg-green-600 text-white text-sm disabled:opacity-50"
+          className="px-3 py-1.5 rounded bg-success-solid text-white text-sm disabled:opacity-50"
         >
           {busyAction === "Migrate Approved"
             ? "Migrating..."
@@ -121,7 +121,7 @@ export default function BatchActionBar({
                   setConfirmingMigrate(false);
                   onMigrate();
                 }}
-                className="px-3 py-1.5 rounded bg-green-600 text-white text-sm"
+                className="px-3 py-1.5 rounded bg-success-solid text-white text-sm"
               >
                 Migrate Now
               </button>

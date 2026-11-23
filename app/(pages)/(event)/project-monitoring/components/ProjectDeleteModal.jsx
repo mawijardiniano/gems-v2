@@ -70,8 +70,8 @@ export default function ProjectDeleteModal({
         aria-modal="true"
         aria-labelledby="project-delete-title"
       >
-        <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
-          <FaTrash className="text-2xl text-red-500" />
+        <div className="w-16 h-16 mx-auto rounded-full bg-danger-subtle flex items-center justify-center">
+          <FaTrash className="text-2xl text-danger" />
         </div>
 
         <div className="space-y-2">
@@ -96,7 +96,7 @@ export default function ProjectDeleteModal({
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 text-left">
+          <div className="flex items-start gap-2 rounded-lg border border-danger-border bg-danger-subtle px-3 py-2.5 text-sm text-danger text-left">
             <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
             {error}
           </div>
@@ -114,7 +114,7 @@ export default function ProjectDeleteModal({
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-danger-solid text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {deleting && <FaSpinner className="animate-spin" size={12} />}
             {deleting ? "Deleting…" : "Delete Project"}

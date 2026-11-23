@@ -247,7 +247,7 @@ export default function AcademicInformation() {
                     </div>
                   )}
                   {idError && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-danger text-xs mt-1 flex items-center gap-1">
                       <span>⚠</span> {idError}
                     </p>
                   )}

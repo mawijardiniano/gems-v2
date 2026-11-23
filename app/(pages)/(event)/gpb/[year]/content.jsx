@@ -20,6 +20,8 @@ import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import GpbEditProjectModal from "./components/GpbEditProjectModal";
 import AddProjectWizard from "./components/AddProjectWizard";
 import GpbProjectsTable from "./components/GpbProjectsTable";
+import { useConfirm } from "@/components/ui/useConfirm";
+import ActionToast, { useActionToast } from "@/components/ActionToast";
 
 /* Clears a transient notice after `ms`. */
 function useAutoClear(value, clear, ms) {
@@ -47,11 +49,14 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const add = useAddProject({ year, projects, onCreated: refreshAll });
   const edit = useEditProject({ year, projects, onSaved: refreshAll });
   const del = useDeleteProject({ onDeleted: refreshAll });
-  const comments = useProjectComments({ onChanged: refreshProjects });
+  const { confirm, confirmDialog } = useConfirm();
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
+  const comments = useProjectComments({ onChanged: refreshProjects, confirm });
   const statusUpdate = useGpbStatusUpdate({
     gpbId: gpb.gpbId,
     gpbStatus,
     onUpdated: () => gpb.fetchProjects({ quiet: true }),
+    onError: (message) => showToast(message, "error"),
   });
   const viewer = useScannedViewer(gpbStatus?.scanned_copy?.url);
 
@@ -148,14 +153,14 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       {loadError && (
         <div
-          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-danger-border bg-danger-subtle px-4 py-3 text-sm text-danger"
           role="alert"
         >
           <span>{loadError}</span>
           <button
             type="button"
             onClick={() => gpb.fetchProjects()}
-            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+            className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-danger hover:bg-red-100"
           >
             Retry
           </button>
@@ -165,7 +170,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
       {/* A failed comment delete happens outside the comment modal. */}
       {comments.commentError && !comments.showCommentForm && (
         <div
-          className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="mb-4 rounded-lg border border-danger-border bg-danger-subtle px-4 py-3 text-sm text-danger"
           role="alert"
         >
           {comments.commentError}
@@ -177,7 +182,7 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           <button
             type="button"
             onClick={add.openWizard}
-            className="px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
+            className="px-4 py-2 bg-success-solid text-white rounded-md font-medium hover:bg-green-700 transition"
           >
             + Add Project
           </button>
@@ -280,6 +285,8 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
           onDeleteComment={comments.handleDeleteComment}
         />
       )}
+      {confirmDialog}
+      <ActionToast toast={toast} onClose={hideToast} />
     </div>
   );
 }

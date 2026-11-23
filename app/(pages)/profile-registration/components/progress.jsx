@@ -54,7 +54,7 @@ export default function Progress() {
                     isActive
                       ? "text-secondary-600"
                       : isCompleted
-                      ? "text-emerald-600"
+                      ? "text-success"
                       : "text-gray-500"
                   }`}
                 >

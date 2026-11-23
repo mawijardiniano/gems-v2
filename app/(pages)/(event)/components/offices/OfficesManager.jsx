@@ -42,7 +42,7 @@ const TITLE = "Offices & Groups — University Officials";
 
 function OfficePill({ active }) {
   return active ? (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Active
     </span>
@@ -101,7 +101,7 @@ function OfficeRow({ office, canEdit, busy, onDeactivate, onReactivate }) {
               onClick={() => onReactivate(office)}
               disabled={busy}
               title="Reactivate this office"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-success-border bg-success-subtle px-3 py-1.5 text-xs font-medium text-success transition hover:bg-emerald-100 hover:border-emerald-300 disabled:opacity-50"
             >
               <FaRedo className="h-3 w-3" />
               Reactivate

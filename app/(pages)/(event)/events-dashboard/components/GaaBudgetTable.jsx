@@ -78,7 +78,7 @@ export default function GaaBudgetTable({ dashboard }) {
                             {budget.gadPercent}%
                           </span>
                         </td>
-                        <td className="py-3 pl-4 text-right text-sm font-semibold text-emerald-600">
+                        <td className="py-3 pl-4 text-right text-sm font-semibold text-success">
                           ₱ {formatAmount(budget.gadAnnualBudget, "—")}
                         </td>
                       </>

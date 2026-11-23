@@ -14,6 +14,8 @@ import {
 } from "./gfps-config";
 import { resolveSaveRequest } from "@/data/lib/gfpsSaveRequest";
 import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
+import { useConfirm } from "@/components/ui/useConfirm";
+import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
 
 /* Where the page-header "Add Member" button opens. The chair/head of agency is
    a single slot rather than a row list, so a dialog opened there could offer no
@@ -27,6 +29,8 @@ const DEFAULT_ADD_SECTION =
 export default function GFPSManager() {
   const [section, setSection] = useState(SECTIONS[0].key);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
   const [selectedOfficials, setSelectedOfficials] = useState([]);
   /* Typed names for manual member rows, keyed by their synthetic selection key.
      Kept beside the selection so a manual entry is edited in place rather than
@@ -150,9 +154,12 @@ export default function GFPSManager() {
   const handleAssignLegacy = async () => {
     if (!academicYear || copying) return;
     if (
-      !window.confirm(
-        `Assign the untagged legacy records to AY ${academicYear}? This tags them in place; nothing is deleted.`,
-      )
+      !(await confirm({
+        title: `Assign the untagged legacy records to AY ${academicYear}?`,
+        message: "This tags them in place; nothing is deleted.",
+        confirmLabel: "Assign",
+        tone: "primary",
+      }))
     ) {
       return;
     }
@@ -190,9 +197,12 @@ export default function GFPSManager() {
       return;
     }
     if (
-      !window.confirm(
-        `Copy the GFPS committee from AY ${source} to AY ${academicYear}? Copy the officials roster first if you have not.`,
-      )
+      !(await confirm({
+        title: `Copy the GFPS committee from AY ${source} to AY ${academicYear}?`,
+        message: "Copy the officials roster first if you have not.",
+        confirmLabel: "Copy",
+        tone: "primary",
+      }))
     ) {
       return;
     }
@@ -451,7 +461,7 @@ export default function GFPSManager() {
       }
     } catch (err) {
       console.error("SUBMIT ERROR:", err);
-      alert("An error occurred while saving");
+      showToast(errorText(err, "An error occurred while saving"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -522,7 +532,7 @@ export default function GFPSManager() {
                       Archived
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success-subtle text-success border border-success-border">
                       Active
                     </span>
                   )}
@@ -656,6 +666,8 @@ export default function GFPSManager() {
           ))}
         </div>
       )}
+      {confirmDialog}
+      <ActionToast toast={toast} onClose={hideToast} />
     </div>
   );
 }

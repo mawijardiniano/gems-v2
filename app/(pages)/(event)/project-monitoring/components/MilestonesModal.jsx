@@ -13,6 +13,7 @@ import {
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
 import { useDialog } from "@/hooks/useDialog";
+import { useConfirm } from "@/components/ui/useConfirm";
 import {
   MAX_GANTT_ACTIVITIES,
   emptyActivity,
@@ -44,7 +45,7 @@ const MILESTONE_STATUS_META = {
   },
   completed: {
     label: "Completed",
-    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    classes: "bg-success-subtle text-success border-success-border",
   },
 };
 
@@ -82,6 +83,7 @@ export default function MilestonesModal({
   onClose,
   onSaved,
 }) {
+  const { confirm, confirmDialog } = useConfirm();
   const fileLifecycle = useFileUploads();
   /* Index of the row whose proofs are uploading, or null. */
   /* A row whose proofs are uploading, or null; isUploadingTarget(i) per row. */
@@ -132,7 +134,7 @@ export default function MilestonesModal({
 
   /* Replaces the milestone list with ones generated from the Gantt chart.
      Proofs/status of milestones with the same title are kept. */
-  const regenerateMilestones = () => {
+  const regenerateMilestones = async () => {
     const generated = generateMilestonesFromGantt(activities);
     if (generated.length === 0) {
       setError(
@@ -150,11 +152,18 @@ export default function MilestonesModal({
     );
     if (
       lostProgress.length > 0 &&
-      !window.confirm(
-        `${lostProgress.length} milestone(s) with completed status or proofs no longer exist in the Gantt chart and will be removed:\n- ${lostProgress
-          .map((r) => r.title)
-          .join("\n- ")}\n\nContinue?`,
-      )
+      !(await confirm({
+        title: "Continue?",
+        message: (
+          <span className="whitespace-pre-line">
+            {`${lostProgress.length} milestone(s) with completed status or proofs no longer exist in the Gantt chart and will be removed:\n- ${lostProgress
+              .map((r) => r.title)
+              .join("\n- ")}`}
+          </span>
+        ),
+        confirmLabel: "Continue",
+        tone: "danger",
+      }))
     ) {
       return;
     }
@@ -438,7 +447,7 @@ export default function MilestonesModal({
 
         <div className={inline ? "space-y-4" : "p-5 space-y-4"}>
           {error && (
-            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+            <div className="flex items-start gap-2 rounded-lg border border-danger-border bg-danger-subtle px-3 py-2.5 text-sm text-danger">
               <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
               {error}
             </div>
@@ -700,7 +709,7 @@ export default function MilestonesModal({
                                           <button
                                             type="button"
                                             onClick={() => removeProof(i, file)}
-                                            className="touch-target text-gray-500 hover:text-red-500 transition-colors"
+                                            className="touch-target text-gray-500 hover:text-danger transition-colors"
                                             title="Remove proof"
                                           >
                                             <FaTimes size={9} />
@@ -754,7 +763,7 @@ export default function MilestonesModal({
                               <button
                                 type="button"
                                 onClick={() => removeRow(i)}
-                                className="touch-target text-gray-500 hover:text-red-500 transition-colors"
+                                className="touch-target text-gray-500 hover:text-danger transition-colors"
                                 title="Remove milestone"
                               >
                                 <FaTrash size={12} />
@@ -799,6 +808,7 @@ export default function MilestonesModal({
           </button>
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

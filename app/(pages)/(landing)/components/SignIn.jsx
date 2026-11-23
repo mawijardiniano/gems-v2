@@ -247,7 +247,7 @@ export default function LoginForm({ redirect, compact = false }) {
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
+              <div className="rounded-md bg-danger-subtle p-4">
                 <div className="flex">
                   <div className="shrink-0">
                     <svg
@@ -263,7 +263,7 @@ export default function LoginForm({ redirect, compact = false }) {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-danger">{error}</p>
                   </div>
                 </div>
               </div>

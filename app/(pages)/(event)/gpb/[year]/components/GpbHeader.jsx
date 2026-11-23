@@ -6,11 +6,11 @@ import PrintGPB from "../../../components/Print/PrintGPB";
 
 const BADGE_STYLES = {
   approved: {
-    badge: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    badge: "bg-success-subtle text-success border border-success-border",
     dot: "bg-emerald-500",
   },
   disapproved: {
-    badge: "bg-red-50 text-red-700 border border-red-200",
+    badge: "bg-danger-subtle text-danger border border-danger-border",
     dot: "bg-red-500",
   },
   default: {

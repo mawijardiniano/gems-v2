@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FaDownload } from "react-icons/fa";
+import ActionToast, { useActionToast } from "@/components/ActionToast";
 import {
   buildGanttPdf,
   ganttPdfFilename,
@@ -45,6 +46,7 @@ export default function PrintGantt({
 }) {
   const activities = ganttRows(project);
   const [busy, setBusy] = useState(false);
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
 
   const handleDownload = async () => {
     if (activities.length === 0 || busy) return;
@@ -68,26 +70,29 @@ export default function PrintGantt({
       pdf.save(ganttPdfFilename(project, pickGanttYear(project, activities)));
     } catch (err) {
       console.error("Gantt chart export failed", err);
-      alert("Unable to generate the Gantt chart. Please try again.");
+      showToast("Unable to generate the Gantt chart. Please try again.", "error");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      disabled={activities.length === 0 || busy}
-      title={
-        activities.length === 0
-          ? "No activities yet - nothing to download"
-          : "Download the project Gantt chart as a PDF"
-      }
-      className={className}
-    >
-      <FaDownload className="h-3 w-3" />
-      {busy ? "Preparing..." : label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={activities.length === 0 || busy}
+        title={
+          activities.length === 0
+            ? "No activities yet - nothing to download"
+            : "Download the project Gantt chart as a PDF"
+        }
+        className={className}
+      >
+        <FaDownload className="h-3 w-3" />
+        {busy ? "Preparing..." : label}
+      </button>
+      <ActionToast toast={toast} onClose={hideToast} />
+    </>
   );
 }

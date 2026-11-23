@@ -38,7 +38,7 @@ export default function BudgetCards({ budgetSummary, status, year }) {
         value={`₱ ${formatAmount(budgetSummary.usedBudget ?? 0)}`}
         badge={
           overBudget && (
-            <span className="text-xs font-semibold text-red-700 bg-red-100 border border-red-300 rounded-full px-2 py-0.5 whitespace-nowrap">
+            <span className="text-xs font-semibold text-danger bg-red-100 border border-red-300 rounded-full px-2 py-0.5 whitespace-nowrap">
               ⚠ Over budget
             </span>
           )
@@ -60,7 +60,7 @@ export default function BudgetCards({ budgetSummary, status, year }) {
           !hasBudget ? (
             "Budget allocation pending"
           ) : overBudget ? (
-            <span className="font-semibold text-red-600">
+            <span className="font-semibold text-danger">
               Over budget by ₱{formatAmount(budgetSummary.overBy)}
             </span>
           ) : (

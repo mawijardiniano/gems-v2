@@ -239,7 +239,7 @@ export default function EditProjectModal({
         <form onSubmit={handleSave} className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {error && (
-              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+              <div className="flex items-start gap-2 rounded-lg border border-danger-border bg-danger-subtle px-3 py-2.5 text-sm text-danger">
                 <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
                 {error}
               </div>

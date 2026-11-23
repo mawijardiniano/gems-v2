@@ -75,7 +75,7 @@ function EmptyState({ icon: Icon, title, description, action }) {
 function StatCard({ icon: Icon, label, value, sub, color = "blue" }) {
   const colorMap = {
     blue: "bg-secondary-50 text-secondary-600",
-    green: "bg-emerald-50 text-emerald-600",
+    green: "bg-success-subtle text-success",
     amber: "bg-secondary-50 text-secondary-600",
     violet: "bg-secondary-50 text-secondary-600",
   };
@@ -321,13 +321,13 @@ export default function GAABudgetContent() {
 
       {/* ── Success / Error Banners ─────────────────────────────── */}
       {success && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-success-border bg-success-subtle text-success text-sm animate-slide-up">
           <FaCheckCircle className="h-5 w-5 shrink-0" />
           <span>{success}</span>
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -489,7 +489,7 @@ export default function GAABudgetContent() {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <span className="text-sm font-bold text-emerald-600">
+                      <span className="text-sm font-bold text-success">
                         ₱ {fmt(b.gadAnnualBudget)}
                       </span>
                     </td>
@@ -505,7 +505,7 @@ export default function GAABudgetContent() {
                           </button>
                           <button
                             onClick={() => handleDeleteClick(b)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-subtle border border-danger-border rounded-lg hover:bg-red-100 hover:border-red-300 transition"
                           >
                             <FaTrash className="h-3 w-3" />
                             Delete
@@ -523,7 +523,7 @@ export default function GAABudgetContent() {
                           <button
                             onClick={() => handleDeleteClick(b)}
                             aria-label="Delete budget"
-                            className="touch-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition"
+                            className="touch-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-subtle border border-danger-border rounded-lg hover:bg-red-100 transition"
                           >
                             <FaTrash className="h-3 w-3" aria-hidden="true" />
                           </button>
@@ -561,10 +561,10 @@ export default function GAABudgetContent() {
             aria-labelledby={deleteTitleId}
             className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
           >
-            <div className="flex items-center justify-between px-6 py-4 bg-red-50 border-b border-red-200">
+            <div className="flex items-center justify-between px-6 py-4 bg-danger-subtle border-b border-danger-border">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
-                  <FaExclamationTriangle className="h-4 w-4 text-red-600" />
+                  <FaExclamationTriangle className="h-4 w-4 text-danger" />
                 </div>
                 <h3 id={deleteTitleId} className="text-sm font-semibold text-red-900">
                   Confirm Delete
@@ -574,7 +574,7 @@ export default function GAABudgetContent() {
                 type="button"
                 aria-label="Close"
                 onClick={cancelDelete}
-                className="touch-target text-red-400 hover:text-red-600 transition-colors"
+                className="touch-target text-red-400 hover:text-danger transition-colors"
               >
                 <FaTimes className="h-4 w-4" />
               </button>
@@ -608,7 +608,7 @@ export default function GAABudgetContent() {
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-red-200"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-danger-solid rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-red-200"
               >
                 {deleting ? (
                   <>
@@ -729,7 +729,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {displayError && (
-            <div className="flex items-center gap-2.5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-2.5 rounded-xl bg-danger-subtle border border-danger-border px-4 py-3 text-sm text-danger">
               <FaExclamationTriangle className="h-4 w-4 shrink-0" />
               <span>{displayError}</span>
             </div>
@@ -808,7 +808,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
                 Computed GAD Budget (₱)
               </label>
-              <div className="flex items-center gap-2.5 rounded-lg bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-emerald-700 font-bold text-base">
+              <div className="flex items-center gap-2.5 rounded-lg bg-success-subtle border border-success-border px-3.5 py-2.5 text-success font-bold text-base">
                 <FaMoneyBillWave className="h-4 w-4 shrink-0" />
                 <span>
                   {gadAnnualBudget.toLocaleString(undefined, {

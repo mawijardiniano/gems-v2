@@ -241,7 +241,7 @@ export default function ActualsEncoderModal({
 
         <div className="p-6 space-y-5">
           {error && (
-            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+            <div className="flex items-start gap-2 rounded-lg border border-danger-border bg-danger-subtle px-3 py-2.5 text-sm text-danger">
               <FaExclamationTriangle size={14} className="mt-0.5 shrink-0" />
               {error}
             </div>
@@ -272,8 +272,8 @@ export default function ActualsEncoderModal({
             <div
               className={`rounded-lg border px-3 py-2.5 ${
                 variance < 0
-                  ? "bg-red-50 border-red-200"
-                  : "bg-emerald-50 border-emerald-100"
+                  ? "bg-danger-subtle border-danger-border"
+                  : "bg-success-subtle border-emerald-100"
               }`}
             >
               <p
@@ -285,7 +285,7 @@ export default function ActualsEncoderModal({
               </p>
               <p
                 className={`text-sm font-bold mt-0.5 ${
-                  variance < 0 ? "text-red-700" : "text-emerald-700"
+                  variance < 0 ? "text-danger" : "text-success"
                 }`}
               >
                 {fmtPeso(variance)}
@@ -299,7 +299,7 @@ export default function ActualsEncoderModal({
                 <span>Utilization</span>
                 <span
                   className={`font-semibold ${
-                    utilization > 100 ? "text-red-600" : "text-emerald-600"
+                    utilization > 100 ? "text-danger" : "text-success"
                   }`}
                 >
                   {utilization}%
@@ -319,7 +319,7 @@ export default function ActualsEncoderModal({
           {/* Expenditures */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">
-              Actual Expenditures (₱) <span className="text-red-500">*</span>
+              Actual Expenditures (₱) <span className="text-danger">*</span>
             </label>
             <input
               type="number"
@@ -389,7 +389,7 @@ export default function ActualsEncoderModal({
                     <button
                       type="button"
                       onClick={() => removeEvidenceFile(file)}
-                      className="touch-target text-gray-500 hover:text-red-500 transition-colors"
+                      className="touch-target text-gray-500 hover:text-danger transition-colors"
                       title="Remove"
                     >
                       <FaTrash size={11} />
@@ -429,7 +429,7 @@ export default function ActualsEncoderModal({
                   Reset to auto-generated
                 </button>
               ) : (
-                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                <span className="inline-flex items-center rounded-full border border-success-border bg-success-subtle px-2 py-0.5 text-xs font-medium text-success">
                   Auto
                 </span>
               )}

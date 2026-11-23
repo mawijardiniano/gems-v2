@@ -72,7 +72,7 @@ export default function AddProjectWizard({
                   wizardStep === i + 1
                     ? "text-secondary-600"
                     : wizardStep > i + 1
-                      ? "text-green-600"
+                      ? "text-success"
                       : "text-gray-500"
                 }`}
               >
@@ -81,7 +81,7 @@ export default function AddProjectWizard({
                     wizardStep === i + 1
                       ? "border-secondary-600 bg-secondary-50"
                       : wizardStep > i + 1
-                        ? "border-green-600 bg-green-50"
+                        ? "border-green-600 bg-success-subtle"
                         : "border-gray-300"
                   }`}
                 >
@@ -109,7 +109,7 @@ export default function AddProjectWizard({
         )}
 
         {addError && (
-          <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">
+          <div className="mb-4 p-3 rounded bg-danger-subtle border border-danger-border text-danger text-sm">
             {addError}
           </div>
         )}
@@ -124,7 +124,7 @@ export default function AddProjectWizard({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Type <span className="text-red-500">*</span>
+                Project Type <span className="text-danger">*</span>
               </label>
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
@@ -154,7 +154,7 @@ export default function AddProjectWizard({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Gender Issue / GAD Mandate{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <textarea
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
@@ -181,7 +181,7 @@ export default function AddProjectWizard({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Cause of the Gender Issue{" "}
-                    <span className="text-red-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   {newProject.cause_gender_issue.map((val, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
@@ -238,7 +238,7 @@ export default function AddProjectWizard({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 GAD Result Statement / GAD Objective{" "}
-                <span className="text-red-500">*</span>
+                <span className="text-danger">*</span>
               </label>
               {newProject.gad_objective.map((val, idx) => (
                 <div key={idx} className="flex gap-2 mb-2">
@@ -298,7 +298,7 @@ export default function AddProjectWizard({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Relevant Agency MFO/PAP{" "}
-                <span className="text-red-500">*</span>
+                <span className="text-danger">*</span>
               </label>
               <textarea
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
@@ -316,7 +316,7 @@ export default function AddProjectWizard({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                GAD Activity <span className="text-red-500">*</span>
+                GAD Activity <span className="text-danger">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-2">
                 Type the activity title, then its description underneath.
@@ -436,7 +436,7 @@ export default function AddProjectWizard({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  GAD Budget <span className="text-red-500">*</span>
+                  GAD Budget <span className="text-danger">*</span>
                 </label>
                 <input
                   type="number"
@@ -454,7 +454,7 @@ export default function AddProjectWizard({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Source of Budget <span className="text-red-500">*</span>
+                  Source of Budget <span className="text-danger">*</span>
                 </label>
                 <textarea
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
@@ -469,7 +469,7 @@ export default function AddProjectWizard({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Responsible Unit/Office{" "}
-                <span className="text-red-500">*</span>
+                <span className="text-danger">*</span>
               </label>
               <OfficeMultiSelect
                 value={newProject.responsible_office}
@@ -616,7 +616,7 @@ export default function AddProjectWizard({
           return (
             <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-gray-200">
               {!stepValid && (
-                <div className="text-xs text-red-500 text-right">
+                <div className="text-xs text-danger text-right">
                   Please fill in all required fields before continuing.
                 </div>
               )}
@@ -668,7 +668,7 @@ export default function AddProjectWizard({
                       !isStep1Valid(newProject) ||
                       !isStep2Valid(newProject)
                     }
-                    className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="px-5 py-2 bg-success-solid text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {addLoading ? "Saving..." : "Submit"}
                   </button>

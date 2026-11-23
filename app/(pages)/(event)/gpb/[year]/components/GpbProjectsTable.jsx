@@ -71,7 +71,7 @@ export default function GpbProjectsTable({
         )}
 
         {addError && (
-          <div className="whitespace-pre-line rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 mb-4">
+          <div className="whitespace-pre-line rounded-xl bg-danger-subtle border border-danger-border px-4 py-3 text-danger mb-4">
             {addError}
           </div>
         )}
@@ -426,8 +426,8 @@ export default function GpbProjectsTable({
                                                 <span
                                                   className={`font-semibold text-xs ${
                                                     c.type === "revision"
-                                                      ? "text-red-500"
-                                                      : "text-green-600"
+                                                      ? "text-danger"
+                                                      : "text-success"
                                                   }`}
                                                 >
                                                   {tags
@@ -453,7 +453,7 @@ export default function GpbProjectsTable({
                                                         c._id,
                                                       )
                                                     }
-                                                    className="touch-target ml-1 text-red-400 hover:text-red-600 text-xs"
+                                                    className="touch-target ml-1 text-red-400 hover:text-danger text-xs"
                                                     title="Delete comment"
                                                   >
                                                     ✕
@@ -508,7 +508,7 @@ export default function GpbProjectsTable({
                                               {canChange(project) && (
                                                   <button
                                                     type="button"
-                                                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                                    className="px-3 py-1 bg-success-solid text-white rounded hover:bg-green-700 transition"
                                                     onClick={() =>
                                                       onEdit(project)
                                                     }
@@ -519,7 +519,7 @@ export default function GpbProjectsTable({
                                               {canChange(project) && (
                                                   <button
                                                     type="button"
-                                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                                    className="px-3 py-1 bg-danger-solid text-white rounded hover:bg-red-700 transition"
                                                     onClick={() =>
                                                       onDelete(project)
                                                     }

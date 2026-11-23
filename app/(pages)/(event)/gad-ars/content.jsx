@@ -249,7 +249,7 @@ export default function GADARContent() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -277,7 +277,7 @@ export default function GADARContent() {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Total Actual Expenditures
             </p>
-            <p className="text-xl font-bold text-emerald-600 mt-0.5">
+            <p className="text-xl font-bold text-success mt-0.5">
               ₱ {fmt(totalExpenditures)}
             </p>
           </div>
@@ -482,7 +482,7 @@ export default function GADARContent() {
                         <td className="px-3 py-4 align-top text-right text-xs font-semibold text-gray-900">
                           ₱ {fmt(getFieldValue(project.gad_budget))}
                         </td>
-                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-emerald-600">
+                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-success">
                           <div className="flex items-center justify-end gap-1.5">
                             {project.actual_expenditures
                               ? `₱ ${fmt(project.actual_expenditures)}`
@@ -537,7 +537,7 @@ export default function GADARContent() {
                   <td className="px-3 py-3 text-right text-xs font-bold text-gray-900">
                     ₱ {fmt(totalBudget)}
                   </td>
-                  <td className="px-3 py-3 text-right text-xs font-bold text-emerald-600">
+                  <td className="px-3 py-3 text-right text-xs font-bold text-success">
                     ₱ {fmt(totalExpenditures)}
                   </td>
                   <td />
@@ -724,7 +724,7 @@ export default function GADARContent() {
                     }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap border transition ${
                       i === viewerIndex
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-700 font-medium"
+                        ? "bg-success-subtle border-emerald-300 text-success font-medium"
                         : "bg-white border-gray-200 text-gray-600 hover:bg-gray-100"
                     }`}
                   >
