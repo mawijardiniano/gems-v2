@@ -77,7 +77,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         <div className="flex flex-col flex-1">
           <label className="text-xs text-gray-500 mb-0.5">
             Type of Activity{" "}
-            {hasActivityCount && <span className="text-red-500">*</span>}
+            {hasActivityCount && <span className="text-danger">*</span>}
           </label>
           <select
             className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
@@ -100,7 +100,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         <div className="flex flex-col flex-1">
           <label className="text-xs text-gray-500 mb-0.5">
             No. of Activity{" "}
-            {hasActivityType && <span className="text-red-500">*</span>}
+            {hasActivityType && <span className="text-danger">*</span>}
           </label>
           <input
             type="number"
@@ -142,12 +142,12 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
       </div>
 
       {activityTypeMissing && (
-        <div className="text-xs text-red-500 px-1">
+        <div className="text-xs text-danger px-1">
           Type of Activity is required when No. of Activity is filled in.
         </div>
       )}
       {activityCountMissing && (
-        <div className="text-xs text-red-500 px-1">
+        <div className="text-xs text-danger px-1">
           No. of Activity is required when a Type of Activity is selected.
         </div>
       )}

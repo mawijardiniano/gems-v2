@@ -21,7 +21,7 @@ const ActivityTypeBadge = ({ type }) => {
   const colorMap = {
     Academic: "bg-secondary-100 text-secondary-700",
     Administrative: "bg-secondary-100 text-secondary-700",
-    GAD: "bg-emerald-100 text-emerald-700",
+    GAD: "bg-emerald-100 text-success",
     Extension: "bg-secondary-100 text-secondary-700",
     Research: "bg-rose-100 text-rose-700",
     Students: "bg-cyan-100 text-cyan-700",
@@ -56,9 +56,9 @@ const EventStatusBadge = ({ event }) => {
     const startDate = new Date(start);
 
     if (endDate.getTime() < now.getTime())
-      return { label: "Past", classes: "bg-red-50 text-red-600 border border-red-200" };
+      return { label: "Past", classes: "bg-danger-subtle text-danger border border-danger-border" };
     if (startDate.getTime() <= now.getTime() && endDate.getTime() >= now.getTime())
-      return { label: "Ongoing", classes: "bg-green-50 text-green-600 border border-green-200" };
+      return { label: "Ongoing", classes: "bg-success-subtle text-success border border-success-border" };
     return { label: "Upcoming", classes: "bg-secondary-50 text-secondary-600 border border-secondary-200" };
   };
 
@@ -227,7 +227,7 @@ export default function DeanProjectsContent() {
 
         {/* Error */}
         {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center gap-2">
+          <div className="p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
             {error}
           </div>
@@ -302,7 +302,7 @@ export default function DeanProjectsContent() {
 
                   <div className="p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                      <h3 className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-success transition-colors line-clamp-2">
                         {evt.title}
                       </h3>
                       {evt.type_of_activity && <ActivityTypeBadge type={evt.type_of_activity} />}
@@ -339,7 +339,7 @@ export default function DeanProjectsContent() {
                       </div>
                       <button
                         onClick={() => goToManage(evt._id)}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-success hover:text-success bg-success-subtle hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors"
                       >
                         Manage <FaArrowRight size={12} />
                       </button>

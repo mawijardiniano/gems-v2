@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState, useCallback, useId } from "react";
 import { useDialog } from "@/hooks/useDialog";
+import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
 import { FaHistory, FaSearch, FaDownload, FaTimes, FaShieldAlt, FaChevronRight } from "react-icons/fa";
 
 function formatDate(dateStr) {
@@ -32,79 +33,79 @@ function timeAgo(dateStr) {
 }
 
 const ACTION_COLORS = {
-  LOGIN: "text-green-600 bg-green-50",
+  LOGIN: "text-success bg-success-subtle",
   LOGOUT: "text-gray-600 bg-gray-50",
-  LOGIN_FAILED: "text-red-600 bg-red-50",
+  LOGIN_FAILED: "text-danger bg-danger-subtle",
   CREATE: "text-secondary-600 bg-secondary-50",
-  UPDATE: "text-yellow-600 bg-yellow-50",
-  DELETE: "text-red-600 bg-red-50",
+  UPDATE: "text-warning bg-warning-subtle",
+  DELETE: "text-danger bg-danger-subtle",
   PROFILE_UPDATE: "text-secondary-600 bg-secondary-50",
   EVENT_CREATE: "text-secondary-600 bg-secondary-50",
-  EVENT_UPDATE: "text-yellow-600 bg-yellow-50",
-  EVENT_DELETE: "text-red-600 bg-red-50",
-  EVENT_CANCEL: "text-red-600 bg-red-50",
+  EVENT_UPDATE: "text-warning bg-warning-subtle",
+  EVENT_DELETE: "text-danger bg-danger-subtle",
+  EVENT_CANCEL: "text-danger bg-danger-subtle",
   EVENT_REGISTER: "text-secondary-600 bg-secondary-50",
   CHANGE_PASSWORD: "text-orange-600 bg-orange-50",
-  RESET_PASSWORD: "text-red-600 bg-red-50",
-  REGISTER: "text-green-600 bg-green-50",
+  RESET_PASSWORD: "text-danger bg-danger-subtle",
+  REGISTER: "text-success bg-success-subtle",
   ROLE_CHANGE: "text-secondary-600 bg-secondary-50",
-  USER_DELETE: "text-red-700 bg-red-100",
+  USER_DELETE: "text-danger bg-red-100",
   STATUS_CHANGE: "text-orange-600 bg-orange-50",
   PROFILE_CREATE: "text-secondary-600 bg-secondary-50",
-  PROFILE_BULK_DELETE: "text-red-700 bg-red-100",
+  PROFILE_BULK_DELETE: "text-danger bg-red-100",
 
   GFP_CREATE: "text-cyan-600 bg-cyan-50",
   GFP_UPDATE: "text-cyan-600 bg-cyan-50",
   GFP_MEMBER_ADD: "text-cyan-600 bg-cyan-50",
   GFP_MEMBER_REMOVE: "text-cyan-600 bg-cyan-50",
   GFP_COPY_FORWARD: "text-cyan-600 bg-cyan-50",
-  GPB_CREATE: "text-green-600 bg-green-50",
-  GPB_UPDATE: "text-green-600 bg-green-50",
-  GPB_DELETE: "text-red-700 bg-red-100",
-  GPB_STATUS: "text-green-600 bg-green-50",
+  GPB_CREATE: "text-success bg-success-subtle",
+  GPB_UPDATE: "text-success bg-success-subtle",
+  GPB_DELETE: "text-danger bg-red-100",
+  GPB_STATUS: "text-success bg-success-subtle",
   GPB_COMMENT: "text-gray-600 bg-gray-50",
-  GPB_COMMENT_DELETE: "text-red-600 bg-red-50",
-  GAA_BUDGET_CREATE: "text-yellow-600 bg-yellow-50",
-  GAA_BUDGET_UPDATE: "text-yellow-600 bg-yellow-50",
-  GAA_BUDGET_DELETE: "text-red-700 bg-red-100",
+  GPB_COMMENT_DELETE: "text-danger bg-danger-subtle",
+  GAA_BUDGET_CREATE: "text-warning bg-warning-subtle",
+  GAA_BUDGET_UPDATE: "text-warning bg-warning-subtle",
+  GAA_BUDGET_DELETE: "text-danger bg-red-100",
   OFFICIAL_CREATE: "text-orange-600 bg-orange-50",
   OFFICIAL_UPDATE: "text-orange-600 bg-orange-50",
-  OFFICIAL_DELETE: "text-red-700 bg-red-100",
+  OFFICIAL_DELETE: "text-danger bg-red-100",
   OFFICIAL_ASSIGN: "text-orange-600 bg-orange-50",
-  OFFICIAL_VACATE: "text-red-700 bg-red-100",
+  OFFICIAL_VACATE: "text-danger bg-red-100",
   OFFICIAL_COPY_FORWARD: "text-orange-600 bg-orange-50",
   OFFICIAL_ASSIGN_LEGACY: "text-orange-600 bg-orange-50",
   PROJECT_CREATE: "text-teal-600 bg-teal-50",
-  PROJECT_UPDATE: "text-yellow-600 bg-yellow-50",
-  PROJECT_DELETE: "text-red-700 bg-red-100",
-  PROJECT_BULK_DELETE: "text-red-700 bg-red-100",
+  PROJECT_UPDATE: "text-warning bg-warning-subtle",
+  PROJECT_DELETE: "text-danger bg-red-100",
+  PROJECT_BULK_DELETE: "text-danger bg-red-100",
   PROJECT_COMMENT: "text-gray-600 bg-gray-50",
-  PROJECT_COMMENT_DELETE: "text-red-600 bg-red-50",
+  PROJECT_COMMENT_DELETE: "text-danger bg-danger-subtle",
   EVENT_PARTICIPATE: "text-secondary-600 bg-secondary-50",
   ACCOMPLISHMENT_CREATE: "text-pink-600 bg-pink-50",
   ACCOMPLISHMENT_UPDATE: "text-pink-600 bg-pink-50",
-  APPROVE: "text-green-600 bg-green-50",
-  REJECT: "text-red-600 bg-red-50",
+  APPROVE: "text-success bg-success-subtle",
+  REJECT: "text-danger bg-danger-subtle",
   EXPORT: "text-secondary-600 bg-secondary-50",
   IMPORT: "text-secondary-600 bg-secondary-50",
   INTEGRATION_SYNC: "text-cyan-600 bg-cyan-50",
   NOTIFICATION_READ: "text-gray-600 bg-gray-50",
   PII_ACCESS: "text-orange-700 bg-orange-100",
-  AUDIT_REDACT: "text-red-700 bg-red-100",
+  AUDIT_REDACT: "text-danger bg-red-100",
   IMPORT_BATCH_FETCH: "text-pink-600 bg-pink-50",
-  IMPORT_BATCH_FETCH_FAILED: "text-red-600 bg-red-50",
+  IMPORT_BATCH_FETCH_FAILED: "text-danger bg-danger-subtle",
   IMPORT_BATCH_VALIDATE: "text-pink-600 bg-pink-50",
   IMPORT_BATCH_APPROVE: "text-pink-600 bg-pink-50",
-  IMPORT_BATCH_REJECT: "text-red-600 bg-red-50",
-  IMPORT_BATCH_DELETE: "text-red-700 bg-red-100",
+  IMPORT_BATCH_REJECT: "text-danger bg-danger-subtle",
+  IMPORT_BATCH_DELETE: "text-danger bg-red-100",
   OTHER: "text-gray-500 bg-gray-100",
 };
 
 const SEVERITY_COLORS = {
   info: "text-secondary-600 bg-secondary-50",
-  warning: "text-yellow-600 bg-yellow-50",
-  error: "text-red-600 bg-red-50",
-  critical: "text-red-700 bg-red-100",
+  warning: "text-warning bg-warning-subtle",
+  error: "text-danger bg-danger-subtle",
+  critical: "text-danger bg-red-100",
 };
 
 const RESOURCE_COLORS = {
@@ -112,9 +113,9 @@ const RESOURCE_COLORS = {
   profile: "text-secondary-600 bg-secondary-50",
   event: "text-secondary-600 bg-secondary-50",
   project: "text-teal-600 bg-teal-50",
-  gpb: "text-green-600 bg-green-50",
+  gpb: "text-success bg-success-subtle",
   gfps: "text-cyan-600 bg-cyan-50",
-  gaa_budget: "text-yellow-600 bg-yellow-50",
+  gaa_budget: "text-warning bg-warning-subtle",
   university_official: "text-orange-600 bg-orange-50",
   notification: "text-gray-600 bg-gray-50",
   integration: "text-pink-600 bg-pink-50",
@@ -209,11 +210,11 @@ function ChangeList({ changes }) {
         <li key={`${c.field}-${i}`} className="text-xs text-gray-600">
           <span className="font-medium text-gray-700">{c.field}</span>
           {": "}
-          <span className="text-red-700 line-through decoration-red-300">
+          <span className="text-danger line-through decoration-red-300">
             {formatChangeValue(c.before, c.redacted)}
           </span>
           <span className="mx-1 text-gray-500">→</span>
-          <span className="text-green-700">
+          <span className="text-success">
             {formatChangeValue(c.after, c.redacted)}
           </span>
         </li>
@@ -265,7 +266,7 @@ function LogDetail({ log }) {
           {log.hash_self ? (
             <span className="font-mono text-2xs">{log.hash_self}</span>
           ) : (
-            <span className="italic text-amber-700">not linked</span>
+            <span className="italic text-warning">not linked</span>
           )}
         </DetailItem>
         <DetailItem label="Hash (previous)">
@@ -292,7 +293,7 @@ function LogDetail({ log }) {
           <span className="text-2xs uppercase tracking-wide text-gray-500">
             Redaction
           </span>
-          <div className="text-red-700">
+          <div className="text-danger">
             Redacted{log.redacted_at ? ` ${formatDate(log.redacted_at)}` : ""}
             {log.redacted_by ? ` by user ${log.redacted_by}` : ""}
           </div>
@@ -334,6 +335,7 @@ export default function ActivityLogsContent() {
   // Delete confirmation
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const { toast, show: showToast, hide: hideToast } = useActionToast();
   const deleteTitleId = useId();
   const deleteDialogRef = useDialog(deleting ? null : () => setDeleteId(null));
 
@@ -432,7 +434,7 @@ export default function ActivityLogsContent() {
     );
     if (reason === null) return;
     if (!reason.trim()) {
-      alert("A reason is required to redact an audit record.");
+      showToast("A reason is required to redact an audit record.", "error");
       return;
     }
     setDeleting(true);
@@ -451,7 +453,7 @@ export default function ActivityLogsContent() {
       setDeleteId(null);
       fetchLogs();
     } catch (err) {
-      alert(err.message);
+      showToast(errorText(err, "Redaction failed"), "error");
     } finally {
       setDeleting(false);
     }
@@ -538,7 +540,7 @@ export default function ActivityLogsContent() {
           <button
             onClick={handleExport}
             disabled={logs.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-success-solid text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             <FaDownload /> Export CSV
           </button>
@@ -640,7 +642,7 @@ export default function ActivityLogsContent() {
         {hasFilters && (
           <button
             onClick={handleResetFilters}
-            className="mt-3 flex items-center gap-1 text-sm text-red-600 hover:text-red-800"
+            className="mt-3 flex items-center gap-1 text-sm text-danger hover:text-danger"
           >
             <FaTimes /> Clear filters
           </button>
@@ -657,8 +659,8 @@ export default function ActivityLogsContent() {
                 !integrity
                   ? "text-lg text-gray-500"
                   : integrity.status === "intact"
-                    ? "text-lg text-green-600"
-                    : "text-lg text-red-600"
+                    ? "text-lg text-success"
+                    : "text-lg text-danger"
               }
             />
             <div>
@@ -691,8 +693,8 @@ export default function ActivityLogsContent() {
               <div
                 className={
                   integrity.status === "intact"
-                    ? "font-semibold text-green-700"
-                    : "font-semibold text-red-700"
+                    ? "font-semibold text-success"
+                    : "font-semibold text-danger"
                 }
               >
                 {integrity.status}
@@ -714,7 +716,7 @@ export default function ActivityLogsContent() {
         )}
 
         {integrity?.forked_pre_fix > 0 && (
-          <p className="mt-3 text-xs text-amber-700">
+          <p className="mt-3 text-xs text-warning">
             {integrity.forked_pre_fix} record
             {integrity.forked_pre_fix === 1 ? " was" : "s were"} written at the
             same moment as another and linked to the same earlier record. This
@@ -724,7 +726,7 @@ export default function ActivityLogsContent() {
         )}
 
         {integrity?.unlinked_degraded > 0 && (
-          <p className="mt-3 text-xs text-red-700">
+          <p className="mt-3 text-xs text-danger">
             {integrity.unlinked_degraded} record
             {integrity.unlinked_degraded === 1 ? "" : "s"} could not be linked
             when written, so the audit writer was not working correctly at that
@@ -737,7 +739,7 @@ export default function ActivityLogsContent() {
         {integrity?.problems?.length > 0 && (
           <ul className="mt-3 space-y-1 text-xs">
             {integrity.problems.map((p) => (
-              <li key={`${p.type}-${p.id}`} className="text-red-700">
+              <li key={`${p.type}-${p.id}`} className="text-danger">
                 <span className="font-mono">{p.type}</span> — record{" "}
                 <span className="font-mono">{p.id}</span>
                 {p.createdAt ? ` (${formatDate(p.createdAt)})` : ""}
@@ -747,7 +749,7 @@ export default function ActivityLogsContent() {
         )}
 
         {integrity?.truncated && (
-          <p className="mt-3 text-xs text-amber-700">
+          <p className="mt-3 text-xs text-warning">
             Only the most recent records were verified. Earlier records exist
             and were not checked, so this result does not cover the whole
             trail.
@@ -760,7 +762,7 @@ export default function ActivityLogsContent() {
         {loading ? (
           <div className="p-8 text-center text-gray-500">Loading audit records...</div>
         ) : error ? (
-          <div className="p-8 text-center text-red-500">{error}</div>
+          <div className="p-8 text-center text-danger">{error}</div>
         ) : logs.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No audit records found.</div>
         ) : (
@@ -861,7 +863,7 @@ export default function ActivityLogsContent() {
                         ) : (
                           <button
                             onClick={() => setDeleteId(log._id)}
-                            className="text-xs text-gray-500 hover:text-red-700 underline"
+                            className="text-xs text-gray-500 hover:text-danger underline"
                             title="Redact: blanks the detail, keeps the record"
                           >
                             Redact
@@ -934,7 +936,7 @@ export default function ActivityLogsContent() {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                className="px-4 py-2 bg-danger-solid text-white rounded hover:bg-red-700 disabled:opacity-50"
                 onClick={handleDelete}
                 disabled={deleting}
               >
@@ -944,6 +946,7 @@ export default function ActivityLogsContent() {
           </div>
         </div>
       )}
+      <ActionToast toast={toast} onClose={hideToast} />
     </div>
   );
 }

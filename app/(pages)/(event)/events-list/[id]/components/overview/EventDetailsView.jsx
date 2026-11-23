@@ -54,7 +54,7 @@ export default function EventDetailsView({
       icon: FaUsers,
       gradient: "from-emerald-600 to-emerald-400",
       iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      iconColor: "text-success",
       /* Same number the Insights tab shows: profiles + approved guests. */
       value: attendedCount || "—",
     },

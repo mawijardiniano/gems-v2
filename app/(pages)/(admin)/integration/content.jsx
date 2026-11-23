@@ -138,7 +138,7 @@ export default function IntegrationContent() {
             <span
               className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${
                 endpoint
-                  ? "bg-green-100 text-green-700"
+                  ? "bg-green-100 text-success"
                   : "bg-gray-100 text-gray-600"
               }`}
             >

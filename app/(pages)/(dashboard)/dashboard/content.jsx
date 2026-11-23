@@ -134,10 +134,10 @@ function EventCard({ event, onClick, compact = false }) {
         <span
           className={`shrink-0 ml-3 px-2.5 py-0.5 rounded-full text-2xs font-semibold uppercase tracking-wider ${
             isCancelled
-              ? "bg-red-50 text-red-600"
+              ? "bg-danger-subtle text-danger"
               : isPast
                 ? "bg-gray-100 text-gray-500"
-                : "bg-emerald-50 text-emerald-700"
+                : "bg-success-subtle text-success"
           }`}
         >
           {isCancelled ? "Cancelled" : isPast ? "Past" : "Upcoming"}

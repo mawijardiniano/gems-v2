@@ -80,7 +80,7 @@ export default function EventOfficeDropdown({
             aria-hidden="true"
           />
         )}
-        {label} {required && <span className="text-red-500">*</span>}
+        {label} {required && <span className="text-danger">*</span>}
       </p>
       {description && (
         <p className="text-xs text-gray-500 mb-2">{description}</p>

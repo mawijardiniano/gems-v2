@@ -114,8 +114,8 @@ function Toast({ message, type, onClose }) {
 
   const bgColor =
     type === "success"
-      ? "bg-green-50 border-green-200 text-green-800"
-      : "bg-red-50 border-red-200 text-red-800";
+      ? "bg-success-subtle border-success-border text-success"
+      : "bg-danger-subtle border-danger-border text-danger";
   const Icon = type === "success" ? HiOutlineCheck : HiOutlineExclamation;
 
   return (
@@ -636,7 +636,7 @@ export default function ManageRoleContent() {
               {SCOPED_ROLES.includes(selectedRole) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Assigned College <span className="text-red-500">*</span>
+                    Assigned College <span className="text-danger">*</span>
                   </label>
                   <select
                     value={assignedCollege}

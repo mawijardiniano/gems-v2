@@ -144,8 +144,8 @@ export default function UpdateStatusModal({
               saving
                 ? "bg-gray-400 cursor-not-allowed"
                 : statusType === "approved"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
+                  ? "bg-success-solid hover:bg-green-700"
+                  : "bg-danger-solid hover:bg-red-700"
             }`}
           >
             {saving ? "Saving..." : "Save Status"}

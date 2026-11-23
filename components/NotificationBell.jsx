@@ -178,7 +178,7 @@ export default function NotificationBell() {
       >
         <FaBell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-2xs leading-5 text-center font-semibold">
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-danger-solid text-white text-2xs leading-5 text-center font-semibold">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

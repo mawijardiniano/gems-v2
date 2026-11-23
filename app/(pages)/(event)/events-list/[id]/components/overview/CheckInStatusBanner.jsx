@@ -19,7 +19,7 @@ export function checkInStatusOf(event, now = Date.now()) {
       tone: "danger",
       title: "Event cancelled",
       detail: "Check-in is closed. No further attendance can be recorded.",
-      classes: "border-red-200 bg-red-50 text-red-700",
+      classes: "border-danger-border bg-danger-subtle text-danger",
     };
   }
   if (phase === "completed") return null;
@@ -41,7 +41,7 @@ export function checkInStatusOf(event, now = Date.now()) {
       latestEnd === null
         ? "Guests can scan the QR code now."
         : `Guests can scan the QR code until ${formatDateOnly(new Date(latestEnd))}.`,
-    classes: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    classes: "border-success-border bg-success-subtle text-success",
   };
 }
 

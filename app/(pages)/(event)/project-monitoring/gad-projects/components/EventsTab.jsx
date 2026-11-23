@@ -26,7 +26,7 @@ function BudgetUtilization({ project, canManage, onEditActuals }) {
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold text-gray-900">{formatPeso(spent)}</span>
         <span className="text-gray-500">of {formatPeso(budget)}</span>
-        <span className={`font-bold ${isOver ? "text-red-600" : "text-emerald-600"}`}>
+        <span className={`font-bold ${isOver ? "text-danger" : "text-success"}`}>
           {Math.round(pct)}%
         </span>
       </div>

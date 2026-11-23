@@ -24,6 +24,7 @@ import {
   FaSitemap,
 } from "react-icons/fa";
 import { useDialog } from "@/hooks/useDialog";
+import { useConfirm } from "@/components/ui/useConfirm";
 import Link from "next/link";
 import { HEADERS } from "@/data/lib/universityOfficialsConstants";
 import {
@@ -55,7 +56,7 @@ const ADD_NEW_OFFICE_VALUE = "__add_new_office__";
  * case is the honest reading for anything that somehow does not.
  */
 const STATUS_BADGE = {
-  substantive: { label: "Assigned", cls: "bg-emerald-50 text-emerald-600" },
+  substantive: { label: "Assigned", cls: "bg-success-subtle text-success" },
   acting: { label: "Acting", cls: "bg-secondary-50 text-secondary-700" },
   interim: { label: "Interim", cls: "bg-secondary-50 text-secondary-700" },
   concurrent: {
@@ -89,10 +90,10 @@ const HEADER_COLORS = [
 const colorMap = {
   amber: "bg-secondary-50 text-secondary-600",
   blue: "bg-secondary-50 text-secondary-600",
-  green: "bg-emerald-50 text-emerald-600",
+  green: "bg-success-subtle text-success",
   violet: "bg-secondary-50 text-secondary-600",
   indigo: "bg-secondary-50 text-secondary-600",
-  emerald: "bg-emerald-50 text-emerald-600",
+  emerald: "bg-success-subtle text-success",
   rose: "bg-rose-50 text-rose-600",
   sky: "bg-primary-50 text-primary-600",
   orange: "bg-orange-50 text-orange-600",
@@ -433,7 +434,7 @@ function OfficialModal({
 
         <form onSubmit={onSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="flex items-center gap-2.5 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-2.5 rounded-xl bg-danger-subtle border border-danger-border px-4 py-3 text-sm text-danger">
               <FaExclamationTriangle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -608,7 +609,7 @@ function HeaderCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success-subtle text-success">
             Assigned only
           </span>
           {expanded ? (
@@ -715,7 +716,7 @@ function HeaderCard({
                               </button>
                               <button
                                 onClick={() => onVacate(official)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-subtle border border-danger-border rounded-lg hover:bg-red-100 hover:border-red-300 transition"
                               >
                                 <FaTrash className="h-3 w-3" />
                                 Remove
@@ -754,6 +755,7 @@ function UnlistedCard() {
 export default function UniversityOfficialsContent() {
   const role = useSelector((state) => state.auth.role);
   const isCoordinator = role === "gad coordinator";
+  const { confirm, confirmDialog } = useConfirm();
 
   const [assignments, setAssignments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -898,9 +900,12 @@ export default function UniversityOfficialsContent() {
       return;
     }
     if (
-      !window.confirm(
-        `Copy ${assignments.length || "the"} assignment(s) from AY ${source} to AY ${academicYear}? Past years stay unchanged.`,
-      )
+      !(await confirm({
+        title: `Copy ${assignments.length || "the"} assignment(s) from AY ${source} to AY ${academicYear}?`,
+        message: "Past years stay unchanged.",
+        confirmLabel: "Copy",
+        tone: "primary",
+      }))
     ) {
       return;
     }
@@ -923,7 +928,7 @@ export default function UniversityOfficialsContent() {
     } finally {
       setCopying(false);
     }
-  }, [academicYear, copying, yearOptions, assignments.length, fetchOfficials]);
+  }, [academicYear, copying, yearOptions, assignments.length, fetchOfficials, confirm]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -1095,9 +1100,12 @@ export default function UniversityOfficialsContent() {
 
   const handleVacate = async (official) => {
     if (
-      !window.confirm(
-        `Vacate "${official.name}"? The seat stays in the chart and can be reassigned later.`,
-      )
+      !(await confirm({
+        title: `Vacate "${official.name}"?`,
+        message: "The seat stays in the chart and can be reassigned later.",
+        confirmLabel: "Vacate",
+        tone: "danger",
+      }))
     ) {
       return;
     }
@@ -1180,7 +1188,7 @@ export default function UniversityOfficialsContent() {
                     Archived
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success-subtle text-success border border-success-border">
                     Active
                   </span>
                 )}
@@ -1242,13 +1250,13 @@ export default function UniversityOfficialsContent() {
 
       {/* ── Success / Error Banners ─────────────────────────────── */}
       {success && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-success-border bg-success-subtle text-success text-sm">
           <FaCheckCircle className="h-5 w-5 shrink-0" />
           <span>{success}</span>
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -1302,8 +1310,8 @@ export default function UniversityOfficialsContent() {
           </div>
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <FaCheckCircle className="h-6 w-6 text-emerald-600" />
+              <div className="h-12 w-12 rounded-xl bg-success-subtle flex items-center justify-center">
+                <FaCheckCircle className="h-6 w-6 text-success" />
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1367,6 +1375,7 @@ export default function UniversityOfficialsContent() {
         assignedCounts={officeCounts}
         officeBusy={officeBusy}
       />
+      {confirmDialog}
     </div>
   );
 }

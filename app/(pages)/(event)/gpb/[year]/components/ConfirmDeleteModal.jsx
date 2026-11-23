@@ -37,13 +37,13 @@ export default function ConfirmDeleteModal({
         </button>
         <h3 className="text-xl font-bold mb-4">Delete Project</h3>
         <p>Are you sure you want to delete this project?</p>
-        <p className="mt-2 text-sm text-red-600">
+        <p className="mt-2 text-sm text-danger">
           This also permanently deletes the events linked to this project
           (including their posters and accomplishment reports) and the
           uploaded evidence files. This cannot be undone.
         </p>
         {deleteError && (
-          <p className="mt-3 text-sm text-red-700" role="alert">
+          <p className="mt-3 text-sm text-danger" role="alert">
             {deleteError}
           </p>
         )}
@@ -59,7 +59,7 @@ export default function ConfirmDeleteModal({
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            className="px-4 py-2 bg-danger-solid text-white rounded hover:bg-red-700 disabled:opacity-50"
             disabled={deletingProject}
             onClick={() => handleDelete(deleteModal.project._id)}
           >

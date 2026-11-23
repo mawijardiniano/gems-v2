@@ -45,14 +45,14 @@ const STATUS_STYLES = {
   cancelled: {
     label: "Cancelled",
     dot: "bg-red-500",
-    chip: "bg-red-50 text-red-700 hover:bg-red-100",
-    cls: "bg-red-50 text-red-700 border-red-200",
+    chip: "bg-danger-subtle text-danger hover:bg-red-100",
+    cls: "bg-danger-subtle text-danger border-danger-border",
   },
   completed: {
     label: "Completed",
     dot: "bg-emerald-500",
-    chip: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
-    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    chip: "bg-success-subtle text-success hover:bg-emerald-100",
+    cls: "bg-success-subtle text-success border-success-border",
   },
   past: {
     label: "Past",
@@ -63,8 +63,8 @@ const STATUS_STYLES = {
   ongoing: {
     label: "Ongoing",
     dot: "bg-green-500",
-    chip: "bg-green-50 text-green-700 hover:bg-green-100",
-    cls: "bg-green-50 text-green-700 border-green-200",
+    chip: "bg-success-subtle text-success hover:bg-green-100",
+    cls: "bg-success-subtle text-success border-success-border",
   },
   upcoming: {
     label: "Upcoming",

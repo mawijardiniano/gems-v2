@@ -30,7 +30,7 @@ export default function ParticipantTargetProgress({
             <span className="text-gray-500">of {progress.target} target</span>
             <span
               className={`font-bold ${
-                progress.isOver ? "text-red-600" : "text-emerald-600"
+                progress.isOver ? "text-danger" : "text-success"
               }`}
             >
               {progress.percent}%

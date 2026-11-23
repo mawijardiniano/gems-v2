@@ -233,12 +233,12 @@ export default function EventCalendarContent() {
       </div>
 
       {error && (
-        <div className="lg:col-span-12 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="lg:col-span-12 flex items-center justify-between rounded-xl border border-danger-border bg-danger-subtle px-4 py-3">
+          <p className="text-sm text-danger">{error}</p>
           <button
             type="button"
             onClick={loadEvents}
-            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-danger hover:bg-red-100 transition-colors"
           >
             Retry
           </button>

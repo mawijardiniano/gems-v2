@@ -112,10 +112,10 @@ export default function AttendanceSyncToast() {
           key={toast.id}
           className={`animate-slide-up rounded-lg shadow-xl px-5 py-4 max-w-sm text-white text-sm font-medium ${
             toast.type === "success"
-              ? "bg-green-600"
+              ? "bg-success-solid"
               : toast.type === "info"
                 ? "bg-secondary-600"
-                : "bg-red-600"
+                : "bg-danger-solid"
           }`}
         >
           <div className="flex items-start gap-3">

@@ -27,7 +27,7 @@ export const PROJECT_STATUS_META = {
   },
   completed: {
     label: "Completed",
-    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    classes: "bg-success-subtle text-success border-success-border",
   },
 };
 
@@ -42,7 +42,7 @@ export const MILESTONE_STATUS_META = {
   },
   completed: {
     label: "Completed",
-    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    classes: "bg-success-subtle text-success border-success-border",
   },
 };
 
@@ -50,7 +50,7 @@ export const EVENT_STATUS_META = {
   completed: {
     label: "Completed",
     dot: "bg-emerald-500",
-    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    classes: "bg-success-subtle text-success border-success-border",
   },
   active: {
     label: "Ongoing",
@@ -60,7 +60,7 @@ export const EVENT_STATUS_META = {
   cancelled: {
     label: "Cancelled",
     dot: "bg-red-400",
-    classes: "bg-red-50 text-red-700 border-red-200",
+    classes: "bg-danger-subtle text-danger border-danger-border",
   },
 };
 

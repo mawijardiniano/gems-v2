@@ -15,9 +15,9 @@ const ACTION_LABELS = {
 };
 
 const LEVEL_STYLES = {
-  info: { dot: "bg-green-500", title: "text-green-700" },
+  info: { dot: "bg-green-500", title: "text-success" },
   warn: { dot: "bg-secondary-500", title: "text-secondary-700" },
-  error: { dot: "bg-red-500", title: "text-red-700" },
+  error: { dot: "bg-red-500", title: "text-danger" },
 };
 
 const GENERIC_KEY_SKIP = new Set(["dedupe_key", "staging_record_id"]);

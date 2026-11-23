@@ -32,9 +32,9 @@ const statCards = [
     label: "PWD",
     icon: FaWheelchair,
     gradient: "from-emerald-600 to-emerald-400",
-    lightBg: "bg-emerald-50",
+    lightBg: "bg-success-subtle",
     iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
+    iconColor: "text-success",
   },
   {
     key: "ip",

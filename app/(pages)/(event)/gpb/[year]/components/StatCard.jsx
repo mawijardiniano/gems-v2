@@ -11,17 +11,17 @@ export default function StatCard({
 }) {
   const colorMap = {
     blue: "bg-secondary-50 text-secondary-600",
-    green: "bg-emerald-50 text-emerald-600",
+    green: "bg-success-subtle text-success",
     amber: "bg-secondary-50 text-secondary-600",
     violet: "bg-secondary-50 text-secondary-600",
-    red: "bg-red-50 text-red-600",
+    red: "bg-danger-subtle text-danger",
   };
 
   return (
     <div
       className={`rounded-2xl border shadow-sm p-5 transition duration-200 ${
         danger
-          ? "border-red-200 bg-red-50/50 hover:shadow-md"
+          ? "border-danger-border bg-red-50/50 hover:shadow-md"
           : "bg-white border-gray-100 hover:shadow-md"
       }`}
     >
@@ -37,7 +37,7 @@ export default function StatCard({
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-0.5">
             <p
-              className={`text-xl font-bold truncate ${danger ? "text-red-700" : "text-gray-900"}`}
+              className={`text-xl font-bold truncate ${danger ? "text-danger" : "text-gray-900"}`}
             >
               {value}
             </p>

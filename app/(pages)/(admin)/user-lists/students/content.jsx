@@ -537,7 +537,7 @@ export default function StudentsUserListContent({
             </div>
             <div>
               <span className="font-semibold text-gray-600">Status:</span>
-              <p className={`font-medium ${user.is_active ? "text-green-600" : "text-red-600"}`}>
+              <p className={`font-medium ${user.is_active ? "text-success" : "text-danger"}`}>
                 {user.is_active ? "Active" : "Inactive"}
               </p>
             </div>
@@ -962,12 +962,12 @@ export default function StudentsUserListContent({
             className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
           >
             <h2 id={deleteTitleId} className="text-lg font-semibold mb-4">Confirm Delete</h2>
-            <div className="text-center text-red-600 mb-6">
+            <div className="text-center text-danger mb-6">
               Are you sure you want to delete the selected users?
             </div>
             <div className="flex justify-end gap-2">
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-danger-solid"
                 onClick={confirmBulkDelete}
               >
                 Yes, Delete
@@ -1125,8 +1125,8 @@ export default function StudentsUserListContent({
                 <div className="flex items-center gap-2.5">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                     selectedUser.is_active
-                      ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
-                      : "bg-red-50 text-red-700 ring-1 ring-red-600/20"
+                      ? "bg-success-subtle text-success ring-1 ring-green-600/20"
+                      : "bg-danger-subtle text-danger ring-1 ring-red-600/20"
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
                       selectedUser.is_active ? "bg-green-500" : "bg-red-500"
@@ -1146,8 +1146,8 @@ export default function StudentsUserListContent({
                     }}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition ${
                       selectedUser.is_active
-                        ? "bg-red-50 text-red-700 ring-1 ring-red-600/20 hover:bg-red-100"
-                        : "bg-green-50 text-green-700 ring-1 ring-green-600/20 hover:bg-green-100"
+                        ? "bg-danger-subtle text-danger ring-1 ring-red-600/20 hover:bg-red-100"
+                        : "bg-success-subtle text-success ring-1 ring-green-600/20 hover:bg-green-100"
                     }`}
                   >
                     {selectedUser.is_active ? "Deactivate" : "Activate"}

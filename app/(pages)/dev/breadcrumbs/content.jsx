@@ -105,7 +105,7 @@ export default function BreadcrumbsPreview() {
                           {route.group && (
                             <span
                               title="Navigation group with no page — its crumb is not a link"
-                              className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-700"
+                              className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-warning"
                             >
                               group
                             </span>

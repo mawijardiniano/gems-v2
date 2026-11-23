@@ -226,7 +226,7 @@ export function handlePrintGuests(guests, event, buildRows) {
   };
 }
 
-export function handleDownloadGuestsPdf(guests, event, buildRows) {
+export function handleDownloadGuestsPdf(guests, event, buildRows, onError) {
   if (typeof window === "undefined") return;
 
   const rows = buildRows(guests);
@@ -416,11 +416,11 @@ export function handleDownloadGuestsPdf(guests, event, buildRows) {
     })
     .catch((err) => {
       console.error("PDF export failed", err);
-      alert("Unable to generate PDF. Please try again.");
+      onError?.("Unable to generate PDF. Please try again.");
     });
 }
 
-export function handleDownloadBlankGuestsPdf(event) {
+export function handleDownloadBlankGuestsPdf(event, onError) {
   if (typeof window === "undefined") return;
 
   const blankRowHtml = () =>
@@ -533,6 +533,6 @@ export function handleDownloadBlankGuestsPdf(event) {
     })
     .catch((err) => {
       console.error("PDF export failed", err);
-      alert("Unable to generate PDF. Please try again.");
+      onError?.("Unable to generate PDF. Please try again.");
     });
 }

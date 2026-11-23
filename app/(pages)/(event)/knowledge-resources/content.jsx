@@ -39,7 +39,7 @@ import {
 const CATEGORY_STYLES = {
   "Training Material":
     "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
-  Manual: "bg-emerald-100 text-emerald-800 ring-emerald-600/20",
+  Manual: "bg-emerald-100 text-success ring-emerald-600/20",
   Research: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Other: "bg-gray-100 text-gray-700 ring-gray-500/20",
 };
@@ -360,16 +360,16 @@ export default function KnowledgeResourcesContent() {
 
       {/* ── Alerts ──────────────────────────────────────────────── */}
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
-          <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-danger-subtle p-4">
+          <FaExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-success-subtle p-4">
           <FaCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-          <p className="text-sm text-emerald-700">{success}</p>
+          <p className="text-sm text-success">{success}</p>
         </div>
       )}
 
@@ -516,7 +516,7 @@ export default function KnowledgeResourcesContent() {
                     <button
                       onClick={() => setDeleteTarget(item)}
                       title="Delete document"
-                      className="touch-target mt-1 rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
+                      className="touch-target mt-1 rounded-lg p-2 text-danger hover:bg-danger-subtle transition-colors"
                     >
                       <FaTrashAlt size={13} />
                     </button>
@@ -629,9 +629,9 @@ export default function KnowledgeResourcesContent() {
               </div>
 
               {formError && (
-                <div className="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 p-3">
-                  <FaExclamationTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
-                  <p className="text-xs text-red-700">{formError}</p>
+                <div className="flex items-start gap-2 rounded-xl border border-red-100 bg-danger-subtle p-3">
+                  <FaExclamationTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" />
+                  <p className="text-xs text-danger">{formError}</p>
                 </div>
               )}
             </div>
@@ -675,8 +675,8 @@ export default function KnowledgeResourcesContent() {
             aria-labelledby={deleteTitleId}
             className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 text-center shadow-xl animate-slide-up"
           >
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-              <FaTrashAlt className="text-2xl text-red-500" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-danger-subtle">
+              <FaTrashAlt className="text-2xl text-danger" />
             </div>
             <div className="space-y-2">
               <h2 id={deleteTitleId} className="text-xl font-bold text-gray-900">
@@ -701,7 +701,7 @@ export default function KnowledgeResourcesContent() {
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+                className="flex-1 rounded-xl bg-danger-solid px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-60"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

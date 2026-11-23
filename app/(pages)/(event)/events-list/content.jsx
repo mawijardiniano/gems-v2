@@ -247,7 +247,7 @@ export default function EventsListContent() {
 
         {/* Error */}
         {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center gap-2">
+          <div className="p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
             {error}
           </div>

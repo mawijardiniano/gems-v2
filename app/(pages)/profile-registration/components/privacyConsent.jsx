@@ -99,7 +99,7 @@ export default function PrivacyConsent() {
             </ul>
           </div>
 
-          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
+          <div className="bg-success-subtle border border-success-border p-4 rounded-lg">
             <p className="font-semibold text-gray-900 mb-1">
               3. Data Security & Retention
             </p>

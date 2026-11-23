@@ -29,9 +29,9 @@ export function useActionToast(ms = 4000) {
 }
 
 const STYLES = {
-  success: "bg-green-50 text-green-800 ring-green-600/20",
-  error: "bg-red-50 text-red-800 ring-red-600/20",
-  info: "bg-amber-50 text-amber-800 ring-amber-600/20",
+  success: "bg-success-subtle text-success ring-success-solid/20",
+  error: "bg-danger-subtle text-danger ring-danger-solid/20",
+  info: "bg-warning-subtle text-warning ring-warning-solid/20",
 };
 
 export default function ActionToast({ toast, onClose }) {

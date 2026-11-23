@@ -78,12 +78,12 @@ export function LoadingState({ label = "Loading statistics…" }) {
 
 export function ErrorState({ message, onRetry }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-      <p className="text-sm text-red-700">{message}</p>
+    <div className="flex items-center justify-between rounded-xl border border-danger-border bg-danger-subtle px-4 py-3">
+      <p className="text-sm text-danger">{message}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+        className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-danger hover:bg-red-100 transition-colors"
       >
         Retry
       </button>
@@ -161,7 +161,7 @@ export function SummaryCards({ totals, what, deltas }) {
                 {c.sex && deltas?.[c.sex] != null && (
                   <span
                     className={`ml-1 font-medium ${
-                      deltas[c.sex] < 0 ? "text-red-500" : "text-emerald-600"
+                      deltas[c.sex] < 0 ? "text-danger" : "text-success"
                     }`}
                   >
                     · {deltas[c.sex] > 0 ? "+" : ""}
@@ -766,8 +766,8 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
                       change == null
                         ? "text-gray-500"
                         : change < 0
-                          ? "text-red-500"
-                          : "text-emerald-600"
+                          ? "text-danger"
+                          : "text-success"
                     }`}
                   >
                     {change == null ? "—" : `${change > 0 ? "+" : ""}${change}%`}
@@ -978,9 +978,9 @@ export function YearComparisonTable({
                     <td
                       className={`py-2.5 pl-3 text-right text-xs font-medium ${
                         diff < 0
-                          ? "text-red-500"
+                          ? "text-danger"
                           : diff > 0
-                            ? "text-emerald-600"
+                            ? "text-success"
                             : "text-gray-500"
                       }`}
                     >

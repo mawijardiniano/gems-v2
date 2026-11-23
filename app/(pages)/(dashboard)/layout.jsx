@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
 import PageBreadcrumbs from "@/components/layout/PageBreadcrumbs";
 import SkipLink from "@/components/layout/SkipLink";
+import { useDialog } from "@/hooks/useDialog";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,6 +14,20 @@ export default function DashboardLayout({ children }) {
   const [initialMobileCheckDone, setInitialMobileCheckDone] = useState(false);
   const sidebarRef = useRef(null);
   const router = useRouter();
+
+  /* On phones the open sidebar is a drawer over the page: make it a real
+     dialog (focus moves in, Tab stays inside, Escape closes, focus returns to
+     the menu button). Closed, it is zero-width but its links would still be
+     tabbable, so it is made inert. */
+  const closeDrawer = useCallback(() => setSidebarOpen(false), []);
+  const drawerDialogRef = useDialog(closeDrawer);
+  const drawerRef = useCallback(
+    (node) => {
+      sidebarRef.current = node;
+      return drawerDialogRef(node);
+    },
+    [drawerDialogRef],
+  );
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -98,7 +113,13 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex relative bg-gray-50">
       <SkipLink />
-      <div ref={sidebarRef}>
+      <div
+        ref={isMobile && sidebarOpen ? drawerRef : sidebarRef}
+        role={isMobile && sidebarOpen ? "dialog" : undefined}
+        aria-modal={isMobile && sidebarOpen ? true : undefined}
+        aria-label={isMobile && sidebarOpen ? "Navigation" : undefined}
+        inert={isMobile && !sidebarOpen}
+      >
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       </div>
 

@@ -49,15 +49,15 @@ export default function BatchTable({
                 </td>
                 <td className="px-3 py-2">{batch.totals?.fetched ?? 0}</td>
                 <td className="px-3 py-2">{batch.totals?.valid ?? 0}</td>
-                <td className="px-3 py-2 text-red-600">
+                <td className="px-3 py-2 text-danger">
                   {batch.totals?.invalid ?? 0}
                 </td>
                 <td className="px-3 py-2">{batch.totals?.approved ?? 0}</td>
-                <td className="px-3 py-2 text-yellow-600">
+                <td className="px-3 py-2 text-warning">
                   {batch.totals?.duplicates ?? 0}
                 </td>
                 <td className="px-3 py-2">{migrated}</td>
-                <td className="px-3 py-2 text-red-600">
+                <td className="px-3 py-2 text-danger">
                   {batch.totals?.failed ?? 0}
                 </td>
                 <td className="px-3 py-2">
@@ -73,7 +73,7 @@ export default function BatchTable({
                       type="button"
                       disabled={loading}
                       onClick={() => onDelete(batch)}
-                      className="px-2 py-1 rounded border border-red-300 text-red-700 text-xs disabled:opacity-50"
+                      className="px-2 py-1 rounded border border-red-300 text-danger text-xs disabled:opacity-50"
                     >
                       Delete
                     </button>

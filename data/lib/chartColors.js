@@ -48,9 +48,9 @@ export function categoricalColor(index) {
 
 /* Status meaning shared with the rest of the UI (badges, alerts). */
 export const STATUS = {
-  positive: "#059669", // emerald-600 — increase, complete, on track
-  negative: "#dc2626", // red-600 — decrease, overdue, failed
-  warning: "#d97706", // amber-600
+  positive: "#047857", // --color-success — increase, complete, on track
+  negative: "#b91c1c", // --color-danger — decrease, overdue, failed
+  warning: "#92400e", // --color-warning
   neutral: "#6b7280", // gray-500
 };
 

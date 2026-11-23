@@ -39,14 +39,14 @@ export default function ReportTab({
   if (loadError) {
     return (
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-danger-border bg-danger-subtle px-4 py-3 text-sm text-danger"
         role="alert"
       >
         <span>{loadError}</span>
         <button
           type="button"
           onClick={fetchReport}
-          className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+          className="shrink-0 rounded-md border border-red-300 bg-white px-3 py-1 text-xs font-medium text-danger hover:bg-red-100"
         >
           Retry
         </button>

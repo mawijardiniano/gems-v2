@@ -40,7 +40,7 @@ export function GadStatCards({ totals, yearFilter, budgetView, budgetSummary }) 
       />
       <StatCard
         icon={FaCheckCircle}
-        iconClass="bg-emerald-50 text-emerald-600"
+        iconClass="bg-success-subtle text-success"
         label="Completed"
         value={totals.completed}
         sub={`${percentOf(totals.completed, totals.listed)}% of listed projects`}

@@ -24,7 +24,7 @@ const ACTIVITY_COLORS = {
   Academic: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Administrative: "bg-secondary-50 text-secondary-700 border-secondary-200",
   GAD: "bg-pink-50 text-pink-700 border-pink-200",
-  Extension: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
   Others: "bg-gray-50 text-gray-700 border-gray-200",
@@ -283,13 +283,13 @@ export default function EventContent({
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center gap-2">
+        <div className="p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm flex items-center gap-2">
           <FaTimes className="shrink-0" />
           {error}
           <button
             onClick={() => setError("")}
             aria-label="Dismiss error"
-            className="touch-target ml-auto text-red-400 hover:text-red-600"
+            className="touch-target ml-auto text-red-400 hover:text-danger"
           >
             <FaTimes className="text-xs" aria-hidden="true" />
           </button>

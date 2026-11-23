@@ -226,7 +226,7 @@ export default function SubmitProfile() {
 
           <div className="p-6 space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-danger-subtle border border-danger-border text-danger px-4 py-3 rounded-xl text-sm">
                 <p className="font-semibold mb-1">Please fix the following:</p>
                 <ul className="list-disc pl-4 space-y-0.5">
                   {error.split("\n").map((e, i) => (

@@ -84,7 +84,7 @@ export default function GanttEncodeTab({
                 </td>
                 <td className="px-2.5 py-2 text-sm text-gray-700">
                   {invalid ? (
-                    <span className="text-xs text-red-600">Invalid</span>
+                    <span className="text-xs text-danger">Invalid</span>
                   ) : (
                     days || "—"
                   )}
@@ -108,7 +108,7 @@ export default function GanttEncodeTab({
                         <button
                           type="button"
                           onClick={() => setEditing(null)}
-                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-subtle px-2 py-1 text-xs font-medium text-success hover:bg-emerald-100"
                         >
                           <FaCheck size={9} />
                           Done
@@ -119,7 +119,7 @@ export default function GanttEncodeTab({
                             onChange(activities.filter((_, idx) => idx !== i));
                             setEditing(null);
                           }}
-                          className="touch-target text-gray-500 hover:text-red-500 transition-colors"
+                          className="touch-target text-gray-500 hover:text-danger transition-colors"
                           title="Remove activity"
                         >
                           <FaTrash size={12} />

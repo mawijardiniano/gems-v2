@@ -84,22 +84,22 @@ const ACTION_CONFIG = {
   },
   EVENT_REGISTER: {
     icon: <FaCalendarCheck />,
-    color: "bg-emerald-100 text-emerald-600",
+    color: "bg-emerald-100 text-success",
     label: "Event Registration",
   },
   EVENT_CREATE: {
     icon: <FaPlusCircle />,
-    color: "bg-green-100 text-green-600",
+    color: "bg-green-100 text-success",
     label: "Event Created",
   },
   EVENT_STATUS_UPDATE: {
     icon: <FaTimesCircle />,
-    color: "bg-red-100 text-red-600",
+    color: "bg-red-100 text-danger",
     label: "Event Status Change",
   },
   EVENT_UPDATE: {
     icon: <FaEdit />,
-    color: "bg-yellow-100 text-yellow-600",
+    color: "bg-yellow-100 text-warning",
     label: "Event Updated",
   },
   CHANGE_PASSWORD: {
@@ -657,7 +657,7 @@ export default function Settings() {
     (message.type === "error" ? (
       <div
         role="alert"
-        className="mb-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+        className="mb-4 flex items-start gap-2 rounded-xl border border-red-100 bg-danger-subtle px-4 py-3 text-sm text-danger"
       >
         <FaExclamationCircle className="mt-0.5 shrink-0" />
         <span className="flex-1">{message.text}</span>
@@ -665,13 +665,13 @@ export default function Settings() {
           type="button"
           onClick={() => setMessage(null)}
           aria-label="Dismiss"
-          className="touch-target shrink-0 text-red-400 transition hover:text-red-600"
+          className="touch-target shrink-0 text-red-400 transition hover:text-danger"
         >
           <FaTimesCircle />
         </button>
       </div>
     ) : (
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-100 bg-success-subtle px-4 py-3 text-sm text-success">
         <FaCheckCircle className="shrink-0" />
         {message.text}
       </div>
@@ -764,9 +764,9 @@ export default function Settings() {
                   </div>
                 </div>
                 {passwordChangedAt && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-100 shrink-0">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-success-subtle rounded-lg border border-emerald-100 shrink-0">
                     <FaCheckCircle className="text-emerald-500 text-xs" />
-                    <span className="text-xs text-emerald-700 font-medium">
+                    <span className="text-xs text-success font-medium">
                       Password is active
                     </span>
                   </div>
@@ -1102,8 +1102,8 @@ export default function Settings() {
                         <div
                           className={`p-3 rounded-lg text-sm ${
                             sigMessage.type === "error"
-                              ? "bg-red-50 text-red-700 border border-red-100"
-                              : "bg-green-50 text-green-700 border border-green-100"
+                              ? "bg-danger-subtle text-danger border border-red-100"
+                              : "bg-success-subtle text-success border border-green-100"
                           }`}
                         >
                           {sigMessage.text}
@@ -1401,8 +1401,8 @@ export default function Settings() {
                   role="alert"
                   className={`mb-3 p-3 rounded-lg text-sm ${
                     message.type === "error"
-                      ? "bg-red-50 text-red-700 border border-red-100"
-                      : "bg-green-50 text-green-700 border border-green-100"
+                      ? "bg-danger-subtle text-danger border border-red-100"
+                      : "bg-success-subtle text-success border border-green-100"
                   }`}
                 >
                   {message.text}

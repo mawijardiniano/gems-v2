@@ -62,8 +62,8 @@ function EmptyState({ icon: Icon, title, description, action }) {
 function StatusBadge({ status }) {
   const styles = {
     draft: "bg-secondary-50 text-secondary-700 border-secondary-200",
-    approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    disapproved: "bg-red-50 text-red-700 border-red-200",
+    approved: "bg-success-subtle text-success border-success-border",
+    disapproved: "bg-danger-subtle text-danger border-danger-border",
   };
   const s = (status || "draft").toLowerCase();
   return (
@@ -429,19 +429,19 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
       </div>
 
       {success && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-success-border bg-success-subtle text-success text-sm animate-slide-up">
           <FaCheckCircle className="h-5 w-5 shrink-0" />
           <span>{success}</span>
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
       {quickReportError && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm animate-slide-up">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-danger-border bg-danger-subtle text-danger text-sm animate-slide-up">
           <FaExclamationTriangle className="h-5 w-5 shrink-0" />
           <span>{quickReportError}</span>
         </div>
@@ -554,7 +554,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                                         handleDelete(item.year);
                                       }}
                                       disabled={deleting}
-                                      className="flex-1 px-2 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition"
+                                      className="flex-1 px-2 py-1.5 text-xs font-medium bg-danger-solid text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition"
                                     >
                                       {deleting ? "..." : "Yes, Delete"}
                                     </button>
@@ -577,7 +577,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                                     e.stopPropagation();
                                     setDeleteConfirmId(item._id);
                                   }}
-                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
+                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-danger hover:bg-danger-subtle transition"
                                 >
                                   <FaTrash className="h-3.5 w-3.5" />
                                   Delete GPB
@@ -638,7 +638,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                             <FaMoneyBillWave className="h-3.5 w-3.5" />
                             GAD Budget
                           </span>
-                          <span className="font-semibold text-emerald-600">
+                          <span className="font-semibold text-success">
                             {gaa?.gadAnnualBudget
                               ? formatPeso(gaa.gadAnnualBudget)
                               : "To follow"}
@@ -823,7 +823,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   />
                 </div>
                 {yearAlreadyExists ? (
-                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-danger mt-1.5 flex items-center gap-1">
                     <FaExclamationTriangle className="h-3 w-3" />
                     A GPB for {selectedYear} already exists.
                   </p>
@@ -879,7 +879,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-500">GAD Budget</span>
-                          <span className="font-semibold text-emerald-600">
+                          <span className="font-semibold text-success">
                             {formatPeso(budget.gadAnnualBudget)}
                           </span>
                         </div>

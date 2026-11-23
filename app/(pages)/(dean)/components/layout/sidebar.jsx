@@ -203,7 +203,7 @@ export default function Sidebar({ open, setOpen, role }) {
                 <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
-                <p className="text-2xs font-medium text-emerald-600 truncate mt-0.5 uppercase tracking-wider">
+                <p className="text-2xs font-medium text-success truncate mt-0.5 uppercase tracking-wider">
                   Dean
                 </p>
               </div>
@@ -246,7 +246,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     open ? "p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-gradient-to-r from-emerald-50 to-teal-50/50 text-emerald-700"
+                      ? "bg-gradient-to-r from-emerald-50 to-teal-50/50 text-success"
                       : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                   }`}
                 >

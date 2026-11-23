@@ -77,7 +77,7 @@ function SectionTitle({ step, title }) {
 function StateCard({ icon, tone = "gray", title, message }) {
   const tones = {
     gray: "bg-gray-50 text-gray-500",
-    red: "bg-red-50 text-red-500",
+    red: "bg-danger-subtle text-danger",
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
@@ -290,7 +290,7 @@ export default function AttendContent() {
                   ? "bg-secondary-50"
                   : done.already
                     ? "bg-secondary-50"
-                    : "bg-emerald-50"
+                    : "bg-success-subtle"
               }`}
             >
               {done.pending ? (
@@ -425,7 +425,7 @@ export default function AttendContent() {
             <div className="mt-4 space-y-4">
               <div>
                 <label className="label" htmlFor="full_name">
-                  Full Name <span className="text-red-500">*</span>
+                  Full Name <span className="text-danger">*</span>
                 </label>
                 <input
                   id="full_name"
@@ -445,7 +445,7 @@ export default function AttendContent() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="label" htmlFor="sex">
-                    Sex at Birth <span className="text-red-500">*</span>
+                    Sex at Birth <span className="text-danger">*</span>
                   </label>
                   <select
                     id="sex"
@@ -465,7 +465,7 @@ export default function AttendContent() {
                 </div>
                 <div>
                   <label className="label" htmlFor="age">
-                    Age <span className="text-red-500">*</span>
+                    Age <span className="text-danger">*</span>
                   </label>
                   <input
                     id="age"
@@ -532,7 +532,7 @@ export default function AttendContent() {
             <div className="mt-4 space-y-4">
               <fieldset>
                 <legend className="label">
-                  I am attending as <span className="text-red-500">*</span>
+                  I am attending as <span className="text-danger">*</span>
                 </legend>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {PARTICIPANT_TYPES.map(({ value, label, icon: Icon }) => {
@@ -588,7 +588,7 @@ export default function AttendContent() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="sm:col-span-3">
                     <label className="label" htmlFor="program">
-                      Program <span className="text-red-500">*</span>
+                      Program <span className="text-danger">*</span>
                     </label>
                     <input
                       id="program"

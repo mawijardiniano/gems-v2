@@ -20,6 +20,7 @@ import {
   seatCountLabel,
   sortPositions,
 } from "@/data/lib/universityPositionsUi";
+import { useConfirm } from "@/components/ui/useConfirm";
 
 /**
  * The one place the university seat list ("positions") is edited.
@@ -74,7 +75,7 @@ const groupPanelId = (header) =>
 
 function SeatPill({ active }) {
   return active ? (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Active
     </span>
@@ -92,6 +93,7 @@ function SeatPill({ active }) {
  * scannable.
  */
 function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
+  const { confirm, confirmDialog } = useConfirm();
   const [name, setName] = useState(seat.name || "");
   const [header, setHeader] = useState(seat.header || "");
   const [order, setOrder] = useState(
@@ -114,10 +116,13 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
        seat by id — so say so before it happens rather than after. */
     if (
       patch.name &&
-      typeof window !== "undefined" &&
-      !window.confirm(
-        `Rename "${seat.name}" to "${nextName}"? Every term in this seat's history — past and present — will read under the new name.`,
-      )
+      !(await confirm({
+        title: `Rename "${seat.name}" to "${nextName}"?`,
+        message:
+          "Every term in this seat's history — past and present — will read under the new name.",
+        confirmLabel: "Rename",
+        tone: "primary",
+      }))
     ) {
       return;
     }
@@ -132,65 +137,68 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
   };
 
   return (
-    <form onSubmit={submit} className="mt-2 flex flex-col gap-2 lg:flex-row">
-      <div className="grid flex-1 gap-2 sm:grid-cols-3">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          aria-label="Position name"
-          placeholder="e.g. Head, Student Affairs and Services"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
-        />
-        <select
-          value={header}
-          onChange={(e) => setHeader(e.target.value)}
-          aria-label="Office / group"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
-        >
-          {/*
-            The seat's own header comes first: it can be missing from `offices`
-            on an older install, and a select with no matching option silently
-            resets the value to the first column.
-          */}
-          {!offices.some((o) => o.header === seat.header) && (
-            <option value={seat.header}>{seat.header}</option>
-          )}
-          {offices.map((o) => (
-            <option key={o._id || o.header} value={o.header}>
-              {o.header}
-              {o.is_active === false ? " (inactive)" : ""}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          value={order}
-          onChange={(e) => setOrder(e.target.value)}
-          aria-label="Sort order"
-          placeholder="Order in column"
-          className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
-        />
-      </div>
-      <div className="flex shrink-0 items-start gap-2">
-        <button
-          type="submit"
-          disabled={busy || !name.trim()}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
-        >
-          <FaCheckCircle className="h-3 w-3" />
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
-        >
-          <FaTimes className="h-3 w-3" />
-          Cancel
-        </button>
-      </div>
-    </form>
+    <>
+      <form onSubmit={submit} className="mt-2 flex flex-col gap-2 lg:flex-row">
+        <div className="grid flex-1 gap-2 sm:grid-cols-3">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-label="Position name"
+            placeholder="e.g. Head, Student Affairs and Services"
+            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+          />
+          <select
+            value={header}
+            onChange={(e) => setHeader(e.target.value)}
+            aria-label="Office / group"
+            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+          >
+            {/*
+              The seat's own header comes first: it can be missing from `offices`
+              on an older install, and a select with no matching option silently
+              resets the value to the first column.
+            */}
+            {!offices.some((o) => o.header === seat.header) && (
+              <option value={seat.header}>{seat.header}</option>
+            )}
+            {offices.map((o) => (
+              <option key={o._id || o.header} value={o.header}>
+                {o.header}
+                {o.is_active === false ? " (inactive)" : ""}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+            aria-label="Sort order"
+            placeholder="Order in column"
+            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+          />
+        </div>
+        <div className="flex shrink-0 items-start gap-2">
+          <button
+            type="submit"
+            disabled={busy || !name.trim()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
+          >
+            <FaCheckCircle className="h-3 w-3" />
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+          >
+            <FaTimes className="h-3 w-3" />
+            Cancel
+          </button>
+        </div>
+      </form>
+      {confirmDialog}
+    </>
   );
 }
 
@@ -289,7 +297,7 @@ function SeatRow({
                 onClick={() => onReactivate(seat)}
                 disabled={busy}
                 title="Reactivate this seat"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-success-border bg-success-subtle px-3 py-1.5 text-xs font-medium text-success transition hover:bg-emerald-100 hover:border-emerald-300 disabled:opacity-50"
               >
                 <FaRedo className="h-3 w-3" />
                 Reactivate

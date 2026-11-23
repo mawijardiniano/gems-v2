@@ -165,7 +165,7 @@ function Accomplishments({ project }) {
               className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium normal-case tracking-normal ${
                 isOverride
                   ? "border-secondary-200 bg-secondary-50 text-secondary-700"
-                  : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-success-border bg-success-subtle text-success"
               }`}
             >
               {isOverride ? "Custom (manual)" : "Auto from linked events"}

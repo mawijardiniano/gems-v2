@@ -32,8 +32,8 @@ function AlertBanner({ type = "error", message }) {
     <div
       className={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 ${
         isError
-          ? "border-red-200 bg-red-50 text-red-700"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          ? "border-danger-border bg-danger-subtle text-danger"
+          : "border-success-border bg-success-subtle text-success"
       }`}
       role={isError ? "alert" : "status"}
     >

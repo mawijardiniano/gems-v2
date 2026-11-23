@@ -49,7 +49,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
           confirmation has to be shown here or it is never seen. */}
       {success && (
         <div
-          className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-center gap-3"
+          className="rounded-xl border border-success-border bg-success-subtle p-4 text-sm text-success flex items-center gap-3"
           role="status"
         >
           <FiCheckCircle size={16} className="shrink-0" />
@@ -59,7 +59,7 @@ export default function ReportView({ report, canSubmit, viewerId }) {
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-subtle text-success">
               <FiCheckCircle size={18} />
             </div>
             <div>

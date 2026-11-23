@@ -227,7 +227,7 @@ function ManualEntries({
                     type="button"
                     onClick={() => onRemove(key)}
                     title="Remove"
-                    className="touch-target p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    className="touch-target p-2 rounded-lg text-gray-500 hover:text-danger hover:bg-danger-subtle transition-colors"
                   >
                     <svg className="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -378,7 +378,7 @@ export default function EditMemberModal({
           )}
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
+            <p className="text-sm text-danger bg-danger-subtle border border-danger-border rounded-xl px-3.5 py-2.5">
               {error}
             </p>
           )}

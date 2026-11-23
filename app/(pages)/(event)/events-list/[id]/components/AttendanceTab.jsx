@@ -28,7 +28,7 @@ const STATUS_META = {
   },
   approved: {
     label: "Approved",
-    pill: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    pill: "bg-success-subtle text-success ring-emerald-600/20",
     icon: FiCheck,
   },
   rejected: {
@@ -337,7 +337,7 @@ export default function AttendanceTab(props) {
 
       <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success-subtle text-success">
             <FiUsers size={16} />
           </div>
           <div>
@@ -442,7 +442,7 @@ export default function AttendanceTab(props) {
                           </p>
                         )}
                       </td>
-                      <td className="text-center text-emerald-700 font-medium">{fmtTime(g.attended_at)}</td>
+                      <td className="text-center text-success font-medium">{fmtTime(g.attended_at)}</td>
                       <td className="text-center">
                         <div className="inline-flex items-center gap-1.5 pointer-coarse:gap-3">
                           {!editable ? (
@@ -456,7 +456,7 @@ export default function AttendanceTab(props) {
                                   title="Approve"
                                   aria-label={`Approve ${g.full_name}`}
                                   onClick={() => handleSingle(g._id, "approve")}
-                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                  className="touch-target inline-flex h-7 w-7 items-center justify-center rounded-lg border border-success-border bg-success-subtle text-success hover:bg-emerald-100"
                                 >
                                   <FiCheck size={13} />
                                 </button>
@@ -493,7 +493,7 @@ export default function AttendanceTab(props) {
           </div>
         ) : (
           <div className="p-12 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-success-subtle mb-4">
               <FaUserCheck className="text-emerald-500" size={24} />
             </div>
             <p className="text-gray-500 font-medium">

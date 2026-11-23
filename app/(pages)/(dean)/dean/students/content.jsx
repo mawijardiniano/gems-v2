@@ -1190,8 +1190,8 @@ export default function StudentsUserListContent({ college }) {
                           }
                           className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition ${
                             user.is_active
-                              ? "bg-white text-red-600 border-red-200 hover:bg-red-50"
-                              : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                              ? "bg-white text-danger border-danger-border hover:bg-danger-subtle"
+                              : "bg-white text-success border-success-border hover:bg-success-subtle"
                           }`}
                         >
                           {user.is_active ? "Deactivate" : "Activate"}
@@ -1336,8 +1336,8 @@ export default function StudentsUserListContent({ college }) {
                   confirmAction.type === "reset"
                     ? "bg-secondary-500 hover:bg-secondary-600"
                     : confirmAction.isActive
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-emerald-500 hover:bg-emerald-600"
+                      ? "bg-red-500 hover:bg-danger-solid"
+                      : "bg-emerald-500 hover:bg-success-solid"
                 }`}
               >
                 Confirm

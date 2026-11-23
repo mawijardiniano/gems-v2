@@ -44,13 +44,13 @@ function Toast({ message, type, visible }) {
     <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
       <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-lg border ${
         type === "success"
-          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-          : "bg-red-50 border-red-200 text-red-800"
+          ? "bg-success-subtle border-success-border text-success"
+          : "bg-danger-subtle border-danger-border text-danger"
       }`}>
         {type === "success" ? (
           <FaCheckCircle className="text-emerald-500 shrink-0 text-lg" />
         ) : (
-          <FaTimes className="text-red-500 shrink-0 text-lg" />
+          <FaTimes className="text-danger shrink-0 text-lg" />
         )}
         <p className="text-sm font-semibold">{message}</p>
       </div>
@@ -272,7 +272,7 @@ export default function ContactInformationContent({ profile }) {
 
   const contactCards = [
     { icon: <FaEnvelope />, label: "Email Address", value: formData.email, color: "bg-secondary-50 text-secondary-600" },
-    { icon: <FaPhone />, label: "Mobile Number", value: formData.mobileNumber, color: "bg-green-50 text-green-600" },
+    { icon: <FaPhone />, label: "Mobile Number", value: formData.mobileNumber, color: "bg-success-subtle text-success" },
     { icon: <FaHome />, label: "Permanent Address", value: getAddressSummary(formData.permanentAddress), color: "bg-secondary-50 text-secondary-600" },
     { icon: <FaMapMarkerAlt />, label: "Current Address", value: getAddressSummary(formData.currentAddress), color: "bg-secondary-50 text-secondary-600" },
   ];

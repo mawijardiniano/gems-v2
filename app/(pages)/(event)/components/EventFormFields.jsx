@@ -57,7 +57,7 @@ const labelClass =
 
 const SECTION_COLORS = {
   blue: "bg-secondary-50 text-secondary-600",
-  emerald: "bg-emerald-50 text-emerald-600",
+  emerald: "bg-success-subtle text-success",
   amber: "bg-secondary-50 text-secondary-600",
   cyan: "bg-cyan-50 text-cyan-600",
 };
@@ -238,7 +238,7 @@ export default function EventFormFields({
         <div>
           {variant === "compact" && (
             <p className={labelClass} id={id("source-label")}>
-              Event Source <span className="text-red-500">*</span>
+              Event Source <span className="text-danger">*</span>
             </p>
           )}
           <div
@@ -298,7 +298,7 @@ export default function EventFormFields({
               className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
               aria-hidden="true"
             />
-            Type of Activity <span className="text-red-500">*</span>
+            Type of Activity <span className="text-danger">*</span>
           </p>
           <div
             className="grid grid-cols-2 sm:grid-cols-3 gap-3"
@@ -330,7 +330,7 @@ export default function EventFormFields({
                 className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
                 aria-hidden="true"
               />
-              GAD Activity <span className="text-red-500">*</span>
+              GAD Activity <span className="text-danger">*</span>
             </label>
             {projects.length === 0 ? (
               <p className="text-xs text-gray-500 italic">
@@ -381,7 +381,7 @@ export default function EventFormFields({
 
         <div>
           <label className={labelClass} htmlFor={id("title")}>
-            Event Title <span className="text-red-500">*</span>
+            Event Title <span className="text-danger">*</span>
           </label>
           <input
             id={id("title")}
@@ -406,7 +406,7 @@ export default function EventFormFields({
         {/* Date only: events run the whole (Manila) day. */}
         <div>
           <label className={labelClass} htmlFor={id("date")}>
-            Event Date <span className="text-red-500">*</span>
+            Event Date <span className="text-danger">*</span>
           </label>
           <input
             id={id("date")}
