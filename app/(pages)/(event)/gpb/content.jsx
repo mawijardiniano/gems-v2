@@ -26,6 +26,7 @@ import {
 import { formatPeso } from "@/data/lib/money";
 import StatCard from "./[year]/components/StatCard";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 
 function SkeletonCard() {
@@ -415,15 +416,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
         </div>
         <div className="flex items-center gap-3">
           {canManage && (
-            <button
+            <Button
+              variant="primary"
+              className="disabled:cursor-wait"
               type="button"
               onClick={openModal}
               disabled={openingModal}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200 disabled:opacity-60 disabled:cursor-wait"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add GPB
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -468,15 +470,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             description="Create your first GPB record to start managing projects and budgets."
             action={
               canManage ? (
-                <button
+                <Button
+                  variant="primary"
+                  className="disabled:cursor-wait"
                   type="button"
                   onClick={openModal}
                   disabled={openingModal}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-60 disabled:cursor-wait"
                 >
                   <FaPlus className="h-3 w-3" />
                   Create GPB
-                </button>
+                </Button>
               ) : null
             }
           />
@@ -895,16 +898,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
             
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={closeModal}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   disabled={!selectedYear || yearAlreadyExists || creating}
                   onClick={handleCreate}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
                 >
                   {creating ? (
                     <>
@@ -917,7 +920,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   ) : (
                     "Create GPB"
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -993,23 +996,23 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
    
               <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={closeAttachModal}
-                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   disabled={!attachBudgetId || attaching}
                   onClick={handleAttach}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
                 >
                   {attaching
                     ? "Linking..."
                     : attachModal.gpb.gaaBudgetId
                       ? "Update Budget"
                       : "Attach Budget"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

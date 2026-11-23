@@ -34,6 +34,7 @@ import {
   KNOWLEDGE_ALLOWED_EXTS,
   MAX_FILE_SIZE,
 } from "@/data/lib/knowledgeResources";
+import Button from "@/components/ui/Button";
 
 // ─── Constants ──────────────────────────────────────────────────────
 const CATEGORY_STYLES = {
@@ -637,13 +638,13 @@ export default function KnowledgeResourcesContent() {
             </div>
 
             <div className="flex flex-col-reverse gap-3 border-t border-gray-100 px-6 py-4 sm:flex-row sm:justify-end">
-              <button
+              <Button
+                variant="secondary"
                 onClick={closeUploadModal}
                 disabled={uploading}
-                className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
                 Cancel
-              </button>
+              </Button>
               <button
                 onClick={handleUpload}
                 disabled={uploading}
@@ -691,20 +692,22 @@ export default function KnowledgeResourcesContent() {
               </p>
             </div>
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-              <button
+              <Button
+                variant="secondary"
+                className="flex-1"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
-                className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="flex-1 rounded-xl bg-danger-solid px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-60"
               >
                 {deleting ? "Deleting..." : "Delete"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

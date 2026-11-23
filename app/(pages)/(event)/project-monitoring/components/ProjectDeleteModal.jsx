@@ -7,6 +7,7 @@ import {
   FaSpinner,
   FaTrash,
 } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 /*
  * Confirmation dialog for deleting a module project. Mirrors the sidebar's
@@ -103,22 +104,24 @@ export default function ProjectDeleteModal({
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <button
+          <Button
+            variant="secondary"
+            className="flex-1"
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
+            className="flex-1"
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-danger-solid text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {deleting && <FaSpinner className="animate-spin" size={12} />}
             {deleting ? "Deleting…" : "Delete Project"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

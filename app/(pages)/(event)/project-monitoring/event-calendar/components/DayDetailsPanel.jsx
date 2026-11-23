@@ -18,6 +18,7 @@ import {
   eventDateRangeLabel,
   eventTimeLabel,
 } from "../calendarDates";
+import Button from "@/components/ui/Button";
 
 
 const getStatusBadge = calendarStatus;
@@ -177,13 +178,14 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
           )}
 
           {canManage ? (
-            <button
+            <Button
+              variant="primary"
+              className="w-full"
               type="button"
               onClick={() => onManage(event)}
-              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 py-2.5 text-xs font-semibold text-white shadow-md transition hover:from-secondary-700 hover:to-secondary-700 active:scale-[0.99]"
             >
               Manage event
-            </button>
+            </Button>
           ) : (
             <p className="text-center text-xs text-gray-500">
               Only the event organizer can manage this event.

@@ -13,6 +13,7 @@ import {
   filterOfficesByTab,
   officeCountsWithAssigned,
 } from "@/data/lib/universityOffices";
+import Button from "@/components/ui/Button";
 
 /**
  * The one place the university office list is edited.
@@ -183,14 +184,15 @@ export default function OfficesManager({
             aria-label="New office name"
             className="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             type="submit"
             disabled={busy || !draft.trim()}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-secondary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
           >
             <FaPlus className="h-3 w-3" />
             {busy ? "Working..." : "Add Office"}
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">

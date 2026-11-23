@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
-import { useDialog } from "@/hooks/useDialog";
+import { useState } from "react";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import BatchTable from "./BatchTable";
 import StagingRecordsTable from "./StagingRecordsTable";
 import RecordDetailPanel from "./RecordDetailPanel";
@@ -17,8 +18,6 @@ import BatchActionBar from "./BatchActionBar";
 export default function StagingWorkspace({ d }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleteTargetBatch, setDeleteTargetBatch] = useState(null);
-  const deleteTitleId = useId();
-  const deleteDialogRef = useDialog(() => setDeleteTargetBatch(null));
 
   function toggleRow(id, checked) {
     setSelectedIds((prev) => {
@@ -236,51 +235,30 @@ export default function StagingWorkspace({ d }) {
           </div>
         </div>
       )}
-      {deleteTargetBatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setDeleteTargetBatch(null)}
-          />
-          <div
-            ref={deleteDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={deleteTitleId}
-            className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4"
-          >
-            <div>
-              <h3 id={deleteTitleId} className="text-base font-semibold text-gray-900">
-                Confirm Delete Batch
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                This will permanently delete batch
-                <span className="font-semibold">
-                  {" "}
-                  {deleteTargetBatch.source_name || deleteTargetBatch._id}
-                </span>
-                , including all staging records and logs.
-              </p>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeleteTargetBatch(null)}
-                className="px-3 py-1.5 rounded border border-gray-300 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteBatch}
-                className="px-3 py-1.5 rounded bg-danger-solid text-white text-sm"
-              >
-                Delete Batch
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={Boolean(deleteTargetBatch)}
+        onClose={() => setDeleteTargetBatch(null)}
+        title="Confirm Delete Batch"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteTargetBatch(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={confirmDeleteBatch}>
+              Delete Batch
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          This will permanently delete batch
+          <span className="font-semibold">
+            {" "}
+            {deleteTargetBatch?.source_name || deleteTargetBatch?._id}
+          </span>
+          , including all staging records and logs.
+        </p>
+      </Modal>
     </div>
   );
 }

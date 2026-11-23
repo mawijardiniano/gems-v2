@@ -2,6 +2,7 @@
 
 import { gpbStatusOptions } from "@/data/lib/gpbStatus";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -130,26 +131,20 @@ export default function UpdateStatusModal({
         </div>
 
         <div className="flex justify-end gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setUpdateStatusModal(false)}
-            className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
           >
             Cancel
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant={statusType === "approved" ? "success" : "danger"}
             onClick={handleUpdateStatus}
             disabled={saving}
-            className={`px-5 py-2 rounded-lg text-white transition ${
-              saving
-                ? "bg-gray-400 cursor-not-allowed"
-                : statusType === "approved"
-                  ? "bg-success-solid hover:bg-green-700"
-                  : "bg-danger-solid hover:bg-red-700"
-            }`}
           >
             {saving ? "Saving..." : "Save Status"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

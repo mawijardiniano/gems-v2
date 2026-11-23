@@ -43,6 +43,7 @@ import {
   profileFilterOptions,
   profileFilterSummary,
 } from "./profileFilters";
+import Button from "@/components/ui/Button";
 
 const PROFILE_REPORT = "gender-profile";
 const FLAG_FILTER_FIELDS = Object.keys(PROFILE_FILTER_KINDS).filter(
@@ -808,17 +809,18 @@ export default function ReportsContent({ scopeCollege = "" }) {
                 Preview
               </button>
             )}
-            <button
+            <Button
+              variant="primary"
+              className="flex-1"
               type="button"
               onClick={handleGenerate}
               disabled={generating || (needsGpbYear && !year)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-secondary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {generating && (
                 <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
               )}
               {generating ? "Generating…" : "Generate Report"}
-            </button>
+            </Button>
           </div>
 
           {status && (

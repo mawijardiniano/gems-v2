@@ -1,7 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
-import { useDialog } from "@/hooks/useDialog";
+import { useState } from "react";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 export default function BatchActionBar({
   batch,
@@ -16,8 +17,6 @@ export default function BatchActionBar({
 }) {
   const [confirmingMigrate, setConfirmingMigrate] = useState(false);
   const busy = busyAction !== "";
-  const migrateTitleId = useId();
-  const migrateDialogRef = useDialog(() => setConfirmingMigrate(false));
 
   const finished = ["migrating", "completed"].includes(batch?.status);
   const canValidate = !busy && !finished;
@@ -40,18 +39,17 @@ export default function BatchActionBar({
         >
           {busyAction === "Validate Batch" ? "Validating..." : "Validate"}
         </button>
-        <button
-          type="button"
+        <Button
           disabled={!canReview}
           onClick={() => onApprove(hasSelection ? [...selectedIds] : null)}
-          className="px-3 py-1.5 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
+          className="rounded px-3 py-1.5"
         >
           {busyAction.startsWith("Approve")
             ? "Approving..."
             : hasSelection
               ? `Approve Selected (${selectedIds.size})`
               : "Approve All Valid"}
-        </button>
+        </Button>
         <button
           type="button"
           disabled={!canReview}
@@ -64,71 +62,53 @@ export default function BatchActionBar({
               ? `Reject Selected (${selectedIds.size})`
               : "Reject All Valid"}
         </button>
-        <button
-          type="button"
+        <Button
+          variant="success"
           disabled={!canMigrate}
           onClick={() => setConfirmingMigrate(true)}
-          className="px-3 py-1.5 rounded bg-success-solid text-white text-sm disabled:opacity-50"
+          className="rounded px-3 py-1.5"
         >
           {busyAction === "Migrate Approved"
             ? "Migrating..."
             : `Migrate Approved (${approvedCount})`}
-        </button>
+        </Button>
       </div>
 
-      {confirmingMigrate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setConfirmingMigrate(false)}
-          />
-          <div
-            ref={migrateDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={migrateTitleId}
-            className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4"
-          >
-            <div>
-              <h3 id={migrateTitleId} className="text-base font-semibold text-gray-900">
-                Confirm Migration
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                This will write{" "}
-                <span className="font-semibold">{approvedCount}</span> approved
-                record(s) into production (profiles, terms, and user accounts).
-                Make sure you are connected to the intended database.
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                <span className="font-semibold">{predictedCreateCount}</span>{" "}
-                will create new persons ·{" "}
-                <span className="font-semibold">{predictedUpdateCount}</span>{" "}
-                will update existing persons (blank CSV cells keep current
-                values)
-              </p>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingMigrate(false)}
-                className="px-3 py-1.5 rounded border border-gray-300 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmingMigrate(false);
-                  onMigrate();
-                }}
-                className="px-3 py-1.5 rounded bg-success-solid text-white text-sm"
-              >
-                Migrate Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmingMigrate}
+        onClose={() => setConfirmingMigrate(false)}
+        title="Confirm Migration"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmingMigrate(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              onClick={() => {
+                setConfirmingMigrate(false);
+                onMigrate();
+              }}
+            >
+              Migrate Now
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          This will write{" "}
+          <span className="font-semibold">{approvedCount}</span> approved
+          record(s) into production (profiles, terms, and user accounts).
+          Make sure you are connected to the intended database.
+        </p>
+        <p className="text-xs text-gray-500 mt-2">
+          <span className="font-semibold">{predictedCreateCount}</span>{" "}
+          will create new persons ·{" "}
+          <span className="font-semibold">{predictedUpdateCount}</span>{" "}
+          will update existing persons (blank CSV cells keep current
+          values)
+        </p>
+      </Modal>
     </>
   );
 }

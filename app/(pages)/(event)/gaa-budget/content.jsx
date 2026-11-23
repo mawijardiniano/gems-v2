@@ -21,6 +21,7 @@ import {
 import { useDialog } from "@/hooks/useDialog";
 import { useRouter } from "next/navigation";
 import PrintGAABudget from "../components/Print/PrintGAABudget";
+import Button from "@/components/ui/Button";
 
 // ─── Skeleton Components ───────────────────────────────────────────
 function SkeletonCard({ className = "" }) {
@@ -305,16 +306,16 @@ export default function GAABudgetContent() {
         <div className="flex items-center gap-3">
           <PrintGAABudget budgets={budgets} />
           {!isCoordinator && (
-            <button
+            <Button
+              variant="primary"
               onClick={() => {
                 setEditBudget(null);
                 setModalOpen(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Add Budget
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -430,16 +431,16 @@ export default function GAABudgetContent() {
             }
             action={
               !searchTerm && !isCoordinator ? (
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => {
                     setEditBudget(null);
                     setModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
                 >
                   <FaPlus className="h-3 w-3" />
                   Add Budget
-                </button>
+                </Button>
               ) : null
             }
           />
@@ -598,17 +599,17 @@ export default function GAABudgetContent() {
             </div>
 
             <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
-              <button
+              <Button
+                variant="secondary"
                 onClick={cancelDelete}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-danger-solid rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-red-200"
               >
                 {deleting ? (
                   <>
@@ -621,7 +622,7 @@ export default function GAABudgetContent() {
                 ) : (
                   "Delete Budget"
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -822,17 +823,17 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <button
+            <Button
+              variant="secondary"
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
             >
               {loading ? (
                 <>
@@ -847,7 +848,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               ) : (
                 "Save Budget"
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

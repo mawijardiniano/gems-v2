@@ -22,6 +22,7 @@ import { MAX_UPLOAD_FILE_BYTES } from "@/data/lib/uploadRules";
 
 const POSTER_FOLDER = "events/posters";
 import EventFormFields from "../components/EventFormFields";
+import Button from "@/components/ui/Button";
 
 const labelClass =
   "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
@@ -362,24 +363,24 @@ export default function CreateEventsContent() {
         />
 
         <div className="flex items-center justify-end gap-3 pt-2 pb-8">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={() =>
               router.push(
                 userRole === "dean" ? "/dean/projects" : "/events-list",
               )
             }
-            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             type="submit"
             disabled={loading || uploading}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary-700 to-secondary-500 text-sm font-medium text-white shadow-lg shadow-secondary-500/25 transition hover:shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {loading || uploading ? "Creating..." : "Create Event"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

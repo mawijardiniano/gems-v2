@@ -21,6 +21,7 @@ import {
   sortPositions,
 } from "@/data/lib/universityPositionsUi";
 import { useConfirm } from "@/components/ui/useConfirm";
+import Button from "@/components/ui/Button";
 
 /**
  * The one place the university seat list ("positions") is edited.
@@ -179,22 +180,22 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
           />
         </div>
         <div className="flex shrink-0 items-start gap-2">
-          <button
+          <Button
             type="submit"
             disabled={busy || !name.trim()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
+            className="gap-1.5 rounded-lg px-3 py-2 text-xs"
           >
             <FaCheckCircle className="h-3 w-3" />
             Save
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
             onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+            className="gap-1.5 rounded-lg px-3 py-2 text-xs text-gray-600"
           >
             <FaTimes className="h-3 w-3" />
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
       {confirmDialog}
@@ -609,14 +610,14 @@ export default function PositionsManager({
             aria-label="New position name"
             className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
-          <button
+          <Button
             type="submit"
             disabled={busy || !addHeader || !addName.trim()}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-secondary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-secondary-700 disabled:opacity-50"
+            className="shrink-0 gap-1.5 rounded-lg py-2"
           >
             <FaPlus className="h-3 w-3" />
             {busy ? "Working..." : "Add Position"}
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">

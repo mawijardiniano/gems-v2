@@ -22,6 +22,7 @@ import AddProjectWizard from "./components/AddProjectWizard";
 import GpbProjectsTable from "./components/GpbProjectsTable";
 import { useConfirm } from "@/components/ui/useConfirm";
 import ActionToast, { useActionToast } from "@/components/ActionToast";
+import Button from "@/components/ui/Button";
 
 /* Clears a transient notice after `ms`. */
 function useAutoClear(value, clear, ms) {
@@ -179,24 +180,24 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
 
       <div className="flex justify-end mb-4 gap-2">
         {!loadError && role !== "planning director" && gpbOpen && (
-          <button
+          <Button
+            variant="success"
             type="button"
             onClick={add.openWizard}
-            className="px-4 py-2 bg-success-solid text-white rounded-md font-medium hover:bg-green-700 transition"
           >
             + Add Project
-          </button>
+          </Button>
         )}
         {/* Hidden until the plan has loaded: with no GPB id the save posted
             to /api/gpb/status/null. */}
         {!loadError && gpb.gpbId && role !== "gad coordinator" && (
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={statusUpdate.openModal}
-            className="bg-secondary-600 py-2 px-5 text-white rounded-md font-medium"
           >
             Update Status
-          </button>
+          </Button>
         )}
       </div>
 

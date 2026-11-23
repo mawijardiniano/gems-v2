@@ -7,6 +7,7 @@ import {
   prevStep,
 } from "@/store/slices/profileRegistrationSlice";
 import { FaBriefcase, FaArrowRight, FaArrowLeft } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 export default function EmploymentInformation() {
   const dispatch = useDispatch();
@@ -84,18 +85,17 @@ export default function EmploymentInformation() {
             </p>
           </div>
           <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => dispatch(prevStep())}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 transition text-sm font-medium"
             >
               <FaArrowLeft className="text-xs" /> Previous
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => dispatch(nextStep())}
-              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-secondary-600 text-white hover:bg-secondary-700 transition text-sm font-semibold shadow-lg shadow-secondary-200"
             >
               Next Step <FaArrowRight className="text-xs" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -234,23 +234,18 @@ export default function EmploymentInformation() {
           </div>
 
           <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => dispatch(prevStep())}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 transition text-sm font-medium"
             >
               <FaArrowLeft className="text-xs" /> Previous
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => !isNextDisabled && dispatch(nextStep())}
               disabled={isNextDisabled}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
-                isNextDisabled
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
-              }`}
             >
               Next Step <FaArrowRight className="text-xs" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

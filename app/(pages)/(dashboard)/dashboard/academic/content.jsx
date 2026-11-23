@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Button from "@/components/ui/Button";
 import {
   FaSave,
   FaTimes,
@@ -288,14 +289,10 @@ export default function AcademicContent() {
           </div>
           <div className="flex items-center gap-3">
             {isEditing && (
-              <button
-                onClick={handleSave}
-                disabled={isUpdating}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-success-solid text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 shadow-sm hover:shadow-md"
-              >
+              <Button variant="success" onClick={handleSave} disabled={isUpdating}>
                 <FaSave className="text-xs" />
                 {isUpdating ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
             )}
             <button
               onClick={() => {

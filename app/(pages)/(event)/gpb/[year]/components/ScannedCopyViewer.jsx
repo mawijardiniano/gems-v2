@@ -4,6 +4,7 @@ import { useId } from "react";
 import { FiDownload, FiFileText, FiX } from "react-icons/fi";
 import { getScannedFileType } from "../lib/projectForm";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -49,13 +50,13 @@ export default function ScannedCopyViewer({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
+            <Button
+              variant="primary"
               onClick={downloadScannedCopy}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
             >
               <FiDownload className="h-3.5 w-3.5" />
               Download
-            </button>
+            </Button>
             <button
               type="button"
               aria-label="Close"
@@ -101,13 +102,14 @@ export default function ScannedCopyViewer({
           {scannedPreviewError ? (
             <div className="text-center p-8">
               <p className="text-sm text-gray-300">{scannedPreviewError}</p>
-              <button
+              <Button
+                variant="primary"
+                className="mt-3"
                 onClick={downloadScannedCopy}
-                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
               >
                 <FiDownload className="h-3.5 w-3.5" />
                 Download instead
-              </button>
+              </Button>
             </div>
           ) : getScannedFileType(selectedGPBStatus.scanned_copy.url) ===
             "image" ? (
@@ -146,13 +148,14 @@ export default function ScannedCopyViewer({
               <p className="text-sm text-gray-300">
                 Preview not available for this file type.
               </p>
-              <button
+              <Button
+                variant="primary"
+                className="mt-3"
                 onClick={downloadScannedCopy}
-                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
               >
                 <FiDownload className="h-3.5 w-3.5" />
                 Download to view
-              </button>
+              </Button>
             </div>
           )}
         </div>

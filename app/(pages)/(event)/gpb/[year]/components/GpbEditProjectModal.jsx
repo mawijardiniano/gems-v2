@@ -4,6 +4,7 @@ import { alignActivityDescriptions, emptyIndicator, isAttributedProgram, isEditR
 import PerformanceIndicatorInput from "./PerformanceIndicatorInput";
 import OfficeMultiSelect from "../../../components/OfficeMultiSelect";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -526,27 +527,27 @@ export default function GpbEditProjectModal({
         </div>
 
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={cancelEdit}
-            className="px-5 py-2 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition"
           >
             Cancel
-          </button>
+          </Button>
           <div className="flex flex-col items-end gap-1">
             {!isEditRowValid(editRow) && (
               <span className="text-xs text-danger">
                 Please fill in all required fields.
               </span>
             )}
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={saveEdit}
               disabled={editLoading || !isEditRowValid(editRow)}
-              className="px-6 py-2 bg-secondary-600 text-white rounded-xl text-sm font-medium hover:bg-secondary-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               {editLoading ? "Saving..." : "Save Changes"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

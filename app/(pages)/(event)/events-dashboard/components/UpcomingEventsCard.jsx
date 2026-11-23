@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { EmptyState } from "./DashboardUi";
 import { APP_TIME_ZONE, appParts } from "@/data/lib/appTime";
+import Button from "@/components/ui/Button";
 
 /* The next upcoming events. */
 export default function UpcomingEventsCard({ dashboard }) {
@@ -69,13 +70,13 @@ export default function UpcomingEventsCard({ dashboard }) {
             title="No upcoming events"
             description="Active events with upcoming dates will appear here."
             action={
-              <button
+              <Button
+                variant="primary"
                 onClick={() => router.push("/create")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition-colors"
               >
                 <Activity className="h-3.5 w-3.5" />
                 Create Event
-              </button>
+              </Button>
             }
           />
         ) : (

@@ -4,6 +4,7 @@ import { useEffect, useId, useRef } from "react";
 import { SECTIONS } from "../gfps-config";
 import { isManualKey, nextManualKey } from "../officials";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 function ModalHeader({ editingSection, onClose, titleId }) {
   return (
@@ -385,17 +386,17 @@ export default function EditMemberModal({
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             type="submit"
             disabled={!canSubmit}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {submitting && (
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -404,7 +405,7 @@ export default function EditMemberModal({
               </svg>
             )}
             {submitting ? "Saving..." : editingSection ? "Save Changes" : "Add Members"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

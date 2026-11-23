@@ -12,6 +12,7 @@ import GaaBudgetChart from "./components/GaaBudgetChart";
 import GpbOverviewCard from "./components/GpbOverviewCard";
 import UpcomingEventsCard from "./components/UpcomingEventsCard";
 import GaaBudgetTable from "./components/GaaBudgetTable";
+import Button from "@/components/ui/Button";
 
 /* The events dashboard. Data and derived figures come from
    useEventsDashboard; each card is its own component. */
@@ -62,20 +63,20 @@ export default function EventsDashboardContent() {
               ))}
             </select>
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={() => router.push("/events-list")}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition duration-200 shadow-sm"
           >
             <CalendarDays className="h-4 w-4" />
             View Events
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => router.push("/create")}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200"
           >
             <Activity className="h-4 w-4" />
             Create Event
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -175,6 +175,8 @@ export default function NotificationBell() {
         }}
         className="touch-target relative p-2 rounded-full hover:bg-gray-100 text-gray-700"
         title="Notifications"
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+        aria-expanded={open}
       >
         <FaBell size={18} />
         {unreadCount > 0 && (

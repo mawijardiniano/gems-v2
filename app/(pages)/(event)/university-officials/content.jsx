@@ -38,6 +38,7 @@ import {
 import useUniversityOffices from "@/data/lib/useUniversityOffices";
 import PrintUniversityOfficials from "../components/Print/PrintUniversityOfficials";
 import SeatHistoryPanel from "../components/SeatHistoryPanel";
+import Button from "@/components/ui/Button";
 
 /** Sentinel option value for the "+ Add new office…" entry in the picker. */
 const ADD_NEW_OFFICE_VALUE = "__add_new_office__";
@@ -329,25 +330,27 @@ function OfficeSelect({
             placeholder="e.g. OFFICE OF THE REGISTRAR"
             className="flex-1 min-w-0 px-3 py-2 text-sm border border-secondary-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
           />
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             type="button"
             onClick={submitNewOffice}
             disabled={busy || !normalizeOfficeName(draft)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             <FaPlus className="h-3 w-3" />
             Save
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            className="shrink-0"
             type="button"
             onClick={() => {
               setAdding(false);
               setDraft("");
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition shrink-0"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       )}
 
@@ -540,24 +543,24 @@ function OfficialModal({
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <button
+            <Button
+              variant="secondary"
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-secondary-200"
             >
               {loading
                 ? "Saving..."
                 : isEdit
                   ? "Save Changes"
                   : "Assign Official"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -1211,13 +1214,13 @@ export default function UniversityOfficialsContent() {
             </button>
           )}
           {canEdit && (
-            <button
+            <Button
+              variant="primary"
               onClick={() => openAssign(null)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition duration-200 shadow-sm shadow-secondary-200"
             >
               <FaPlus className="h-3.5 w-3.5" />
               Assign Official
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -1238,13 +1241,14 @@ export default function UniversityOfficialsContent() {
             No roster for AY {academicYear} yet. Copy last year&apos;s
             assignments or assign seats manually.
           </span>
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
-          </button>
+          </Button>
         </div>
       )}
 

@@ -119,7 +119,7 @@ export default function PlanningDirectorLayout({ children }) {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ${
+        className={`flex-1 min-w-0 transition-all duration-300 ${
           sidebarOpen ? "sm:ml-80" : "ml-0 sm:ml-20"
         }`}
       >

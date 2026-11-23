@@ -7,6 +7,7 @@ import {
   SECTION,
   sectionRowCount,
 } from "../gender-statistics/components/reportSections.js";
+import Button from "@/components/ui/Button";
 
 /* Read-only preview of a quick report, drawn from the same section list the PDF
    generator renders (see reportSections.js). Because both renderers walk one
@@ -204,21 +205,21 @@ export default function ReportSectionsPreview({
             Preview of the PDF — the download contains the same sections.
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               Close
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               type="button"
               onClick={onDownload}
               disabled={downloading}
-              className="rounded-lg bg-secondary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {downloading ? "Generating…" : "Download PDF"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

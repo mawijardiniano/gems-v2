@@ -1,6 +1,7 @@
 "use client";
 
-import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -12,44 +13,16 @@ export default function ConfirmDeleteModal({
   setDeleteError,
   setDeleteModal,
 }) {
-  const dialogRef = useDialog(
-    deletingProject
-      ? null
-      : () => setDeleteModal({ open: false, project: null }),
-  );
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div
-        ref={dialogRef}
-        className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Delete project"
-      >
-        <button
-          type="button"
-          aria-label="Close"
-          className="touch-target absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-4xl"
-          onClick={() => setDeleteModal({ open: false, project: null })}
-        >
-          &times;
-        </button>
-        <h3 className="text-xl font-bold mb-4">Delete Project</h3>
-        <p>Are you sure you want to delete this project?</p>
-        <p className="mt-2 text-sm text-danger">
-          This also permanently deletes the events linked to this project
-          (including their posters and accomplishment reports) and the
-          uploaded evidence files. This cannot be undone.
-        </p>
-        {deleteError && (
-          <p className="mt-3 text-sm text-danger" role="alert">
-            {deleteError}
-          </p>
-        )}
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+    <Modal
+      open
+      onClose={() => setDeleteModal({ open: false, project: null })}
+      busy={deletingProject}
+      title="Delete Project"
+      footer={
+        <>
+          <Button
+            variant="secondary"
             disabled={deletingProject}
             onClick={() => {
               setDeleteError("");
@@ -57,16 +30,28 @@ export default function ConfirmDeleteModal({
             }}
           >
             Cancel
-          </button>
-          <button
-            className="px-4 py-2 bg-danger-solid text-white rounded hover:bg-red-700 disabled:opacity-50"
+          </Button>
+          <Button
+            variant="danger"
             disabled={deletingProject}
             onClick={() => handleDelete(deleteModal.project._id)}
           >
             {deletingProject ? "Deleting…" : "Delete"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </>
+      }
+    >
+      <p>Are you sure you want to delete this project?</p>
+      <p className="mt-2 text-sm text-danger">
+        This also permanently deletes the events linked to this project
+        (including their posters and accomplishment reports) and the
+        uploaded evidence files. This cannot be undone.
+      </p>
+      {deleteError && (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {deleteError}
+        </p>
+      )}
+    </Modal>
   );
 }

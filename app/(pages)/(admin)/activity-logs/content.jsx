@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useState, useCallback, useId } from "react";
-import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
 import { FaHistory, FaSearch, FaDownload, FaTimes, FaShieldAlt, FaChevronRight } from "react-icons/fa";
 
@@ -336,8 +337,14 @@ export default function ActivityLogsContent() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const { toast, show: showToast, hide: hideToast } = useActionToast();
-  const deleteTitleId = useId();
-  const deleteDialogRef = useDialog(deleting ? null : () => setDeleteId(null));
+  const [redactReason, setRedactReason] = useState("");
+  const [redactReasonError, setRedactReasonError] = useState("");
+  const redactReasonId = useId();
+  const closeRedact = () => {
+    setDeleteId(null);
+    setRedactReason("");
+    setRedactReasonError("");
+  };
 
   /* Which records are expanded. A Set rather than a single id: an auditor
      comparing two rows should not have one collapse when the other opens. */
@@ -429,12 +436,9 @@ export default function ActivityLogsContent() {
    * the answer. */
   const handleDelete = async () => {
     if (!deleteId) return;
-    const reason = window.prompt(
-      "Reason for redacting this entry (required, kept in the audit record):",
-    );
-    if (reason === null) return;
+    const reason = redactReason;
     if (!reason.trim()) {
-      showToast("A reason is required to redact an audit record.", "error");
+      setRedactReasonError("A reason is required to redact an audit record.");
       return;
     }
     setDeleting(true);
@@ -450,7 +454,7 @@ export default function ActivityLogsContent() {
         const data = await res.json();
         throw new Error(data.message || "Redaction failed");
       }
-      setDeleteId(null);
+      closeRedact();
       fetchLogs();
     } catch (err) {
       showToast(errorText(err, "Redaction failed"), "error");
@@ -912,40 +916,52 @@ export default function ActivityLogsContent() {
       )}
 
       {/* Redaction Confirmation Modal */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-          <div
-            ref={deleteDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={deleteTitleId}
-            className="bg-white rounded-lg shadow-lg p-6 w-96"
-          >
-            <h2 id={deleteTitleId} className="text-lg font-medium mb-2">Redact Audit Record</h2>
-            <p className="text-gray-600 mb-6">
-              This entry will remain in the audit trail — who acted, when, and
-              the action itself are preserved — but its description and details
-              will be blanked. The redaction is recorded against your account.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={() => setDeleteId(null)}
-                disabled={deleting}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-danger-solid text-white rounded hover:bg-red-700 disabled:opacity-50"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? "Redacting..." : "Redact entry"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={Boolean(deleteId)}
+        onClose={closeRedact}
+        busy={deleting}
+        title="Redact Audit Record"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeRedact} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Redacting..." : "Redact entry"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          This entry will remain in the audit trail — who acted, when, and
+          the action itself are preserved — but its description and details
+          will be blanked. The redaction is recorded against your account.
+        </p>
+        <label htmlFor={redactReasonId} className="label mt-4">
+          Reason for redacting <span className="text-danger">(required)</span>
+        </label>
+        <textarea
+          id={redactReasonId}
+          className="input min-h-20"
+          value={redactReason}
+          onChange={(e) => {
+            setRedactReason(e.target.value);
+            if (redactReasonError) setRedactReasonError("");
+          }}
+          aria-invalid={redactReasonError ? true : undefined}
+          aria-describedby={redactReasonError ? `${redactReasonId}-error` : `${redactReasonId}-hint`}
+          disabled={deleting}
+        />
+        {redactReasonError ? (
+          <p id={`${redactReasonId}-error`} className="mt-1.5 text-sm text-danger" role="alert">
+            {redactReasonError}
+          </p>
+        ) : (
+          <p id={`${redactReasonId}-hint`} className="mt-1.5 text-xs text-gray-500">
+            Kept in the audit record.
+          </p>
+        )}
+      </Modal>
       <ActionToast toast={toast} onClose={hideToast} />
     </div>
   );
