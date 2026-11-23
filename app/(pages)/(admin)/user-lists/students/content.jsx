@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useId } from "react";
+import { useDialog } from "@/hooks/useDialog";
 
 import axios from "axios";
 import {
@@ -571,6 +572,16 @@ export default function StudentsUserListContent({
     }
   };
 
+  const deleteTitleId = useId();
+  const deleteDialogRef = useDialog(() => setShowConfirmModal(false));
+  const actionTitleId = useId();
+  const actionDialogRef = useDialog(() => setConfirmAction(null));
+  const viewTitleId = useId();
+  const viewDialogRef = useDialog(() => {
+    setSelectedUser(null);
+    setActiveTab("personal");
+  });
+
   return (
     <div className="p-6">
       <ActionToast toast={toast} onClose={hideToast} />
@@ -943,8 +954,14 @@ export default function StudentsUserListContent({
 
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteTitleId}
+            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
+          >
+            <h2 id={deleteTitleId} className="text-lg font-semibold mb-4">Confirm Delete</h2>
             <div className="text-center text-red-600 mb-6">
               Are you sure you want to delete the selected users?
             </div>
@@ -968,8 +985,14 @@ export default function StudentsUserListContent({
 
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-3">
+          <div
+            ref={actionDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={actionTitleId}
+            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
+          >
+            <h2 id={actionTitleId} className="text-lg font-semibold mb-3">
               {confirmAction.type === "reset"
                 ? "Reset Password"
                 : "Change User Status"}
@@ -1030,7 +1053,13 @@ export default function StudentsUserListContent({
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+            <div
+              ref={viewDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={viewTitleId}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4"
+            >
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -1038,7 +1067,7 @@ export default function StudentsUserListContent({
                     {(personal.last_name?.[0] || "").toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 id={viewTitleId} className="text-lg font-semibold text-gray-900">
                       {personal.first_name || ""}{" "}
                       {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
                       {personal.last_name || ""}
@@ -1051,6 +1080,8 @@ export default function StudentsUserListContent({
                   </div>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={() => {
                     setSelectedUser(null);
                     setActiveTab("personal");

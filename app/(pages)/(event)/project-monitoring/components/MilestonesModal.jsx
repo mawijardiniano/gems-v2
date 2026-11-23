@@ -1,7 +1,7 @@
 "use client";
 
 import { appDateInput } from "@/data/lib/appTime";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   FaExclamationTriangle,
   FaPaperclip,
@@ -12,7 +12,7 @@ import {
 } from "react-icons/fa";
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import {
   MAX_GANTT_ACTIVITIES,
   emptyActivity,
@@ -297,7 +297,8 @@ export default function MilestonesModal({
     fileLifecycle.release(file);
   };
 
-  useEscapeKey(!inline && !saving, () => closeAndCleanup());
+  const dialogRef = useDialog(saving ? null : () => closeAndCleanup());
+  const titleId = useId();
 
   const closeAndCleanup = () => {
     /* Closing mid-save would delete files the save is still linking. */
@@ -395,6 +396,10 @@ export default function MilestonesModal({
         />
       )}
       <div
+        ref={inline ? undefined : dialogRef}
+        role={inline ? undefined : "dialog"}
+        aria-modal={inline ? undefined : "true"}
+        aria-labelledby={inline ? undefined : titleId}
         className={
           inline
             ? "w-full bg-white"
@@ -405,7 +410,7 @@ export default function MilestonesModal({
         {!inline && (
           <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
             <div>
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 id={titleId} className="text-base font-bold text-gray-900">
                 Project Gantt Chart &amp; Milestones
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">

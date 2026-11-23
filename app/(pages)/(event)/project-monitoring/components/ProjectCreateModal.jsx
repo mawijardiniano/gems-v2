@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import {
   FaCheck,
   FaChevronLeft,
@@ -218,7 +218,7 @@ export default function ProjectCreateModal({
 
   /* Escape or the backdrop close the wizard, but never in the middle of a
      save (the request would finish with the modal gone). */
-  useEscapeKey(!saving, onClose);
+  const dialogRef = useDialog(saving ? null : onClose);
 
   const isReview = stepIndex === reviewIndex;
   const currentStep = isReview ? null : groupedSteps[stepIndex];
@@ -350,6 +350,7 @@ export default function ProjectCreateModal({
         aria-hidden="true"
       />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-xl"
         role="dialog"
         aria-modal="true"

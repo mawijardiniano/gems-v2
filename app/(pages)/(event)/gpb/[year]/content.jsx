@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { nextRefNumber } from "@/data/lib/referenceNumber";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { orderProjectsByType } from "./lib/projectForm";
 import { useGpbYear } from "./hooks/useGpbYear";
 import { useAddProject, useEditProject } from "./hooks/useProjectForms";
@@ -81,26 +80,6 @@ export default function ProjectContent({ sidebarOpen, backPath = "/gpb" }) {
   const nextRefPreview = nextRefNumber(
     year,
     projects.map((project) => project.reference_number).filter(Boolean),
-  );
-
-  /* Escape closes the topmost open modal, the same way its own close button
-     does — and never while that modal is saving. The scanned-copy viewer can
-     open on top of the status modal, so it goes first. */
-  useEscapeKey(
-    viewer.open ||
-      add.showWizard ||
-      Boolean(edit.editRow) ||
-      del.deleteModal.open ||
-      comments.showCommentForm ||
-      statusUpdate.open,
-    () => {
-      if (viewer.open) viewer.closeViewer();
-      else if (add.showWizard) add.closeWizard();
-      else if (edit.editRow) edit.cancelEdit();
-      else if (del.deleteModal.open) del.closeDelete();
-      else if (comments.showCommentForm) comments.closeComment();
-      else if (statusUpdate.open) statusUpdate.closeModal();
-    },
   );
 
   const gpbOpen =

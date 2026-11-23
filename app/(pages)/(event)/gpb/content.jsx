@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback, useId } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import {
@@ -25,6 +25,7 @@ import {
 } from "react-icons/fa";
 import { formatPeso } from "@/data/lib/money";
 import StatCard from "./[year]/components/StatCard";
+import { useDialog } from "@/hooks/useDialog";
 
 
 function SkeletonCard() {
@@ -395,6 +396,11 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
   }, [gpbList]);
 
   const canManage = role !== "gad coordinator" && role !== "planning director";
+
+  const createDialogRef = useDialog(closeModal);
+  const createTitleId = useId();
+  const attachDialogRef = useDialog(closeAttachModal);
+  const attachTitleId = useId();
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -768,7 +774,13 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+          <div
+            ref={createDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={createTitleId}
+            className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+          >
             {/* Header */}
             <div className="px-6 py-5 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -777,7 +789,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     <FaFolderOpen className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Create GPB</h2>
+                    <h2 id={createTitleId} className="text-base font-semibold text-gray-900">Create GPB</h2>
                     <p className="text-xs text-gray-500">Create a GPB record — link its GAA budget now or later</p>
                   </div>
                 </div>
@@ -914,7 +926,13 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
       {attachModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+          <div
+            ref={attachDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={attachTitleId}
+            className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+          >
             {/* Header */}
             <div className="px-6 py-5 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -923,7 +941,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     <FaLink className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 id={attachTitleId} className="text-base font-semibold text-gray-900">
                       {attachModal.gpb.gaaBudgetId
                         ? "Change Budget"
                         : "Attach Budget"}

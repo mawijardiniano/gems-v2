@@ -1,6 +1,7 @@
 "use client";
 
 import { gpbStatusOptions } from "@/data/lib/gpbStatus";
+import { useDialog } from "@/hooks/useDialog";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -17,9 +18,12 @@ export default function UpdateStatusModal({
   setUpdateStatusModal,
   statusType,
 }) {
+  const dialogRef = useDialog(saving ? null : () => setUpdateStatusModal(false));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div
+        ref={dialogRef}
         className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative"
         role="dialog"
         aria-modal="true"

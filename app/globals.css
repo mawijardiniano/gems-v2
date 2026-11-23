@@ -215,6 +215,36 @@ select.input {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white shadow-sm shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98];
 }
 
+/* Keyboard focus for the shared buttons. .btn* strips the browser outline,
+   so every variant needs its own visible ring (WCAG 2.4.7). */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  @apply focus-visible:ring-4 focus-visible:ring-secondary-500/30;
+}
+.btn-danger {
+  @apply focus-visible:ring-4 focus-visible:ring-red-500/30;
+}
+.btn-success {
+  @apply focus-visible:ring-4 focus-visible:ring-emerald-500/30;
+}
+
+/* Skip link: off-screen until focused, then pinned top-left above the
+   navbar (z-60 clears the z-50 navbar and modals' backdrops). */
+.skip-link {
+  @apply fixed left-4 top-3 z-[60] -translate-y-[200%] rounded-xl bg-secondary-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg outline-none transition-transform duration-150 focus-visible:translate-y-0 focus-visible:ring-4 focus-visible:ring-secondary-300;
+}
+
+/* The skip-link target and dialog panels take focus programmatically
+   (tabIndex -1). They announce themselves to screen readers; a ring around
+   the whole page or panel would only be noise. */
+#main-content:focus,
+[role="dialog"]:focus,
+[role="alertdialog"]:focus {
+  outline: none;
+}
+
 /* Badge */
 .badge {
   @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;

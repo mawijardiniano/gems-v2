@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback, useId } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import { FaHistory, FaSearch, FaDownload, FaTimes, FaShieldAlt, FaChevronRight } from "react-icons/fa";
 
 function formatDate(dateStr) {
@@ -333,6 +334,8 @@ export default function ActivityLogsContent() {
   // Delete confirmation
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const deleteTitleId = useId();
+  const deleteDialogRef = useDialog(deleting ? null : () => setDeleteId(null));
 
   /* Which records are expanded. A Set rather than a single id: an auditor
      comparing two rows should not have one collapse when the other opens. */
@@ -909,8 +912,14 @@ export default function ActivityLogsContent() {
       {/* Redaction Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            <h2 className="text-lg font-medium mb-2">Redact Audit Record</h2>
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteTitleId}
+            className="bg-white rounded-lg shadow-lg p-6 w-96"
+          >
+            <h2 id={deleteTitleId} className="text-lg font-medium mb-2">Redact Audit Record</h2>
             <p className="text-gray-600 mb-6">
               This entry will remain in the audit trail — who acted, when, and
               the action itself are preserved — but its description and details

@@ -1,7 +1,9 @@
 "use client";
 
+import { useId } from "react";
 import { FiDownload, FiFileText, FiX } from "react-icons/fi";
 import { getScannedFileType } from "../lib/projectForm";
+import { useDialog } from "@/hooks/useDialog";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -15,12 +17,19 @@ export default function ScannedCopyViewer({
   setScannedPreviewLoading,
   year,
 }) {
+  const dialogRef = useDialog(closeScannedViewer);
+  const titleId = useId();
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={closeScannedViewer}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col"
         style={{ maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
@@ -31,7 +40,7 @@ export default function ScannedCopyViewer({
               <FiFileText className="h-5 w-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-gray-900 truncate">
+              <h2 id={titleId} className="text-sm font-semibold text-gray-900 truncate">
                 Scanned Copy
               </h2>
               <p className="text-xs text-gray-500 truncate">
@@ -48,6 +57,8 @@ export default function ScannedCopyViewer({
               Download
             </button>
             <button
+              type="button"
+              aria-label="Close"
               onClick={closeScannedViewer}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
             >

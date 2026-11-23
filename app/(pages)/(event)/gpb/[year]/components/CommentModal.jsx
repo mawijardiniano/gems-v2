@@ -1,5 +1,7 @@
 "use client";
 
+import { useDialog } from "@/hooks/useDialog";
+
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
 export default function CommentModal({
@@ -15,9 +17,20 @@ export default function CommentModal({
   setCommentType,
   setShowCommentForm,
 }) {
+  const dialogRef = useDialog(
+    commentSaving
+      ? null
+      : () => {
+          setShowCommentForm(false);
+          setCommentField([]);
+          setCommentProjectId(null);
+        },
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div
+        ref={dialogRef}
         className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative"
         role="dialog"
         aria-modal="true"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import BatchTable from "./BatchTable";
 import StagingRecordsTable from "./StagingRecordsTable";
 import RecordDetailPanel from "./RecordDetailPanel";
@@ -16,6 +17,8 @@ import BatchActionBar from "./BatchActionBar";
 export default function StagingWorkspace({ d }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleteTargetBatch, setDeleteTargetBatch] = useState(null);
+  const deleteTitleId = useId();
+  const deleteDialogRef = useDialog(() => setDeleteTargetBatch(null));
 
   function toggleRow(id, checked) {
     setSelectedIds((prev) => {
@@ -239,9 +242,15 @@ export default function StagingWorkspace({ d }) {
             className="absolute inset-0 bg-black/40"
             onClick={() => setDeleteTargetBatch(null)}
           />
-          <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4">
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteTitleId}
+            className="relative w-full max-w-md bg-white border border-gray-200 rounded-md shadow-lg p-5 space-y-4"
+          >
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 id={deleteTitleId} className="text-base font-semibold text-gray-900">
                 Confirm Delete Batch
               </h3>
               <p className="text-sm text-gray-600 mt-1">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useId } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import BrandMark from "@/components/BrandMark";
 import useMyProfile from "@/data/lib/useMyProfile";
 import {
@@ -43,6 +44,8 @@ const TooltipWrapper = ({ label, children, collapsed }) => {
 
 export default function Sidebar({ open, setOpen, role }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const logoutTitleId = useId();
+  const logoutDialogRef = useDialog(() => setShowLogoutModal(false));
   const [userListOpen, setUserListOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
   const { profile, user } = useMyProfile();
@@ -506,12 +509,18 @@ export default function Sidebar({ open, setOpen, role }) {
       {/* ===== LOGOUT MODAL ===== */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 space-y-6 text-center animate-slide-up">
+          <div
+            ref={logoutDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={logoutTitleId}
+            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 space-y-6 text-center animate-slide-up"
+          >
             <div className="w-16 h-16 mx-auto rounded-full bg-red-50 flex items-center justify-center">
               <FaSignOutAlt className="text-2xl text-red-500" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 id={logoutTitleId} className="text-xl font-bold text-gray-900">
                 Confirm Logout
               </h2>
               <p className="text-sm text-gray-500">

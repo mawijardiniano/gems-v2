@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
 import PageBreadcrumbs from "@/components/layout/PageBreadcrumbs";
+import SkipLink from "@/components/layout/SkipLink";
 
 export default function IctuLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -82,6 +83,7 @@ export default function IctuLayout({ children }) {
 
   return (
     <div className="flex relative">
+      <SkipLink />
       <div ref={sidebarRef}>
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       </div>
@@ -100,6 +102,8 @@ export default function IctuLayout({ children }) {
       >
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <main
+          id="main-content"
+          tabIndex={-1}
           className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-gray-50"
         >
           <PageBreadcrumbs role="ictu-director" />

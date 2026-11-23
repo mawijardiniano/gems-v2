@@ -3,7 +3,7 @@
 import { FiCheck, FiTrash2, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { effectiveStatus, canTransition } from "@/data/lib/eventStatus";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import CancelEventModal from "../CancelEventModal";
 
 /* Cancel / reinstate and delete, with their confirmation dialogs.
@@ -36,7 +36,9 @@ export default function EventDangerZone({
   deleting,
   handleDeleteEvent,
 }) {
-  useEscapeKey(showDeleteModal && !deleting, () => setShowDeleteModal(false));
+  const deleteDialogRef = useDialog(
+    deleting ? null : () => setShowDeleteModal(false),
+  );
 
   const isCancelled = effectiveStatus(event) === "cancelled";
   /* The matrix says which move is legal; the status API also requires the
@@ -137,6 +139,7 @@ export default function EventDangerZone({
       {showDeleteModal && (
         <div className="modal-overlay">
           <div
+            ref={deleteDialogRef}
             className="modal"
             role="dialog"
             aria-modal="true"
@@ -150,6 +153,7 @@ export default function EventDangerZone({
                 Delete Event
               </h2>
               <button
+                type="button"
                 onClick={() => setShowDeleteModal(false)}
                 className="btn-ghost !p-2"
                 aria-label="Close"

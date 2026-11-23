@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useId } from "react";
 import { useSelector } from "react-redux";
 import {
   FaPlus,
@@ -23,6 +23,7 @@ import {
   FaHistory,
   FaSitemap,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 import Link from "next/link";
 import { HEADERS } from "@/data/lib/universityOfficialsConstants";
 import {
@@ -318,6 +319,8 @@ function OfficeSelect({
                 submitNewOffice();
               }
               if (e.key === "Escape") {
+                // Cancel only the inline add; keep the surrounding dialog open.
+                e.stopPropagation();
                 setAdding(false);
                 setDraft("");
               }
@@ -380,13 +383,22 @@ function OfficialModal({
   assignedCounts,
   officeBusy,
 }) {
+  const titleId = useId();
+  const dialogRef = useDialog(onClose);
+
   if (!open) return null;
 
   const isEdit = mode === "edit";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+      >
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -398,7 +410,7 @@ function OfficialModal({
                 )}
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 id={titleId} className="text-base font-semibold text-gray-900">
                   {isEdit ? "Reassign Seat" : "Assign Official"}
                 </h2>
                 <p className="text-xs text-gray-500">
@@ -409,6 +421,8 @@ function OfficialModal({
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
             >

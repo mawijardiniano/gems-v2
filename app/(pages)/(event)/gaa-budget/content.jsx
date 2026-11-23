@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useId } from "react";
 import { useSelector } from "react-redux";
 import {
   FaEdit,
@@ -18,6 +18,7 @@ import {
   FaSortAmountDown,
   FaSortAmountUp,
 } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 import { useRouter } from "next/navigation";
 import PrintGAABudget from "../components/Print/PrintGAABudget";
 
@@ -273,6 +274,9 @@ export default function GAABudgetContent() {
     setDeleteConfirmOpen(false);
     setBudgetToDelete(null);
   };
+
+  const deleteTitleId = useId();
+  const deleteDialogRef = useDialog(deleting ? null : cancelDelete);
 
   // ── Format helpers ─────────────────────────────────────────────
   const fmt = (n) =>
@@ -548,17 +552,25 @@ export default function GAABudgetContent() {
       {/* ── Delete Confirmation Modal ───────────────────────────── */}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={deleteTitleId}
+            className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+          >
             <div className="flex items-center justify-between px-6 py-4 bg-red-50 border-b border-red-200">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
                   <FaExclamationTriangle className="h-4 w-4 text-red-600" />
                 </div>
-                <h3 className="text-sm font-semibold text-red-900">
+                <h3 id={deleteTitleId} className="text-sm font-semibold text-red-900">
                   Confirm Delete
                 </h3>
               </div>
               <button
+                type="button"
+                aria-label="Close"
                 onClick={cancelDelete}
                 className="text-red-400 hover:text-red-600 transition-colors"
               >
@@ -667,13 +679,22 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
     }
   };
 
+  const titleId = useId();
+  const dialogRef = useDialog(onClose);
+
   if (!open) return null;
 
   const displayError = localError || error;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
+      >
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center justify-between">
@@ -682,7 +703,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                 <FaPiggyBank className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 id={titleId} className="text-base font-semibold text-gray-900">
                   {initial ? "Edit Budget" : "Add Budget"}
                 </h2>
                 <p className="text-xs text-gray-500">
@@ -693,6 +714,8 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
             >

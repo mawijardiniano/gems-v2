@@ -11,7 +11,7 @@
  * (`requiresCancelReason`), and a cancellation trail with no reason is weak
  * evidence on a GAD accomplishment report.
  */
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 
 export default function CancelEventModal({
   isOpen,
@@ -22,7 +22,7 @@ export default function CancelEventModal({
   loading = false,
   error = "",
 }) {
-  useEscapeKey(isOpen && !loading, onClose);
+  const dialogRef = useDialog(loading ? null : onClose);
 
   if (!isOpen) return null;
 
@@ -31,6 +31,7 @@ export default function CancelEventModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
       <div
+        ref={dialogRef}
         className="bg-white rounded-lg shadow-lg w-full max-w-md"
         role="dialog"
         aria-modal="true"

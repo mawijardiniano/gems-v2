@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useId } from "react";
 import { COLLEGES, SCOPED_ROLES } from "@/data/lib/colleges";
+import { useDialog } from "@/hooks/useDialog";
 import {
   HiOutlineShieldCheck,
   HiOutlineUserGroup,
@@ -291,6 +292,9 @@ export default function ManageRoleContent() {
     setLoading(false);
   };
 
+  const modalTitleId = useId();
+  const modalDialogRef = useDialog(closeModal);
+
   if (pageLoading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
@@ -496,7 +500,13 @@ export default function ManageRoleContent() {
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in">
+          <div
+            ref={modalDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={modalTitleId}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div className="flex items-center gap-3">
@@ -504,7 +514,7 @@ export default function ManageRoleContent() {
                   <HiOutlineShieldCheck className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 id={modalTitleId} className="text-lg font-semibold text-gray-900">
                     {editingUser ? "Edit Role" : "Assign Role"}
                   </h3>
                   <p className="text-sm text-gray-500">
@@ -515,6 +525,8 @@ export default function ManageRoleContent() {
                 </div>
               </div>
               <button
+                type="button"
+                aria-label="Close"
                 onClick={closeModal}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >

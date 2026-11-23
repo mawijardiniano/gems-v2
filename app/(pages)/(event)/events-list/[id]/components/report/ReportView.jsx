@@ -9,6 +9,7 @@ import {
   FiPaperclip,
 } from "react-icons/fi";
 import { isPdfFile } from "./FileThumb";
+import { useDialog } from "@/hooks/useDialog";
 
 /* The submitted report, read-only, with an Edit button for those allowed. */
 export default function ReportView({ report, canSubmit, viewerId }) {
@@ -22,11 +23,13 @@ export default function ReportView({ report, canSubmit, viewerId }) {
     singleFileFields,
     handleDownload,
   } = report;
+  const previewDialogRef = useDialog(() => setPreviewImg(null));
 
   return (
     <div className="space-y-6 animate-fade-in">
       {previewImg && (
         <div
+          ref={previewDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
           onClick={() => setPreviewImg(null)}
           role="dialog"

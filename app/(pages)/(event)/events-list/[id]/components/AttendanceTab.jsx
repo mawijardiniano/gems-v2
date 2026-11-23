@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import ManualEncodeModal from "./ManualEncodeModal";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 
 const STATUS_META = {
   pending: {
@@ -69,7 +69,7 @@ export default function AttendanceTab(props) {
   const [showManualEncode, setShowManualEncode] = useState(false);
   const [rejecting, setRejecting] = useState(false);
 
-  useEscapeKey(Boolean(rejectTarget) && !rejecting, () => {
+  const rejectDialogRef = useDialog(rejecting ? null : () => {
     setRejectTarget(null);
     setRejectNote("");
   });
@@ -525,6 +525,7 @@ export default function AttendanceTab(props) {
       {rejectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div
+            ref={rejectDialogRef}
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
             role="dialog"
             aria-modal="true"

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
+import { useDialog } from "@/hooks/useDialog";
 
 /* Read-only preview of the Gender Profile Report as an in-browser table.
    Renders whatever buildProfileTable() returns — head/body are plain data, so
@@ -23,15 +24,11 @@ export default function ReportTablePreview({
   downloading = false,
 }) {
   const closeRef = useRef(null);
+  const dialogRef = useDialog(onClose);
 
   useEffect(() => {
     closeRef.current?.focus();
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, []);
 
   if (!table) return null;
 
@@ -44,6 +41,7 @@ export default function ReportTablePreview({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="report-preview-title"

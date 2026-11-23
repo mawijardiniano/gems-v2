@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useDialog } from "@/hooks/useDialog";
 import {
   FaExclamationTriangle,
   FaSpinner,
@@ -29,7 +29,7 @@ export default function ProjectDeleteModal({
 }) {
   const [deleting, setDeleting] = useState(false);
 
-  useEscapeKey(!deleting, onClose);
+  const dialogRef = useDialog(deleting ? null : onClose);
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
@@ -64,6 +64,7 @@ export default function ProjectDeleteModal({
         aria-hidden="true"
       />
       <div
+        ref={dialogRef}
         className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6 text-center"
         role="dialog"
         aria-modal="true"

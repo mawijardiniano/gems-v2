@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FaUserPlus, FaSignInAlt, FaTimes, FaBars } from "react-icons/fa";
 import BrandMark from "@/components/BrandMark";
+import { useDialog } from "@/hooks/useDialog";
 import SignIn from "../SignIn";
 
 export default function Navbar() {
@@ -12,6 +13,7 @@ export default function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const signInDialogRef = useDialog(() => setShowSignIn(false));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,10 +131,15 @@ export default function Navbar() {
           onClick={() => setShowSignIn(false)}
         >
           <div
+            ref={signInDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sign in"
             className="relative animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors z-10"
               onClick={() => setShowSignIn(false)}
               aria-label="Close"
