@@ -28,6 +28,8 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 
 export default function StudentsUserListContent({ college }) {
   /* Sample mode is the default view; live fetching stays parked while on. */
@@ -583,12 +585,10 @@ export default function StudentsUserListContent({ college }) {
   };
 
   const viewTitleId = useId();
-  const confirmTitleId = useId();
   const viewDialogRef = useDialog(() => {
     setViewModalUser(null);
     setViewTab("personal");
   });
-  const confirmDialogRef = useDialog(() => setConfirmAction(null));
 
   const renderViewModal = () => {
     if (!viewModalUser) return null;
@@ -846,15 +846,15 @@ export default function StudentsUserListContent({ college }) {
           <div className="px-6 py-5">{tabContent[viewTab]}</div>
 
           <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => {
                 setViewModalUser(null);
                 setViewTab("personal");
               }}
-              className="px-5 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
             >
               Close
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -939,13 +939,9 @@ export default function StudentsUserListContent({ college }) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={generatePDF}
-            disabled={generating}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-secondary-600 text-white hover:bg-secondary-700 disabled:bg-secondary-300 disabled:cursor-not-allowed transition shadow-sm"
-          >
+          <Button onClick={generatePDF} disabled={generating}>
             <svg
-              className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`}
+              className={`w-4 h-4 ${generating ? "animate-spin" : ""}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -958,7 +954,7 @@ export default function StudentsUserListContent({ college }) {
               />
             </svg>
             {generating ? "Generating..." : "Download PDF Report"}
-          </button>
+          </Button>
         </div>
       </div>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -1288,64 +1284,56 @@ export default function StudentsUserListContent({ college }) {
         </div>
       </div>
 
-      {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div
-            ref={confirmDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={confirmTitleId}
-            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
-          >
-            <h2 id={confirmTitleId} className="text-lg font-semibold mb-3">
-              {confirmAction.type === "reset"
-                ? "Reset Password"
-                : confirmAction.isActive
-                  ? "Deactivate User"
-                  : "Activate User"}
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              {confirmAction.type === "reset"
-                ? "This will reset the user's password to the default value."
-                : confirmAction.isActive
-                  ? "This will deactivate the user account."
-                  : "This will activate the user account."}
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    if (confirmAction.type === "reset")
-                      await handleResetPassword(confirmAction.userId);
-                    else
-                      await handleToggleStatus(
-                        confirmAction.userId,
-                        confirmAction.isActive,
-                      );
-                  } finally {
-                    setConfirmAction(null);
-                  }
-                }}
-                className={`px-4 py-2 text-sm font-medium rounded-lg text-white transition shadow-sm ${
-                  confirmAction.type === "reset"
-                    ? "bg-secondary-500 hover:bg-secondary-600"
-                    : confirmAction.isActive
-                      ? "bg-red-500 hover:bg-danger-solid"
-                      : "bg-emerald-500 hover:bg-success-solid"
-                }`}
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={Boolean(confirmAction)}
+        onClose={() => setConfirmAction(null)}
+        title={
+          confirmAction?.type === "reset"
+            ? "Reset Password"
+            : confirmAction?.isActive
+              ? "Deactivate User"
+              : "Activate User"
+        }
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant={
+                confirmAction?.type === "reset"
+                  ? "primary"
+                  : confirmAction?.isActive
+                    ? "danger"
+                    : "success"
+              }
+              onClick={async () => {
+                try {
+                  if (confirmAction.type === "reset")
+                    await handleResetPassword(confirmAction.userId);
+                  else
+                    await handleToggleStatus(
+                      confirmAction.userId,
+                      confirmAction.isActive,
+                    );
+                } finally {
+                  setConfirmAction(null);
+                }
+              }}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          {confirmAction?.type === "reset"
+            ? "This will reset the user's password to the default value."
+            : confirmAction?.isActive
+              ? "This will deactivate the user account."
+              : "This will activate the user account."}
+        </p>
+      </Modal>
 
       {renderViewModal()}
     </div>

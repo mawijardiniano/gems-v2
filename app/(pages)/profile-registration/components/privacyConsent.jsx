@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { nextStep } from "@/store/slices/profileRegistrationSlice";
 import { FaShieldAlt, FaCheckCircle, FaArrowRight } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 export default function PrivacyConsent() {
   const [checked, setChecked] = useState(false);
@@ -160,18 +161,14 @@ export default function PrivacyConsent() {
           </label>
 
           {/* Next Button */}
-          <button
+          <Button
             onClick={handleNext}
             disabled={!checked}
-            className={`mt-5 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition duration-200 ${
-              checked
-                ? "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
+            className="mt-5 w-full"
           >
             Continue
             <FaArrowRight className="text-xs" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

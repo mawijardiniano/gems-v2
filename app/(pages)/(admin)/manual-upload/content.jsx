@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Button from "@/components/ui/Button";
 import useIntegrationData from "../components/integration/useIntegrationData";
 import StagingWorkspace from "../components/integration/StagingWorkspace";
 import SyncLogsPanel from "../components/integration/SyncLogsPanel";
@@ -88,15 +89,15 @@ export default function ManualUploadContent() {
             <option value="Summer">Summer</option>
           </select>
           <div className="sm:col-span-3">
-            <button
+            <Button
+              variant="success"
               type="submit"
               disabled={d.busyAction !== ""}
-              className="px-4 py-2 rounded bg-success-solid text-white text-sm disabled:opacity-50"
             >
               {d.busyAction === "Upload to Staging"
                 ? "Uploading..."
                 : "Upload to Staging"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

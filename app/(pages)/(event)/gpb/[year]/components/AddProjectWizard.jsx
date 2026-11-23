@@ -6,6 +6,7 @@ import PerformanceIndicatorInput from "./PerformanceIndicatorInput";
 import OfficeMultiSelect from "../../../components/OfficeMultiSelect";
 import { toOfficeArray } from "@/data/lib/colleges";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -621,7 +622,8 @@ export default function AddProjectWizard({
                 </div>
               )}
               <div className="flex justify-between">
-                <button
+                <Button
+                  variant="secondary"
                   type="button"
                   onClick={() => {
                     if (wizardStep === 1) {
@@ -636,12 +638,12 @@ export default function AddProjectWizard({
                       setWizardStep(wizardStep - 1);
                     }
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
                 >
                   {wizardStep === 1 ? "Cancel" : "← Back"}
-                </button>
+                </Button>
                 {wizardStep < 4 ? (
-                  <button
+                  <Button
+                    variant="primary"
                     type="button"
                     onClick={() => {
                       if (
@@ -654,12 +656,12 @@ export default function AddProjectWizard({
                       }
                     }}
                     disabled={!stepValid}
-                    className="px-5 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Next →
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
+                    variant="success"
                     type="button"
                     onClick={handleWizardSubmit}
                     disabled={
@@ -668,10 +670,9 @@ export default function AddProjectWizard({
                       !isStep1Valid(newProject) ||
                       !isStep2Valid(newProject)
                     }
-                    className="px-5 py-2 bg-success-solid text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {addLoading ? "Saving..." : "Submit"}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

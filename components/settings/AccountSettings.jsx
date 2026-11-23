@@ -266,13 +266,12 @@ export default function AccountSettings() {
             {/* Password Info & Change Button */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-3">
-                <button
+                <Button
                   onClick={openPasswordModal}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors shadow-sm hover:shadow-md"
                 >
                   <FaLock className="text-xs" />
                   Change Password
-                </button>
+                </Button>
                 <div className="text-xs text-gray-500">
                   {userInfoLoading ? (
                     <span className="text-gray-500">Loading security info...</span>
@@ -394,20 +393,21 @@ export default function AccountSettings() {
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <button
+                  <Button
                     onClick={() => fetchActivities(1)}
-                    className="px-3 py-2 bg-secondary-600 text-white text-xs font-medium rounded-lg hover:bg-secondary-700 transition-colors"
+                    className="rounded-lg px-3 py-2 text-xs"
                   >
                     Apply
-                  </button>
+                  </Button>
                   {(filterAction || filterFrom || filterTo) && (
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={resetFilters}
-                      className="px-3 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
+                      className="gap-1 rounded-lg px-3 py-2 text-xs text-gray-600"
                     >
                       <FaRedo className="text-xs" />
                       Reset
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

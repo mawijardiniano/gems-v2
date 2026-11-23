@@ -7,6 +7,7 @@ import EventDetailsView from "./overview/EventDetailsView";
 import EventEditForm from "./overview/EventEditForm";
 import AttendanceQrCard from "./overview/AttendanceQrCard";
 import EventDangerZone from "./overview/EventDangerZone";
+import Button from "@/components/ui/Button";
 
 /* The Overview tab: check-in banner, the Event Details card (read-only view or
    edit form), the attendance QR, and the cancel/delete controls. Each section
@@ -125,7 +126,9 @@ export default function OverviewTab({
             </div>
           </div>
           {canEdit && (
-          <button
+          <Button
+            variant={isEditing ? "secondary" : "primary"}
+            className="!py-2 !px-4 !rounded-lg !text-xs shrink-0"
             onClick={async () => {
               if (isEditing) {
                 await handleCancelEdit();
@@ -137,11 +140,10 @@ export default function OverviewTab({
                 setIsEditing(true);
               }
             }}
-            className={`${isEditing ? "btn-secondary" : "btn-primary"} !py-2 !px-4 !rounded-lg !text-xs shrink-0`}
           >
             <FiEdit2 size={13} aria-hidden="true" />
             {isEditing ? "Cancel" : "Edit"}
-          </button>
+          </Button>
           )}
         </div>
 

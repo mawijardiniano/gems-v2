@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useId } from "react";
 import { COLLEGES, SCOPED_ROLES } from "@/data/lib/colleges";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 import {
   HiOutlineShieldCheck,
   HiOutlineUserGroup,
@@ -326,13 +327,10 @@ export default function ManageRoleContent() {
             Assign and manage user roles and permissions across the system
           </p>
         </div>
-        <button
-          onClick={openAssignModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-secondary-600 to-secondary-700 text-white text-sm font-semibold rounded-xl shadow-md hover:from-secondary-700 hover:to-secondary-800 hover:shadow-lg transition duration-200 active:scale-[0.98]"
-        >
+        <Button onClick={openAssignModal}>
           <HiOutlineShieldCheck className="h-5 w-5" />
           Assign Role
-        </button>
+        </Button>
       </div>
 
       <div className="relative mb-6">
@@ -655,20 +653,16 @@ export default function ManageRoleContent() {
             </div>
 
             <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
-              <button
-                onClick={closeModal}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
+              <Button variant="secondary" onClick={closeModal}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleAssign}
                 disabled={
                   !selectedUser ||
                   loading ||
                   (SCOPED_ROLES.includes(selectedRole) && !assignedCollege)
                 }
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-lg shadow-sm hover:from-secondary-700 hover:to-secondary-800 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 active:scale-[0.98]"
               >
                 {loading ? (
                   <>
@@ -698,7 +692,7 @@ export default function ManageRoleContent() {
                 ) : (
                   "Assign Role"
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

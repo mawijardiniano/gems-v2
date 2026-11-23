@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
+import Button from "@/components/ui/Button";
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -66,18 +67,19 @@ export default function PWAInstallPrompt() {
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <button
+          <Button
             onClick={handleInstall}
-            className="px-3 py-1.5 bg-secondary-600 text-white rounded-lg text-xs font-semibold hover:bg-secondary-700"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold"
           >
             Install
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => setShowPrompt(false)}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs hover:bg-gray-50"
+            className="rounded-lg px-3 py-1.5 text-xs"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       </div>
     </div>

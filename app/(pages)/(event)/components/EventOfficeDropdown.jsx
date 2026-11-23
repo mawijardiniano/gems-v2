@@ -8,6 +8,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { addTypedOffice, normalizeOffice } from "@/data/lib/colleges";
+import Button from "@/components/ui/Button";
 
 /* Office multi-select for the event create and edit forms. These used to be
    two different components: the create page's version looked right, while
@@ -181,14 +182,15 @@ export default function EventOfficeDropdown({
                 aria-label={`Add an office to ${label}`}
                 className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               />
-              <button
+              <Button
+                variant="primary"
+                className="shrink-0"
                 type="button"
                 onClick={addDraft}
                 disabled={!draft.trim()}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-secondary-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaPlus className="h-3 w-3" aria-hidden="true" /> Add
-              </button>
+              </Button>
             </div>
           )}
         </div>

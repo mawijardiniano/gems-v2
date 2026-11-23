@@ -3,9 +3,9 @@
 import { FiCheck, FiTrash2, FiX } from "react-icons/fi";
 import { FaSpinner } from "react-icons/fa";
 import { effectiveStatus, canTransition } from "@/data/lib/eventStatus";
-import { useDialog } from "@/hooks/useDialog";
 import CancelEventModal from "../CancelEventModal";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 
 /* Cancel / reinstate and delete, with their confirmation dialogs.
 
@@ -37,10 +37,6 @@ export default function EventDangerZone({
   deleting,
   handleDeleteEvent,
 }) {
-  const deleteDialogRef = useDialog(
-    deleting ? null : () => setShowDeleteModal(false),
-  );
-
   const isCancelled = effectiveStatus(event) === "cancelled";
   /* The matrix says which move is legal; the status API also requires the
      creator or an Admin, so others see neither button. */
@@ -138,76 +134,54 @@ export default function EventDangerZone({
         error={cancelError}
       />
 
-      {showDeleteModal && (
-        <div className="modal-overlay">
-          <div
-            ref={deleteDialogRef}
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-event-title"
-          >
-            <div className="modal-header">
-              <h2
-                id="delete-event-title"
-                className="text-lg font-bold text-gray-900"
-              >
-                Delete Event
-              </h2>
-              <Button
-                type="button"
-                onClick={() => setShowDeleteModal(false)}
-                variant="ghost"
-                className="touch-target !p-2"
-                aria-label="Close"
-              >
-                <FiX />
-              </Button>
-            </div>
-            <div className="modal-body">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-danger-subtle flex items-center justify-center shrink-0">
-                  <FiTrash2 className="text-danger" size={20} />
-                </div>
-                <div>
-                  <p className="text-md font-medium text-gray-900">
-                    Are you sure you want to delete this event?
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This action cannot be undone. All event data will be
-                    permanently removed.
-                  </p>
-                  {deleteError && (
-                    <p className="alert-error mt-3 !p-2">{deleteError}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <Button
-                onClick={() => setShowDeleteModal(false)}
-                variant="secondary"
-                disabled={deleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteEvent}
-                disabled={deleting}
-                variant="danger"
-              >
-                {deleting ? (
-                  <>
-                    <FaSpinner className="animate-spin" /> Deleting...
-                  </>
-                ) : (
-                  "Yes, delete"
-                )}
-              </Button>
-            </div>
+      <Modal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        busy={deleting}
+        title="Delete Event"
+        footer={
+          <>
+            <Button
+              onClick={() => setShowDeleteModal(false)}
+              variant="secondary"
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteEvent}
+              disabled={deleting}
+              variant="danger"
+            >
+              {deleting ? (
+                <>
+                  <FaSpinner className="animate-spin" /> Deleting...
+                </>
+              ) : (
+                "Yes, delete"
+              )}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-danger-subtle flex items-center justify-center shrink-0">
+            <FiTrash2 className="text-danger" size={20} />
+          </div>
+          <div>
+            <p className="text-md font-medium text-gray-900">
+              Are you sure you want to delete this event?
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              This action cannot be undone. All event data will be
+              permanently removed.
+            </p>
+            {deleteError && (
+              <p className="alert-error mt-3 !p-2">{deleteError}</p>
+            )}
           </div>
         </div>
-      )}
+      </Modal>
     </>
   );
 }

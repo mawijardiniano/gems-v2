@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect, useId } from "react";
 import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import axios from "axios";
 import {
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -560,10 +561,6 @@ export default function EmployeeListPageContent({
     }
   };
 
-  const deleteTitleId = useId();
-  const deleteDialogRef = useDialog(() => setShowConfirmModal(false));
-  const actionTitleId = useId();
-  const actionDialogRef = useDialog(() => setConfirmAction(null));
   const viewTitleId = useId();
   const viewDialogRef = useDialog(() => {
     setSelectedUser(null);
@@ -639,12 +636,13 @@ export default function EmployeeListPageContent({
             />
           </div>
           {selected.length > 0 && !useSample && (
-            <button
-              className="bg-red-500 px-4 py-1 text-white rounded-md"
+            <Button
+              variant="danger"
+              className="rounded-md py-1"
               onClick={handleBulkDelete}
             >
               Delete
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -855,15 +853,15 @@ export default function EmployeeListPageContent({
                     })()}
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
-                    <button
+                    <Button
                       onClick={() => {
                         setSelectedUser(user);
                         setActiveTab("personal");
                       }}
-                      className="px-3 py-1 text-xs rounded-md bg-secondary-600 text-white hover:bg-secondary-700 transition"
+                      className="rounded-md px-3 py-1 text-xs"
                     >
                       View
-                    </button>
+                    </Button>
                    
                   </TableCell>
                 </TableRow>
@@ -919,91 +917,69 @@ export default function EmployeeListPageContent({
         </div>
       </div>
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 bg-opacity-40">
-          <div
-            ref={deleteDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={deleteTitleId}
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
-          >
-            <h2 id={deleteTitleId} className="text-lg font-semibold mb-4">Confirm Delete</h2>
-            <div className="text-center text-danger mb-6">
-              Are you sure you want to delete the selected users?
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-danger-solid"
-                onClick={confirmBulkDelete}
-              >
-                Yes, Delete
-              </button>
-              <button
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Delete"
+        footer={
+          <>
+            <Button variant="danger" onClick={confirmBulkDelete}>
+              Yes, Delete
+            </Button>
+            <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div className="text-center text-danger">
+          Are you sure you want to delete the selected users?
         </div>
-      )}
+      </Modal>
 
-      {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div
-            ref={actionDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={actionTitleId}
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md"
-          >
-            <h2 id={actionTitleId} className="text-lg font-semibold mb-3">
-              {confirmAction.type === "reset"
-                ? "Reset Password"
-                : "Change User Status"}
-            </h2>
+      <Modal
+        open={Boolean(confirmAction)}
+        onClose={() => setConfirmAction(null)}
+        title={
+          confirmAction?.type === "reset"
+            ? "Reset Password"
+            : "Change User Status"
+        }
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
 
-            <p className="text-sm text-gray-600 mb-6">
-              {confirmAction.type === "reset"
-                ? "This will reset password to default."
-                : confirmAction.isActive
-                  ? "This will deactivate the user."
-                  : "This will activate the user."}
-            </p>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="px-4 py-2 text-sm rounded bg-gray-300 hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={async () => {
-                  try {
-                    if (confirmAction.type === "reset") {
-                      await handleResetPassword(confirmAction.userId);
-                    } else {
-                      await handleToggleStatus(
-                        confirmAction.userId,
-                        confirmAction.isActive,
-                      );
-                    }
-                  } finally {
-                    setConfirmAction(null);
+            <Button
+              onClick={async () => {
+                try {
+                  if (confirmAction.type === "reset") {
+                    await handleResetPassword(confirmAction.userId);
+                  } else {
+                    await handleToggleStatus(
+                      confirmAction.userId,
+                      confirmAction.isActive,
+                    );
                   }
-                }}
-                className="px-4 py-2 text-sm rounded bg-secondary-600 text-white hover:bg-secondary-700"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                } finally {
+                  setConfirmAction(null);
+                }
+              }}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          {confirmAction?.type === "reset"
+            ? "This will reset password to default."
+            : confirmAction?.isActive
+              ? "This will deactivate the user."
+              : "This will activate the user."}
+        </p>
+      </Modal>
 
       {selectedUser && (() => {
         const p = selectedUser.personal_info_id || {};

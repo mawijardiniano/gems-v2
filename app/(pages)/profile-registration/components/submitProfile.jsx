@@ -8,6 +8,7 @@ import { prevStep, reset } from "@/store/slices/profileRegistrationSlice";
 import Progress from "./progress";
 import AddressData from "@/public/data/all.json";
 import { FaCheckCircle, FaArrowLeft, FaSpinner, FaUserCheck, FaGraduationCap, FaBriefcase, FaChartBar, FaMapMarkerAlt, FaClipboardList } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 
 export default function SubmitProfile() {
   const dispatch = useDispatch();
@@ -187,15 +188,15 @@ export default function SubmitProfile() {
                   Please change your password after first login.
                 </p>
               </div>
-              <button
+              <Button
                 onClick={() => {
                   dispatch(reset());
                   router.push("/");
                 }}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-secondary-600 text-white rounded-xl font-semibold text-sm hover:bg-secondary-700 transition shadow-lg shadow-secondary-200"
+                className="w-full"
               >
                 Back to Home
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -293,28 +294,23 @@ export default function SubmitProfile() {
 
           {/* Footer */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => dispatch(prevStep())}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 transition text-sm font-medium"
             >
               <FaArrowLeft className="text-xs" /> Previous
-            </button>
+            </Button>
             <div className="flex items-center gap-3">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => dispatch(reset())}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition text-sm font-medium"
                 disabled={isSubmitting}
               >
                 Reset
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition duration-200 ${
-                  isSubmitting
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-secondary-600 text-white hover:bg-secondary-700 shadow-lg shadow-secondary-200"
-                }`}
               >
                 {isSubmitting ? (
                   <>
@@ -327,7 +323,7 @@ export default function SubmitProfile() {
                     Submit Profile
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

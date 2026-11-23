@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback, useId } from "react";
 import axios from "axios";
-import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import {
   FaSignInAlt,
   FaUserEdit,
@@ -359,10 +360,7 @@ export default function AdminSettings() {
   const passwordChangedAt = userInfo?.passwordChangedAt;
   const lastLogin = userInfo?.lastLogin;
 
-  const passwordTitleId = useId();
-  const passwordDialogRef = useDialog(closePasswordModal);
-  const confirmTitleId = useId();
-  const confirmDialogRef = useDialog(() => setConfirmOpen(false));
+  const passwordFormId = useId();
 
   return (
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
@@ -395,13 +393,10 @@ export default function AdminSettings() {
           <div className="px-6 py-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-3">
-                <button
-                  onClick={openPasswordModal}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors shadow-sm hover:shadow-md"
-                >
+                <Button onClick={openPasswordModal}>
                   <FaLock className="text-xs" />
                   Change Password
-                </button>
+                </Button>
                 <div className="text-xs text-gray-500">
                   {userInfoLoading ? (
                     <span className="text-gray-500">
@@ -528,11 +523,7 @@ export default function AdminSettings() {
                 )}
 
                 <div className="flex justify-end">
-                  <button
-                    onClick={saveActiveTerm}
-                    disabled={termSaving}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
-                  >
+                  <Button onClick={saveActiveTerm} disabled={termSaving}>
                     {termSaving ? (
                       <>
                         <FaSpinner className="animate-spin text-xs" />
@@ -544,7 +535,7 @@ export default function AdminSettings() {
                         Save
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -634,20 +625,21 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <button
+                  <Button
                     onClick={() => fetchActivities(1)}
-                    className="px-3 py-2 bg-secondary-600 text-white text-xs font-medium rounded-lg hover:bg-secondary-700 transition-colors"
+                    className="rounded-lg px-3 py-2 text-xs"
                   >
                     Apply
-                  </button>
+                  </Button>
                   {(filterAction || filterFrom || filterTo) && (
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={resetFilters}
-                      className="px-3 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
+                      className="gap-1 rounded-lg px-3 py-2 text-xs text-gray-600"
                     >
                       <FaRedo className="text-xs" />
                       Reset
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -769,172 +761,124 @@ export default function AdminSettings() {
       </section>
 
       {/* Password Change Modal */}
-      {passwordModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center">
+      <Modal
+        open={passwordModalOpen}
+        onClose={closePasswordModal}
+        title="Change Password"
+        description="Update your account password"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closePasswordModal}>
+              Cancel
+            </Button>
+            <Button type="submit" form={passwordFormId} disabled={loading}>
+              {loading ? "Saving..." : "Change Password"}
+            </Button>
+          </>
+        }
+      >
+        {message && (
           <div
-            className="absolute inset-0 bg-black/40"
-            onClick={closePasswordModal}
-          />
-          <div
-            ref={passwordDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={passwordTitleId}
-            className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden"
+            role="alert"
+            className={`mb-3 p-3 rounded-lg text-sm ${
+              message.type === "error"
+                ? "bg-danger-subtle text-danger border border-red-100"
+                : "bg-success-subtle text-success border border-green-100"
+            }`}
           >
-            <div className="p-6">
-              <div className="mb-4">
-                <h3 id={passwordTitleId} className="text-lg font-semibold text-gray-900">
-                  Change Password
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Update your account password
-                </p>
-              </div>
+            {message.text}
+          </div>
+        )}
 
-              {message && (
-                <div
-                  role="alert"
-                  className={`mb-3 p-3 rounded-lg text-sm ${
-                    message.type === "error"
-                      ? "bg-danger-subtle text-danger border border-red-100"
-                      : "bg-success-subtle text-success border border-green-100"
-                  }`}
-                >
-                  {message.text}
-                </div>
-              )}
-
-              <form onSubmit={handleModalSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Current Password
-                  </label>
-                  <div className="mt-1 relative">
-                    <input
-                      ref={firstInputRef}
-                      type={showCurrent ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrent((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
-                    >
-                      {showCurrent ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    New Password
-                  </label>
-                  <div className="mt-1 relative">
-                    <input
-                      type={showNew ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNew((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
-                    >
-                      {showNew ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    At least 8 characters. Include letters and numbers.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirm New Password
-                  </label>
-                  <div className="mt-1 relative">
-                    <input
-                      type={showConfirm ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm((s) => !s)}
-                      className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
-                    >
-                      {showConfirm ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={closePasswordModal}
-                    className="px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2.5 rounded-lg bg-secondary-600 text-white text-sm font-medium hover:bg-secondary-700 transition-colors disabled:opacity-50"
-                  >
-                    {loading ? "Saving..." : "Change Password"}
-                  </button>
-                </div>
-              </form>
+        <form id={passwordFormId} onSubmit={handleModalSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Current Password
+            </label>
+            <div className="mt-1 relative">
+              <input
+                ref={firstInputRef}
+                type={showCurrent ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent((s) => !s)}
+                className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
+              >
+                {showCurrent ? "Hide" : "Show"}
+              </button>
             </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              New Password
+            </label>
+            <div className="mt-1 relative">
+              <input
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew((s) => !s)}
+                className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
+              >
+                {showNew ? "Hide" : "Show"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              At least 8 characters. Include letters and numbers.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Confirm New Password
+            </label>
+            <div className="mt-1 relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((s) => !s)}
+                className="absolute right-3 top-2.5 text-xs font-medium text-secondary-600 hover:text-secondary-700"
+              >
+                {showConfirm ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </Modal>
 
       {/* Confirmation Modal */}
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setConfirmOpen(false)}
-          />
-          <div
-            ref={confirmDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={confirmTitleId}
-            className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden"
-          >
-            <div className="p-6">
-              <h3 id={confirmTitleId} className="text-lg font-semibold text-gray-900">
-                Confirm Password Change
-              </h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Are you sure you want to change your password? This action will
-                update your account credentials immediately.
-              </p>
-              <div className="mt-6 flex justify-end gap-2">
-                <button
-                  onClick={() => setConfirmOpen(false)}
-                  className="px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={performChange}
-                  className="px-4 py-2.5 rounded-lg bg-secondary-600 text-white text-sm font-medium hover:bg-secondary-700 transition-colors"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirm Password Change"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={performChange}>Confirm</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          Are you sure you want to change your password? This action will
+          update your account credentials immediately.
+        </p>
+      </Modal>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   FaGlobeAsia,
 } from "react-icons/fa";
 import { eventPhaseStyle } from "@/data/lib/eventStatus";
+import Button from "@/components/ui/Button";
 
 const ActivityTypeBadge = ({ type }) => {
   /* Shared with the calendar and the check-in page. */
@@ -236,13 +237,13 @@ export default function EventsListContent() {
             </p>
           </div>
 
-          <button
+          <Button
+            variant="primary"
             onClick={() => router.push("/create")}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-secondary-200 hover:shadow-xl hover:from-secondary-700 hover:to-secondary-600 transition duration-200"
           >
             <FaPlus size={14} />
             Create Event
-          </button>
+          </Button>
         </div>
 
         {/* Error */}

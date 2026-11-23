@@ -1,6 +1,7 @@
 "use client";
 
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 
 /* Extracted from the GPB year page (gpb/[year]/content.jsx). The page owns
    the state and handlers and passes them in. */
@@ -136,23 +137,23 @@ export default function CommentModal({
           </p>
         )}
         <div className="flex gap-2 justify-end">
-          <button
+          <Button
+            variant="success"
             onClick={handleSubmitComment}
             disabled={commentSaving}
-            className="bg-success-solid text-white px-4 py-2 rounded disabled:opacity-50"
           >
             {commentSaving ? "Saving..." : "Submit"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => {
               setShowCommentForm(false);
               setCommentField([]);
               setCommentProjectId(null);
             }}
-            className="bg-gray-400 px-4 py-2 rounded"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

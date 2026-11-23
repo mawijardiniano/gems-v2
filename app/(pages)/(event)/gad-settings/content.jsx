@@ -43,6 +43,8 @@ import {
   FaSpinner,
 } from "react-icons/fa";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
@@ -319,9 +321,7 @@ export default function Settings() {
 
   const firstInputRef = useRef(null);
   const passwordTitleId = useId();
-  const confirmTitleId = useId();
   const passwordDialogRef = useDialog(closePasswordModal);
-  const confirmDialogRef = useDialog(() => setConfirmOpen(false));
 
   /* ── Report signatories: load, search, save ──────────────────────────────
      Only fetched when the role may edit, so other roles never trigger a read
@@ -1118,10 +1118,10 @@ export default function Settings() {
                       </p>
 
                       <div className="flex justify-end">
-                        <button
+                        <Button
+                          variant="primary"
                           onClick={saveReportSignatories}
                           disabled={sigSaving}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white text-sm font-medium rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50"
                         >
                           {sigSaving ? (
                             <>
@@ -1134,7 +1134,7 @@ export default function Settings() {
                               Save
                             </>
                           )}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1478,13 +1478,13 @@ export default function Settings() {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     type="button"
                     onClick={closePasswordModal}
-                    className="px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
                   >
                     Cancel
-                  </button>
+                  </Button>
                   <button
                     type="submit"
                     disabled={loading}
@@ -1500,45 +1500,33 @@ export default function Settings() {
       )}
 
       {/* Confirmation Modal */}
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setConfirmOpen(false)}
-          />
-          <div
-            ref={confirmDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={confirmTitleId}
-            className="relative z-50 w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden"
-          >
-            <div className="p-6">
-              <h3 id={confirmTitleId} className="text-lg font-semibold text-gray-900">
-                Confirm Password Change
-              </h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Are you sure you want to change your password? This action will
-                update your account credentials immediately.
-              </p>
-              <div className="mt-6 flex justify-end gap-2">
-                <button
-                  onClick={() => setConfirmOpen(false)}
-                  className="px-4 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={performChange}
-                  className="px-4 py-2.5 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 transition-colors"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirm Password Change"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={performChange}
+            >
+              Confirm
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-600">
+          Are you sure you want to change your password? This action will
+          update your account credentials immediately.
+        </p>
+      </Modal>
     </div>
   );
 }

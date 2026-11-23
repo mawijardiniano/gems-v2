@@ -16,6 +16,7 @@ import { resolveSaveRequest } from "@/data/lib/gfpsSaveRequest";
 import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
 import { useConfirm } from "@/components/ui/useConfirm";
 import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
+import Button from "@/components/ui/Button";
 
 /* Where the page-header "Add Member" button opens. The chair/head of agency is
    a single slot rather than a row list, so a dialog opened there could offer no
@@ -557,9 +558,9 @@ export default function GFPSManager() {
             </button>
           )}
           {canEdit && (
-            <button
+            <Button
+              variant="primary"
               onClick={openAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary-600 text-white rounded-xl hover:bg-secondary-700 transition font-medium text-sm shadow-lg shadow-secondary-200 hover:shadow-secondary-300"
             >
               <svg
                 className="w-4 h-4"
@@ -575,7 +576,7 @@ export default function GFPSManager() {
                 />
               </svg>
               Add Member
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -601,13 +602,14 @@ export default function GFPSManager() {
             Showing untagged records from before the academic-year migration.
             Assign them to AY {academicYear} to keep them.
           </span>
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             onClick={handleAssignLegacy}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Assigning..." : `Assign to AY ${academicYear}`}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -617,13 +619,14 @@ export default function GFPSManager() {
             No GFPS for AY {academicYear} yet. Copy last year&apos;s committee
             or add members manually.
           </span>
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             onClick={handleCopyForward}
             disabled={copying}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-secondary-600 rounded-xl hover:bg-secondary-700 transition disabled:opacity-50 shrink-0"
           >
             {copying ? "Copying..." : "Copy from previous year"}
-          </button>
+          </Button>
         </div>
       )}
 

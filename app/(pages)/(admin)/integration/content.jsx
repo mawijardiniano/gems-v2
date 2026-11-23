@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Button from "@/components/ui/Button";
 import useIntegrationData from "../components/integration/useIntegrationData";
 import StagingWorkspace from "../components/integration/StagingWorkspace";
 import FieldMappingPanel from "../components/integration/FieldMappingPanel";
@@ -149,14 +150,12 @@ export default function IntegrationContent() {
               />
               {endpoint ? "Connected" : "Not Configured"}
             </span>
-            <button
-              type="button"
+            <Button
               onClick={syncNow}
               disabled={d.busyAction !== "" || !endpoint}
-              className="px-4 py-2 rounded bg-secondary-600 text-white text-sm disabled:opacity-50"
             >
               {d.busyAction === "Sync Now" ? "Syncing..." : "Sync Now"}
-            </button>
+            </Button>
           </div>
         </div>
 

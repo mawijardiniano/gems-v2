@@ -27,6 +27,7 @@ import {
   orderProjectsByType,
   projectTypeLabel as getProjectTypeLabel,
 } from "@/data/lib/reportFields";
+import Button from "@/components/ui/Button";
 
 const getEvidenceFileType = (file) => {
   const name = `${file?.name || ""} ${file?.url || ""}`.toLowerCase();
@@ -575,13 +576,13 @@ export default function GADARContent() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => downloadEvidenceFile(viewerFile)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                 >
                   <FaDownload className="h-3.5 w-3.5" />
                   Download
-                </button>
+                </Button>
                 <button
                   type="button"
                   aria-label="Close"
@@ -624,13 +625,14 @@ export default function GADARContent() {
                 <div className="text-center p-8">
                   <FaFileAlt className="h-10 w-10 text-red-400 mx-auto mb-3" />
                   <p className="text-sm text-gray-300">{previewError}</p>
-                  <button
+                  <Button
+                    variant="primary"
+                    className="mt-3"
                     onClick={() => downloadEvidenceFile(viewerFile)}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FaDownload className="h-3.5 w-3.5" />
                     Download instead
-                  </button>
+                  </Button>
                 </div>
               ) : viewerFileType === "image" ? (
                 <img
@@ -667,13 +669,14 @@ export default function GADARContent() {
                   <p className="text-sm text-gray-300">
                     Preview not available for this file type.
                   </p>
-                  <button
+                  <Button
+                    variant="primary"
+                    className="mt-3"
                     onClick={() => downloadEvidenceFile(viewerFile)}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-secondary-600 rounded-lg hover:bg-secondary-700 transition"
                   >
                     <FaDownload className="h-3.5 w-3.5" />
                     Download to view
-                  </button>
+                  </Button>
                 </div>
               )}
 

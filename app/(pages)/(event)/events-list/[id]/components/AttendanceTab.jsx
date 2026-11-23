@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import ManualEncodeModal from "./ManualEncodeModal";
-import { useDialog } from "@/hooks/useDialog";
+import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 
 const STATUS_META = {
@@ -70,10 +70,6 @@ export default function AttendanceTab(props) {
   const [showManualEncode, setShowManualEncode] = useState(false);
   const [rejecting, setRejecting] = useState(false);
 
-  const rejectDialogRef = useDialog(rejecting ? null : () => {
-    setRejectTarget(null);
-    setRejectNote("");
-  });
   const q = String(guestSearch || "").toLowerCase();
 
   /* The parent always fetches every validation status, so the queue filter is
@@ -526,66 +522,62 @@ export default function AttendanceTab(props) {
       </div>
 
       {/* Reject reason dialog (single or bulk) */}
-      {rejectTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div
-            ref={rejectDialogRef}
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reject-guest-title"
-          >
-            <h3 id="reject-guest-title" className="text-lg font-semibold text-gray-900">
-              Not approve {rejectTarget.length === 1 ? "this check-in" : `${rejectTarget.length} check-ins`}?
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              The guest may submit the form again. Your reason is kept for the audit trail.
-            </p>
-            <textarea
-              className="input mt-4 !rounded-lg w-full"
-              rows={3}
-              placeholder="Reason (optional)"
-              aria-label="Reason (optional)"
-              autoFocus
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-            />
-            <div className="mt-5 flex justify-end gap-3">
-              <Button
-                variant="secondary"
-                className="!rounded-lg"
-                onClick={() => { setRejectTarget(null); setRejectNote(""); }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                className="!rounded-lg !bg-rose-600"
-                disabled={rejecting}
-                onClick={async () => {
-                  if (rejecting) return;
-                  setRejecting(true);
-                  const ids = rejectTarget;
-                  const note = rejectNote;
-                  setRejectTarget(null);
-                  setBusyId(ids.length === 1 ? ids[0] : null);
-                  setBulkBusy(ids.length > 1);
-                  try {
-                    await runValidate(ids, "reject", note);
-                  } finally {
-                    setBusyId(null);
-                    setBulkBusy(false);
-                    setRejectNote("");
-                    setRejecting(false);
-                  }
-                }}
-              >
-                <FiX size={13} /> Reject
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={Boolean(rejectTarget)}
+        onClose={() => { setRejectTarget(null); setRejectNote(""); }}
+        busy={rejecting}
+        title={
+          rejectTarget
+            ? `Not approve ${rejectTarget.length === 1 ? "this check-in" : `${rejectTarget.length} check-ins`}?`
+            : ""
+        }
+        description="The guest may submit the form again. Your reason is kept for the audit trail."
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              className="!rounded-lg"
+              onClick={() => { setRejectTarget(null); setRejectNote(""); }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              className="!rounded-lg !bg-rose-600"
+              disabled={rejecting}
+              onClick={async () => {
+                if (rejecting) return;
+                setRejecting(true);
+                const ids = rejectTarget;
+                const note = rejectNote;
+                setRejectTarget(null);
+                setBusyId(ids.length === 1 ? ids[0] : null);
+                setBulkBusy(ids.length > 1);
+                try {
+                  await runValidate(ids, "reject", note);
+                } finally {
+                  setBusyId(null);
+                  setBulkBusy(false);
+                  setRejectNote("");
+                  setRejecting(false);
+                }
+              }}
+            >
+              <FiX size={13} /> Reject
+            </Button>
+          </>
+        }
+      >
+        <textarea
+          className="input !rounded-lg w-full"
+          rows={3}
+          placeholder="Reason (optional)"
+          aria-label="Reason (optional)"
+          autoFocus
+          value={rejectNote}
+          onChange={(e) => setRejectNote(e.target.value)}
+        />
+      </Modal>
 
       <ManualEncodeModal
         open={showManualEncode}
