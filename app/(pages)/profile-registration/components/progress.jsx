@@ -50,7 +50,7 @@ export default function Progress() {
                   )}
                 </div>
                 <span
-                  className={`text-[10px] mt-1.5 font-medium transition-colors duration-300 whitespace-nowrap ${
+                  className={`text-xs mt-1.5 font-medium transition-colors duration-300 whitespace-nowrap ${
                     isActive
                       ? "text-secondary-600"
                       : isCompleted

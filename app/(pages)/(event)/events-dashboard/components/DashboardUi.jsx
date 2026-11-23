@@ -117,7 +117,7 @@ export function EmptyState({ icon: Icon, title, description, action }) {
 export function SourceTag({ sample }) {
   return (
     <span
-      className={`ml-1.5 inline-flex items-center align-middle px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
+      className={`ml-1.5 inline-flex items-center align-middle px-1.5 py-0.5 rounded text-2xs font-semibold uppercase tracking-wide ${
         sample
           ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
           : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -263,7 +263,7 @@ export function ReadinessItem({ count, label, hint, clearLabel, linkLabel, onOpe
             {clear ? clearLabel : `${count} ${label}`}
           </p>
           {!clear && hint ? (
-            <p className="text-[11px] text-gray-500 mt-0.5">{hint}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{hint}</p>
           ) : null}
           {!clear && onOpen ? (
             <button

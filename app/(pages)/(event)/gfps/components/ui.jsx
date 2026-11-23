@@ -143,12 +143,12 @@ export function OfficialRow({ member, avatarBg, avatarText }) {
               broken link. `manual` is derived on read (lib/gfpsServer.js) — every
               GFPS row is typed by hand now, so it is never stored. */}
           {m.manual && (
-            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+            <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
               Manual
             </span>
           )}
           {vacant && (
-            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-secondary-100 text-secondary-700">
+            <span className="flex-shrink-0 text-2xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-secondary-100 text-secondary-700">
               Vacant
             </span>
           )}

@@ -144,7 +144,7 @@ function ScheduleSection({ project, canManage, onSaved }) {
             </span>
           </div>
           {!canManage && (
-            <p className="text-[11px] text-gray-500 italic">
+            <p className="text-xs text-gray-500 italic">
               Only the project creator or a GAD Focal Person can set the schedule
               and status.
             </p>

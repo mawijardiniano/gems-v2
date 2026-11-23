@@ -422,7 +422,7 @@ export default function MilestonesModal({
             <div className="flex items-center gap-2">
               <PrintGantt
                 project={{ ...project, gantt_activities: activities }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
@@ -447,7 +447,7 @@ export default function MilestonesModal({
           {stats.total > 0 && (
             <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
                   Milestone Progress
                 </p>
                 <p className="text-sm font-bold text-gray-900 mt-0.5">
@@ -569,14 +569,14 @@ export default function MilestonesModal({
                   <label className="text-xs font-medium text-gray-500">
                     Milestones &amp; Activities
                   </label>
-                  <span className="text-[11px] text-gray-500">
+                  <span className="text-xs text-gray-500">
                     {rows.length}/{MAX_MILESTONES}
                   </span>
                 </div>
 
                 <div className="overflow-x-auto rounded-lg border border-gray-200">
                   <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+                    <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
                       <tr>
                         <th className="px-2.5 py-1.5 font-semibold">
                           Milestone / Activity
@@ -635,7 +635,7 @@ export default function MilestonesModal({
                                   {row.source_activity}
                                 </span>
                               ) : (
-                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500">
+                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
                                   Manual
                                 </span>
                               )}
@@ -685,7 +685,7 @@ export default function MilestonesModal({
                                           key={
                                             file.key || file.url || fileIndex
                                           }
-                                          className="flex items-center gap-1.5 text-[11px] text-gray-600"
+                                          className="flex items-center gap-1.5 text-xs text-gray-600"
                                         >
                                           <FaPaperclip
                                             size={9}
@@ -712,7 +712,7 @@ export default function MilestonesModal({
                                 )}
                                 {row.status === "completed" ? (
                                   <>
-                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
+                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
                                       {fileLifecycle.isUploadingTarget(i) ? (
                                         <FaSpinner
                                           size={10}
@@ -736,14 +736,14 @@ export default function MilestonesModal({
                                       />
                                     </label>
                                     {(row.proofs || []).length === 0 && (
-                                      <p className="text-[10px] font-medium text-secondary-600">
+                                      <p className="text-xs font-medium text-secondary-600">
                                         Proof required
                                       </p>
                                     )}
                                   </>
                                 ) : (
                                   (row.proofs || []).length === 0 && (
-                                    <span className="text-[11px] text-gray-500">
+                                    <span className="text-xs text-gray-500">
                                       —
                                     </span>
                                   )

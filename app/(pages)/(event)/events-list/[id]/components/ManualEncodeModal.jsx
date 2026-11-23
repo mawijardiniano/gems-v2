@@ -340,7 +340,7 @@ export default function ManualEncodeModal({
                 </button>
               );
             })}
-            <span className="text-[11px] text-gray-500">
+            <span className="text-xs text-gray-500">
               {TYPES.find((t) => t.key === type)?.hint}
             </span>
           </div>

@@ -103,7 +103,7 @@ export default function GanttUploadTab({ onApply }) {
             e.target.value = "";
           }}
         />
-        <p className="text-[11px] text-gray-500">Supported: CSV (.csv)</p>
+        <p className="text-xs text-gray-500">Supported: CSV (.csv)</p>
       </div>
 
       <button
@@ -153,7 +153,7 @@ export default function GanttUploadTab({ onApply }) {
         </div>
       )}
 
-      <p className="text-[11px] text-gray-500">
+      <p className="text-xs text-gray-500">
         The system reads the activities and timelines from the file. You can
         review and edit them in the Encode tab, then generate milestones.
       </p>

@@ -450,7 +450,7 @@ export default function EmployeeGenderStatsContent() {
             </button>
           )}
         </div>
-        <p className="text-[11px] text-gray-500">
+        <p className="text-xs text-gray-500">
           {useSample
             ? `Filters re-aggregate the sample records in your browser â€” ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
             : "Live data can be filtered by personnel type, college/office, employment status and one academic year. Department and Position Level are available with sample data only."}
@@ -792,7 +792,7 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
         </a>
       </div>
       {useSample && (
-        <p className="text-[11px] text-gray-500 mt-2">
+        <p className="text-xs text-gray-500 mt-2">
           Generated in your browser from the sample dataset â€” no database
           reads or writes.
         </p>

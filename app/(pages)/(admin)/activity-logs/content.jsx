@@ -124,7 +124,7 @@ const RESOURCE_COLORS = {
 function getSeverityBadge(severity) {
   const colors = SEVERITY_COLORS[severity] || "text-gray-600 bg-gray-100";
   return (
-    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${colors}`}>
+    <span className={`inline-block px-1.5 py-0.5 rounded text-2xs font-semibold uppercase ${colors}`}>
       {severity || "info"}
     </span>
   );
@@ -134,7 +134,7 @@ function getResourceBadge(resourceType) {
   if (!resourceType || resourceType === "system") return null;
   const colors = RESOURCE_COLORS[resourceType] || "text-gray-600 bg-gray-100";
   return (
-    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${colors}`}>
+    <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${colors}`}>
       {resourceType}
     </span>
   );
@@ -227,7 +227,7 @@ function DetailItem({ label, children }) {
   if (children === null || children === undefined || children === "") return null;
   return (
     <div>
-      <dt className="text-[10px] uppercase tracking-wide text-gray-500">{label}</dt>
+      <dt className="text-2xs uppercase tracking-wide text-gray-500">{label}</dt>
       <dd className="text-xs text-gray-700 break-words">{children}</dd>
     </div>
   );
@@ -263,33 +263,33 @@ function LogDetail({ log }) {
             not link should look different from one it could. */}
         <DetailItem label="Hash (self)">
           {log.hash_self ? (
-            <span className="font-mono text-[10px]">{log.hash_self}</span>
+            <span className="font-mono text-2xs">{log.hash_self}</span>
           ) : (
             <span className="italic text-amber-700">not linked</span>
           )}
         </DetailItem>
         <DetailItem label="Hash (previous)">
           {log.hash_prev ? (
-            <span className="font-mono text-[10px]">{log.hash_prev}</span>
+            <span className="font-mono text-2xs">{log.hash_prev}</span>
           ) : (
             <span className="italic text-gray-500">none (chain start)</span>
           )}
         </DetailItem>
         <DetailItem label="Record ID">
-          {log._id ? <span className="font-mono text-[10px]">{String(log._id)}</span> : null}
+          {log._id ? <span className="font-mono text-2xs">{String(log._id)}</span> : null}
         </DetailItem>
       </dl>
 
       {log.changes?.length > 0 && (
         <div className="mt-3">
-          <div className="text-[10px] uppercase tracking-wide text-gray-500">Changes</div>
+          <div className="text-2xs uppercase tracking-wide text-gray-500">Changes</div>
           <ChangeList changes={log.changes} />
         </div>
       )}
 
       {log.redacted && (
         <div className="mt-3 text-xs">
-          <span className="text-[10px] uppercase tracking-wide text-gray-500">
+          <span className="text-2xs uppercase tracking-wide text-gray-500">
             Redaction
           </span>
           <div className="text-red-700">
@@ -306,7 +306,7 @@ function LogDetail({ log }) {
         </div>
       )}
 
-      <div className="mt-3 text-[10px] text-gray-500">
+      <div className="mt-3 text-xs text-gray-500">
         Actor snapshot: {[actor.primary, ...actor.secondary].filter(Boolean).join(" · ") || "unknown"}
         {actor.id ? ` · user ${actor.id}` : ""}
       </div>
@@ -817,7 +817,7 @@ export default function ActivityLogsContent() {
                           {actor.primary || "—"}
                         </span>
                         {actor.secondary.length > 0 && (
-                          <span className="block text-[10px] text-gray-500">
+                          <span className="block text-xs text-gray-500">
                             {actor.secondary.join(" · ")}
                           </span>
                         )}
@@ -841,12 +841,12 @@ export default function ActivityLogsContent() {
                           <ChangeList changes={log.changes} />
                         )}
                         {!isOpen && log.changes?.length > 1 && (
-                          <span className="block text-[10px] text-gray-500">
+                          <span className="block text-xs text-gray-500">
                             {log.changes.length} fields changed — expand to view
                           </span>
                         )}
                         {log.redacted && !isOpen && (
-                          <span className="block text-[10px] text-red-400">
+                          <span className="block text-xs text-red-400">
                             redacted{log.redacted_at ? ` ${formatDate(log.redacted_at)}` : ""}
                           </span>
                         )}
@@ -857,7 +857,7 @@ export default function ActivityLogsContent() {
                             actually happens, so the control cannot be mistaken for
                             the removal it deliberately is not. */}
                         {log.redacted ? (
-                          <span className="text-[10px] text-gray-500">—</span>
+                          <span className="text-xs text-gray-500">—</span>
                         ) : (
                           <button
                             onClick={() => setDeleteId(log._id)}

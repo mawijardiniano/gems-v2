@@ -56,7 +56,7 @@ export default function PageBreadcrumbs({
               {!isFirst && (
                 <FaChevronRight
                   aria-hidden="true"
-                  className="flex-shrink-0 text-[8px] text-gray-300"
+                  className="flex-shrink-0 text-[0.5rem] text-gray-300"
                 />
               )}
 
@@ -68,7 +68,7 @@ export default function PageBreadcrumbs({
                   {showIcon && (
                     <FaHome
                       aria-hidden="true"
-                      className="flex-shrink-0 text-[11px]"
+                      className="flex-shrink-0 text-xs"
                     />
                   )}
                   <span className="truncate">{crumb.label}</span>
@@ -85,7 +85,7 @@ export default function PageBreadcrumbs({
                   {showIcon && (
                     <FaHome
                       aria-hidden="true"
-                      className="flex-shrink-0 text-[11px]"
+                      className="flex-shrink-0 text-xs"
                     />
                   )}
                   <span className="truncate">{crumb.label}</span>

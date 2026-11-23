@@ -58,7 +58,7 @@ function ProgressBar({ project }) {
         />
       </div>
       <span
-        className="text-[10px] font-medium text-gray-600 whitespace-nowrap"
+        className="text-xs font-medium text-gray-600 whitespace-nowrap"
         title={
           progress.total > 0
             ? `${progress.done} of ${progress.total} milestones completed`
@@ -183,7 +183,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
           <div>{displayIndex}</div>
           {project.reference_number && (
             <div
-              className="mt-1 font-mono text-[10px] font-normal text-gray-500 whitespace-nowrap"
+              className="mt-1 font-mono text-2xs font-normal text-gray-500 whitespace-nowrap"
               title="Project reference number"
             >
               {project.reference_number}
@@ -220,7 +220,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
           </td>
         )}
         <td className="px-3 py-4 align-top text-xs">
-          <StatusPill meta={statusMeta} className="text-[10px]" />
+          <StatusPill meta={statusMeta} className="text-xs" />
         </td>
         <td className="px-3 py-4 align-top text-xs">
           <ProgressBar project={project} />
@@ -302,7 +302,7 @@ function Pagination({ list }) {
             aria-label="Previous page"
             className={navButton}
           >
-            <FaChevronLeft className="text-[10px]" />
+            <FaChevronLeft className="text-xs" />
           </button>
           {pageWindow(currentPage, totalPages).map((p, i) =>
             p === null ? (
@@ -332,7 +332,7 @@ function Pagination({ list }) {
             aria-label="Next page"
             className={navButton}
           >
-            <FaChevronRight className="text-[10px]" />
+            <FaChevronRight className="text-xs" />
           </button>
         </div>
       )}

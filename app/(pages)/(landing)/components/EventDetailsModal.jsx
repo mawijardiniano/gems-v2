@@ -92,7 +92,7 @@ export default function EventDetailsModal({ event, onClose }) {
             </h2>
             {event.type_of_activity && (
               <span
-                className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                   ACTIVITY_COLORS[event.type_of_activity] ||
                   "bg-gray-50 text-gray-700 border-gray-200"
                 }`}

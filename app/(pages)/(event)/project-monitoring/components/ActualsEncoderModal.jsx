@@ -248,13 +248,13 @@ export default function ActualsEncoderModal({
           )}
 
           {/* Budget Utilization — planned vs actual, expenditure and evidence */}
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
             Budget Utilization
           </p>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
                 {budgetLabel}
               </p>
               <p className="text-sm font-bold text-gray-900 mt-0.5">
@@ -262,7 +262,7 @@ export default function ActualsEncoderModal({
               </p>
             </div>
             <div className="rounded-lg bg-secondary-50/60 border border-secondary-100 px-3 py-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-secondary-400">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-secondary-400">
                 Actual
               </p>
               <p className="text-sm font-bold text-secondary-900 mt-0.5">
@@ -277,7 +277,7 @@ export default function ActualsEncoderModal({
               }`}
             >
               <p
-                className={`text-[10px] font-semibold uppercase tracking-wider ${
+                className={`text-2xs font-semibold uppercase tracking-wider ${
                   variance < 0 ? "text-red-400" : "text-emerald-500"
                 }`}
               >
@@ -295,7 +295,7 @@ export default function ActualsEncoderModal({
 
           {plannedBudget > 0 && (
             <div>
-              <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
                 <span>Utilization</span>
                 <span
                   className={`font-semibold ${
@@ -331,7 +331,7 @@ export default function ActualsEncoderModal({
               placeholder="0.00"
             />
             {spent > 0 && evidence.length === 0 && (
-              <p className="text-[11px] text-secondary-600 mt-1 flex items-center gap-1">
+              <p className="text-xs text-secondary-600 mt-1 flex items-center gap-1">
                 <FaExclamationTriangle size={10} />
                 Expenditures require evidence before saving.
               </p>
@@ -423,13 +423,13 @@ export default function ActualsEncoderModal({
                       ? "Replace the custom text with the auto-generated summary"
                       : "No linked events to generate from yet"
                   }
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaRedo size={9} />
                   Reset to auto-generated
                 </button>
               ) : (
-                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                   Auto
                 </span>
               )}
@@ -446,7 +446,7 @@ export default function ActualsEncoderModal({
               placeholder="Actual accomplishments for this project…"
             />
             {!isOverride && (
-              <p className="text-[11px] text-gray-500">
+              <p className="text-xs text-gray-500">
                 Updates automatically whenever a linked event is added, edited
                 or cancelled. Type in the box to keep a custom version instead.
               </p>

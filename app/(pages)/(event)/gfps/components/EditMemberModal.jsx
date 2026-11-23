@@ -252,7 +252,7 @@ function ManualEntries({
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                   />
                   {locked && (
-                    <p className="mt-1 text-[11px] text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500">
                       Seat fixed by the GFPS memorandum.
                     </p>
                   )}

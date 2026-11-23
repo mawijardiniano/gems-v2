@@ -89,13 +89,13 @@ const StatCard = ({ icon, iconClass, label, value, sub }) => (
       {icon}
     </span>
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
         {label}
       </p>
       <p className="text-lg font-bold text-gray-900 leading-tight truncate">
         {value}
       </p>
-      {sub && <p className="text-[11px] text-gray-500 truncate">{sub}</p>}
+      {sub && <p className="text-xs text-gray-500 truncate">{sub}</p>}
     </div>
   </div>
 );
@@ -134,7 +134,7 @@ const DetailRow = ({ label, value }) => {
 /* One titled block of detail rows; rows flow into two columns on wide screens. */
 const DetailSection = ({ title, children }) => (
   <div>
-    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 pb-1.5 border-b border-gray-100">
+    <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 pb-1.5 border-b border-gray-100">
       {title}
     </p>
     <dl className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10">{children}</dl>
@@ -165,7 +165,7 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
           style={{ width: `${capped}%` }}
         />
       </div>
-      {caption && <p className="text-[11px] text-gray-500 mt-1">{caption}</p>}
+      {caption && <p className="text-xs text-gray-500 mt-1">{caption}</p>}
     </div>
   );
 };
@@ -409,12 +409,12 @@ export default function ProjectWorkspace({ config }) {
         >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-mono font-semibold text-gray-500">
+              <span className="text-2xs font-mono font-semibold text-gray-500">
                 {project.reference_number || "—"}
               </span>
               {badgeValue && (
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${badgeClass}`}
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}
                 >
                   {badgeValue}
                 </span>
@@ -424,7 +424,7 @@ export default function ProjectWorkspace({ config }) {
             <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-1.5">
               {titleValue}
             </h3>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[11px] text-gray-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500">
               <span>
                 {formatDate(project.start_date) || "No start date"} →{" "}
                 {formatDate(project.end_date) || "No end date"}
@@ -527,7 +527,7 @@ export default function ProjectWorkspace({ config }) {
                 )}
 
                 <p
-                  className={`text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 ${
+                  className={`text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-2 ${
                     managementAllowed ? "hidden" : ""
                   }`}
                 >
@@ -569,7 +569,7 @@ export default function ProjectWorkspace({ config }) {
                           </span>
                         )}
                       {milestone.source_activity && (
-                        <span className="basis-full pl-3.5 text-[11px] text-gray-500">
+                        <span className="basis-full pl-3.5 text-xs text-gray-500">
                           from: {milestone.source_activity}
                         </span>
                       )}
@@ -586,7 +586,7 @@ export default function ProjectWorkspace({ config }) {
 
             {detailTab === "events" && (
               <div className="animate-fade-in" role="tabpanel">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
                   Linked Events
                 </p>
                 {events.length === 0 && (
@@ -624,7 +624,7 @@ export default function ProjectWorkspace({ config }) {
               <div className="animate-fade-in" role="tabpanel">
                 <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
                   {milestones.length > 0 && (
-                    <p className="text-[11px] text-gray-500 mb-2">
+                    <p className="text-xs text-gray-500 mb-2">
                       Milestone progress:{" "}
                       <span className="font-medium text-gray-700">
                         {milestoneDone}/{milestones.length} completed (
@@ -634,7 +634,7 @@ export default function ProjectWorkspace({ config }) {
                     </p>
                   )}
 
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
                     Actual Accomplishment
                   </p>
                   <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
@@ -643,7 +643,7 @@ export default function ProjectWorkspace({ config }) {
                   {canSeeBudget &&
                     Array.isArray(project.expenditure_evidence) &&
                     project.expenditure_evidence.length > 0 && (
-                      <p className="text-[11px] text-gray-500 mt-2 inline-flex items-center gap-1">
+                      <p className="text-xs text-gray-500 mt-2 inline-flex items-center gap-1">
                         <FaPaperclip size={9} />{" "}
                         {project.expenditure_evidence.length} evidence file
                         {project.expenditure_evidence.length === 1 ? "" : "s"}

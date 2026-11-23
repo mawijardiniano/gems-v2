@@ -58,7 +58,7 @@ export default function TextSizeMenu({ scaleId, percent, presets, onSelect }) {
         title="Text size"
       >
         <FaTextHeight size={16} aria-hidden="true" />
-        <span className="hidden text-[11px] font-semibold tabular-nums sm:inline">
+        <span className="hidden text-xs font-semibold tabular-nums sm:inline">
           {textScaleTriggerLabel(percent)}
         </span>
       </button>
@@ -70,7 +70,7 @@ export default function TextSizeMenu({ scaleId, percent, presets, onSelect }) {
           className="fixed right-4 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl animate-dropdown sm:absolute sm:right-0"
         >
           <div className="border-b border-gray-50 px-4 pb-2 pt-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
+            <p className="text-2xs font-semibold uppercase tracking-widest text-gray-500">
               Text size
             </p>
           </div>

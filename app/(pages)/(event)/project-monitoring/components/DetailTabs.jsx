@@ -63,7 +63,7 @@ export default function DetailTabs({ tabs = [], active, onChange, className = ""
             {tab.label}
             {typeof tab.count === "number" && (
               <span
-                className={`rounded-full px-2 py-0.5 text-[11px] font-bold leading-none ${
+                className={`rounded-full px-2 py-0.5 text-xs font-bold leading-none ${
                   isActive
                     ? "bg-white/25 text-white"
                     : "bg-gray-100 text-gray-600"

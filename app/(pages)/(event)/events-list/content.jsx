@@ -365,7 +365,7 @@ export default function EventsListContent() {
                           {evt.title}
                         </h3>
                         {evt.reference_number && (
-                          <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
+                          <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
                             {evt.reference_number}
                           </span>
                         )}

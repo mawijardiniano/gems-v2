@@ -82,7 +82,7 @@ function EventCard({ event, onClick }) {
     >
       {/* Status banners */}
       {isCancelled && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider text-center py-1">
+        <div className="absolute top-0 left-0 right-0 z-10 bg-red-500 text-white text-2xs font-bold uppercase tracking-wider text-center py-1">
           Cancelled
         </div>
       )}
@@ -111,14 +111,14 @@ function EventCard({ event, onClick }) {
               {event.title}
             </h3>
             {event.reference_number && (
-              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500">
+              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
                 {event.reference_number}
               </span>
             )}
           </div>
           {event.type_of_activity && (
             <span
-              className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+              className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${
                 ACTIVITY_COLORS[event.type_of_activity] ||
                 "bg-gray-50 text-gray-700 border-gray-200"
               }`}
@@ -148,8 +148,8 @@ function EventCard({ event, onClick }) {
 
         {/* Stats & View link */}
         <div className="flex items-center justify-end pt-1 border-t border-gray-50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
-            View Details <FaChevronRight className="text-[8px]" />
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
+            View Details <FaChevronRight className="text-[0.5rem]" />
           </span>
         </div>
       </div>
@@ -289,7 +289,7 @@ export default function DiscoverContent() {
               </option>
             ))}
           </select>
-          <FaChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] -rotate-90 pointer-events-none" />
+          <FaChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs -rotate-90 pointer-events-none" />
         </div>
       </div>
 

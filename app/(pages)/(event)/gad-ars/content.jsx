@@ -498,7 +498,7 @@ export default function GADARContent() {
                                     )
                                   }
                                   title={`${project.expenditure_evidence.length} evidence file(s) attached`}
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
                                 >
                                   <FaPaperclip className="h-2.5 w-2.5" />
                                   {project.expenditure_evidence.length}
@@ -506,7 +506,7 @@ export default function GADARContent() {
                               )}
                           </div>
                           {hasActuals && (
-                            <span className="block mt-1 text-[10px] font-normal text-gray-500">
+                            <span className="block mt-1 text-xs font-normal text-gray-500">
                               Variance: ₱{" "}
                               {fmt(
                                 (Number(getFieldValue(project.gad_budget)) ||

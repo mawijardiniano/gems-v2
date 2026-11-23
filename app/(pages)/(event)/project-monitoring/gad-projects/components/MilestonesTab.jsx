@@ -36,7 +36,7 @@ function MilestoneTable({ project }) {
     <>
       <div className="overflow-x-auto rounded-lg border border-gray-100">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
+          <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
             <tr>
               <th className="px-2 py-1.5 font-semibold">Milestone / Activity</th>
               <th className="px-2 py-1.5 font-semibold whitespace-nowrap">
@@ -67,7 +67,7 @@ function MilestoneTable({ project }) {
                     {formatDate(m.actual_date) || "—"}
                   </td>
                   <td className="px-2 py-2">
-                    <StatusPill meta={meta} className="text-[10px]" />
+                    <StatusPill meta={meta} className="text-xs" />
                   </td>
                   <td className="px-2 py-2">
                     {proofs.length > 0 ? (
@@ -79,11 +79,11 @@ function MilestoneTable({ project }) {
                         ))}
                       </ul>
                     ) : m.status === "completed" ? (
-                      <span className="text-[10px] font-medium text-secondary-600">
+                      <span className="text-xs font-medium text-secondary-600">
                         Missing proof
                       </span>
                     ) : (
-                      <span className="text-[10px] text-gray-500">—</span>
+                      <span className="text-xs text-gray-500">—</span>
                     )}
                   </td>
                   <td className="px-2 py-2 text-xs text-gray-600">
@@ -95,7 +95,7 @@ function MilestoneTable({ project }) {
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-gray-500">
+      <p className="text-xs text-gray-500">
         Progress:{" "}
         <span className="font-medium text-gray-700">
           {progress.done}/{progress.total} ({progress.percent}%)
@@ -149,7 +149,7 @@ function Accomplishments({ project }) {
                     {ev?.venue ? ` • ${ev.venue}` : ""}
                   </p>
                   <span className="mt-1 inline-block">
-                    <StatusPill meta={meta} className="text-[10px]" />
+                    <StatusPill meta={meta} className="text-xs" />
                   </span>
                 </div>
               </li>
@@ -159,10 +159,10 @@ function Accomplishments({ project }) {
       )}
       {accomplishments.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex flex-wrap items-center gap-2">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex flex-wrap items-center gap-2">
             Actual Accomplishment
             <span
-              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal ${
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium normal-case tracking-normal ${
                 isOverride
                   ? "border-secondary-200 bg-secondary-50 text-secondary-700"
                   : "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -225,7 +225,7 @@ export default function MilestonesTab({
       </div>
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
           Actual Accomplishments
         </p>
         {canManage && <EditButton onClick={onEditActuals}>Update Actuals</EditButton>}

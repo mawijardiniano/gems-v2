@@ -1,20 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/provider";
 import { registerServiceWorker } from "@/data/lib/pwa/registerSW";
 import AttendanceSyncToast from "@/components/AttendanceSyncToast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/* Brand face. Self-hosted (no render-blocking Google Fonts request), variable
+   weight axis, metric-adjusted fallback to avoid layout shift. Exposed as
+   --font-inter on <html>; app/globals.css maps --font-sans to it. */
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({ children }) {
@@ -23,7 +22,7 @@ export default function RootLayout({ children }) {
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#8e3b9e" />
@@ -33,9 +32,7 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         <ReduxProvider>{children}</ReduxProvider>
         <AttendanceSyncToast />
       </body>

@@ -101,7 +101,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
               title={reachable ? `Go to ${title}` : title}
             >
               <span
-                className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold border shrink-0 ${
+                className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold border shrink-0 ${
                   done || active
                     ? "bg-rose-600 border-rose-600 text-white"
                     : "bg-white border-gray-200 text-gray-500"
@@ -110,7 +110,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
                 {done ? <FaCheck size={9} /> : index + 1}
               </span>
               <span
-                className={`text-[11px] font-medium truncate ${
+                className={`text-xs font-medium truncate ${
                   active
                     ? "text-rose-700"
                     : done
@@ -158,13 +158,13 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
 const ReviewGroup = ({ title, entries, onEdit }) => (
   <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
     <div className="flex items-center justify-between gap-2 mb-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
         {title}
       </p>
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-600 hover:text-rose-700 transition-colors"
+        className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 transition-colors"
       >
         <FaPen size={9} />
         Edit
@@ -173,7 +173,7 @@ const ReviewGroup = ({ title, entries, onEdit }) => (
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
       {entries.map(({ label, value }) => (
         <div key={label} className="min-w-0">
-          <dt className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+          <dt className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
             {label}
           </dt>
           <dd className="text-sm text-gray-800 break-words">{value}</dd>
@@ -364,7 +364,7 @@ export default function ProjectCreateModal({
               New {String(config.title || "").replace(/\s*Projects?$/i, "")}{" "}
               Project
             </h3>
-            <p className="text-[11px] text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               Fields marked <span className="text-rose-500">*</span> are required.
             </p>
           </div>

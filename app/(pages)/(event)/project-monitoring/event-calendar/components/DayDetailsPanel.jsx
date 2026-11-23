@@ -95,20 +95,20 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
         <div className="space-y-3 border-t border-secondary-100 px-4 py-4">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.cls}`}
+              className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${status.cls}`}
             >
               {status.label}
             </span>
             {event.type_of_activity && (
               <span
-                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${activityCls}`}
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${activityCls}`}
               >
                 {event.type_of_activity}
               </span>
             )}
             {event.reference_number && (
               <span
-                className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-[11px] font-medium text-gray-500"
+                className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-2xs font-medium text-gray-500"
                 title="Event reference number"
               >
                 {event.reference_number}
@@ -160,7 +160,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
                 <button
                   type="button"
                   onClick={() => setDescExpanded((v) => !v)}
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-secondary-600 transition-colors hover:text-secondary-700"
+                  className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-secondary-600 transition-colors hover:text-secondary-700"
                 >
                   {descExpanded ? (
                     <>
@@ -185,7 +185,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
               Manage event
             </button>
           ) : (
-            <p className="text-center text-[11px] text-gray-500">
+            <p className="text-center text-xs text-gray-500">
               Only the event organizer can manage this event.
             </p>
           )}
@@ -216,7 +216,7 @@ export default function DayDetailsPanel({
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
           Selected date
         </p>
         <h3 className="mt-0.5 text-sm font-semibold text-gray-900">
@@ -250,7 +250,7 @@ export default function DayDetailsPanel({
         </div>
       ) : (
         <>
-          <p className="px-5 pt-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+          <p className="px-5 pt-4 text-2xs font-semibold uppercase tracking-wider text-gray-500">
             {events.length} event{events.length === 1 ? "" : "s"}
           </p>
           <ul className="space-y-3 p-5">

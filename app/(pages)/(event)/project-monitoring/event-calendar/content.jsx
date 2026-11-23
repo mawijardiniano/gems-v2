@@ -300,7 +300,7 @@ export default function EventCalendarContent() {
                           selectDate(cell.key);
                           setExpandedEventId(event._id);
                         }}
-                        className={`mt-0.5 flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-[10px] font-medium cursor-pointer ${st.chip}`}
+                        className={`mt-0.5 flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-xs font-medium cursor-pointer ${st.chip}`}
                       >
                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${st.dot}`} />
                         <span className="truncate">{event.title}</span>
@@ -308,7 +308,7 @@ export default function EventCalendarContent() {
                     );
                   })}
                   {dayEvents.length > 2 && (
-                    <span className="mt-0.5 block text-[10px] text-gray-500 font-medium">
+                    <span className="mt-0.5 block text-xs text-gray-500 font-medium">
                       +{dayEvents.length - 2} more
                     </span>
                   )}

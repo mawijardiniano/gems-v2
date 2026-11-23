@@ -29,7 +29,7 @@ export function StatCard({ icon: Icon, iconClass, label, value, sub, children })
 /* A span (not a <p>) so it can also sit inside a <label>. */
 export const FieldLabel = ({ children, className = "" }) => (
   <span
-    className={`block text-[11px] font-semibold uppercase tracking-wider text-gray-500 ${className}`}
+    className={`block text-2xs font-semibold uppercase tracking-wider text-gray-500 ${className}`}
   >
     {children}
   </span>
@@ -68,7 +68,7 @@ export function DetailList({ label, items, descriptions }) {
   );
 }
 
-export const StatusPill = ({ meta, className = "text-[11px]" }) => (
+export const StatusPill = ({ meta, className = "text-xs" }) => (
   <span
     className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium border whitespace-nowrap ${className} ${meta.classes}`}
   >
@@ -77,7 +77,7 @@ export const StatusPill = ({ meta, className = "text-[11px]" }) => (
 );
 
 export const ErrorNote = ({ children }) => (
-  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] text-red-700">
+  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-xs text-red-700">
     <FaExclamationTriangle className="h-3 w-3 mt-0.5 shrink-0" />
     <span>{children}</span>
   </div>
@@ -91,7 +91,7 @@ export const EditButton = ({ onClick, children }) => (
       e.stopPropagation();
       onClick();
     }}
-    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
   >
     <FaPen size={10} />
     {children}
@@ -128,7 +128,7 @@ export function FileChip({ file, fallbackName, size = "md" }) {
   const name = file?.name || fallbackName;
   const small = size === "sm";
   const base = small
-    ? "inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] rounded-md border"
+    ? "inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded-md border"
     : "inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md border";
   const icon = <FaPaperclip className={small ? "h-2.5 w-2.5" : "h-3 w-3"} />;
   const label = (

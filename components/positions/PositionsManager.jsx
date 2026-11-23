@@ -74,12 +74,12 @@ const groupPanelId = (header) =>
 
 function SeatPill({ active }) {
   return active ? (
-    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
+    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-[11px] font-medium text-gray-500">
+    <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
       <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
       Inactive
     </span>
@@ -235,7 +235,7 @@ function SeatRow({
             {ambiguous && (
               <span
                 title="Another office column has a seat with this same name"
-                className="rounded-full border border-secondary-200 bg-secondary-50 px-2 py-0.5 text-[10px] font-medium text-secondary-700"
+                className="rounded-full border border-secondary-200 bg-secondary-50 px-2 py-0.5 text-xs font-medium text-secondary-700"
               >
                 shared name
               </span>
@@ -486,7 +486,7 @@ export default function PositionsManager({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               {group.header}
             </h4>
-            <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500">
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
               {seatCountLabel(group.seats.length)}
             </span>
           </button>
@@ -495,7 +495,7 @@ export default function PositionsManager({
           {officeInactive && (
             <span
               title="This office column is deactivated — its seats can be viewed but not added to"
-              className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500"
+              className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
             >
               office inactive
             </span>
@@ -570,7 +570,7 @@ export default function PositionsManager({
             </p>
           </div>
         </div>
-        <span className="shrink-0 self-start rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-[11px] font-medium text-gray-600">
+        <span className="shrink-0 self-start rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600">
           {seatCountLabel(summary.total)}
         </span>
       </div>
@@ -671,7 +671,7 @@ export default function PositionsManager({
       </div>
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
-        <p className="mt-2 text-[11px] text-gray-500">
+        <p className="mt-2 text-xs text-gray-500">
           {summary.inactive} inactive seat(s) hidden. A name refused as a
           duplicate may be one of them — tick “Show inactive seats” or open the
           Inactive tab to reactivate it.
@@ -688,7 +688,7 @@ export default function PositionsManager({
         </div>
       )}
 
-      <p className="mt-3 text-[11px] text-gray-500">
+      <p className="mt-3 text-xs text-gray-500">
         Positions are never deleted — term history and previously printed charts
         keep referencing them. Deactivate a seat you no longer use instead.
       </p>

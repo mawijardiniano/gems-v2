@@ -26,7 +26,7 @@ function CollegeRanking({ ranking }) {
                 <span className="min-w-0 truncate font-medium text-gray-800">
                   <span className="mr-1.5 text-gray-500">{i + 1}.</span>
                   {r.unit}
-                  <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">
+                  <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-500">
                     {r.kind}
                   </span>
                 </span>
@@ -48,7 +48,7 @@ function CollegeRanking({ ranking }) {
           ))}
         </ul>
       )}
-      <div className="mt-3 flex items-center gap-3 text-[11px] text-gray-500">
+      <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />Female</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-400" />Male</span>
       </div>
