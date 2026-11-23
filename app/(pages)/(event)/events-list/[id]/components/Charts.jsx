@@ -33,7 +33,7 @@ function InlineLegend({ data, colors }) {
       {data.map((entry, i) => (
         <div
           key={entry.name}
-          className="flex items-center gap-1.5 text-xs text-gray-600"
+          className="flex items-center gap-1.5 text-xs text-fg-4"
         >
           <span
             className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
@@ -62,13 +62,13 @@ function NoData() {
 
 function ChartCard({ title, subtitle, total, height = 240, children }) {
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-fg">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-xs text-fg-muted">{subtitle}</p>}
         {total !== undefined && (
-          <p className="mt-1 text-xs text-gray-500">
-            <span className="font-semibold text-gray-700">
+          <p className="mt-1 text-xs text-fg-muted">
+            <span className="font-semibold text-fg-3">
               {total.toLocaleString()}
             </span>{" "}
             total

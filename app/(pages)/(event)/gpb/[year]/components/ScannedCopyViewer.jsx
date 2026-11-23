@@ -35,16 +35,16 @@ export default function ScannedCopyViewer({
         style={{ maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-4 border-b border-line-subtle flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm shrink-0">
               <FiFileText className="h-5 w-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 id={titleId} className="text-sm font-semibold text-gray-900 truncate">
+              <h2 id={titleId} className="text-sm font-semibold text-fg truncate">
                 Scanned Copy
               </h2>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-fg-muted truncate">
                 GPB Year {year} · Status attachment
               </p>
             </div>
@@ -61,7 +61,7 @@ export default function ScannedCopyViewer({
               type="button"
               aria-label="Close"
               onClick={closeScannedViewer}
-              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
             >
               <FiX className="h-4 w-4" />
             </button>
@@ -69,14 +69,14 @@ export default function ScannedCopyViewer({
         </div>
 
         <div
-          className="relative flex-1 bg-gray-900 flex items-center justify-center overflow-hidden"
+          className="relative flex-1 bg-inverse flex items-center justify-center overflow-hidden"
           style={{ minHeight: "55vh" }}
         >
           {scannedPreviewLoading &&
             !scannedPreviewError &&
             getScannedFileType(selectedGPBStatus.scanned_copy.url) !==
               "other" && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/80">
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-inverse/80">
                 <svg
                   className="animate-spin h-8 w-8 text-white"
                   viewBox="0 0 24 24"
@@ -101,7 +101,7 @@ export default function ScannedCopyViewer({
 
           {scannedPreviewError ? (
             <div className="text-center p-8">
-              <p className="text-sm text-gray-300">{scannedPreviewError}</p>
+              <p className="text-sm text-fg-faint">{scannedPreviewError}</p>
               <Button
                 variant="primary"
                 className="mt-3"
@@ -144,8 +144,8 @@ export default function ScannedCopyViewer({
             />
           ) : (
             <div className="text-center p-8">
-              <FiFileText className="h-10 w-10 text-gray-500 mx-auto mb-3" />
-              <p className="text-sm text-gray-300">
+              <FiFileText className="h-10 w-10 text-fg-muted mx-auto mb-3" />
+              <p className="text-sm text-fg-faint">
                 Preview not available for this file type.
               </p>
               <Button

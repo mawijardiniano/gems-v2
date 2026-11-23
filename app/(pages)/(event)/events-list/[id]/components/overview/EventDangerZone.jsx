@@ -56,10 +56,10 @@ export default function EventDangerZone({
               <div>
                 {/* Worded by the action offered: a completed event that can be
                     reinstated used to read "Cancel this event". */}
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-fg">
                   {canCancel ? "Cancel this event" : "Reinstate this event"}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-fg-muted">
                   {canCancel
                     ? "Cancelling stops check-in and hides the event from Discover. It can be reinstated later."
                     : isCancelled
@@ -67,7 +67,7 @@ export default function EventDangerZone({
                       : "Reinstating puts the event back to active."}
                 </p>
                 {event.cancel_reason && (
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-fg-muted">
                     Cancelled because: {event.cancel_reason}
                   </p>
                 )}
@@ -105,8 +105,8 @@ export default function EventDangerZone({
                 <FiTrash2 size={18} />
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Delete this event</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-semibold text-fg">Delete this event</p>
+                <p className="text-sm text-fg-muted">
                   This action cannot be undone. All event data will be
                   permanently removed.
                 </p>
@@ -169,10 +169,10 @@ export default function EventDangerZone({
             <FiTrash2 className="text-danger" size={20} />
           </div>
           <div>
-            <p className="text-md font-medium text-gray-900">
+            <p className="text-md font-medium text-fg">
               Are you sure you want to delete this event?
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-fg-muted">
               This action cannot be undone. All event data will be
               permanently removed.
             </p>

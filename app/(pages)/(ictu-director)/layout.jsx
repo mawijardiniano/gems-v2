@@ -125,7 +125,7 @@ export default function IctuLayout({ children }) {
         <main
           id="main-content"
           tabIndex={-1}
-          className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-gray-50"
+          className="mt-16 min-h-[calc(100vh-4rem)] px-4 sm:px-6 bg-subtle"
         >
           <PageBreadcrumbs role="ictu-director" />
           {children}

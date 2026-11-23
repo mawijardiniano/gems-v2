@@ -14,7 +14,7 @@ export default function FileThumb({ file, className, alt }) {
         href={file.url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${className} flex flex-col items-center justify-center gap-1 bg-slate-50 text-gray-500 text-xs font-medium`}
+        className={`${className} flex flex-col items-center justify-center gap-1 bg-slate-50 text-fg-muted text-xs font-medium`}
       >
         <FiFileText size={22} aria-hidden="true" />
         PDF

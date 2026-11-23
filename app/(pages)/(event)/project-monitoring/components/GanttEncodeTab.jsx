@@ -5,7 +5,7 @@ import { FaCheck, FaPen, FaTrash } from "react-icons/fa";
 import { calcDurationDays } from "@/data/lib/gantt";
 
 const INPUT =
-  "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-default";
+  "w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 disabled:bg-subtle disabled:text-fg-muted disabled:cursor-default";
 
 /** Activity table with auto-computed duration. One row is editable at a time. */
 export default function GanttEncodeTab({
@@ -23,9 +23,9 @@ export default function GanttEncodeTab({
     onChange(activities.map((a, i) => (i === index ? { ...a, ...patch } : a)));
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-line">
       <table className="w-full text-left">
-        <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
+        <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
           <tr>
             <th className="px-2.5 py-1.5 w-8">#</th>
             <th className="px-2.5 py-1.5">Activity / Deliverable</th>
@@ -41,7 +41,7 @@ export default function GanttEncodeTab({
             <tr>
               <td
                 colSpan={7}
-                className="px-2.5 py-5 text-center text-xs italic text-gray-500"
+                className="px-2.5 py-5 text-center text-xs italic text-fg-muted"
               >
                 No activities yet — click “Add Activity”.
               </td>
@@ -52,8 +52,8 @@ export default function GanttEncodeTab({
             const invalid = row.start_date && row.end_date && days === 0;
             const isEditing = editing === i;
             return (
-              <tr key={i} className="border-t border-gray-100 align-top">
-                <td className="px-2.5 py-2 text-xs text-gray-500">{i + 1}</td>
+              <tr key={i} className="border-t border-line-subtle align-top">
+                <td className="px-2.5 py-2 text-xs text-fg-muted">{i + 1}</td>
                 <td className="px-2.5 py-1.5">
                   <input
                     type="text"
@@ -82,7 +82,7 @@ export default function GanttEncodeTab({
                     className={INPUT}
                   />
                 </td>
-                <td className="px-2.5 py-2 text-sm text-gray-700">
+                <td className="px-2.5 py-2 text-sm text-fg-3">
                   {invalid ? (
                     <span className="text-xs text-danger">Invalid</span>
                   ) : (
@@ -119,7 +119,7 @@ export default function GanttEncodeTab({
                             onChange(activities.filter((_, idx) => idx !== i));
                             setEditing(null);
                           }}
-                          className="touch-target text-gray-500 hover:text-danger transition-colors"
+                          className="touch-target text-fg-muted hover:text-danger transition-colors"
                           title="Remove activity"
                         >
                           <FaTrash size={12} />
@@ -129,7 +129,7 @@ export default function GanttEncodeTab({
                       <button
                         type="button"
                         onClick={() => setEditing(i)}
-                        className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs font-medium text-fg-4 hover:bg-subtle"
                       >
                         <FaPen size={9} />
                         Edit

@@ -8,7 +8,7 @@
  */
 
 export const inputClass =
-  "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400";
+  "w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400";
 
 /* List fields (objectives, outputs, …) are edited one entry per line. They
    used to be joined with ", " and split on commas, so an entry such as
@@ -42,7 +42,7 @@ export const FieldRenderer = ({ field, value, onChange }) => (
     }`}
   >
     <label
-      className="text-xs font-medium text-gray-600"
+      className="text-xs font-medium text-fg-4"
       htmlFor={`project-field-${field.key}`}
     >
       {field.label}
@@ -94,6 +94,6 @@ export const FieldRenderer = ({ field, value, onChange }) => (
       />
     )}
 
-    {field.help && <p className="text-xs text-gray-500">{field.help}</p>}
+    {field.help && <p className="text-xs text-fg-muted">{field.help}</p>}
   </div>
 );

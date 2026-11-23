@@ -34,14 +34,14 @@ export default function ReadinessCard({ dashboard }) {
       {readinessLoading ? (
         <SnapshotSkeleton rows={3} />
       ) : readinessError ? (
-        <p className="text-xs text-gray-500 italic">{readinessError}</p>
+        <p className="text-xs text-fg-muted italic">{readinessError}</p>
       ) : !readiness ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           Select an academic year to see what is still missing.
         </p>
       ) : (
         <>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-line-faint">
             <ReadinessItem
               count={
                 readiness.projects?.missingAccomplishments?.length || 0
@@ -67,7 +67,7 @@ export default function ReadinessCard({ dashboard }) {
               onOpen={() => router.push("/events-list")}
             />
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-50">
+          <div className="mt-3 pt-3 border-t border-line-faint">
             <button
               onClick={() => router.push("/reports")}
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition duration-200"

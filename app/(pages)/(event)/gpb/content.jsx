@@ -31,17 +31,17 @@ import Button from "@/components/ui/Button";
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+    <div className="animate-pulse rounded-2xl bg-white border border-line-subtle shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <div className="h-6 w-20 bg-gray-200 rounded-full" />
-        <div className="h-8 w-8 bg-gray-200 rounded-full" />
+        <div className="h-6 w-20 bg-emphasis rounded-full" />
+        <div className="h-8 w-8 bg-emphasis rounded-full" />
       </div>
-      <div className="h-10 w-24 bg-gray-200 rounded mb-4" />
-      <div className="h-px bg-gray-100 my-4" />
+      <div className="h-10 w-24 bg-emphasis rounded mb-4" />
+      <div className="h-px bg-muted my-4" />
       <div className="space-y-3">
-        <div className="h-4 w-full bg-gray-200 rounded" />
-        <div className="h-4 w-3/4 bg-gray-200 rounded" />
-        <div className="h-4 w-2/3 bg-gray-200 rounded" />
+        <div className="h-4 w-full bg-emphasis rounded" />
+        <div className="h-4 w-3/4 bg-emphasis rounded" />
+        <div className="h-4 w-2/3 bg-emphasis rounded" />
       </div>
     </div>
   );
@@ -50,11 +50,11 @@ function SkeletonCard() {
 function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 col-span-full">
-      <div className="h-16 w-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
-        <Icon className="h-8 w-8 text-gray-300" />
+      <div className="h-16 w-16 rounded-2xl bg-subtle border border-line-subtle flex items-center justify-center mb-4">
+        <Icon className="h-8 w-8 text-fg-faint" />
       </div>
-      <p className="text-sm font-medium text-gray-900 mb-1">{title}</p>
-      <p className="text-xs text-gray-500 text-center max-w-xs mb-4">{description}</p>
+      <p className="text-sm font-medium text-fg mb-1">{title}</p>
+      <p className="text-xs text-fg-muted text-center max-w-xs mb-4">{description}</p>
       {action}
     </div>
   );
@@ -68,7 +68,7 @@ function StatusBadge({ status }) {
   };
   const s = (status || "draft").toLowerCase();
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${styles[s] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize ${styles[s] || "bg-subtle text-fg-4 border-line"}`}>
       {s}
     </span>
   );
@@ -90,7 +90,7 @@ function QuickReportButton({
       onClick={onClick}
       disabled={disabled || loading}
       title={title}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 ${accentClass} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 ${accentClass} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {loading ? (
         <>
@@ -407,10 +407,10 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-fg tracking-tight">
             GPB Dashboard
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             Gender and Development Plan and Budget overview
           </p>
         </div>
@@ -463,7 +463,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
           {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
         </div>
       ) : gpbList.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-12">
           <EmptyState
             icon={FaFolderOpen}
             title="No GPB records yet"
@@ -492,7 +492,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               return (
                 <div
                   key={item._id}
-                  className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-200 overflow-hidden"
+                  className="relative group rounded-2xl bg-white border border-line-subtle shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-200 overflow-hidden"
                 >
                 
                   <div className={`h-1.5 w-full ${
@@ -512,7 +512,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                         </span>
                         <StatusBadge status={item.status_of_gpb?.status} />
                         {!item.gaaBudgetId && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 border border-gray-200">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-subtle text-fg-muted border border-line">
                             Awaiting GAA budget
                           </span>
                         )}
@@ -535,16 +535,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                             type="button"
                             aria-label={`Actions for GPB ${item.year}`}
                             aria-expanded={openMenuId === item._id}
-                            className="touch-target flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition"
+                            className="touch-target flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted text-fg-muted hover:text-fg-4 transition"
                           >
                             <FaEllipsisV className="h-4 w-4" />
                           </button>
 
                           {openMenuId === item._id && (
-                            <div className="absolute right-0 top-10 z-50 w-44 bg-white border border-gray-200 rounded-xl shadow-xl py-1">
+                            <div className="absolute right-0 top-10 z-50 w-44 bg-white border border-line rounded-xl shadow-xl py-1">
                               {deleteConfirmId === item._id ? (
                                 <div className="px-3 py-2 space-y-2">
-                                  <p className="text-xs text-gray-600">
+                                  <p className="text-xs text-fg-4">
                                     Delete this GPB? Projects and monitoring
                                     data are kept and will re-link if you
                                     recreate this GPB.
@@ -567,7 +567,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                                         e.stopPropagation();
                                         setDeleteConfirmId(null);
                                       }}
-                                      className="flex-1 px-2 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition"
+                                      className="flex-1 px-2 py-1.5 text-xs font-medium bg-muted text-fg-3 rounded-md hover:bg-emphasis transition"
                                     >
                                       Cancel
                                     </button>
@@ -586,14 +586,14 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                                   Delete GPB
                                 </button>
                               )}
-                              <div className="border-t border-gray-100 my-1" />
+                              <div className="border-t border-line-subtle my-1" />
                               <button
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   openAttachModal(item);
                                 }}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-fg-3 hover:bg-subtle transition"
                               >
                                 <FaLink className="h-3.5 w-3.5" />
                                 {item.gaaBudgetId
@@ -607,37 +607,37 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     </div>
                     <Link href={`${basePath}/${item.year}`} className="block">
                       <div className="mb-4">
-                        <span className="text-3xl font-bold text-gray-900 group-hover:text-secondary-600 transition-colors">
+                        <span className="text-3xl font-bold text-fg group-hover:text-secondary-600 transition-colors">
                           {item.year}
                         </span>
                       </div>
 
-                      <div className="border-t border-gray-100 my-4" />
+                      <div className="border-t border-line-subtle my-4" />
 
                       {/* Details */}
                       <div className="space-y-2.5 text-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500 flex items-center gap-1.5">
+                          <span className="text-fg-muted flex items-center gap-1.5">
                             <FaProjectDiagram className="h-3.5 w-3.5" />
                             Projects
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-fg">
                             {item.projects?.length || 0}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500 flex items-center gap-1.5">
+                          <span className="text-fg-muted flex items-center gap-1.5">
                             <FaPiggyBank className="h-3.5 w-3.5" />
                             Total GAA
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-fg">
                             {gaa?.totalGAA
                               ? formatPeso(gaa.totalGAA)
                               : "To follow"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500 flex items-center gap-1.5">
+                          <span className="text-fg-muted flex items-center gap-1.5">
                             <FaMoneyBillWave className="h-3.5 w-3.5" />
                             GAD Budget
                           </span>
@@ -655,8 +655,8 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                       </div>
                     </Link>
 
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    <div className="mt-4 pt-4 border-t border-line-subtle">
+                      <p className="text-2xs font-semibold text-fg-muted uppercase tracking-wider mb-2">
                         Quick Reports
                       </p>
                       <div className="flex items-center gap-2">
@@ -697,26 +697,26 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
         
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-fg-muted">
               <span>Showing</span>
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-fg-3">
                 {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, gpbList.length)}
               </span>
               <span>of</span>
-              <span className="font-medium text-gray-700">{gpbList.length}</span>
+              <span className="font-medium text-fg-3">{gpbList.length}</span>
               <span>records</span>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-500">Per page:</label>
+                <label className="text-sm text-fg-muted">Per page:</label>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
+                  className="w-16 px-2 py-1.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none bg-white"
                 >
                   {[3, 6, 9, 12, 24].map((n) => (
                     <option key={n} value={n}>{n}</option>
@@ -730,7 +730,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   aria-label="Previous page"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-line bg-white text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <FaChevronLeft className="h-3.5 w-3.5" />
                 </button>
@@ -752,7 +752,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                       className={`inline-flex items-center justify-center h-9 w-9 rounded-lg text-sm font-medium transition ${
                         currentPage === pageNum
                           ? "bg-secondary-600 text-white shadow-sm"
-                          : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          : "border border-line bg-white text-fg-4 hover:bg-subtle"
                       }`}
                     >
                       {pageNum}
@@ -764,7 +764,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                   aria-label="Next page"
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="touch-target inline-flex items-center justify-center h-9 w-9 rounded-lg border border-line bg-white text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <FaChevronRight className="h-3.5 w-3.5" />
                 </button>
@@ -785,22 +785,22 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
           >
             {/* Header */}
-            <div className="px-6 py-5 border-b border-gray-100">
+            <div className="px-6 py-5 border-b border-line-subtle">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                     <FaFolderOpen className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 id={createTitleId} className="text-base font-semibold text-gray-900">Create GPB</h2>
-                    <p className="text-xs text-gray-500">Create a GPB record — link its GAA budget now or later</p>
+                    <h2 id={createTitleId} className="text-base font-semibold text-fg">Create GPB</h2>
+                    <p className="text-xs text-fg-muted">Create a GPB record — link its GAA budget now or later</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   aria-label="Close"
                   onClick={closeModal}
-                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -810,11 +810,11 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             <div className="p-6 space-y-5">
        
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                   GPB Year
                 </label>
                 <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
                   <input
                     type="number"
                     min="2000"
@@ -822,7 +822,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                     placeholder={`e.g. ${new Date().getFullYear() + 1}`}
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white"
                   />
                 </div>
                 {yearAlreadyExists ? (
@@ -844,16 +844,16 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
        
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                   Link GAA Budget{" "}
-                  <span className="normal-case font-normal text-gray-500">
+                  <span className="normal-case font-normal text-fg-muted">
                     (optional)
                   </span>
                 </label>
                 <select
                   value={selectedBudget}
                   onChange={(e) => setSelectedBudget(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
+                  className="w-full px-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
                 >
                   <option value="">No budget — link later</option>
                   {availableBudgets.map((budget) => (
@@ -867,27 +867,27 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               </div>
 
               {selectedBudget && (
-                <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Linked Budget</p>
+                <div className="rounded-xl bg-subtle border border-line p-4 space-y-3">
+                  <p className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Linked Budget</p>
                   {(() => {
                     const budget = availableBudgets.find((b) => b._id === selectedBudget);
                     if (!budget) return null;
                     return (
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500">Total GAA</span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="text-fg-muted">Total GAA</span>
+                          <span className="font-semibold text-fg">
                             {formatPeso(budget.totalGAA)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500">GAD Budget</span>
+                          <span className="text-fg-muted">GAD Budget</span>
                           <span className="font-semibold text-success">
                             {formatPeso(budget.gadAnnualBudget)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-500">GAD %</span>
+                          <span className="text-fg-muted">GAD %</span>
                           <span className="font-semibold text-secondary-600">{budget.gadPercent}%</span>
                         </div>
                       </div>
@@ -897,7 +897,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               )}
 
             
-              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-2 border-t border-line-subtle">
                 <Button
                   variant="secondary"
                   onClick={closeModal}
@@ -937,26 +937,26 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
             className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
           >
             {/* Header */}
-            <div className="px-6 py-5 border-b border-gray-100">
+            <div className="px-6 py-5 border-b border-line-subtle">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center shadow-sm">
                     <FaLink className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h2 id={attachTitleId} className="text-base font-semibold text-gray-900">
+                    <h2 id={attachTitleId} className="text-base font-semibold text-fg">
                       {attachModal.gpb.gaaBudgetId
                         ? "Change Budget"
                         : "Attach Budget"}
                     </h2>
-                    <p className="text-xs text-gray-500">Link a GAA budget to GPB {attachModal.gpb.year}</p>
+                    <p className="text-xs text-fg-muted">Link a GAA budget to GPB {attachModal.gpb.year}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   aria-label="Close"
                   onClick={closeAttachModal}
-                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -965,7 +965,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
 
             <div className="p-6 space-y-5">
               {attachableBudgets.length === 0 ? (
-                <p className="text-sm text-gray-500 flex items-start gap-2">
+                <p className="text-sm text-fg-muted flex items-start gap-2">
                   <FaExclamationTriangle className="h-4 w-4 text-secondary-500 shrink-0 mt-0.5" />
                   <span>
                     No GAA budget exists for {attachModal.gpb.year} yet. Create
@@ -974,13 +974,13 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
                 </p>
               ) : (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                     GAA Budget for {attachModal.gpb.year}
                   </label>
                   <select
                     value={attachBudgetId}
                     onChange={(e) => setAttachBudgetId(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
+                    className="w-full px-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition bg-white appearance-none"
                   >
                     <option value="">Select a budget</option>
                     {attachableBudgets.map((budget) => (
@@ -995,7 +995,7 @@ export default function ProjectContent2({ basePath = "/gpb" }) {
               )}
 
    
-              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-2 border-t border-line-subtle">
                 <Button
                   variant="secondary"
                   onClick={closeAttachModal}

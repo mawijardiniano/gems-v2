@@ -22,7 +22,7 @@ function ExecutiveGroupedBody({ members }) {
     <div className="space-y-4">
       {chairs.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
+          <p className="text-xs font-semibold text-fg-muted uppercase tracking-wider mb-2.5">
             Chair
           </p>
           <div className="space-y-2.5">
@@ -39,7 +39,7 @@ function ExecutiveGroupedBody({ members }) {
       )}
       {regulars.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">
+          <p className="text-xs font-semibold text-fg-muted uppercase tracking-wider mb-2.5">
             Members
           </p>
           <div className="space-y-2.5">
@@ -48,7 +48,7 @@ function ExecutiveGroupedBody({ members }) {
                 key={memberKey(m, i)}
                 member={m}
                 avatarBg="bg-white"
-                avatarText="text-gray-600"
+                avatarText="text-fg-4"
               />
             ))}
           </div>
@@ -66,7 +66,7 @@ function FlatMembersBody({ members }) {
           key={memberKey(m, i)}
           member={m}
           avatarBg="bg-white"
-          avatarText="text-gray-600"
+          avatarText="text-fg-4"
         />
       ))}
     </div>
@@ -91,7 +91,7 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
             {SECTION_ICONS[sectionKey]}
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{label}</h3>
+            <h3 className="font-semibold text-fg truncate">{label}</h3>
             <span className={`text-xs px-2 py-0.5 rounded-full ${style.badge} inline-block mt-0.5`}>
               {chairData
                 ? "1 Member"

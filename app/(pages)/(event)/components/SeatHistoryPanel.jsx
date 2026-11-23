@@ -56,16 +56,16 @@ export default function SeatHistoryPanel({ header, name }) {
   const turnover = state.data?.turnover || [];
 
   return (
-    <div className="bg-gray-50/70 border-t border-gray-100 px-6 py-4">
+    <div className="bg-subtle/70 border-t border-line-subtle px-6 py-4">
       <div className="flex items-center gap-2 mb-3">
-        <FaHistory className="h-3.5 w-3.5 text-gray-500" />
-        <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        <FaHistory className="h-3.5 w-3.5 text-fg-muted" />
+        <h4 className="text-xs font-semibold text-fg-4 uppercase tracking-wider">
           Tenure history — {name}
         </h4>
       </div>
 
       {state.status === "loading" ? (
-        <p className="flex items-center gap-2 text-sm text-gray-500">
+        <p className="flex items-center gap-2 text-sm text-fg-muted">
           <FaSpinner className="h-3.5 w-3.5 animate-spin" />
           Loading history…
         </p>
@@ -81,7 +81,7 @@ export default function SeatHistoryPanel({ header, name }) {
           </button>
         </div>
       ) : entries.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-fg-muted">
           {state.data?.seat_exists === false
             ? "This seat is not registered in Positions, so it has no history."
             : "No one has held this seat yet."}
@@ -95,14 +95,14 @@ export default function SeatHistoryPanel({ header, name }) {
       )}
 
       {turnover.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-200">
-          <h5 className="text-2xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <div className="mt-4 pt-3 border-t border-line">
+          <h5 className="text-2xs font-semibold text-fg-muted uppercase tracking-wider mb-2">
             Recorded handovers
           </h5>
           <ul className="space-y-1.5">
             {turnover.map((event) => (
-              <li key={String(event._id)} className="text-xs text-gray-600">
-                <span className="text-gray-500">
+              <li key={String(event._id)} className="text-xs text-fg-4">
+                <span className="text-fg-muted">
                   {formatDate(event.createdAt)}
                 </span>
                 {" — "}
@@ -110,7 +110,7 @@ export default function SeatHistoryPanel({ header, name }) {
                   ? `${event.prev_name} → ${event.new_name}`
                   : event.description || event.action}
                 {event.academic_year ? (
-                  <span className="text-gray-500">
+                  <span className="text-fg-muted">
                     {" "}
                     (AY {event.academic_year})
                   </span>
@@ -131,11 +131,11 @@ function HistoryRow({ entry }) {
     : "Vacant";
   return (
     <li className="flex items-start gap-3">
-      <div className="h-7 w-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0 mt-0.5">
+      <div className="h-7 w-7 rounded-full bg-white border border-line flex items-center justify-center text-xs font-bold text-fg-4 shrink-0 mt-0.5">
         {entry.official_text ? (
           (person[0] || "?").toUpperCase()
         ) : (
-          <FaUserTie className="h-3 w-3 text-gray-500" />
+          <FaUserTie className="h-3 w-3 text-fg-muted" />
         )}
       </div>
       <div className="min-w-0">
@@ -143,8 +143,8 @@ function HistoryRow({ entry }) {
           <span
             className={`text-sm ${
               entry.official_text
-                ? "font-medium text-gray-900"
-                : "text-gray-500 italic"
+                ? "font-medium text-fg"
+                : "text-fg-muted italic"
             }`}
           >
             {person}
@@ -160,7 +160,7 @@ function HistoryRow({ entry }) {
             </span>
           ) : null}
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-fg-muted mt-0.5">
           {formatDate(entry.startDate)} →{" "}
           {entry.isOpen ? "present" : formatDate(entry.endDate)}
           {entry.academic_year ? ` · AY ${entry.academic_year}` : ""}

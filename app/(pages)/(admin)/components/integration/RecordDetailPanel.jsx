@@ -10,7 +10,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
   return (
     <div className="space-y-3 text-xs">
       <div className="flex items-center justify-between pb-2 border-b">
-        <span className="font-semibold text-gray-900">
+        <span className="font-semibold text-fg">
           Row {record.row_number}
           {record.status === "duplicate" && (
             <span className="ml-2 text-warning">(Duplicate)</span>
@@ -20,7 +20,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
           type="button"
           onClick={onClose}
           aria-label="Close record details"
-          className="touch-target text-gray-500 hover:text-gray-600"
+          className="touch-target text-fg-muted hover:text-fg-4"
         >
           <span aria-hidden="true">✕</span>
         </button>
@@ -111,7 +111,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
       )}
 
       {record.payload_cleared_at && (
-        <div className="rounded border border-gray-200 bg-gray-50 p-1.5 text-xs text-gray-600">
+        <div className="rounded border border-line bg-subtle p-1.5 text-xs text-fg-4">
           Personal data in this row was cleared on{" "}
           {new Date(record.payload_cleared_at).toLocaleDateString()} after the
           batch was imported. The person&apos;s details are kept encrypted in
@@ -121,9 +121,9 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
 
       {record.raw_payload && !record.payload_cleared_at && (
         <div>
-          <div className="font-semibold text-gray-900 mb-1">Raw Data:</div>
-          <div className="bg-gray-50 border border-gray-200 rounded p-1.5 overflow-auto max-h-24">
-            <pre className="text-xs text-gray-700">
+          <div className="font-semibold text-fg mb-1">Raw Data:</div>
+          <div className="bg-subtle border border-line rounded p-1.5 overflow-auto max-h-24">
+            <pre className="text-xs text-fg-3">
               {JSON.stringify(record.raw_payload, null, 2)}
             </pre>
           </div>
@@ -132,11 +132,11 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
 
       {record.mapped_payload && !record.payload_cleared_at && (
         <div>
-          <div className="font-semibold text-gray-900 mb-1">
+          <div className="font-semibold text-fg mb-1">
             Normalized Data:
           </div>
           <div className="bg-secondary-50 border border-secondary-200 rounded p-1.5 overflow-auto max-h-30">
-            <pre className="text-xs text-gray-700">
+            <pre className="text-xs text-fg-3">
               {JSON.stringify(record.mapped_payload, null, 2)}
             </pre>
           </div>

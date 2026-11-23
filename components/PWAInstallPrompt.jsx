@@ -56,13 +56,13 @@ export default function PWAInstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
-      <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-3">
+      <div className="bg-white rounded-xl shadow-2xl border border-line p-4 flex items-center gap-3">
         <BrandMark size={48} className="flex-shrink-0 rounded-xl shadow-sm" />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm">
+          <p className="font-semibold text-fg-2 text-sm">
             Install GEMS
           </p>
-          <p className="text-gray-500 text-xs">
+          <p className="text-fg-muted text-xs">
             Get faster access to event attendance and reports, even offline.
           </p>
         </div>

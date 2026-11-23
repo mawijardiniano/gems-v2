@@ -106,23 +106,23 @@ export default function IntegrationContent() {
 
   return (
     <div className="py-8 space-y-4">
-      <div className="bg-white border border-gray-200 rounded-md p-4">
-        <h1 className="text-lg font-semibold text-gray-900">
+      <div className="bg-white border border-line rounded-md p-4">
+        <h1 className="text-lg font-semibold text-fg">
           Data Integration
         </h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           Connect to the HRMIS API, sync employee and student data into the
           staging area, validate, review, and migrate into production.
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-md p-4 space-y-3">
+      <div className="bg-white border border-line rounded-md p-4 space-y-3">
         <div className="flex flex-wrap gap-2 items-center justify-between">
           <div>
-            <h2 className="text-base font-medium text-gray-900">
+            <h2 className="text-base font-medium text-fg">
               HRMIS API Integration
             </h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-fg-muted mt-1">
               {config?.last_sync_at ? (
                 <>
                   Last synchronization: {lastSync}
@@ -140,7 +140,7 @@ export default function IntegrationContent() {
               className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${
                 endpoint
                   ? "bg-green-100 text-success"
-                  : "bg-gray-100 text-gray-600"
+                  : "bg-muted text-fg-4"
               }`}
             >
               <span
@@ -161,7 +161,7 @@ export default function IntegrationContent() {
 
         <form
           onSubmit={saveConfig}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-gray-100 pt-3"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-line-subtle pt-3"
         >
           <input
             type="url"
@@ -169,20 +169,20 @@ export default function IntegrationContent() {
             onChange={(e) => setEndpoint(e.target.value)}
             placeholder="HRMIS API endpoint (https://...)"
             required
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm sm:col-span-2"
+            className="w-full border border-line-strong rounded px-3 py-2 text-sm sm:col-span-2"
           />
           <input
             type="password"
             value={authHeader}
             onChange={(e) => setAuthHeader(e.target.value)}
             placeholder="Authorization header value (optional, stored securely)"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-line-strong rounded px-3 py-2 text-sm"
           />
           <div className="grid grid-cols-2 gap-3">
             <select
               value={cfgSchoolYear}
               onChange={(e) => setCfgSchoolYear(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm"
             >
               <option value="">Default school year</option>
               {buildSchoolYearOptions(cfgSchoolYear).map((sy) => (
@@ -194,7 +194,7 @@ export default function IntegrationContent() {
             <select
               value={cfgSemester}
               onChange={(e) => setCfgSemester(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm"
             >
               <option value="">Default semester</option>
               <option value="1st">1st</option>
@@ -206,7 +206,7 @@ export default function IntegrationContent() {
             <button
               type="submit"
               disabled={savingConfig}
-              className="px-4 py-2 rounded border border-gray-300 text-sm disabled:opacity-50"
+              className="px-4 py-2 rounded border border-line-strong text-sm disabled:opacity-50"
             >
               {savingConfig ? "Saving..." : "Save Connection"}
             </button>
@@ -216,8 +216,8 @@ export default function IntegrationContent() {
 
       <MessageBanner message={d.message} />
 
-      <div className="bg-white border border-gray-200 rounded-md">
-        <div className="flex gap-1 border-b border-gray-200 px-4 pt-3">
+      <div className="bg-white border border-line rounded-md">
+        <div className="flex gap-1 border-b border-line px-4 pt-3">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -226,7 +226,7 @@ export default function IntegrationContent() {
               className={`px-3 py-2 text-sm rounded-t-md -mb-px border-b-2 ${
                 tab === t.id
                   ? "border-secondary-600 text-secondary-700 font-medium"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  : "border-transparent text-fg-muted hover:text-fg-3"
               }`}
             >
               {t.label}
@@ -240,7 +240,7 @@ export default function IntegrationContent() {
             <div>
               {d.selectedBatch ? (
                 <>
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="text-xs text-fg-muted mb-2">
                     Sync logs for batch:{" "}
                     <span className="font-semibold">
                       {d.selectedBatch.source_name || d.selectedBatch._id}
@@ -253,7 +253,7 @@ export default function IntegrationContent() {
                   />
                 </>
               ) : (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-fg-muted">
                   Select a batch in the Staging Areas tab to view its
                   synchronization logs.
                 </p>

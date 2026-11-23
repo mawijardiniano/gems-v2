@@ -78,8 +78,8 @@ const FIELD_MAPPINGS = [
 export default function FieldMappingPanel() {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs border border-gray-200">
-        <thead className="bg-gray-50">
+      <table className="w-full text-xs border border-line">
+        <thead className="bg-subtle">
           <tr>
             <th className="text-left px-3 py-2">Source field (HRMIS / SIS / ARO)</th>
             <th className="text-left px-3 py-2">GEMS staging field</th>
@@ -87,8 +87,8 @@ export default function FieldMappingPanel() {
         </thead>
         <tbody>
           {FIELD_MAPPINGS.map((m) => (
-            <tr key={m.target} className="border-t border-gray-100">
-              <td className="px-3 py-1.5 font-mono text-2xs text-gray-700">
+            <tr key={m.target} className="border-t border-line-subtle">
+              <td className="px-3 py-1.5 font-mono text-2xs text-fg-3">
                 {m.source}
               </td>
               <td className="px-3 py-1.5 font-mono text-2xs text-secondary-700">
@@ -98,7 +98,7 @@ export default function FieldMappingPanel() {
           ))}
         </tbody>
       </table>
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-fg-muted mt-2">
         Mappings are implemented in{" "}
         <code>app/api/integration/_utils/mapping.js</code>. Records missing a
         required field (first name, last name, current status, school year,

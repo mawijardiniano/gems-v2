@@ -24,7 +24,7 @@ export default function PrivacyConsent() {
 
   return (
     <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-6">
           <div className="flex items-center gap-4">
@@ -42,11 +42,11 @@ export default function PrivacyConsent() {
 
         {/* Scrollable Content */}
         <div
-          className="px-8 py-6 max-h-80 overflow-y-auto space-y-4 text-sm text-gray-700 leading-relaxed"
+          className="px-8 py-6 max-h-80 overflow-y-auto space-y-4 text-sm text-fg-3 leading-relaxed"
           onScroll={handleScroll}
         >
           <p>
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-fg">
               Marinduque State University (MarSU)
             </span>{" "}
             is committed to protecting your privacy and ensuring that all
@@ -63,10 +63,10 @@ export default function PrivacyConsent() {
           </p>
 
           <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
-            <p className="font-semibold text-gray-900 mb-1">
+            <p className="font-semibold text-fg mb-1">
               1. Purpose of Data Collection
             </p>
-            <p className="text-gray-700">
+            <p className="text-fg-3">
               We collect and process your data (such as name, sex, age,
               ethnicity, disability status, and affiliation) solely for:
             </p>
@@ -83,7 +83,7 @@ export default function PrivacyConsent() {
           </div>
 
           <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
-            <p className="font-semibold text-gray-900 mb-1">
+            <p className="font-semibold text-fg mb-1">
               2. Types of Information Collected
             </p>
             <ul className="list-disc pl-5 space-y-1">
@@ -101,7 +101,7 @@ export default function PrivacyConsent() {
           </div>
 
           <div className="bg-success-subtle border border-success-border p-4 rounded-lg">
-            <p className="font-semibold text-gray-900 mb-1">
+            <p className="font-semibold text-fg mb-1">
               3. Data Security & Retention
             </p>
             <ul className="list-disc pl-5 space-y-1">
@@ -120,10 +120,10 @@ export default function PrivacyConsent() {
           </div>
 
           <div className="bg-secondary-50 border border-secondary-200 p-4 rounded-lg">
-            <p className="font-semibold text-gray-900 mb-1">
+            <p className="font-semibold text-fg mb-1">
               4. Your Rights
             </p>
-            <p className="text-gray-700 mb-1">
+            <p className="text-fg-3 mb-1">
               As a data subject, you have the right to:
             </p>
             <ul className="list-disc pl-5 space-y-1">
@@ -136,7 +136,7 @@ export default function PrivacyConsent() {
         </div>
 
         {/* Consent Checkbox */}
-        <div className="px-8 py-5 border-t border-gray-100 bg-gray-50">
+        <div className="px-8 py-5 border-t border-line-subtle bg-subtle">
           <label className="flex items-start gap-3 cursor-pointer group">
             <div className="relative mt-0.5">
               <input
@@ -149,13 +149,13 @@ export default function PrivacyConsent() {
                 className={`w-5 h-5 rounded border-2 transition duration-200 flex items-center justify-center ${
                   checked
                     ? "bg-secondary-600 border-secondary-600"
-                    : "border-gray-300 group-hover:border-secondary-400"
+                    : "border-line-strong group-hover:border-secondary-400"
                 }`}
               >
                 {checked && <FaCheckCircle className="text-white text-xs" />}
               </div>
             </div>
-            <span className="text-sm text-gray-700 font-medium select-none">
+            <span className="text-sm text-fg-3 font-medium select-none">
               I have read and agree to the privacy policy and consent statement
             </span>
           </label>

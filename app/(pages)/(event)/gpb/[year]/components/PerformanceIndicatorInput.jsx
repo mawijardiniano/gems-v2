@@ -18,11 +18,11 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
       <div className="flex flex-col gap-2 w-full">
         {/* Format toggle */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-500">Format:</span>
+          <span className="text-fg-muted">Format:</span>
           <button
             type="button"
             onClick={() => onChange(emptyIndicator())}
-            className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
+            className="px-2 py-0.5 rounded-full border border-line-strong text-fg-muted hover:bg-muted"
           >
             ○ Structured
           </button>
@@ -35,7 +35,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         </div>
         <textarea
           rows={3}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
+          className="w-full border border-line-strong rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
           placeholder="Type any performance indicator... (e.g. At least 50% increase in male scholarship applicants)"
           value={value._raw || ""}
           onChange={(e) => onChange({ _raw: e.target.value })}
@@ -57,7 +57,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
     <div className="flex flex-col gap-2 w-full">
       {/* Format toggle */}
       <div className="flex items-center gap-2 text-xs">
-        <span className="text-gray-500">Format:</span>
+        <span className="text-fg-muted">Format:</span>
         <button
           type="button"
           className="px-2 py-0.5 rounded-full bg-secondary-600 text-white"
@@ -67,7 +67,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         <button
           type="button"
           onClick={() => onChange({ _raw: preview || "" })}
-          className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
+          className="px-2 py-0.5 rounded-full border border-line-strong text-fg-muted hover:bg-muted"
         >
           ○ Free Text
         </button>
@@ -75,7 +75,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
 
       <div className="flex gap-3">
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-500 mb-0.5">
+          <label className="text-xs text-fg-muted mb-0.5">
             Type of Activity{" "}
             {hasActivityCount && <span className="text-danger">*</span>}
           </label>
@@ -83,7 +83,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
             className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
               activityTypeMissing
                 ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-secondary-400"
+                : "border-line-strong focus:ring-secondary-400"
             }`}
             value={v.activityType}
             onChange={(e) => onChange({ ...v, activityType: e.target.value })}
@@ -98,7 +98,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
         </div>
 
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-500 mb-0.5">
+          <label className="text-xs text-fg-muted mb-0.5">
             No. of Activity{" "}
             {hasActivityType && <span className="text-danger">*</span>}
           </label>
@@ -108,7 +108,7 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
             className={`border rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 ${
               activityCountMissing
                 ? "border-red-400 focus:ring-red-400"
-                : "border-gray-300 focus:ring-secondary-400"
+                : "border-line-strong focus:ring-secondary-400"
             }`}
             value={v.totalActivities}
             onChange={(e) =>
@@ -118,22 +118,22 @@ export default function PerformanceIndicatorInput({ value, onChange }) {
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-500 mb-0.5">Male</label>
+          <label className="text-xs text-fg-muted mb-0.5">Male</label>
           <input
             type="number"
             min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
+            className="border border-line-strong rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
             value={v.totalMale}
             onChange={(e) => onChange({ ...v, totalMale: e.target.value })}
             placeholder="0"
           />
         </div>
         <div className="flex flex-col flex-1">
-          <label className="text-xs text-gray-500 mb-0.5">Female</label>
+          <label className="text-xs text-fg-muted mb-0.5">Female</label>
           <input
             type="number"
             min={0}
-            className="border border-gray-300 rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
+            className="border border-line-strong rounded-lg px-2 py-1.5 w-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
             value={v.totalFemale}
             onChange={(e) => onChange({ ...v, totalFemale: e.target.value })}
             placeholder="0"

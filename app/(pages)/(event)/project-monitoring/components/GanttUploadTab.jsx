@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { FaDownload, FaFileAlt, FaTimes, FaUpload } from "react-icons/fa";
+import Button from "@/components/ui/Button";
 import {
   parseCsvTable,
   parseGanttTable,
@@ -80,19 +81,19 @@ export default function GanttUploadTab({ onApply }) {
           handleFile(e.dataTransfer.files?.[0]);
         }}
         className={`flex flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
-          dragging ? "border-rose-400 bg-rose-50" : "border-gray-300 bg-gray-50"
+          dragging ? "border-rose-400 bg-rose-50" : "border-line-strong bg-subtle"
         }`}
       >
-        <FaUpload className="text-gray-500" size={22} />
-        <p className="text-sm text-gray-600">Drag and drop your file here</p>
-        <p className="text-xs text-gray-500">or</p>
-        <button
-          type="button"
+        <FaUpload className="text-fg-muted" size={22} />
+        <p className="text-sm text-fg-4">Drag and drop your file here</p>
+        <p className="text-xs text-fg-muted">or</p>
+        <Button
+          variant="secondary"
           onClick={() => inputRef.current?.click()}
-          className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50"
+          className="rounded-lg px-3 py-1.5 text-xs"
         >
           Choose File
-        </button>
+        </Button>
         <input
           ref={inputRef}
           type="file"
@@ -103,13 +104,13 @@ export default function GanttUploadTab({ onApply }) {
             e.target.value = "";
           }}
         />
-        <p className="text-xs text-gray-500">Supported: CSV (.csv)</p>
+        <p className="text-xs text-fg-muted">Supported: CSV (.csv)</p>
       </div>
 
       <button
         type="button"
         onClick={downloadTemplate}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 hover:underline"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-700 hover:underline"
       >
         <FaDownload size={11} />
         Download Template
@@ -122,38 +123,38 @@ export default function GanttUploadTab({ onApply }) {
       )}
 
       {file && rows.length > 0 && (
-        <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+        <div className="rounded-lg border border-line p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="flex items-center gap-2 text-sm text-fg-3">
               <FaFileAlt className="text-success" />
               <span className="font-medium">{file.name}</span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-fg-muted">
                 {formatSize(file.size)} · {rows.length} activities
               </span>
             </div>
             <button
               type="button"
               onClick={reset}
-              className="touch-target text-gray-500 hover:text-danger"
+              className="touch-target text-fg-muted hover:text-danger"
               aria-label="Remove file"
             >
               <FaTimes size={12} />
             </button>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={() => {
               onApply(rows);
               reset();
             }}
-            className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700"
+            className="rounded-lg px-3 py-1.5 text-xs"
           >
             Use these activities
-          </button>
+          </Button>
         </div>
       )}
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-fg-muted">
         The system reads the activities and timelines from the file. You can
         review and edit them in the Encode tab, then generate milestones.
       </p>

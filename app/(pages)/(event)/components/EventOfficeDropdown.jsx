@@ -18,7 +18,7 @@ import Button from "@/components/ui/Button";
    OfficeMultiSelect with a different layout.) */
 
 const labelClass =
-  "block text-sm font-medium text-gray-700 mb-2 gap-2 flex items-center";
+  "block text-sm font-medium text-fg-3 mb-2 gap-2 flex items-center";
 
 export default function EventOfficeDropdown({
   label,
@@ -77,14 +77,14 @@ export default function EventOfficeDropdown({
       <p className={labelClass}>
         {Icon && (
           <Icon
-            className="inline h-4 w-4 mr-1.5 text-gray-500 -mt-0.5"
+            className="inline h-4 w-4 mr-1.5 text-fg-muted -mt-0.5"
             aria-hidden="true"
           />
         )}
         {label} {required && <span className="text-danger">*</span>}
       </p>
       {description && (
-        <p className="text-xs text-gray-500 mb-2">{description}</p>
+        <p className="text-xs text-fg-muted mb-2">{description}</p>
       )}
 
       <button
@@ -99,15 +99,15 @@ export default function EventOfficeDropdown({
         className={`w-full flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 ${
           open
             ? "border-secondary-500 bg-secondary-50/50"
-            : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
-        } ${selected.length === 0 ? "text-gray-500" : "text-gray-900"}`}
+            : "border-line bg-subtle/50 hover:border-line-strong"
+        } ${selected.length === 0 ? "text-fg-muted" : "text-fg"}`}
       >
         <span className="flex items-center gap-2 truncate pr-2">
           {selected.length === 0 ? "Select options..." : selected.join(", ")}
         </span>
         <FaChevronDown
           aria-hidden="true"
-          className={`h-3.5 w-3.5 text-gray-500 shrink-0 transition-transform ${
+          className={`h-3.5 w-3.5 text-fg-muted shrink-0 transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -135,7 +135,7 @@ export default function EventOfficeDropdown({
       )}
 
       {open && (
-        <div className="absolute z-20 mt-2 w-full rounded-xl border border-gray-100 bg-white shadow-lg shadow-gray-200/50 overflow-hidden">
+        <div className="absolute z-20 mt-2 w-full rounded-xl border border-line-subtle bg-white shadow-lg shadow-gray-200/50 overflow-hidden">
           <div
             id={listId}
             role="listbox"
@@ -152,7 +152,7 @@ export default function EventOfficeDropdown({
                   aria-selected={checked}
                   key={option}
                   onClick={() => toggleOption(option)}
-                  className="w-full flex items-center justify-between px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors"
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-sm text-fg-3 hover:bg-subtle focus:bg-subtle focus:outline-none transition-colors"
                 >
                   <span className="pr-2 text-left">{option}</span>
                   {checked && (
@@ -167,7 +167,7 @@ export default function EventOfficeDropdown({
           </div>
 
           {allowCustom && (
-            <div className="flex items-center gap-2 border-t border-gray-100 bg-gray-50/60 p-2">
+            <div className="flex items-center gap-2 border-t border-line-subtle bg-subtle/60 p-2">
               <input
                 type="text"
                 value={draft}
@@ -180,7 +180,7 @@ export default function EventOfficeDropdown({
                 }}
                 placeholder="Type an office not listed..."
                 aria-label={`Add an office to ${label}`}
-                className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                className="min-w-0 flex-1 rounded-lg border border-line bg-white px-3 py-2 text-sm text-fg placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
               />
               <Button
                 variant="primary"

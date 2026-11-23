@@ -48,7 +48,7 @@ const statCards = [
 const StatCard = memo(function StatCard({ card, children }) {
   const Icon = card.icon;
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <div className="group relative overflow-hidden rounded-xl border border-line-subtle bg-white p-5 transition duration-300 hover:shadow-lg hover:-translate-y-0.5">
       <div
         className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.gradient}`}
       />
@@ -60,10 +60,10 @@ const StatCard = memo(function StatCard({ card, children }) {
           <Icon className="text-lg" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
             {card.label}
           </p>
-          <div className="mt-1 text-2xl font-bold text-gray-900">
+          <div className="mt-1 text-2xl font-bold text-fg">
             {children}
           </div>
         </div>
@@ -103,12 +103,12 @@ function Snapshot({ data, snapshot }) {
   }, [data, snapshot]);
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-fg">
           Executive Snapshot
         </h2>
-        <p className="mt-0.5 text-sm text-gray-500">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Overview of key indicators and demographic gaps
         </p>
       </div>
@@ -119,13 +119,13 @@ function Snapshot({ data, snapshot }) {
         <StatCard card={statCards[1]}>
           <div className="flex items-baseline gap-2">
             <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-gray-500">·</span>
+            <span className="text-sm font-normal text-fg-muted">·</span>
             <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-gray-500">(F · M)</span>
+            <span className="text-xs font-normal text-fg-muted">(F · M)</span>
           </div>
           {/* Mini bar */}
           {total > 0 && (
-            <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className="bg-secondary-500 transition-all duration-500"
                 style={{ width: `${(femaleCount / total) * 100}%` }}
@@ -141,7 +141,7 @@ function Snapshot({ data, snapshot }) {
         <StatCard card={statCards[2]}>
           {pwdCount}
           {pwdCount === 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
               No declaration
             </span>
           )}
@@ -150,7 +150,7 @@ function Snapshot({ data, snapshot }) {
         <StatCard card={statCards[3]}>
           {ipCount}
           {ipCount === 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
               No declaration
             </span>
           )}

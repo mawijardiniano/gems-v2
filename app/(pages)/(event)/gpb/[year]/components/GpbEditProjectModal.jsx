@@ -33,9 +33,9 @@ export default function GpbEditProjectModal({
         aria-label="Edit project"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl font-bold text-fg-2">
               Edit Project
               {editRow.reference_number && (
                 <span className="ml-2 align-middle font-mono text-xs font-semibold text-secondary-700 bg-secondary-50 border border-secondary-200 rounded px-2 py-0.5">
@@ -43,7 +43,7 @@ export default function GpbEditProjectModal({
                 </span>
               )}
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-fg-muted mt-0.5">
               All fields marked <span className="text-danger">*</span> are
               required
             </p>
@@ -52,7 +52,7 @@ export default function GpbEditProjectModal({
             type="button"
             aria-label="Close"
             onClick={cancelEdit}
-            className="touch-target w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 text-3xl transition"
+            className="touch-target w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-fg-muted hover:text-fg-2 text-3xl transition"
           >
             ×
           </button>
@@ -72,16 +72,16 @@ export default function GpbEditProjectModal({
               <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                 1
               </div>
-              <h3 className="text-base font-semibold text-gray-700">
+              <h3 className="text-base font-semibold text-fg-3">
                 Gender Issue
               </h3>
             </div>
             <div className="space-y-4 pl-8">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 Project Type <span className="text-danger">*</span>
               </label>
               <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 value={editRow.project_type}
                 onChange={(e) =>
                   handleEditRowChange("project_type", e.target.value)
@@ -101,12 +101,12 @@ export default function GpbEditProjectModal({
             {!isAttributedProgram(editRow) && (
               <div className="space-y-4 pl-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     Gender Issue / GAD Mandate{" "}
                     <span className="text-danger">*</span>
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                    className="w-full border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                     rows={3}
                     value={editRow.gender_issue || ""}
                     onChange={(e) =>
@@ -128,7 +128,7 @@ export default function GpbEditProjectModal({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     Cause of the Gender Issue{" "}
                     <span className="text-danger">*</span>
                   </label>
@@ -136,11 +136,11 @@ export default function GpbEditProjectModal({
                     {(editRow.cause_gender_issue || [""]).map(
                       (val, idx) => (
                         <div key={idx} className="flex gap-2 items-start">
-                          <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
+                          <span className="mt-2 text-xs text-fg-muted w-5 text-right shrink-0">
                             {idx + 1}.
                           </span>
                           <textarea
-                            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                            className="flex-1 border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                             rows={2}
                             value={val}
                             onChange={(e) => {
@@ -211,24 +211,24 @@ export default function GpbEditProjectModal({
                 <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                   2
                 </div>
-                <h3 className="text-base font-semibold text-gray-700">
+                <h3 className="text-base font-semibold text-fg-3">
                   Objectives & Data
                 </h3>
               </div>
               <div className="space-y-4 pl-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     GAD Result Statement / GAD Objective{" "}
                     <span className="text-danger">*</span>
                   </label>
                   <div className="space-y-2">
                     {(editRow.gad_objective || [""]).map((val, idx) => (
                       <div key={idx} className="flex gap-2 items-start">
-                        <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
+                        <span className="mt-2 text-xs text-fg-muted w-5 text-right shrink-0">
                           {idx + 1}.
                         </span>
                         <textarea
-                          className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                          className="flex-1 border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                           rows={2}
                           value={val}
                           onChange={(e) => {
@@ -276,11 +276,11 @@ export default function GpbEditProjectModal({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     Supporting Statistics / Data
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                    className="w-full border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                     rows={3}
                     value={editRow.supporting_statistics_data || ""}
                     onChange={(e) =>
@@ -292,12 +292,12 @@ export default function GpbEditProjectModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     Relevant Agency MFO/PAP{" "}
                     <span className="text-danger">*</span>
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                    className="w-full border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                     rows={2}
                     value={editRow.relevant_agency || ""}
                     onChange={(e) =>
@@ -315,16 +315,16 @@ export default function GpbEditProjectModal({
               <div className="w-6 h-6 rounded-full bg-secondary-600 text-white text-xs font-bold flex items-center justify-center">
                 3
               </div>
-              <h3 className="text-base font-semibold text-gray-700">
+              <h3 className="text-base font-semibold text-fg-3">
                 Activity & Budget
               </h3>
             </div>
             <div className="space-y-4 pl-8">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-fg-4 mb-1">
                   GAD Activity <span className="text-danger">*</span>
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-fg-muted mb-2">
                   Type the activity title, then its description underneath.
                   Both print inside the single GAD Activity column.
                 </p>
@@ -332,14 +332,14 @@ export default function GpbEditProjectModal({
                   {(editRow.gad_activity || [""]).map((val, idx) => (
                     <div
                       key={idx}
-                      className="flex gap-2 items-start rounded-xl border border-gray-200 bg-gray-50 p-2"
+                      className="flex gap-2 items-start rounded-xl border border-line bg-subtle p-2"
                     >
-                      <span className="mt-2 text-xs text-gray-500 w-5 text-right shrink-0">
+                      <span className="mt-2 text-xs text-fg-muted w-5 text-right shrink-0">
                         {idx + 1}.
                       </span>
                       <div className="flex-1 space-y-2">
                         <textarea
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                          className="w-full border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                           rows={2}
                           placeholder="GAD activity title"
                           value={val}
@@ -351,7 +351,7 @@ export default function GpbEditProjectModal({
                           }
                         />
                         <textarea
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                          className="w-full border border-line-strong rounded-xl px-3 py-2 text-xs text-fg-4 focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                           rows={2}
                           placeholder="Description (optional)"
                           value={
@@ -396,7 +396,7 @@ export default function GpbEditProjectModal({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+                <label className="block text-sm font-medium text-fg-4 mb-2">
                   Output Performance Indicators and Target
                 </label>
                 <div className="space-y-3">
@@ -407,7 +407,7 @@ export default function GpbEditProjectModal({
                   ).map((val, idx) => (
                     <div
                       key={idx}
-                      className="flex gap-2 items-start bg-gray-50 rounded-xl p-3 border border-gray-200"
+                      className="flex gap-2 items-start bg-subtle rounded-xl p-3 border border-line"
                     >
                       <div className="flex-1">
                         <PerformanceIndicatorInput
@@ -475,17 +475,17 @@ export default function GpbEditProjectModal({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     GAD Budget <span className="text-danger">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted text-sm">
                       ₱
                     </span>
                     <input
                       type="number"
                       min="0"
-                      className="w-full border border-gray-300 rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
+                      className="w-full border border-line-strong rounded-xl pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400"
                       value={editRow.gad_budget || ""}
                       onChange={(e) =>
                         handleEditRowChange(
@@ -497,11 +497,11 @@ export default function GpbEditProjectModal({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-fg-4 mb-1">
                     Source of Budget <span className="text-danger">*</span>
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
+                    className="w-full border border-line-strong rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 resize-none"
                     rows={2}
                     value={editRow.source_budget || ""}
                     onChange={(e) =>
@@ -511,7 +511,7 @@ export default function GpbEditProjectModal({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-fg-4 mb-1">
                   Responsible Unit/Office{" "}
                   <span className="text-danger">*</span>
                 </label>
@@ -526,7 +526,7 @@ export default function GpbEditProjectModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-line bg-subtle rounded-b-2xl">
           <Button
             variant="secondary"
             type="button"

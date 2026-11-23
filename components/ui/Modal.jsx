@@ -60,11 +60,11 @@ export default function Modal({
       >
         <div className="modal-header">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+            <h2 id={titleId} className="text-lg font-semibold text-fg">
               {title}
             </h2>
             {description && (
-              <p id={descId} className="mt-0.5 text-sm text-gray-500">
+              <p id={descId} className="mt-0.5 text-sm text-fg-muted">
                 {description}
               </p>
             )}
@@ -74,7 +74,7 @@ export default function Modal({
             aria-label="Close"
             onClick={() => close?.()}
             disabled={busy}
-            className="touch-target -mr-2 rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary-500/30 disabled:opacity-50"
+            className="touch-target -mr-2 rounded-lg p-2 text-fg-muted transition hover:bg-muted hover:text-fg-3 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary-500/30 disabled:opacity-50"
           >
             <HiOutlineX className="h-5 w-5" aria-hidden="true" />
           </button>

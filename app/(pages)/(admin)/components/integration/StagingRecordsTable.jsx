@@ -34,9 +34,9 @@ export default function StagingRecordsTable({
     selectableRecords.every((r) => selectedIds.has(r._id));
 
   return (
-    <div className="max-h-80 overflow-auto border border-gray-200 rounded">
+    <div className="max-h-80 overflow-auto border border-line rounded">
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 sticky top-0">
+        <thead className="bg-subtle sticky top-0">
           <tr>
             <th className="text-left px-2 py-1 w-6">
               <input
@@ -68,7 +68,7 @@ export default function StagingRecordsTable({
             return (
               <tr
                 key={r._id}
-                className={`border-t border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                className={`border-t border-line-subtle cursor-pointer hover:bg-subtle ${
                   selectedRecordId === r._id ? "bg-secondary-50" : ""
                 }`}
                 onClick={() => onRowClick(r._id)}
@@ -126,7 +126,7 @@ export default function StagingRecordsTable({
           })}
           {records.length === 0 && (
             <tr>
-              <td className="px-2 py-3 text-gray-500" colSpan={9}>
+              <td className="px-2 py-3 text-fg-muted" colSpan={9}>
                 {loading ? "Loading..." : "No records"}
               </td>
             </tr>

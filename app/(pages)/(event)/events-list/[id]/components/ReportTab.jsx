@@ -30,7 +30,7 @@ export default function ReportTab({
 
   if (reportLoading) {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-500" role="status">
+      <div className="rounded-2xl border border-line-subtle bg-white p-6 text-sm text-fg-muted" role="status">
         Loading report…
       </div>
     );
@@ -56,7 +56,7 @@ export default function ReportTab({
 
   if (showReport === null && !canSubmit) {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-500">
+      <div className="rounded-2xl border border-line-subtle bg-white p-6 text-sm text-fg-muted">
         No accomplishment report has been submitted for this event yet. Only
         the event&apos;s creator or an Admin can submit it.
       </div>

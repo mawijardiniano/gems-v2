@@ -201,15 +201,15 @@ export default function IctuDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-subtle py-8">
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-fg">
               Data Operations Dashboard
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-fg-4">
               Overview of data integration batches, manual uploads, and sync activity
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function IctuDashboard() {
             <Link
               key={action.href}
               href={action.href}
-              className="flex items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-secondary-200 transition"
+              className="flex items-center gap-4 p-5 bg-white rounded-xl border border-line shadow-sm hover:shadow-md hover:border-secondary-200 transition"
             >
               <span
                 className={`w-11 h-11 rounded-lg flex items-center justify-center text-white ${action.color}`}
@@ -243,10 +243,10 @@ export default function IctuDashboard() {
                 {action.icon}
               </span>
               <span>
-                <span className="block text-sm font-semibold text-gray-900">
+                <span className="block text-sm font-semibold text-fg">
                   {action.label}
                 </span>
-                <span className="block text-xs text-gray-500">
+                <span className="block text-xs text-fg-muted">
                   {action.desc}
                 </span>
               </span>
@@ -259,17 +259,17 @@ export default function IctuDashboard() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm"
+              className="p-5 bg-white rounded-xl border border-line shadow-sm"
             >
               <span
                 className={`w-9 h-9 rounded-full flex items-center justify-center ${card.color}`}
               >
                 {card.icon}
               </span>
-              <p className="mt-3 text-2xl font-bold text-gray-900">
+              <p className="mt-3 text-2xl font-bold text-fg">
                 {loading ? "…" : card.value}
               </p>
-              <p className="text-xs text-gray-500">{card.label}</p>
+              <p className="text-xs text-fg-muted">{card.label}</p>
             </div>
           ))}
         </div>
@@ -279,21 +279,21 @@ export default function IctuDashboard() {
           {recordCards.map((card) => (
             <div
               key={card.label}
-              className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm"
+              className="p-4 bg-white rounded-xl border border-line shadow-sm"
             >
-              <p className="text-xl font-bold text-gray-900">
+              <p className="text-xl font-bold text-fg">
                 {loading ? "…" : card.value.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500">{card.label}</p>
+              <p className="text-xs text-fg-muted">{card.label}</p>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent batches */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <div className="bg-white rounded-xl border border-line shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-line-subtle flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-fg">
                 Recent Batches
               </h2>
               <Link
@@ -304,25 +304,25 @@ export default function IctuDashboard() {
               </Link>
             </div>
             {loading ? (
-              <div className="p-5 text-sm text-gray-500">Loading batches…</div>
+              <div className="p-5 text-sm text-fg-muted">Loading batches…</div>
             ) : recentBatches.length === 0 ? (
-              <div className="p-5 text-sm text-gray-500">
+              <div className="p-5 text-sm text-fg-muted">
                 No integration batches yet.
               </div>
             ) : (
-              <ul className="divide-y divide-gray-100">
+              <ul className="divide-y divide-line-subtle">
                 {recentBatches.map((b) => (
                   <li
                     key={b._id}
                     className="px-5 py-3 flex items-center justify-between gap-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-fg truncate">
                         {b.source_name ||
                           SOURCE_TYPE_LABELS[b.source_type] ||
                           b.source_type}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-fg-muted">
                         {SOURCE_TYPE_LABELS[b.source_type] || b.source_type} ·{" "}
                         {formatDateTime(b.started_at || b.createdAt)} · by{" "}
                         {b.created_by_username || "Unknown"}
@@ -339,20 +339,20 @@ export default function IctuDashboard() {
           </div>
 
           {/* Recent sync logs */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <div className="bg-white rounded-xl border border-line shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-line-subtle">
+              <h2 className="text-sm font-semibold text-fg">
                 Recent Sync Activity
               </h2>
             </div>
             {loading ? (
-              <div className="p-5 text-sm text-gray-500">Loading activity…</div>
+              <div className="p-5 text-sm text-fg-muted">Loading activity…</div>
             ) : logs.length === 0 ? (
-              <div className="p-5 text-sm text-gray-500">
+              <div className="p-5 text-sm text-fg-muted">
                 No sync activity recorded yet.
               </div>
             ) : (
-              <ul className="divide-y divide-gray-100">
+              <ul className="divide-y divide-line-subtle">
                 {logs.map((log) => (
                   <li key={log._id} className="px-5 py-3">
                     <div className="flex items-start gap-3">
@@ -362,11 +362,11 @@ export default function IctuDashboard() {
                         }`}
                       />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-fg">
                           {ACTION_LABELS[log.action] || log.action}
                         </p>
-                        <p className="text-xs text-gray-600">{log.message}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-fg-4">{log.message}</p>
+                        <p className="text-xs text-fg-muted mt-0.5">
                           By {log.executed_by_username || "Unknown"} ·{" "}
                           {formatDateTime(log.executed_at || log.createdAt)}
                         </p>
@@ -380,9 +380,9 @@ export default function IctuDashboard() {
         </div>
 
         {/* Manual upload activity */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">
+        <div className="bg-white rounded-xl border border-line shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-line-subtle flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-fg">
               Manual Upload Activity
             </h2>
             <Link
@@ -393,23 +393,23 @@ export default function IctuDashboard() {
             </Link>
           </div>
           {loading ? (
-            <div className="p-5 text-sm text-gray-500">Loading uploads…</div>
+            <div className="p-5 text-sm text-fg-muted">Loading uploads…</div>
           ) : manualUploads.length === 0 ? (
-            <div className="p-5 text-sm text-gray-500">
+            <div className="p-5 text-sm text-fg-muted">
               No manual uploads recorded yet.
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-line-subtle">
               {manualUploads.map((b) => (
                 <li
                   key={b._id}
                   className="px-5 py-3 flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-fg truncate">
                       {b.source_name || b.source_file_key || "Untitled upload"}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-muted">
                       {formatDateTime(b.started_at || b.createdAt)} · by{" "}
                       {b.created_by_username || "Unknown"}
                     </p>

@@ -27,13 +27,13 @@ import Button from "@/components/ui/Button";
 function SkeletonCard({ className = "" }) {
   return (
     <div
-      className={`animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-100 p-6 ${className}`}
+      className={`animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-line-subtle p-6 ${className}`}
     >
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl bg-gray-200" />
+        <div className="h-12 w-12 rounded-xl bg-emphasis" />
         <div className="flex-1 space-y-2">
-          <div className="h-3 w-20 bg-gray-200 rounded" />
-          <div className="h-5 w-32 bg-gray-200 rounded" />
+          <div className="h-3 w-20 bg-emphasis rounded" />
+          <div className="h-5 w-32 bg-emphasis rounded" />
         </div>
       </div>
     </div>
@@ -45,11 +45,11 @@ function SkeletonTable({ rows = 4 }) {
     <div className="animate-pulse space-y-4 p-6">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex gap-6">
-          <div className="h-5 w-16 bg-gray-200 rounded" />
-          <div className="h-5 w-28 bg-gray-200 rounded" />
-          <div className="h-5 w-14 bg-gray-200 rounded" />
-          <div className="h-5 w-28 bg-gray-200 rounded" />
-          <div className="h-5 w-24 bg-gray-200 rounded ml-auto" />
+          <div className="h-5 w-16 bg-emphasis rounded" />
+          <div className="h-5 w-28 bg-emphasis rounded" />
+          <div className="h-5 w-14 bg-emphasis rounded" />
+          <div className="h-5 w-28 bg-emphasis rounded" />
+          <div className="h-5 w-24 bg-emphasis rounded ml-auto" />
         </div>
       ))}
     </div>
@@ -60,11 +60,11 @@ function SkeletonTable({ rows = 4 }) {
 function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="h-16 w-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
-        <Icon className="h-8 w-8 text-gray-300" />
+      <div className="h-16 w-16 rounded-2xl bg-subtle border border-line-subtle flex items-center justify-center mb-4">
+        <Icon className="h-8 w-8 text-fg-faint" />
       </div>
-      <p className="text-sm font-medium text-gray-900 mb-1">{title}</p>
-      <p className="text-xs text-gray-500 text-center max-w-xs mb-4">
+      <p className="text-sm font-medium text-fg mb-1">{title}</p>
+      <p className="text-xs text-fg-muted text-center max-w-xs mb-4">
         {description}
       </p>
       {action}
@@ -82,7 +82,7 @@ function StatCard({ icon: Icon, label, value, sub, color = "blue" }) {
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition duration-200">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5 hover:shadow-md transition duration-200">
       <div className="flex items-center gap-4">
         <div
           className={`h-12 w-12 rounded-xl ${colorMap[color] || colorMap.blue} flex items-center justify-center shrink-0`}
@@ -90,14 +90,14 @@ function StatCard({ icon: Icon, label, value, sub, color = "blue" }) {
           <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-xl font-bold text-gray-900 mt-0.5 truncate">
+          <p className="text-xl font-bold text-fg mt-0.5 truncate">
             {value}
           </p>
           {sub && (
-            <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+            <p className="text-xs text-fg-muted mt-0.5">{sub}</p>
           )}
         </div>
       </div>
@@ -296,10 +296,10 @@ export default function GAABudgetContent() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-fg tracking-tight">
             Annual GAA Budgets
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             Manage annual allocation and GAD budget records
           </p>
         </div>
@@ -369,18 +369,18 @@ export default function GAABudgetContent() {
       )}
 
       {/* ── Main Table Card ─────────────────────────────────────── */}
-      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+      <div className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
         {/* Table header */}
-        <div className="px-6 py-5 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="px-6 py-5 border-b border-line-faint flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
               <FaPiggyBank className="h-5 w-5 text-secondary-600" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-fg">
                 Budget Records
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 {filteredBudgets.length} record{filteredBudgets.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -389,20 +389,20 @@ export default function GAABudgetContent() {
           <div className="flex items-center gap-3">
             {/* Search */}
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
               <input
                 type="text"
                 placeholder="Search budgets..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-48 pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
+                className="w-48 pl-9 pr-3 py-2 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
               />
             </div>
 
             {/* Sort toggle */}
             <button
               onClick={() => setSortAsc(!sortAsc)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-fg-4 bg-white border border-line rounded-lg hover:bg-subtle transition"
               title={sortAsc ? "Sort: oldest first" : "Sort: newest first"}
             >
               {sortAsc ? (
@@ -448,39 +448,39 @@ export default function GAABudgetContent() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-line-subtle bg-subtle/50">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     Year
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     Total GAA
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     GAD %
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     GAD Budget
                   </th>
                   {!isCoordinator && (
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                       Actions
                     </th>
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-line-faint">
                 {filteredBudgets.map((b) => (
                   <tr
                     key={b._id}
-                    className="hover:bg-gray-50/80 transition-colors duration-150 group"
+                    className="hover:bg-subtle/80 transition-colors duration-150 group"
                   >
                     <td className="px-6 py-5">
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-bold text-fg">
                         {b.year}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-fg-3">
                         ₱ {fmt(b.totalGAA)}
                       </span>
                     </td>
@@ -582,14 +582,14 @@ export default function GAABudgetContent() {
             </div>
 
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-fg-3">
                 Are you sure you want to delete the budget for{" "}
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-fg">
                   {budgetToDelete?.year}
                 </span>
                 ?
               </p>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-fg-muted mt-2">
                 This action cannot be undone. The GAA budget of{" "}
                 <span className="font-medium">
                   ₱ {fmt(budgetToDelete?.totalGAA || 0)}
@@ -598,7 +598,7 @@ export default function GAABudgetContent() {
               </p>
             </div>
 
-            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div className="flex justify-end gap-3 px-6 py-4 bg-subtle border-t border-line-subtle">
               <Button
                 variant="secondary"
                 onClick={cancelDelete}
@@ -699,17 +699,17 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
         className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in"
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100">
+        <div className="px-6 py-5 border-b border-line-subtle">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-sm">
                 <FaPiggyBank className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 id={titleId} className="text-base font-semibold text-gray-900">
+                <h2 id={titleId} className="text-base font-semibold text-fg">
                   {initial ? "Edit Budget" : "Add Budget"}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-fg-muted">
                   {initial
                     ? `Updating budget for ${initial.year}`
                     : "Create a new annual GAA budget record"}
@@ -720,7 +720,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+              className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
             >
               <FaTimes className="h-4 w-4" />
             </button>
@@ -739,11 +739,11 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Year */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                 Budget Year
               </label>
               <div className="relative">
-                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
                 <input
                   type="number"
                   value={year}
@@ -752,18 +752,18 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   max={2100}
                   required
                   disabled={!!initial}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition disabled:bg-subtle disabled:text-fg-muted"
                 />
               </div>
             </div>
 
             {/* Total GAA */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                 Total GAA (₱)
               </label>
               <div className="relative">
-                <FaPiggyBank className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+                <FaPiggyBank className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
                 <input
                   type="number"
                   value={totalGAA}
@@ -772,7 +772,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   step="0.01"
                   required
                   placeholder="0.00"
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
                 />
               </div>
             </div>
@@ -781,11 +781,11 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* GAD % */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                 GAD Percentage (%)
               </label>
               <div className="relative">
-                <FaPercent className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+                <FaPercent className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-muted" />
                 <input
                   type="number"
                   value={gadPercent}
@@ -796,17 +796,17 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
                   max={100}
                   step="0.1"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-fg-muted mt-1">
                 Recommended: 5% of total GAA
               </p>
             </div>
 
             {/* Computed GAD Budget */}
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
                 Computed GAD Budget (₱)
               </label>
               <div className="flex items-center gap-2.5 rounded-lg bg-success-subtle border border-success-border px-3.5 py-2.5 text-success font-bold text-base">
@@ -822,7 +822,7 @@ function BudgetModal({ open, onClose, onSave, initial, error, setError }) {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 pt-2 border-t border-line-subtle">
             <Button
               variant="secondary"
               type="button"

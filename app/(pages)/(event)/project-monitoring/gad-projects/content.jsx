@@ -49,16 +49,16 @@ export default function GADProjectsMonitoringContent() {
     <div className="space-y-5 mx-auto py-10">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-fg flex items-center gap-2">
             <FaChartLine className="text-rose-600" />
             GAD Projects/Activities Monitoring
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-fg-muted mt-0.5">
             Monitor GAD projects and activities across academic years — update
             actuals as activities are conducted
           </p>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           {list.totals.listed} project{list.totals.listed !== 1 ? "s" : ""} listed
         </p>
       </div>
@@ -87,18 +87,18 @@ export default function GADProjectsMonitoringContent() {
       <QuickReports yearFilter={list.filters.yearFilter} report={report} />
 
       {loading ? (
-        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-gray-100">
+        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-line-subtle">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-8 bg-gray-200 rounded" />
+            <div key={i} className="h-8 bg-emphasis rounded" />
           ))}
         </div>
       ) : list.filteredProjects.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
-          <FaFolderOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-900">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-12 text-center">
+          <FaFolderOpen className="h-10 w-10 text-fg-faint mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg">
             No GAD projects/activities found
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             {projects.length === 0
               ? "Create GPB projects first — they will appear here for monitoring."
               : "Try adjusting the academic year, college/office, status, or search filters."}

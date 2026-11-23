@@ -57,7 +57,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
       className={`overflow-hidden rounded-xl border transition-colors ${
         expanded
           ? "border-secondary-200 bg-secondary-50/30"
-          : "border-gray-100 bg-gray-50/50 hover:border-gray-200"
+          : "border-line-subtle bg-subtle/50 hover:border-line"
       }`}
     >
       <button
@@ -68,10 +68,10 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
       >
         <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${status.dot}`} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-gray-900">
+          <span className="block truncate text-sm font-medium text-fg">
             {event.title}
           </span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
             {timeLabel && (
               <span className="flex items-center gap-1">
                 <FaRegClock size={11} />
@@ -87,7 +87,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
             <span className="font-medium">{status.label}</span>
           </span>
         </span>
-        <span className="mt-1 shrink-0 text-gray-500">
+        <span className="mt-1 shrink-0 text-fg-muted">
           {expanded ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
         </span>
       </button>
@@ -109,7 +109,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
             )}
             {event.reference_number && (
               <span
-                className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-2xs font-medium text-gray-500"
+                className="rounded-full border border-line bg-subtle px-2.5 py-1 font-mono text-2xs font-medium text-fg-muted"
                 title="Event reference number"
               >
                 {event.reference_number}
@@ -119,30 +119,30 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
 
           <div className="space-y-2">
             {dateRange && (
-              <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaCalendarAlt className="mt-0.5 shrink-0 text-gray-500" />
+              <div className="flex items-start gap-2 text-xs text-fg-4">
+                <FaCalendarAlt className="mt-0.5 shrink-0 text-fg-muted" />
                 <span>{dateRange}</span>
               </div>
             )}
-            <div className="flex items-start gap-2 text-xs text-gray-600">
-              <FaRegClock className="mt-0.5 shrink-0 text-gray-500" />
+            <div className="flex items-start gap-2 text-xs text-fg-4">
+              <FaRegClock className="mt-0.5 shrink-0 text-fg-muted" />
               <span>{timeLabel || "Time TBD"}</span>
             </div>
             {offices.length > 0 && (
-              <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaBuilding className="mt-0.5 shrink-0 text-gray-500" />
+              <div className="flex items-start gap-2 text-xs text-fg-4">
+                <FaBuilding className="mt-0.5 shrink-0 text-fg-muted" />
                 <span>{offices.join(", ")}</span>
               </div>
             )}
             {registeredCount > 0 && (
-              <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaUsers className="mt-0.5 shrink-0 text-gray-500" />
+              <div className="flex items-start gap-2 text-xs text-fg-4">
+                <FaUsers className="mt-0.5 shrink-0 text-fg-muted" />
                 <span>{registeredCount} registered</span>
               </div>
             )}
             {organizerName && (
-              <div className="flex items-start gap-2 text-xs text-gray-600">
-                <FaUserTag className="mt-0.5 shrink-0 text-gray-500" />
+              <div className="flex items-start gap-2 text-xs text-fg-4">
+                <FaUserTag className="mt-0.5 shrink-0 text-fg-muted" />
                 <span>Organized by {organizerName}</span>
               </div>
             )}
@@ -151,7 +151,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
           {event.description && (
             <div className="border-t border-secondary-100 pt-3">
               <p
-                className={`text-xs leading-relaxed whitespace-pre-line text-gray-600 ${
+                className={`text-xs leading-relaxed whitespace-pre-line text-fg-4 ${
                   descExpanded ? "" : "line-clamp-4"
                 }`}
               >
@@ -187,7 +187,7 @@ function EventRow({ event, expanded, onToggle, canManage, onManage }) {
               Manage event
             </Button>
           ) : (
-            <p className="text-center text-xs text-gray-500">
+            <p className="text-center text-xs text-fg-muted">
               Only the event organizer can manage this event.
             </p>
           )}
@@ -216,12 +216,12 @@ export default function DayDetailsPanel({
     : "Select a date";
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-5 py-4">
-        <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+    <div className="rounded-2xl border border-line-subtle bg-white shadow-sm">
+      <div className="border-b border-line-subtle px-5 py-4">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
           Selected date
         </p>
-        <h3 className="mt-0.5 text-sm font-semibold text-gray-900">
+        <h3 className="mt-0.5 text-sm font-semibold text-fg">
           {dateLabel}
         </h3>
       </div>
@@ -231,28 +231,28 @@ export default function DayDetailsPanel({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="animate-pulse rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3"
+              className="animate-pulse rounded-xl border border-line-subtle bg-subtle/50 px-4 py-3"
             >
-              <div className="h-3 w-2/3 rounded bg-gray-200" />
-              <div className="mt-2 h-2.5 w-1/2 rounded bg-gray-200" />
+              <div className="h-3 w-2/3 rounded bg-emphasis" />
+              <div className="mt-2 h-2.5 w-1/2 rounded bg-emphasis" />
             </div>
           ))}
         </div>
       ) : events.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-300">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-subtle text-fg-faint">
             <FaRegCalendarTimes size={20} />
           </span>
-          <p className="mt-3 text-sm font-medium text-gray-600">
+          <p className="mt-3 text-sm font-medium text-fg-4">
             No events on this day.
           </p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-fg-muted">
             Select another date on the calendar to see its events.
           </p>
         </div>
       ) : (
         <>
-          <p className="px-5 pt-4 text-2xs font-semibold uppercase tracking-wider text-gray-500">
+          <p className="px-5 pt-4 text-2xs font-semibold uppercase tracking-wider text-fg-muted">
             {events.length} event{events.length === 1 ? "" : "s"}
           </p>
           <ul className="space-y-3 p-5">

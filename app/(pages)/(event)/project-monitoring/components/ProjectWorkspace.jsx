@@ -20,6 +20,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import ProjectCreateModal from "./ProjectCreateModal";
+import Button from "@/components/ui/Button";
 import {
   ayLabel,
   formatDate,
@@ -82,20 +83,20 @@ const canManageProject = (project, userId, role) => {
 };
 
 const StatCard = ({ icon, iconClass, label, value, sub }) => (
-  <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-3.5 flex items-start gap-3">
+  <div className="rounded-xl bg-white border border-line-subtle shadow-sm p-3.5 flex items-start gap-3">
     <span
       className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${iconClass}`}
     >
       {icon}
     </span>
     <div className="min-w-0">
-      <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+      <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
         {label}
       </p>
-      <p className="text-lg font-bold text-gray-900 leading-tight truncate">
+      <p className="text-lg font-bold text-fg leading-tight truncate">
         {value}
       </p>
-      {sub && <p className="text-xs text-gray-500 truncate">{sub}</p>}
+      {sub && <p className="text-xs text-fg-muted truncate">{sub}</p>}
     </div>
   </div>
 );
@@ -118,11 +119,11 @@ const DetailRow = ({ label, value }) => {
   const muted = !value || value === "—";
 
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-2 border-b border-gray-50">
-      <dt className="text-xs text-gray-500">{label}</dt>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-2 border-b border-line-faint">
+      <dt className="text-xs text-fg-muted">{label}</dt>
       <dd
         className={`text-sm font-medium text-right break-words min-w-0 ${
-          muted ? "text-gray-500" : "text-gray-900"
+          muted ? "text-fg-muted" : "text-fg"
         }`}
       >
         {value || "—"}
@@ -134,7 +135,7 @@ const DetailRow = ({ label, value }) => {
 /* One titled block of detail rows; rows flow into two columns on wide screens. */
 const DetailSection = ({ title, children }) => (
   <div>
-    <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 pb-1.5 border-b border-gray-100">
+    <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted pb-1.5 border-b border-line-subtle">
       {title}
     </p>
     <dl className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10">{children}</dl>
@@ -146,18 +147,18 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
   const capped = Math.min(Math.max(percent, 0), 100);
 
   return (
-    <div className="py-2 border-b border-gray-50">
+    <div className="py-2 border-b border-line-faint">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5">
-        <dt className="text-xs text-gray-500">{label}</dt>
+        <dt className="text-xs text-fg-muted">{label}</dt>
         <dd
           className={`text-sm font-medium text-right ${
-            over ? "text-danger" : "text-gray-900"
+            over ? "text-danger" : "text-fg"
           }`}
         >
           {percent}%
         </dd>
       </div>
-      <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+      <div className="mt-1.5 h-1.5 w-full rounded-full bg-muted overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             over ? "bg-red-500" : "bg-emerald-500"
@@ -165,13 +166,13 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
           style={{ width: `${capped}%` }}
         />
       </div>
-      {caption && <p className="text-xs text-gray-500 mt-1">{caption}</p>}
+      {caption && <p className="text-xs text-fg-muted mt-1">{caption}</p>}
     </div>
   );
 };
 
 const toolbarSelect =
-  "appearance-none bg-white border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none cursor-pointer hover:border-gray-300 transition-colors";
+  "appearance-none bg-white border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors";
 
 export default function ProjectWorkspace({ config }) {
   const {
@@ -352,7 +353,7 @@ export default function ProjectWorkspace({ config }) {
     const projectStatus = getProjectStatus(project, statuses);
     const isExpanded = expandedId === project._id;
     const badgeValue = getFieldValue(project[badgeField]);
-    const badgeClass = badgeClasses[badgeValue] || "bg-gray-100 text-gray-700";
+    const badgeClass = badgeClasses[badgeValue] || "bg-muted text-fg-3";
     const titleValue = getFieldValue(project.title) || "(untitled project)";
     const budget = Number(getFieldValue(project[budgetField])) || 0;
     const spent = Number(project.actual_expenditures) || 0;
@@ -396,7 +397,7 @@ export default function ProjectWorkspace({ config }) {
     return (
       <div
         key={project._id}
-        className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden"
+        className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden"
       >
         <button
           type="button"
@@ -405,11 +406,11 @@ export default function ProjectWorkspace({ config }) {
             setDetailTab("details");
             setExpandedId(isExpanded ? null : project._id);
           }}
-          className="w-full text-left px-4 sm:px-5 py-4 flex items-start gap-3 hover:bg-gray-50/60 transition-colors"
+          className="w-full text-left px-4 sm:px-5 py-4 flex items-start gap-3 hover:bg-subtle/60 transition-colors"
         >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-2xs font-mono font-semibold text-gray-500">
+              <span className="text-2xs font-mono font-semibold text-fg-muted">
                 {project.reference_number || "—"}
               </span>
               {badgeValue && (
@@ -421,10 +422,10 @@ export default function ProjectWorkspace({ config }) {
               )}
               <StatusBadge status={projectStatus} />
             </div>
-            <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-1.5">
+            <h3 className="text-sm sm:text-base font-semibold text-fg mt-1.5">
               {titleValue}
             </h3>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-fg-muted">
               <span>
                 {formatDate(project.start_date) || "No start date"} →{" "}
                 {formatDate(project.end_date) || "No end date"}
@@ -442,7 +443,7 @@ export default function ProjectWorkspace({ config }) {
               )}
             </div>
           </div>
-          <span className="text-gray-500 mt-1">
+          <span className="text-fg-muted mt-1">
             {isExpanded ? (
               <FaChevronUp size={12} />
             ) : (
@@ -452,7 +453,7 @@ export default function ProjectWorkspace({ config }) {
         </button>
 
         {isExpanded && (
-          <div className="border-t border-gray-100 px-4 sm:px-5 py-4 space-y-5">
+          <div className="border-t border-line-subtle px-4 sm:px-5 py-4 space-y-5">
             <DetailTabs
               tabs={[
                 { key: "details", label: "Project Details" },
@@ -527,7 +528,7 @@ export default function ProjectWorkspace({ config }) {
                 )}
 
                 <p
-                  className={`text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-2 ${
+                  className={`text-2xs font-semibold uppercase tracking-wider text-fg-muted mb-2 ${
                     managementAllowed ? "hidden" : ""
                   }`}
                 >
@@ -539,7 +540,7 @@ export default function ProjectWorkspace({ config }) {
                   {milestones.map((milestone, index) => (
                     <li
                       key={`${project._id}-ms-${index}`}
-                      className="flex flex-wrap items-center gap-2 text-xs text-gray-600"
+                      className="flex flex-wrap items-center gap-2 text-xs text-fg-4"
                     >
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${
@@ -550,13 +551,13 @@ export default function ProjectWorkspace({ config }) {
                               : "bg-gray-300"
                         }`}
                       />
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-fg-2">
                         {milestone.title}
                       </span>
-                      <span className="text-gray-500">{milestone.status}</span>
+                      <span className="text-fg-muted">{milestone.status}</span>
                       {(formatDate(milestone.actual_date) ||
                         formatDate(milestone.target_date)) && (
-                        <span className="text-gray-500">
+                        <span className="text-fg-muted">
                           ·{" "}
                           {formatDate(milestone.actual_date) ||
                             formatDate(milestone.target_date)}
@@ -564,12 +565,12 @@ export default function ProjectWorkspace({ config }) {
                       )}
                       {Array.isArray(milestone.proofs) &&
                         milestone.proofs.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-gray-500">
+                          <span className="inline-flex items-center gap-1 text-fg-muted">
                             <FaPaperclip size={9} /> {milestone.proofs.length}
                           </span>
                         )}
                       {milestone.source_activity && (
-                        <span className="basis-full pl-3.5 text-xs text-gray-500">
+                        <span className="basis-full pl-3.5 text-xs text-fg-muted">
                           from: {milestone.source_activity}
                         </span>
                       )}
@@ -577,7 +578,7 @@ export default function ProjectWorkspace({ config }) {
                   ))}
                 </ul>
                 {milestones.length === 0 && !managementAllowed && (
-                  <p className="text-xs text-gray-500 italic">
+                  <p className="text-xs text-fg-muted italic">
                     No milestones recorded yet.
                   </p>
                 )}
@@ -586,11 +587,11 @@ export default function ProjectWorkspace({ config }) {
 
             {detailTab === "events" && (
               <div className="animate-fade-in" role="tabpanel">
-                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted mb-2">
                   Linked Events
                 </p>
                 {events.length === 0 && (
-                  <p className="text-xs text-gray-500 italic">
+                  <p className="text-xs text-fg-muted italic">
                     No linked events yet.
                   </p>
                 )}
@@ -598,21 +599,21 @@ export default function ProjectWorkspace({ config }) {
                   {events.map((event) => (
                     <li
                       key={event._id}
-                      className="flex flex-wrap items-center gap-2 text-xs text-gray-600"
+                      className="flex flex-wrap items-center gap-2 text-xs text-fg-4"
                     >
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-fg-2">
                         {event.title}
                       </span>
                       {getEventStart(event) && (
-                        <span className="text-gray-500">
+                        <span className="text-fg-muted">
                           {formatDate(getEventStart(event))}
                         </span>
                       )}
-                      <span className="text-gray-500">
+                      <span className="text-fg-muted">
                         {participantCount(event)} attended
                       </span>
                       {event.status && event.status !== "active" && (
-                        <span className="text-gray-500">{event.status}</span>
+                        <span className="text-fg-muted">{event.status}</span>
                       )}
                     </li>
                   ))}
@@ -622,11 +623,11 @@ export default function ProjectWorkspace({ config }) {
 
             {detailTab === "accomplishment" && (
               <div className="animate-fade-in" role="tabpanel">
-                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3.5">
+                <div className="rounded-xl border border-line-subtle bg-subtle/50 p-3.5">
                   {milestones.length > 0 && (
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-fg-muted mb-2">
                       Milestone progress:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-fg-3">
                         {milestoneDone}/{milestones.length} completed (
                         {Math.round((milestoneDone / milestones.length) * 100)}
                         %)
@@ -634,16 +635,16 @@ export default function ProjectWorkspace({ config }) {
                     </p>
                   )}
 
-                  <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                     Actual Accomplishment
                   </p>
-                  <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">
+                  <p className="text-sm text-fg-2 mt-1 whitespace-pre-line">
                     {accomplishment || "—"}
                   </p>
                   {canSeeBudget &&
                     Array.isArray(project.expenditure_evidence) &&
                     project.expenditure_evidence.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-2 inline-flex items-center gap-1">
+                      <p className="text-xs text-fg-muted mt-2 inline-flex items-center gap-1">
                         <FaPaperclip size={9} />{" "}
                         {project.expenditure_evidence.length} evidence file
                         {project.expenditure_evidence.length === 1 ? "" : "s"}
@@ -659,21 +660,21 @@ export default function ProjectWorkspace({ config }) {
                   <button
                     type="button"
                     onClick={() => setEditProject(project)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3.5 py-2 text-xs font-medium text-fg-3 hover:bg-subtle transition-colors"
                   >
                     <FaPen size={11} />
                     Edit Project
                   </button>
                 )}
                 {creatorAllowed && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="primary"
                     onClick={() => setActualsProject(project)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-medium text-white hover:bg-rose-700 transition-colors"
+                    className="rounded-lg px-3.5 py-2 text-xs"
                   >
                     <FaWallet size={11} />
                     Update Actuals
-                  </button>
+                  </Button>
                 )}
                 {managementAllowed && (
                   <button
@@ -697,20 +698,20 @@ export default function ProjectWorkspace({ config }) {
     <div className="p-4 sm:p-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-fg">
             {title}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="text-sm text-fg-muted mt-0.5">{subtitle}</p>
         </div>
         {canCreate && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-lg shadow-rose-200 hover:bg-rose-700 transition-colors"
+            className="px-5"
           >
             <FaPlus size={12} />
             New Project
-          </button>
+          </Button>
         )}
       </div>
 
@@ -799,20 +800,20 @@ export default function ProjectWorkspace({ config }) {
 
         <div className="relative flex-1 min-w-[180px]">
           <FaSearch
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint"
             size={12}
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or reference no."
-            className="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-3 py-2 text-sm text-gray-700 placeholder:text-gray-500 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-line bg-white pl-8 pr-3 py-2 text-sm text-fg-3 placeholder:text-fg-muted focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
           />
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-gray-500">
+        <div className="flex items-center justify-center py-16 text-fg-muted">
           <FaSpinner className="animate-spin" size={20} />
         </div>
       ) : error ? (
@@ -821,10 +822,10 @@ export default function ProjectWorkspace({ config }) {
           {error}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 py-16 text-center">
-          <FaFolderOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-900">No projects found</p>
-          <p className="text-xs text-gray-500 mt-1">
+        <div className="rounded-2xl bg-white border border-line-subtle py-16 text-center">
+          <FaFolderOpen className="h-10 w-10 text-fg-faint mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg">No projects found</p>
+          <p className="text-xs text-fg-muted mt-1">
             {projects.length === 0
               ? emptyHint ||
                 "Create the first project to start monitoring it here."

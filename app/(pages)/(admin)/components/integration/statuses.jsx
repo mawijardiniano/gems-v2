@@ -1,7 +1,7 @@
 "use client";
 
 export const RECORD_STATUS_STYLES = {
-  pending: "bg-gray-100 text-gray-700",
+  pending: "bg-muted text-fg-3",
   valid: "bg-green-100 text-success",
   invalid: "bg-red-100 text-danger",
   approved: "bg-secondary-100 text-secondary-700",
@@ -12,7 +12,7 @@ export const RECORD_STATUS_STYLES = {
 };
 
 export const BATCH_STATUS_STYLES = {
-  pending: "bg-gray-100 text-gray-700",
+  pending: "bg-muted text-fg-3",
   validating: "bg-secondary-100 text-secondary-700",
   ready: "bg-secondary-100 text-secondary-700",
   migrating: "bg-secondary-100 text-secondary-700",
@@ -24,7 +24,7 @@ export default function StatusBadge({ status, styles = RECORD_STATUS_STYLES }) {
   return (
     <span
       className={`text-xs px-1.5 py-0.5 rounded inline-block ${
-        styles[status] || "bg-gray-100 text-gray-700"
+        styles[status] || "bg-muted text-fg-3"
       }`}
     >
       {status || "-"}

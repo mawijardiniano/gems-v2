@@ -124,8 +124,8 @@ export default function InsightTab({
       label: "Unspecified",
       value: roles.Unspecified ?? 0,
       icon: FiActivity,
-      iconBg: "bg-gray-100",
-      iconColor: "text-gray-500",
+      iconBg: "bg-muted",
+      iconColor: "text-fg-muted",
       hideIfZero: true,
     },
   ].filter((card) => !card.hideIfZero || card.value > 0);
@@ -136,14 +136,14 @@ export default function InsightTab({
           donut of two zero slices and four zero-valued bars, which reads as
           "everyone is missing" rather than "nobody has been recorded yet". */}
       {hasData === false ? (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-line bg-white px-6 py-14 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary-50 text-secondary-500">
             <FiActivity className="text-xl" />
           </div>
-          <p className="text-base font-semibold text-gray-900">
+          <p className="text-base font-semibold text-fg">
             No attendance recorded yet
           </p>
-          <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
+          <p className="mx-auto mt-1 max-w-md text-sm text-fg-muted">
             Insights appear once participants check in. Share the event QR code
             from the Overview tab, or encode attendees manually from the
             Attendance tab.
@@ -158,7 +158,7 @@ export default function InsightTab({
           return (
             <div
               key={card.label}
-              className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 transition duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-xl border border-line-subtle bg-white p-6 transition duration-300 hover:shadow-lg hover:-translate-y-0.5"
             >
               <div
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${card.gradient}`}
@@ -170,14 +170,14 @@ export default function InsightTab({
                   <Icon className="text-lg" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
                     {card.label}
                   </p>
-                  <p className="mt-1 text-3xl font-bold text-gray-900 leading-tight">
+                  <p className="mt-1 text-3xl font-bold text-fg leading-tight">
                     {card.value}
                   </p>
                   {card.sub && (
-                    <p className="mt-0.5 text-xs text-gray-500">{card.sub}</p>
+                    <p className="mt-0.5 text-xs text-fg-muted">{card.sub}</p>
                   )}
                 </div>
               </div>
@@ -198,7 +198,7 @@ export default function InsightTab({
             return (
               <div
                 key={card.label}
-                className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm flex items-center gap-4"
+                className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm flex items-center gap-4"
               >
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.iconBg} ${card.iconColor}`}
@@ -206,10 +206,10 @@ export default function InsightTab({
                   <Icon className="text-base" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500 truncate">
+                  <p className="text-xs font-medium uppercase tracking-wider text-fg-muted truncate">
                     {card.label}
                   </p>
-                  <p className="text-xl font-bold text-gray-900 leading-tight">
+                  <p className="text-xl font-bold text-fg leading-tight">
                     {card.value}
                   </p>
                 </div>

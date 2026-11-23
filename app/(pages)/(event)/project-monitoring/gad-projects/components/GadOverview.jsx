@@ -64,7 +64,7 @@ export function GadStatCards({ totals, yearFilter, budgetView, budgetSummary }) 
             budgetSummary.totalBudget,
           )}`}
         >
-          <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+          <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition duration-500 ${
                 overBudget ? "bg-red-500" : "bg-emerald-500"
@@ -81,15 +81,15 @@ export function GadStatCards({ totals, yearFilter, budgetView, budgetSummary }) 
 }
 
 const selectClass =
-  "text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
+  "text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
 
 /* Academic year, office, status and search filters. */
 export function GadFilterBar({ list }) {
   const { filters, years, officeOptions } = list;
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-3">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-4 flex flex-col lg:flex-row lg:items-center gap-3">
       <div className="flex items-center gap-2 lg:w-44">
-        <FaRegCalendarAlt className="text-gray-500 shrink-0" />
+        <FaRegCalendarAlt className="text-fg-muted shrink-0" />
         <select
           value={filters.yearFilter}
           onChange={(e) => list.setYearFilter(e.target.value)}
@@ -134,20 +134,20 @@ export function GadFilterBar({ list }) {
       </select>
 
       <div className="relative flex-1">
-        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-muted" />
         <input
           type="text"
           value={filters.search}
           onChange={(e) => list.setSearch(e.target.value)}
           placeholder="Search GAD activity, mandate, office..."
-          className="w-full text-sm rounded-lg border border-gray-200 bg-white pl-9 pr-8 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+          className="w-full text-sm rounded-lg border border-line bg-white pl-9 pr-8 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
         />
         {filters.search && (
           <button
             type="button"
             onClick={() => list.setSearch("")}
             aria-label="Clear search"
-            className="touch-target absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
+            className="touch-target absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg-4"
           >
             <FaTimes className="h-3.5 w-3.5" />
           </button>
@@ -157,7 +157,7 @@ export function GadFilterBar({ list }) {
       <button
         type="button"
         onClick={list.resetFilters}
-        className="self-start lg:self-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        className="self-start lg:self-auto px-4 py-2 text-sm font-medium text-fg-3 bg-white border border-line rounded-lg hover:bg-subtle transition"
       >
         Reset
       </button>
@@ -183,14 +183,14 @@ const REPORTS = [
 /* The milestone progress PDF downloads for the selected year. */
 export function QuickReports({ yearFilter, report }) {
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="h-9 w-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
           <FaFileAlt className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900">Quick Reports</p>
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-sm font-semibold text-fg">Quick Reports</p>
+          <p className="text-xs text-fg-muted truncate">
             {yearFilter
               ? `Milestone progress for ${ayLabel(Number(yearFilter))}`
               : "Select an academic year first"}
@@ -206,7 +206,7 @@ export function QuickReports({ yearFilter, report }) {
             onClick={() => report.download(mode)}
             disabled={!yearFilter || report.generating !== null}
             title={title}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-fg-3 bg-white border border-line rounded-lg hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {report.generating === mode ? (
               <FaSpinner className="animate-spin h-3.5 w-3.5" />

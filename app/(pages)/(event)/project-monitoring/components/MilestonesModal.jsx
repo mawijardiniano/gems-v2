@@ -13,6 +13,7 @@ import {
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/useConfirm";
 import {
   MAX_GANTT_ACTIVITIES,
@@ -27,17 +28,17 @@ import GanttUploadTab from "./GanttUploadTab";
 import GanttTimeline from "./GanttTimeline";
 import PrintGantt from "./PrintGantt";
 
-const CARD = "rounded-xl border border-gray-200 bg-white p-4 min-w-0";
-const CARD_TITLE = "mb-3 text-sm font-semibold text-gray-800";
+const CARD = "rounded-xl border border-line bg-white p-4 min-w-0";
+const CARD_TITLE = "mb-3 text-sm font-semibold text-fg-2";
 const CARD_HEADER = "mb-3 flex flex-wrap items-center justify-between gap-2";
-const CARD_TITLE_INLINE = "text-sm font-semibold text-gray-800";
+const CARD_TITLE_INLINE = "text-sm font-semibold text-fg-2";
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
 
 const MILESTONE_STATUS_META = {
   pending: {
     label: "Pending",
-    classes: "bg-gray-50 text-gray-700 border-gray-200",
+    classes: "bg-subtle text-fg-3 border-line",
   },
   ongoing: {
     label: "Ongoing",
@@ -417,12 +418,12 @@ export default function MilestonesModal({
       >
         {/* Header */}
         {!inline && (
-          <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
+          <div className="sticky top-0 bg-white border-b border-line-subtle px-5 py-3.5 flex items-center justify-between rounded-t-2xl z-10">
             <div>
-              <h3 id={titleId} className="text-base font-bold text-gray-900">
+              <h3 id={titleId} className="text-base font-bold text-fg">
                 Project Gantt Chart &amp; Milestones
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Encode or upload the Gantt chart; activities and timelines
                 generate the milestones. Completed milestones require at least
                 one proof file.
@@ -431,12 +432,12 @@ export default function MilestonesModal({
             <div className="flex items-center gap-2">
               <PrintGantt
                 project={{ ...project, gantt_activities: activities }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
                 onClick={closeAndCleanup}
-                className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+                className="touch-target h-8 w-8 rounded-lg text-fg-muted hover:bg-muted hover:text-fg-4 flex items-center justify-center transition-colors"
                 aria-label="Close"
               >
                 <FaTimes size={14} />
@@ -454,23 +455,23 @@ export default function MilestonesModal({
           )}
 
           {stats.total > 0 && (
-            <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="rounded-lg border border-line-subtle bg-subtle px-4 py-3 flex items-center justify-between gap-4">
               <div>
-                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                   Milestone Progress
                 </p>
-                <p className="text-sm font-bold text-gray-900 mt-0.5">
+                <p className="text-sm font-bold text-fg mt-0.5">
                   {stats.done}/{stats.total} completed
                 </p>
               </div>
               <div className="flex items-center gap-2 w-40">
-                <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
+                <div className="h-2 flex-1 rounded-full bg-emphasis overflow-hidden">
                   <div
                     className="h-full rounded-full bg-rose-500 transition-all duration-300"
                     style={{ width: `${stats.percent}%` }}
                   />
                 </div>
-                <span className="text-xs font-semibold text-gray-600">
+                <span className="text-xs font-semibold text-fg-4">
                   {stats.percent}%
                 </span>
               </div>
@@ -497,24 +498,24 @@ export default function MilestonesModal({
                 <div className="flex flex-wrap items-center gap-2">
                   <PrintGantt
                     project={{ ...project, gantt_activities: activities }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button
                     type="button"
                     onClick={addActivity}
                     disabled={activities.length >= MAX_GANTT_ACTIVITIES}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <FaPlus size={10} />
                     Add Activity
                   </button>
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     onClick={regenerateMilestones}
-                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                    className="rounded-lg px-3 py-1.5 text-xs"
                   >
                     Generate Milestones
-                  </button>
+                  </Button>
                 </div>
               </div>
               <GanttEncodeTab
@@ -530,7 +531,7 @@ export default function MilestonesModal({
                 <h4 className={CARD_TITLE_INLINE}>Gantt Chart</h4>
                 <PrintGantt
                   project={{ ...project, gantt_activities: activities }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
               <GanttTimeline activities={activities} year={timelineYear} />
@@ -551,18 +552,18 @@ export default function MilestonesModal({
                   Generated Milestones ({rows.filter((r) => r.title).length})
                 </h4>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     onClick={regenerateMilestones}
-                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                    className="rounded-lg px-3 py-1.5 text-xs"
                   >
                     Regenerate
-                  </button>
+                  </Button>
                   <button
                     type="button"
                     onClick={addRow}
                     disabled={rows.length >= MAX_MILESTONES}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <FaPlus size={10} />
                     Add Milestone
@@ -570,22 +571,22 @@ export default function MilestonesModal({
                 </div>
               </div>
               <div>
-                <p className="mb-2 text-xs text-gray-500">
+                <p className="mb-2 text-xs text-fg-muted">
                   Milestones are generated from the Gantt activities. You may
                   edit them as needed.
                 </p>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <label className="text-xs font-medium text-gray-500">
+                  <label className="text-xs font-medium text-fg-muted">
                     Milestones &amp; Activities
                   </label>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-fg-muted">
                     {rows.length}/{MAX_MILESTONES}
                   </span>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="overflow-x-auto rounded-lg border border-line">
                   <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-2xs uppercase tracking-wider text-gray-500">
+                    <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
                       <tr>
                         <th className="px-2.5 py-1.5 font-semibold">
                           Milestone / Activity
@@ -613,7 +614,7 @@ export default function MilestonesModal({
                         <tr>
                           <td
                             colSpan={7}
-                            className="px-2.5 py-5 text-center text-xs text-gray-500 italic"
+                            className="px-2.5 py-5 text-center text-xs text-fg-muted italic"
                           >
                             No milestones yet — click “Add Milestone” to start.
                           </td>
@@ -622,7 +623,7 @@ export default function MilestonesModal({
                         rows.map((row, i) => (
                           <tr
                             key={i}
-                            className="border-t border-gray-100 align-top"
+                            className="border-t border-line-subtle align-top"
                           >
                             <td className="px-2.5 py-1.5">
                               <input
@@ -632,19 +633,19 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { title: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                               />
                             </td>
                             <td className="px-2.5 py-2">
                               {row.source_activity ? (
                                 <span
-                                  className="block max-w-40 truncate text-xs text-gray-600"
+                                  className="block max-w-40 truncate text-xs text-fg-4"
                                   title={row.source_activity}
                                 >
                                   {row.source_activity}
                                 </span>
                               ) : (
-                                <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                <span className="rounded-full border border-line bg-subtle px-2 py-0.5 text-xs font-medium text-fg-muted">
                                   Manual
                                 </span>
                               )}
@@ -656,7 +657,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { target_date: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                               />
                             </td>
                             <td className="px-2.5 py-1.5">
@@ -666,7 +667,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { actual_date: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                               />
                             </td>
                             <td className="px-2.5 py-1.5">
@@ -675,7 +676,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { status: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
                               >
                                 {MILESTONE_STATUSES.map((s) => (
                                   <option key={s} value={s}>
@@ -694,11 +695,11 @@ export default function MilestonesModal({
                                           key={
                                             file.key || file.url || fileIndex
                                           }
-                                          className="flex items-center gap-1.5 text-xs text-gray-600"
+                                          className="flex items-center gap-1.5 text-xs text-fg-4"
                                         >
                                           <FaPaperclip
                                             size={9}
-                                            className="shrink-0 text-gray-500"
+                                            className="shrink-0 text-fg-muted"
                                           />
                                           <span
                                             className="max-w-[120px] truncate"
@@ -709,7 +710,7 @@ export default function MilestonesModal({
                                           <button
                                             type="button"
                                             onClick={() => removeProof(i, file)}
-                                            className="touch-target text-gray-500 hover:text-danger transition-colors"
+                                            className="touch-target text-fg-muted hover:text-danger transition-colors"
                                             title="Remove proof"
                                           >
                                             <FaTimes size={9} />
@@ -721,7 +722,7 @@ export default function MilestonesModal({
                                 )}
                                 {row.status === "completed" ? (
                                   <>
-                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-400 cursor-pointer transition-colors">
+                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-2.5 py-1 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 cursor-pointer transition-colors">
                                       {fileLifecycle.isUploadingTarget(i) ? (
                                         <FaSpinner
                                           size={10}
@@ -752,7 +753,7 @@ export default function MilestonesModal({
                                   </>
                                 ) : (
                                   (row.proofs || []).length === 0 && (
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-fg-muted">
                                       —
                                     </span>
                                   )
@@ -763,7 +764,7 @@ export default function MilestonesModal({
                               <button
                                 type="button"
                                 onClick={() => removeRow(i)}
-                                className="touch-target text-gray-500 hover:text-danger transition-colors"
+                                className="touch-target text-fg-muted hover:text-danger transition-colors"
                                 title="Remove milestone"
                               >
                                 <FaTrash size={12} />
@@ -783,29 +784,29 @@ export default function MilestonesModal({
         <div
           className={
             inline
-              ? "mt-4 border-t border-gray-100 pt-3.5 flex items-center justify-end gap-3"
-              : "sticky bottom-0 bg-white border-t border-gray-100 px-5 py-3.5 flex items-center justify-end gap-3 rounded-b-2xl"
+              ? "mt-4 border-t border-line-subtle pt-3.5 flex items-center justify-end gap-3"
+              : "sticky bottom-0 bg-white border-t border-line-subtle px-5 py-3.5 flex items-center justify-end gap-3 rounded-b-2xl"
           }
         >
           {!inline && (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={closeAndCleanup}
               disabled={saving}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="rounded-lg"
             >
               Cancel
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
+          <Button
+            variant="primary"
             onClick={saveMilestones}
             disabled={saving || uploadingRow !== null}
-            className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="rounded-lg"
           >
             {saving && <FaSpinner className="animate-spin" size={12} />}
             {saving ? "Saving…" : "Save Milestones"}
-          </button>
+          </Button>
         </div>
       </div>
       {confirmDialog}

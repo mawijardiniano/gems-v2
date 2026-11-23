@@ -81,7 +81,7 @@ function SeatPill({ active }) {
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-muted px-2.5 py-0.5 text-xs font-medium text-fg-muted">
       <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
       Inactive
     </span>
@@ -147,13 +147,13 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
             onChange={(e) => setName(e.target.value)}
             aria-label="Position name"
             placeholder="e.g. Head, Student Affairs and Services"
-            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+            className="min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
           <select
             value={header}
             onChange={(e) => setHeader(e.target.value)}
             aria-label="Office / group"
-            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+            className="min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           >
             {/*
               The seat's own header comes first: it can be missing from `offices`
@@ -176,7 +176,7 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
             onChange={(e) => setOrder(e.target.value)}
             aria-label="Sort order"
             placeholder="Order in column"
-            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+            className="min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
         </div>
         <div className="flex shrink-0 items-start gap-2">
@@ -191,7 +191,7 @@ function SeatEditForm({ seat, offices, busy, onCancel, onSave }) {
           <Button
             variant="secondary"
             onClick={onCancel}
-            className="gap-1.5 rounded-lg px-3 py-2 text-xs text-gray-600"
+            className="gap-1.5 rounded-lg px-3 py-2 text-xs text-fg-4"
           >
             <FaTimes className="h-3 w-3" />
             Cancel
@@ -226,7 +226,7 @@ function SeatRow({
 
   return (
     <li
-      className={`px-4 py-3 ${active ? "" : "bg-gray-50/60"}`}
+      className={`px-4 py-3 ${active ? "" : "bg-subtle/60"}`}
       data-position-id={seat._id}
       data-position-active={active ? "true" : "false"}
     >
@@ -235,7 +235,7 @@ function SeatRow({
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`text-sm font-medium ${
-                active ? "text-gray-900" : "text-gray-500"
+                active ? "text-fg" : "text-fg-muted"
               }`}
             >
               {seat.name}
@@ -251,14 +251,14 @@ function SeatRow({
             )}
           </div>
 
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
             {showHeader && (
               <>
-                <span className="font-medium text-gray-500">{seat.header}</span>
+                <span className="font-medium text-fg-muted">{seat.header}</span>
                 <span aria-hidden="true">Â·</span>
               </>
             )}
-            <span className={assigned ? "text-gray-500" : "text-gray-500"}>
+            <span className={assigned ? "text-fg-muted" : "text-fg-muted"}>
               {assignedLabel(seat)}
             </span>
             <span aria-hidden="true">Â·</span>
@@ -275,7 +275,7 @@ function SeatRow({
               type="button"
               onClick={() => setEditing(true)}
               title="Rename, move or reorder this seat"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 transition hover:bg-subtle"
             >
               <FaPen className="h-3 w-3" />
               Edit
@@ -484,18 +484,18 @@ export default function PositionsManager({
             onClick={() => toggleGroup(group.header)}
             aria-expanded={open}
             aria-controls={panelId}
-            className="flex flex-wrap items-center gap-2 rounded-lg px-1 py-0.5 text-left transition hover:bg-gray-50"
+            className="flex flex-wrap items-center gap-2 rounded-lg px-1 py-0.5 text-left transition hover:bg-subtle"
           >
             <FaChevronRight
               aria-hidden="true"
-              className={`h-2.5 w-2.5 shrink-0 text-gray-500 transition-transform ${
+              className={`h-2.5 w-2.5 shrink-0 text-fg-muted transition-transform ${
                 open ? "rotate-90" : ""
               }`}
             />
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
               {group.header}
             </h4>
-            <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
+            <span className="rounded-full border border-line bg-subtle px-2 py-0.5 text-xs font-medium text-fg-muted">
               {seatCountLabel(group.seats.length)}
             </span>
           </button>
@@ -504,7 +504,7 @@ export default function PositionsManager({
           {officeInactive && (
             <span
               title="This office column is deactivated — its seats can be viewed but not added to"
-              className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
+              className="rounded-full border border-line bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted"
             >
               office inactive
             </span>
@@ -516,7 +516,7 @@ export default function PositionsManager({
         {open && (
           <ul
             id={panelId}
-            className="mt-2 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-100"
+            className="mt-2 divide-y divide-line-subtle overflow-hidden rounded-xl border border-line-subtle"
           >
             {group.seats.map((seat) => (
               <SeatRow
@@ -542,7 +542,7 @@ export default function PositionsManager({
     <div
       id="positions"
       data-positions-manager
-      className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-line-subtle bg-white p-5 shadow-sm"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
@@ -550,17 +550,17 @@ export default function PositionsManager({
             <FaLayerGroup />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-fg">
               Positions — Seats per Office
             </h3>
-            <p className="mt-0.5 max-w-2xl text-xs text-gray-500">
+            <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
               An office is a column of the org chart; a position is one seat
               inside it — for example{" "}
-              <span className="font-medium text-gray-600">
+              <span className="font-medium text-fg-4">
                 University President
               </span>{" "}
               under{" "}
-              <span className="font-medium text-gray-600">
+              <span className="font-medium text-fg-4">
                 EXECUTIVE OFFICIALS
               </span>
               . Renaming a seat rewrites how every term in its history reads.
@@ -570,7 +570,7 @@ export default function PositionsManager({
                 <>
                   {" "}
                   Counts below are the{" "}
-                  <span className="font-medium text-gray-600">
+                  <span className="font-medium text-fg-4">
                     {academicYear}
                   </span>{" "}
                   roster.
@@ -579,7 +579,7 @@ export default function PositionsManager({
             </p>
           </div>
         </div>
-        <span className="shrink-0 self-start rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+        <span className="shrink-0 self-start rounded-full border border-line bg-subtle px-2.5 py-0.5 text-xs font-medium text-fg-4">
           {seatCountLabel(summary.total)}
         </span>
       </div>
@@ -593,7 +593,7 @@ export default function PositionsManager({
             value={addHeader}
             onChange={(e) => setAddHeader(e.target.value)}
             aria-label="Office / group for the new seat"
-            className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100 lg:w-64"
+            className="min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100 lg:w-64"
           >
             <option value="">Select office / group…</option>
             {activeOfficeOptions.map((o) => (
@@ -608,7 +608,7 @@ export default function PositionsManager({
             onChange={(e) => setAddName(e.target.value)}
             placeholder="e.g. Head, Student Affairs and Services"
             aria-label="New position name"
-            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+            className="min-w-0 flex-1 rounded-lg border border-line bg-white px-3 py-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
           <Button
             type="submit"
@@ -620,8 +620,8 @@ export default function PositionsManager({
           </Button>
         </form>
       ) : (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">
-          <FaLock className="mt-0.5 shrink-0 text-gray-500" />
+        <div className="mt-4 flex items-start gap-2 rounded-lg border border-line-subtle bg-subtle px-3 py-2 text-xs text-fg-4">
+          <FaLock className="mt-0.5 shrink-0 text-fg-muted" />
           <span>
             Read-only: only the GAD focal person can add, rename or deactivate
             positions.
@@ -640,7 +640,7 @@ export default function PositionsManager({
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 isActiveTab
                   ? "border-secondary-200 bg-secondary-50 text-secondary-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                  : "border-line bg-white text-fg-4 hover:bg-subtle"
               }`}
             >
               {t.label} (
@@ -656,31 +656,31 @@ export default function PositionsManager({
           type="button"
           onClick={toggleAllGroups}
           disabled={groups.length === 0}
-          className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+          className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-fg-4 transition hover:bg-subtle disabled:opacity-40"
         >
           <FaChevronDown
             aria-hidden="true"
-            className={`h-2.5 w-2.5 text-gray-500 transition-transform ${
+            className={`h-2.5 w-2.5 text-fg-muted transition-transform ${
               allGroupsOpen ? "rotate-180" : ""
             }`}
           />
           {allGroupsOpen ? "Collapse all" : "Expand all"}
         </button>
 
-        <label className="ml-auto inline-flex cursor-pointer select-none items-center gap-2 text-xs text-gray-500">
+        <label className="ml-auto inline-flex cursor-pointer select-none items-center gap-2 text-xs text-fg-muted">
           <input
             type="checkbox"
             checked={showInactive || tab === "inactive"}
             disabled={tab === "inactive"}
             onChange={(e) => setShowInactive(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-100 disabled:opacity-50"
+            className="h-3.5 w-3.5 rounded border-line-strong text-secondary-600 focus:ring-secondary-100 disabled:opacity-50"
           />
           Show inactive seats
         </label>
       </div>
 
       {summary.inactive > 0 && !showInactive && tab !== "inactive" && (
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-fg-muted">
           {summary.inactive} inactive seat(s) hidden. A name refused as a
           duplicate may be one of them — tick “Show inactive seats” or open the
           Inactive tab to reactivate it.
@@ -688,7 +688,7 @@ export default function PositionsManager({
       )}
 
       {rows.length === 0 ? (
-        <div className="mt-3 rounded-xl border border-gray-100 px-4 py-6 text-center text-sm text-gray-500">
+        <div className="mt-3 rounded-xl border border-line-subtle px-4 py-6 text-center text-sm text-fg-muted">
           No positions in this view.
         </div>
       ) : (
@@ -697,7 +697,7 @@ export default function PositionsManager({
         </div>
       )}
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-fg-muted">
         Positions are never deleted — term history and previously printed charts
         keep referencing them. Deactivate a seat you no longer use instead.
       </p>

@@ -160,7 +160,7 @@ export default function AcademicInformation() {
   if (personal.currentStatus !== "Student") {
     return (
       <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
-        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -175,18 +175,18 @@ export default function AcademicInformation() {
             </div>
           </div>
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaGraduationCap className="text-gray-500 text-2xl" />
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaGraduationCap className="text-fg-muted text-2xl" />
             </div>
-            <p className="text-gray-600 font-medium">
+            <p className="text-fg-4 font-medium">
               This section is available when Current Status is set to{" "}
               <span className="font-semibold text-secondary-600">Student</span>.
             </p>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-fg-muted text-sm mt-1">
               Please go back to Personal Information to update your status.
             </p>
           </div>
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}
@@ -207,7 +207,7 @@ export default function AcademicInformation() {
   return (
     <div className="min-h-[70vh] flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -227,15 +227,15 @@ export default function AcademicInformation() {
           <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Student ID <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <input
-                    className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition bg-gray-50 hover:bg-white ${
+                    className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition bg-subtle hover:bg-white ${
                       idError
                         ? "border-red-400 focus:ring-red-200 focus:border-red-400"
-                        : "border-gray-200 focus:ring-secondary-200 focus:border-secondary-400"
+                        : "border-line focus:ring-secondary-200 focus:border-secondary-400"
                     }`}
                     value={academic?.student_id || ""}
                     onChange={(e) => handleStudentIdChange(e.target.value)}
@@ -243,7 +243,7 @@ export default function AcademicInformation() {
                   />
                   {idChecking && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FaSpinner className="animate-spin text-gray-500" />
+                      <FaSpinner className="animate-spin text-fg-muted" />
                     </div>
                   )}
                   {idError && (
@@ -255,11 +255,11 @@ export default function AcademicInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Campus <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={academic?.campus || ""}
                   onChange={(e) => update("campus", e.target.value)}
                 >
@@ -272,11 +272,11 @@ export default function AcademicInformation() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   College <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={academic?.college || ""}
                   onChange={(e) => handleCollegeChange(e.target.value)}
                 >
@@ -292,11 +292,11 @@ export default function AcademicInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Course <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
                   value={academic?.course || ""}
                   onChange={(e) => update("course", e.target.value)}
                   disabled={!academic?.college}
@@ -315,11 +315,11 @@ export default function AcademicInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Year Level <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={academic?.year_level || ""}
                   onChange={(e) => update("year_level", e.target.value)}
                 >
@@ -341,11 +341,11 @@ export default function AcademicInformation() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                 Are you a scholar? <span className="text-red-400">*</span>
               </label>
               <select
-                className="w-full md:w-1/3 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                className="w-full md:w-1/3 border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                 value={academic?.isScholar || ""}
                 onChange={(e) => update("isScholar", e.target.value)}
               >
@@ -356,7 +356,7 @@ export default function AcademicInformation() {
             </div>
           </div>
 
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}

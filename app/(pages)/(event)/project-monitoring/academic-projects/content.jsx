@@ -17,7 +17,7 @@ const BADGE_CLASSES = {
   "Faculty Development": "bg-emerald-100 text-success",
   "Student Development": "bg-cyan-100 text-cyan-700",
   "Instruction / Pedagogy": "bg-rose-100 text-rose-700",
-  Others: "bg-gray-100 text-gray-700",
+  Others: "bg-muted text-fg-3",
 };
 
 const CONFIG = {

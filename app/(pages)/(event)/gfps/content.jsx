@@ -500,10 +500,10 @@ export default function GFPSManager() {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-fg">
                 GFPS
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-fg-muted mt-0.5">
                 Gender and Development Focal Point System — manage committee
                 members and their roles per academic year
               </p>
@@ -511,7 +511,7 @@ export default function GFPSManager() {
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <label
                     htmlFor="gfps-year"
-                    className="text-xs font-medium text-gray-500"
+                    className="text-xs font-medium text-fg-muted"
                   >
                     Academic Year
                   </label>
@@ -519,7 +519,7 @@ export default function GFPSManager() {
                     id="gfps-year"
                     value={academicYear}
                     onChange={(e) => setAcademicYear(e.target.value)}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+                    className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
                   >
                     {yearOptions.map((y) => (
                       <option key={y} value={y}>

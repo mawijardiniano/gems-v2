@@ -42,7 +42,7 @@ export default function GadInformation() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition ${
             value === opt.value
               ? "border-secondary-500 bg-secondary-50 text-secondary-700"
-              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+              : "border-line bg-white text-fg-4 hover:border-line-strong"
           }`}
         >
           <input
@@ -54,7 +54,7 @@ export default function GadInformation() {
           />
           <div
             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-              value === opt.value ? "border-secondary-500" : "border-gray-300"
+              value === opt.value ? "border-secondary-500" : "border-line-strong"
             }`}
           >
             {value === opt.value && (
@@ -72,7 +72,7 @@ export default function GadInformation() {
       <div className="w-full max-w-4xl">
         <Progress />
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
@@ -91,15 +91,15 @@ export default function GadInformation() {
           <div className="p-8 space-y-8">
    
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaVenusMars className="text-secondary-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Sex at Birth <span className="text-red-400">*</span>
                   </label>
                 </div>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={gadData.sexAtBirth}
                   onChange={(e) => update("sexAtBirth", e.target.value)}
                 >
@@ -109,15 +109,15 @@ export default function GadInformation() {
                 </select>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaUsers className="text-secondary-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Gender Preference <span className="text-red-400">*</span>
                   </label>
                 </div>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={gadData.gender_preference}
                   onChange={(e) => update("gender_preference", e.target.value)}
                 >
@@ -130,15 +130,15 @@ export default function GadInformation() {
             </div>
 
             {/* Socio-economic Status */}
-            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+            <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
               <div className="flex items-center gap-2 mb-3">
                 <FaMoneyBillWave className="text-emerald-500" />
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-fg-3">
                   Socio-economic Status <span className="text-red-400">*</span>
                 </label>
               </div>
               <select
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                className="w-full md:w-1/2 border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                 value={gadData.socioEconomicStatus}
                 onChange={(e) => update("socioEconomicStatus", e.target.value)}
               >
@@ -150,10 +150,10 @@ export default function GadInformation() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaWheelchair className="text-secondary-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Person with Disability <span className="text-red-400">*</span>
                   </label>
                 </div>
@@ -171,7 +171,7 @@ export default function GadInformation() {
                 />
                 {gadData.isPWD === true && (
                   <select
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white mt-3"
+                    className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white mt-3"
                     value={gadData.pwd_type}
                     onChange={(e) => update("pwd_type", e.target.value)}
                   >
@@ -195,10 +195,10 @@ export default function GadInformation() {
                 )}
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaUsers className="text-secondary-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Indigenous Person <span className="text-red-400">*</span>
                   </label>
                 </div>
@@ -215,16 +215,16 @@ export default function GadInformation() {
             </div>
 
             {/* Head of Household */}
-            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+            <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
               <div className="flex items-center gap-2 mb-3">
                 <FaUserTie className="text-cyan-500" />
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-fg-3">
                   Who is the head of the household?{" "}
                   <span className="text-red-400">*</span>
                 </label>
               </div>
               <input
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                className="w-full md:w-1/2 border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                 value={gadData.headOfHousehold}
                 onChange={(e) => update("headOfHousehold", e.target.value)}
                 placeholder="e.g., Self, Spouse, Parent"
@@ -233,7 +233,7 @@ export default function GadInformation() {
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}

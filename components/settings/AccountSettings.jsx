@@ -63,7 +63,7 @@ const ACTION_CONFIG = {
 };
 
 function ActivityIcon({ action }) {
-  const cfg = ACTION_CONFIG[action] || { icon: <FaSignInAlt />, color: "bg-gray-100 text-gray-600" };
+  const cfg = ACTION_CONFIG[action] || { icon: <FaSignInAlt />, color: "bg-muted text-fg-4" };
   return (
     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs ${cfg.color}`}>
       {cfg.icon}
@@ -244,21 +244,21 @@ export default function AccountSettings() {
     <div className="py-6 px-0 md:px-2 max-w-5xl mx-auto">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your account credentials, security, and activity log</p>
+        <h1 className="text-2xl font-bold text-fg">Account Settings</h1>
+        <p className="text-sm text-fg-muted mt-1">Manage your account credentials, security, and activity log</p>
       </div>
 
       {/* Security Section */}
       <section className="mb-8">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-line-faint">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                 <FaLock />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Security</h2>
-                <p className="text-xs text-gray-500">Manage your password and account security</p>
+                <h2 className="text-base font-semibold text-fg">Security</h2>
+                <p className="text-xs text-fg-muted">Manage your password and account security</p>
               </div>
             </div>
           </div>
@@ -272,17 +272,17 @@ export default function AccountSettings() {
                   <FaLock className="text-xs" />
                   Change Password
                 </Button>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-fg-muted">
                   {userInfoLoading ? (
-                    <span className="text-gray-500">Loading security info...</span>
+                    <span className="text-fg-muted">Loading security info...</span>
                   ) : (
                     <div className="space-y-2 mt-1">
                       {passwordChangedAt ? (
                         <div className="flex items-center gap-2">
-                          <FaHistory className="text-gray-500 shrink-0" />
+                          <FaHistory className="text-fg-muted shrink-0" />
                           <span>
                             Last changed:{" "}
-                            <span className="font-medium text-gray-700">
+                            <span className="font-medium text-fg-3">
                               {formatDateTime(passwordChangedAt)}
                             </span>
                           </span>
@@ -295,10 +295,10 @@ export default function AccountSettings() {
                       )}
                       {lastLogin && (
                         <div className="flex items-center gap-2">
-                          <FaSignInAlt className="text-gray-500 shrink-0" />
+                          <FaSignInAlt className="text-fg-muted shrink-0" />
                           <span>
                             Last login:{" "}
-                            <span className="font-medium text-gray-700">
+                            <span className="font-medium text-fg-3">
                               {formatDateTime(lastLogin)}
                             </span>
                           </span>
@@ -323,16 +323,16 @@ export default function AccountSettings() {
 
       {/* Activity Log Section */}
       <section className="mb-8">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-50">
+        <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden">
+          <div className="px-6 py-5 border-b border-line-faint">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaClipboardList />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Activity Log</h2>
-                  <p className="text-xs text-gray-500">
+                  <h2 className="text-base font-semibold text-fg">Activity Log</h2>
+                  <p className="text-xs text-fg-muted">
                     {pagination.total > 0
                       ? `${pagination.total} activity record${pagination.total !== 1 ? "s" : ""} found`
                       : "Track your recent account activity"}
@@ -344,7 +344,7 @@ export default function AccountSettings() {
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                   showFilters
                     ? "bg-secondary-50 border-secondary-200 text-secondary-700"
-                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    : "bg-white border-line text-fg-4 hover:bg-subtle"
                 }`}
               >
                 <FaFilter className="text-xs" />
@@ -355,14 +355,14 @@ export default function AccountSettings() {
 
           {/* Filters */}
           {showFilters && (
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <div className="px-6 py-4 bg-subtle border-b border-line-subtle">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Action Type</label>
+                  <label className="block text-xs font-medium text-fg-4 mb-1">Action Type</label>
                   <select
                     value={filterAction}
                     onChange={(e) => setFilterAction(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
+                    className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                   >
                     <option value="">All Actions</option>
                     <option value="LOGIN">Login</option>
@@ -375,21 +375,21 @@ export default function AccountSettings() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                  <label className="block text-xs font-medium text-fg-4 mb-1">From</label>
                   <input
                     type="date"
                     value={filterFrom}
                     onChange={(e) => setFilterFrom(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
+                    className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                  <label className="block text-xs font-medium text-fg-4 mb-1">To</label>
                   <input
                     type="date"
                     value={filterTo}
                     onChange={(e) => setFilterTo(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
+                    className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                   />
                 </div>
                 <div className="flex items-end gap-2">
@@ -403,7 +403,7 @@ export default function AccountSettings() {
                     <Button
                       variant="secondary"
                       onClick={resetFilters}
-                      className="gap-1 rounded-lg px-3 py-2 text-xs text-gray-600"
+                      className="gap-1 rounded-lg px-3 py-2 text-xs text-fg-4"
                     >
                       <FaRedo className="text-xs" />
                       Reset
@@ -420,19 +420,19 @@ export default function AccountSettings() {
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="flex items-center gap-3 animate-pulse">
-                    <div className="w-9 h-9 rounded-full bg-gray-200" />
+                    <div className="w-9 h-9 rounded-full bg-emphasis" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3 bg-gray-200 rounded w-3/4" />
-                      <div className="h-2.5 bg-gray-100 rounded w-1/4" />
+                      <div className="h-3 bg-emphasis rounded w-3/4" />
+                      <div className="h-2.5 bg-muted rounded w-1/4" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : activities.length === 0 ? (
               <div className="text-center py-8">
-                <FaClipboardList className="mx-auto text-gray-300 text-3xl mb-3" />
-                <p className="text-sm text-gray-500">No activity records found.</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <FaClipboardList className="mx-auto text-fg-faint text-3xl mb-3" />
+                <p className="text-sm text-fg-muted">No activity records found.</p>
+                <p className="text-xs text-fg-muted mt-1">
                   {filterAction || filterFrom || filterTo
                     ? "Try adjusting your filters."
                     : "Activity will appear here as you use the platform."}
@@ -445,18 +445,18 @@ export default function AccountSettings() {
                   return (
                     <li
                       key={a._id}
-                      className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-b-0"
+                      className="flex items-start gap-3 py-3 border-b border-line-faint last:border-b-0"
                     >
                       <ActivityIcon action={a.action} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-fg">
                           {description}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-fg-muted mt-0.5">
                           {timeAgo(a.createdAt)}
                         </p>
                       </div>
-                      <span className="shrink-0 text-2xs font-medium text-gray-500 uppercase tracking-wider">
+                      <span className="shrink-0 text-2xs font-medium text-fg-muted uppercase tracking-wider">
                         {ACTION_CONFIG[a.action]?.label || a.action}
                       </span>
                     </li>
@@ -468,8 +468,8 @@ export default function AccountSettings() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
+            <div className="px-6 py-4 border-t border-line-faint flex items-center justify-between">
+              <p className="text-xs text-fg-muted">
                 Page {pagination.page} of {pagination.totalPages}
               </p>
               <div className="flex items-center gap-1">
@@ -477,7 +477,7 @@ export default function AccountSettings() {
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page <= 1}
                   aria-label="Previous page"
-                  className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="touch-target p-1.5 rounded-lg border border-line text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <FaChevronLeft className="text-xs" />
                 </button>
@@ -489,14 +489,14 @@ export default function AccountSettings() {
                   .map((p, idx, arr) => (
                     <React.Fragment key={p}>
                       {idx > 0 && arr[idx - 1] !== p - 1 && (
-                        <span className="px-1 text-gray-500 text-xs">...</span>
+                        <span className="px-1 text-fg-muted text-xs">...</span>
                       )}
                       <button
                         onClick={() => handlePageChange(p)}
                         className={`w-7 h-7 rounded-lg text-xs font-medium ${
                           p === pagination.page
                             ? "bg-secondary-600 text-white"
-                            : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                            : "border border-line text-fg-4 hover:bg-subtle"
                         }`}
                       >
                         {p}
@@ -507,7 +507,7 @@ export default function AccountSettings() {
                   onClick={() => handlePageChange(pagination.page + 1)}
                   aria-label="Next page"
                   disabled={pagination.page >= pagination.totalPages}
-                  className="touch-target p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="touch-target p-1.5 rounded-lg border border-line text-fg-4 hover:bg-subtle disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <FaChevronRight className="text-xs" />
                 </button>
@@ -547,14 +547,14 @@ export default function AccountSettings() {
 
         <form id={passwordFormId} onSubmit={handleModalSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Current Password</label>
+            <label className="block text-sm font-medium text-fg-3">Current Password</label>
             <div className="mt-1 relative">
               <input
                 ref={firstInputRef}
                 type={showCurrent ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+                className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
               />
               <button
                 type="button"
@@ -567,13 +567,13 @@ export default function AccountSettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">New Password</label>
+            <label className="block text-sm font-medium text-fg-3">New Password</label>
             <div className="mt-1 relative">
               <input
                 type={showNew ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+                className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
               />
               <button
                 type="button"
@@ -583,17 +583,17 @@ export default function AccountSettings() {
                 {showNew ? "Hide" : "Show"}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">At least 8 characters. Include letters and numbers.</p>
+            <p className="text-xs text-fg-muted mt-1">At least 8 characters. Include letters and numbers.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+            <label className="block text-sm font-medium text-fg-3">Confirm New Password</label>
             <div className="mt-1 relative">
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
+                className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
               />
               <button
                 type="button"
@@ -621,7 +621,7 @@ export default function AccountSettings() {
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           Are you sure you want to change your password? This action will update your account credentials immediately.
         </p>
       </Modal>

@@ -27,7 +27,7 @@ const ACTIVITY_COLORS = {
   Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
+  Others: "bg-subtle text-fg-3 border-line",
 };
 
 /* Dates only for whole-day events (the normal case); legacy rows with real
@@ -35,11 +35,11 @@ const ACTIVITY_COLORS = {
 function DateRangeDisplay({ event }) {
   const when = formatEventWhen(event);
   if (!when) {
-    return <span className="text-gray-500 text-xs">No date set</span>;
+    return <span className="text-fg-muted text-xs">No date set</span>;
   }
   return (
-    <div className="flex items-center gap-1.5 text-xs text-gray-500">
-      <FaCalendar className="shrink-0 text-gray-500" />
+    <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+      <FaCalendar className="shrink-0 text-fg-muted" />
       <span>{when}</span>
     </div>
   );
@@ -62,7 +62,7 @@ function EventCard({ event, onClick, isPast }) {
 
   return (
     <div
-      className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-md transition duration-200 overflow-hidden cursor-pointer"
+      className="group relative bg-white rounded-xl border border-line hover:border-secondary-200 hover:shadow-md transition duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
       role="link"
       tabIndex={0}
@@ -104,18 +104,18 @@ function EventCard({ event, onClick, isPast }) {
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-gray-900 group-hover:text-secondary-600 transition-colors line-clamp-2">
+            <h3 className="text-base font-semibold text-fg group-hover:text-secondary-600 transition-colors line-clamp-2">
               {event.title}
             </h3>
             {event.reference_number && (
-              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
+              <span className="mt-1 inline-block rounded border border-line bg-subtle px-1.5 py-0.5 font-mono text-2xs font-medium text-fg-muted">
                 {event.reference_number}
               </span>
             )}
           </div>
           {event.type_of_activity && (
             <span
-              className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${ACTIVITY_COLORS[event.type_of_activity] || "bg-gray-50 text-gray-700 border-gray-200"}`}
+              className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${ACTIVITY_COLORS[event.type_of_activity] || "bg-subtle text-fg-3 border-line"}`}
             >
               {event.type_of_activity}
             </span>
@@ -127,21 +127,21 @@ function EventCard({ event, onClick, isPast }) {
 
         {/* Venue */}
         {event.venue && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaLocationArrow className="shrink-0 text-gray-500" />
+          <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <FaLocationArrow className="shrink-0 text-fg-muted" />
             <span className="truncate">{event.venue}</span>
           </div>
         )}
 
         {/* Description */}
         {event.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-fg-muted line-clamp-2 leading-relaxed">
             {event.description}
           </p>
         )}
 
         {/* View details link */}
-        <div className="flex items-center justify-end pt-1 border-t border-gray-50">
+        <div className="flex items-center justify-end pt-1 border-t border-line-faint">
           <span className="inline-flex items-center gap-1 text-xs font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[0.5rem]" />
           </span>
@@ -246,12 +246,12 @@ export default function EventContent({
 
   const EmptyState = ({ icon, title, description }) => (
     <div className="text-center py-12 px-4">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center">
-        <div className="text-2xl text-gray-300">{icon}</div>
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-subtle flex items-center justify-center">
+        <div className="text-2xl text-fg-faint">{icon}</div>
       </div>
-      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <p className="text-sm font-medium text-fg-muted">{title}</p>
       {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-fg-muted mt-1">{description}</p>
       )}
     </div>
   );
@@ -262,7 +262,7 @@ export default function EventContent({
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-secondary-200 border-t-indigo-500 rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Loading events...</p>
+            <p className="text-sm text-fg-muted">Loading events...</p>
           </div>
         </div>
       </div>
@@ -274,8 +274,8 @@ export default function EventContent({
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Events</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-fg">Your Events</h1>
+          <p className="text-sm text-fg-muted mt-1">
             Manage your event registrations and discover new ones.
           </p>
         </div>
@@ -297,18 +297,18 @@ export default function EventContent({
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-100">
+      <div className="border-b border-line-subtle">
         <div className="flex gap-6">
           <button
             onClick={() => setActiveTab("upcoming")}
             className={`pb-3 px-1 -mb-px border-b-2 text-sm font-medium transition ${
               activeTab === "upcoming"
                 ? "border-secondary-600 text-secondary-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-fg-muted hover:text-fg-3"
             }`}
           >
             Upcoming
-            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">
+            <span className="ml-2 text-xs bg-muted text-fg-muted rounded-full px-2 py-0.5">
               {upcomingRegistered.length}
             </span>
           </button>
@@ -317,11 +317,11 @@ export default function EventContent({
             className={`pb-3 px-1 -mb-px border-b-2 text-sm font-medium transition ${
               activeTab === "past"
                 ? "border-secondary-600 text-secondary-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-fg-muted hover:text-fg-3"
             }`}
           >
             Past
-            <span className="ml-2 text-xs bg-gray-100 text-gray-500 rounded-full px-2 py-0.5">
+            <span className="ml-2 text-xs bg-muted text-fg-muted rounded-full px-2 py-0.5">
               {pastRegistered.length}
             </span>
           </button>
@@ -376,13 +376,13 @@ export default function EventContent({
       )}
 
       {/* Discover Events */}
-      <section className="space-y-5 pt-4 border-t border-gray-100">
+      <section className="space-y-5 pt-4 border-t border-line-subtle">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-fg">
               Discover Events
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-fg-muted mt-0.5">
               Find and register for upcoming events
             </p>
           </div>
@@ -396,14 +396,14 @@ export default function EventContent({
 
         {/* Search */}
         <div className="relative">
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted text-sm" />
           <input
             type="text"
             placeholder="Search events by title, description, venue..."
             aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+            className="w-full pl-10 pr-4 py-2.5 border border-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
           />
         </div>
 

@@ -14,8 +14,8 @@ function MiniDonut({ title, female, male }) {
   ];
   return (
     <div className="flex-1 min-w-[180px]">
-      <p className="text-xs font-semibold text-gray-700">{title}</p>
-      <p className="text-xs text-gray-500">{total.toLocaleString()} counted</p>
+      <p className="text-xs font-semibold text-fg-3">{title}</p>
+      <p className="text-xs text-fg-muted">{total.toLocaleString()} counted</p>
       <div className="h-[150px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -27,7 +27,7 @@ function MiniDonut({ title, female, male }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex items-center gap-3 text-xs text-gray-600">
+      <div className="flex items-center gap-3 text-xs text-fg-4">
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />F {f.toLocaleString()}</span>
         <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-secondary-500" />M {m.toLocaleString()}</span>
       </div>
@@ -39,12 +39,12 @@ function GenderGlance({ snapshot, parityGaps }) {
   const s = snapshot || {};
   const gaps = Array.isArray(parityGaps) ? parityGaps : [];
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-line-subtle bg-white p-6 shadow-sm">
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-fg">
           Gender at a Glance
         </h2>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <p className="mt-0.5 text-xs text-fg-muted">
           Summary only — full breakdowns live in Gender Statistics
         </p>
       </div>
@@ -57,19 +57,19 @@ function GenderGlance({ snapshot, parityGaps }) {
           Parity gaps to watch
         </p>
         {gaps.length === 0 ? (
-          <p className="mt-1 text-xs text-gray-500">No concentrated gaps detected.</p>
+          <p className="mt-1 text-xs text-fg-muted">No concentrated gaps detected.</p>
         ) : (
           <ul className="mt-1.5 space-y-1">
             {gaps.map((g, i) => (
-              <li key={i} className="text-xs text-gray-700">
+              <li key={i} className="text-xs text-fg-3">
                 <span className="font-medium">{g.unit}</span>
-                <span className="text-gray-500"> · {g.kind} · </span>
+                <span className="text-fg-muted"> · {g.kind} · </span>
                 {g.malePct}% male ({Number(g.total).toLocaleString()})
               </li>
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-fg-muted">
           PWD {Number(s.pwdCount || 0).toLocaleString()} · IP {Number(s.ipCount || 0).toLocaleString()} · LGBTQIA+ {Number(s.lgbtqia || 0).toLocaleString()}
         </p>
       </div>

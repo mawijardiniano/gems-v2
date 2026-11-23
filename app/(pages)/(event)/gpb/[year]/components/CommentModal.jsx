@@ -40,9 +40,9 @@ export default function CommentModal({
         <h3 className="text-xl font-semibold mb-3">Add Comment</h3>
 
         <div className="mb-3">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-fg-3 mb-2">
             Fields{" "}
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-fg-muted">
               (select one or more)
             </span>
           </label>
@@ -75,7 +75,7 @@ export default function CommentModal({
             ].map((opt) => (
               <label
                 key={opt.value}
-                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded"
+                className="flex items-center gap-2 text-sm cursor-pointer hover:bg-subtle px-1 py-0.5 rounded"
               >
                 <input
                   type="checkbox"

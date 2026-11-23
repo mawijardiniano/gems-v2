@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 
 function ModalHeader({ editingSection, onClose, titleId }) {
   return (
-    <div className="px-6 py-5 border-b border-gray-100">
+    <div className="px-6 py-5 border-b border-line-subtle">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-secondary-50 text-secondary-600">
@@ -17,10 +17,10 @@ function ModalHeader({ editingSection, onClose, titleId }) {
             </svg>
           </div>
           <div>
-            <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+            <h2 id={titleId} className="text-lg font-semibold text-fg">
               {editingSection ? "Edit Section" : "Add Member"}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-fg-muted">
               {editingSection
                 ? `Update members in ${SECTIONS.find((s) => s.key === editingSection)?.label}`
                 : "Add members to a GFPS section"}
@@ -31,7 +31,7 @@ function ModalHeader({ editingSection, onClose, titleId }) {
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="touch-target p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors"
+          className="touch-target p-1.5 rounded-lg hover:bg-muted text-fg-muted hover:text-fg-4 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -45,7 +45,7 @@ function ModalHeader({ editingSection, onClose, titleId }) {
 function SectionSelect({ section, editingSection, onChange }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      <label className="block text-sm font-medium text-fg-3 mb-1.5">
         Section
       </label>
       <select
@@ -55,7 +55,7 @@ function SectionSelect({ section, editingSection, onChange }) {
           if (!editingSection) onChange(e.target.value);
         }}
         disabled={!!editingSection}
-        className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        className="w-full border border-line-strong rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-subtle disabled:text-fg-disabled disabled:cursor-not-allowed"
       >
         {SECTIONS.map((s) => (
           <option key={s.key} value={s.key}>
@@ -75,13 +75,13 @@ function AssignRoles({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-fg-3 mb-2">
         Assign Roles
       </label>
       {/* No inner `max-h`/`overflow-y-auto`: the dialog body already scrolls, and
           a second scrollbar inside it meant the wheel over this list could not
           reach the name rows above. The list now grows with the body instead. */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+      <div className="border border-line rounded-xl overflow-hidden divide-y divide-line-subtle">
         {selectedOfficials.map((key) => {
           /* Every row is a typed name: there is no roster entry to look up, so
              what the operator entered is what they see beside the selector. */
@@ -91,19 +91,19 @@ function AssignRoles({
           return (
             <div
               key={key}
-              className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between px-4 py-3 hover:bg-subtle transition-colors"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-fg truncate">
                   {label}
                   {subLabel && (
-                    <span className="text-gray-500 font-normal">
+                    <span className="text-fg-muted font-normal">
                       {" "}
                       — {subLabel}
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-fg-muted">
                   {label}
                 </p>
               </div>
@@ -115,7 +115,7 @@ function AssignRoles({
                     [key]: e.target.value,
                   }))
                 }
-                className="ml-3 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none"
+                className="ml-3 border border-line-strong rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none"
               >
                 <option value="member">Member</option>
                 <option value="chair">Chair</option>
@@ -175,7 +175,7 @@ function ManualEntries({
           margins span the body's `px-6` padding, so rows cannot show through
           beside the bar while it is stuck. */}
       <div className="sticky top-0 z-10 -mx-6 px-6 py-2 bg-white flex items-center justify-between mb-1.5">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-fg-3">
           Type a name
         </label>
         <button
@@ -191,7 +191,7 @@ function ManualEntries({
       </div>
 
       {manualKeys.length === 0 ? (
-        <p className="text-xs text-gray-500 border border-dashed border-gray-200 rounded-xl px-3.5 py-3">
+        <p className="text-xs text-fg-muted border border-dashed border-line rounded-xl px-3.5 py-3">
           Add the person by name.
         </p>
       ) : (
@@ -212,7 +212,7 @@ function ManualEntries({
               <div
                 key={key}
                 ref={isLast ? lastRowRef : null}
-                className="border border-gray-200 rounded-xl p-2.5 space-y-2"
+                className="border border-line rounded-xl p-2.5 space-y-2"
               >
                 <div className="flex items-center gap-2">
                   <input
@@ -222,13 +222,13 @@ function ManualEntries({
                       onManualTextsChange((prev) => ({ ...prev, [key]: e.target.value }))
                     }
                     placeholder="e.g. Dela Cruz, Juan"
-                    className="flex-1 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition"
+                    className="flex-1 border border-line-strong rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition"
                   />
                   <button
                     type="button"
                     onClick={() => onRemove(key)}
                     title="Remove"
-                    className="touch-target p-2 rounded-lg text-gray-500 hover:text-danger hover:bg-danger-subtle transition-colors"
+                    className="touch-target p-2 rounded-lg text-fg-muted hover:text-danger hover:bg-danger-subtle transition-colors"
                   >
                     <svg className="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -236,7 +236,7 @@ function ManualEntries({
                   </button>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                  <label className="block text-xs font-medium text-fg-muted mb-1">
                     Position / seat
                   </label>
                   <input
@@ -250,10 +250,10 @@ function ManualEntries({
                     }
                     disabled={locked}
                     placeholder="e.g. Director, Research"
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    className="w-full border border-line-strong rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition disabled:bg-subtle disabled:text-fg-muted disabled:cursor-not-allowed"
                   />
                   {locked && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-fg-muted">
                       Seat fixed by the GFPS memorandum.
                     </p>
                   )}
@@ -385,7 +385,7 @@ export default function EditMemberModal({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-line-subtle bg-subtle flex justify-end gap-3 shrink-0">
           <Button
             variant="secondary"
             type="button"

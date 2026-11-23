@@ -44,7 +44,7 @@ export default function AddProjectWizard({
         aria-label="Add project"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
+          <h2 className="text-xl font-semibold text-fg-2">
             Add Project — Year {year}
           </h2>
           {/* Closing (and the step reset) is closeWizard's job, which waits
@@ -54,7 +54,7 @@ export default function AddProjectWizard({
             type="button"
             aria-label="Close"
             onClick={() => setShowWizard(false)}
-            className="touch-target text-gray-500 hover:text-gray-700 text-3xl leading-none"
+            className="touch-target text-fg-muted hover:text-fg-3 text-3xl leading-none"
           >
             &times;
           </button>
@@ -74,7 +74,7 @@ export default function AddProjectWizard({
                     ? "text-secondary-600"
                     : wizardStep > i + 1
                       ? "text-success"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                 }`}
               >
                 <div
@@ -83,7 +83,7 @@ export default function AddProjectWizard({
                       ? "border-secondary-600 bg-secondary-50"
                       : wizardStep > i + 1
                         ? "border-green-600 bg-success-subtle"
-                        : "border-gray-300"
+                        : "border-line-strong"
                   }`}
                 >
                   {wizardStep > i + 1 ? "✓" : i + 1}
@@ -94,7 +94,7 @@ export default function AddProjectWizard({
               </div>
               {i < 3 && (
                 <div
-                  className={`flex-1 h-0.5 ${wizardStep > i + 1 ? "bg-green-400" : "bg-gray-200"}`}
+                  className={`flex-1 h-0.5 ${wizardStep > i + 1 ? "bg-green-400" : "bg-emphasis"}`}
                 />
               )}
             </React.Fragment>
@@ -124,11 +124,11 @@ export default function AddProjectWizard({
         {wizardStep === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 Project Type <span className="text-danger">*</span>
               </label>
               <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 value={newProject.project_type}
                 onChange={(e) =>
                   handleNewProjectChange("project_type", e.target.value)
@@ -144,21 +144,21 @@ export default function AddProjectWizard({
                 </option>
               </select>
             </div>
-            <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-xs text-gray-500">
+            <div className="flex items-center justify-between rounded-lg bg-subtle border border-line px-3 py-2 text-xs text-fg-muted">
               <span>Project Reference No.</span>
-              <span className="font-mono font-semibold text-gray-700">
+              <span className="font-mono font-semibold text-fg-3">
                 {nextRefPreview}
               </span>
             </div>
             {!isAttributedProgram(newProject) && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-fg-3 mb-1">
                     Gender Issue / GAD Mandate{" "}
                     <span className="text-danger">*</span>
                   </label>
                   <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                    className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={3}
                     value={newProject.gender_issue}
                     onChange={(e) =>
@@ -180,14 +180,14 @@ export default function AddProjectWizard({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-fg-3 mb-1">
                     Cause of the Gender Issue{" "}
                     <span className="text-danger">*</span>
                   </label>
                   {newProject.cause_gender_issue.map((val, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                       <textarea
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                        className="flex-1 border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                         rows={2}
                         value={val}
                         onChange={(e) =>
@@ -237,14 +237,14 @@ export default function AddProjectWizard({
         {wizardStep === 2 && !isAttributedProgram(newProject) && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 GAD Result Statement / GAD Objective{" "}
                 <span className="text-danger">*</span>
               </label>
               {newProject.gad_objective.map((val, idx) => (
                 <div key={idx} className="flex gap-2 mb-2">
                   <textarea
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                    className="flex-1 border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                     rows={2}
                     value={val}
                     onChange={(e) =>
@@ -281,11 +281,11 @@ export default function AddProjectWizard({
               ))}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 Supporting Statistics / Data
               </label>
               <textarea
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 rows={3}
                 value={newProject.supporting_statistics_data}
                 onChange={(e) =>
@@ -297,12 +297,12 @@ export default function AddProjectWizard({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 Relevant Agency MFO/PAP{" "}
                 <span className="text-danger">*</span>
               </label>
               <textarea
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                 rows={2}
                 value={newProject.relevant_agency}
                 onChange={(e) =>
@@ -316,21 +316,21 @@ export default function AddProjectWizard({
         {wizardStep === 3 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 GAD Activity <span className="text-danger">*</span>
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-fg-muted mb-2">
                 Type the activity title, then its description underneath.
                 Both print inside the single GAD Activity column.
               </p>
               {newProject.gad_activity.map((val, idx) => (
                 <div
                   key={idx}
-                  className="flex gap-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2"
+                  className="flex gap-2 mb-2 rounded-lg border border-line bg-subtle p-2"
                 >
                   <div className="flex-1 space-y-2">
                     <textarea
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                      className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                       rows={2}
                       placeholder="GAD activity title"
                       value={val}
@@ -339,7 +339,7 @@ export default function AddProjectWizard({
                       }
                     />
                     <textarea
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                      className="w-full border border-line-strong rounded-lg px-3 py-2 text-xs text-fg-4 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                       rows={2}
                       placeholder="Description (optional)"
                       value={
@@ -378,7 +378,7 @@ export default function AddProjectWizard({
             </div>
             {!isAttributedProgram(newProject) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-fg-3 mb-1">
                   Output Performance Indicators and Target
                 </label>
                 {newProject.performance_indicator_target.map((val, idx) => (
@@ -436,13 +436,13 @@ export default function AddProjectWizard({
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-fg-3 mb-1">
                   GAD Budget <span className="text-danger">*</span>
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                  className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                   value={newProject.gad_budget ?? ""}
                   /* An emptied field stays empty; Number("") made it "0". */
                   onChange={(e) =>
@@ -454,11 +454,11 @@ export default function AddProjectWizard({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-fg-3 mb-1">
                   Source of Budget <span className="text-danger">*</span>
                 </label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                  className="w-full border border-line-strong rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary-500"
                   rows={2}
                   value={newProject.source_budget}
                   onChange={(e) =>
@@ -468,7 +468,7 @@ export default function AddProjectWizard({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-fg-3 mb-1">
                 Responsible Unit/Office{" "}
                 <span className="text-danger">*</span>
               </label>
@@ -484,28 +484,28 @@ export default function AddProjectWizard({
 
         {wizardStep === 4 && (
           <div className="space-y-3 text-sm">
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="bg-subtle rounded-lg p-4 space-y-3">
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Project Type:
                 </span>
-                <p className="mt-0.5 text-gray-800">
+                <p className="mt-0.5 text-fg-2">
                   {newProject.project_type || "—"}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Gender Issue:
                 </span>
-                <p className="mt-0.5 text-gray-800">
+                <p className="mt-0.5 text-fg-2">
                   {newProject.gender_issue || "—"}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Cause of Gender Issue:
                 </span>
-                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                <ul className="mt-0.5 list-disc list-inside text-fg-2">
                   {newProject.cause_gender_issue
                     .filter(Boolean)
                     .map((v, i) => (
@@ -514,36 +514,36 @@ export default function AddProjectWizard({
                 </ul>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   GAD Objective:
                 </span>
-                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                <ul className="mt-0.5 list-disc list-inside text-fg-2">
                   {newProject.gad_objective.filter(Boolean).map((v, i) => (
                     <li key={i}>{v}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Supporting Statistics:
                 </span>
-                <p className="mt-0.5 text-gray-800">
+                <p className="mt-0.5 text-fg-2">
                   {newProject.supporting_statistics_data || "—"}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Relevant Agency:
                 </span>
-                <p className="mt-0.5 text-gray-800">
+                <p className="mt-0.5 text-fg-2">
                   {newProject.relevant_agency || "—"}
                 </p>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   GAD Activity:
                 </span>
-                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                <ul className="mt-0.5 list-disc list-inside text-fg-2">
                   {newProject.gad_activity.filter(Boolean).map((v, i) => {
                     const description = alignActivityDescriptions(
                       newProject.gad_activity,
@@ -561,10 +561,10 @@ export default function AddProjectWizard({
                 </ul>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Performance Indicators:
                 </span>
-                <ul className="mt-0.5 list-disc list-inside text-gray-800">
+                <ul className="mt-0.5 list-disc list-inside text-fg-2">
                   {serializeIndicators(
                     newProject.performance_indicator_target,
                   ).map((v, i) => (
@@ -574,27 +574,27 @@ export default function AddProjectWizard({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="font-medium text-gray-600">
+                  <span className="font-medium text-fg-4">
                     GAD Budget:
                   </span>
-                  <p className="mt-0.5 text-gray-800">
+                  <p className="mt-0.5 text-fg-2">
                     ₱{Number(newProject.gad_budget || 0).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-600">
+                  <span className="font-medium text-fg-4">
                     Source of Budget:
                   </span>
-                  <p className="mt-0.5 text-gray-800">
+                  <p className="mt-0.5 text-fg-2">
                     {newProject.source_budget || "—"}
                   </p>
                 </div>
               </div>
               <div>
-                <span className="font-medium text-gray-600">
+                <span className="font-medium text-fg-4">
                   Responsible Office:
                 </span>
-                <p className="mt-0.5 text-gray-800">
+                <p className="mt-0.5 text-fg-2">
                   {toOfficeArray(newProject.responsible_office).join(
                     ", ",
                   ) || "—"}
@@ -615,7 +615,7 @@ export default function AddProjectWizard({
                   : true;
 
           return (
-            <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-gray-200">
+            <div className="flex flex-col gap-2 mt-6 pt-4 border-t border-line">
               {!stepValid && (
                 <div className="text-xs text-danger text-right">
                   Please fill in all required fields before continuing.

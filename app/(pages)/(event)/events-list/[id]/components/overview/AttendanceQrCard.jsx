@@ -52,10 +52,10 @@ export default function AttendanceQrCard({
               <FaClipboardCheck size={18} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-fg">
                 Attendance QR
               </h3>
-              <p className="mt-0.5 text-sm text-gray-500">
+              <p className="mt-0.5 text-sm text-fg-muted">
                 Guests scan, fill the form, recorded as pending — validate to
                 include in attendance
               </p>
@@ -81,10 +81,10 @@ export default function AttendanceQrCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">
+              <p className="text-xs font-medium uppercase tracking-wider text-fg-muted mb-2">
                 Scan Destination
               </p>
-              <p className="break-all text-xs text-gray-500 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
+              <p className="break-all text-xs text-fg-muted bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 font-mono">
                 {attendanceUrl}
               </p>
               <p className="text-xs text-success font-medium mt-2">
@@ -126,7 +126,7 @@ export default function AttendanceQrCard({
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          <div className="flex items-center gap-3 text-sm text-fg-muted">
             <FaSpinner className="animate-spin text-emerald-500" />
             Generating QR...
           </div>

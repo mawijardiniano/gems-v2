@@ -14,18 +14,18 @@ export default function GaaBudgetTable({ dashboard }) {
   } = dashboard;
 
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-      <div className="p-5 border-b border-gray-50">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
+      <div className="p-5 border-b border-line-faint">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-secondary-50 flex items-center justify-center">
               <PiggyBank className="h-5 w-5 text-secondary-600" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-fg">
                 GAA Budget
               </h2>
-              <p className="text-xs text-gray-500">Attached to each GPB</p>
+              <p className="text-xs text-fg-muted">Attached to each GPB</p>
             </div>
           </div>
         </div>
@@ -44,33 +44,33 @@ export default function GaaBudgetTable({ dashboard }) {
           <div className="overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="pb-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-line-subtle">
+                  <th className="pb-2 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     Year
                   </th>
-                  <th className="pb-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="pb-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     Total GAA
                   </th>
-                  <th className="pb-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="pb-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     GAD %
                   </th>
-                  <th className="pb-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="pb-2 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                     GAD Budget
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-line-faint">
                 {planBudgets.map(({ _id, year, budget }) => (
                   <tr
                     key={_id}
-                    className="hover:bg-gray-50 transition-colors duration-150"
+                    className="hover:bg-subtle transition-colors duration-150"
                   >
-                    <td className="py-3 pr-4 text-sm font-semibold text-gray-900">
+                    <td className="py-3 pr-4 text-sm font-semibold text-fg">
                       {year}
                     </td>
                     {budget ? (
                       <>
-                        <td className="py-3 px-4 text-right text-sm text-gray-600">
+                        <td className="py-3 px-4 text-right text-sm text-fg-4">
                           ₱ {formatAmount(budget.totalGAA, "—")}
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -85,7 +85,7 @@ export default function GaaBudgetTable({ dashboard }) {
                     ) : (
                       <td
                         colSpan={3}
-                        className="py-3 pl-4 text-right text-sm italic text-gray-500"
+                        className="py-3 pl-4 text-right text-sm italic text-fg-muted"
                       >
                         To follow
                       </td>
@@ -98,7 +98,7 @@ export default function GaaBudgetTable({ dashboard }) {
         )}
 
         {planBudgets.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-50">
+          <div className="mt-3 pt-3 border-t border-line-faint">
             <button
               onClick={() => router.push("/gaa-budget")}
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-secondary-600 hover:text-secondary-700 py-2 rounded-lg hover:bg-secondary-50 transition duration-200"

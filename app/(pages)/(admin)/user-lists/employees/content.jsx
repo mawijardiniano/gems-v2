@@ -363,20 +363,20 @@ export default function EmployeeListPageContent({
         return (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-semibold text-gray-600">First Name:</span>
-              <p className="text-gray-900">{personal.first_name || "—"}</p>
+              <span className="font-semibold text-fg-4">First Name:</span>
+              <p className="text-fg">{personal.first_name || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Middle Name:</span>
-              <p className="text-gray-900">{personal.middle_name || "—"}</p>
+              <span className="font-semibold text-fg-4">Middle Name:</span>
+              <p className="text-fg">{personal.middle_name || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Last Name:</span>
-              <p className="text-gray-900">{personal.last_name || "—"}</p>
+              <span className="font-semibold text-fg-4">Last Name:</span>
+              <p className="text-fg">{personal.last_name || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Date of Birth:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Date of Birth:</span>
+              <p className="text-fg">
                 {personal.birthday
                   ? new Date(personal.birthday).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -387,20 +387,20 @@ export default function EmployeeListPageContent({
               </p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Civil Status:</span>
-              <p className="text-gray-900">{personal.civil_status || "—"}</p>
+              <span className="font-semibold text-fg-4">Civil Status:</span>
+              <p className="text-fg">{personal.civil_status || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Nationality:</span>
-              <p className="text-gray-900">{personal.nationality || "—"}</p>
+              <span className="font-semibold text-fg-4">Nationality:</span>
+              <p className="text-fg">{personal.nationality || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Religion:</span>
-              <p className="text-gray-900">{personal.religion || "—"}</p>
+              <span className="font-semibold text-fg-4">Religion:</span>
+              <p className="text-fg">{personal.religion || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Blood Type:</span>
-              <p className="text-gray-900">{personal.bloodType || "—"}</p>
+              <span className="font-semibold text-fg-4">Blood Type:</span>
+              <p className="text-fg">{personal.bloodType || "—"}</p>
             </div>
           </div>
         );
@@ -408,20 +408,20 @@ export default function EmployeeListPageContent({
         return (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-semibold text-gray-600">Employee ID:</span>
-              <p className="text-gray-900">{emp.employee_id || "—"}</p>
+              <span className="font-semibold text-fg-4">Employee ID:</span>
+              <p className="text-fg">{emp.employee_id || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Office:</span>
-              <p className="text-gray-900">{emp.office || "—"}</p>
+              <span className="font-semibold text-fg-4">Office:</span>
+              <p className="text-fg">{emp.office || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Employment Status:</span>
-              <p className="text-gray-900">{emp.employment_status || "—"}</p>
+              <span className="font-semibold text-fg-4">Employment Status:</span>
+              <p className="text-fg">{emp.employment_status || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Appointment Status:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Appointment Status:</span>
+              <p className="text-fg">
                 {emp.employment_appointment_status || "—"}
               </p>
             </div>
@@ -431,8 +431,8 @@ export default function EmployeeListPageContent({
         return (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-semibold text-gray-600">Sex at Birth:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Sex at Birth:</span>
+              <p className="text-fg">
                 {gad.sexAtBirth
                   ? gad.sexAtBirth.toLowerCase() === "male"
                     ? "Male"
@@ -443,28 +443,28 @@ export default function EmployeeListPageContent({
               </p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Gender Preference:</span>
-              <p className="text-gray-900">{gad.gender_preference || "—"}</p>
+              <span className="font-semibold text-fg-4">Gender Preference:</span>
+              <p className="text-fg">{gad.gender_preference || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Indigenous Person:</span>
-              <p className="text-gray-900">{gad.isIndigenousPerson ? "Yes" : "No"}</p>
+              <span className="font-semibold text-fg-4">Indigenous Person:</span>
+              <p className="text-fg">{gad.isIndigenousPerson ? "Yes" : "No"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">PWD:</span>
-              <p className="text-gray-900">{gad.isPWD ? "Yes" : "No"}</p>
+              <span className="font-semibold text-fg-4">PWD:</span>
+              <p className="text-fg">{gad.isPWD ? "Yes" : "No"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">PWD Type:</span>
-              <p className="text-gray-900">{gad.pwd_type || "—"}</p>
+              <span className="font-semibold text-fg-4">PWD Type:</span>
+              <p className="text-fg">{gad.pwd_type || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Socio-Economic Status:</span>
-              <p className="text-gray-900">{gad.socioEconomicStatus || "—"}</p>
+              <span className="font-semibold text-fg-4">Socio-Economic Status:</span>
+              <p className="text-fg">{gad.socioEconomicStatus || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Head of Household:</span>
-              <p className="text-gray-900">{gad.headOfHousehold || "—"}</p>
+              <span className="font-semibold text-fg-4">Head of Household:</span>
+              <p className="text-fg">{gad.headOfHousehold || "—"}</p>
             </div>
           </div>
         );
@@ -472,16 +472,16 @@ export default function EmployeeListPageContent({
         return (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-semibold text-gray-600">Email:</span>
-              <p className="text-gray-900">{contact.email || user.email || "—"}</p>
+              <span className="font-semibold text-fg-4">Email:</span>
+              <p className="text-fg">{contact.email || user.email || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Mobile:</span>
-              <p className="text-gray-900">{contact.mobileNumber || "—"}</p>
+              <span className="font-semibold text-fg-4">Mobile:</span>
+              <p className="text-fg">{contact.mobileNumber || "—"}</p>
             </div>
             <div className="col-span-2">
-              <span className="font-semibold text-gray-600">Current Address:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Current Address:</span>
+              <p className="text-fg">
                 {contact.currentAddress
                   ? [
                       contact.currentAddress.barangay?.name,
@@ -494,8 +494,8 @@ export default function EmployeeListPageContent({
               </p>
             </div>
             <div className="col-span-2">
-              <span className="font-semibold text-gray-600">Permanent Address:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Permanent Address:</span>
+              <p className="text-fg">
                 {contact.permanentAddress
                   ? [
                       contact.permanentAddress.barangay?.name,
@@ -513,26 +513,26 @@ export default function EmployeeListPageContent({
         return (
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-semibold text-gray-600">Username:</span>
-              <p className="text-gray-900">{user.username || "—"}</p>
+              <span className="font-semibold text-fg-4">Username:</span>
+              <p className="text-fg">{user.username || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Email:</span>
-              <p className="text-gray-900">{user.email || "—"}</p>
+              <span className="font-semibold text-fg-4">Email:</span>
+              <p className="text-fg">{user.email || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Role:</span>
-              <p className="text-gray-900">{user.role || "—"}</p>
+              <span className="font-semibold text-fg-4">Role:</span>
+              <p className="text-fg">{user.role || "—"}</p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Status:</span>
+              <span className="font-semibold text-fg-4">Status:</span>
               <p className={`font-medium ${user.is_active ? "text-success" : "text-danger"}`}>
                 {user.is_active ? "Active" : "Inactive"}
               </p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Created At:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Created At:</span>
+              <p className="text-fg">
                 {user.createdAt
                   ? new Date(user.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -543,8 +543,8 @@ export default function EmployeeListPageContent({
               </p>
             </div>
             <div>
-              <span className="font-semibold text-gray-600">Last Updated:</span>
-              <p className="text-gray-900">
+              <span className="font-semibold text-fg-4">Last Updated:</span>
+              <p className="text-fg">
                 {user.updatedAt
                   ? new Date(user.updatedAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -649,7 +649,7 @@ export default function EmployeeListPageContent({
 
       <div className="overflow-x-auto">
         <Table className="bg-white" striped={false} color="none">
-          <TableHead className="bg-gray-200 text-black">
+          <TableHead className="bg-emphasis text-black">
             <TableHeadCell></TableHeadCell>
             <TableHeadCell
               className="cursor-pointer select-none"
@@ -663,7 +663,7 @@ export default function EmployeeListPageContent({
                   className={
                     nameSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▲
@@ -672,7 +672,7 @@ export default function EmployeeListPageContent({
                   className={
                     nameSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▼
@@ -691,7 +691,7 @@ export default function EmployeeListPageContent({
                   className={
                     sexSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▲
@@ -700,7 +700,7 @@ export default function EmployeeListPageContent({
                   className={
                     sexSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▼
@@ -719,7 +719,7 @@ export default function EmployeeListPageContent({
                   className={
                     officeSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▲
@@ -728,7 +728,7 @@ export default function EmployeeListPageContent({
                   className={
                     officeSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▼
@@ -747,7 +747,7 @@ export default function EmployeeListPageContent({
                   className={
                     employmentSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▲
@@ -756,7 +756,7 @@ export default function EmployeeListPageContent({
                   className={
                     employmentSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▼
@@ -775,7 +775,7 @@ export default function EmployeeListPageContent({
                   className={
                     appointmentSort === "asc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▲
@@ -784,7 +784,7 @@ export default function EmployeeListPageContent({
                   className={
                     appointmentSort === "desc"
                       ? "text-secondary-600 font-bold"
-                      : "text-gray-500"
+                      : "text-fg-muted"
                   }
                 >
                   ▼
@@ -810,7 +810,7 @@ export default function EmployeeListPageContent({
                 p.employment_information ||
                 {};
               return (
-                <TableRow key={user._id || index} className="hover:bg-gray-50">
+                <TableRow key={user._id || index} className="hover:bg-subtle">
                   <TableCell>
                     <input
                       type="checkbox"
@@ -881,11 +881,11 @@ export default function EmployeeListPageContent({
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Rows per page:</span>
+          <span className="text-sm text-fg-4">Rows per page:</span>
           <select
             value={pageSize}
             onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-            className="h-9 rounded-lg border border-gray-200 bg-white px-2 text-xs"
+            className="h-9 rounded-lg border border-line bg-white px-2 text-xs"
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -893,7 +893,7 @@ export default function EmployeeListPageContent({
             <option value={100}>100</option>
           </select>
         </div>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-fg-4">
           {loading ? "Loading..." : `${serverTotal} total employees`}
         </span>
         <div className="flex items-center gap-2">
@@ -972,7 +972,7 @@ export default function EmployeeListPageContent({
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           {confirmAction?.type === "reset"
             ? "This will reset password to default."
             : confirmAction?.isActive
@@ -1004,19 +1004,19 @@ export default function EmployeeListPageContent({
               className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto mx-4"
             >
       
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line-subtle sticky top-0 bg-white z-10 rounded-t-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                     {(personal.first_name?.[0] || "").toUpperCase()}
                     {(personal.last_name?.[0] || "").toUpperCase()}
                   </div>
                   <div>
-                    <h2 id={viewTitleId} className="text-lg font-semibold text-gray-900">
+                    <h2 id={viewTitleId} className="text-lg font-semibold text-fg">
                       {personal.first_name || ""}{" "}
                       {personal.middle_name ? `${personal.middle_name[0]}. ` : ""}
                       {personal.last_name || ""}
                     </h2>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-fg-muted">
                       {emp.office || ""}
                       {emp.employment_status ? ` • ${emp.employment_status}` : ""}
                     </p>
@@ -1029,14 +1029,14 @@ export default function EmployeeListPageContent({
                     setSelectedUser(null);
                     setActiveTab("personal");
                   }}
-                  className="touch-target w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition"
+                  className="touch-target w-8 h-8 rounded-full bg-muted hover:bg-emphasis flex items-center justify-center text-fg-muted hover:text-fg-3 transition"
                 >
                   <FaTimes size={14} />
                 </button>
               </div>
 
        
-              <div className="px-6 border-b border-gray-100">
+              <div className="px-6 border-b border-line-subtle">
                 <div className="flex gap-1 -mb-px">
                   {viewTabs.map((tab) => {
                     const Icon = tab.icon;
@@ -1047,7 +1047,7 @@ export default function EmployeeListPageContent({
                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${
                           activeTab === tab.id
                             ? "border-secondary-600 text-secondary-600"
-                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            : "border-transparent text-fg-muted hover:text-fg-3 hover:border-line-strong"
                         }`}
                       >
                         <Icon size={14} /> {tab.label}
@@ -1064,7 +1064,7 @@ export default function EmployeeListPageContent({
               </div>
 
   
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between px-6 py-4 border-t border-line-subtle bg-subtle/50">
                 <div className="flex items-center gap-2.5">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                     selectedUser.is_active
@@ -1112,7 +1112,7 @@ export default function EmployeeListPageContent({
                       setSelectedUser(null);
                       setActiveTab("personal");
                     }}
-                    className="px-4 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                    className="px-4 py-1.5 text-xs font-medium bg-muted text-fg-3 rounded-lg hover:bg-emphasis transition"
                   >
                     Close
                   </button>

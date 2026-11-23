@@ -62,6 +62,35 @@
   --color-ink: #0f172a;          /* primary text */
   --color-ink-muted: #6b7280;    /* secondary text */
 
+  /* ─── Neutral roles ─────────────────────────────────────────────
+     Semantic names for the gray scale. Values equal today's Tailwind
+     grays exactly, so nothing looks different; a dark theme later only
+     redefines these. Use them instead of raw gray-* in new code.
+       text:   text-fg (headings, primary) · text-fg-2 · text-fg-3 (body)
+               · text-fg-4 · text-fg-muted (secondary, ≥4.5:1 on white)
+               · text-fg-disabled (disabled only) · text-fg-faint (decor)
+       fill:   bg-subtle (page/zebra) · bg-muted (chips, hovers)
+               · bg-emphasis (tracks, pressed) · bg-inverse (tooltips)
+       lines:  border-line-faint · border-line-subtle · border-line
+               · border-line-strong (also divide-*) */
+  --color-fg: #111827;
+  --color-fg-2: #1f2937;
+  --color-fg-3: #374151;
+  --color-fg-4: #4b5563;
+  --color-fg-muted: #6b7280;
+  --color-fg-disabled: #9ca3af;
+  --color-fg-faint: #d1d5db;
+
+  --color-subtle: #f9fafb;
+  --color-muted: #f3f4f6;
+  --color-emphasis: #e5e7eb;
+  --color-inverse: #111827;
+
+  --color-line-faint: #f9fafb;
+  --color-line-subtle: #f3f4f6;
+  --color-line: #e5e7eb;
+  --color-line-strong: #d1d5db;
+
   /* ─── Status roles ──────────────────────────────────────────────
      Use these, not raw red/emerald/amber, for anything that means
      success / warning / danger / info: badges, alerts, inline errors,
@@ -287,19 +316,19 @@ th {
    <Button className="w-full"> or <Modal size="sm">. */
 @layer components {
 .card {
-  @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
+  @apply bg-white rounded-2xl border border-line-subtle shadow-sm;
 }
 .input {
-  @apply w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 transition duration-200 outline-none;
+  @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-muted transition duration-200 outline-none;
 }
 .input:focus {
   @apply border-secondary-500 ring-4 ring-secondary-500/10;
 }
 .input:hover:not(:focus):not(:disabled) {
-  @apply border-gray-300;
+  @apply border-line-strong;
 }
 .input:disabled {
-  @apply bg-gray-50 text-gray-400 cursor-not-allowed;
+  @apply bg-subtle text-fg-disabled cursor-not-allowed;
 }
 
 select.input {
@@ -317,13 +346,13 @@ select.input {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-secondary-600 text-white shadow-sm shadow-secondary-200 hover:bg-secondary-700 hover:shadow-md active:scale-[0.98];
 }
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-white text-fg-3 border border-line shadow-sm hover:bg-subtle hover:border-line-strong active:scale-[0.98];
 }
 .btn-danger {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-danger-solid text-white shadow-sm shadow-danger-border hover:bg-danger active:scale-[0.98];
 }
 .btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-fg-4 hover:bg-muted hover:text-fg;
 }
 .btn-success {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition duration-200 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-success-solid text-white shadow-sm shadow-success-border hover:bg-success active:scale-[0.98];
@@ -366,7 +395,7 @@ select.input {
 
 /* Table */
 .table-container {
-  @apply overflow-hidden rounded-2xl border border-gray-200 bg-white;
+  @apply overflow-hidden rounded-2xl border border-line bg-white;
 }
 .table {
   @apply min-w-full text-sm;
@@ -375,13 +404,13 @@ select.input {
   @apply bg-slate-50;
 }
 .table thead th {
-  @apply px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500;
+  @apply px-4 py-3 text-left text-xs font-semibold uppercase text-fg-muted;
 }
 .table tbody {
-  @apply divide-y divide-gray-100;
+  @apply divide-y divide-line-subtle;
 }
 .table tbody td {
-  @apply px-4 py-3 text-sm text-gray-700 align-middle;
+  @apply px-4 py-3 text-sm text-fg-3 align-middle;
 }
 .table tbody tr {
   @apply transition-colors duration-150;
@@ -399,23 +428,23 @@ select.input {
   animation: slide-up 0.3s ease-out;
 }
 .modal-header {
-  @apply px-6 py-4 border-b border-gray-100 flex items-center justify-between;
+  @apply px-6 py-4 border-b border-line-subtle flex items-center justify-between;
 }
 .modal-body {
   @apply px-6 py-5;
 }
 .modal-footer {
-  @apply px-6 py-4 border-t border-gray-100 flex justify-end gap-3;
+  @apply px-6 py-4 border-t border-line-subtle flex justify-end gap-3;
 }
 
 /* Label */
 .label {
-  @apply block text-sm font-medium text-gray-700 mb-1.5;
+  @apply block text-sm font-medium text-fg-3 mb-1.5;
 }
 
 /* Section card header */
 .card-header {
-  @apply flex items-center justify-between p-5 border-b border-gray-100;
+  @apply flex items-center justify-between p-5 border-b border-line-subtle;
 }
 .card-body {
   @apply p-5;
@@ -428,10 +457,10 @@ select.input {
 
 /* Page title */
 .page-title {
-  @apply text-2xl font-bold tracking-tight text-gray-900;
+  @apply text-2xl font-bold tracking-tight text-fg;
 }
 .page-subtitle {
-  @apply text-sm text-gray-500 mt-1;
+  @apply text-sm text-fg-muted mt-1;
 }
 
 /* Error/success alert */
@@ -465,6 +494,6 @@ select.input {
   @apply relative w-full;
 }
 .file-input input[type="file"] {
-  @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-secondary-50 file:text-secondary-700 hover:file:bg-secondary-100 transition-colors;
+  @apply block w-full text-sm text-fg-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-secondary-50 file:text-secondary-700 hover:file:bg-secondary-100 transition-colors;
 }
 }

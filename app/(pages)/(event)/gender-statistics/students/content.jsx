@@ -311,13 +311,13 @@ export default function StudentGenderStatsContent() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
       {/* ===== HEADER ===== */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg flex items-center gap-3">
           <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-pink-600 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-pink-200">
             <FaUserGraduate size={18} />
           </span>
           Student Gender Statistics
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-fg-muted text-sm mt-1">
           Explore the distribution of female and male students by sex, academic
           level, program, and other demographic indicators.
         </p>
@@ -325,7 +325,7 @@ export default function StudentGenderStatsContent() {
 
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Academic Year
           </label>
           <YearMultiSelect
@@ -335,7 +335,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Semester
           </label>
           <MultiSelect
@@ -354,7 +354,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Campus
           </label>
           <MultiSelect
@@ -366,7 +366,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             College
           </label>
           <MultiSelect
@@ -378,7 +378,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Program
           </label>
           <MultiSelect
@@ -390,7 +390,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Year Level
           </label>
           <MultiSelect
@@ -402,7 +402,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Demographic Profile
           </label>
           <MultiSelect
@@ -414,7 +414,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Age Group
           </label>
           <MultiSelect
@@ -430,7 +430,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Sex
           </label>
           <MultiSelect
@@ -442,7 +442,7 @@ export default function StudentGenderStatsContent() {
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
+          <label className="text-xs font-medium text-fg-muted mb-1 block">
             Data source
           </label>
           <button
@@ -452,7 +452,7 @@ export default function StudentGenderStatsContent() {
             className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
               useSample
                 ? "border-secondary-300 bg-secondary-50 text-secondary-700"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                : "border-line bg-white text-fg-3 hover:bg-subtle"
             }`}
           >
             <span
@@ -467,7 +467,7 @@ export default function StudentGenderStatsContent() {
           <button
             type="button"
             onClick={clearFilters}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-fg-4 transition-colors hover:bg-subtle"
           >
             Clear filters ({filterCount})
           </button>
@@ -487,7 +487,7 @@ export default function StudentGenderStatsContent() {
 
       {!useSample && error && <ErrorState message={error} onRetry={refetch} />}
 
-      <p className="text-xs text-gray-500 -mt-2">
+      <p className="text-xs text-fg-muted -mt-2">
         Students enrolled in both semesters of the same academic year are
         counted once per year.
       </p>
@@ -569,7 +569,7 @@ export default function StudentGenderStatsContent() {
                 rowsOf={(s) => s.demographics}
                 nameKey="label"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Insights and quick reports below describe the latest selected
                 year (AY {schoolYear}).
               </p>
@@ -665,17 +665,17 @@ export default function StudentGenderStatsContent() {
 function TopProgramsTable({ rows }) {
   const safeRows = Array.isArray(rows) ? rows : [];
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         Top 10 Programs by Gender Population
       </h3>
       {safeRows.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-line-subtle text-xs uppercase tracking-wider text-fg-muted">
                 <th className="py-2 pr-3 font-medium">#</th>
                 <th className="py-2 pr-3 font-medium">Program</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
@@ -688,10 +688,10 @@ function TopProgramsTable({ rows }) {
               {safeRows.map((r, i) => (
                 <tr
                   key={r.program}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60"
+                  className="border-b border-line-faint last:border-0 hover:bg-subtle/60"
                 >
-                  <td className="py-2.5 pr-3 text-gray-500">{i + 1}</td>
-                  <td className="py-2.5 pr-3 font-medium text-gray-800">
+                  <td className="py-2.5 pr-3 text-fg-muted">{i + 1}</td>
+                  <td className="py-2.5 pr-3 font-medium text-fg-2">
                     {r.program}
                   </td>
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
@@ -700,10 +700,10 @@ function TopProgramsTable({ rows }) {
                   <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {r.Male}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
+                  <td className="py-2.5 pr-3 text-right font-semibold text-fg">
                     {r.total}
                   </td>
-                  <td className="py-2.5 text-right text-xs text-gray-500">
+                  <td className="py-2.5 text-right text-xs text-fg-muted">
                     {r.pctFemale}%
                   </td>
                 </tr>
@@ -719,13 +719,13 @@ function TopProgramsTable({ rows }) {
 function KeyInsightsCard({ insights }) {
   const list = Array.isArray(insights) ? insights : [];
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" />{" "}
         Key Insights
       </h3>
       {list.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           No insights available for the current data.
         </p>
       ) : (
@@ -733,7 +733,7 @@ function KeyInsightsCard({ insights }) {
           {list.map((line, i) => (
             <li
               key={i}
-              className="flex items-start gap-2 text-sm text-gray-700"
+              className="flex items-start gap-2 text-sm text-fg-3"
             >
               <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-pink-500 shrink-0" />
               {line}
@@ -770,15 +770,15 @@ function QuickReportsCard({ data, useSample = false, filters }) {
   };
 
   const buttonClass =
-    "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2 text-xs font-medium text-fg-3 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" />{" "}
         Quick Reports
       </h3>
-      <p className="text-xs text-gray-500 mt-1 mb-4">
+      <p className="text-xs text-fg-muted mt-1 mb-4">
         Each button generates its own separate PDF from the data currently shown
         {useSample ? " (sample dataset)" : ""}.
       </p>
@@ -796,7 +796,7 @@ function QuickReportsCard({ data, useSample = false, filters }) {
           </button>
         ))}
       </div>
-      {status && <p className="text-xs text-gray-500 mt-2">{status}</p>}
+      {status && <p className="text-xs text-fg-muted mt-2">{status}</p>}
     </div>
   );
 }

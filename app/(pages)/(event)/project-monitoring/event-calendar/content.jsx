@@ -174,13 +174,13 @@ export default function EventCalendarContent() {
     <div className="w-full px-4 sm:px-6 lg:px-8 py-10 space-y-6 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0 lg:items-start animate-fade-in">
       <div className="lg:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg flex items-center gap-3">
             <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-700 to-secondary-500 flex items-center justify-center text-white shadow-lg shadow-secondary-200">
               <FaCalendarDay size={18} />
             </span>
             Event Calendar
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-fg-muted text-sm mt-1">
             All events on a monthly calendar
           </p>
         </div>
@@ -189,18 +189,18 @@ export default function EventCalendarContent() {
           <button
             type="button"
             onClick={goPrev}
-            className="touch-target h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
+            className="touch-target h-9 w-9 rounded-lg border border-line bg-white text-fg-4 hover:bg-subtle flex items-center justify-center transition-colors"
             aria-label="Previous month"
           >
             <FaChevronLeft size={13} />
           </button>
-          <span className="min-w-[9.5rem] text-center text-sm font-semibold text-gray-900">
+          <span className="min-w-[9.5rem] text-center text-sm font-semibold text-fg">
             {MONTH_LABELS[viewMonth]} {viewYear}
           </span>
           <button
             type="button"
             onClick={goNext}
-            className="touch-target h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-colors"
+            className="touch-target h-9 w-9 rounded-lg border border-line bg-white text-fg-4 hover:bg-subtle flex items-center justify-center transition-colors"
             aria-label="Next month"
           >
             <FaChevronRight size={13} />
@@ -215,8 +215,8 @@ export default function EventCalendarContent() {
         </div>
       </div>
 
-      <div className="lg:col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-600">
-        <span className="font-medium text-gray-500 uppercase tracking-wider">
+      <div className="lg:col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-fg-4">
+        <span className="font-medium text-fg-muted uppercase tracking-wider">
           {loading ? "Loading…" : `${monthEventCount} event${monthEventCount === 1 ? "" : "s"} this month`}
         </span>
         {[
@@ -245,12 +245,12 @@ export default function EventCalendarContent() {
         </div>
       )}
 
-      <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-        <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50/70">
+      <div className="lg:col-span-8 rounded-2xl border border-line-subtle bg-white shadow-sm overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-line-subtle bg-subtle/70">
           {WEEKDAYS.map((d) => (
             <div
               key={d}
-              className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500"
+              className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-fg-muted"
             >
               {d}
             </div>
@@ -258,7 +258,7 @@ export default function EventCalendarContent() {
         </div>
 
         {loading ? (
-          <div className="p-8 flex items-center justify-center gap-3 text-gray-500 text-sm">
+          <div className="p-8 flex items-center justify-center gap-3 text-fg-muted text-sm">
             <FaSpinner className="animate-spin text-secondary-500" size={18} />
             Loading calendar…
           </div>
@@ -273,8 +273,8 @@ export default function EventCalendarContent() {
                   type="button"
                   key={cell.key}
                   onClick={() => selectDate(cell.key)}
-                  className={`min-h-[92px] border-b border-r border-gray-100 p-1.5 text-left align-top transition-colors last:border-r-0 ${
-                    cell.inMonth ? "bg-white" : "bg-gray-50/50"
+                  className={`min-h-[92px] border-b border-r border-line-subtle p-1.5 text-left align-top transition-colors last:border-r-0 ${
+                    cell.inMonth ? "bg-white" : "bg-subtle/50"
                   } ${isSelected ? "ring-2 ring-inset ring-secondary-500" : "hover:bg-secondary-50/40"}`}
                 >
                   <span
@@ -282,8 +282,8 @@ export default function EventCalendarContent() {
                       isToday
                         ? "bg-secondary-600 text-white"
                         : cell.inMonth
-                          ? "text-gray-700"
-                          : "text-gray-500"
+                          ? "text-fg-3"
+                          : "text-fg-muted"
                     }`}
                   >
                     {cell.date.getDate()}
@@ -308,7 +308,7 @@ export default function EventCalendarContent() {
                     );
                   })}
                   {dayEvents.length > 2 && (
-                    <span className="mt-0.5 block text-xs text-gray-500 font-medium">
+                    <span className="mt-0.5 block text-xs text-fg-muted font-medium">
                       +{dayEvents.length - 2} more
                     </span>
                   )}

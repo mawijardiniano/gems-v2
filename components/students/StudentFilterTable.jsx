@@ -114,7 +114,7 @@ export default function StudentFilterTable({
         {multiOpen && (
           <div className="absolute z-10 mt-1 w-64 bg-white border rounded shadow max-h-48 overflow-auto p-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">{multiHeading}</span>
+              <span className="text-sm text-fg-4">{multiHeading}</span>
               <button
                 type="button"
                 onClick={() => setMultiValue([])}
@@ -126,7 +126,7 @@ export default function StudentFilterTable({
             {multiOptions.map((c) => (
               <label
                 key={c}
-                className="flex items-center gap-2 p-1 hover:bg-gray-50 rounded"
+                className="flex items-center gap-2 p-1 hover:bg-subtle rounded"
               >
                 <input
                   type="checkbox"

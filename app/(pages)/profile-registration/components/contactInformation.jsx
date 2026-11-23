@@ -130,7 +130,7 @@ export default function ContactInformation() {
     return (
       <div className="space-y-3">
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+          className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
           value={region}
           onChange={(e) => {
             update(`${prefix}.region`, e.target.value);
@@ -147,7 +147,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+          className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
           value={province}
           onChange={(e) => {
             update(`${prefix}.province`, e.target.value);
@@ -164,7 +164,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+          className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
           value={city}
           onChange={(e) => {
             update(`${prefix}.city`, e.target.value);
@@ -180,7 +180,7 @@ export default function ContactInformation() {
           ))}
         </select>
         <select
-          className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+          className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
           value={contact[prefix]?.barangay || ""}
           onChange={(e) => update(`${prefix}.barangay`, e.target.value)}
           disabled={!city}
@@ -201,7 +201,7 @@ export default function ContactInformation() {
       <div className="w-full max-w-4xl">
         <Progress />
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
@@ -220,30 +220,30 @@ export default function ContactInformation() {
           <div className="p-8 space-y-6">
             {/* Email & Mobile */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaEnvelope className="text-secondary-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Email <span className="text-red-400">*</span>
                   </label>
                 </div>
                 <input
                   type="email"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   value={contact.email}
                   onChange={(e) => update("email", e.target.value)}
                   placeholder="example@email.com"
                 />
               </div>
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+              <div className="bg-subtle rounded-xl p-5 border border-line-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <FaPhone className="text-emerald-500" />
-                  <label className="text-sm font-semibold text-gray-700">
+                  <label className="text-sm font-semibold text-fg-3">
                     Mobile Number <span className="text-red-400">*</span>
                   </label>
                 </div>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-white"
                   type="number"
                   value={contact.mobileNumber}
                   onChange={(e) => update("mobileNumber", e.target.value)}
@@ -253,13 +253,13 @@ export default function ContactInformation() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-line-subtle" />
 
             {/* Addresses */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Permanent Address */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-fg-3 mb-3 flex items-center gap-2">
                   <FaMapMarkerAlt className="text-secondary-500" />
                   Permanent Address <span className="text-red-400">*</span>
                 </h3>
@@ -269,18 +269,18 @@ export default function ContactInformation() {
               {/* Current Address */}
               <div>
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-fg-3 flex items-center gap-2">
                     <FaMapMarkerAlt className="text-secondary-500" />
                     Current Address <span className="text-red-400">*</span>
                   </h3>
-                  <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer hover:text-secondary-600 transition-colors">
+                  <label className="flex items-center gap-1.5 text-xs text-fg-muted cursor-pointer hover:text-secondary-600 transition-colors">
                     <input
                       type="checkbox"
                       checked={copyChecked}
                       onChange={(e) => handleCopyChecked(e.target.checked)}
                       className="sr-only"
                     />
-                    <FaCopy className={`${copyChecked ? "text-secondary-500" : "text-gray-500"}`} />
+                    <FaCopy className={`${copyChecked ? "text-secondary-500" : "text-fg-muted"}`} />
                     <span className="font-medium">Same as Permanent</span>
                   </label>
                 </div>
@@ -290,7 +290,7 @@ export default function ContactInformation() {
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-between">
             <Button
               variant="secondary"
               onClick={() => dispatch(prevStep())}

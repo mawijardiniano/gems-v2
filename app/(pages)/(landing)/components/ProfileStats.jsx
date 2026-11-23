@@ -52,8 +52,8 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
 
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{total}</p>
+          <p className="text-sm font-medium text-fg-muted">{label}</p>
+          <p className="text-3xl font-bold text-fg mt-1">{total}</p>
         </div>
         <div
           className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
@@ -66,11 +66,11 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
           <span className="h-2.5 w-2.5 rounded-full bg-series-male" />
-          <span className="text-gray-600">Male</span>
-          <span className="ml-auto font-semibold text-gray-900">{male}</span>
-          <span className="text-xs text-gray-500">({malePct}%)</span>
+          <span className="text-fg-4">Male</span>
+          <span className="ml-auto font-semibold text-fg">{male}</span>
+          <span className="text-xs text-fg-muted">({malePct}%)</span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-gray-100">
+        <div className="h-1.5 w-full rounded-full bg-muted">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${malePct}%`, background: SERIES.male }}
@@ -79,11 +79,11 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
 
         <div className="flex items-center gap-2 text-sm">
           <span className="h-2.5 w-2.5 rounded-full bg-series-female" />
-          <span className="text-gray-600">Female</span>
-          <span className="ml-auto font-semibold text-gray-900">{female}</span>
-          <span className="text-xs text-gray-500">({femalePct}%)</span>
+          <span className="text-fg-4">Female</span>
+          <span className="ml-auto font-semibold text-fg">{female}</span>
+          <span className="text-xs text-fg-muted">({femalePct}%)</span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-gray-100">
+        <div className="h-1.5 w-full rounded-full bg-muted">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${femalePct}%`, background: SERIES.female }}
@@ -93,9 +93,9 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
         {unspecified > 0 && (
           <div className="flex items-center gap-2 text-sm">
             <span className="h-2.5 w-2.5 rounded-full bg-series-slate" />
-            <span className="text-gray-600">Unspecified</span>
-            <span className="ml-auto font-semibold text-gray-900">{unspecified}</span>
-            <span className="text-xs text-gray-500">
+            <span className="text-fg-4">Unspecified</span>
+            <span className="ml-auto font-semibold text-fg">{unspecified}</span>
+            <span className="text-xs text-fg-muted">
               ({total ? ((unspecified / total) * 100).toFixed(1) : 0}%)
             </span>
           </div>
@@ -109,16 +109,16 @@ function StatCard({ icon: Icon, label, total, male, female, unspecified, accent 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
-      <p className="text-sm font-semibold text-gray-700 mb-2">{label}</p>
+    <div className="rounded-xl border border-line-subtle bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
+      <p className="text-sm font-semibold text-fg-3 mb-2">{label}</p>
       {payload.map((entry, idx) => (
         <div key={idx} className="flex items-center gap-2 text-sm">
           <span
             className="h-2.5 w-2.5 rounded-full"
             style={{ background: entry.color }}
           />
-          <span className="text-gray-600">{entry.name}:</span>
-          <span className="font-semibold text-gray-900">{entry.value}</span>
+          <span className="text-fg-4">{entry.name}:</span>
+          <span className="font-semibold text-fg">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -127,13 +127,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 function SegmentedToggle({ active, onChange }) {
   return (
-    <div className="inline-flex rounded-xl bg-gray-100 p-1">
+    <div className="inline-flex rounded-xl bg-muted p-1">
       <button
         onClick={() => onChange("chart")}
         className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${
           active === "chart"
             ? "bg-white text-secondary-700 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            : "text-fg-muted hover:text-fg-3"
         }`}
       >
         <FiPieChart className="h-4 w-4" />
@@ -144,7 +144,7 @@ function SegmentedToggle({ active, onChange }) {
         className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${
           active === "table"
             ? "bg-white text-secondary-700 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            : "text-fg-muted hover:text-fg-3"
         }`}
       >
         <FiUsers className="h-4 w-4" />
@@ -158,20 +158,20 @@ function LoadingSkeleton() {
   return (
     <section className="my-8 px-4 animate-pulse">
       <div className="mb-8 text-center">
-        <div className="mx-auto h-9 w-96 rounded-lg bg-gray-200" />
-        <div className="mx-auto mt-4 h-5 w-64 rounded bg-gray-100" />
+        <div className="mx-auto h-9 w-96 rounded-lg bg-emphasis" />
+        <div className="mx-auto mt-4 h-5 w-64 rounded bg-muted" />
       </div>
 
       <div className="flex flex-wrap justify-center gap-6 mb-10">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-40 w-64 rounded-2xl bg-gray-100" />
+          <div key={i} className="h-40 w-64 rounded-2xl bg-muted" />
         ))}
       </div>
 
       <div className="max-w-7xl mx-auto space-y-10">
-        <div className="h-80 rounded-2xl bg-gray-100" />
-        <div className="h-80 rounded-2xl bg-gray-100" />
-        <div className="h-80 rounded-2xl bg-gray-100" />
+        <div className="h-80 rounded-2xl bg-muted" />
+        <div className="h-80 rounded-2xl bg-muted" />
+        <div className="h-80 rounded-2xl bg-muted" />
       </div>
     </section>
   );
@@ -525,10 +525,10 @@ export default function ProfileStats() {
             <FiPieChart className="h-4 w-4" />
             Gender Equality Dashboard
           </div>
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
+          <h2 className="text-4xl font-extrabold text-fg mb-2 tracking-tight">
             Campus Gender Equality Overview
           </h2>
-          <p className="text-gray-500 max-w-xl mx-auto">
+          <p className="text-fg-muted max-w-xl mx-auto">
             {useSample
               ? "Sample sex-disaggregated data across the university"
               : "Real-time sex-disaggregated data across the university"}
@@ -539,7 +539,7 @@ export default function ProfileStats() {
             <div>
               <label
                 htmlFor="school-year-select"
-                className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5"
+                className="block text-xs font-semibold text-fg-muted uppercase tracking-wider mb-1.5"
               >
                 School Year
               </label>
@@ -547,7 +547,7 @@ export default function ProfileStats() {
                 id="school-year-select"
                 value={selectedSchoolYear}
                 onChange={handleSchoolYearChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
+                className="rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-fg-3 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-line-strong"
               >
                 {activeSchoolYears.length === 0 && (
                   <option value="">No terms available</option>
@@ -563,7 +563,7 @@ export default function ProfileStats() {
             <div>
               <label
                 htmlFor="semester-select"
-                className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5"
+                className="block text-xs font-semibold text-fg-muted uppercase tracking-wider mb-1.5"
               >
                 Semester
               </label>
@@ -571,7 +571,7 @@ export default function ProfileStats() {
                 id="semester-select"
                 value={selectedSemester}
                 onChange={handleSemesterChange}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-gray-300"
+                className="rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-fg-3 shadow-sm transition duration-200 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 hover:border-line-strong"
               >
                 {availableSemesters.length === 0 && (
                   <option value="">No semesters available</option>
@@ -589,7 +589,7 @@ export default function ProfileStats() {
             </div>
 
             <div>
-              <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+              <span className="block text-xs font-semibold text-fg-muted uppercase tracking-wider mb-1.5">
                 Data source
               </span>
               <button
@@ -599,7 +599,7 @@ export default function ProfileStats() {
                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
                   useSample
                     ? "border-secondary-300 bg-secondary-50 text-secondary-700"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    : "border-line bg-white text-fg-3 hover:bg-subtle"
                 }`}
               >
                 <span
@@ -613,13 +613,13 @@ export default function ProfileStats() {
           </div>
 
           {selectedSchoolYear && selectedSemester && (
-            <p className="text-sm text-gray-500 mt-3">
+            <p className="text-sm text-fg-muted mt-3">
               Showing {useSample ? "sample data" : "data"} for{" "}
-              <span className="font-semibold text-gray-600">
+              <span className="font-semibold text-fg-4">
                 {selectedSchoolYear}
               </span>{" "}
               —{" "}
-              <span className="font-semibold text-gray-600">
+              <span className="font-semibold text-fg-4">
                 {selectedSemester === "1st"
                   ? "1st Semester"
                   : selectedSemester === "2nd"
@@ -699,7 +699,7 @@ export default function ProfileStats() {
 
         <div className="mb-12 animate-slide-up">
           <div className="rounded-2xl bg-white p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)]">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <h3 className="text-lg font-semibold text-fg mb-6">
               Overall Gender Distribution
             </h3>
             <div className="flex flex-col md:flex-row items-center justify-center gap-8">
@@ -727,14 +727,14 @@ export default function ProfileStats() {
                           ? ((d.value / totalPopulation) * 100).toFixed(1)
                           : 0;
                         return (
-                          <div className="rounded-xl border border-gray-100 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
-                            <p className="text-sm font-semibold text-gray-700">
+                          <div className="rounded-xl border border-line-subtle bg-white/95 px-4 py-3 shadow-xl backdrop-blur-sm">
+                            <p className="text-sm font-semibold text-fg-3">
                               {d.name}
                             </p>
-                            <p className="text-lg font-bold text-gray-900">
+                            <p className="text-lg font-bold text-fg">
                               {d.value}
                             </p>
-                            <p className="text-xs text-gray-500">{pct}% of total</p>
+                            <p className="text-xs text-fg-muted">{pct}% of total</p>
                           </div>
                         );
                       }}
@@ -753,10 +753,10 @@ export default function ProfileStats() {
                         className="h-3 w-3 rounded-full"
                         style={{ background: entry.color }}
                       />
-                      <span className="text-sm text-gray-600 w-20">
+                      <span className="text-sm text-fg-4 w-20">
                         {entry.name}
                       </span>
-                      <div className="w-32 h-2 rounded-full bg-gray-100">
+                      <div className="w-32 h-2 rounded-full bg-muted">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -765,10 +765,10 @@ export default function ProfileStats() {
                           }}
                         />
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 w-12 text-right">
+                      <span className="text-sm font-semibold text-fg w-12 text-right">
                         {entry.value}
                       </span>
-                      <span className="text-xs text-gray-500 w-10 text-right">
+                      <span className="text-xs text-fg-muted w-10 text-right">
                         {pct}%
                       </span>
                     </div>
@@ -783,7 +783,7 @@ export default function ProfileStats() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HiOutlineOfficeBuilding className="h-5 w-5 text-cyan-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-fg">
                 Employees — Per Office / Department
               </h3>
             </div>
@@ -800,37 +800,37 @@ export default function ProfileStats() {
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr className="border-b border-line-subtle">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Office
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Male
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Female
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-line-faint">
                     {officeData.map((row, index) => (
                       <tr
                         key={index}
-                        className="transition-colors hover:bg-gray-50"
+                        className="transition-colors hover:bg-subtle"
                       >
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        <td className="px-4 py-3 text-sm font-medium text-fg">
                           {row.office}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Male}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Female}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right font-semibold text-fg">
                           {row.Male + row.Female}
                         </td>
                       </tr>
@@ -839,7 +839,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-500"
+                          className="px-4 py-8 text-center text-sm text-fg-muted"
                         >
                           No office data available
                         </td>
@@ -877,7 +877,7 @@ export default function ProfileStats() {
                     height={36}
                     iconType="circle"
                     formatter={(value) => (
-                      <span className="text-sm text-gray-600">{value}</span>
+                      <span className="text-sm text-fg-4">{value}</span>
                     )}
                   />
                   <Bar
@@ -902,7 +902,7 @@ export default function ProfileStats() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HiOutlineAcademicCap className="h-5 w-5 text-secondary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-fg">
                 Students — Per College
               </h3>
             </div>
@@ -919,37 +919,37 @@ export default function ProfileStats() {
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr className="border-b border-line-subtle">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         College
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Male
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Female
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-line-faint">
                     {collegeData.map((row, index) => (
                       <tr
                         key={index}
-                        className="transition-colors hover:bg-gray-50"
+                        className="transition-colors hover:bg-subtle"
                       >
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        <td className="px-4 py-3 text-sm font-medium text-fg">
                           {row.college}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Male}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Female}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right font-semibold text-fg">
                           {row.Male + row.Female}
                         </td>
                       </tr>
@@ -958,7 +958,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-500"
+                          className="px-4 py-8 text-center text-sm text-fg-muted"
                         >
                           No college data available
                         </td>
@@ -996,7 +996,7 @@ export default function ProfileStats() {
                     height={36}
                     iconType="circle"
                     formatter={(value) => (
-                      <span className="text-sm text-gray-600">{value}</span>
+                      <span className="text-sm text-fg-4">{value}</span>
                     )}
                   />
                   <Bar
@@ -1021,7 +1021,7 @@ export default function ProfileStats() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HiOutlineUserGroup className="h-5 w-5 text-secondary-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-fg">
                 Students — By Year Level
               </h3>
             </div>
@@ -1038,37 +1038,37 @@ export default function ProfileStats() {
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr className="border-b border-line-subtle">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Year Level
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Male
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Female
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                         Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-line-faint">
                     {yearLineData.map((row, index) => (
                       <tr
                         key={index}
-                        className="transition-colors hover:bg-gray-50"
+                        className="transition-colors hover:bg-subtle"
                       >
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        <td className="px-4 py-3 text-sm font-medium text-fg">
                           {row.year}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Male}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-700">
+                        <td className="px-4 py-3 text-sm text-right text-fg-3">
                           {row.Female}
                         </td>
-                        <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-sm text-right font-semibold text-fg">
                           {row.Male + row.Female}
                         </td>
                       </tr>
@@ -1077,7 +1077,7 @@ export default function ProfileStats() {
                       <tr>
                         <td
                           colSpan={4}
-                          className="px-4 py-8 text-center text-sm text-gray-500"
+                          className="px-4 py-8 text-center text-sm text-fg-muted"
                         >
                           No year level data available
                         </td>
@@ -1110,7 +1110,7 @@ export default function ProfileStats() {
                     height={36}
                     iconType="circle"
                     formatter={(value) => (
-                      <span className="text-sm text-gray-600">{value}</span>
+                      <span className="text-sm text-fg-4">{value}</span>
                     )}
                   />
                   <Bar

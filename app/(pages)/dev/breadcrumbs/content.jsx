@@ -40,12 +40,12 @@ export default function BreadcrumbsPreview() {
   const total = groups.reduce((sum, group) => sum + group.routes.length, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-8">
+    <div className="min-h-screen bg-subtle px-4 py-8 sm:px-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Breadcrumb preview</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-fg">Breadcrumb preview</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           Every route rendered with the real{" "}
-          <code className="rounded bg-gray-200 px-1 py-0.5 text-xs">
+          <code className="rounded bg-emphasis px-1 py-0.5 text-xs">
             PageBreadcrumbs
           </code>{" "}
           component. Development only.
@@ -56,9 +56,9 @@ export default function BreadcrumbsPreview() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Filter by path…"
-          className="mt-4 w-full max-w-sm rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-200"
+          className="mt-4 w-full max-w-sm rounded-lg border border-line-strong bg-white px-3 py-2 text-sm text-fg placeholder:text-fg-muted focus:border-secondary-500 focus:outline-none focus:ring-2 focus:ring-secondary-200"
         />
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-fg-muted">
           Showing {total} of {BREADCRUMB_ROUTE_PREVIEW.length} routes
         </p>
       </header>
@@ -70,27 +70,27 @@ export default function BreadcrumbsPreview() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-secondary-700">
                 {group.role}
               </h2>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-fg-muted">
                 home: {group.home.label} → {group.home.href}
               </span>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-line bg-white shadow-sm">
               <table className="w-full text-left">
-                <thead className="border-b border-gray-100 bg-gray-50/70">
+                <thead className="border-b border-line-subtle bg-subtle/70">
                   <tr>
-                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-fg-muted">
                       Route
                     </th>
-                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-fg-muted">
                       Breadcrumb
                     </th>
-                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-fg-muted">
                       Plain text
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-line-subtle">
                   {group.routes.map((route) => {
                     const plain = buildBreadcrumbs(route.path, {
                       home: BREADCRUMB_HOMES[route.role],
@@ -100,7 +100,7 @@ export default function BreadcrumbsPreview() {
 
                     return (
                       <tr key={`${route.role}${route.path}`}>
-                        <td className="whitespace-nowrap px-4 py-2 align-middle font-mono text-xs text-gray-600">
+                        <td className="whitespace-nowrap px-4 py-2 align-middle font-mono text-xs text-fg-4">
                           {route.path}
                           {route.group && (
                             <span
@@ -118,7 +118,7 @@ export default function BreadcrumbsPreview() {
                             className="py-0"
                           />
                         </td>
-                        <td className="px-4 py-2 align-middle text-xs text-gray-500">
+                        <td className="px-4 py-2 align-middle text-xs text-fg-muted">
                           {plain}
                         </td>
                       </tr>

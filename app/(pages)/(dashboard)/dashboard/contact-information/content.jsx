@@ -25,14 +25,14 @@ const emptyAddress = {
 
 function DetailCard({ icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-xl border border-line-subtle p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shrink-0 ${color || "bg-secondary-50 text-secondary-600"}`}>
           {icon}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-          <p className="text-base font-semibold text-gray-900 mt-1 truncate">{value || "—"}</p>
+          <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">{label}</p>
+          <p className="text-base font-semibold text-fg mt-1 truncate">{value || "—"}</p>
         </div>
       </div>
     </div>
@@ -213,9 +213,9 @@ export default function ContactInformationContent({ profile }) {
     return (
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Region</label>
+          <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Region</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+            className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
             value={addr.region.code}
             onChange={(e) => handleAddressChange(which, "region", e.target.value)}
           >
@@ -226,9 +226,9 @@ export default function ContactInformationContent({ profile }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Province</label>
+          <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Province</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
+            className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.province.code}
             onChange={(e) => handleAddressChange(which, "province", e.target.value)}
             disabled={!addr.region.code}
@@ -240,9 +240,9 @@ export default function ContactInformationContent({ profile }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">City/Municipality</label>
+          <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">City/Municipality</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
+            className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.city.code}
             onChange={(e) => handleAddressChange(which, "city", e.target.value)}
             disabled={!addr.province.code}
@@ -254,9 +254,9 @@ export default function ContactInformationContent({ profile }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Barangay</label>
+          <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Barangay</label>
           <select
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
+            className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition disabled:opacity-50"
             value={addr.barangay.code}
             onChange={(e) => handleAddressChange(which, "barangay", e.target.value)}
             disabled={!addr.city.code}
@@ -284,8 +284,8 @@ export default function ContactInformationContent({ profile }) {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contact Information</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your email, phone number, and addresses</p>
+            <h1 className="text-2xl font-bold text-fg">Contact Information</h1>
+            <p className="text-sm text-fg-muted mt-1">Manage your email, phone number, and addresses</p>
           </div>
           <div className="flex items-center gap-3">
             {isEditing && (
@@ -301,7 +301,7 @@ export default function ContactInformationContent({ profile }) {
               }}
               className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border transition ${
                 isEditing
-                  ? "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? "bg-white border-line text-fg-4 hover:bg-subtle"
                   : "bg-secondary-50 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300"
               }`}
             >
@@ -322,7 +322,7 @@ export default function ContactInformationContent({ profile }) {
             <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
               <FaIdCard />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Contact Details</h2>
+            <h2 className="text-lg font-semibold text-fg">Contact Details</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {contactCards.map((card, i) => (
@@ -336,34 +336,34 @@ export default function ContactInformationContent({ profile }) {
       {isEditing && (
         <>
           {/* Contact Info */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-            <div className="px-8 py-5 border-b border-gray-50">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+            <div className="px-8 py-5 border-b border-line-faint">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaEnvelope />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Contact Details</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Your email and phone number</p>
+                  <h2 className="text-base font-semibold text-fg">Contact Details</h2>
+                  <p className="text-xs text-fg-muted mt-0.5">Your email and phone number</p>
                 </div>
               </div>
             </div>
             <div className="px-8 py-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Email Address <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Email Address <span className="text-red-400">*</span></label>
                   <input
                     type="email"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                    className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
+                  <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
                   <input
                     type="number"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+                    className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.mobileNumber}
                     onChange={(e) => handleChange("mobileNumber", e.target.value)}
                   />
@@ -373,15 +373,15 @@ export default function ContactInformationContent({ profile }) {
           </div>
 
           {/* Permanent Address */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-            <div className="px-8 py-5 border-b border-gray-50">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+            <div className="px-8 py-5 border-b border-line-faint">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                   <FaHome />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Permanent Address</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Your permanent/home address</p>
+                  <h2 className="text-base font-semibold text-fg">Permanent Address</h2>
+                  <p className="text-xs text-fg-muted mt-0.5">Your permanent/home address</p>
                 </div>
               </div>
             </div>
@@ -393,22 +393,22 @@ export default function ContactInformationContent({ profile }) {
           </div>
 
           {/* Current Address */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-            <div className="px-8 py-5 border-b border-gray-50">
+          <div className="bg-white rounded-xl border border-line-subtle shadow-sm overflow-hidden mb-8">
+            <div className="px-8 py-5 border-b border-line-faint">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center text-secondary-600">
                     <FaMapMarkerAlt />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Current Address</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Your current residence</p>
+                    <h2 className="text-base font-semibold text-fg">Current Address</h2>
+                    <p className="text-xs text-fg-muted mt-0.5">Your current residence</p>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-secondary-600 focus:ring-secondary-500"
+                    className="w-4 h-4 rounded border-line-strong text-secondary-600 focus:ring-secondary-500"
                     onChange={(e) => {
                       if (e.target.checked) {
                         setFormData((prev) => ({
@@ -423,7 +423,7 @@ export default function ContactInformationContent({ profile }) {
                       }
                     }}
                   />
-                  <span className="text-xs font-medium text-gray-600">Same as Permanent</span>
+                  <span className="text-xs font-medium text-fg-4">Same as Permanent</span>
                 </label>
               </div>
             </div>

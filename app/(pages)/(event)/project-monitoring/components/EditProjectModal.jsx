@@ -3,6 +3,7 @@
 import { appDateInput } from "@/data/lib/appTime";
 import { useMemo, useState } from "react";
 import { useDialog } from "@/hooks/useDialog";
+import Button from "@/components/ui/Button";
 import { FaExclamationTriangle, FaSpinner, FaTimes } from "react-icons/fa";
 import {
   FieldRenderer,
@@ -216,12 +217,12 @@ export default function EditProjectModal({
         aria-modal="true"
         aria-labelledby="project-edit-title"
       >
-        <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-2xl">
+        <div className="shrink-0 px-6 py-4 flex items-center justify-between border-b border-line-subtle rounded-t-2xl">
           <div className="min-w-0">
-            <h3 id="project-edit-title" className="text-base font-bold text-gray-900">
+            <h3 id="project-edit-title" className="text-base font-bold text-fg">
               Edit Project
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5 truncate">
+            <p className="text-xs text-fg-muted mt-0.5 truncate">
               {project?.reference_number ? `${project.reference_number} · ` : ""}
               {getFieldValue(project?.title) || "(untitled project)"}
             </p>
@@ -229,7 +230,7 @@ export default function EditProjectModal({
           <button
             type="button"
             onClick={onClose}
-            className="touch-target h-8 w-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-600 flex items-center justify-center transition-colors"
+            className="touch-target h-8 w-8 rounded-lg text-fg-muted hover:bg-muted hover:text-fg-4 flex items-center justify-center transition-colors"
             aria-label="Close"
           >
             <FaTimes size={14} />
@@ -247,7 +248,7 @@ export default function EditProjectModal({
 
             {sections.map((section) => (
               <div key={section.step}>
-                <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500 pb-2 border-b border-gray-100 mb-3">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted pb-2 border-b border-line-subtle mb-3">
                   {section.title}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -268,23 +269,23 @@ export default function EditProjectModal({
           </div>
         </form>
 
-        <div className="shrink-0 border-t border-gray-100 px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
-          <button
-            type="button"
+        <div className="shrink-0 border-t border-line-subtle px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
+          <Button
+            variant="secondary"
             onClick={onClose}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            className="rounded-lg"
           >
             Cancel
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-5 py-2 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-lg"
           >
             {saving && <FaSpinner className="animate-spin" size={12} />}
             {saving ? "Saving…" : "Save Changes"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -31,14 +31,14 @@ export default function BatchActionBar({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           disabled={!canValidate}
           onClick={onValidate}
-          className="px-3 py-1.5 rounded bg-secondary-500 text-white text-sm disabled:opacity-50"
+          className="rounded px-3 py-1.5"
         >
           {busyAction === "Validate Batch" ? "Validating..." : "Validate"}
-        </button>
+        </Button>
         <Button
           disabled={!canReview}
           onClick={() => onApprove(hasSelection ? [...selectedIds] : null)}
@@ -50,18 +50,18 @@ export default function BatchActionBar({
               ? `Approve Selected (${selectedIds.size})`
               : "Approve All Valid"}
         </Button>
-        <button
-          type="button"
+        <Button
+          variant="danger"
           disabled={!canReview}
           onClick={() => onReject(hasSelection ? [...selectedIds] : null)}
-          className="px-3 py-1.5 rounded bg-orange-500 text-white text-sm disabled:opacity-50"
+          className="rounded px-3 py-1.5"
         >
           {busyAction.startsWith("Reject")
             ? "Rejecting..."
             : hasSelection
               ? `Reject Selected (${selectedIds.size})`
               : "Reject All Valid"}
-        </button>
+        </Button>
         <Button
           variant="success"
           disabled={!canMigrate}
@@ -95,13 +95,13 @@ export default function BatchActionBar({
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           This will write{" "}
           <span className="font-semibold">{approvedCount}</span> approved
           record(s) into production (profiles, terms, and user accounts).
           Make sure you are connected to the intended database.
         </p>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-fg-muted mt-2">
           <span className="font-semibold">{predictedCreateCount}</span>{" "}
           will create new persons ·{" "}
           <span className="font-semibold">{predictedUpdateCount}</span>{" "}

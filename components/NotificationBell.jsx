@@ -173,7 +173,7 @@ export default function NotificationBell() {
           setOpen(next);
           if (next) fetchNotifications();
         }}
-        className="touch-target relative p-2 rounded-full hover:bg-gray-100 text-gray-700"
+        className="touch-target relative p-2 rounded-full hover:bg-muted text-fg-3"
         title="Notifications"
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         aria-expanded={open}
@@ -187,17 +187,17 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="fixed sm:absolute right-4 sm:right-0 mt-2 w-96 max-w-[calc(100vw-32px)] sm:max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-lg z-50">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h4 className="font-semibold text-gray-800">Notifications</h4>
-            <span className="text-xs text-gray-500">{unreadCount} unread</span>
+        <div className="fixed sm:absolute right-4 sm:right-0 mt-2 w-96 max-w-[calc(100vw-32px)] sm:max-w-[90vw] bg-white border border-line rounded-xl shadow-lg z-50">
+          <div className="px-4 py-3 border-b border-line-subtle flex items-center justify-between">
+            <h4 className="font-semibold text-fg-2">Notifications</h4>
+            <span className="text-xs text-fg-muted">{unreadCount} unread</span>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="px-4 py-6 text-sm text-gray-500">Loading...</div>
+              <div className="px-4 py-6 text-sm text-fg-muted">Loading...</div>
             ) : notifications.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-gray-500">
+              <div className="px-4 py-6 text-sm text-fg-muted">
                 No notifications yet.
               </div>
             ) : (
@@ -206,19 +206,19 @@ export default function NotificationBell() {
                   type="button"
                   key={item._id}
                   onClick={() => handleNotificationClick(item)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 ${
+                  className={`w-full text-left px-4 py-3 border-b border-line-faint hover:bg-subtle ${
                     item.isRead ? "bg-white" : "bg-secondary-50/60"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="text-sm font-semibold text-fg-2">
                       {item.title}
                     </p>
-                    <span className="text-xs text-gray-500 shrink-0">
+                    <span className="text-xs text-fg-muted shrink-0">
                       {formatRelativeDate(item.createdAt)}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">{item.message}</p>
+                  <p className="text-xs text-fg-4 mt-1">{item.message}</p>
                 </button>
               ))
             )}

@@ -38,7 +38,7 @@ export default function GadProjectsCard({ dashboard }) {
       }
       action={
         projectsSnapshot.total > 0 ? (
-          <span className="text-xs text-gray-500 shrink-0">
+          <span className="text-xs text-fg-muted shrink-0">
             {projectsSnapshot.total} listed
           </span>
         ) : null
@@ -67,19 +67,19 @@ export default function GadProjectsCard({ dashboard }) {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="rounded-xl bg-gray-50/70 p-3">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="rounded-xl bg-subtle/70 p-3">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                 Accomplished
               </p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-lg font-bold text-fg">
                 {projectsSnapshot.completed}/{projectsSnapshot.total}
               </p>
             </div>
-            <div className="rounded-xl bg-gray-50/70 p-3">
-              <p className="text-2xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="rounded-xl bg-subtle/70 p-3">
+              <p className="text-2xs font-semibold uppercase tracking-wider text-fg-muted">
                 Milestones
               </p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-lg font-bold text-fg">
                 {projectsSnapshot.milestonesDone}/
                 {projectsSnapshot.milestones}
               </p>
@@ -110,7 +110,7 @@ export default function GadProjectsCard({ dashboard }) {
               }`}
             />
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-50">
+          <div className="mt-3 pt-3 border-t border-line-faint">
             <button
               onClick={() =>
                 router.push("/project-monitoring/gad-projects")

@@ -35,7 +35,7 @@ function timeAgo(dateStr) {
 
 const ACTION_COLORS = {
   LOGIN: "text-success bg-success-subtle",
-  LOGOUT: "text-gray-600 bg-gray-50",
+  LOGOUT: "text-fg-4 bg-subtle",
   LOGIN_FAILED: "text-danger bg-danger-subtle",
   CREATE: "text-secondary-600 bg-secondary-50",
   UPDATE: "text-warning bg-warning-subtle",
@@ -64,7 +64,7 @@ const ACTION_COLORS = {
   GPB_UPDATE: "text-success bg-success-subtle",
   GPB_DELETE: "text-danger bg-red-100",
   GPB_STATUS: "text-success bg-success-subtle",
-  GPB_COMMENT: "text-gray-600 bg-gray-50",
+  GPB_COMMENT: "text-fg-4 bg-subtle",
   GPB_COMMENT_DELETE: "text-danger bg-danger-subtle",
   GAA_BUDGET_CREATE: "text-warning bg-warning-subtle",
   GAA_BUDGET_UPDATE: "text-warning bg-warning-subtle",
@@ -80,7 +80,7 @@ const ACTION_COLORS = {
   PROJECT_UPDATE: "text-warning bg-warning-subtle",
   PROJECT_DELETE: "text-danger bg-red-100",
   PROJECT_BULK_DELETE: "text-danger bg-red-100",
-  PROJECT_COMMENT: "text-gray-600 bg-gray-50",
+  PROJECT_COMMENT: "text-fg-4 bg-subtle",
   PROJECT_COMMENT_DELETE: "text-danger bg-danger-subtle",
   EVENT_PARTICIPATE: "text-secondary-600 bg-secondary-50",
   ACCOMPLISHMENT_CREATE: "text-pink-600 bg-pink-50",
@@ -90,7 +90,7 @@ const ACTION_COLORS = {
   EXPORT: "text-secondary-600 bg-secondary-50",
   IMPORT: "text-secondary-600 bg-secondary-50",
   INTEGRATION_SYNC: "text-cyan-600 bg-cyan-50",
-  NOTIFICATION_READ: "text-gray-600 bg-gray-50",
+  NOTIFICATION_READ: "text-fg-4 bg-subtle",
   PII_ACCESS: "text-orange-700 bg-orange-100",
   AUDIT_REDACT: "text-danger bg-red-100",
   IMPORT_BATCH_FETCH: "text-pink-600 bg-pink-50",
@@ -99,7 +99,7 @@ const ACTION_COLORS = {
   IMPORT_BATCH_APPROVE: "text-pink-600 bg-pink-50",
   IMPORT_BATCH_REJECT: "text-danger bg-danger-subtle",
   IMPORT_BATCH_DELETE: "text-danger bg-red-100",
-  OTHER: "text-gray-500 bg-gray-100",
+  OTHER: "text-fg-muted bg-muted",
 };
 
 const SEVERITY_COLORS = {
@@ -118,13 +118,13 @@ const RESOURCE_COLORS = {
   gfps: "text-cyan-600 bg-cyan-50",
   gaa_budget: "text-warning bg-warning-subtle",
   university_official: "text-orange-600 bg-orange-50",
-  notification: "text-gray-600 bg-gray-50",
+  notification: "text-fg-4 bg-subtle",
   integration: "text-pink-600 bg-pink-50",
-  system: "text-gray-500 bg-gray-100",
+  system: "text-fg-muted bg-muted",
 };
 
 function getSeverityBadge(severity) {
-  const colors = SEVERITY_COLORS[severity] || "text-gray-600 bg-gray-100";
+  const colors = SEVERITY_COLORS[severity] || "text-fg-4 bg-muted";
   return (
     <span className={`inline-block px-1.5 py-0.5 rounded text-2xs font-semibold uppercase ${colors}`}>
       {severity || "info"}
@@ -134,7 +134,7 @@ function getSeverityBadge(severity) {
 
 function getResourceBadge(resourceType) {
   if (!resourceType || resourceType === "system") return null;
-  const colors = RESOURCE_COLORS[resourceType] || "text-gray-600 bg-gray-100";
+  const colors = RESOURCE_COLORS[resourceType] || "text-fg-4 bg-muted";
   return (
     <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${colors}`}>
       {resourceType}
@@ -143,7 +143,7 @@ function getResourceBadge(resourceType) {
 }
 
 function getActionBadge(action) {
-  const colors = ACTION_COLORS[action] || "text-gray-600 bg-gray-100";
+  const colors = ACTION_COLORS[action] || "text-fg-4 bg-muted";
   return (
     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${colors}`}>
       {action}
@@ -196,9 +196,9 @@ function describeActor(log) {
  * than blank, because "cleared" and "never set" read very differently in a
  * dispute and a blank cell conflates them. */
 function formatChangeValue(value, redacted) {
-  if (redacted) return <span className="italic text-gray-500">[vaulted]</span>;
+  if (redacted) return <span className="italic text-fg-muted">[vaulted]</span>;
   if (value === null || value === undefined || value === "") {
-    return <span className="italic text-gray-500">(empty)</span>;
+    return <span className="italic text-fg-muted">(empty)</span>;
   }
   if (typeof value === "object") return <span className="font-mono">{JSON.stringify(value)}</span>;
   return <span className="font-mono">{String(value)}</span>;
@@ -208,13 +208,13 @@ function ChangeList({ changes }) {
   return (
     <ul className="mt-1 space-y-0.5">
       {changes.map((c, i) => (
-        <li key={`${c.field}-${i}`} className="text-xs text-gray-600">
-          <span className="font-medium text-gray-700">{c.field}</span>
+        <li key={`${c.field}-${i}`} className="text-xs text-fg-4">
+          <span className="font-medium text-fg-3">{c.field}</span>
           {": "}
           <span className="text-danger line-through decoration-red-300">
             {formatChangeValue(c.before, c.redacted)}
           </span>
-          <span className="mx-1 text-gray-500">→</span>
+          <span className="mx-1 text-fg-muted">→</span>
           <span className="text-success">
             {formatChangeValue(c.after, c.redacted)}
           </span>
@@ -229,8 +229,8 @@ function DetailItem({ label, children }) {
   if (children === null || children === undefined || children === "") return null;
   return (
     <div>
-      <dt className="text-2xs uppercase tracking-wide text-gray-500">{label}</dt>
-      <dd className="text-xs text-gray-700 break-words">{children}</dd>
+      <dt className="text-2xs uppercase tracking-wide text-fg-muted">{label}</dt>
+      <dd className="text-xs text-fg-3 break-words">{children}</dd>
     </div>
   );
 }
@@ -245,7 +245,7 @@ function DetailItem({ label, children }) {
 function LogDetail({ log }) {
   const actor = describeActor(log);
   return (
-    <div className="bg-gray-50 border-t px-4 py-3">
+    <div className="bg-subtle border-t px-4 py-3">
       <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-2">
         <DetailItem label="Outcome">
           {log.outcome?.result
@@ -274,7 +274,7 @@ function LogDetail({ log }) {
           {log.hash_prev ? (
             <span className="font-mono text-2xs">{log.hash_prev}</span>
           ) : (
-            <span className="italic text-gray-500">none (chain start)</span>
+            <span className="italic text-fg-muted">none (chain start)</span>
           )}
         </DetailItem>
         <DetailItem label="Record ID">
@@ -284,14 +284,14 @@ function LogDetail({ log }) {
 
       {log.changes?.length > 0 && (
         <div className="mt-3">
-          <div className="text-2xs uppercase tracking-wide text-gray-500">Changes</div>
+          <div className="text-2xs uppercase tracking-wide text-fg-muted">Changes</div>
           <ChangeList changes={log.changes} />
         </div>
       )}
 
       {log.redacted && (
         <div className="mt-3 text-xs">
-          <span className="text-2xs uppercase tracking-wide text-gray-500">
+          <span className="text-2xs uppercase tracking-wide text-fg-muted">
             Redaction
           </span>
           <div className="text-danger">
@@ -303,12 +303,12 @@ function LogDetail({ log }) {
               here is what makes the required justification readable to the next
               auditor rather than collected and then hidden. */}
           {log.description && (
-            <div className="text-gray-700 mt-0.5">{log.description}</div>
+            <div className="text-fg-3 mt-0.5">{log.description}</div>
           )}
         </div>
       )}
 
-      <div className="mt-3 text-xs text-gray-500">
+      <div className="mt-3 text-xs text-fg-muted">
         Actor snapshot: {[actor.primary, ...actor.secondary].filter(Boolean).join(" · ") || "unknown"}
         {actor.id ? ` · user ${actor.id}` : ""}
       </div>
@@ -540,7 +540,7 @@ export default function ActivityLogsContent() {
           <h1 className="text-2xl font-bold">Audit Trail</h1>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">{total} total entries</span>
+          <span className="text-sm text-fg-muted">{total} total entries</span>
           <button
             onClick={handleExport}
             disabled={logs.length === 0}
@@ -555,21 +555,21 @@ export default function ActivityLogsContent() {
       <div className="bg-white rounded-lg shadow p-4 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">User ID</label>
+            <label className="block text-xs font-medium text-fg-4 mb-1">User ID</label>
             <input
               type="text"
               value={searchUserId}
               onChange={(e) => { setSearchUserId(e.target.value); setPage(1); }}
               placeholder="Filter by user ID..."
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Action</label>
+            <label className="block text-xs font-medium text-fg-4 mb-1">Action</label>
             <select
               value={searchAction}
               onChange={(e) => { setSearchAction(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             >
               <option value="">All Actions</option>
               <option value="LOGIN">LOGIN</option>
@@ -625,21 +625,21 @@ export default function ActivityLogsContent() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+            <label className="block text-xs font-medium text-fg-4 mb-1">From</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+            <label className="block text-xs font-medium text-fg-4 mb-1">To</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
+              className="w-full border border-line-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-secondary-500"
             />
           </div>
         </div>
@@ -661,17 +661,17 @@ export default function ActivityLogsContent() {
             <FaShieldAlt
               className={
                 !integrity
-                  ? "text-lg text-gray-500"
+                  ? "text-lg text-fg-muted"
                   : integrity.status === "intact"
                     ? "text-lg text-success"
                     : "text-lg text-danger"
               }
             />
             <div>
-              <h2 className="text-sm font-semibold text-gray-700">
+              <h2 className="text-sm font-semibold text-fg-3">
                 Chain integrity
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 {integrityLoading
                   ? "Verifying every record’s hash and link…"
                   : integrityError
@@ -692,8 +692,8 @@ export default function ActivityLogsContent() {
 
         {integrity && (
           <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Status</div>
+            <div className="bg-subtle rounded p-2">
+              <div className="text-fg-muted">Status</div>
               <div
                 className={
                   integrity.status === "intact"
@@ -704,16 +704,16 @@ export default function ActivityLogsContent() {
                 {integrity.status}
               </div>
             </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Records checked</div>
+            <div className="bg-subtle rounded p-2">
+              <div className="text-fg-muted">Records checked</div>
               <div className="font-semibold">{integrity.checked}</div>
             </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Retention boundaries</div>
+            <div className="bg-subtle rounded p-2">
+              <div className="text-fg-muted">Retention boundaries</div>
               <div className="font-semibold">{integrity.archived}</div>
             </div>
-            <div className="bg-gray-50 rounded p-2">
-              <div className="text-gray-500">Unlinked (legacy)</div>
+            <div className="bg-subtle rounded p-2">
+              <div className="text-fg-muted">Unlinked (legacy)</div>
               <div className="font-semibold">{integrity.unlinked_legacy}</div>
             </div>
           </div>
@@ -764,24 +764,24 @@ export default function ActivityLogsContent() {
       {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading audit records...</div>
+          <div className="p-8 text-center text-fg-muted">Loading audit records...</div>
         ) : error ? (
           <div className="p-8 text-center text-danger">{error}</div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No audit records found.</div>
+          <div className="p-8 text-center text-fg-muted">No audit records found.</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-subtle border-b">
               <tr>
                 <th className="w-8 px-2 py-3" />
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Timestamp</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">User</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Action</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Severity</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Resource</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Description</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">IP Address</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Actions</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">Timestamp</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">User</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">Action</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">Severity</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">Resource</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">Description</th>
+                <th className="text-left px-4 py-3 font-medium text-fg-4">IP Address</th>
+                <th className="text-center px-4 py-3 font-medium text-fg-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -790,14 +790,14 @@ export default function ActivityLogsContent() {
                 const isOpen = expanded.has(log._id);
                 return (
                   <Fragment key={log._id}>
-                    <tr className={isOpen ? "bg-gray-50" : "hover:bg-gray-50"}>
+                    <tr className={isOpen ? "bg-subtle" : "hover:bg-subtle"}>
                       <td className="px-2 py-3">
                         <button
                           onClick={() => toggleExpanded(log._id)}
                           aria-expanded={isOpen}
                           aria-label={isOpen ? "Hide details" : "Show details"}
                           title={isOpen ? "Hide details" : "Show details"}
-                          className="touch-target text-gray-500 hover:text-gray-700"
+                          className="touch-target text-fg-muted hover:text-fg-3"
                         >
                           <FaChevronRight
                             className={`transition-transform ${isOpen ? "rotate-90" : ""}`}
@@ -808,7 +808,7 @@ export default function ActivityLogsContent() {
                         {/* Absolute time only. It used to show "Just now" above
                             the real timestamp, which duplicated the same fact
                             twice in one cell; a relative age is a tooltip now. */}
-                        <span className="text-xs text-gray-600" title={timeAgo(log.createdAt)}>
+                        <span className="text-xs text-fg-4" title={timeAgo(log.createdAt)}>
                           {formatDate(log.createdAt)}
                         </span>
                       </td>
@@ -817,13 +817,13 @@ export default function ActivityLogsContent() {
                             of "who", so it moves to the tooltip and the detail
                             panel rather than being the headline. */}
                         <span
-                          className="text-xs font-medium text-gray-700"
+                          className="text-xs font-medium text-fg-3"
                           title={actor.id ? `User ID: ${actor.id}` : undefined}
                         >
                           {actor.primary || "—"}
                         </span>
                         {actor.secondary.length > 0 && (
-                          <span className="block text-xs text-gray-500">
+                          <span className="block text-xs text-fg-muted">
                             {actor.secondary.join(" · ")}
                           </span>
                         )}
@@ -834,7 +834,7 @@ export default function ActivityLogsContent() {
                       <td className="px-4 py-3 max-w-md">
                         <span
                           className={`block ${isOpen ? "" : "truncate"} ${
-                            log.redacted ? "italic text-gray-500" : ""
+                            log.redacted ? "italic text-fg-muted" : ""
                           }`}
                           title={log.description}
                         >
@@ -847,7 +847,7 @@ export default function ActivityLogsContent() {
                           <ChangeList changes={log.changes} />
                         )}
                         {!isOpen && log.changes?.length > 1 && (
-                          <span className="block text-xs text-gray-500">
+                          <span className="block text-xs text-fg-muted">
                             {log.changes.length} fields changed — expand to view
                           </span>
                         )}
@@ -857,17 +857,17 @@ export default function ActivityLogsContent() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{log.ip_address || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-fg-muted">{log.ip_address || "—"}</td>
                       <td className="px-4 py-3 text-center">
                         {/* Not a trash icon: nothing is deleted. The label says what
                             actually happens, so the control cannot be mistaken for
                             the removal it deliberately is not. */}
                         {log.redacted ? (
-                          <span className="text-xs text-gray-500">—</span>
+                          <span className="text-xs text-fg-muted">—</span>
                         ) : (
                           <button
                             onClick={() => setDeleteId(log._id)}
-                            className="text-xs text-gray-500 hover:text-danger underline"
+                            className="text-xs text-fg-muted hover:text-danger underline"
                             title="Redact: blanks the detail, keeps the record"
                           >
                             Redact
@@ -893,21 +893,21 @@ export default function ActivityLogsContent() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-fg-muted">
             Page {page} of {totalPages} ({total} entries)
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="px-3 py-1 border rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 border rounded text-sm hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1 border rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 border rounded text-sm hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -932,7 +932,7 @@ export default function ActivityLogsContent() {
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-fg-4">
           This entry will remain in the audit trail — who acted, when, and
           the action itself are preserved — but its description and details
           will be blanked. The redaction is recorded against your account.
@@ -957,7 +957,7 @@ export default function ActivityLogsContent() {
             {redactReasonError}
           </p>
         ) : (
-          <p id={`${redactReasonId}-hint`} className="mt-1.5 text-xs text-gray-500">
+          <p id={`${redactReasonId}-hint`} className="mt-1.5 text-xs text-fg-muted">
             Kept in the audit record.
           </p>
         )}

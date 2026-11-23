@@ -3,17 +3,18 @@
 import React from "react";
 import { FaExclamationTriangle, FaPaperclip, FaPen } from "react-icons/fa";
 import { getEvidenceProxyUrl } from "../../lib/projectView";
+import Button from "@/components/ui/Button";
 
 /* Small building blocks shared by the GAD page's cards and detail tabs. */
 
 export function StatCard({ icon: Icon, iconClass, label, value, sub, children }) {
   return (
-    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+    <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-          {sub && <p className="mt-0.5 text-xs text-gray-500">{sub}</p>}
+          <p className="text-xs font-medium text-fg-muted truncate">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-fg">{value}</p>
+          {sub && <p className="mt-0.5 text-xs text-fg-muted">{sub}</p>}
         </div>
         <div
           className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}
@@ -29,7 +30,7 @@ export function StatCard({ icon: Icon, iconClass, label, value, sub, children })
 /* A span (not a <p>) so it can also sit inside a <label>. */
 export const FieldLabel = ({ children, className = "" }) => (
   <span
-    className={`block text-2xs font-semibold uppercase tracking-wider text-gray-500 ${className}`}
+    className={`block text-2xs font-semibold uppercase tracking-wider text-fg-muted ${className}`}
   >
     {children}
   </span>
@@ -39,7 +40,7 @@ export function DetailRow({ label, value }) {
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
-      <p className="text-sm text-gray-800 break-words">{value || "—"}</p>
+      <p className="text-sm text-fg-2 break-words">{value || "—"}</p>
     </div>
   );
 }
@@ -53,7 +54,7 @@ export function DetailList({ label, items, descriptions }) {
     <div>
       <FieldLabel>{label}</FieldLabel>
       {list.length > 0 ? (
-        <ol className="list-decimal list-inside space-y-0.5 text-sm text-gray-800">
+        <ol className="list-decimal list-inside space-y-0.5 text-sm text-fg-2">
           {list.map((it, i) => (
             <li key={i}>
               {it}
@@ -62,7 +63,7 @@ export function DetailList({ label, items, descriptions }) {
           ))}
         </ol>
       ) : (
-        <p className="text-sm text-gray-800">—</p>
+        <p className="text-sm text-fg-2">—</p>
       )}
     </div>
   );
@@ -83,44 +84,44 @@ export const ErrorNote = ({ children }) => (
   </div>
 );
 
-/* The rose "Update"/"Set" button on a detail section. */
+/* The "Update"/"Set" button on a detail section. */
 export const EditButton = ({ onClick, children }) => (
-  <button
-    type="button"
+  <Button
+    variant="secondary"
     onClick={(e) => {
       e.stopPropagation();
       onClick();
     }}
-    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100 shrink-0"
+    className="gap-1.5 rounded-lg px-2.5 py-1 text-xs shrink-0"
   >
     <FaPen size={10} />
     {children}
-  </button>
+  </Button>
 );
 
 export const SaveCancel = ({ saving, onSave, onCancel }) => (
   <div className="flex items-center justify-end gap-2">
-    <button
-      type="button"
+    <Button
+      variant="secondary"
       onClick={onCancel}
       disabled={saving}
-      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="rounded-lg px-3 py-1.5 text-xs"
     >
       Cancel
-    </button>
-    <button
-      type="button"
+    </Button>
+    <Button
+      variant="primary"
       onClick={onSave}
       disabled={saving}
-      className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="rounded-lg px-3 py-1.5 text-xs"
     >
       {saving ? "Saving…" : "Save"}
-    </button>
+    </Button>
   </div>
 );
 
 export const inputClass =
-  "w-full text-sm rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
+  "w-full text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
 
 /* An uploaded file as a chip linking to the file proxy. */
 export function FileChip({ file, fallbackName, size = "md" }) {
@@ -148,7 +149,7 @@ export function FileChip({ file, fallbackName, size = "md" }) {
       {label}
     </a>
   ) : (
-    <span className={`${base} text-gray-600 bg-gray-50 border-gray-200`}>
+    <span className={`${base} text-fg-4 bg-subtle border-line`}>
       {icon}
       {label}
     </span>

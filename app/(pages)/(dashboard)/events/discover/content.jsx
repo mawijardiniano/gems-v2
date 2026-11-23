@@ -23,7 +23,7 @@ const ACTIVITY_COLORS = {
   Extension: "bg-success-subtle text-success border-success-border",
   Research: "bg-secondary-50 text-secondary-700 border-secondary-200",
   Students: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  Others: "bg-gray-50 text-gray-700 border-gray-200",
+  Others: "bg-subtle text-fg-3 border-line",
 };
 
 const ACTIVITY_TYPES = [
@@ -42,11 +42,11 @@ const ACTIVITY_TYPES = [
 function DateRangeDisplay({ event }) {
   const when = formatEventWhen(event);
   if (!when) {
-    return <span className="text-gray-500 text-xs">No date set</span>;
+    return <span className="text-fg-muted text-xs">No date set</span>;
   }
   return (
-    <div className="flex items-center gap-1.5 text-xs text-gray-500">
-      <FaCalendar className="shrink-0 text-gray-500" />
+    <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+      <FaCalendar className="shrink-0 text-fg-muted" />
       <span>{when}</span>
     </div>
   );
@@ -68,7 +68,7 @@ function EventCard({ event, onClick }) {
 
   return (
     <div
-      className="group relative bg-white rounded-xl border border-gray-200 hover:border-secondary-200 hover:shadow-lg transition duration-200 overflow-hidden cursor-pointer"
+      className="group relative bg-white rounded-xl border border-line hover:border-secondary-200 hover:shadow-lg transition duration-200 overflow-hidden cursor-pointer"
       onClick={() => onClick(event._id)}
       role="link"
       tabIndex={0}
@@ -107,11 +107,11 @@ function EventCard({ event, onClick }) {
         {/* Title & Activity Type */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-gray-900 group-hover:text-secondary-600 transition-colors line-clamp-2">
+            <h3 className="text-base font-semibold text-fg group-hover:text-secondary-600 transition-colors line-clamp-2">
               {event.title}
             </h3>
             {event.reference_number && (
-              <span className="mt-1 inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-2xs font-medium text-gray-500">
+              <span className="mt-1 inline-block rounded border border-line bg-subtle px-1.5 py-0.5 font-mono text-2xs font-medium text-fg-muted">
                 {event.reference_number}
               </span>
             )}
@@ -120,7 +120,7 @@ function EventCard({ event, onClick }) {
             <span
               className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border ${
                 ACTIVITY_COLORS[event.type_of_activity] ||
-                "bg-gray-50 text-gray-700 border-gray-200"
+                "bg-subtle text-fg-3 border-line"
               }`}
             >
               {event.type_of_activity}
@@ -133,21 +133,21 @@ function EventCard({ event, onClick }) {
 
         {/* Venue */}
         {event.venue && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FaLocationArrow className="shrink-0 text-gray-500" />
+          <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+            <FaLocationArrow className="shrink-0 text-fg-muted" />
             <span className="truncate">{event.venue}</span>
           </div>
         )}
 
         {/* Description */}
         {event.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-fg-muted line-clamp-2 leading-relaxed">
             {event.description}
           </p>
         )}
 
         {/* Stats & View link */}
-        <div className="flex items-center justify-end pt-1 border-t border-gray-50">
+        <div className="flex items-center justify-end pt-1 border-t border-line-faint">
           <span className="inline-flex items-center gap-1 text-xs font-medium text-secondary-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100 transition-opacity">
             View Details <FaChevronRight className="text-[0.5rem]" />
           </span>
@@ -160,12 +160,12 @@ function EventCard({ event, onClick }) {
 function EmptyState({ icon, title, description }) {
   return (
     <div className="text-center py-16 px-4">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center">
-        <div className="text-2xl text-gray-300">{icon}</div>
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-subtle flex items-center justify-center">
+        <div className="text-2xl text-fg-faint">{icon}</div>
       </div>
-      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <p className="text-sm font-medium text-fg-muted">{title}</p>
       {description && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <p className="text-xs text-fg-muted mt-1">{description}</p>
       )}
     </div>
   );
@@ -232,7 +232,7 @@ export default function DiscoverContent() {
         <div className="flex items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-secondary-200 border-t-indigo-500 rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Loading events...</p>
+            <p className="text-sm text-fg-muted">Loading events...</p>
           </div>
         </div>
       </div>
@@ -243,8 +243,8 @@ export default function DiscoverContent() {
     <div className="mx-auto p-5 space-y-8 max-w-5xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Discover Events</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-fg">Discover Events</h1>
+        <p className="text-sm text-fg-muted mt-1">
           Explore and register for upcoming events
         </p>
       </div>
@@ -267,22 +267,22 @@ export default function DiscoverContent() {
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted text-sm" />
           <input
             type="text"
             placeholder="Search events by title, description, venue..."
             aria-label="Search events"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
+            className="w-full pl-10 pr-4 py-2.5 border border-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
           />
         </div>
         <div className="relative">
-          <FaFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+          <FaFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted text-sm" />
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="appearance-none pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition cursor-pointer min-w-[140px]"
+            className="appearance-none pl-10 pr-8 py-2.5 border border-line rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition cursor-pointer min-w-[140px]"
           >
             {ACTIVITY_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -290,12 +290,12 @@ export default function DiscoverContent() {
               </option>
             ))}
           </select>
-          <FaChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs -rotate-90 pointer-events-none" />
+          <FaChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted text-xs -rotate-90 pointer-events-none" />
         </div>
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-fg-muted">
         {discoverEvents.length} event{discoverEvents.length !== 1 ? "s" : ""}{" "}
         available
       </div>

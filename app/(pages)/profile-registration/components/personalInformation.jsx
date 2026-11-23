@@ -47,7 +47,7 @@ export default function PersonalInformation() {
       <div className="w-full max-w-4xl">
         <Progress />
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-line-subtle overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-secondary-600 to-secondary-700 px-8 py-5">
             <div className="flex items-center gap-3">
@@ -66,7 +66,7 @@ export default function PersonalInformation() {
           <div className="p-8 space-y-6">
             {/* Full Name Row */}
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Full Name</p>
+              <p className="text-sm font-semibold text-fg-3 mb-3">Full Name</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { field: "first_name", label: "First Name", required: true },
@@ -74,12 +74,12 @@ export default function PersonalInformation() {
                   { field: "last_name", label: "Last Name", required: true },
                 ].map(({ field, label, required }) => (
                   <div key={field}>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                       {label}
                       {required && <span className="text-red-400 ml-1">*</span>}
                     </label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-gray-50 hover:bg-white"
+                      className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition-all bg-subtle hover:bg-white"
                       value={personal[field]}
                       onChange={(e) => updatePersonal(field, e.target.value)}
                       placeholder={`Enter ${label.toLowerCase()}`}
@@ -89,16 +89,16 @@ export default function PersonalInformation() {
               </div>
             </div>
 
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-line-subtle" />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Birthday <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="date"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={personal.birthday}
                   onChange={(e) => updatePersonal("birthday", e.target.value)}
                   max={new Date().toISOString().split("T")[0]}
@@ -106,11 +106,11 @@ export default function PersonalInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Blood Type <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={personal.bloodType}
                   onChange={(e) => updatePersonal("bloodType", e.target.value)}
                 >
@@ -126,11 +126,11 @@ export default function PersonalInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Nationality <span className="text-red-400">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={personal.nationality}
                   onChange={(e) => updatePersonal("nationality", e.target.value)}
                 />
@@ -138,16 +138,16 @@ export default function PersonalInformation() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-line-subtle" />
 
             {/* Status & Religion Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Civil Status <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={personal.civil_status}
                   onChange={(e) => updatePersonal("civil_status", e.target.value)}
                 >
@@ -162,11 +162,11 @@ export default function PersonalInformation() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                   Religion <span className="text-red-400">*</span>
                 </label>
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                  className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                   value={personal.religion}
                   onChange={(e) => {
                     updatePersonal("religion", e.target.value);
@@ -195,7 +195,7 @@ export default function PersonalInformation() {
                 </select>
                 {personal.religion === "Other" && (
                   <input
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white mt-2"
+                    className="w-full border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white mt-2"
                     placeholder="Please specify your religion"
                     value={personal.religion_other || ""}
                     onChange={(e) => updatePersonal("religion_other", e.target.value)}
@@ -205,15 +205,15 @@ export default function PersonalInformation() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-line-subtle" />
 
             {/* Current Status */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-medium text-fg-muted mb-1.5 uppercase tracking-wide">
                 Current Status <span className="text-red-400">*</span>
               </label>
               <select
-                className="w-full md:w-1/2 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-gray-50 hover:bg-white"
+                className="w-full md:w-1/2 border border-line rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-400 transition bg-subtle hover:bg-white"
                 value={personal.currentStatus}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -251,7 +251,7 @@ export default function PersonalInformation() {
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <div className="px-8 py-4 bg-subtle border-t border-line-subtle flex justify-end">
             <Button
               onClick={handleNext}
               disabled={isNextDisabled}

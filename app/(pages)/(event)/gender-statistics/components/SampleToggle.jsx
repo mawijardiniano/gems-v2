@@ -21,7 +21,7 @@ export function SampleToggle({ useSample, onToggle, className = "" }) {
       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
         useSample
           ? "border-secondary-300 bg-secondary-50 text-secondary-700"
-          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+          : "border-line bg-white text-fg-3 hover:bg-subtle"
       } ${className}`}
     >
       <span

@@ -48,7 +48,7 @@ export function useGenderStats(type, params) {
   return { data, loading, error, refetch: load };
 }
 
-export const CARD_CLS = "rounded-xl border border-gray-100 bg-white p-5 shadow-sm";
+export const CARD_CLS = "rounded-xl border border-line-subtle bg-white p-5 shadow-sm";
 
 const tooltipStyle = {
   borderRadius: 10,
@@ -69,7 +69,7 @@ export const GENDER_IDENTITY_COLORS = {
 
 export function LoadingState({ label = "Loading statistics…" }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-10 flex items-center justify-center gap-3 text-gray-500 text-sm">
+    <div className="rounded-2xl border border-line-subtle bg-white shadow-sm p-10 flex items-center justify-center gap-3 text-fg-muted text-sm">
       <span className="h-5 w-5 rounded-full border-2 border-secondary-500 border-t-transparent animate-spin" />
       {label}
     </div>
@@ -93,7 +93,7 @@ export function ErrorState({ message, onRetry }) {
 
 export function SectionTitle({ children }) {
   return (
-    <h3 className="text-sm font-semibold text-gray-900 mb-4">{children}</h3>
+    <h3 className="text-sm font-semibold text-fg mb-4">{children}</h3>
   );
 }
 
@@ -142,7 +142,7 @@ export function SummaryCards({ totals, what, deltas }) {
       {cards.map((c) => (
         <div
           key={c.label}
-          className="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 shadow-sm"
+          className="relative overflow-hidden rounded-xl border border-line-subtle bg-white p-6 shadow-sm"
         >
           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${c.accent}`} />
           <div className="flex items-start gap-4">
@@ -150,13 +150,13 @@ export function SummaryCards({ totals, what, deltas }) {
               {c.icon}
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+              <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
                 {c.label}
               </p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 leading-tight">
+              <p className="mt-1 text-2xl font-bold text-fg leading-tight">
                 {c.value == null ? "—" : c.value.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 {c.pct === "—" ? "not recorded" : `${c.pct} of total`}
                 {c.sex && deltas?.[c.sex] != null && (
                   <span
@@ -187,7 +187,7 @@ export function SexDonut({ totals }) {
     <div className={CARD_CLS}>
       <SectionTitle>Sex Distribution</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="relative">
           <ResponsiveContainer width="100%" height={220}>
@@ -211,14 +211,14 @@ export function SexDonut({ totals }) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-fg">
               {totals.total.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-500">Total</span>
+            <span className="text-xs text-fg-muted">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
-              <span key={d.name} className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span key={d.name} className="flex items-center gap-1.5 text-xs text-fg-4">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: SEX_COLORS[d.name] }}
@@ -243,7 +243,7 @@ export function StackedSexBar({ title, data, nameKey, height }) {
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height || safeData.length * 42 + 60}>
           <BarChart
@@ -287,7 +287,7 @@ export function GenderIdentityDonut({ rows }) {
     <div className={CARD_CLS}>
       <SectionTitle>Gender Identity</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="relative">
           <ResponsiveContainer width="100%" height={220}>
@@ -314,16 +314,16 @@ export function GenderIdentityDonut({ rows }) {
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-fg">
               {total.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-500">Total</span>
+            <span className="text-xs text-fg-muted">Total</span>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
             {data.map((d) => (
               <span
                 key={d.name}
-                className="flex items-center gap-1.5 text-xs text-gray-600"
+                className="flex items-center gap-1.5 text-xs text-fg-4"
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full"
@@ -345,7 +345,7 @@ export function StackedSexBarVertical({ title, data, nameKey, height = 260 }) {
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={safeData} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
@@ -369,12 +369,12 @@ export function DemographicTable({ rows, total }) {
     <div className={CARD_CLS}>
       <SectionTitle>Demographic Profile (Institutional Data)</SectionTitle>
       {safeRows.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-line-subtle text-xs uppercase tracking-wider text-fg-muted">
                 <th className="py-2 pr-3 font-medium">Category</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -384,12 +384,12 @@ export function DemographicTable({ rows, total }) {
             </thead>
             <tbody>
               {safeRows.map((r) => (
-                <tr key={r.label} className="border-b border-gray-50 last:border-0">
-                  <td className="py-2.5 pr-3 text-gray-700">{r.label}</td>
+                <tr key={r.label} className="border-b border-line-faint last:border-0">
+                  <td className="py-2.5 pr-3 text-fg-3">{r.label}</td>
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">{r.Female}</td>
                   <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">{r.Male}</td>
-                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">{r.total}</td>
-                  <td className="py-2.5 text-right text-xs text-gray-500">
+                  <td className="py-2.5 pr-3 text-right font-semibold text-fg">{r.total}</td>
+                  <td className="py-2.5 text-right text-xs text-fg-muted">
                     {total ? `${Math.round((r.total / total) * 1000) / 10}%` : "—"}
                   </td>
                 </tr>
@@ -422,18 +422,18 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
   return (
     <div className={CARD_CLS}>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-fg">{title}</h3>
         {subtitle && (
-          <span className="text-xs text-gray-500">{subtitle}</span>
+          <span className="text-xs text-fg-muted">{subtitle}</span>
         )}
       </div>
       {safeData.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-line-subtle text-xs uppercase tracking-wider text-fg-muted">
                 <th className="py-2 pr-3 font-medium">{nameHeader}</th>
                 <th className="py-2 pr-3 font-medium text-right">Female</th>
                 <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -445,9 +445,9 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
               {safeData.map((r, i) => (
                 <tr
                   key={r[nameKey] ?? i}
-                  className="border-b border-gray-50 last:border-0"
+                  className="border-b border-line-faint last:border-0"
                 >
-                  <td className="py-2.5 pr-3 text-gray-700">
+                  <td className="py-2.5 pr-3 text-fg-3">
                     {r[nameKey] ?? "—"}
                   </td>
                   <td className="py-2.5 pr-3 text-right text-pink-600 font-medium">
@@ -456,10 +456,10 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                   <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {(r.Male || 0).toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
+                  <td className="py-2.5 pr-3 text-right font-semibold text-fg">
                     {rowTotal(r).toLocaleString()}
                   </td>
-                  <td className="py-2.5 text-right text-xs text-gray-500">
+                  <td className="py-2.5 text-right text-xs text-fg-muted">
                     {r.pctFemale != null
                       ? `${r.pctFemale}%`
                       : pct(r.Female || 0, rowTotal(r))}
@@ -468,7 +468,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-gray-200 font-semibold text-gray-900">
+              <tr className="border-t border-line font-semibold text-fg">
                 <td className="py-2.5 pr-3">Total</td>
                 <td className="py-2.5 pr-3 text-right text-pink-700">
                   {totals.Female.toLocaleString()}
@@ -479,7 +479,7 @@ export function SexTable({ title, subtitle, data, nameKey, nameHeader = "Categor
                 <td className="py-2.5 pr-3 text-right">
                   {totals.total.toLocaleString()}
                 </td>
-                <td className="py-2.5 text-right text-xs text-gray-500">
+                <td className="py-2.5 text-right text-xs text-fg-muted">
                   {pct(totals.Female, totals.total)}
                 </td>
               </tr>
@@ -583,19 +583,19 @@ export function YearMultiSelect({ options, value, onChange }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         disabled={options.length === 0}
-        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2 text-left text-sm text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
-        <span className="text-xs text-gray-500">▾</span>
+        <span className="text-xs text-fg-muted">▾</span>
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-line bg-white p-2 shadow-lg">
             {options.map((year) => (
               <label
                 key={year}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-fg-3 hover:bg-subtle"
               >
                 <input
                   type="checkbox"
@@ -605,7 +605,7 @@ export function YearMultiSelect({ options, value, onChange }) {
                 AY {year}
               </label>
             ))}
-            <p className="px-2 pt-1 text-xs text-gray-500">
+            <p className="px-2 pt-1 text-xs text-fg-muted">
               Select two or more years to compare them.
             </p>
           </div>
@@ -652,19 +652,19 @@ export function MultiSelect({
         aria-expanded={open}
         aria-label={label}
         disabled={options.length === 0}
-        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+        className="flex min-w-[10rem] items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2 text-left text-sm text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
       >
         <span>{summary}</span>
-        <span className="text-xs text-gray-500">v</span>
+        <span className="text-xs text-fg-muted">v</span>
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+          <div className="absolute z-20 mt-1 w-56 rounded-lg border border-line bg-white p-2 shadow-lg">
             {options.map((option) => (
               <label
                 key={option}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-fg-3 hover:bg-subtle"
               >
                 <input
                   type="checkbox"
@@ -723,7 +723,7 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
+            <tr className="border-b border-line-subtle text-xs uppercase tracking-wider text-fg-muted">
               <th className="py-2 pr-3 font-medium">Academic Year</th>
               <th className="py-2 pr-3 font-medium text-right">Female</th>
               <th className="py-2 pr-3 font-medium text-right">Male</th>
@@ -741,8 +741,8 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
                   ? Math.round(((t.total - prev.total) / prev.total) * 1000) / 10
                   : null;
               return (
-                <tr key={year} className="border-b border-gray-50 last:border-0">
-                  <td className="py-2.5 pr-3 text-gray-700">
+                <tr key={year} className="border-b border-line-faint last:border-0">
+                  <td className="py-2.5 pr-3 text-fg-3">
                     <span
                       className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: yearColor(i) }}
@@ -755,16 +755,16 @@ export function YearTotalsTable({ perYear, what = "Students" }) {
                   <td className="py-2.5 pr-3 text-right text-secondary-600 font-medium">
                     {t.Male.toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right font-semibold text-gray-900">
+                  <td className="py-2.5 pr-3 text-right font-semibold text-fg">
                     {t.total.toLocaleString()}
                   </td>
-                  <td className="py-2.5 pr-3 text-right text-xs text-gray-500">
+                  <td className="py-2.5 pr-3 text-right text-xs text-fg-muted">
                     {t.pctFemale != null ? `${t.pctFemale}%` : "—"}
                   </td>
                   <td
                     className={`py-2.5 text-right text-xs font-medium ${
                       change == null
-                        ? "text-gray-500"
+                        ? "text-fg-muted"
                         : change < 0
                           ? "text-danger"
                           : "text-success"
@@ -792,7 +792,7 @@ export function YearSexDonuts({ perYear }) {
     >
       {perYear.map(({ year, stats }) => (
         <div key={year}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-fg-muted">
             AY {year}
           </p>
           <SexDonut totals={stats?.totals || { Female: 0, Male: 0, total: 0 }} />
@@ -808,9 +808,9 @@ function YearBarTooltip({ active, payload, years }) {
   const row = payload[0].payload;
   return (
     <div style={tooltipStyle} className="bg-white">
-      <p className="mb-1 font-semibold text-gray-900">{row.name}</p>
+      <p className="mb-1 font-semibold text-fg">{row.name}</p>
       {years.map((year, i) => (
-        <p key={year} className="text-gray-600">
+        <p key={year} className="text-fg-4">
           <span
             className="mr-1.5 inline-block h-2 w-2 rounded-full"
             style={{ backgroundColor: yearColor(i) }}
@@ -850,7 +850,7 @@ export function YearGroupedBars({
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {data.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={data} margin={{ left: -12, right: 8, top: 4, bottom: 4 }}>
@@ -910,12 +910,12 @@ export function YearComparisonTable({
     <div className={CARD_CLS}>
       <SectionTitle>{title}</SectionTitle>
       {names.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No data available.</p>
+        <p className="text-xs text-fg-muted italic">No data available.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wider text-gray-500">
+              <tr className="text-xs uppercase tracking-wider text-fg-muted">
                 <th rowSpan={2} className="py-2 pr-3 font-medium align-bottom">
                   {nameHeader}
                 </th>
@@ -923,7 +923,7 @@ export function YearComparisonTable({
                   <th
                     key={year}
                     colSpan={3}
-                    className="px-2 pt-2 text-center font-semibold text-gray-700"
+                    className="px-2 pt-2 text-center font-semibold text-fg-3"
                   >
                     <span
                       className="mr-1.5 inline-block h-2 w-2 rounded-full"
@@ -937,7 +937,7 @@ export function YearComparisonTable({
                   Change
                 </th>
               </tr>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500">
+              <tr className="border-b border-line-subtle text-xs uppercase tracking-wider text-fg-muted">
                 {perYear.map(({ year }) => (
                   <Fragment key={year}>
                     <th className="px-2 pb-2 font-medium text-right">F</th>
@@ -957,8 +957,8 @@ export function YearComparisonTable({
                 );
                 const diff = lastTotal - firstTotal;
                 return (
-                  <tr key={name} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2.5 pr-3 text-gray-700">{name}</td>
+                  <tr key={name} className="border-b border-line-faint last:border-0">
+                    <td className="py-2.5 pr-3 text-fg-3">{name}</td>
                     {perYear.map(({ year, stats }) => {
                       const row = findRow(stats, rowsOf, nameKey, name);
                       return (
@@ -969,7 +969,7 @@ export function YearComparisonTable({
                           <td className="px-2 py-2.5 text-right text-secondary-600 font-medium">
                             {(row?.Male || 0).toLocaleString()}
                           </td>
-                          <td className="px-2 py-2.5 text-right font-semibold text-gray-900">
+                          <td className="px-2 py-2.5 text-right font-semibold text-fg">
                             {rowTotalOf(row).toLocaleString()}
                           </td>
                         </Fragment>
@@ -981,7 +981,7 @@ export function YearComparisonTable({
                           ? "text-danger"
                           : diff > 0
                             ? "text-success"
-                            : "text-gray-500"
+                            : "text-fg-muted"
                       }`}
                     >
                       {signed(diff)}

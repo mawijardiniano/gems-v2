@@ -42,7 +42,7 @@ const CATEGORY_STYLES = {
     "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   Manual: "bg-emerald-100 text-success ring-emerald-600/20",
   Research: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
-  Other: "bg-gray-100 text-gray-700 ring-gray-500/20",
+  Other: "bg-muted text-fg-3 ring-gray-500/20",
 };
 
 const CATEGORY_ICONS = {
@@ -97,13 +97,13 @@ function fileIconFor(name) {
 // ─── Skeleton ───────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-100 p-5">
+    <div className="animate-pulse rounded-2xl bg-white/60 backdrop-blur-sm border border-line-subtle p-5">
       <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-xl bg-gray-200 shrink-0" />
+        <div className="h-12 w-12 rounded-xl bg-emphasis shrink-0" />
         <div className="flex-1 space-y-2.5">
-          <div className="h-4 w-3/5 bg-gray-200 rounded" />
-          <div className="h-3 w-2/5 bg-gray-200 rounded" />
-          <div className="h-3 w-1/2 bg-gray-200 rounded" />
+          <div className="h-4 w-3/5 bg-emphasis rounded" />
+          <div className="h-3 w-2/5 bg-emphasis rounded" />
+          <div className="h-3 w-1/2 bg-emphasis rounded" />
         </div>
       </div>
     </div>
@@ -114,24 +114,21 @@ function SkeletonCard() {
 function EmptyState({ hasFilters, onUpload }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="h-16 w-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
-        <FaFolderOpen className="h-7 w-7 text-gray-300" />
+      <div className="h-16 w-16 rounded-2xl bg-subtle border border-line-subtle flex items-center justify-center mb-4">
+        <FaFolderOpen className="h-7 w-7 text-fg-faint" />
       </div>
-      <p className="text-sm font-medium text-gray-900 mb-1">
+      <p className="text-sm font-medium text-fg mb-1">
         {hasFilters ? "No documents found" : "No documents yet"}
       </p>
-      <p className="text-xs text-gray-500 text-center max-w-xs mb-4">
+      <p className="text-xs text-fg-muted text-center max-w-xs mb-4">
         {hasFilters
           ? "Try a different category or search term."
           : "Upload training materials, manuals, research, and other references for everyone to access."}
       </p>
       {!hasFilters && (
-        <button
-          onClick={onUpload}
-          className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-rose-700 transition-colors"
-        >
+        <Button variant="primary" onClick={onUpload}>
           <FaUpload size={14} /> Upload Document
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -342,21 +339,18 @@ export default function KnowledgeResourcesContent() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-fg tracking-tight">
             Knowledge Resources
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             Upload and share training materials, manuals, research, and other
             references
           </p>
         </div>
 
-        <button
-          onClick={openUploadModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-rose-700 transition-colors shadow-sm"
-        >
+        <Button variant="primary" onClick={openUploadModal}>
           <FaCloudUploadAlt size={16} /> Upload Document
-        </button>
+        </Button>
       </div>
 
       {/* ── Alerts ──────────────────────────────────────────────── */}
@@ -386,7 +380,7 @@ export default function KnowledgeResourcesContent() {
                 className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                    : "bg-white text-fg-4 border border-line hover:bg-subtle"
                 }`}
               >
                 {cat === "all" ? "All" : cat}
@@ -394,7 +388,7 @@ export default function KnowledgeResourcesContent() {
                   className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     isActive
                       ? "bg-rose-100 text-rose-700"
-                      : "bg-gray-100 text-gray-600"
+                      : "bg-muted text-fg-4"
                   }`}
                 >
                   {counts[cat] ?? 0}
@@ -407,14 +401,14 @@ export default function KnowledgeResourcesContent() {
         <div className="relative w-full lg:w-72">
           <FaSearch
             size={13}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-muted"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title, file, or uploader..."
-            className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+            className="w-full rounded-xl border border-line bg-white pl-9 pr-3 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
           />
         </div>
       </div>
@@ -426,7 +420,7 @@ export default function KnowledgeResourcesContent() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm">
           <EmptyState hasFilters={hasFilters} onUpload={openUploadModal} />
         </div>
       ) : (
@@ -437,20 +431,20 @@ export default function KnowledgeResourcesContent() {
             return (
               <div
                 key={item._id}
-                className="flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition duration-200"
+                className="flex flex-col rounded-2xl bg-white border border-line-subtle shadow-sm p-5 hover:shadow-md transition duration-200"
               >
                 <div className="flex items-start gap-4">
                   <div className="h-12 w-12 shrink-0 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                     <FileIcon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 line-clamp-2">
+                    <p className="text-sm font-semibold text-fg line-clamp-2">
                       {item.title}
                     </p>
                     <span
                       className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
                         CATEGORY_STYLES[item.category] ||
-                        "bg-gray-100 text-gray-700 ring-gray-500/20"
+                        "bg-muted text-fg-3 ring-gray-500/20"
                       }`}
                     >
                       <CategoryIcon size={10} />
@@ -459,22 +453,22 @@ export default function KnowledgeResourcesContent() {
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-1.5 text-xs text-gray-500">
+                <div className="mt-4 space-y-1.5 text-xs text-fg-muted">
                   <p className="flex items-center gap-2">
-                    <FaFileAlt className="shrink-0 text-gray-500" size={11} />
+                    <FaFileAlt className="shrink-0 text-fg-muted" size={11} />
                     <span className="truncate">
                       {item.file?.name || "Document"}
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <FaUser className="shrink-0 text-gray-500" size={11} />
+                    <FaUser className="shrink-0 text-fg-muted" size={11} />
                     <span className="truncate">
                       {item.uploaded_by_name || "Unknown"}
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
                     <FaCalendarAlt
-                      className="shrink-0 text-gray-500"
+                      className="shrink-0 text-fg-muted"
                       size={11}
                     />
                     {formatDate(item.createdAt)} ·{" "}
@@ -482,7 +476,7 @@ export default function KnowledgeResourcesContent() {
                   </p>
                 </div>
 
-                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                <div className="mt-auto pt-4 border-t border-line-subtle flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 pt-1">
                     {/* The bucket is private, so these go through the
                         session-checked routes rather than to a stored URL:
@@ -495,7 +489,7 @@ export default function KnowledgeResourcesContent() {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-fg-3 hover:bg-subtle transition-colors"
                     >
                       <FaEye size={11} /> View
                     </a>
@@ -507,7 +501,7 @@ export default function KnowledgeResourcesContent() {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-fg-3 hover:bg-subtle transition-colors"
                     >
                       <FaDownload size={11} /> Download
                     </a>
@@ -539,16 +533,16 @@ export default function KnowledgeResourcesContent() {
             aria-labelledby={uploadTitleId}
             className="w-full max-w-lg rounded-2xl bg-white shadow-xl animate-slide-up"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div className="flex items-center justify-between border-b border-line-subtle px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                   <FaCloudUploadAlt className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 id={uploadTitleId} className="text-base font-semibold text-gray-900">
+                  <h2 id={uploadTitleId} className="text-base font-semibold text-fg">
                     Upload Document
                   </h2>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-fg-muted">
                     PDF, Word, Excel, PowerPoint, images, or text — up to{" "}
                     {MAX_FILE_SIZE_LABEL}
                   </p>
@@ -558,7 +552,7 @@ export default function KnowledgeResourcesContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeUploadModal}
-                className="touch-target rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="touch-target rounded-lg p-2 text-fg-muted hover:bg-muted hover:text-fg-4 transition-colors"
               >
                 <FaTimes size={14} />
               </button>
@@ -566,7 +560,7 @@ export default function KnowledgeResourcesContent() {
 
             <div className="space-y-4 px-6 py-5">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-muted">
                   Title
                 </label>
                 <input
@@ -574,18 +568,18 @@ export default function KnowledgeResourcesContent() {
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g. GAD Training Module 2026"
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 placeholder:text-gray-500 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-muted">
                   Category
                 </label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-fg-3 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 >
                   <option value="">Select a category</option>
                   {KNOWLEDGE_CATEGORIES.map((cat) => (
@@ -597,7 +591,7 @@ export default function KnowledgeResourcesContent() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-muted">
                   File
                 </label>
                 <input
@@ -610,19 +604,19 @@ export default function KnowledgeResourcesContent() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full rounded-xl border-2 border-dashed border-gray-200 px-4 py-6 text-center hover:border-rose-300 hover:bg-rose-50/40 transition-colors"
+                  className="w-full rounded-xl border-2 border-dashed border-line px-4 py-6 text-center hover:border-secondary-300 hover:bg-secondary-50/40 transition-colors"
                 >
                   {formFile ? (
-                    <span className="flex items-center justify-center gap-2 text-sm text-gray-700">
+                    <span className="flex items-center justify-center gap-2 text-sm text-fg-3">
                       <FaFileAlt className="text-rose-500" />
                       <span className="truncate">{formFile.name}</span>
-                      <span className="shrink-0 text-xs text-gray-500">
+                      <span className="shrink-0 text-xs text-fg-muted">
                         ({formatBytes(formFile.size)})
                       </span>
                     </span>
                   ) : (
-                    <span className="flex flex-col items-center gap-2 text-sm text-gray-500">
-                      <FaCloudUploadAlt className="h-6 w-6 text-gray-300" />
+                    <span className="flex flex-col items-center gap-2 text-sm text-fg-muted">
+                      <FaCloudUploadAlt className="h-6 w-6 text-fg-faint" />
                       Click to choose a file
                     </span>
                   )}
@@ -637,7 +631,7 @@ export default function KnowledgeResourcesContent() {
               )}
             </div>
 
-            <div className="flex flex-col-reverse gap-3 border-t border-gray-100 px-6 py-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-3 border-t border-line-subtle px-6 py-4 sm:flex-row sm:justify-end">
               <Button
                 variant="secondary"
                 onClick={closeUploadModal}
@@ -645,10 +639,10 @@ export default function KnowledgeResourcesContent() {
               >
                 Cancel
               </Button>
-              <button
+              <Button
+                variant="primary"
                 onClick={handleUpload}
                 disabled={uploading}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-rose-700 transition-colors disabled:opacity-60"
               >
                 {uploading ? (
                   <>
@@ -660,7 +654,7 @@ export default function KnowledgeResourcesContent() {
                     <FaUpload size={13} /> Upload
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -680,12 +674,12 @@ export default function KnowledgeResourcesContent() {
               <FaTrashAlt className="text-2xl text-danger" />
             </div>
             <div className="space-y-2">
-              <h2 id={deleteTitleId} className="text-xl font-bold text-gray-900">
+              <h2 id={deleteTitleId} className="text-xl font-bold text-fg">
                 Delete Document
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-fg-muted">
                 Are you sure you want to delete{" "}
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-fg-3">
                   &quot;{deleteTarget.title}&quot;
                 </span>
                 ? This action cannot be undone.

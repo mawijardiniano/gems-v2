@@ -34,7 +34,7 @@ export default function EventDetailsView({
             event.end_date,
             event,
           ).map((line, idx) => (
-            <span key={idx} className="text-sm font-semibold text-gray-900">
+            <span key={idx} className="text-sm font-semibold text-fg">
               {line}
             </span>
           ))}
@@ -82,19 +82,19 @@ export default function EventDetailsView({
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-muted mb-2">
             Event Description
           </p>
-          <p className="text-sm text-gray-700 leading-relaxed">
+          <p className="text-sm text-fg-3 leading-relaxed">
             {event.description || "No description provided."}
           </p>
         </div>
         {event.type_of_activity === "GAD" && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-fg-muted mb-2">
               GAD Activity
             </p>
-            <p className="text-sm text-gray-700">{event.gad_activity}</p>
+            <p className="text-sm text-fg-3">{event.gad_activity}</p>
           </div>
         )}
       </div>
@@ -105,7 +105,7 @@ export default function EventDetailsView({
           return (
             <div
               key={m.label}
-              className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-6 transition duration-300 hover:shadow-lg hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-xl border border-line-subtle bg-white p-6 transition duration-300 hover:shadow-lg hover:-translate-y-0.5"
             >
               <div
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${m.gradient}`}
@@ -117,10 +117,10 @@ export default function EventDetailsView({
                   <Icon className="text-lg" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wider text-fg-muted">
                     {m.label}
                   </p>
-                  <div className="mt-2 text-2xl font-bold text-gray-900 leading-tight">
+                  <div className="mt-2 text-2xl font-bold text-fg leading-tight">
                     {m.value}
                   </div>
                   {m.action && (

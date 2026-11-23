@@ -46,7 +46,7 @@ const ROLE_COLORS = {
   "Planning Director": "bg-teal-100 text-teal-800 ring-teal-600/20",
   Dean: "bg-secondary-100 text-secondary-800 ring-secondary-600/20",
   "Campus Director": "bg-rose-100 text-rose-800 ring-rose-600/20",
-  User: "bg-gray-100 text-gray-800 ring-gray-600/20",
+  User: "bg-muted text-fg-2 ring-gray-600/20",
 };
 
 const ROLE_ICONS = {
@@ -63,7 +63,7 @@ const ROLE_ICONS = {
 function RoleBadge({ role }) {
   const Icon = ROLE_ICONS[role] || HiOutlineBadgeCheck;
   const colorClass =
-    ROLE_COLORS[role] || "bg-gray-100 text-gray-800 ring-gray-600/20";
+    ROLE_COLORS[role] || "bg-muted text-fg-2 ring-gray-600/20";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${colorClass}`}
@@ -78,13 +78,13 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
       <div className="flex justify-between items-center">
-        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
-        <div className="h-10 w-36 bg-gray-200 rounded-lg" />
+        <div className="h-8 w-48 bg-emphasis rounded-lg" />
+        <div className="h-10 w-36 bg-emphasis rounded-lg" />
       </div>
-      <div className="h-10 w-full bg-gray-200 rounded-lg" />
+      <div className="h-10 w-full bg-emphasis rounded-lg" />
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded-lg" />
+          <div key={i} className="h-16 bg-muted rounded-lg" />
         ))}
       </div>
     </div>
@@ -94,11 +94,11 @@ function LoadingSkeleton() {
 function EmptyState({ hasSearch }) {
   return (
     <div className="text-center py-16">
-      <HiOutlineUserGroup className="mx-auto h-16 w-16 text-gray-300" />
-      <h3 className="mt-4 text-lg font-semibold text-gray-900">
+      <HiOutlineUserGroup className="mx-auto h-16 w-16 text-fg-faint" />
+      <h3 className="mt-4 text-lg font-semibold text-fg">
         {hasSearch ? "No matching users found" : "No roles assigned yet"}
       </h3>
-      <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+      <p className="mt-2 text-sm text-fg-muted max-w-sm mx-auto">
         {hasSearch
           ? "Try adjusting your search terms or clear the filter to see all users."
           : "Assign roles to users to manage their permissions and access levels."}
@@ -320,10 +320,10 @@ export default function ManageRoleContent() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-fg tracking-tight">
             Manage Roles
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-fg-muted">
             Assign and manage user roles and permissions across the system
           </p>
         </div>
@@ -334,36 +334,36 @@ export default function ManageRoleContent() {
       </div>
 
       <div className="relative mb-6">
-        <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+        <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-fg-muted" />
         <input
           type="text"
           placeholder="Search by name, role, or college..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition duration-200"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-line rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition duration-200"
         />
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-line">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <tr className="bg-subtle">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   College / Unit
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Assigned Role
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line-subtle">
               {paginatedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-4">
@@ -387,7 +387,7 @@ export default function ManageRoleContent() {
                   return (
                     <tr
                       key={user._id}
-                      className="hover:bg-gray-50/80 transition-colors duration-150"
+                      className="hover:bg-subtle/80 transition-colors duration-150"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -398,11 +398,11 @@ export default function ManageRoleContent() {
                             </span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-fg">
                               {firstName} {lastName}
                             </p>
                             {user.username && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-fg-muted">
                                 @{user.username}
                               </p>
                             )}
@@ -410,7 +410,7 @@ export default function ManageRoleContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600">{college}</span>
+                        <span className="text-sm text-fg-4">{college}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <RoleBadge role={user.role} />
@@ -433,8 +433,8 @@ export default function ManageRoleContent() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
+          <div className="flex items-center justify-between px-6 py-4 bg-subtle border-t border-line">
+            <p className="text-sm text-fg-muted">
               Showing{" "}
               <span className="font-medium">
                 {(currentPage - 1) * ITEMS_PER_PAGE + 1}
@@ -454,7 +454,7 @@ export default function ManageRoleContent() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-fg-3 bg-white border border-line-strong rounded-lg hover:bg-subtle disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
@@ -468,14 +468,14 @@ export default function ManageRoleContent() {
                 .map((p, idx, arr) => (
                   <React.Fragment key={p}>
                     {idx > 0 && arr[idx - 1] !== p - 1 && (
-                      <span className="px-1 text-gray-500">...</span>
+                      <span className="px-1 text-fg-muted">...</span>
                     )}
                     <button
                       onClick={() => setCurrentPage(p)}
                       className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                         currentPage === p
                           ? "bg-secondary-600 text-white shadow-sm"
-                          : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                          : "text-fg-3 bg-white border border-line-strong hover:bg-subtle"
                       }`}
                     >
                       {p}
@@ -487,7 +487,7 @@ export default function ManageRoleContent() {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-fg-3 bg-white border border-line-strong rounded-lg hover:bg-subtle disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -510,16 +510,16 @@ export default function ManageRoleContent() {
             className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-line-subtle">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-50 to-secondary-100/60 border border-secondary-100 flex items-center justify-center">
                   <HiOutlineShieldCheck className="h-5 w-5 text-secondary-600" />
                 </div>
                 <div>
-                  <h3 id={modalTitleId} className="text-lg font-semibold text-gray-900">
+                  <h3 id={modalTitleId} className="text-lg font-semibold text-fg">
                     {editingUser ? "Edit Role" : "Assign Role"}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-fg-muted">
                     {editingUser
                       ? "Update the role for this user"
                       : "Search and select a user to assign a role"}
@@ -530,7 +530,7 @@ export default function ManageRoleContent() {
                 type="button"
                 aria-label="Close"
                 onClick={closeModal}
-                className="touch-target p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="touch-target p-2 text-fg-muted hover:text-fg-4 hover:bg-muted rounded-lg transition-colors"
               >
                 <HiOutlineX className="h-5 w-5" />
               </button>
@@ -538,22 +538,22 @@ export default function ManageRoleContent() {
 
             <div className="px-6 py-5 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-fg-3 mb-1.5">
                   Select User
                 </label>
                 <div className="relative">
-                  <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-muted" />
                   <input
                     type="text"
                     placeholder="Search by name or username..."
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-line rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
                     value={modalSearch}
                     onChange={(e) => setModalSearch(e.target.value)}
                   />
                 </div>
-                <div className="mt-2 max-h-40 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
+                <div className="mt-2 max-h-40 overflow-y-auto border border-line-subtle rounded-lg divide-y divide-line-faint">
                   {filteredModalUsers.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
+                    <div className="p-4 text-center text-sm text-fg-muted">
                       No users found
                     </div>
                   ) : (
@@ -568,25 +568,25 @@ export default function ManageRoleContent() {
                           className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-secondary-50 border-l-2 border-secondary-500"
-                              : "hover:bg-gray-50 border-l-2 border-transparent"
+                              : "hover:bg-subtle border-l-2 border-transparent"
                           }`}
                         >
                           <div
                             className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                               isSelected
                                 ? "bg-secondary-100 text-secondary-600"
-                                : "bg-gray-100 text-gray-500"
+                                : "bg-muted text-fg-muted"
                             }`}
                           >
                             {fn.charAt(0)}
                             {ln.charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-fg truncate">
                               {fn} {ln}
                             </p>
                             {u.role && (
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-fg-muted truncate">
                                 Current: {u.role}
                               </p>
                             )}
@@ -602,7 +602,7 @@ export default function ManageRoleContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-fg-3 mb-1.5">
                   Select Role
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -616,12 +616,12 @@ export default function ManageRoleContent() {
                         className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border transition duration-150 ${
                           isActive
                             ? "bg-secondary-50 border-secondary-200 text-secondary-700 ring-1 ring-secondary-200"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                            : "bg-white border-line text-fg-4 hover:border-line-strong hover:bg-subtle"
                         }`}
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-secondary-500" : "text-gray-500"
+                            isActive ? "text-secondary-500" : "text-fg-muted"
                           }`}
                         />
                         <span className="truncate">{role}</span>
@@ -633,13 +633,13 @@ export default function ManageRoleContent() {
 
               {SCOPED_ROLES.includes(selectedRole) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-fg-3 mb-1.5">
                     Assigned College <span className="text-danger">*</span>
                   </label>
                   <select
                     value={assignedCollege}
                     onChange={(e) => setAssignedCollege(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
+                    className="w-full px-3 py-2.5 bg-white border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500 transition"
                   >
                     <option value="">Select a college...</option>
                     {COLLEGES.map((c) => (
@@ -652,7 +652,7 @@ export default function ManageRoleContent() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-subtle border-t border-line-subtle">
               <Button variant="secondary" onClick={closeModal}>
                 Cancel
               </Button>

@@ -97,7 +97,7 @@ function FriendlyDetails({ details }) {
   if (lines.length === 0) return null;
 
   return (
-    <div className="mt-1 space-y-0.5 text-xs text-gray-600">
+    <div className="mt-1 space-y-0.5 text-xs text-fg-4">
       {lines.map((line, idx) => (
         <div key={idx}>{line}</div>
       ))}
@@ -112,12 +112,12 @@ function TechnicalDetails({ details }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="text-xs text-gray-500 underline hover:text-gray-600"
+        className="text-xs text-fg-muted underline hover:text-fg-4"
       >
         {open ? "Hide technical details" : "Technical details"}
       </button>
       {open && (
-        <pre className="mt-1 rounded bg-gray-50 border border-gray-200 p-1.5 text-xs text-gray-600 whitespace-pre-wrap">
+        <pre className="mt-1 rounded bg-subtle border border-line p-1.5 text-xs text-fg-4 whitespace-pre-wrap">
           {JSON.stringify(details, null, 2)}
         </pre>
       )}
@@ -131,7 +131,7 @@ export default function SyncLogsPanel({ logs, loading, records = [] }) {
   );
 
   return (
-    <div className="max-h-80 overflow-auto border border-gray-200 rounded p-2 space-y-2">
+    <div className="max-h-80 overflow-auto border border-line rounded p-2 space-y-2">
       {logs.map((log) => {
         const level = LEVEL_STYLES[log.level] || LEVEL_STYLES.info;
         const rawId = log.staging_record_id;
@@ -155,7 +155,7 @@ export default function SyncLogsPanel({ logs, loading, records = [] }) {
           : null;
 
         return (
-          <div key={log._id} className="border border-gray-100 rounded p-2">
+          <div key={log._id} className="border border-line-subtle rounded p-2">
             <div className="flex items-center gap-1.5">
               <span
                 className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${level.dot}`}
@@ -167,12 +167,12 @@ export default function SyncLogsPanel({ logs, loading, records = [] }) {
                 {ACTION_LABELS[log.action] || log.action}
               </span>
             </div>
-            <div className="text-xs text-gray-600 mt-0.5">{log.message}</div>
+            <div className="text-xs text-fg-4 mt-0.5">{log.message}</div>
             {rowContext && (
-              <div className="text-xs text-gray-600 mt-0.5">{rowContext}</div>
+              <div className="text-xs text-fg-4 mt-0.5">{rowContext}</div>
             )}
             <FriendlyDetails details={log.details} />
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-fg-muted mt-1">
               By {log.executed_by_username || "Unknown"} ·{" "}
               {new Date(log.executed_at || log.createdAt).toLocaleString()}
             </div>
@@ -183,7 +183,7 @@ export default function SyncLogsPanel({ logs, loading, records = [] }) {
         );
       })}
       {logs.length === 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           {loading ? "Loading..." : "No logs yet"}
         </p>
       )}

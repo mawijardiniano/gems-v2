@@ -291,23 +291,23 @@ export default function EmployeeGenderStatsContent() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg flex items-center gap-3">
           <span className="h-10 w-10 rounded-xl bg-gradient-to-br from-secondary-600 to-secondary-400 flex items-center justify-center text-white shadow-lg shadow-secondary-200">
             <FaUserTie size={18} />
           </span>
           Employee Gender Statistics
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-fg-muted text-sm mt-1">
           Explore the distribution of female and male employees by sex, office,
           appointment status, and other demographic indicators.
         </p>
       </div>
 
       {/* ===== FILTERS ===== */}
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm space-y-3">
+      <div className="rounded-xl border border-line-subtle bg-white p-4 shadow-sm space-y-3">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Academic Year
             </label>
             <MultiSelect
@@ -319,7 +319,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Personnel Type
             </label>
             <MultiSelect
@@ -331,7 +331,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               College/Office
             </label>
             <MultiSelect
@@ -343,7 +343,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Department
             </label>
             <MultiSelect
@@ -355,7 +355,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Employment Status
             </label>
             <MultiSelect
@@ -367,7 +367,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Position Level
             </label>
             <MultiSelect
@@ -379,7 +379,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Demographic Profile
             </label>
             <MultiSelect
@@ -391,7 +391,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Age Group
             </label>
             <MultiSelect
@@ -407,7 +407,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Sex
             </label>
             <MultiSelect
@@ -419,7 +419,7 @@ export default function EmployeeGenderStatsContent() {
             />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-fg-muted mb-1 block">
               Data source
             </label>
             <button
@@ -429,7 +429,7 @@ export default function EmployeeGenderStatsContent() {
               className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                 useSample
                   ? "border-secondary-300 bg-secondary-50 text-secondary-700"
-                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                  : "border-line bg-white text-fg-3 hover:bg-subtle"
               }`}
             >
               <span
@@ -444,13 +444,13 @@ export default function EmployeeGenderStatsContent() {
             <button
               type="button"
               onClick={() => setFilters(baselineFilters)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-fg-4 transition-colors hover:bg-subtle"
             >
               Clear filters ({filterCount})
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-fg-muted">
           {useSample
             ? `Filters re-aggregate the sample records in your browser â€” ${filteredSampleRecords.length.toLocaleString()} of ${SAMPLE_EMPLOYEE_COUNT.toLocaleString()} employees match. Department, Position Level and Academic Year exist in the sample dataset only; the live database does not store them.`
             : "Live data can be filtered by personnel type, college/office, employment status and one academic year. Department and Position Level are available with sample data only."}
@@ -548,7 +548,7 @@ export default function EmployeeGenderStatsContent() {
                 rowsOf={(s) => s.demographics}
                 nameKey="label"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 Insights and quick reports below describe the combined selection
                 ({selectedYears.join(", ")}).
               </p>
@@ -567,7 +567,7 @@ export default function EmployeeGenderStatsContent() {
               the Faculty row appears in both with identical figures, and side
               by side they read as a double count. */}
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-fg-muted">
                   Teaching vs Non-Teaching
                 </p>
                 <SexTable
@@ -578,7 +578,7 @@ export default function EmployeeGenderStatsContent() {
                 />
               </div>
 
-              <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <p className="mb-2 mt-2 text-xs font-semibold uppercase tracking-wider text-fg-muted">
                 Detailed Breakdown
               </p>
 
@@ -694,7 +694,7 @@ export default function EmployeeGenderStatsContent() {
 /* Buttons shared by the quick-report card, so the sample-data and live-data
    variants look identical. */
 const QUICK_REPORT_BTN_CLS =
-  "inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center gap-2 rounded-lg border border-line bg-white px-4 py-2 text-xs font-medium text-fg-3 transition-colors hover:bg-secondary-50 hover:border-secondary-200 hover:text-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed";
 
 function QuickReportsCard({ data, useSample, filterSummary, college }) {
   const [busy, setBusy] = useState("");
@@ -759,8 +759,8 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
   };
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         <FaFileDownload className="inline-block mr-1.5 align-[-2px] text-secondary-600" />{" "}
         Quick Reports
       </h3>
@@ -792,12 +792,12 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
         </a>
       </div>
       {useSample && (
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-fg-muted mt-2">
           Generated in your browser from the sample dataset â€” no database
           reads or writes.
         </p>
       )}
-      {status && <p className="text-xs text-gray-500 mt-2">{status}</p>}
+      {status && <p className="text-xs text-fg-muted mt-2">{status}</p>}
     </div>
   );
 }
@@ -805,13 +805,13 @@ function QuickReportsCard({ data, useSample, filterSummary, college }) {
 function KeyInsightsCard({ insights }) {
   const list = Array.isArray(insights) ? insights : [];
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-line-subtle bg-white p-5 shadow-sm">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         <FaLightbulb className="inline-block mr-1.5 align-[-2px] text-secondary-500" />{" "}
         Key Insights
       </h3>
       {list.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           No insights available for the current data.
         </p>
       ) : (
@@ -819,7 +819,7 @@ function KeyInsightsCard({ insights }) {
           {list.map((line, i) => (
             <li
               key={i}
-              className="flex items-start gap-2 text-sm text-gray-700"
+              className="flex items-start gap-2 text-sm text-fg-3"
             >
               <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-secondary-500 shrink-0" />
               {line}

@@ -16,28 +16,28 @@ function BudgetUtilization({ project, canManage, onEditActuals }) {
   const pct = budget > 0 ? (spent / budget) * 100 : 0;
   const isOver = pct > 100;
   return (
-    <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
+    <section className="rounded-xl bg-white border border-line-subtle p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted">
           Budget Utilization
         </p>
         {canManage && <EditButton onClick={onEditActuals}>Update</EditButton>}
       </div>
       <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-gray-900">{formatPeso(spent)}</span>
-        <span className="text-gray-500">of {formatPeso(budget)}</span>
+        <span className="font-semibold text-fg">{formatPeso(spent)}</span>
+        <span className="text-fg-muted">of {formatPeso(budget)}</span>
         <span className={`font-bold ${isOver ? "text-danger" : "text-success"}`}>
           {Math.round(pct)}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div
           className={`h-full rounded-full ${isOver ? "bg-red-500" : "bg-emerald-500"}`}
           style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }}
         />
       </div>
       {budget === 0 && (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           No GAD budget set for this project.
         </p>
       )}
@@ -50,8 +50,8 @@ function ExpenditureEvidence({ project }) {
     ? project.expenditure_evidence
     : [];
   return (
-    <section className="rounded-xl bg-white border border-gray-100 p-4 space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+    <section className="rounded-xl bg-white border border-line-subtle p-4 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted flex items-center gap-1.5">
         <FaPaperclip className="h-3 w-3" />
         Expenditure Evidence
       </p>
@@ -64,7 +64,7 @@ function ExpenditureEvidence({ project }) {
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-fg-muted italic">
           No expenditure evidence uploaded.
         </p>
       )}
@@ -78,29 +78,29 @@ function ParticipantsPerEvent({ project }) {
      events have no target of their own. */
   const indicatorProgress = aggregateIndicatorProgress(project);
   return (
-    <section className="rounded-xl bg-white border border-gray-100 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
+    <section className="rounded-xl bg-white border border-line-subtle p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
         <FaUsers className="h-3 w-3" />
         Participants per Event
       </p>
       {events.length === 0 ? (
-        <p className="text-xs text-gray-500 italic">No linked events yet.</p>
+        <p className="text-xs text-fg-muted italic">No linked events yet.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-2xs uppercase tracking-wider text-gray-500">
+              <tr className="text-2xs uppercase tracking-wider text-fg-muted">
                 <th className="text-left py-1.5 font-semibold">Event</th>
                 <th className="text-center py-1.5 font-semibold w-16">Attended</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-line-faint">
               {events.map((ev, i) => (
                 <tr key={ev?._id || i}>
-                  <td className="py-2 pr-2 text-gray-800">
+                  <td className="py-2 pr-2 text-fg-2">
                     <span className="line-clamp-2">{ev?.title || "Untitled event"}</span>
                   </td>
-                  <td className="py-2 text-center text-gray-800">
+                  <td className="py-2 text-center text-fg-2">
                     {participantCount(ev)}
                   </td>
                 </tr>
@@ -109,7 +109,7 @@ function ParticipantsPerEvent({ project }) {
           </table>
 
           <ParticipantTargetProgress
-            className="mt-4 border-t border-gray-100 pt-3"
+            className="mt-4 border-t border-line-subtle pt-3"
             actual={indicatorProgress.actualTotal}
             target={indicatorProgress.targetTotal}
             emptyMessage="No participant target found in the Performance Indicator / Target."

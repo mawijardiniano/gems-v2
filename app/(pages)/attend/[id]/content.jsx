@@ -43,7 +43,7 @@ const PARTICIPANT_TYPES = [
   { value: "Stakeholder", label: "Stakeholder", icon: FaUsers },
 ];
 
-const helperCls = "mt-1 text-xs text-gray-500";
+const helperCls = "mt-1 text-xs text-fg-muted";
 
 const formatDateTime = (value) => {
   if (!value) return "";
@@ -65,10 +65,10 @@ function SectionTitle({ step, title }) {
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
         {step}
       </span>
-      <h2 className="text-xs font-bold tracking-wider text-gray-500 uppercase">
+      <h2 className="text-xs font-bold tracking-wider text-fg-muted uppercase">
         {title}
       </h2>
-      <span className="h-px flex-1 bg-gray-100" />
+      <span className="h-px flex-1 bg-muted" />
     </div>
   );
 }
@@ -76,7 +76,7 @@ function SectionTitle({ step, title }) {
 /* Centered state card used while loading and for not-found / cancelled. */
 function StateCard({ icon, tone = "gray", title, message }) {
   const tones = {
-    gray: "bg-gray-50 text-gray-500",
+    gray: "bg-subtle text-fg-muted",
     red: "bg-danger-subtle text-danger",
   };
   return (
@@ -87,8 +87,8 @@ function StateCard({ icon, tone = "gray", title, message }) {
         >
           {icon}
         </div>
-        <h1 className="text-lg font-bold text-gray-900">{title}</h1>
-        {message && <p className="mt-1.5 text-sm text-gray-500">{message}</p>}
+        <h1 className="text-lg font-bold text-fg">{title}</h1>
+        {message && <p className="mt-1.5 text-sm text-fg-muted">{message}</p>}
       </div>
     </div>
   );
@@ -221,7 +221,7 @@ export default function AttendContent() {
           <button
             type="button"
             onClick={() => setReloadKey((k) => k + 1)}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-fg-3 hover:bg-subtle"
           >
             Try again
           </button>
@@ -301,7 +301,7 @@ export default function AttendContent() {
                 <FaCheckCircle className="text-emerald-500" size={26} />
               )}
             </div>
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-fg">
               {done.pending
                 ? done.already
                   ? "Already Submitted"
@@ -310,17 +310,17 @@ export default function AttendContent() {
                   ? "Already Checked In"
                   : "Attendance Confirmed!"}
             </h1>
-            <p className="mt-1.5 text-sm text-gray-500">
+            <p className="mt-1.5 text-sm text-fg-muted">
               {done.pending
                 ? "Your check-in was submitted and is awaiting organizer validation. It will count toward attendance once approved."
                 : done.already
                   ? "You were already marked as attended for"
                   : "Your attendance has been recorded for"}{" "}
-              <span className="font-semibold text-gray-700">{event.title}</span>
+              <span className="font-semibold text-fg-3">{event.title}</span>
               .
             </p>
             {done.at && (
-              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-500">
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-subtle px-3 py-1 text-xs font-medium text-fg-muted">
                 <FaCalendarAlt size={11} />
                 {formatDateTime(done.at)}
               </p>
@@ -543,7 +543,7 @@ export default function AttendContent() {
                         className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium transition duration-200 ${
                           active
                             ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-4 ring-secondary-500/10"
-                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                            : "border-line bg-white text-fg-4 hover:border-line-strong hover:bg-subtle"
                         }`}
                       >
                         <input
@@ -556,7 +556,7 @@ export default function AttendContent() {
                         />
                         <Icon
                           className={
-                            active ? "text-secondary-600" : "text-gray-500"
+                            active ? "text-secondary-600" : "text-fg-muted"
                           }
                           size={16}
                         />
@@ -689,7 +689,7 @@ export default function AttendContent() {
                 </>
               )}
             </Button>
-            <p className="mt-3 text-center text-xs text-gray-500">
+            <p className="mt-3 text-center text-xs text-fg-muted">
               Your details are used only for this event&apos;s attendance
               report.
             </p>

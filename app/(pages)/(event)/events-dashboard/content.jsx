@@ -34,10 +34,10 @@ export default function EventsDashboardContent() {
 
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-fg tracking-tight">
             Dashboard
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             GAD impact, participation gaps, and project delivery
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function EventsDashboardContent() {
           <div className="flex items-center gap-2">
             <label
               htmlFor="dashboard-year"
-              className="text-xs font-medium text-gray-500"
+              className="text-xs font-medium text-fg-muted"
             >
               Academic Year
             </label>
@@ -54,7 +54,7 @@ export default function EventsDashboardContent() {
               id="dashboard-year"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
+              className="rounded-lg border border-line bg-white px-3 py-2 text-sm text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-500"
             >
               {yearOptions.map((year) => (
                 <option key={year} value={String(year)}>

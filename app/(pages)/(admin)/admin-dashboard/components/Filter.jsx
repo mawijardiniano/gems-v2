@@ -4,7 +4,7 @@ import { HiChevronDown, HiX } from "react-icons/hi";
 function Select({ value, onChange, label, options }) {
   return (
     <select
-      className="h-9 appearance-none rounded-lg border border-gray-200 bg-white px-3 pr-8 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100"
+      className="h-9 appearance-none rounded-lg border border-line bg-white px-3 pr-8 text-xs text-fg-3 transition-colors hover:border-line-strong focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
@@ -45,8 +45,8 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
       <button
         type="button"
         onClick={() => setOpen((s) => !s)}
-        className={`flex h-9 items-center gap-2 rounded-lg border bg-white px-3 text-xs text-gray-700 transition-colors hover:border-gray-300 focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100 ${
-          open ? "border-secondary-400 ring-2 ring-secondary-100" : "border-gray-200"
+        className={`flex h-9 items-center gap-2 rounded-lg border bg-white px-3 text-xs text-fg-3 transition-colors hover:border-line-strong focus:border-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-100 ${
+          open ? "border-secondary-400 ring-2 ring-secondary-100" : "border-line"
         }`}
       >
         <span className="truncate">{placeholder}</span>
@@ -56,16 +56,16 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
           </span>
         )}
         <HiChevronDown
-          className={`ml-auto text-gray-500 transition-transform duration-150 ${
+          className={`ml-auto text-fg-muted transition-transform duration-150 ${
             open ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {open && (
-        <div className="absolute left-0 z-20 mt-1 w-64 rounded-lg border border-gray-100 bg-white shadow-lg">
-          <div className="flex items-center justify-between border-b border-gray-50 px-3 py-2">
-            <span className="text-xs font-medium text-gray-500">
+        <div className="absolute left-0 z-20 mt-1 w-64 rounded-lg border border-line-subtle bg-white shadow-lg">
+          <div className="flex items-center justify-between border-b border-line-faint px-3 py-2">
+            <span className="text-xs font-medium text-fg-muted">
               {label}
             </span>
             {count > 0 && (
@@ -85,8 +85,8 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
               return (
                 <label
                   key={opt}
-                  className={`flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-gray-50 ${
-                    checked ? "bg-secondary-50 text-secondary-800" : "text-gray-700"
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-subtle ${
+                    checked ? "bg-secondary-50 text-secondary-800" : "text-fg-3"
                   }`}
                 >
                   <input
@@ -99,7 +99,7 @@ function MultiCheckbox({ label, options, value, onChange, placeholder }) {
                           : [...value, opt],
                       )
                     }
-                    className="h-3.5 w-3.5 rounded border-gray-300 text-secondary-600 focus:ring-secondary-200"
+                    className="h-3.5 w-3.5 rounded border-line-strong text-secondary-600 focus:ring-secondary-200"
                   />
                   {opt}
                 </label>
@@ -178,7 +178,7 @@ function Filter({
   }, [onDoc]);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line-subtle bg-white px-4 py-3 shadow-sm">
       <Select
         label="All Sex at Birth"
         value={filterSex}

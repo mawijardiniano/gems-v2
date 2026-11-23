@@ -221,10 +221,10 @@ export default function GADARContent() {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-fg tracking-tight">
             GAD Accomplishment Report
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-fg-muted mt-1">
             Annual GAD Accomplishment Report
           </p>
         </div>
@@ -232,7 +232,7 @@ export default function GADARContent() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
+            className="px-4 py-2 text-sm border border-line rounded-xl bg-white focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none"
           >
             <option value="">Select Year</option>
             {gpbList.map((g) => (
@@ -258,24 +258,24 @@ export default function GADARContent() {
 
       {projects.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
+            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
               Total Projects
             </p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">
+            <p className="text-xl font-bold text-fg mt-0.5">
               {projects.length}
             </p>
           </div>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
+            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
               Total GAD Budget
             </p>
-            <p className="text-xl font-bold text-gray-900 mt-0.5">
+            <p className="text-xl font-bold text-fg mt-0.5">
               ₱ {fmt(totalBudget)}
             </p>
           </div>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
+            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
               Total Actual Expenditures
             </p>
             <p className="text-xl font-bold text-success mt-0.5">
@@ -286,51 +286,51 @@ export default function GADARContent() {
       )}
 
       {loading ? (
-        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-gray-100">
+        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-line-subtle">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-gray-200 rounded" />
+            <div key={i} className="h-8 bg-emphasis rounded" />
           ))}
         </div>
       ) : !selectedYear ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
-          <FaFolderOpen className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-900">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-12 text-center">
+          <FaFolderOpen className="h-10 w-10 text-fg-faint mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg">
             Select a year to view the GAD AR
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             Choose a year from the dropdown above
           </p>
         </div>
       ) : loadingProjects ? (
-        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-gray-100">
+        <div className="animate-pulse space-y-4 p-6 bg-white rounded-2xl border border-line-subtle">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-8 bg-gray-200 rounded" />
+            <div key={i} className="h-8 bg-emphasis rounded" />
           ))}
         </div>
       ) : projectsError ? (
         <div className="rounded-2xl bg-white border border-red-100 shadow-sm p-12 text-center">
           <FaExclamationTriangle className="h-10 w-10 text-red-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-fg">
             Could not load the GAD projects for {selectedYear}
           </p>
-          <p className="text-xs text-gray-500 mt-1">{projectsError}</p>
+          <p className="text-xs text-fg-muted mt-1">{projectsError}</p>
         </div>
       ) : projects.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
-          <FaFileAlt className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-900">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-12 text-center">
+          <FaFileAlt className="h-10 w-10 text-fg-faint mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg">
             No projects found for {selectedYear}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             Create GPB projects first to generate the GAD AR
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-white border border-line-subtle shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-900 text-white">
+                <tr className="bg-inverse text-white">
                   <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">
                     No.
                   </th>
@@ -366,7 +366,7 @@ export default function GADARContent() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-line-subtle">
                 {orderedProjects.map((project, idx) => {
                   const projectTypeLabel = getProjectTypeLabel(project);
                   const prevProject = orderedProjects[idx - 1];
@@ -405,14 +405,14 @@ export default function GADARContent() {
                           </td>
                         </tr>
                       )}
-                      <tr className="hover:bg-gray-50/80">
-                        <td className="px-3 py-4 align-top text-center text-xs font-medium text-gray-800">
+                      <tr className="hover:bg-subtle/80">
+                        <td className="px-3 py-4 align-top text-center text-xs font-medium text-fg-2">
                           {idx + 1}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {getFieldValue(project.gender_issue) || "—"}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {causes.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
                               {causes.map((c, i) => (
@@ -423,7 +423,7 @@ export default function GADARContent() {
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {objectives.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
                               {objectives.map((o, i) => (
@@ -434,17 +434,17 @@ export default function GADARContent() {
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {getFieldValue(project.relevant_agency) || "—"}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {activities.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
                               {activities.map(({ title, description }, i) => (
                                 <li key={i}>
                                   {title}
                                   {description && (
-                                    <span className="block pl-4 text-gray-500">
+                                    <span className="block pl-4 text-fg-muted">
                                       {description}
                                     </span>
                                   )}
@@ -455,7 +455,7 @@ export default function GADARContent() {
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {indicators.length > 0 ? (
                             <ol className="list-decimal list-inside space-y-0.5">
                               {indicators.map((ind, i) => (
@@ -466,21 +466,21 @@ export default function GADARContent() {
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {actual ? (
                             actual
                           ) : !actualReported ? (
-                            <span className="text-gray-500 italic">
+                            <span className="text-fg-muted italic">
                               Not reported for Attributed Programs
                             </span>
                           ) : (
-                            <span className="text-gray-500 italic">
+                            <span className="text-fg-muted italic">
                               Encode actuals in Project Monitoring → GAD
                               Projects
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-gray-900">
+                        <td className="px-3 py-4 align-top text-right text-xs font-semibold text-fg">
                           ₱ {fmt(getFieldValue(project.gad_budget))}
                         </td>
                         <td className="px-3 py-4 align-top text-right text-xs font-semibold text-success">
@@ -499,7 +499,7 @@ export default function GADARContent() {
                                     )
                                   }
                                   title={`${project.expenditure_evidence.length} evidence file(s) attached`}
-                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200 transition"
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-medium text-fg-muted bg-muted border border-line rounded-md hover:bg-emphasis transition"
                                 >
                                   <FaPaperclip className="h-2.5 w-2.5" />
                                   {project.expenditure_evidence.length}
@@ -507,7 +507,7 @@ export default function GADARContent() {
                               )}
                           </div>
                           {hasActuals && (
-                            <span className="block mt-1 text-xs font-normal text-gray-500">
+                            <span className="block mt-1 text-xs font-normal text-fg-muted">
                               Variance: ₱{" "}
                               {fmt(
                                 (Number(getFieldValue(project.gad_budget)) ||
@@ -517,7 +517,7 @@ export default function GADARContent() {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-4 align-top text-xs text-gray-800">
+                        <td className="px-3 py-4 align-top text-xs text-fg-2">
                           {getArrayValue(project.responsible_office).join(
                             ", ",
                           ) || "—"}
@@ -528,14 +528,14 @@ export default function GADARContent() {
                 })}
               </tbody>
               <tfoot>
-                <tr className="bg-gray-50 border-t-2 border-gray-200">
+                <tr className="bg-subtle border-t-2 border-line">
                   <td
                     colSpan={8}
-                    className="px-3 py-3 text-right text-xs font-bold text-gray-900 uppercase"
+                    className="px-3 py-3 text-right text-xs font-bold text-fg uppercase"
                   >
                     TOTALS
                   </td>
-                  <td className="px-3 py-3 text-right text-xs font-bold text-gray-900">
+                  <td className="px-3 py-3 text-right text-xs font-bold text-fg">
                     ₱ {fmt(totalBudget)}
                   </td>
                   <td className="px-3 py-3 text-right text-xs font-bold text-success">
@@ -559,16 +559,16 @@ export default function GADARContent() {
             className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl overflow-hidden animate-scale-in flex flex-col"
             style={{ maxHeight: "90vh" }}
           >
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 shrink-0">
+            <div className="px-6 py-4 border-b border-line-subtle flex items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm shrink-0">
                   <FaPaperclip className="h-5 w-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 id={viewerTitleId} className="text-sm font-semibold text-gray-900 truncate">
+                  <h2 id={viewerTitleId} className="text-sm font-semibold text-fg truncate">
                     {viewerFile.name || "Evidence file"}
                   </h2>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-fg-muted truncate">
                     Expenditure Evidence ·{" "}
                     {evidenceViewer.contextLabel || "Project"} · File{" "}
                     {viewerIndex + 1} of {viewerFiles.length}
@@ -587,7 +587,7 @@ export default function GADARContent() {
                   type="button"
                   aria-label="Close"
                   onClick={() => setEvidenceViewer(null)}
-                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
+                  className="touch-target h-8 w-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg-4 hover:bg-muted transition"
                 >
                   <FaTimes className="h-4 w-4" />
                 </button>
@@ -595,11 +595,11 @@ export default function GADARContent() {
             </div>
 
             <div
-              className="relative flex-1 bg-gray-900 flex items-center justify-center overflow-hidden"
+              className="relative flex-1 bg-inverse flex items-center justify-center overflow-hidden"
               style={{ minHeight: "55vh" }}
             >
               {previewLoading && viewerFileType !== "other" && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/80">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-inverse/80">
                   <svg
                     className="animate-spin h-8 w-8 text-white"
                     viewBox="0 0 24 24"
@@ -624,7 +624,7 @@ export default function GADARContent() {
               {previewError ? (
                 <div className="text-center p-8">
                   <FaFileAlt className="h-10 w-10 text-red-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-300">{previewError}</p>
+                  <p className="text-sm text-fg-faint">{previewError}</p>
                   <Button
                     variant="primary"
                     className="mt-3"
@@ -665,8 +665,8 @@ export default function GADARContent() {
                 />
               ) : (
                 <div className="text-center p-8">
-                  <FaFileAlt className="h-10 w-10 text-gray-500 mx-auto mb-3" />
-                  <p className="text-sm text-gray-300">
+                  <FaFileAlt className="h-10 w-10 text-fg-muted mx-auto mb-3" />
+                  <p className="text-sm text-fg-faint">
                     Preview not available for this file type.
                   </p>
                   <Button
@@ -693,7 +693,7 @@ export default function GADARContent() {
                     }}
                     disabled={viewerIndex === 0}
                     aria-label="Previous file"
-                    className="touch-target absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="touch-target absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-fg-3 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <FaChevronLeft className="h-4 w-4" />
                   </button>
@@ -708,7 +708,7 @@ export default function GADARContent() {
                     }}
                     disabled={viewerIndex === viewerFiles.length - 1}
                     aria-label="Next file"
-                    className="touch-target absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-700 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="touch-target absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/90 shadow-md flex items-center justify-center text-fg-3 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <FaChevronRight className="h-4 w-4" />
                   </button>
@@ -716,7 +716,7 @@ export default function GADARContent() {
               )}
             </div>
             {viewerFiles.length > 1 && (
-              <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex gap-2 overflow-x-auto shrink-0">
+              <div className="px-4 py-3 border-t border-line-subtle bg-subtle flex gap-2 overflow-x-auto shrink-0">
                 {viewerFiles.map((file, i) => (
                   <button
                     key={file.key || i}
@@ -728,7 +728,7 @@ export default function GADARContent() {
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap border transition ${
                       i === viewerIndex
                         ? "bg-success-subtle border-emerald-300 text-success font-medium"
-                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-100"
+                        : "bg-white border-line text-fg-4 hover:bg-muted"
                     }`}
                   >
                     <FaFileAlt className="h-3 w-3 shrink-0" />
