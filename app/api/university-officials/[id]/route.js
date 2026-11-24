@@ -10,7 +10,10 @@ import {
 import { academicYearAsOf } from "@/data/lib/officialsTermsQuery";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
-import { upsertOfficialFromBody } from "@/data/lib/officialsPerson";
+import {
+  officialNameFromBody,
+  upsertOfficialFromBody,
+} from "@/data/lib/officialsPerson";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
@@ -68,16 +71,39 @@ export async function PATCH(req, { params }) {
   }
 
   try {
-    const officialDoc = await upsertOfficialFromBody(body);
-    if (!officialDoc) {
+    /* Officials are keyed by name, so correcting a linked person's name
+       ("Maria Santos" -> "Dr. Maria Santos") resolves to a different Official.
+       When the editor did not touch the link, it follows the person: it is
+       released from the old name first (one official per profile), then set
+       on the new one — and restored if the write fails. */
+    let input = body;
+    let released = null;
+    const newName = officialNameFromBody(body);
+    const keepsLink =
+      prev?.profileRef &&
+      !Object.prototype.hasOwnProperty.call(body || {}, "profileRef") &&
+      newName &&
+      newName !== prev.name;
+    if (keepsLink) {
+      released = prev.profileRef;
+      await Official.updateOne({ _id: prev._id }, { $set: { profileRef: null } });
+      input = { ...body, profileRef: released };
+    }
+
+    const person = await upsertOfficialFromBody(input);
+    if (person.error) {
+      if (released) {
+        await Official.updateOne(
+          { _id: prev._id },
+          { $set: { profileRef: released } },
+        );
+      }
       return Response.json(
-        {
-          success: false,
-          error: "Missing official (search a person or type a name)",
-        },
-        { status: 400 },
+        { success: false, error: person.error },
+        { status: person.status },
       );
     }
+    const officialDoc = person.official;
 
     term.official = officialDoc._id;
     if (ASSIGNABLE_STATUSES.includes(body?.status)) term.status = body.status;
@@ -108,6 +134,7 @@ export async function PATCH(req, { params }) {
         official: officialDoc._id,
         official_text: officialDoc.name,
         sex: officialDoc.sex,
+        linked: Boolean(officialDoc.profileRef),
         status: term.status,
         startDate: term.startDate,
         endDate: term.endDate,
