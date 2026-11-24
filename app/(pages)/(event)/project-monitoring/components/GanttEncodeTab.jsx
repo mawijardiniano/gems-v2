@@ -5,7 +5,7 @@ import { FaCheck, FaPen, FaTrash } from "react-icons/fa";
 import { calcDurationDays } from "@/data/lib/gantt";
 
 const INPUT =
-  "w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 disabled:bg-subtle disabled:text-fg-muted disabled:cursor-default";
+  "w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400 disabled:bg-subtle disabled:text-fg-muted disabled:cursor-default";
 
 /** Activity table with auto-computed duration. One row is editable at a time. */
 export default function GanttEncodeTab({

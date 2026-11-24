@@ -59,7 +59,7 @@ export default function OfficeMultiSelect({
 
   const Chip = ({ office, small }) => (
     <span
-      className={`inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 ${
+      className={`inline-flex items-center gap-1 rounded-full bg-secondary-50 border border-secondary-200 text-secondary-700 ${
         small ? "px-1.5 py-0.5 text-xs" : "px-2 py-0.5 text-xs"
       }`}
     >
@@ -73,7 +73,7 @@ export default function OfficeMultiSelect({
           type="button"
           onClick={() => remove(office)}
           aria-label={`Remove ${office}`}
-          className="touch-target text-rose-400 hover:text-rose-700"
+          className="touch-target text-secondary-400 hover:text-secondary-700"
         >
           <FaTimes
             className={small ? "h-2 w-2" : "h-2.5 w-2.5"}
@@ -115,7 +115,7 @@ export default function OfficeMultiSelect({
                   checked={isChecked(office)}
                   onChange={() => toggle(office)}
                   disabled={disabled}
-                  className="mt-0.5 accent-rose-600"
+                  className="mt-0.5 accent-secondary-600"
                 />
                 <span>{office}</span>
               </label>
@@ -134,7 +134,7 @@ export default function OfficeMultiSelect({
                     }
                   }}
                   placeholder="Type an office not listed..."
-                  className="min-w-0 flex-1 rounded border border-line px-2 py-1 text-xs focus:outline-none focus:border-rose-400"
+                  className="min-w-0 flex-1 rounded border border-line px-2 py-1 text-xs focus:outline-none focus:border-secondary-400"
                 />
                 <Button
                   variant="primary"
@@ -185,7 +185,7 @@ export default function OfficeMultiSelect({
               checked={isChecked(office)}
               onChange={() => toggle(office)}
               disabled={disabled}
-              className="mt-0.5 accent-rose-600"
+              className="mt-0.5 accent-secondary-600"
             />
             <span>{office}</span>
           </label>
@@ -205,7 +205,7 @@ export default function OfficeMultiSelect({
               }
             }}
             placeholder="Type an office not listed..."
-            className="min-w-0 flex-1 rounded-lg border border-line-strong px-3 py-1.5 text-sm focus:outline-none focus:border-rose-400"
+            className="min-w-0 flex-1 rounded-lg border border-line-strong px-3 py-1.5 text-sm focus:outline-none focus:border-secondary-400"
           />
           <Button
             variant="primary"

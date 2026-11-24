@@ -81,7 +81,7 @@ export default function GanttUploadTab({ onApply }) {
           handleFile(e.dataTransfer.files?.[0]);
         }}
         className={`flex flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors ${
-          dragging ? "border-rose-400 bg-rose-50" : "border-line-strong bg-subtle"
+          dragging ? "border-secondary-400 bg-secondary-50" : "border-line-strong bg-subtle"
         }`}
       >
         <FaUpload className="text-fg-muted" size={22} />

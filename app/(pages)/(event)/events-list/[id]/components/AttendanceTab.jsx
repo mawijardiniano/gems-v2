@@ -33,7 +33,7 @@ const STATUS_META = {
   },
   rejected: {
     label: "Not approved",
-    pill: "bg-rose-50 text-rose-700 ring-rose-600/20",
+    pill: "bg-danger-subtle text-danger ring-danger-border",
     icon: FiX,
   },
 };

@@ -81,7 +81,7 @@ export function GadStatCards({ totals, yearFilter, budgetView, budgetSummary }) 
 }
 
 const selectClass =
-  "text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
+  "text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300";
 
 /* Academic year, office, status and search filters. */
 export function GadFilterBar({ list }) {
@@ -140,7 +140,7 @@ export function GadFilterBar({ list }) {
           value={filters.search}
           onChange={(e) => list.setSearch(e.target.value)}
           placeholder="Search GAD activity, mandate, office..."
-          className="w-full text-sm rounded-lg border border-line bg-white pl-9 pr-8 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300"
+          className="w-full text-sm rounded-lg border border-line bg-white pl-9 pr-8 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300"
         />
         {filters.search && (
           <button

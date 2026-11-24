@@ -1175,7 +1175,7 @@ export default function Settings() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                     showFilters
-                      ? "bg-rose-50 border-rose-200 text-rose-700"
+                      ? "bg-secondary-50 border-secondary-200 text-secondary-700"
                       : "bg-white border-line text-fg-4 hover:bg-subtle"
                   }`}
                 >
@@ -1196,7 +1196,7 @@ export default function Settings() {
                     <select
                       value={filterAction}
                       onChange={(e) => setFilterAction(e.target.value)}
-                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200 bg-white"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200 bg-white"
                     >
                       <option value="">All Actions</option>
                       <option value="LOGIN">Login</option>
@@ -1218,7 +1218,7 @@ export default function Settings() {
                       type="date"
                       value={filterFrom}
                       onChange={(e) => setFilterFrom(e.target.value)}
-                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                     />
                   </div>
                   <div>
@@ -1229,7 +1229,7 @@ export default function Settings() {
                       type="date"
                       value={filterTo}
                       onChange={(e) => setFilterTo(e.target.value)}
-                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-200"
+                      className="w-full rounded-lg border border-line px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-secondary-200"
                     />
                   </div>
                   <div className="flex items-end gap-2">
@@ -1351,7 +1351,7 @@ export default function Settings() {
                           onClick={() => handlePageChange(p)}
                           className={`w-7 h-7 rounded-lg text-xs font-medium ${
                             p === pagination.page
-                              ? "bg-rose-600 text-white"
+                              ? "bg-secondary-600 text-white"
                               : "border border-line text-fg-4 hover:bg-subtle"
                           }`}
                         >
@@ -1422,7 +1422,7 @@ export default function Settings() {
                       type={showCurrent ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
@@ -1443,7 +1443,7 @@ export default function Settings() {
                       type={showNew ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
@@ -1467,7 +1467,7 @@ export default function Settings() {
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-sm"
+                      className="block w-full rounded-lg border border-line bg-white px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 text-sm"
                     />
                     <button
                       type="button"
