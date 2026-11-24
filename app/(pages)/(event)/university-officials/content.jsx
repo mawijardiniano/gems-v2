@@ -415,11 +415,11 @@ function OfficialModal({
               </div>
               <div>
                 <h2 id={titleId} className="text-base font-semibold text-fg">
-                  {isEdit ? "Reassign Seat" : "Assign Official"}
+                  {isEdit ? "Edit Official" : "Assign Official"}
                 </h2>
                 <p className="text-xs text-fg-muted">
                   {isEdit
-                    ? "Assign a different person to this seat"
+                    ? "Correct the name or status. For a new holder, vacate the seat, then assign."
                     : "Pick a seat from the MarSU chart, then the person who fills it"}
                 </p>
               </div>
@@ -773,7 +773,6 @@ export default function UniversityOfficialsContent() {
   const [academicYear, setAcademicYear] = useState("");
   const [yearOptions, setYearOptions] = useState([]);
   const [activeYear, setActiveYear] = useState("");
-  const [copying, setCopying] = useState(false);
 
   /* ── Offices & Groups ────────────────────────────────────────────────
      The office list is global and shared with the Settings > Offices & Groups
@@ -894,44 +893,6 @@ export default function UniversityOfficialsContent() {
     [academicYear],
   );
 
-  const handleCopyForward = useCallback(async () => {
-    if (!academicYear || copying) return;
-    const sorted = [...yearOptions].sort((a, b) => b.localeCompare(a));
-    const source = sorted.find((y) => y < academicYear) || sorted[0];
-    if (!source || source === academicYear) {
-      setError("No previous year to copy from");
-      return;
-    }
-    if (
-      !(await confirm({
-        title: `Copy ${assignments.length || "the"} assignment(s) from AY ${source} to AY ${academicYear}?`,
-        message: "Past years stay unchanged.",
-        confirmLabel: "Copy",
-        tone: "primary",
-      }))
-    ) {
-      return;
-    }
-    setCopying(true);
-    try {
-      const res = await fetch("/api/university-officials/copy-forward", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: source, to: academicYear }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.error || "Failed to copy roster");
-        return;
-      }
-      setSuccess(`Copied ${data.data.copied} assignment(s) from AY ${source}!`);
-      fetchOfficials(academicYear);
-    } catch {
-      setError("Network error");
-    } finally {
-      setCopying(false);
-    }
-  }, [academicYear, copying, yearOptions, assignments.length, fetchOfficials, confirm]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -1055,16 +1016,16 @@ export default function UniversityOfficialsContent() {
             body: JSON.stringify({
               official: modalForm.official || null,
               official_text: modalForm.official ? "" : personName,
-              academic_year: academicYear,
+              status: modalForm.status || "substantive",
             }),
           },
         );
         const data = await res.json();
         if (!res.ok || !data.success) {
-          setModalError(data.error || "Failed to reassign official");
+          setModalError(data.error || "Failed to update official");
           return;
         }
-        setSuccess("Official reassigned successfully!");
+        setSuccess("Official updated.");
       } else {
         const seatName = String(modalForm.name || "").trim();
         if (!seatName) {
@@ -1204,15 +1165,6 @@ export default function UniversityOfficialsContent() {
             officials={assignments}
             academicYear={academicYear}
           />
-          {canEdit && assignments.length === 0 && !loading && (
-            <button
-              onClick={handleCopyForward}
-              disabled={copying}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-xl hover:bg-secondary-100 transition duration-200 disabled:opacity-50"
-            >
-              {copying ? "Copying..." : "Copy from previous year"}
-            </button>
-          )}
           {canEdit && (
             <Button
               variant="primary"
@@ -1238,16 +1190,16 @@ export default function UniversityOfficialsContent() {
       {!loading && canEdit && assignments.length === 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-secondary-200 bg-secondary-50 text-secondary-800 text-sm">
           <span>
-            No roster for AY {academicYear} yet. Copy last year&apos;s
-            assignments or assign seats manually.
+            No officials on the chart for AY {academicYear} yet. Officials stay
+            on the chart every year until their seat is vacated.
           </span>
           <Button
             variant="primary"
             className="shrink-0"
-            onClick={handleCopyForward}
-            disabled={copying}
+            onClick={() => openAssign(null)}
           >
-            {copying ? "Copying..." : "Copy from previous year"}
+            <FaPlus className="h-3.5 w-3.5" />
+            Assign Official
           </Button>
         </div>
       )}

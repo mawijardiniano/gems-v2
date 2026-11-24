@@ -1,6 +1,6 @@
 import GFPS from "@/models/gfps";
 import { connectDB } from "@/data/lib/db";
-import { requireAuth } from "@/data/lib/auth";
+import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { NextResponse } from "next/server";
 import { getGFPSMemberList } from "@/data/lib/gfpsServer";
 import { logActivity, diffFields } from "@/data/lib/activityLog";
@@ -18,7 +18,7 @@ const MEMBER_DIFF_FIELDS = [
 ];
 
 export async function PATCH(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireOrgStructureEditor(req);
   if (error) return NextResponse.json({ error }, { status });
 
   try {

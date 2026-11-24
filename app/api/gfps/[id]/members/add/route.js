@@ -1,12 +1,12 @@
 import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
 import { logActivity } from "@/data/lib/activityLog";
-import { requireAuth } from "@/data/lib/auth";
+import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { NextResponse } from "next/server";
 import { getGFPSMemberList } from "@/data/lib/gfpsServer";
 
 export async function POST(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireOrgStructureEditor(req);
   if (error) return NextResponse.json({ error }, { status });
 
   try {
