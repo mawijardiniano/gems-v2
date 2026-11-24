@@ -7,9 +7,11 @@ import Position from "@/models/position";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
-import { upsertOfficialFromBody } from "@/data/lib/officialsPerson";
+import {
+  officialNameFromBody,
+  upsertOfficialFromBody,
+} from "@/data/lib/officialsPerson";
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import {
   buildDefaultOfficeRows,
   isOfficeAssignable,
@@ -141,8 +143,6 @@ export async function POST(req) {
   const {
     header,
     name,
-    official,
-    official_text = "",
     academic_year,
     /* Renamed on arrival: `status` in this handler is already the HTTP status
        from requireAuth above, and shadowing it would break every error return. */
@@ -150,15 +150,13 @@ export async function POST(req) {
   } = body || {};
 
   const seatName = String(name || body?.position || "").trim();
-  const personText = String(official_text || "").trim();
-  const personId =
-    official && mongoose.isValidObjectId(official) ? official : null;
+  const personText = officialNameFromBody(body);
 
-  if (!header || !seatName || (!personId && !personText)) {
+  if (!header || !seatName || !personText) {
     return Response.json(
       {
         success: false,
-        error: "Missing office, seat, or official (pick a user or type a name)",
+        error: "Missing office, seat, or official (search a person or type a name)",
       },
       { status: 400 },
     );
@@ -239,7 +237,7 @@ export async function POST(req) {
       return Response.json(
         {
           success: false,
-          error: "Missing official (pick a user or type a name)",
+          error: "Missing official (search a person or type a name)",
         },
         { status: 400 },
       );

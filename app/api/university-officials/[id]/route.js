@@ -73,7 +73,7 @@ export async function PATCH(req, { params }) {
       return Response.json(
         {
           success: false,
-          error: "Missing official (pick a user or type a name)",
+          error: "Missing official (search a person or type a name)",
         },
         { status: 400 },
       );

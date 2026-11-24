@@ -117,51 +117,69 @@ const headerColor = (header) => {
   return HEADER_COLORS[slot % HEADER_COLORS.length];
 };
 
-// ─── Helpers ───────────────────────────────────────────────────────
-function getUserFullName(user) {
-  if (!user) return "";
-  if (user.personal_info_id?.personal) {
-    const p = user.personal_info_id.personal;
-    if (p.first_name || p.last_name)
-      return `${p.first_name || ""} ${p.last_name || ""}`.trim();
-  }
-  if (user.first_name || user.last_name)
-    return `${user.first_name || ""} ${user.last_name || ""}`.trim();
-  return user.username || user._id || "";
-}
+// ─── Person search + typed-name fallback ─────────────────────────────
+/**
+ * The official's name field. Typing sets the name directly (a manual entry);
+ * after a short pause the text is also sent to the server-side person search,
+ * and picking a result fills in that employee's real name.
+ *
+ * The search runs on the server (/api/university-officials/person-search):
+ * editors only, employees only, at most 10 rows, name/office/sex only. Names
+ * are matched through an encrypted index of whole words, so the hint asks for
+ * a full first or last name — "maria" finds Maria, "mar" does not.
+ */
+const PERSON_SEARCH_DELAY_MS = 300;
 
-// ─── User Search Field + typed-name fallback ─────────────────────────
-function UserSearchField({
-  onChange,
-  users,
-  selectedUserId,
-  selectedNameText,
-  autoFocus,
-}) {
-  const [search, setSearch] = useState("");
+function PersonSearchField({ value, onChange, autoFocus }) {
+  const [query, setQuery] = useState(value || "");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    let filtered = users;
-    if (search) {
-      const s = search.toLowerCase();
-      filtered = users.filter(
-        (u) =>
-          u.username?.toLowerCase().includes(s) ||
-          u.personal_info_id?.personal?.first_name?.toLowerCase().includes(s) ||
-          u.personal_info_id?.personal?.last_name?.toLowerCase().includes(s),
-      );
-    }
-    return filtered.slice(0, 30);
-  }, [search, users]);
+  const term = query.trim();
+  const searchable =
+    term.length > 0 && term.split(/\s+/).every((word) => word.length >= 2);
 
-  const selectedName = useMemo(() => {
-    if (selectedNameText) return selectedNameText;
-    if (!selectedUserId) return "";
-    const u = users.find((u) => u._id === selectedUserId);
-    if (!u) return "";
-    return getUserFullName(u);
-  }, [selectedUserId, selectedNameText, users]);
+  useEffect(() => {
+    if (!showDropdown || !searchable) {
+      setResults([]);
+      setSearching(false);
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      setSearchError("");
+      try {
+        const res = await fetch(
+          `/api/university-officials/person-search?q=${encodeURIComponent(term)}`,
+          { signal: controller.signal },
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          setResults([]);
+          setSearchError(data.error || "Search failed");
+          return;
+        }
+        setResults(Array.isArray(data.data) ? data.data : []);
+      } catch (err) {
+        if (err?.name !== "AbortError") setSearchError("Network error");
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, PERSON_SEARCH_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [term, searchable, showDropdown]);
+
+  const pick = (name) => {
+    setQuery(name);
+    onChange(name);
+    setShowDropdown(false);
+  };
 
   return (
     <div className="relative">
@@ -170,12 +188,12 @@ function UserSearchField({
         <input
           type="text"
           className="w-full pl-9 pr-3 py-2.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-secondary-100 focus:border-secondary-500 outline-none transition"
-          placeholder="Search user, or type a name..."
-          value={search || selectedName}
+          placeholder="Search an employee, or type a name..."
+          value={query}
           onChange={(e) => {
-            setSearch(e.target.value);
+            setQuery(e.target.value);
+            onChange(e.target.value);
             setShowDropdown(true);
-            onChange({ userId: "", nameText: e.target.value });
           }}
           onFocus={() => setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -183,58 +201,49 @@ function UserSearchField({
           autoFocus={autoFocus}
         />
       </div>
-      {showDropdown && (
-        <div className="absolute z-20 w-full bg-white border border-line rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-          {search.trim() && (
-            <button
-              type="button"
-              className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-50 transition"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                onChange({ userId: "", nameText: search.trim() });
-                setSearch("");
-                setShowDropdown(false);
-              }}
-            >
-              Use &quot;{search.trim()}&quot;
-            </button>
+      {showDropdown && term && (
+        <div className="absolute z-20 w-full bg-white border border-line rounded-lg shadow-lg mt-1 max-h-56 overflow-y-auto">
+          {searching && (
+            <div className="px-3 py-2 text-sm text-fg-muted">Searching...</div>
           )}
-          {filteredUsers.length === 0 && !search.trim() ? (
-            <div className="px-3 py-2 text-sm text-fg-muted">
-              No users found
-            </div>
-          ) : (
-            filteredUsers.map((u) => (
+          {!searching && searchError && (
+            <div className="px-3 py-2 text-sm text-danger">{searchError}</div>
+          )}
+          {!searching &&
+            results.map((r) => (
               <button
-                key={u._id}
+                key={r.gemsPublicId || r.name}
                 type="button"
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 ${
-                  selectedUserId === u._id
-                    ? "bg-secondary-50 text-secondary-700"
-                    : "text-fg-3"
-                }`}
-                onClick={() => {
-                  onChange({ userId: u._id, nameText: "" });
-                  setSearch("");
-                  setShowDropdown(false);
-                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 text-fg-3"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(r.name)}
               >
                 <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-fg-4 shrink-0">
-                  {(
-                    u.personal_info_id?.personal?.first_name?.[0] ||
-                    u.username?.[0] ||
-                    "?"
-                  ).toUpperCase()}
+                  {(r.name[0] || "?").toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{getUserFullName(u)}</p>
-                  <p className="text-xs text-fg-muted truncate">
-                    @{u.username}
-                  </p>
+                  <p className="truncate font-medium">{r.name}</p>
+                  {r.office && (
+                    <p className="text-xs text-fg-muted truncate">{r.office}</p>
+                  )}
                 </div>
               </button>
-            ))
+            ))}
+          {!searching && !searchError && !results.length && (
+            <div className="px-3 py-2 text-xs text-fg-muted">
+              {searchable
+                ? "No employee found. Type a full first or last name, e.g. maria or santos."
+                : "Type a full first or last name to search employees."}
+            </div>
           )}
+          <button
+            type="button"
+            className="w-full text-left px-3 py-2 text-sm text-secondary-700 hover:bg-secondary-50 transition border-t border-line-subtle"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => pick(term)}
+          >
+            Use &quot;{term}&quot; as typed
+          </button>
         </div>
       )}
     </div>
@@ -374,7 +383,6 @@ function OfficialModal({
   onClose,
   onSubmit,
   onFormChange,
-  users,
   form,
   positionSuggestions,
   loading,
@@ -505,16 +513,11 @@ function OfficialModal({
 
           <div>
             <label className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
-              Official (pick a user or type a name)
+              Official (search an employee or type a name)
             </label>
-            <UserSearchField
-              onChange={({ userId, nameText }) => {
-                onFormChange("official", userId);
-                onFormChange("official_text", nameText);
-              }}
-              users={users}
-              selectedUserId={form.official}
-              selectedNameText={form.official_text}
+            <PersonSearchField
+              value={form.official_text}
+              onChange={(name) => onFormChange("official_text", name)}
               autoFocus={isEdit}
             />
           </div>
@@ -761,7 +764,6 @@ export default function UniversityOfficialsContent() {
   const { confirm, confirmDialog } = useConfirm();
 
   const [assignments, setAssignments] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
   const [success, setSuccess] = useState("");
@@ -893,17 +895,6 @@ export default function UniversityOfficialsContent() {
     [academicYear],
   );
 
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      const res = await fetch("/api/profile");
-      const data = await res.json();
-      setUsers(data.data || []);
-    } catch {
-      // silent
-    }
-  }, []);
-
   useEffect(() => {
     (async () => {
       try {
@@ -925,8 +916,7 @@ export default function UniversityOfficialsContent() {
         setLoading(false);
       }
     })();
-    fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   useEffect(() => {
     if (academicYear) fetchOfficials(academicYear);
@@ -954,7 +944,6 @@ export default function UniversityOfficialsContent() {
     setModalForm({
       header,
       name: "",
-      official: "",
       official_text: "",
       /* Substantive is the ordinary case, so the picker opens on it and an
          operator who ignores the field gets the same term as before. */
@@ -969,10 +958,6 @@ export default function UniversityOfficialsContent() {
     setModalForm({
       header: official.header,
       name: official.name,
-      official:
-        typeof official.official === "object"
-          ? official.official?._id || ""
-          : "",
       official_text:
         official.official_text ||
         (typeof official.official === "string" ? official.official : ""),
@@ -1002,8 +987,8 @@ export default function UniversityOfficialsContent() {
         setModalError("Select an office");
         return;
       }
-      if (!personName && !modalForm.official) {
-        setModalError("Pick a user or type a name");
+      if (!personName) {
+        setModalError("Search an employee or type a name");
         return;
       }
 
@@ -1014,8 +999,7 @@ export default function UniversityOfficialsContent() {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              official: modalForm.official || null,
-              official_text: modalForm.official ? "" : personName,
+              official_text: personName,
               status: modalForm.status || "substantive",
             }),
           },
@@ -1038,8 +1022,7 @@ export default function UniversityOfficialsContent() {
           body: JSON.stringify({
             header: modalForm.header,
             name: seatName,
-            official: modalForm.official || null,
-            official_text: modalForm.official ? "" : personName,
+            official_text: personName,
             academic_year: academicYear,
             status: modalForm.status || "substantive",
           }),
@@ -1318,7 +1301,6 @@ export default function UniversityOfficialsContent() {
         onClose={closeModal}
         onSubmit={handleSubmit}
         onFormChange={changeModalForm}
-        users={users}
         form={modalForm}
         positionSuggestions={positionSuggestions}
         loading={modalLoading}
