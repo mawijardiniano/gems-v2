@@ -116,6 +116,16 @@ const REPORT_TYPES = [
     label: "Projects & Events Status (Quarterly)",
     mode: "download",
   },
+  {
+    value: "leadership-sex",
+    label: "Leadership by Sex (University Officials)",
+    mode: "download",
+  },
+  {
+    value: "gfps-composition",
+    label: "GFPS Composition",
+    mode: "download",
+  },
 ];
 
 /* Live sex-disaggregated PDF. The API locks scoped roles (Dean, GAD
@@ -431,6 +441,10 @@ export default function ReportsContent({ scopeCollege = "" }) {
         const quarterParam =
           quarter && quarter !== "breakdown" ? `&quarter=${quarter}` : "";
         endpoint = `/api/reports/projects-events?year=${encodeURIComponent(year)}${quarterParam}`;
+      } else if (type === "leadership-sex") {
+        endpoint = `/api/reports/leadership-sex?year=${encodeURIComponent(year)}`;
+      } else if (type === "gfps-composition") {
+        endpoint = `/api/reports/gfps-composition?year=${encodeURIComponent(year)}`;
       }
 
       const res = await axios.get(endpoint, { responseType: "blob" });
@@ -451,6 +465,8 @@ export default function ReportsContent({ scopeCollege = "" }) {
           quarter && quarter !== "breakdown" ? `-q${quarter}` : ""
         }.pdf`,
         [LIVE_SEX_DISAGGREGATED]: `sex-disaggregated-${population}.pdf`,
+        "leadership-sex": `leadership-by-sex-${year}.pdf`,
+        "gfps-composition": `gfps-composition-${year}.pdf`,
       };
       const filename =
         (res.headers?.["content-disposition"] || "").split("filename=")[1] ||
@@ -467,7 +483,9 @@ export default function ReportsContent({ scopeCollege = "" }) {
       setError(
         type === LIVE_SEX_DISAGGREGATED && err?.response?.status === 404
           ? "No live records found for this scope yet."
-          : "Could not generate the report. Please try again.",
+          : type === "gfps-composition" && err?.response?.status === 404
+            ? "No GFPS recorded for this academic year."
+            : "Could not generate the report. Please try again.",
       );
     } finally {
       setGenerating(false);
