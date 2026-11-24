@@ -284,6 +284,7 @@ export async function POST(req) {
           name: position.name,
           official: officialDoc._id,
           official_text: officialDoc.name,
+          sex: officialDoc.sex,
           status: term.status,
           startDate: term.startDate,
           endDate: term.endDate,

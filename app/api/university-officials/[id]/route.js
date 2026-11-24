@@ -107,6 +107,7 @@ export async function PATCH(req, { params }) {
         name: position?.name || null,
         official: officialDoc._id,
         official_text: officialDoc.name,
+        sex: officialDoc.sex,
         status: term.status,
         startDate: term.startDate,
         endDate: term.endDate,

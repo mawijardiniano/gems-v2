@@ -1,4 +1,5 @@
 import { academicYearRange } from "./academicYear.js";
+import { normalizeOfficialSex } from "./universityOfficialsMerge.js";
 
 /**
  * Reads the org chart from the TERM model (Official + OfficialTerm + Position)
@@ -163,6 +164,7 @@ export function rosterPipeline(academicYear) {
         name: "$__position.name",
         official: "$__official._id",
         official_text: { $ifNull: ["$__official.name", ""] },
+        sex: { $ifNull: ["$__official.sex", "unspecified"] },
         status: 1,
         startDate: 1,
         endDate: 1,
@@ -188,6 +190,8 @@ export function toRosterRow(row) {
     name: row.name,
     official: row.official ?? null,
     official_text: String(row.official_text || "").trim(),
+    // The holder's sex, from the Official; "unspecified" until it is entered.
+    sex: normalizeOfficialSex(row.sex),
     // Carried through for callers that want to render tenure; the legacy
     // documents had no dates, so anything reading only the old fields is
     // unaffected by their presence.
