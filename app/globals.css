@@ -130,6 +130,15 @@
 }
 
 /* ─── Base ─────────────────────────────────────────────────────── */
+/* Tailwind v4 defaults bare `border` to currentColor (near-black). */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-line);
+  }
+}
+
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
