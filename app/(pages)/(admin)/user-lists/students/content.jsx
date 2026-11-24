@@ -581,6 +581,7 @@ export default function StudentsUserListContent({
 
   return (
     <div className="p-6">
+      <h1 className="sr-only">Students</h1>
       <ActionToast toast={toast} onClose={hideToast} />
       {!useSample && listError && (
         <LoadError

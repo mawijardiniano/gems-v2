@@ -121,6 +121,7 @@ export default function DeanDashboardContent() {
 
   return (
     <div>
+      <h1 className="sr-only">Dean Dashboard</h1>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4 text-xs">
         <SampleToggle
           useSample={useSample}

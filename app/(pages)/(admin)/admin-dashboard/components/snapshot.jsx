@@ -117,12 +117,18 @@ function Snapshot({ data, snapshot }) {
         <StatCard card={statCards[0]}>{total.toLocaleString()}</StatCard>
 
         <StatCard card={statCards[1]}>
-          <div className="flex items-baseline gap-2">
-            <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-fg-muted">·</span>
-            <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-fg-muted">(F · M)</span>
-          </div>
+          {/* Two labelled lines: a single "F · M" row overflowed the card
+              at four columns. */}
+          <dl className="space-y-0.5">
+            <div className="flex items-baseline gap-2">
+              <dt className="w-4 text-xs font-medium text-fg-muted">F</dt>
+              <dd className="text-secondary-600 tabular-nums">{femaleCount}</dd>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <dt className="w-4 text-xs font-medium text-fg-muted">M</dt>
+              <dd className="text-secondary-600 tabular-nums">{maleCount}</dd>
+            </div>
+          </dl>
           {/* Mini bar */}
           {total > 0 && (
             <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">

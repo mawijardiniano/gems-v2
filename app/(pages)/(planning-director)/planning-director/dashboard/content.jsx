@@ -148,6 +148,7 @@ export default function PlanningDirectorDashboard() {
 
   return (
     <div className="py-8 flex flex-col gap-4">
+      <h1 className="sr-only">Planning Director Dashboard</h1>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <SampleToggle
           useSample={useSample}
