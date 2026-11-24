@@ -2,19 +2,12 @@
 
 import {
   buildOrgChart,
-  countOfficialsBySex,
   getOfficialPersonName,
-  normalizeOfficialSex,
-  OFFICIAL_SEX_LABELS,
 } from "@/data/lib/universityOfficialsMerge";
 import { escapeHtml } from "@/data/lib/escapeHtml";
 
 /* Seat names, person names and office headers are typed text written into a
    same-origin iframe, so every one is escaped (see data/lib/escapeHtml.js). */
-
-const sexSummary = (counts) =>
-  `Female ${counts.female} · Male ${counts.male}` +
-  (counts.unspecified ? ` · Not set ${counts.unspecified}` : "");
 
 /**
  * Prints the assigned MarSU officials roster (assigned-only mode).
@@ -24,7 +17,6 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
   const handlePrintOfficials = () => {
     const chart = buildOrgChart(officials);
     const yearLabel = academicYear ? ` — AY ${escapeHtml(academicYear)}` : "";
-    const totals = countOfficialsBySex(chart.rows);
 
     const sectionsHtml = chart.byHeader
       .map(({ header, seats }) => {
@@ -34,25 +26,22 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
             const name = getOfficialPersonName(
               official?.official_text || official?.official,
             );
-            const sex = normalizeOfficialSex(official?.sex);
             return `
               <tr>
                 <td>${escapeHtml(seat.name)}</td>
                 <td>${escapeHtml(name)}</td>
-                <td class="sex">${sex === "unspecified" ? "" : OFFICIAL_SEX_LABELS[sex]}</td>
               </tr>
             `;
           })
           .join("");
 
         return `
-          <h4>${escapeHtml(header)} <span class="counts">${sexSummary(countOfficialsBySex(seats))}</span></h4>
+          <h4>${escapeHtml(header)}</h4>
           <table>
             <thead>
               <tr>
-                <th style="width: 55%">Position / Designation</th>
+                <th style="width: 62%">Position / Designation</th>
                 <th>Name</th>
-                <th style="width: 12%">Sex</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -104,17 +93,6 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
     background: #f2f2f2;
   }
 
-  .counts {
-    font-weight: normal;
-    font-size: 11px;
-    color: #444;
-    margin-left: 8px;
-  }
-
-  .sex {
-    text-align: center;
-  }
-
   .vacant {
     color: #999;
     text-align: center;
@@ -124,7 +102,6 @@ export default function PrintUniversityOfficials({ officials, academicYear }) {
       <body>
         <h2>MARINDUQUE STATE UNIVERSITY</h2>
         <p class="subtitle">Offices &amp; Administrative Designations${yearLabel}</p>
-        <p class="subtitle">${chart.rows.length} assigned seats · ${sexSummary(totals)}</p>
 
         ${sectionsHtml}
       </body>
