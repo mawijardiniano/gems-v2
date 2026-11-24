@@ -87,6 +87,18 @@ const GFPSchema = new mongoose.Schema({
   executiveCommittee: ExecutiveCommitteeSchema,
   technicalWorkingGroup: TechnicalWorkingGroupSchema,
   secretariat: [MemberSchema],
+  /* The memorandum or special order that constitutes the GFPS for this
+     academic year (PCW requires the committee to be created by an issuance).
+     Not carried by copy-forward: each year has its own issuance. */
+  issuance: {
+    number: { type: String, trim: true, default: "" },
+    date: { type: Date, default: null },
+    effectivity: { type: Date, default: null },
+    file: {
+      key: { type: String, default: null },
+      name: { type: String, trim: true, default: "" },
+    },
+  },
 });
 
 export default mongoose.models.GFPS || mongoose.model("GFPS", GFPSchema);
