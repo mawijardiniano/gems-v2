@@ -89,3 +89,7 @@ gpb-progress-preview-*.pdf
 dev-err.txt
 dev-out.txt
 gfps-retired-cleanup-backup.json
+
+# local tooling: browser-automation captures and personal Claude settings
+.playwright-mcp/
+.claude/settings.local.json
