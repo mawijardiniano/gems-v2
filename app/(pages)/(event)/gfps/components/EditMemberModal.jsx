@@ -5,6 +5,10 @@ import { SECTIONS } from "../gfps-config";
 import { isManualKey, nextManualKey } from "../officials";
 import { useDialog } from "@/hooks/useDialog";
 import Button from "@/components/ui/Button";
+import {
+  OFFICIAL_SEX_LABELS,
+  OFFICIAL_SEX_VALUES,
+} from "@/data/lib/universityOfficialsMerge";
 
 function ModalHeader({ editingSection, onClose, titleId }) {
   return (
@@ -144,9 +148,11 @@ function ManualEntries({
   manualKeys,
   manualTexts,
   manualPositions = {},
+  manualSexes = {},
   lockedPositions = {},
   onManualTextsChange,
   onManualPositionsChange,
+  onManualSexesChange,
   onAdd,
   onRemove,
 }) {
@@ -258,6 +264,27 @@ function ManualEntries({
                     </p>
                   )}
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-fg-muted mb-1">
+                    Sex
+                  </label>
+                  <select
+                    value={manualSexes[key] || "unspecified"}
+                    onChange={(e) =>
+                      onManualSexesChange((prev) => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-line-strong rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition bg-white"
+                  >
+                    {OFFICIAL_SEX_VALUES.map((value) => (
+                      <option key={value} value={value}>
+                        {OFFICIAL_SEX_LABELS[value]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             );
           })}
@@ -273,6 +300,7 @@ export default function EditMemberModal({
   selectedOfficials,
   manualTexts = {},
   manualPositions = {},
+  manualSexes = {},
   lockedPositions = {},
   execRoles,
   error,
@@ -282,6 +310,7 @@ export default function EditMemberModal({
   onSelectedChange,
   onManualTextsChange,
   onManualPositionsChange,
+  onManualSexesChange = () => {},
   onExecRolesChange,
   onSubmit,
 }) {
@@ -298,6 +327,7 @@ export default function EditMemberModal({
     onSelectedChange((prev) => [...prev, key]);
     onManualTextsChange((prev) => ({ ...prev, [key]: "" }));
     onManualPositionsChange((prev) => ({ ...prev, [key]: "" }));
+    onManualSexesChange((prev) => ({ ...prev, [key]: "unspecified" }));
     onExecRolesChange((prev) => ({ ...prev, [key]: "member" }));
   };
 
@@ -309,6 +339,11 @@ export default function EditMemberModal({
       return next;
     });
     onManualPositionsChange((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    onManualSexesChange((prev) => {
       const next = { ...prev };
       delete next[key];
       return next;
@@ -362,9 +397,11 @@ export default function EditMemberModal({
             manualKeys={manualKeys}
             manualTexts={manualTexts}
             manualPositions={manualPositions}
+            manualSexes={manualSexes}
             lockedPositions={lockedPositions}
             onManualTextsChange={onManualTextsChange}
             onManualPositionsChange={onManualPositionsChange}
+            onManualSexesChange={onManualSexesChange}
             onAdd={addManualRow}
             onRemove={removeManualRow}
           />

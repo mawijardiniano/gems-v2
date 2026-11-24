@@ -3,6 +3,7 @@ import GFPS from "@/models/gfps";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { NextResponse } from "next/server";
+import { normalizeOfficialSex } from "@/data/lib/universityOfficialsMerge";
 import { getGFPSMemberList } from "@/data/lib/gfpsServer";
 
 export async function POST(req, { params }) {
@@ -28,6 +29,9 @@ export async function POST(req, { params }) {
 
     const added = {
       ...member,
+      ...(member?.sex !== undefined
+        ? { sex: normalizeOfficialSex(member.sex) }
+        : {}),
       appointedAt: new Date(),
       isActive: true,
     };

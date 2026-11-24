@@ -90,6 +90,7 @@ export async function POST(req) {
       row.sort_order = member.sort_order;
     }
     if (member.role) row.role = member.role;
+    if (member.sex) row.sex = member.sex;
 
     return row;
   };

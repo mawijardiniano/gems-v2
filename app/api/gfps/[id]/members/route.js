@@ -3,6 +3,7 @@ import { connectDB } from "@/data/lib/db";
 import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { NextResponse } from "next/server";
 import { getGFPSMemberList } from "@/data/lib/gfpsServer";
+import { normalizeOfficialSex } from "@/data/lib/universityOfficialsMerge";
 import { logActivity, diffFields } from "@/data/lib/activityLog";
 
 /* Fields a member row is compared on. Both sides of the diff are plain
@@ -13,6 +14,7 @@ const MEMBER_DIFF_FIELDS = [
   "position_title",
   "role",
   "sort_order",
+  "sex",
   "isActive",
   "appointedAt",
 ];
@@ -61,6 +63,9 @@ export async function PATCH(req, { params }) {
     members[memberIndex] = {
       ...before,
       ...data,
+      ...(data?.sex !== undefined
+        ? { sex: normalizeOfficialSex(data.sex) }
+        : {}),
     };
 
     await gfps.save();

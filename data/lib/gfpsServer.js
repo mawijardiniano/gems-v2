@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { normalizeOfficialSex } from "./universityOfficialsMerge.js";
 
 /**
  * GFPS members are manual-first: a member carries a typed `official_text` as
@@ -117,6 +118,12 @@ const normalizeMember = (m, { role, fallbackRole } = {}) => {
     official_text: String(m?.official_text ?? "").trim(),
   };
 
+  /* Sex is written only when the row carries it, so a save that omits it
+     leaves the stored value (or the schema default) alone. */
+  if (m?.sex !== undefined && m?.sex !== null) {
+    member.sex = normalizeOfficialSex(m.sex);
+  }
+
   /* Order is kept only when it is a real number. `Number("")` is 0, so a blank
      field from a form would otherwise become order 0 and sort the row ahead of
      the memorandum's first entry instead of leaving it unnumbered. */
@@ -222,6 +229,8 @@ function describeMember(member) {
     position_title,
     official_text,
     manual: true,
+    // Rows saved before the field existed have no value: "unspecified".
+    sex: normalizeOfficialSex(member.sex),
     // True when the seat is known but nobody has been appointed to it yet.
     vacant: !official_text,
   };

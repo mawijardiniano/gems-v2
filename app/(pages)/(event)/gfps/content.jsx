@@ -14,6 +14,7 @@ import {
 } from "./gfps-config";
 import { resolveSaveRequest } from "@/data/lib/gfpsSaveRequest";
 import { isManualKey, manualMemberNames, nextManualKey } from "./officials";
+import { normalizeOfficialSex } from "@/data/lib/universityOfficialsMerge";
 import { useConfirm } from "@/components/ui/useConfirm";
 import ActionToast, { useActionToast, errorText } from "@/components/ActionToast";
 import Button from "@/components/ui/Button";
@@ -37,6 +38,8 @@ export default function GFPSManager() {
      Kept beside the selection so a manual entry is edited in place rather than
      being flattened into a roster pick when the modal reopens. */
   const [manualTexts, setManualTexts] = useState({});
+  /* Sex per manual row, keyed like manualTexts. */
+  const [manualSexes, setManualSexes] = useState({});
   /* Seats typed alongside manual names, plus the subset that came from the
      memorandum and therefore cannot be renamed (see EditMemberModal). */
   const [manualPositions, setManualPositions] = useState({});
@@ -129,8 +132,8 @@ export default function GFPSManager() {
    * manual rows with a seat, which is what makes a vacant position renderable
    * without inventing a person for it. */
   const resolveSelectedMember = useCallback(
-    (key, manualText = "", manualPosition = "") =>
-      manualMemberNames(manualText, manualPosition),
+    (key, manualText = "", manualPosition = "", manualSex) =>
+      manualMemberNames(manualText, manualPosition, manualSex),
     [],
   );
 
@@ -266,6 +269,7 @@ export default function GFPSManager() {
     const keys = [];
     const texts = {};
     const positions = {};
+    const sexes = {};
     const locked = {};
 
     /* GFPS is maintained by hand, so every stored member is re-seated as a
@@ -286,6 +290,7 @@ export default function GFPSManager() {
       keys.push(manualKey);
       texts[manualKey] = text;
       positions[manualKey] = seat;
+      sexes[manualKey] = normalizeOfficialSex(m.sex);
 
       /* Seats that arrived from the memorandum keep their title: the seeded
          rows are the chart's structure, so they are shown read-only rather than
@@ -294,7 +299,7 @@ export default function GFPSManager() {
       if (fromMemo) locked[manualKey] = true;
     });
 
-    return { sectionMembers, keys, texts, positions, locked };
+    return { sectionMembers, keys, texts, positions, sexes, locked };
   };
 
   const openAddModal = () => {
@@ -320,6 +325,7 @@ export default function GFPSManager() {
     setSection(sectionKey);
     setSelectedOfficials([]);
     setManualTexts({});
+    setManualSexes({});
     setManualPositions({});
     setLockedPositions({});
     setExecRoles({});
@@ -341,6 +347,7 @@ export default function GFPSManager() {
     setSection(sectionKey);
     setSelectedOfficials([]);
     setManualTexts({});
+    setManualSexes({});
     setManualPositions({});
     setLockedPositions({});
     setExecRoles({});
@@ -352,6 +359,7 @@ export default function GFPSManager() {
     setEditingSection(null);
     setSelectedOfficials([]);
     setManualTexts({});
+    setManualSexes({});
     setManualPositions({});
     setLockedPositions({});
     setExecRoles({});
@@ -363,11 +371,12 @@ export default function GFPSManager() {
     setSection(sectionKey);
     setModalError("");
 
-    const { sectionMembers, keys, texts, positions, locked } =
+    const { sectionMembers, keys, texts, positions, sexes, locked } =
       seatSectionMembers(sectionKey);
 
     setSelectedOfficials(keys);
     setManualTexts(texts);
+    setManualSexes(sexes);
     setManualPositions(positions);
     setLockedPositions(locked);
 
@@ -401,6 +410,7 @@ export default function GFPSManager() {
             key,
             manualTexts[key] || "",
             manualPositions[key] || "",
+            manualSexes[key],
           );
           return { key, ...member };
         })
@@ -636,6 +646,8 @@ export default function GFPSManager() {
           editingSection={editingSection}
           selectedOfficials={selectedOfficials}
           manualTexts={manualTexts}
+          manualSexes={manualSexes}
+          onManualSexesChange={setManualSexes}
           manualPositions={manualPositions}
           lockedPositions={lockedPositions}
           execRoles={execRoles}
