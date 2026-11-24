@@ -4,6 +4,10 @@ import {
   SECTIONS as DEFAULT_SECTIONS,
   getSectionData,
 } from "../../gfps/gfps-config";
+import { escapeHtml } from "@/data/lib/escapeHtml";
+
+/* Member names and seats are typed text written into a same-origin print
+   iframe, so each is escaped before it reaches the HTML. */
 
 const PRINT_STYLES = `
   body {
@@ -53,7 +57,7 @@ const PRINT_STYLES = `
    truth. There is nothing to fall back to any more — the retired split
    `first_name` / `last_name` parts and the resolved roster seat both came from
    data that no longer exists on a GFPS row. */
-const memberName = (m) => String(m?.official_text || "").trim();
+const memberName = (m) => escapeHtml(String(m?.official_text || "").trim());
 
 const formatMember = (m) => {
   const name = memberName(m);
@@ -63,7 +67,7 @@ const formatMember = (m) => {
      printing with no position at all. */
   const position =
     String(m?.position_title || "").trim() || (m?.role === "chair" ? "Chair" : "");
-  const label = position;
+  const label = escapeHtml(position);
 
   /* An unfilled seat prints as "(Vacant)": the position is part of the
      memorandum, so the line is reported as unfilled rather than left blank,
@@ -77,10 +81,10 @@ const buildSectionRow = (sec, gfps) => {
 
   if (chairData) {
     const name = memberName(chairData);
-    const position = String(chairData.position_title || "").trim();
+    const position = escapeHtml(String(chairData.position_title || "").trim());
     return `
       <tr>
-        <td class="section">${sec.label}</td>
+        <td class="section">${escapeHtml(sec.label)}</td>
         <td>
           ${position ? `<strong>${position}</strong><br/>` : ""}
           ${name || (position ? "<em>(Vacant)</em>" : "")}
@@ -93,14 +97,14 @@ const buildSectionRow = (sec, gfps) => {
 
   return `
     <tr>
-      <td class="section">${sec.label}</td>
+      <td class="section">${escapeHtml(sec.label)}</td>
       <td class="members">${members.map(formatMember).join("<br/>")}</td>
     </tr>
   `;
 };
 
 const buildPrintHtml = (sections, gfps) => {
-  const yearLabel = gfps?.academic_year ? ` — AY ${gfps.academic_year}` : "";
+  const yearLabel = gfps?.academic_year ? ` — AY ${escapeHtml(gfps.academic_year)}` : "";
   return `
   <html>
     <head>

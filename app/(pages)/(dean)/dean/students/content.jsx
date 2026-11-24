@@ -30,6 +30,7 @@ import {
 import { useDialog } from "@/hooks/useDialog";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { escapeHtml } from "@/data/lib/escapeHtml";
 
 export default function StudentsUserListContent({ college }) {
   /* Sample mode is the default view; live fetching stays parked while on. */
@@ -396,15 +397,19 @@ export default function StudentsUserListContent({ college }) {
     setReportStatus("");
     try {
       const report = buildReportData();
-      const collegeLabel =
-        college || "College of Information and Computing Sciences (CICS)";
-      const yearLabel = filterSchoolYear || "AY 2024-2025";
-      const semLabel = filterSemester || "2nd Semester";
+      /* Every label below is written into a same-origin print iframe, so
+         typed or imported text (college, course, term) is escaped. */
+      const collegeLabel = escapeHtml(
+        college || "College of Information and Computing Sciences (CICS)",
+      );
+      const yearLabel = escapeHtml(filterSchoolYear || "AY 2024-2025");
+      const semLabel = escapeHtml(filterSemester || "2nd Semester");
       const yearOrder = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
       const courses = Object.keys(report.courseYearMap).sort();
 
       const buildCourseSection = (course) => {
         const yearMap = report.courseYearMap[course];
+        const courseLabel = escapeHtml(course);
         let courseMale = 0;
         let courseFemale = 0;
         let courseTotal = 0;
@@ -456,7 +461,7 @@ export default function StudentsUserListContent({ college }) {
 
         let genderStatement = "";
         if (malePct > femalePct) {
-          genderStatement = `Gender Distribution: The ${course} program remains male-dominated, with males consistently outnumbering females in all year levels.`;
+          genderStatement = `Gender Distribution: The ${courseLabel} program remains male-dominated, with males consistently outnumbering females in all year levels.`;
         } else if (femalePct > malePct) {
           genderStatement = `Gender Distribution: Females outnumber males in this course.`;
         } else {
@@ -475,14 +480,14 @@ export default function StudentsUserListContent({ college }) {
         }
 
         return `
-          <h3>Student Enrollment in the ${course} Program</h3>
+          <h3>Student Enrollment in the ${courseLabel} Program</h3>
           <table>
             <thead><tr><th style="text-align:left">Year Level</th><th>Male</th><th>Female</th><th>Total</th></tr></thead>
             <tbody>${bodyRows}</tbody>
           </table>
           <div class="interpretation">
             <p><strong>Interpretation:</strong></p>
-            <p>The total student population in the ${course} program is ${courseTotal} students, with ${courseMale} males (${malePct}%) and ${courseFemale} females (${femalePct}%).</p>
+            <p>The total student population in the ${courseLabel} program is ${courseTotal} students, with ${courseMale} males (${malePct}%) and ${courseFemale} females (${femalePct}%).</p>
             <p>${genderStatement}</p>
             <p>The highest enrollment is in 1st Year (${firstYrTotal} students), but the numbers drop as the year level increases (only ${fourthYrTotal} students remain in 4th Year).</p>
             ${dropStatement}

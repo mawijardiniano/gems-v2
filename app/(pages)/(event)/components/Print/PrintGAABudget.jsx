@@ -1,4 +1,5 @@
 "use client"
+import { escapeHtml } from "@/data/lib/escapeHtml";
 import {
   FaEdit,
   FaPlus,
@@ -58,9 +59,9 @@ const handlePrintBudgets = () => {
 
                 return `
                   <tr>
-                    <td>${b.year}</td>
+                    <td>${escapeHtml(b.year)}</td>
                     <td>${totalGAA}</td>
-                    <td>${b.gadPercent}%</td>
+                    <td>${escapeHtml(b.gadPercent)}%</td>
                     <td>${gadBudget}</td>
                   </tr>
                 `;

@@ -1,4 +1,5 @@
 "use client";
+import { escapeHtml } from "@/data/lib/escapeHtml";
 
 export default function PrintSummaryButton({
   totalPopulation,
@@ -25,7 +26,7 @@ export default function PrintSummaryButton({
       .map(
         (row) => `
           <tr>
-            <td>${row.year}</td>
+            <td>${escapeHtml(row.year)}</td>
             <td>${row.Male}</td>
             <td>${row.Female}</td>
             <td>${row.Male + row.Female}</td>
@@ -38,7 +39,7 @@ export default function PrintSummaryButton({
       .map(
         (row) => `
           <tr>
-            <td>${row.college}</td>
+            <td>${escapeHtml(row.college)}</td>
             <td>${row.Male}</td>
             <td>${row.Female}</td>
             <td>${row.Male + row.Female}</td>
@@ -51,7 +52,7 @@ export default function PrintSummaryButton({
       .map(
         (row) => `
           <tr>
-            <td>${row.office}</td>
+            <td>${escapeHtml(row.office)}</td>
             <td>${row.Male}</td>
             <td>${row.Female}</td>
             <td>${row.Male + row.Female}</td>
@@ -103,7 +104,7 @@ export default function PrintSummaryButton({
         <body>
 
           <h2>Campus Gender Equality Summary${isSample ? " (Sample data - demonstration only)" : " (Live data)"}</h2>
-          ${schoolYear || semesterLabel ? `<p style="text-align:center;">${[schoolYear, semesterLabel].filter(Boolean).join(" — ")}</p>` : ""}
+          ${schoolYear || semesterLabel ? `<p style="text-align:center;">${[schoolYear, semesterLabel].filter(Boolean).map(escapeHtml).join(" — ")}</p>` : ""}
 
           <table>
             <thead>
