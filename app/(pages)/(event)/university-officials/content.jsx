@@ -962,13 +962,13 @@ export default function UniversityOfficialsContent() {
      from Settings; the modal's picker can still create a new name inline. */
   const {
     offices,
-    setOffices,
     busy: officeBusy,
     includeInactive: includeInactiveOffices,
     setIncludeInactive: setIncludeInactiveOffices,
     activeHeaders,
     counts: officeCounts,
     addOffice: handleAddOffice,
+    refresh: refreshOffices,
   } = useUniversityOffices({
     includeCounts: true,
     academicYear,
@@ -1058,7 +1058,10 @@ export default function UniversityOfficialsContent() {
         );
         const data = await res.json();
         setAssignments(Array.isArray(data.data) ? data.data : []);
-        if (Array.isArray(data.offices)) setOffices(data.offices);
+        /* The roster response's `offices` carry no counts. Copying them into
+           the shared office list wiped the counts the hook had loaded, so the
+           assign form read "0 assigned officials" for every office. The hook
+           owns the list; it is refreshed after each change instead. */
         if (Array.isArray(data.years) && data.years.length) {
           setYearOptions(data.years);
         }
@@ -1230,6 +1233,7 @@ export default function UniversityOfficialsContent() {
 
       closeModal();
       fetchOfficials(academicYear);
+      refreshOffices();
     } catch {
       setModalError("Network error");
     } finally {
@@ -1283,6 +1287,7 @@ export default function UniversityOfficialsContent() {
       }
       setSuccess("Seat vacated — it now shows as vacant.");
       fetchOfficials(academicYear);
+      refreshOffices();
     } catch {
       setError("Network error");
     }
