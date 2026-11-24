@@ -6,11 +6,11 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { canReadOffices, canWriteOffices } from "@/data/lib/officesAccess";
 import {
-  academicYearRange,
   normalizeAcademicYear,
   resolveAcademicYear,
 } from "@/data/lib/academicYear";
 import { NextResponse } from "next/server";
+import { termOverlapFilter } from "@/data/lib/officialsTermsQuery";
 import {
   buildDefaultOfficeRows,
   findOffice,
@@ -56,14 +56,12 @@ async function getActiveTermYear() {
  * year filter, which is what the deactivation guard checks.
  */
 async function getAssignedCounts(academicYear) {
-  const range = academicYearRange(academicYear);
-
-  const match = range
-    ? {
-        startDate: { $lte: range.end },
-        $or: [{ endDate: null }, { endDate: { $gte: range.start } }],
-      }
-    : {};
+  /* Same test the roster uses (termOverlapFilter): who held the seat on
+     1 August, when the year opened. The June–May overlap used before also
+     counted every term that ended in that window — including all the terms
+     closed on 31 July — so an office showed its outgoing and incoming
+     holders together (Executive Officials: 17 instead of the chart's 5). */
+  const match = termOverlapFilter(academicYear) || {};
 
   const rows = await OfficialTerm.aggregate([
     ...(Object.keys(match).length ? [{ $match: match }] : []),
