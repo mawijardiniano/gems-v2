@@ -31,12 +31,15 @@ export const isManualKey = (key) =>
  * defined before anyone was appointed to it — hence either may be blank, but
  * the caller refuses a row where both are blank.
  *
- * The row is exactly those two fields. It used to also carry the chart header
+ * The row is those two fields plus an optional `sex`. It used to also carry the chart header
  * it was picked under and the name split on the "Dela Cruz, Juan" comma; the
  * picker is gone, the header was never rendered, and the split parts were never
  * read because every display path prints `official_text` first.
  */
-export const manualMemberNames = (name, positionTitle = "") => ({
+export const manualMemberNames = (name, positionTitle = "", sex) => ({
   position_title: String(positionTitle || "").trim(),
   official_text: String(name || "").trim(),
+  /* Typed by hand like the name; omitted when the form never set it, so the
+     server keeps whatever the row already had. */
+  ...(sex ? { sex } : {}),
 });

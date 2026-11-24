@@ -70,6 +70,7 @@ const toPayloadMember = (resolved, role) => ({
     ? { sort_order: Number(resolved.sort_order) }
     : {}),
   ...(role ? { role } : {}),
+  ...(resolved?.sex ? { sex: resolved.sex } : {}),
 });
 
 /* The chair section is one slot, so an empty selection has no row at all.

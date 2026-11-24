@@ -2,6 +2,7 @@
 
 import { SECTION_STYLES, getSectionData } from "../gfps-config";
 import { OfficialRow, SECTION_ICONS } from "./ui";
+import { countOfficialsBySex } from "@/data/lib/universityOfficialsMerge";
 
 /* A member's identity for React's key: its typed name, else its seat title.
    There is no roster link to key on any more. Falling back to the array index
@@ -79,6 +80,11 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
 
   const style = SECTION_STYLES[sectionKey] || SECTION_STYLES.executiveCommittee;
   const chairCount = members.filter((m) => m.role === "chair").length;
+  /* Counted over named members only: a vacant memo seat has no holder. */
+  const named = (chairData ? [chairData] : members).filter((m) =>
+    String(m?.official_text || "").trim(),
+  );
+  const sex = countOfficialsBySex(named);
 
   return (
     <div
@@ -100,6 +106,12 @@ export default function SectionCard({ sectionKey, label, gfps, canEdit, onEdit }
                 <> · {chairCount} Chair{chairCount !== 1 ? "s" : ""}</>
               )}
             </span>
+            {sex.total > 0 && (
+              <span className="block text-xs text-fg-muted mt-1 tabular-nums">
+                {sex.female} F · {sex.male} M
+                {sex.unspecified > 0 && ` · ${sex.unspecified} not set`}
+              </span>
+            )}
           </div>
         </div>
         {canEdit && (

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { OFFICIAL_SEX_VALUES } from "../data/lib/universityOfficialsMerge.js";
 import "./user.js";
 
 /* GFPS members are manual-first. The committee is its own record, not a view
@@ -43,6 +44,14 @@ const memberFields = {
   sort_order: {
     type: Number,
     required: false,
+  },
+  /* Sex of the member, typed by hand like the name. "unspecified" is the
+     default so rows saved before this field existed stay valid and read as
+     "not set". Per row, not per person: GFPS rows are text-only by design. */
+  sex: {
+    type: String,
+    enum: OFFICIAL_SEX_VALUES,
+    default: "unspecified",
   },
 };
 
