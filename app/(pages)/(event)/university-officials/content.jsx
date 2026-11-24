@@ -142,6 +142,10 @@ function PersonSearchField({ value, onChange, onPick, autoFocus }) {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  /* The dropdown opens only once the editor has typed in this field. Edit
+     opens with the field focused and pre-filled, and opening on that focus
+     covered the link line and the Sex choice before anything was asked for. */
+  const [typed, setTyped] = useState(false);
 
   const term = query.trim();
   const searchable =
@@ -199,9 +203,10 @@ function PersonSearchField({ value, onChange, onPick, autoFocus }) {
           onChange={(e) => {
             setQuery(e.target.value);
             onChange(e.target.value);
+            setTyped(true);
             setShowDropdown(true);
           }}
-          onFocus={() => setShowDropdown(true)}
+          onFocus={() => typed && setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           autoComplete="off"
           autoFocus={autoFocus}
@@ -476,7 +481,7 @@ function OfficeSelect({
   );
 }
 
-// ─── Assign / Reassign Modal ───────────────────────────────────────
+// ─── Assign / Edit Modal ───────────────────────────────────────
 function OfficialModal({
   open,
   mode,
@@ -844,7 +849,7 @@ function HeaderCard({
                         {official &&
                           (normalizeOfficialSex(official.sex) ===
                           "unspecified" ? (
-                            <span className="text-xs text-fg-muted italic">
+                            <span className="text-xs text-fg-muted italic whitespace-nowrap">
                               Not set
                             </span>
                           ) : (
@@ -886,20 +891,20 @@ function HeaderCard({
                             {historyOpen ? "Hide" : "History"}
                           </button>
                           {!isCoordinator && (
-                            <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <div className="inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
                               <button
                                 onClick={() => onEdit(official)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary-700 bg-secondary-50 border border-secondary-200 rounded-lg hover:bg-secondary-100 hover:border-secondary-300 transition"
                               >
                                 <FaEdit className="h-3 w-3" />
-                                Reassign
+                                Edit
                               </button>
                               <button
                                 onClick={() => onVacate(official)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-subtle border border-danger-border rounded-lg hover:bg-red-100 hover:border-red-300 transition"
                               >
                                 <FaTrash className="h-3 w-3" />
-                                Remove
+                                Vacate
                               </button>
                             </div>
                           )}
