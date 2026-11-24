@@ -1,6 +1,47 @@
 import { HEADERS } from "./universityOfficialsConstants.js";
 
 /**
+ * Values for Official.sex (models/official.js reads this list). Lowercase in
+ * storage; OFFICIAL_SEX_LABELS is what screens show. Kept here, not in the
+ * model, because this module is safe to import in the browser.
+ */
+export const OFFICIAL_SEX_VALUES = ["female", "male", "unspecified"];
+
+export const OFFICIAL_SEX_LABELS = {
+  female: "Female",
+  male: "Male",
+  unspecified: "Not set",
+};
+
+/** Any input to a stored sex value; unknown or empty is "unspecified". */
+export function normalizeOfficialSex(value) {
+  const v = String(value || "").trim().toLowerCase();
+  return OFFICIAL_SEX_VALUES.includes(v) ? v : "unspecified";
+}
+
+/**
+ * Counts filled seats by the holder's sex. Counted per seat, not per person:
+ * someone holding two seats counts twice, matching "seats held by women".
+ *
+ * @param {Array} rows chart rows (`{ official }`) or roster rows (`{ sex }`)
+ * @returns {{ female: number, male: number, unspecified: number, total: number }}
+ */
+export function countOfficialsBySex(rows) {
+  const out = { female: 0, male: 0, unspecified: 0, total: 0 };
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!row) continue;
+    /* Roster rows carry `sex` themselves (their `official` is an id); chart
+       rows nest the roster row under `official`. */
+    const sex = normalizeOfficialSex(
+      row.sex !== undefined ? row.sex : row.official?.sex,
+    );
+    out[sex] += 1;
+    out.total += 1;
+  }
+  return out;
+}
+
+/**
  * Assigned-only roster join (temporary mode).
  *
  * Offices (header) are saved; positions are manually encoded and

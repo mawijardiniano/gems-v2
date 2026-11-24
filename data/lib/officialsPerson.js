@@ -1,4 +1,5 @@
 import Official from "@/models/official";
+import { normalizeOfficialSex } from "@/data/lib/universityOfficialsMerge";
 
 /**
  * The person half of an officials write: turns a request body's
@@ -21,11 +22,23 @@ export async function upsertOfficialFromBody(body) {
   const name = officialNameFromBody(body);
   if (!name) return null;
 
-  return Official.findOneAndUpdate(
-    { name },
-    { $setOnInsert: { name } },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
-  );
+  /* `sex` is optional on the body. When sent, it is written to the person —
+     so it changes on every seat they hold, which is the point of storing it
+     on the Official. When absent, the stored value is left alone. */
+  const hasSex = body && Object.prototype.hasOwnProperty.call(body, "sex");
+  const update = hasSex
+    ? {
+        $setOnInsert: { name },
+        $set: { sex: normalizeOfficialSex(body.sex) },
+      }
+    : { $setOnInsert: { name } };
+
+  return Official.findOneAndUpdate({ name }, update, {
+    upsert: true,
+    new: true,
+    setDefaultsOnInsert: true,
+    runValidators: true,
+  });
 }
 
 /** The trimmed, single-spaced person name from a request body, or "". */

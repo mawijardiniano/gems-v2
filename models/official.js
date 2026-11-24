@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { OFFICIAL_SEX_VALUES } from "../data/lib/universityOfficialsMerge.js";
 
 /**
  * One document = one person who may hold a seat.
@@ -21,6 +22,15 @@ const officialSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+    /* Sex of the person, typed by the editor or pre-filled from the person
+       search. Stored on the person, not the seat, so it is set once and shared
+       by every seat they hold. "unspecified" is the default so the officials
+       recorded before this field existed stay valid and show as "not set". */
+    sex: {
+      type: String,
+      enum: OFFICIAL_SEX_VALUES,
+      default: "unspecified",
     },
   },
   { timestamps: true },

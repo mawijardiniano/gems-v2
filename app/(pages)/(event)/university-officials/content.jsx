@@ -22,6 +22,7 @@ import {
   FaCog,
   FaHistory,
   FaSitemap,
+  FaUsers,
 } from "react-icons/fa";
 import { useDialog } from "@/hooks/useDialog";
 import { useConfirm } from "@/components/ui/useConfirm";
@@ -29,7 +30,11 @@ import Link from "next/link";
 import { HEADERS } from "@/data/lib/universityOfficialsConstants";
 import {
   buildOrgChart,
+  countOfficialsBySex,
   getOfficialPersonName,
+  normalizeOfficialSex,
+  OFFICIAL_SEX_LABELS,
+  OFFICIAL_SEX_VALUES,
 } from "@/data/lib/universityOfficialsMerge";
 import {
   normalizeOfficeName,
@@ -130,7 +135,7 @@ const headerColor = (header) => {
  */
 const PERSON_SEARCH_DELAY_MS = 300;
 
-function PersonSearchField({ value, onChange, autoFocus }) {
+function PersonSearchField({ value, onChange, onPick, autoFocus }) {
   const [query, setQuery] = useState(value || "");
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -216,7 +221,10 @@ function PersonSearchField({ value, onChange, autoFocus }) {
                 type="button"
                 className="w-full text-left px-3 py-2 text-sm hover:bg-secondary-50 transition flex items-center gap-2 text-fg-3"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(r.name)}
+                onClick={() => {
+                  pick(r.name);
+                  onPick?.(r);
+                }}
               >
                 <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-fg-4 shrink-0">
                   {(r.name[0] || "?").toUpperCase()}
@@ -518,9 +526,46 @@ function OfficialModal({
             <PersonSearchField
               value={form.official_text}
               onChange={(name) => onFormChange("official_text", name)}
+              onPick={(person) =>
+                onFormChange("sex", normalizeOfficialSex(person?.sex))
+              }
               autoFocus={isEdit}
             />
           </div>
+
+          {/* Stored on the person, so changing it here changes it on every
+              seat they hold. Pre-filled when an employee is picked from the
+              search; always editable for typed names. */}
+          <fieldset>
+            <legend className="block text-xs font-semibold text-fg-4 mb-1.5 uppercase tracking-wider">
+              Sex
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {OFFICIAL_SEX_VALUES.map((value) => {
+                const checked = (form.sex || "unspecified") === value;
+                return (
+                  <label
+                    key={value}
+                    className={`touch-target inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border cursor-pointer transition ${
+                      checked
+                        ? "border-secondary-500 bg-secondary-50 text-secondary-700"
+                        : "border-line text-fg-3 hover:bg-subtle"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="official-sex"
+                      value={value}
+                      checked={checked}
+                      onChange={() => onFormChange("sex", value)}
+                      className="accent-secondary-600"
+                    />
+                    {OFFICIAL_SEX_LABELS[value]}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           {/* How the seat is held, not who holds it. Only the three statuses
               that carry data are offered: `interim` is in the schema enum but
@@ -586,6 +631,7 @@ function HeaderCard({
   const color = headerColor(header);
   const filled = seats.length;
   const total = seats.length;
+  const sexCounts = countOfficialsBySex(seats);
 
   /* Which seat rows have their tenure trail open. Keyed by seat name (unique
      within one office), held here rather than in the parent so collapsing the
@@ -611,6 +657,12 @@ function HeaderCard({
             <h3 className="text-sm font-semibold text-fg">{header}</h3>
             <p className="text-xs text-fg-muted">
               {filled} assigned official{total !== 1 ? "s" : ""}
+              {" · "}
+              <span className="tabular-nums">
+                {sexCounts.female} F · {sexCounts.male} M
+                {sexCounts.unspecified > 0 &&
+                  ` · ${sexCounts.unspecified} not set`}
+              </span>
             </p>
           </div>
         </div>
@@ -636,6 +688,9 @@ function HeaderCard({
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
+                  Sex
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-fg-muted uppercase tracking-wider">
                   Status
@@ -678,6 +733,19 @@ function HeaderCard({
                             {person}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        {official &&
+                          (normalizeOfficialSex(official.sex) ===
+                          "unspecified" ? (
+                            <span className="text-xs text-fg-muted italic">
+                              Not set
+                            </span>
+                          ) : (
+                            <span className="text-sm text-fg-3">
+                              {OFFICIAL_SEX_LABELS[normalizeOfficialSex(official.sex)]}
+                            </span>
+                          ))}
                       </td>
                       <td className="px-6 py-3.5">
                         {badge ? (
@@ -736,7 +804,7 @@ function HeaderCard({
                       <tr>
                         {/* Mounting this is what triggers the fetch, so the trail
                             is only ever requested for a seat actually opened. */}
-                        <td colSpan={4} className="p-0">
+                        <td colSpan={5} className="p-0">
                           <SeatHistoryPanel header={header} name={seat.name} />
                         </td>
                       </tr>
@@ -839,6 +907,7 @@ export default function UniversityOfficialsContent() {
   }, [assignments, search, headerFilter]);
 
   const chart = filteredChart;
+  const yearSex = useMemo(() => countOfficialsBySex(assignments), [assignments]);
 
   const positionSuggestions = useMemo(() => {
     const header = modalForm.header;
@@ -947,6 +1016,7 @@ export default function UniversityOfficialsContent() {
       official_text: "",
       /* Substantive is the ordinary case, so the picker opens on it and an
          operator who ignores the field gets the same term as before. */
+      sex: "unspecified",
       status: "substantive",
     });
     setModalError("");
@@ -963,6 +1033,7 @@ export default function UniversityOfficialsContent() {
         (typeof official.official === "string" ? official.official : ""),
       /* Seeded from the row so the picker reflects the term that is actually
          there rather than silently resetting it to substantive. */
+      sex: normalizeOfficialSex(official.sex),
       status: official.status || "substantive",
       editingId: official._id,
     });
@@ -1000,6 +1071,7 @@ export default function UniversityOfficialsContent() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               official_text: personName,
+            sex: modalForm.sex || "unspecified",
               status: modalForm.status || "substantive",
             }),
           },
@@ -1023,6 +1095,7 @@ export default function UniversityOfficialsContent() {
             header: modalForm.header,
             name: seatName,
             official_text: personName,
+            sex: modalForm.sex || "unspecified",
             academic_year: academicYear,
             status: modalForm.status || "substantive",
           }),
@@ -1231,7 +1304,7 @@ export default function UniversityOfficialsContent() {
 
       {/* ── Summary ─────────────────────────────────────────────── */}
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-secondary-50 flex items-center justify-center">
@@ -1258,6 +1331,33 @@ export default function UniversityOfficialsContent() {
                 </p>
                 <p className="text-xl font-bold text-fg">
                   {chart.byHeader.length}
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Seats by the holder's sex for the whole year (not the filtered
+              view). The share of women is taken over seats whose holder's sex
+              is recorded, so "not set" rows do not drag it down silently. */}
+          <div className="rounded-2xl bg-white border border-line-subtle shadow-sm p-5">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-secondary-50 flex items-center justify-center">
+                <FaUsers className="h-6 w-6 text-secondary-600" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">
+                  Female / Male
+                </p>
+                <p className="text-xl font-bold text-fg tabular-nums">
+                  {yearSex.female} / {yearSex.male}
+                </p>
+                <p className="text-xs text-fg-muted tabular-nums">
+                  {yearSex.female + yearSex.male > 0
+                    ? `${Math.round(
+                        (yearSex.female / (yearSex.female + yearSex.male)) * 100,
+                      )}% women`
+                    : "No sex recorded yet"}
+                  {yearSex.unspecified > 0 &&
+                    ` · ${yearSex.unspecified} not set`}
                 </p>
               </div>
             </div>
