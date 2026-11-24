@@ -48,6 +48,12 @@ const PRINT_STYLES = `
     background: #fafafa;
   }
 
+  .issuance {
+    margin: 0;
+    font-size: 12px;
+    color: #444;
+  }
+
   .members {
     white-space: pre-wrap;
   }
@@ -103,6 +109,24 @@ const buildSectionRow = (sec, gfps) => {
   `;
 };
 
+/* "Special Order No. 123, s. 2026 dated August 1, 2026 · effective ..." —
+   the year's constituting issuance, when one is recorded. */
+const printDate = (value) => {
+  if (!value) return "";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+};
+const issuanceLine = (issuance) => {
+  if (!issuance) return "";
+  const parts = [];
+  if (issuance.number) parts.push(escapeHtml(issuance.number));
+  if (issuance.date) parts.push(`dated ${escapeHtml(printDate(issuance.date))}`);
+  if (issuance.effectivity) parts.push(`effective ${escapeHtml(printDate(issuance.effectivity))}`);
+  return parts.length ? `<p class="issuance">Per ${parts.join(", ")}</p>` : "";
+};
+
 const buildPrintHtml = (sections, gfps) => {
   const yearLabel = gfps?.academic_year ? ` — AY ${escapeHtml(gfps.academic_year)}` : "";
   return `
@@ -115,6 +139,7 @@ const buildPrintHtml = (sections, gfps) => {
     <body>
       <div class="header">
         <h2>Gender and Development Focal Point System (GFPS)${yearLabel}</h2>
+        ${issuanceLine(gfps?.issuance)}
       </div>
 
       <table>

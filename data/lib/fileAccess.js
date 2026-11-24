@@ -4,9 +4,10 @@ import Project from "@/models/projects";
 import AcademicProject from "@/models/academicProject";
 import ResearchExtensionProject from "@/models/researchExtensionProject";
 import GPB from "@/models/gpb";
+import GFPS from "@/models/gfps";
 import { canViewEventReport } from "@/data/lib/eventAccess";
 import { canViewProjectDetails } from "@/data/lib/projectAccess";
-import { canAccessGpb } from "@/data/lib/roleAccess";
+import { canAccessGpb, EVENT_ROLE_PAGE_ACCESS } from "@/data/lib/roleAccess";
 import { normalizeRole } from "@/data/lib/notifications";
 import { KNOWLEDGE_ROLES } from "@/data/lib/knowledgeResources";
 import { REPORT_FILE_FIELDS, REPORT_FILE_LISTS } from "@/data/lib/eventFileKeys";
@@ -26,6 +27,7 @@ import { fileKeyKind, uploaderOfKey } from "@/data/lib/fileKeyKinds";
  * - expenditure evidence / milestone proofs: who may read that project
  * - GPB scanned copies: the GPB roles
  * - knowledge resources: the knowledge-resource roles
+ * - GFPS issuances: the roles that can open the GFPS page
  * - anything else (audit archives, unknown folders): Admin only
  *
  * A file nobody has saved onto a record yet (still in an open form) is
@@ -49,6 +51,8 @@ export async function canReadStoredFile(user, key) {
       return canReadProjectFile(user, key);
     case "gpb-scan":
       return canReadGpbScan(user, key);
+    case "gfps-issuance":
+      return canReadGfpsIssuance(user, key);
     default:
       return false;
   }
@@ -90,5 +94,15 @@ async function canReadProjectFile(user, key) {
 async function canReadGpbScan(user, key) {
   if (canAccessGpb(user.role)) return true;
   const used = await GPB.exists({ "status_of_gpb.scanned_copy.key": key });
+  return !used && isUploader(user, key);
+}
+
+/* The GFPS issuance is shown on the GFPS page, so the roles that can open
+   that page may read it. An issuance not yet saved onto a GFPS record is
+   readable only by whoever uploaded it. */
+async function canReadGfpsIssuance(user, key) {
+  const role = normalizeRole(user.role);
+  if ((EVENT_ROLE_PAGE_ACCESS[role] || []).includes("gfps")) return true;
+  const used = await GFPS.exists({ "issuance.file.key": key });
   return !used && isUploader(user, key);
 }

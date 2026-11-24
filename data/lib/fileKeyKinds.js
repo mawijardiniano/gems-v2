@@ -8,6 +8,7 @@ import { EVIDENCE_FOLDER, PROOF_FOLDER } from "./projectFileKeys.js";
 import { S3_FOLDER as KNOWLEDGE_FOLDER } from "./knowledgeResources.js";
 
 export const GPB_SCAN_FOLDER = "status/scanned";
+export const GFPS_ISSUANCE_FOLDER = "gfps/issuance";
 
 const FOLDER_KINDS = [
   [POSTER_FOLDER, "poster"],
@@ -16,6 +17,7 @@ const FOLDER_KINDS = [
   [PROOF_FOLDER, "project"],
   [GPB_SCAN_FOLDER, "gpb-scan"],
   [KNOWLEDGE_FOLDER, "knowledge"],
+  [GFPS_ISSUANCE_FOLDER, "gfps-issuance"],
 ];
 
 const isSafeKey = (key) => {

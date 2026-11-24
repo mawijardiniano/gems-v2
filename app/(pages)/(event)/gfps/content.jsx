@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import PrintGFPS from "../components/Print/PrintGFPS";
 import EditMemberModal from "./components/EditMemberModal";
 import SectionCard from "./components/SectionCard";
+import IssuanceCard from "./components/IssuanceCard";
 import { EmptyState, LoadingSkeleton } from "./components/ui";
 import {
   SECTIONS,
@@ -660,6 +661,20 @@ export default function GFPSManager() {
           onManualPositionsChange={setManualPositions}
           onExecRolesChange={setExecRoles}
           onSubmit={handleSubmit}
+        />
+      )}
+
+      {/* The year's constituting memorandum / special order. Shown even before
+          any member is encoded: the issuance usually comes first. */}
+      {!loadingGfps && academicYear && (
+        <IssuanceCard
+          academicYear={academicYear}
+          issuance={gfps?.issuance}
+          canEdit={canEdit}
+          onSaved={() => {
+            showToast("Issuance saved.", "success");
+            fetchGfps(academicYear);
+          }}
         />
       )}
 

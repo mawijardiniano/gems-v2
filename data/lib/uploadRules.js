@@ -17,6 +17,8 @@ export const UPLOAD_FOLDER_RULES = {
   "expenditure-evidence": [".pdf", ".jpg", ".jpeg", ".png"],
   /* Proof files attached to completed project milestones. */
   "milestone-proof": [".pdf", ".jpg", ".jpeg", ".png"],
+  /* The memorandum or special order that constitutes the GFPS for a year. */
+  "gfps/issuance": [...PDF_EXTS, ".jpg", ".jpeg", ".png"],
 };
 
 /** The server's per-file limit. */
