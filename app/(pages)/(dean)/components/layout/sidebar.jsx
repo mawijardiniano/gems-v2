@@ -203,7 +203,7 @@ export default function Sidebar({ open, setOpen, role }) {
                 <p className="text-sm font-semibold text-white truncate leading-tight">
                   {getDisplayName()}
                 </p>
-                <p className="text-2xs font-medium text-success truncate mt-0.5 uppercase tracking-wider">
+                <p className="text-2xs font-medium text-accent-300 truncate mt-0.5 uppercase tracking-wider">
                   Dean
                 </p>
               </div>
@@ -246,7 +246,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     open ? "p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-gradient-to-r from-emerald-50 to-teal-50/50 text-success"
+                      ? "bg-gradient-to-r from-secondary-100 to-secondary-200 text-secondary-800 ring-1 ring-white/10"
                       : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -263,7 +263,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     </span>
                   )}
                   {linkActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-emerald-500 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                   )}
                 </Link>
               </TooltipWrapper>

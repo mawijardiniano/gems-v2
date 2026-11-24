@@ -151,12 +151,16 @@ export default function Snapshot({
           <StatCard card={statCards[0]}>{total.toLocaleString()}</StatCard>
 
           <StatCard card={statCards[1]}>
-            <div className="flex items-baseline gap-2">
-              <span className="text-secondary-600">{femaleCount}</span>
-              <span className="text-sm font-normal text-fg-muted">·</span>
-              <span className="text-secondary-600">{maleCount}</span>
-              <span className="text-xs font-normal text-fg-muted">(F · M)</span>
-            </div>
+            <dl className="space-y-0.5">
+              <div className="flex items-baseline gap-2">
+                <dt className="w-4 text-xs font-medium text-fg-muted">F</dt>
+                <dd className="text-secondary-600 tabular-nums">{femaleCount}</dd>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <dt className="w-4 text-xs font-medium text-fg-muted">M</dt>
+                <dd className="text-secondary-600 tabular-nums">{maleCount}</dd>
+              </div>
+            </dl>
             {total > 0 && (
               <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
@@ -204,14 +208,16 @@ export default function Snapshot({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {yearRows.map((row, i) => (
                 <StatCard key={row.label} card={yearLevelStatCards[i]}>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-secondary-600">{row.Female || 0}</span>
-                    <span className="text-sm font-normal text-fg-muted">·</span>
-                    <span className="text-secondary-600">{row.Male || 0}</span>
-                    <span className="text-xs font-normal text-fg-muted">
-                      (F · M)
-                    </span>
-                  </div>
+                  <dl className="space-y-0.5">
+                    <div className="flex items-baseline gap-2">
+                      <dt className="w-4 text-xs font-medium text-fg-muted">F</dt>
+                      <dd className="text-secondary-600 tabular-nums">{row.Female || 0}</dd>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <dt className="w-4 text-xs font-medium text-fg-muted">M</dt>
+                      <dd className="text-secondary-600 tabular-nums">{row.Male || 0}</dd>
+                    </div>
+                  </dl>
                   {row.total > 0 && (
                     <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
@@ -322,12 +328,16 @@ export default function Snapshot({
         <StatCard card={statCards[0]}>{total.toLocaleString()}</StatCard>
 
         <StatCard card={statCards[1]}>
-          <div className="flex items-baseline gap-2">
-            <span className="text-secondary-600">{femaleCount}</span>
-            <span className="text-sm font-normal text-fg-muted">·</span>
-            <span className="text-secondary-600">{maleCount}</span>
-            <span className="text-xs font-normal text-fg-muted">(F · M)</span>
-          </div>
+          <dl className="space-y-0.5">
+            <div className="flex items-baseline gap-2">
+              <dt className="w-4 text-xs font-medium text-fg-muted">F</dt>
+              <dd className="text-secondary-600 tabular-nums">{femaleCount}</dd>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <dt className="w-4 text-xs font-medium text-fg-muted">M</dt>
+              <dd className="text-secondary-600 tabular-nums">{maleCount}</dd>
+            </div>
+          </dl>
           {total > 0 && (
             <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
@@ -376,14 +386,16 @@ export default function Snapshot({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {studentYearGenderData.map((row, i) => (
               <StatCard key={row.label} card={yearLevelStatCards[i]}>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-secondary-600">{row.Female}</span>
-                  <span className="text-sm font-normal text-fg-muted">·</span>
-                  <span className="text-secondary-600">{row.Male}</span>
-                  <span className="text-xs font-normal text-fg-muted">
-                    (F · M)
-                  </span>
-                </div>
+                <dl className="space-y-0.5">
+                  <div className="flex items-baseline gap-2">
+                    <dt className="w-4 text-xs font-medium text-fg-muted">F</dt>
+                    <dd className="text-secondary-600 tabular-nums">{row.Female}</dd>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="w-4 text-xs font-medium text-fg-muted">M</dt>
+                    <dd className="text-secondary-600 tabular-nums">{row.Male}</dd>
+                  </div>
+                </dl>
                 {row.total > 0 && (
                   <div className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div

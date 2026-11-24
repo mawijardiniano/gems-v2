@@ -863,6 +863,7 @@ export default function StudentsUserListContent({ college }) {
 
   return (
     <div className="p-6">
+      <h1 className="sr-only">Student Records</h1>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs">
         <SampleToggle
           useSample={useSample}

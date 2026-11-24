@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Button from "@/components/ui/Button";
 import {
   FaDatabase,
   FaCloudUploadAlt,
@@ -213,14 +214,14 @@ export default function IctuDashboard() {
               Overview of data integration batches, manual uploads, and sync activity
             </p>
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={loadBatches}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary-900 text-white text-sm font-medium hover:bg-secondary-800 transition-colors disabled:opacity-50"
           >
-            <FaSyncAlt className={loading ? "animate-spin" : ""} />
+            <FaSyncAlt className={loading ? "animate-spin" : ""} aria-hidden="true" />
             Refresh
-          </button>
+          </Button>
         </div>
 
         {error && (
