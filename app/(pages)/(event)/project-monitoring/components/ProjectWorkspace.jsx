@@ -172,7 +172,7 @@ const DetailBarRow = ({ label, percent, over, caption }) => {
 };
 
 const toolbarSelect =
-  "appearance-none bg-white border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors";
+  "appearance-none bg-white border border-line rounded-lg px-3 py-2 pr-8 text-sm text-fg-3 focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none cursor-pointer hover:border-line-strong transition-colors";
 
 export default function ProjectWorkspace({ config }) {
   const {
@@ -807,7 +807,7 @@ export default function ProjectWorkspace({ config }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or reference no."
-            className="w-full rounded-lg border border-line bg-white pl-8 pr-3 py-2 text-sm text-fg-3 placeholder:text-fg-muted focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-line bg-white pl-8 pr-3 py-2 text-sm text-fg-3 placeholder:text-fg-muted focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 focus:outline-none"
           />
         </div>
       </div>

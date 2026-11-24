@@ -176,7 +176,7 @@ function ProjectRow({ project, displayIndex, showBudget, list, viewer, budgetVie
         id={`gad-project-${project._id}`}
         onClick={() => list.toggleExpand(project._id)}
         className={`transition-colors ${
-          isExpanded ? "bg-rose-50/40" : "hover:bg-subtle cursor-pointer"
+          isExpanded ? "bg-secondary-50/40" : "hover:bg-subtle cursor-pointer"
         }`}
       >
         <td className="px-3 py-4 text-center text-xs font-medium text-fg-2 align-top">
@@ -317,7 +317,7 @@ function Pagination({ list }) {
                 aria-current={p === currentPage ? "page" : undefined}
                 className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors ${
                   p === currentPage
-                    ? "bg-rose-600 text-white"
+                    ? "bg-secondary-600 text-white"
                     : "border border-line bg-white text-fg-4 hover:bg-subtle"
                 }`}
               >

@@ -328,7 +328,7 @@ export default function ActualsEncoderModal({
               step="0.01"
               value={expenditures}
               onChange={(e) => setExpenditures(e.target.value)}
-              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
               placeholder="0.00"
             />
             {spent > 0 && evidence.length === 0 && (
@@ -443,7 +443,7 @@ export default function ActualsEncoderModal({
                 /* Any edit becomes the project owner's custom version. */
                 setIsOverride(true);
               }}
-              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
               placeholder="Actual accomplishments for this project…"
             />
             {!isOverride && (

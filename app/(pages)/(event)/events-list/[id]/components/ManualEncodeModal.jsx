@@ -373,7 +373,7 @@ export default function ManualEncodeModal({
             )}
           </div>
 
-          {searchError && <p className="text-xs text-rose-600">{searchError}</p>}
+          {searchError && <p className="text-xs text-danger">{searchError}</p>}
 
 
           {/* Results */}
@@ -483,7 +483,7 @@ export default function ManualEncodeModal({
             <div
               className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs ${
                 feedback.tone === "error"
-                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                  ? "border-danger-border bg-danger-subtle text-danger"
                   : feedback.tone === "warn"
                     ? "border-secondary-200 bg-secondary-50 text-secondary-800"
                     : "border-success-border bg-success-subtle text-success"

@@ -379,7 +379,7 @@ export default function KnowledgeResourcesContent() {
                 onClick={() => setActiveCategory(cat)}
                 className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200"
+                    ? "bg-secondary-50 text-secondary-700 ring-1 ring-inset ring-secondary-200"
                     : "bg-white text-fg-4 border border-line hover:bg-subtle"
                 }`}
               >
@@ -387,7 +387,7 @@ export default function KnowledgeResourcesContent() {
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     isActive
-                      ? "bg-rose-100 text-rose-700"
+                      ? "bg-secondary-100 text-secondary-700"
                       : "bg-muted text-fg-4"
                   }`}
                 >
@@ -408,7 +408,7 @@ export default function KnowledgeResourcesContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title, file, or uploader..."
-            className="w-full rounded-xl border border-line bg-white pl-9 pr-3 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+            className="w-full rounded-xl border border-line bg-white pl-9 pr-3 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-100"
           />
         </div>
       </div>
@@ -568,7 +568,7 @@ export default function KnowledgeResourcesContent() {
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g. GAD Training Module 2026"
-                  className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm text-fg-3 placeholder:text-fg-muted focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-100"
                 />
               </div>
 
@@ -579,7 +579,7 @@ export default function KnowledgeResourcesContent() {
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-fg-3 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-fg-3 focus:border-secondary-300 focus:outline-none focus:ring-2 focus:ring-secondary-100"
                 >
                   <option value="">Select a category</option>
                   {KNOWLEDGE_CATEGORIES.map((cat) => (

@@ -363,7 +363,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     open ? "p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                      ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                       : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -380,7 +380,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     </span>
                   )}
                   {linkActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                   )}
                 </Link>
               </TooltipWrapper>
@@ -397,7 +397,7 @@ export default function Sidebar({ open, setOpen, role }) {
                       showProjectMonitoring ||
                       pathname?.startsWith("/project-monitoring") ||
                       pathname?.startsWith("/events-list")
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -428,7 +428,7 @@ export default function Sidebar({ open, setOpen, role }) {
                               pathname?.startsWith(
                                 "/project-monitoring/gad-projects",
                               )
-                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                                 : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                             }`}
                           >
@@ -442,7 +442,7 @@ export default function Sidebar({ open, setOpen, role }) {
                             {pathname?.startsWith(
                               "/project-monitoring/gad-projects",
                             ) && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                             )}
                           </Link>
                         </TooltipWrapper>
@@ -460,7 +460,7 @@ export default function Sidebar({ open, setOpen, role }) {
                               pathname?.startsWith(
                                 "/project-monitoring/re-extension-projects",
                               )
-                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                                 : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                             }`}
                           >
@@ -474,7 +474,7 @@ export default function Sidebar({ open, setOpen, role }) {
                             {pathname?.startsWith(
                               "/project-monitoring/re-extension-projects",
                             ) && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                             )}
                           </Link>
                         </TooltipWrapper>
@@ -492,7 +492,7 @@ export default function Sidebar({ open, setOpen, role }) {
                               pathname?.startsWith(
                                 "/project-monitoring/academic-projects",
                               )
-                                ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                                 : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                             }`}
                           >
@@ -506,7 +506,7 @@ export default function Sidebar({ open, setOpen, role }) {
                             {pathname?.startsWith(
                               "/project-monitoring/academic-projects",
                             ) && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                             )}
                           </Link>
                         </TooltipWrapper>
@@ -521,7 +521,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           onClick={handleMobileClose}
                           className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-2.5 ${
                             pathname?.startsWith("/events-list")
-                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
                         >
@@ -533,7 +533,7 @@ export default function Sidebar({ open, setOpen, role }) {
                             Event Management
                           </span>
                           {pathname?.startsWith("/events-list") && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                           )}
                         </Link>
                       </TooltipWrapper>
@@ -546,7 +546,7 @@ export default function Sidebar({ open, setOpen, role }) {
                             pathname?.startsWith(
                               "/project-monitoring/event-calendar",
                             )
-                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
                         >
@@ -560,7 +560,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           {pathname?.startsWith(
                             "/project-monitoring/event-calendar",
                           ) && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                           )}
                         </Link>
                       </TooltipWrapper>
@@ -575,7 +575,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-3 justify-center mx-1.5 ${
                       pathname?.startsWith("/project-monitoring") ||
                       pathname?.startsWith("/events-list")
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -595,7 +595,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     className={`relative flex items-center gap-3 rounded-xl transition duration-200 w-full p-2.5 ${
                       showGenderStatistics ||
                       pathname?.startsWith("/gender-statistics")
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -620,7 +620,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           onClick={handleMobileClose}
                           className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-2.5 ${
                             pathname?.startsWith("/gender-statistics/students")
-                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
                         >
@@ -634,7 +634,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           {pathname?.startsWith(
                             "/gender-statistics/students",
                           ) && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                           )}
                         </Link>
                       </TooltipWrapper>
@@ -645,7 +645,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           onClick={handleMobileClose}
                           className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-2.5 ${
                             pathname?.startsWith("/gender-statistics/employees")
-                              ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                              ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                               : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                           }`}
                         >
@@ -659,7 +659,7 @@ export default function Sidebar({ open, setOpen, role }) {
                           {pathname?.startsWith(
                             "/gender-statistics/employees",
                           ) && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                           )}
                         </Link>
                       </TooltipWrapper>
@@ -673,7 +673,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     onClick={handleMobileClose}
                     className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-3 justify-center mx-1.5 ${
                       pathname?.startsWith("/gender-statistics")
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -699,7 +699,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     open ? "p-2.5" : "p-3 justify-center mx-1.5"
                   } ${
                     linkActive
-                      ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                      ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                       : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -716,7 +716,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     </span>
                   )}
                   {linkActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                   )}
                 </Link>
               </TooltipWrapper>
@@ -731,7 +731,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     onClick={() => setShowStructure((prev) => !prev)}
                     className={`relative flex items-center gap-3 rounded-xl transition duration-200 w-full p-2.5 ${
                       showStructure || structureActive
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -763,7 +763,7 @@ export default function Sidebar({ open, setOpen, role }) {
                               onClick={handleMobileClose}
                               className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-2.5 ${
                                 childActive
-                                  ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                                  ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                                   : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                               }`}
                             >
@@ -774,7 +774,7 @@ export default function Sidebar({ open, setOpen, role }) {
                                 {child.name}
                               </span>
                               {childActive && (
-                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                               )}
                             </Link>
                           </TooltipWrapper>
@@ -793,7 +793,7 @@ export default function Sidebar({ open, setOpen, role }) {
                     onClick={handleMobileClose}
                     className={`relative flex items-center gap-3 rounded-xl transition duration-200 group p-3 justify-center mx-1.5 ${
                       structureActive
-                        ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                        ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                         : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                     }`}
                   >
@@ -813,7 +813,7 @@ export default function Sidebar({ open, setOpen, role }) {
                   open ? "p-2.5" : "p-3 justify-center mx-1.5"
                 } ${
                   reportsActive
-                    ? "bg-gradient-to-r from-rose-50 to-pink-50/50 text-rose-700"
+                    ? "bg-gradient-to-r from-secondary-50 to-secondary-50/50 text-secondary-700"
                     : "text-secondary-100/85 hover:bg-white/5 hover:text-white"
                 }`}
               >
@@ -828,7 +828,7 @@ export default function Sidebar({ open, setOpen, role }) {
                   <span className="text-sm font-medium truncate">Reports</span>
                 )}
                 {reportsActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-rose-500 rounded-full" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-secondary-500 rounded-full" />
                 )}
               </Link>
             </TooltipWrapper>

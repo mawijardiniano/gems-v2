@@ -99,7 +99,7 @@ export default function ParticipantBreakdown({ project }) {
               }}
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 tab === item.key
-                  ? "bg-white text-rose-700 shadow-sm"
+                  ? "bg-white text-secondary-700 shadow-sm"
                   : "text-fg-muted hover:text-fg-3"
               }`}
             >

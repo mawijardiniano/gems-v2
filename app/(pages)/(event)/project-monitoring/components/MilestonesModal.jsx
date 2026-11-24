@@ -633,7 +633,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { title: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
                               />
                             </td>
                             <td className="px-2.5 py-2">
@@ -657,7 +657,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { target_date: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
                               />
                             </td>
                             <td className="px-2.5 py-1.5">
@@ -667,7 +667,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { actual_date: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
                               />
                             </td>
                             <td className="px-2.5 py-1.5">
@@ -676,7 +676,7 @@ export default function MilestonesModal({
                                 onChange={(e) =>
                                   updateRow(i, { status: e.target.value })
                                 }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400"
+                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
                               >
                                 {MILESTONE_STATUSES.map((s) => (
                                   <option key={s} value={s}>

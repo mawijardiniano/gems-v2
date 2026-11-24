@@ -121,7 +121,7 @@ export const SaveCancel = ({ saving, onSave, onCancel }) => (
 );
 
 export const inputClass =
-  "w-full text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300";
+  "w-full text-sm rounded-lg border border-line bg-white px-3 py-2 text-fg-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300";
 
 /* An uploaded file as a chip linking to the file proxy. */
 export function FileChip({ file, fallbackName, size = "md" }) {

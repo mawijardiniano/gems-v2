@@ -104,7 +104,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
               <span
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold border shrink-0 ${
                   done || active
-                    ? "bg-rose-600 border-rose-600 text-white"
+                    ? "bg-secondary-600 border-secondary-600 text-white"
                     : "bg-white border-line text-fg-muted"
                 }`}
               >
@@ -113,7 +113,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
               <span
                 className={`text-xs font-medium truncate ${
                   active
-                    ? "text-rose-700"
+                    ? "text-secondary-700"
                     : done
                       ? "text-fg-3"
                       : "text-fg-muted"
@@ -125,7 +125,7 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
             {index < titles.length - 1 && (
               <span
                 className={`flex-1 h-px ${
-                  done ? "bg-rose-300" : "bg-emphasis"
+                  done ? "bg-secondary-300" : "bg-emphasis"
                 }`}
               />
             )}
@@ -144,9 +144,9 @@ const StepperHeader = ({ titles, currentIndex, reachedIndex, onJump }) => (
             key={title}
             className={`h-1.5 w-1.5 rounded-full ${
               index === currentIndex
-                ? "bg-rose-600"
+                ? "bg-secondary-600"
                 : index < currentIndex
-                  ? "bg-rose-300"
+                  ? "bg-secondary-300"
                   : "bg-emphasis"
             }`}
           />
@@ -366,7 +366,7 @@ export default function ProjectCreateModal({
               Project
             </h3>
             <p className="text-xs text-fg-muted mt-0.5">
-              Fields marked <span className="text-rose-500">*</span> are required.
+              Fields marked <span className="text-danger">*</span> are required.
             </p>
           </div>
           <button
