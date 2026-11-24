@@ -1,15 +1,15 @@
-import mongoose from "mongoose";
 import Official from "@/models/official";
 
 /**
  * The person half of an officials write: turns a request body's
- * `{ official, official_text }` into the `Official` document that a term
- * points at.
+ * `official_text` into the `Official` document that a term points at.
  *
  * Shared by assign (POST) and edit (PATCH) so both resolve a person the same
- * way. `official_text` (a typed name) wins; `official` (a user-account id) is
- * the picker's fallback and contributes its username until the person search
- * replaces it.
+ * way. The name is either typed by hand or filled in from the person search
+ * (/api/university-officials/person-search), which hands the picker the real
+ * name. The old picker sent a user-account id instead, and the server could
+ * only turn that into the account's username — so a picked official was saved
+ * as e.g. "msantos2". Account ids are no longer accepted.
  *
  * Officials are keyed by name — the unique index on Official enforces it — so
  * `findOneAndUpdate` + `upsert` reuses the existing person when the same name
@@ -18,13 +18,7 @@ import Official from "@/models/official";
  * Returns `null` when the body names nobody, so the caller can answer 400.
  */
 export async function upsertOfficialFromBody(body) {
-  const personText = String(body?.official_text || "").trim();
-  const personId =
-    body?.official && mongoose.isValidObjectId(body.official)
-      ? body.official
-      : null;
-
-  const name = personText || (personId ? await nameForUser(personId) : "");
+  const name = officialNameFromBody(body);
   if (!name) return null;
 
   return Official.findOneAndUpdate(
@@ -34,13 +28,9 @@ export async function upsertOfficialFromBody(body) {
   );
 }
 
-/**
- * The label for a picked user account. Last resort: it is the username, the
- * one identifier guaranteed on a UserAuth document.
- */
-async function nameForUser(userId) {
-  const UserAuth = mongoose.models.UserAuth;
-  if (!UserAuth) return "";
-  const user = await UserAuth.findById(userId).select("username").lean();
-  return user?.username || "";
+/** The trimmed, single-spaced person name from a request body, or "". */
+export function officialNameFromBody(body) {
+  return String(body?.official_text || "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
