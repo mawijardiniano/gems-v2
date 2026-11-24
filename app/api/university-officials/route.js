@@ -6,6 +6,8 @@ import Official from "@/models/official";
 import Position from "@/models/position";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
+import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
+import { upsertOfficialFromBody } from "@/data/lib/officialsPerson";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import {
@@ -131,7 +133,7 @@ async function termAcademicYears() {
 }
 
 export async function POST(req) {
-  const { user, error, status } = await requireAuth(req);
+  const { user, error, status } = await requireOrgStructureEditor(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
@@ -230,13 +232,10 @@ export async function POST(req) {
   }
 
   try {
-    /* The person is keyed by name, which is what the unique index on Official
-       enforces. `findOneAndUpdate` with `upsert` makes a re-typed name reuse the
-       existing document instead of throwing E11000 — the typed-string nature of
-       the source means the same person is routinely entered more than once. */
-    const effectiveName =
-      personText || (personId ? await nameForUser(personId) : "");
-    if (!effectiveName) {
+    /* Shared with PATCH (see data/lib/officialsPerson.js): a re-typed name
+       reuses the existing Official instead of throwing E11000. */
+    const officialDoc = await upsertOfficialFromBody(body);
+    if (!officialDoc) {
       return Response.json(
         {
           success: false,
@@ -245,12 +244,7 @@ export async function POST(req) {
         { status: 400 },
       );
     }
-
-    const officialDoc = await Official.findOneAndUpdate(
-      { name: effectiveName },
-      { $setOnInsert: { name: effectiveName } },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
-    );
+    const effectiveName = officialDoc.name;
 
     /* New appointments open with the academic year (1 August) and are left
        open, matching how the migration encoded the current roster. */
@@ -311,19 +305,4 @@ export async function POST(req) {
       { status: isDuplicate ? 409 : 400 },
     );
   }
-}
-
-/**
- * The typed name for a user account, used when the caller picked a user rather
- * than typing a name.
- *
- * Kept deliberately last-resort: the roster's names are plain strings now, so a
- * user pick only has to contribute a label. It prefers the username, which is
- * the one identifier guaranteed present on a UserAuth document.
- */
-async function nameForUser(userId) {
-  const UserAuth = mongoose.models.UserAuth;
-  if (!UserAuth) return "";
-  const user = await UserAuth.findById(userId).select("username").lean();
-  return user?.username || "";
 }

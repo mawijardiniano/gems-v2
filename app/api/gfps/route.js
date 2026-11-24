@@ -3,6 +3,7 @@ import GFPS from "@/models/gfps";
 import SystemSetting from "@/models/systemSetting";
 import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
+import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { requireAdmin } from "@/app/api/integration/_utils/auth";
 import { NextResponse } from "next/server";
 import {
@@ -83,7 +84,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireOrgStructureEditor(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 

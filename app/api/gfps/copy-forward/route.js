@@ -1,7 +1,7 @@
 import { connectDB } from "@/data/lib/db";
 import GFPS from "@/models/gfps";
 import { logActivity } from "@/data/lib/activityLog";
-import { requireAuth } from "@/data/lib/auth";
+import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import { NextResponse } from "next/server";
 import { GFPS_SECTION_KEYS } from "@/data/lib/gfpsServer";
 import { normalizeAcademicYear } from "@/data/lib/academicYear";
@@ -23,7 +23,7 @@ import { normalizeAcademicYear } from "@/data/lib/academicYear";
  * empty GFPS pages.
  */
 export async function POST(req) {
-  const { error, status } = await requireAuth(req);
+  const { error, status } = await requireOrgStructureEditor(req);
   if (error) return NextResponse.json({ error }, { status });
   await connectDB();
 
