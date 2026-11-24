@@ -396,7 +396,7 @@ export default function GADARContent() {
                   return (
                     <React.Fragment key={project._id}>
                       {shouldShowTypeHeader && (
-                        <tr className="bg-orange-300 border-y border-black">
+                        <tr className="bg-orange-300 border-y border-line-strong">
                           <td
                             colSpan={11}
                             className="py-2 px-4 text-sm font-semibold text-black"

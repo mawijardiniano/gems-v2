@@ -216,7 +216,7 @@ export default function GpbProjectsTable({
                   return (
                     <React.Fragment key={project._id}>
                       {shouldShowTypeHeader && (
-                        <tr className="bg-orange-300 border-y border-black">
+                        <tr className="bg-orange-300 border-y border-line-strong">
                           <td
                             colSpan={role !== "planning director" ? 14 : 13}
                             className="py-2 px-4 text-sm font-semibold text-black"
