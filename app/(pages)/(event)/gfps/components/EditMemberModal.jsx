@@ -6,9 +6,11 @@ import { isManualKey, nextManualKey } from "../officials";
 import { useDialog } from "@/hooks/useDialog";
 import Button from "@/components/ui/Button";
 import {
+  normalizeOfficialSex,
   OFFICIAL_SEX_LABELS,
   OFFICIAL_SEX_VALUES,
 } from "@/data/lib/universityOfficialsMerge";
+import PersonSearchField from "../../components/PersonSearchField";
 
 function ModalHeader({ editingSection, onClose, titleId }) {
   return (
@@ -182,7 +184,7 @@ function ManualEntries({
           beside the bar while it is stuck. */}
       <div className="sticky top-0 z-10 -mx-6 px-6 py-2 bg-white flex items-center justify-between mb-1.5">
         <label className="block text-sm font-medium text-fg-3">
-          Type a name
+          Search or type a name
         </label>
         <button
           type="button"
@@ -221,15 +223,26 @@ function ManualEntries({
                 className="border border-line rounded-xl p-2.5 space-y-2"
               >
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={manualTexts[key] || ""}
-                    onChange={(e) =>
-                      onManualTextsChange((prev) => ({ ...prev, [key]: e.target.value }))
-                    }
-                    placeholder="e.g. Dela Cruz, Juan"
-                    className="flex-1 border border-line-strong rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition"
-                  />
+                  {/* Search fills in the name and sex from an employee
+                      profile; the row still stores plain text only — no link
+                      is kept, so a GFPS member never depends on a profile. */}
+                  <div className="flex-1 min-w-0">
+                    <PersonSearchField
+                      value={manualTexts[key] || ""}
+                      onChange={(name) =>
+                        onManualTextsChange((prev) => ({ ...prev, [key]: name }))
+                      }
+                      onPick={(person) =>
+                        onManualSexesChange((prev) => ({
+                          ...prev,
+                          [key]: normalizeOfficialSex(person?.sex),
+                        }))
+                      }
+                      placeholder="Search an employee, or type a name"
+                      inputClassName="w-full border border-line-strong rounded-xl pl-9 pr-3.5 py-2.5 text-sm focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 outline-none transition"
+                      inline
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => onRemove(key)}
