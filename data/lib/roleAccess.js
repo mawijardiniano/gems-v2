@@ -71,7 +71,10 @@ export const canAccessGpb = (role) =>
  * offer these downloads read-only. The President still has no /gpb page.
  */
 export const canViewGpbReports = (role) =>
-  canAccessGpb(role) || normalizeRole(role) === "president";
+  canAccessGpb(role) ||
+  /* The stored role is "SUC President" ("suc president" once normalised);
+     comparing only with "president" refused every President download. */
+  ["suc president", "president"].includes(normalizeRole(role));
 
 /* Menu keys a role may see — used by the (event) sidebar. */
 export const EVENT_ROLE_MENU_ACCESS = {
