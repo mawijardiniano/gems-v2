@@ -23,6 +23,7 @@ import {
   FaHistory,
   FaSitemap,
   FaUsers,
+  FaLink,
 } from "react-icons/fa";
 import { useDialog } from "@/hooks/useDialog";
 import { useConfirm } from "@/components/ui/useConfirm";
@@ -255,6 +256,97 @@ function PersonSearchField({ value, onChange, onPick, autoFocus }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Profile link line (form) ───────────────────────────────────────
+/**
+ * Shows whether the person in the form is linked to an employee profile.
+ *
+ * `form.profileRef` is only present once the editor acts: a picked search
+ * result sets it to the profile token, Unlink sets it to null. Absent, the
+ * saved link (`form.linked`) is kept as it is. The token itself is never
+ * shown — "Linked to profile" is enough to tell a picked person from a typed
+ * one, and the roster other roles read never carries it.
+ */
+function LinkLine({ form, onUnlink }) {
+  const pending = typeof form.profileRef === "string" && form.profileRef;
+  const unlinked = form.profileRef === null;
+  const linked = pending || (form.linked && !unlinked);
+
+  if (!linked) {
+    return (
+      <p className="mt-1.5 text-xs text-fg-muted">
+        {unlinked && form.linked
+          ? "Will be unlinked from the profile when you save."
+          : "Not linked to a profile (typed name)."}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+      <span className="inline-flex items-center gap-1.5 text-secondary-700">
+        <FaLink className="h-3 w-3" />
+        {pending ? "Will link to this employee's profile" : "Linked to profile"}
+      </span>
+      {!pending && form.linkStatus === "differs" && (
+        <span className="px-2 py-0.5 rounded-full bg-warning-subtle text-warning">
+          Profile differs
+        </span>
+      )}
+      {!pending && form.linkStatus === "broken" && (
+        <span className="px-2 py-0.5 rounded-full bg-danger-subtle text-danger">
+          Link broken
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onUnlink}
+        className="touch-target px-2 py-1 rounded-md border border-line text-fg-4 hover:bg-subtle transition"
+      >
+        Unlink
+      </button>
+    </div>
+  );
+}
+
+// ─── Profile link badge (chart row) ─────────────────────────────────
+/**
+ * Small marker beside a linked official's name. "ok" is just the link icon;
+ * "differs" adds an Update button for editors; "broken" says the profile is
+ * gone. The profile's values are never shown here: the update runs on the
+ * server.
+ */
+function LinkBadge({ status, canUpdate, onUpdate }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <FaLink
+        className="h-3 w-3 text-secondary-600"
+        aria-label="Linked to profile"
+        title="Linked to profile"
+      />
+      {status === "differs" && (
+        <>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-warning-subtle text-warning">
+            Profile differs
+          </span>
+          {canUpdate && (
+            <button
+              type="button"
+              onClick={onUpdate}
+              className="touch-target text-xs px-2 py-0.5 rounded-md border border-line text-fg-4 hover:bg-subtle transition"
+            >
+              Update
+            </button>
+          )}
+        </>
+      )}
+      {status === "broken" && (
+        <span className="text-xs px-2 py-0.5 rounded-full bg-danger-subtle text-danger">
+          Link broken
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -526,11 +618,17 @@ function OfficialModal({
             <PersonSearchField
               value={form.official_text}
               onChange={(name) => onFormChange("official_text", name)}
-              onPick={(person) =>
-                onFormChange("sex", normalizeOfficialSex(person?.sex))
-              }
+              onPick={(person) => {
+                onFormChange("sex", normalizeOfficialSex(person?.sex));
+                /* Picking a search result links the person to that profile;
+                   typing a name never does. */
+                if (person?.gemsPublicId) {
+                  onFormChange("profileRef", person.gemsPublicId);
+                }
+              }}
               autoFocus={isEdit}
             />
+            <LinkLine form={form} onUnlink={() => onFormChange("profileRef", null)} />
           </div>
 
           {/* Stored on the person, so changing it here changes it on every
@@ -625,6 +723,7 @@ function HeaderCard({
   onAssign,
   onEdit,
   onVacate,
+  onSync,
   isCoordinator,
 }) {
   const Icon = headerIcon(header);
@@ -732,6 +831,13 @@ function HeaderCard({
                           <span className="text-sm font-medium text-fg">
                             {person}
                           </span>
+                          {official?.linked && (
+                            <LinkBadge
+                              status={official.linkStatus}
+                              canUpdate={!isCoordinator}
+                              onUpdate={() => onSync(official)}
+                            />
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-3.5">
@@ -1034,6 +1140,8 @@ export default function UniversityOfficialsContent() {
       /* Seeded from the row so the picker reflects the term that is actually
          there rather than silently resetting it to substantive. */
       sex: normalizeOfficialSex(official.sex),
+      linked: Boolean(official.linked),
+      linkStatus: official.linkStatus || null,
       status: official.status || "substantive",
       editingId: official._id,
     });
@@ -1072,6 +1180,9 @@ export default function UniversityOfficialsContent() {
             body: JSON.stringify({
               official_text: personName,
             sex: modalForm.sex || "unspecified",
+            ...(modalForm.profileRef !== undefined
+              ? { profileRef: modalForm.profileRef }
+              : {}),
               status: modalForm.status || "substantive",
             }),
           },
@@ -1096,6 +1207,9 @@ export default function UniversityOfficialsContent() {
             name: seatName,
             official_text: personName,
             sex: modalForm.sex || "unspecified",
+            ...(modalForm.profileRef !== undefined
+              ? { profileRef: modalForm.profileRef }
+              : {}),
             academic_year: academicYear,
             status: modalForm.status || "substantive",
           }),
@@ -1115,6 +1229,30 @@ export default function UniversityOfficialsContent() {
       setModalError("Network error");
     } finally {
       setModalLoading(false);
+    }
+  };
+
+  /* "Update from profile": refreshes the copied name/sex from the linked
+     employee profile. Offered only when the roster reports "differs". */
+  const handleSync = async (official) => {
+    try {
+      const res = await fetch(
+        `/api/university-officials/${official._id}/sync`,
+        { method: "POST" },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setError(data.error || "Failed to update from profile");
+        return;
+      }
+      setSuccess(
+        data.data?.changed?.length
+          ? `Updated ${data.data.changed.join(" and ")} from the profile.`
+          : "Already matches the profile.",
+      );
+      fetchOfficials(academicYear);
+    } catch {
+      setError("Network error");
     }
   };
 
@@ -1387,6 +1525,7 @@ export default function UniversityOfficialsContent() {
               onAssign={openAssign}
               onEdit={openEdit}
               onVacate={handleVacate}
+              onSync={handleSync}
               isCoordinator={isCoordinator || isArchived}
             />
           ))}

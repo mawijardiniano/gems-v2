@@ -165,6 +165,9 @@ export function rosterPipeline(academicYear) {
         official: "$__official._id",
         official_text: { $ifNull: ["$__official.name", ""] },
         sex: { $ifNull: ["$__official.sex", "unspecified"] },
+        // Internal: the GET handler turns it into `linked` / `linkStatus`;
+        // toRosterRow drops the token itself.
+        profileRef: { $ifNull: ["$__official.profileRef", null] },
         status: 1,
         startDate: 1,
         endDate: 1,
@@ -192,6 +195,11 @@ export function toRosterRow(row) {
     official_text: String(row.official_text || "").trim(),
     // The holder's sex, from the Official; "unspecified" until it is entered.
     sex: normalizeOfficialSex(row.sex),
+    /* Whether the person is linked to an employee profile, and the server's
+       verdict on that link ("ok" | "differs" | "broken" | null). The profile
+       token itself is deliberately not copied onto the row. */
+    linked: Boolean(row.profileRef || row.linked),
+    linkStatus: row.linkStatus ?? null,
     // Carried through for callers that want to render tenure; the legacy
     // documents had no dates, so anything reading only the old fields is
     // unaffected by their presence.

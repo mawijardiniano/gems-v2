@@ -8,6 +8,10 @@ import { logActivity } from "@/data/lib/activityLog";
 import { requireAuth } from "@/data/lib/auth";
 import { requireOrgStructureEditor } from "@/data/lib/officialsAccess";
 import {
+  identitiesByPublicId,
+  linkStatusFor,
+} from "@/data/lib/officialsProfileLink";
+import {
   officialNameFromBody,
   upsertOfficialFromBody,
 } from "@/data/lib/officialsPerson";
@@ -102,12 +106,26 @@ export async function GET(req) {
         { $sort: { header: 1, name: 1 } },
       ])
     : [];
-  let officials = rawRows.map(toRosterRow).filter(Boolean);
+  /* Rows carry the person's own plain-text name and sex, so the chart needs no
+     vault read. Only officials linked to a profile are checked against it, in
+     one batched read, to report whether the link is still "ok", "differs" or
+     "broken". The comparison stays here: rows carry the verdict and a
+     `linked` flag, never the profile token or the profile's values. */
+  const identities = await identitiesByPublicId(
+    rawRows.map((row) => row.profileRef).filter(Boolean),
+  );
+  let officials = rawRows
+    .map((row) =>
+      toRosterRow({
+        ...row,
+        linkStatus: linkStatusFor(
+          { name: row.official_text, sex: row.sex, profileRef: row.profileRef },
+          identities.get(row.profileRef),
+        ),
+      }),
+    )
+    .filter(Boolean);
 
-  /* Rows already carry the resolved plain-text person name (`official_text`),
-     because Official stores the name as plain text — no vault, no UserAuth ref.
-     That is why no hydration step is needed here any more: the officials screen
-     no longer decrypts PII to render a roster. */
   const legacy = false;
 
   return Response.json({
@@ -232,16 +250,14 @@ export async function POST(req) {
   try {
     /* Shared with PATCH (see data/lib/officialsPerson.js): a re-typed name
        reuses the existing Official instead of throwing E11000. */
-    const officialDoc = await upsertOfficialFromBody(body);
-    if (!officialDoc) {
+    const person = await upsertOfficialFromBody(body);
+    if (person.error) {
       return Response.json(
-        {
-          success: false,
-          error: "Missing official (search a person or type a name)",
-        },
-        { status: 400 },
+        { success: false, error: person.error },
+        { status: person.status },
       );
     }
+    const officialDoc = person.official;
     const effectiveName = officialDoc.name;
 
     /* New appointments open with the academic year (1 August) and are left
@@ -285,6 +301,7 @@ export async function POST(req) {
           official: officialDoc._id,
           official_text: officialDoc.name,
           sex: officialDoc.sex,
+          linked: Boolean(officialDoc.profileRef),
           status: term.status,
           startDate: term.startDate,
           endDate: term.endDate,
