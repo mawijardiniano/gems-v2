@@ -70,16 +70,30 @@ export async function findExistingProfileForRecord(record, GemsProfile) {
         candidates.map((p) => p.vaultRef),
         { fields: ["birthday"] },
       );
-      const match = candidates.find(
+      const matches = candidates.filter(
         (p) =>
           !idConflicts(p, identity) &&
           sameDay(piiByRef.get(String(p.vaultRef))?.birthday, birthday),
       );
-      if (match) return { profile: match, matchedOn: "name_birthday" };
+      /* Several people share this name and birthday: picking one would
+         merge the row into a guess. Refuse it instead (validate blocks the
+         same rows; this covers a person added after validate). */
+      if (matches.length > 1) {
+        throw new Error(ambiguousNameBirthdayMessage(matches.length));
+      }
+      if (matches.length === 1) {
+        return { profile: matches[0], matchedOn: "name_birthday" };
+      }
     }
   }
 
   return null;
+}
+
+export const AMBIGUOUS_NAME_BIRTHDAY_CODE = "ambiguous_name_birthday";
+
+export function ambiguousNameBirthdayMessage(count) {
+  return `${count} existing people have this name and birthday, so the row cannot be matched to one of them. Add the person's Student No., Employee No. or email in the source file before importing.`;
 }
 
 /* A name + birthday candidate is a different person when both sides carry
@@ -95,8 +109,9 @@ export function idConflicts(profile, identity = {}) {
 
 /**
  * Batched name + birthday lookup for many rows at once (the validate route).
- * `items` are `{ key, mapped, identity }`; returns `Map<key, profile>` for the
- * rows that would be merged into an existing person on name + birthday alone.
+ * `items` are `{ key, mapped, identity }`; returns `Map<key, profile[]>` for
+ * the rows whose name + birthday match existing people. One profile means the
+ * row would be merged into that person; more than one means it is ambiguous.
  * Uses the same rules as `findExistingProfileForRecord`.
  */
 export async function matchByNameBirthday(GemsProfile, items) {
@@ -132,7 +147,7 @@ export async function matchByNameBirthday(GemsProfile, items) {
   );
 
   for (const w of wanted) {
-    const match = candidates.find((p) => {
+    const matches = candidates.filter((p) => {
       const index = p.profileSearchIndex || [];
       return (
         index.includes(w.first) &&
@@ -141,7 +156,7 @@ export async function matchByNameBirthday(GemsProfile, items) {
         sameDay(piiByRef.get(String(p.vaultRef))?.birthday, w.birthday)
       );
     });
-    if (match) out.set(w.key, match);
+    if (matches.length) out.set(w.key, matches);
   }
   return out;
 }
