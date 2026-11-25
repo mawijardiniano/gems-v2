@@ -7,6 +7,7 @@ import {
   MAX_BATCH_ROWS,
   MAX_SOURCE_BYTES,
 } from "@/app/api/integration/_utils/staging";
+import { readXlsxRows } from "@/app/api/integration/_utils/xlsxRows";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -36,9 +37,14 @@ export async function POST(req) {
 
     const name = file.name || "upload.csv";
     const lower = name.toLowerCase();
-    if (!lower.endsWith(".csv")) {
+    const isXlsx = lower.endsWith(".xlsx");
+    if (!lower.endsWith(".csv") && !isXlsx) {
       return NextResponse.json(
-        { status: "error", message: "Only .csv files are allowed" },
+        {
+          status: "error",
+          message:
+            "Only .csv and .xlsx files are allowed. Save older .xls files as .xlsx first.",
+        },
         { status: 400 },
       );
     }
@@ -53,8 +59,22 @@ export async function POST(req) {
       );
     }
 
-    const text = await file.text();
-    const rows = await csv().fromString(text);
+    let rows;
+    if (isXlsx) {
+      /* First visible sheet, header row first; values come back as text,
+         the same as from a CSV. */
+      const parsed = await readXlsxRows(Buffer.from(await file.arrayBuffer()));
+      if (parsed.error) {
+        return NextResponse.json(
+          { status: "error", message: parsed.error },
+          { status: 400 },
+        );
+      }
+      rows = parsed.rows;
+    } else {
+      const text = await file.text();
+      rows = await csv().fromString(text);
+    }
 
     if (rows.length === 0) {
       return NextResponse.json(
