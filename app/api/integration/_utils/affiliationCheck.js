@@ -6,6 +6,7 @@
 import GemsProfile from "@/models/profile";
 import employmentInformationSchema from "@/models/employment_information";
 import academicInformationSchema from "@/models/academic_information";
+import { fieldLabel } from "@/app/api/integration/_utils/fieldLabels";
 
 /* Loose form of a value for matching: case, punctuation, "&" vs "and" and
    extra spaces do not matter ("budget office", "Research and Extension
@@ -168,12 +169,6 @@ export function canonicalizeAffiliation(mapped) {
     }
   }
   return changes;
-}
-
-function fieldLabel(path) {
-  const last = path.split(".").pop() || path;
-  const words = last.replace(/_/g, " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 /**

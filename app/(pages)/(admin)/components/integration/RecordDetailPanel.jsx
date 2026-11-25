@@ -1,5 +1,7 @@
 "use client";
 
+import { fieldLabel } from "@/app/api/integration/_utils/fieldLabels";
+
 export default function RecordDetailPanel({ record, allRecords = [], onClose }) {
   if (!record) return null;
   const migration = record.migration_result;
@@ -51,7 +53,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
                   .filter((e) => e.level !== "warning")
                   .map((err, idx) => (
                     <div key={idx}>
-                      • {err.field}: {err.message}
+                      • {fieldLabel(err.field)}: {err.message}
                     </div>
                   ))}
               </div>
@@ -68,7 +70,7 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
                   .filter((e) => e.level === "warning")
                   .map((err, idx) => (
                     <div key={idx}>
-                      • {err.field}: {err.message}
+                      • {fieldLabel(err.field)}: {err.message}
                     </div>
                   ))}
               </div>
@@ -100,8 +102,10 @@ export default function RecordDetailPanel({ record, allRecords = [], onClose }) 
               <div className="space-y-1 text-secondary-700">
                 {migration.changes.map((change, idx) => (
                   <div key={idx}>
-                    • {change.field}: {String(change.from ?? "")} →{" "}
-                    {String(change.to ?? "")}
+                    • {fieldLabel(change.field)}
+                    {change.field?.startsWith("pii.")
+                      ? " (updated)"
+                      : `: ${String(change.from ?? "")} → ${String(change.to ?? "")}`}
                   </div>
                 ))}
               </div>

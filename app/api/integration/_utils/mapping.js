@@ -207,14 +207,14 @@ export function validateMappedPayload(mappedPayload) {
     errors.push({
       field: "personal.first_name",
       code: "required",
-      message: "First name is required",
+      message: "First name is missing.",
     });
   }
   if (!lastName) {
     errors.push({
       field: "personal.last_name",
       code: "required",
-      message: "Last name is required",
+      message: "Last name is missing.",
     });
   }
 
@@ -222,7 +222,8 @@ export function validateMappedPayload(mappedPayload) {
     errors.push({
       field: "personal.currentStatus",
       code: "invalid",
-      message: "Status must be Student or Employee.",
+      message:
+        "Status must be Student or Employee. Add a status column, or a Student No. or Employee No. so it can be worked out.",
     });
   }
 
@@ -230,14 +231,16 @@ export function validateMappedPayload(mappedPayload) {
     errors.push({
       field: "school_year",
       code: "required",
-      message: "school_year is required",
+      message:
+        "School year is missing. Add a school year column to the file, or pick a default school year before uploading or fetching.",
     });
   }
   if (!semester) {
     errors.push({
       field: "semester",
       code: "required",
-      message: "semester is required",
+      message:
+        "Semester is missing or not recognized (use 1st, 2nd or Summer). Add a semester column to the file, or pick a default semester before uploading or fetching.",
     });
   }
 
