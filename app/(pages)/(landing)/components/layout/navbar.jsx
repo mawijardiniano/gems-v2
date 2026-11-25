@@ -154,35 +154,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-8px) scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        @keyframes scale-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-slide-down {
-          animation: slide-down 0.2s ease-out;
-        }
-        .animate-scale-in {
-          animation: scale-in 0.2s ease-out;
-        }
-      `}</style>
     </>
   );
 }

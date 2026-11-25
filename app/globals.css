@@ -244,6 +244,56 @@ th {
   to { opacity: 1; }
 }
 
+/* Popovers and modals (landing menu and sign-in, admin and event modals).
+   Defined here rather than in component <style jsx> blocks: the dev client
+   bundle skipped the styled-jsx scope classes, so the server and client
+   markup differed (hydration warning) and the scoped rules never matched. */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Toast entering from the right edge. */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
 @keyframes slide-in-left {
   from {
     opacity: 0;

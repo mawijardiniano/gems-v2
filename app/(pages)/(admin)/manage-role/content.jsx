@@ -697,35 +697,6 @@ export default function ManageRoleContent() {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            opacity: 0;
-            transform: translateX(100%) translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0) translateY(0);
-          }
-        }
-        @keyframes scale-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-        .animate-scale-in {
-          animation: scale-in 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
