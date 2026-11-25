@@ -193,20 +193,12 @@ export async function POST(req, { params }) {
         const incomingPii = extractIncomingPii(mapped);
 
         if (!profile) {
-          /* Vault first: if the profile write then fails, the worst case is
-             an orphan vault row — never a profile without its PII. */
           const { gemsPublicId, vaultRef } =
             await assignIdentifiers(GemsProfile);
-          const { patch } = await savePii({
-            vaultRef,
-            pii: incomingPii,
-            ownerType: "profile",
-          });
-          profile = await GemsProfile.create({
+          profile = new GemsProfile({
             gemsPublicId,
             vaultRef,
             migrationStatus: "vaulted",
-            profileSearchIndex: patch.profileSearchIndex,
             created_by: auth.user._id,
             /* `person_type` is GEMS-owned and required, so it is carried onto
                the affiliation block explicitly. It arrives on the mapped
@@ -220,6 +212,18 @@ export async function POST(req, { params }) {
                 undefined,
             },
           });
+          /* Validate before touching the vault, so a row the profile schema
+             refuses (say, an office not in the list) writes no PII at all. */
+          await profile.validate();
+          /* Vault first: if the profile write then fails, the worst case is
+             an orphan vault row — never a profile without its PII. */
+          const { patch } = await savePii({
+            vaultRef,
+            pii: incomingPii,
+            ownerType: "profile",
+          });
+          profile.profileSearchIndex = patch.profileSearchIndex;
+          await profile.save();
           profileAction = "created";
           created += 1;
         } else {
@@ -239,6 +243,15 @@ export async function POST(req, { params }) {
             existingPii,
             incomingPii,
           );
+
+          /* Merge and validate the GEMS-side changes before writing PII. A
+             row the profile schema refuses used to update the vault and then
+             fail on save, leaving the person's PII changed (and the search
+             index stale) while the row reported "failed". */
+          const { merged, changes } = mergeProfile(profile, mapped);
+          profile.set(merged);
+          await profile.validate();
+
           if (piiChanges.length > 0) {
             const { patch } = await savePii({
               profileId: profile._id,
@@ -250,8 +263,6 @@ export async function POST(req, { params }) {
             profile.profileSearchIndex = patch.profileSearchIndex;
           }
 
-          const { merged, changes } = mergeProfile(profile, mapped);
-          profile.set(merged);
           await profile.save();
           updated += 1;
           profileChanges = [...changes, ...piiChanges];

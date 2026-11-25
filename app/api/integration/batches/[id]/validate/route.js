@@ -12,6 +12,7 @@ import {
 } from "@/app/api/integration/_utils/mapping";
 import { blindIndex } from "@/data/lib/identityVault";
 import { matchByNameBirthday } from "@/app/api/integration/_utils/profileMatch";
+import { affiliationSchemaErrors } from "@/app/api/integration/_utils/affiliationCheck";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -193,7 +194,11 @@ export async function POST(req, { params }) {
     for (const record of records) {
       if (record.status === "duplicate") continue;
 
-      const errors = validateMappedPayload(record.mapped_payload || {});
+      const errors = [
+        ...validateMappedPayload(record.mapped_payload || {}),
+        /* Values the profile schema would refuse at migration time. */
+        ...affiliationSchemaErrors(record.mapped_payload || {}),
+      ];
 
       const identity = record.identity || {};
       const dedupeKey = buildIdentityDedupeKey(identity);
