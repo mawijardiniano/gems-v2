@@ -11,7 +11,11 @@ import {
   buildIdentityDedupeKey,
 } from "@/app/api/integration/_utils/mapping";
 import { blindIndex } from "@/data/lib/identityVault";
-import { matchByNameBirthday } from "@/app/api/integration/_utils/profileMatch";
+import {
+  AMBIGUOUS_NAME_BIRTHDAY_CODE,
+  ambiguousNameBirthdayMessage,
+  matchByNameBirthday,
+} from "@/app/api/integration/_utils/profileMatch";
 import { affiliationSchemaErrors } from "@/app/api/integration/_utils/affiliationCheck";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
@@ -141,8 +145,8 @@ export async function POST(req, { params }) {
 
     const profileIds = [
       ...new Set(
-        [...existingProfiles, ...nameMatchByRecord.values()].map((p) =>
-          String(p._id),
+        [...existingProfiles, ...[...nameMatchByRecord.values()].flat()].map(
+          (p) => String(p._id),
         ),
       ),
     ];
@@ -214,11 +218,22 @@ export async function POST(req, { params }) {
         }
       }
 
+      const strongMatch = idOrEmailMatch(identity);
+      const nameMatches = strongMatch
+        ? []
+        : nameMatchByRecord.get(String(record._id)) || [];
+      /* Several people share this name and birthday: migrate would refuse
+         the row, so block it here with the fix. */
+      if (errors.length === 0 && nameMatches.length > 1) {
+        errors.push({
+          field: "identity",
+          code: AMBIGUOUS_NAME_BIRTHDAY_CODE,
+          message: ambiguousNameBirthdayMessage(nameMatches.length),
+        });
+      }
+
       if (errors.length === 0) {
-        const strongMatch = idOrEmailMatch(identity);
-        const nameMatch = strongMatch
-          ? null
-          : nameMatchByRecord.get(String(record._id)) || null;
+        const nameMatch = nameMatches.length === 1 ? nameMatches[0] : null;
         const profile = strongMatch || nameMatch;
 
         if (nameMatch) {
