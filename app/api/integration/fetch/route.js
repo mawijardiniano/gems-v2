@@ -32,6 +32,19 @@ async function logFetchFailure(
   auth,
   { endpoint, sourceName, errorCode, statusCode, message },
 ) {
+  /* Record the failure on the stored config too, so the page stops showing
+     the previous successful sync as the latest state. */
+  await SystemSetting.findOneAndUpdate(
+    { key: CONFIG_KEY },
+    {
+      $set: {
+        "value.last_sync_at": new Date(),
+        "value.last_sync_status": "failed",
+        "value.last_sync_message": String(message || "Sync failed").slice(0, 300),
+      },
+    },
+  );
+
   await logActivity({
     req,
     user_id: auth.user._id,
