@@ -72,7 +72,7 @@ export async function POST(req) {
       );
     }
 
-    const { batch, insertedCount, duplicateCount } = await stageRows({
+    const { batch, insertedCount, duplicateCount, sameAs } = await stageRows({
       rows,
       sourceType: "manual_upload",
       sourceName: name,
@@ -120,6 +120,7 @@ export async function POST(req) {
         fetched: rows.length,
         staged: insertedCount,
         duplicates_flagged: duplicateCount,
+        same_content_as: sameAs ? String(sameAs.batch_id) : null,
       },
     });
 
@@ -132,6 +133,7 @@ export async function POST(req) {
           fetched: rows.length,
           staged: insertedCount,
           duplicates_flagged: duplicateCount,
+          same_as: sameAs,
         },
       },
       { status: 201 },
