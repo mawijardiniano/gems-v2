@@ -16,7 +16,10 @@ import {
   ambiguousNameBirthdayMessage,
   matchByNameBirthday,
 } from "@/app/api/integration/_utils/profileMatch";
-import { affiliationSchemaErrors } from "@/app/api/integration/_utils/affiliationCheck";
+import {
+  affiliationSchemaErrors,
+  canonicalizeAffiliation,
+} from "@/app/api/integration/_utils/affiliationCheck";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
@@ -70,6 +73,12 @@ export async function POST(req, { params }) {
        rebuild identity from the mapped payload so they get it. */
     for (const r of records) {
       r.identity = buildIdentity(r.mapped_payload || {});
+      /* "budget office", "CICS", "JO" -> the exact listed value, so case or
+         a common short form does not fail the row. Saved with the record,
+         so migrate writes the listed value. */
+      if (r.mapped_payload && canonicalizeAffiliation(r.mapped_payload).length) {
+        r.markModified("mapped_payload");
+      }
     }
 
     const studentIds = [];
