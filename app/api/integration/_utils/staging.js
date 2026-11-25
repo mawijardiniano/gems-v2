@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import ImportBatch from "@/models/importBatch";
 import StagingRecord from "@/models/stagingRecord";
 import {
@@ -52,10 +53,30 @@ export async function stageRows({
     });
   }
 
+  /* Same rows as a batch staged before (same file uploaded twice, or a feed
+     that has not changed): staged anyway, but reported so the reviewer can
+     delete the repeat. */
+  const contentHash = createHash("sha256")
+    .update(JSON.stringify(rows))
+    .digest("hex");
+  const previous = await ImportBatch.findOne({ content_hash: contentHash })
+    .sort({ createdAt: -1 })
+    .select("source_name status createdAt")
+    .lean();
+  const sameAs = previous
+    ? {
+        batch_id: previous._id,
+        source_name: previous.source_name || "",
+        status: previous.status,
+        created_at: previous.createdAt,
+      }
+    : null;
+
   const batch = await ImportBatch.create({
     source_type: sourceType,
     source_name: sourceName,
     source_file_key: sourceFileKey,
+    content_hash: contentHash,
     created_by: createdBy,
     created_by_username: createdByUsername,
     totals: { fetched: rows.length, duplicates: duplicateCount },
@@ -95,5 +116,6 @@ export async function stageRows({
     batch,
     insertedCount: docs.length,
     duplicateCount,
+    sameAs,
   };
 }

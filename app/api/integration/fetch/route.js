@@ -243,7 +243,7 @@ export async function POST(req) {
       );
     }
 
-    const { batch, insertedCount, duplicateCount } = await stageRows({
+    const { batch, insertedCount, duplicateCount, sameAs } = await stageRows({
       rows,
       sourceType: "hrmis_api",
       sourceName,
@@ -308,6 +308,7 @@ export async function POST(req) {
         fetched: rows.length,
         staged: insertedCount,
         duplicates_flagged: duplicateCount,
+        same_content_as: sameAs ? String(sameAs.batch_id) : null,
       },
       outcome: { result: "success", status_code: 201 },
     });
@@ -320,6 +321,7 @@ export async function POST(req) {
           fetched: rows.length,
           staged: insertedCount,
           duplicates_flagged: duplicateCount,
+          same_as: sameAs,
         },
       },
       { status: 201 },

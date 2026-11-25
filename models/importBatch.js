@@ -45,6 +45,13 @@ const importBatchSchema = new Schema(
     finished_at: {
       type: Date,
     },
+    /* SHA-256 of the source rows, to warn when the same file or feed is
+       staged again. */
+    content_hash: {
+      type: String,
+      default: "",
+      index: true,
+    },
     totals: {
       fetched: { type: Number, default: 0 },
       valid: { type: Number, default: 0 },

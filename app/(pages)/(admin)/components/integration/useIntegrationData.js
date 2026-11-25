@@ -86,7 +86,13 @@ export default function useIntegrationData() {
   function buildResultMessage(actionName, data) {
     if (!data) return null;
     if (["Fetch to Staging", "Sync Now", "Upload to Staging"].includes(actionName)) {
-      return `Imported ${data.fetched ?? 0} raw rows. ${data.staged ?? 0} staged. ${data.duplicates_flagged ?? 0} duplicates flagged.`;
+      const base = `Imported ${data.fetched ?? 0} raw rows. ${data.staged ?? 0} staged. ${data.duplicates_flagged ?? 0} duplicates flagged.`;
+      const same = data.same_as;
+      if (!same) return base;
+      const when = same.created_at
+        ? ` on ${new Date(same.created_at).toLocaleString()}`
+        : "";
+      return `${base} Heads up: these are the same rows as batch "${same.source_name || same.batch_id}" staged${when} (${same.status}). If this is a repeat, delete the new batch instead of importing it twice.`;
     }
     if (actionName === "Validate Batch") {
       return `Validation complete: ${data.valid ?? 0} valid, ${data.invalid ?? 0} invalid.`;
