@@ -60,11 +60,19 @@ export async function POST(req, { params }) {
     batch.status = "validating";
     await batch.save();
 
-    /* Only rows still under review are (re)checked. Approved, rejected,
-       migrated, failed and duplicate rows keep their status. */
-    const REVALIDATABLE = ["pending", "valid", "invalid"];
+    /* Only rows still under review are (re)checked, plus rows whose
+       migration failed, so they can be fixed, approved and migrated again.
+       Approved, rejected, migrated and duplicate rows keep their status. */
+    const REVALIDATABLE = ["pending", "valid", "invalid", "failed"];
     const allRecords = await StagingRecord.find({ batch_id: id });
     const records = allRecords.filter((r) => REVALIDATABLE.includes(r.status));
+    let retried = 0;
+    for (const r of records) {
+      if (r.status !== "failed") continue;
+      /* The old failure reason stays in the sync log. */
+      r.migration_result = undefined;
+      retried += 1;
+    }
     const approvedCount = allRecords.filter(
       (r) => r.status === "approved",
     ).length;
@@ -384,6 +392,7 @@ export async function POST(req, { params }) {
         valid,
         invalid,
         existing: existingCount,
+        retried,
       },
     });
   } catch (error) {

@@ -409,10 +409,15 @@ export async function POST(req, { params }) {
 
     batch.status = failed > 0 ? "failed" : "completed";
     batch.finished_at = new Date();
-    batch.totals.migrated_created = created;
-    batch.totals.migrated_updated = updated;
-    batch.totals.identical = identical;
-    batch.totals.skipped = skipped;
+    /* A batch can be migrated again after its failed rows are fixed and
+       re-approved; each run only handles the rows approved since, so the
+       counts add up. `failed` is what is still failed after this run. */
+    batch.totals.migrated_created =
+      (batch.totals.migrated_created || 0) + created;
+    batch.totals.migrated_updated =
+      (batch.totals.migrated_updated || 0) + updated;
+    batch.totals.identical = (batch.totals.identical || 0) + identical;
+    batch.totals.skipped = (batch.totals.skipped || 0) + skipped;
     batch.totals.failed = failed;
     await batch.save();
 
