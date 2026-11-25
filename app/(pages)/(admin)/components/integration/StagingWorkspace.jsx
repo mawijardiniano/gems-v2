@@ -63,6 +63,14 @@ export default function StagingWorkspace({ d }) {
     batch?.totals?.valid ??
     d.records.filter((r) => r.status === "valid").length;
   const approvedCount = batch?.totals?.approved ?? 0;
+  /* Valid rows matched only on name + birthday: "Approve All" skips them. */
+  const needsReviewCount = d.records.filter(
+    (r) =>
+      r.status === "valid" &&
+      (r.validation_errors || []).some(
+        (e) => e.code === "matched_by_name_birthday",
+      ),
+  ).length;
 
   return (
     <div className="space-y-4">
@@ -133,6 +141,7 @@ export default function StagingWorkspace({ d }) {
               selectedIds={selectedIds}
               validCount={validCount}
               approvedCount={approvedCount}
+              needsReviewCount={needsReviewCount}
               onValidate={() =>
                 d.runAction("Validate Batch", () => ({
                   url: `/api/integration/batches/${batch._id}/validate`,

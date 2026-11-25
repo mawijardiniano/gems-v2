@@ -10,6 +10,7 @@ export default function BatchActionBar({
   selectedIds,
   validCount,
   approvedCount,
+  needsReviewCount = 0,
   onValidate,
   onApprove,
   onReject,
@@ -73,6 +74,13 @@ export default function BatchActionBar({
             : `Migrate Approved (${approvedCount})`}
         </Button>
       </div>
+      {needsReviewCount > 0 && !finished && (
+        <p className="text-xs text-warning">
+          {needsReviewCount} row(s) matched an existing person on name +
+          birthday only. &quot;Approve All Valid&quot; leaves them out — tick
+          each one to approve it after checking it is the same person.
+        </p>
+      )}
 
       <Modal
         open={confirmingMigrate}
