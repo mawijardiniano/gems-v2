@@ -23,7 +23,7 @@ export default function ManualUploadContent() {
   function onUploadCsv(e) {
     e.preventDefault();
     if (!uploadFile) {
-      d.setMessage({ type: "error", text: "Please choose a CSV file first." });
+      d.setMessage({ type: "error", text: "Please choose a CSV or .xlsx file first." });
       return;
     }
     d.runAction("Upload to Staging", () => {
@@ -47,14 +47,15 @@ export default function ManualUploadContent() {
       <div className="bg-white border border-line rounded-md p-4">
         <h1 className="text-lg font-semibold text-fg">Manual Upload</h1>
         <p className="text-sm text-fg-4">
-          Upload SIS/ARO CSV files into the staging area, validate, review, and
-          migrate into production. XLSX support is not enabled yet.
+          Upload SIS/ARO CSV or Excel (.xlsx) files into the staging area,
+          validate, review, and migrate into production. For Excel files, the
+          first sheet is read and its first row must hold the column names.
         </p>
       </div>
 
       <div className="bg-white border border-line rounded-md p-4 space-y-3">
         <h2 className="text-base font-medium text-fg">
-          Upload CSV to Staging
+          Upload CSV or Excel to Staging
         </h2>
         <form
           onSubmit={onUploadCsv}
@@ -62,7 +63,7 @@ export default function ManualUploadContent() {
         >
           <input
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx"
             onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
             className="w-full border border-line-strong rounded px-3 py-2 text-sm"
           />
