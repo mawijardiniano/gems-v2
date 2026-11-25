@@ -103,6 +103,7 @@ export default function IntegrationContent() {
   const lastSync = config?.last_sync_at
     ? new Date(config.last_sync_at).toLocaleString()
     : null;
+  const lastSyncFailed = config?.last_sync_status === "failed";
 
   return (
     <div className="py-8 space-y-4">
@@ -122,10 +123,15 @@ export default function IntegrationContent() {
             <h2 className="text-base font-medium text-fg">
               HRMIS API Integration
             </h2>
-            <p className="text-xs text-fg-muted mt-1">
+            <p
+              className={`text-xs mt-1 ${
+                lastSyncFailed ? "text-danger" : "text-fg-muted"
+              }`}
+            >
               {config?.last_sync_at ? (
                 <>
-                  Last synchronization: {lastSync}
+                  {lastSyncFailed ? "Last sync failed" : "Last synchronization"}
+                  : {lastSync}
                   {config?.last_sync_message
                     ? ` — ${config.last_sync_message}`
                     : ""}
@@ -138,17 +144,27 @@ export default function IntegrationContent() {
           <div className="flex items-center gap-3">
             <span
               className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${
-                endpoint
-                  ? "bg-green-100 text-success"
-                  : "bg-muted text-fg-4"
+                !endpoint
+                  ? "bg-muted text-fg-4"
+                  : lastSyncFailed
+                    ? "bg-danger-subtle text-danger"
+                    : "bg-green-100 text-success"
               }`}
             >
               <span
                 className={`w-2 h-2 rounded-full inline-block ${
-                  endpoint ? "bg-green-500" : "bg-gray-400"
+                  !endpoint
+                    ? "bg-gray-400"
+                    : lastSyncFailed
+                      ? "bg-danger-solid"
+                      : "bg-green-500"
                 }`}
               />
-              {endpoint ? "Connected" : "Not Configured"}
+              {!endpoint
+                ? "Not Configured"
+                : lastSyncFailed
+                  ? "Sync failed"
+                  : "Connected"}
             </span>
             <Button
               onClick={syncNow}
