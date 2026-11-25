@@ -6,6 +6,9 @@ import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
+/* Set by the validate route on a row matched only on name + birthday. */
+const WEAK_MATCH_CODE = "matched_by_name_birthday";
+
 export async function POST(req, { params }) {
   try {
     await connectDB();
@@ -44,8 +47,20 @@ export async function POST(req, { params }) {
     const ids = Array.isArray(body.record_ids) ? body.record_ids : null;
 
     const filter = { batch_id: id, status: "valid" };
+    let needsReview = 0;
     if (ids && ids.length > 0) {
       filter._id = { $in: ids };
+    } else {
+      /* A row matched to an existing person on name + birthday alone is
+         merged into that person, PII included. Bulk "approve all" leaves
+         those rows out, so each one is approved deliberately by selecting
+         it after checking it is the same person. */
+      filter["validation_errors.code"] = { $ne: WEAK_MATCH_CODE };
+      needsReview = await StagingRecord.countDocuments({
+        batch_id: id,
+        status: "valid",
+        "validation_errors.code": WEAK_MATCH_CODE,
+      });
     }
 
     const result = await StagingRecord.updateMany(filter, {
@@ -94,6 +109,7 @@ export async function POST(req, { params }) {
         modified_count: result.modifiedCount,
         approved_total: approved,
         record_ids: ids || "all valid",
+        left_for_review: needsReview,
       },
     });
 
@@ -102,6 +118,7 @@ export async function POST(req, { params }) {
       data: {
         approved_now: result.modifiedCount,
         approved_total: approved,
+        needs_review: needsReview,
       },
     });
   } catch (error) {

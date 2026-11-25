@@ -19,6 +19,14 @@ function isSelectable(status) {
   return ["valid", "approved"].includes(status);
 }
 
+/* Matched to an existing person on name + birthday only: merging it changes
+   that person's PII, so it is ticked one by one, never by "select all". */
+function isWeakMatch(r) {
+  return (r.validation_errors || []).some(
+    (e) => e.code === "matched_by_name_birthday",
+  );
+}
+
 export default function StagingRecordsTable({
   records,
   loading,
@@ -28,7 +36,9 @@ export default function StagingRecordsTable({
   onToggleRow,
   onToggleAll,
 }) {
-  const selectableRecords = records.filter((r) => isSelectable(r.status));
+  const selectableRecords = records.filter(
+    (r) => isSelectable(r.status) && !isWeakMatch(r),
+  );
   const allSelected =
     selectableRecords.length > 0 &&
     selectableRecords.every((r) => selectedIds.has(r._id));

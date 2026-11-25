@@ -92,7 +92,10 @@ export default function useIntegrationData() {
       return `Validation complete: ${data.valid ?? 0} valid, ${data.invalid ?? 0} invalid.`;
     }
     if (actionName.startsWith("Approve")) {
-      return `Approved ${data.approved_now ?? 0} record(s).`;
+      const review = data.needs_review ?? 0;
+      return review > 0
+        ? `Approved ${data.approved_now ?? 0} record(s). ${review} matched only on name + birthday were left out — tick them to approve after checking they are the same person.`
+        : `Approved ${data.approved_now ?? 0} record(s).`;
     }
     if (actionName.startsWith("Reject")) {
       return `Rejected ${data.rejected_now ?? 0} record(s).`;
