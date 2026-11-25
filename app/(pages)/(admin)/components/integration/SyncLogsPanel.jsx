@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fieldLabel } from "@/app/api/integration/_utils/fieldLabels";
 
 const ACTION_LABELS = {
   validate: "Validation",
@@ -31,6 +32,7 @@ const HANDLED_KEYS = new Set([
   "staged",
   "duplicates_flagged",
   "error",
+  "raw_error",
 ]);
 
 function humanizeKey(key) {
@@ -39,10 +41,7 @@ function humanizeKey(key) {
     .replace(/^./, (c) => c.toUpperCase());
 }
 
-function humanizeField(field) {
-  const leaf = String(field).split(".").pop();
-  return humanizeKey(leaf);
-}
+const humanizeField = fieldLabel;
 
 function FriendlyDetails({ details }) {
   if (!details || typeof details !== "object") return null;

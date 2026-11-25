@@ -19,6 +19,7 @@ import {
 import { assignIdentifiers, savePii } from "@/data/lib/vaultWriter";
 import { loadDecryptedPii } from "@/data/lib/profileBroker";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
+import { friendlyMigrationError } from "@/app/api/integration/_utils/fieldLabels";
 import {
   normalizeStudentUsername,
   normalizeEmployeeUsername,
@@ -381,9 +382,12 @@ export async function POST(req, { params }) {
       } catch (e) {
         failed += 1;
         record.status = "failed";
+        /* The admin sees a readable reason; the raw error stays in the
+           sync log's technical details for debugging. */
+        const reason = friendlyMigrationError(e);
         record.migration_result = {
           action: "failed",
-          message: e.message,
+          message: reason,
         };
         await record.save();
 
@@ -393,7 +397,10 @@ export async function POST(req, { params }) {
           level: "error",
           action: "fail",
           message: "Migration failed",
-          details: { error: e.message },
+          details: {
+            error: reason,
+            ...(reason !== e.message ? { raw_error: e.message } : {}),
+          },
           executedBy: auth.user._id,
           executedByUsername: auth.user.username,
         });
