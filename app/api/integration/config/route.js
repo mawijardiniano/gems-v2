@@ -70,6 +70,8 @@ export async function GET(req) {
       data: {
         endpoint: value.endpoint || "",
         headers: maskHeaders(value.headers || {}),
+        school_year: value.school_year || "",
+        semester: value.semester || "",
         last_sync_at: value.last_sync_at || null,
         last_sync_status: value.last_sync_status || null,
         last_sync_message: value.last_sync_message || "",
@@ -136,6 +138,38 @@ export async function PUT(req) {
     const existing = await SystemSetting.findOne({ key: CONFIG_KEY }).lean();
     const previous = existing?.value || {};
 
+    /* Default term for rows that carry none. A key sent as "" clears the
+       default; a key left out keeps the saved one. */
+    const schoolYear =
+      typeof body.school_year === "string"
+        ? body.school_year.trim()
+        : previous.school_year || "";
+    const semester =
+      typeof body.semester === "string"
+        ? body.semester.trim()
+        : previous.semester || "";
+    if (schoolYear) {
+      const m = schoolYear.match(/^(\d{4})-(\d{4})$/);
+      if (!m || Number(m[2]) !== Number(m[1]) + 1) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: "Default school year must look like 2025-2026.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+    if (!["", "1st", "2nd", "Summer"].includes(semester)) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Default semester must be 1st, 2nd or Summer.",
+        },
+        { status: 400 },
+      );
+    }
+
     const mergedHeaders = { ...previous.headers, ...headers };
     for (const [key, value] of Object.entries(headers)) {
       if (
@@ -150,8 +184,8 @@ export async function PUT(req) {
     const value = {
       endpoint,
       headers: mergedHeaders,
-      school_year: body.school_year || previous.school_year || "",
-      semester: body.semester || previous.semester || "",
+      school_year: schoolYear,
+      semester,
       last_sync_at: previous.last_sync_at || null,
       last_sync_status: previous.last_sync_status || null,
       last_sync_message: previous.last_sync_message || "",
@@ -189,6 +223,8 @@ export async function PUT(req) {
         /* Header names only. Values are secrets and must not enter the log,
            which every Admin can read. */
         header_keys: Object.keys(value.headers || {}),
+        school_year: value.school_year || null,
+        semester: value.semester || null,
       },
     });
 
@@ -197,6 +233,8 @@ export async function PUT(req) {
       data: {
         endpoint: value.endpoint,
         headers: maskHeaders(value.headers),
+        school_year: value.school_year,
+        semester: value.semester,
         last_sync_at: value.last_sync_at,
         last_sync_status: value.last_sync_status,
       },
