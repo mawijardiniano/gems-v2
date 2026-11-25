@@ -100,6 +100,14 @@ export default function IntegrationContent() {
     await loadConfig();
   }
 
+  /* Calls the saved endpoint and reports what came back; stages nothing. */
+  async function testConnection() {
+    await d.runAction("Test Connection", () => ({
+      url: "/api/integration/test-connection",
+      options: { method: "POST", credentials: "include" },
+    }));
+  }
+
   const lastSync = config?.last_sync_at
     ? new Date(config.last_sync_at).toLocaleString()
     : null;
@@ -218,7 +226,7 @@ export default function IntegrationContent() {
               <option value="Summer">Summer</option>
             </select>
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
             <button
               type="submit"
               disabled={savingConfig}
@@ -226,6 +234,19 @@ export default function IntegrationContent() {
             >
               {savingConfig ? "Saving..." : "Save Connection"}
             </button>
+            <button
+              type="button"
+              onClick={testConnection}
+              disabled={savingConfig || d.busyAction !== "" || !config?.endpoint}
+              className="px-4 py-2 rounded border border-line-strong text-sm disabled:opacity-50"
+            >
+              {d.busyAction === "Test Connection"
+                ? "Testing..."
+                : "Test Connection"}
+            </button>
+            <span className="text-xs text-fg-muted">
+              Tests the saved connection. Save changes first.
+            </span>
           </div>
         </form>
       </div>

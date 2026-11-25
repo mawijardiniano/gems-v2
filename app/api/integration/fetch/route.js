@@ -2,27 +2,15 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
+import { stageRows } from "@/app/api/integration/_utils/staging";
 import {
-  stageRows,
-  MAX_BATCH_ROWS,
-  MAX_SOURCE_BYTES,
-} from "@/app/api/integration/_utils/staging";
+  fetchHrmisRows,
+  safeHost,
+} from "@/app/api/integration/_utils/hrmisFetch";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
-const FETCH_TIMEOUT_MS = 30000;
-
-/* An endpoint URL may carry a token in its query string. Only the host is ever
-   written to the log — enough to name the external system, not enough to leak
-   the credential used to reach it. */
-function safeHost(endpoint) {
-  try {
-    return new URL(endpoint).host || null;
-  } catch {
-    return null;
-  }
-}
 
 /* A refused or unreachable external system is a fact worth keeping: repeated
    failures here are how a misconfigured — or deliberately sabotaged — sync is
@@ -104,144 +92,21 @@ export async function POST(req) {
       );
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-    let response;
-    try {
-      response = await fetch(endpoint, {
-        headers,
-        signal: controller.signal,
-        /* A redirect could send the request (and its auth headers) to a
-           host the config check never saw. */
-        redirect: "error",
-      });
-    } catch (err) {
-      clearTimeout(timeout);
-      if (err?.name === "AbortError") {
-        await logFetchFailure(req, auth, {
-          endpoint,
-          sourceName,
-          errorCode: "FETCH_TIMEOUT",
-          statusCode: 504,
-          message: `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
-        });
-        return NextResponse.json(
-          {
-            status: "error",
-            message: `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
-          },
-          { status: 504 },
-        );
-      }
+    const result = await fetchHrmisRows(endpoint, headers);
+    if (result.error) {
       await logFetchFailure(req, auth, {
         endpoint,
         sourceName,
-        errorCode: "FETCH_UNREACHABLE",
-        statusCode: 502,
-        message: err.message,
+        errorCode: result.error.code,
+        statusCode: result.error.status,
+        message: result.error.logMessage,
       });
       return NextResponse.json(
-        {
-          status: "error",
-          message: `Failed to reach endpoint: ${err.message}`,
-        },
-        { status: 502 },
+        { status: "error", message: result.error.message },
+        { status: result.error.status },
       );
     }
-
-    if (!response.ok) {
-      clearTimeout(timeout);
-      await logFetchFailure(req, auth, {
-        endpoint,
-        sourceName,
-        errorCode: "FETCH_REJECTED",
-        statusCode: 400,
-        message: `Endpoint responded ${response.status}`,
-      });
-      return NextResponse.json(
-        {
-          status: "error",
-          message: `Failed to fetch endpoint: ${response.status}`,
-        },
-        { status: 400 },
-      );
-    }
-
-    /* Read the body under the same timeout, and refuse anything that is
-       too large, not JSON, or not a list of rows — staging an empty batch
-       would hide a broken feed. */
-    const badPayload = async (errorCode, message, statusCode = 502) => {
-      await logFetchFailure(req, auth, {
-        endpoint,
-        sourceName,
-        errorCode,
-        statusCode,
-        message,
-      });
-      return NextResponse.json(
-        { status: "error", message },
-        { status: statusCode },
-      );
-    };
-
-    let text;
-    try {
-      const declared = Number(response.headers.get("content-length") || 0);
-      if (declared > MAX_SOURCE_BYTES) {
-        clearTimeout(timeout);
-        return badPayload(
-          "FETCH_TOO_LARGE",
-          `Response is too large (max ${MAX_SOURCE_BYTES / 1024 / 1024} MB).`,
-          413,
-        );
-      }
-      text = await response.text();
-    } catch (err) {
-      clearTimeout(timeout);
-      return err?.name === "AbortError"
-        ? badPayload(
-            "FETCH_TIMEOUT",
-            `Fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
-            504,
-          )
-        : badPayload("FETCH_UNREADABLE", `Failed to read response: ${err.message}`);
-    }
-    clearTimeout(timeout);
-
-    if (text.length > MAX_SOURCE_BYTES) {
-      return badPayload(
-        "FETCH_TOO_LARGE",
-        `Response is too large (max ${MAX_SOURCE_BYTES / 1024 / 1024} MB).`,
-        413,
-      );
-    }
-
-    let payload;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      return badPayload("FETCH_NOT_JSON", "Endpoint did not return valid JSON.");
-    }
-
-    const rows = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.data)
-        ? payload.data
-        : null;
-    if (!rows) {
-      return badPayload(
-        "FETCH_BAD_SHAPE",
-        "Endpoint response is not a list of rows (expected an array or { data: [] }).",
-      );
-    }
-    if (rows.length > MAX_BATCH_ROWS) {
-      return badPayload(
-        "FETCH_TOO_MANY_ROWS",
-        `Endpoint returned ${rows.length} rows; the limit per batch is ${MAX_BATCH_ROWS}.`,
-        413,
-      );
-    }
+    const { rows } = result;
 
     const { batch, insertedCount, duplicateCount, sameAs } = await stageRows({
       rows,

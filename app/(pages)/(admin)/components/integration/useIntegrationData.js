@@ -94,6 +94,17 @@ export default function useIntegrationData() {
         : "";
       return `${base} Heads up: these are the same rows as batch "${same.source_name || same.batch_id}" staged${when} (${same.status}). If this is a repeat, delete the new batch instead of importing it twice.`;
     }
+    if (actionName === "Test Connection") {
+      const secs = ((data.elapsed_ms ?? 0) / 1000).toFixed(1);
+      const missing = data.missing_columns || [];
+      const base = `Connection OK: the endpoint answered in ${secs}s with ${data.rows ?? 0} row(s). Nothing was staged.`;
+      if ((data.rows ?? 0) === 0) {
+        return `${base} The feed is empty, so a sync would stage no one.`;
+      }
+      return missing.length
+        ? `${base} Missing expected column(s): ${missing.join("; ")}. Columns found: ${(data.columns || []).join(", ")}.`
+        : `${base} Columns found: ${(data.columns || []).join(", ")}.`;
+    }
     if (actionName === "Validate Batch") {
       return `Validation complete: ${data.valid ?? 0} valid, ${data.invalid ?? 0} invalid.`;
     }
