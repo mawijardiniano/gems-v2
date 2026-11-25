@@ -11,6 +11,7 @@ export default function BatchActionBar({
   validCount,
   approvedCount,
   needsReviewCount = 0,
+  failedCount = 0,
   onValidate,
   onApprove,
   onReject,
@@ -79,6 +80,13 @@ export default function BatchActionBar({
           {needsReviewCount} row(s) matched an existing person on name +
           birthday only. &quot;Approve All Valid&quot; leaves them out — tick
           each one to approve it after checking it is the same person.
+        </p>
+      )}
+      {failedCount > 0 && !finished && (
+        <p className="text-xs text-danger">
+          {failedCount} row(s) failed to import. Open a row to see why, fix
+          it in the row or the source file, then press Validate to check it
+          again, approve it and migrate.
         </p>
       )}
 

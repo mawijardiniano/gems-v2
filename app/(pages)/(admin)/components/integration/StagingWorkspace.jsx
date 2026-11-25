@@ -71,6 +71,8 @@ export default function StagingWorkspace({ d }) {
         (e) => e.code === "matched_by_name_birthday",
       ),
   ).length;
+  /* Rows whose migration failed: Validate re-checks them for a retry. */
+  const failedCount = d.records.filter((r) => r.status === "failed").length;
 
   return (
     <div className="space-y-4">
@@ -142,6 +144,7 @@ export default function StagingWorkspace({ d }) {
               validCount={validCount}
               approvedCount={approvedCount}
               needsReviewCount={needsReviewCount}
+              failedCount={failedCount}
               onValidate={() =>
                 d.runAction("Validate Batch", () => ({
                   url: `/api/integration/batches/${batch._id}/validate`,
