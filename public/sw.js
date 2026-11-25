@@ -1,4 +1,12 @@
-const CACHE_NAME = "gems-attendance-v3";
+/* v4: drops caches filled by earlier workers, which in development held
+   stale /_next/ chunks. */
+const CACHE_NAME = "gems-attendance-v4";
+
+/* Registered as /sw.js?dev=1 by a development build (see registerSW.js).
+   Dev chunk URLs are not content-hashed, so caching them serves old code
+   after every edit; in dev mode /_next/ requests go straight to the
+   network. Offline attendance (API cache, sync queue) still works. */
+const DEV_MODE = new URL(self.location.href).searchParams.get("dev") === "1";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/icons/icon-192.png",
@@ -89,6 +97,8 @@ self.addEventListener("fetch", (event) => {
 
 
   if (request.method !== "GET") return;
+
+  if (DEV_MODE && url.pathname.startsWith("/_next/")) return;
 
 
   if (isApiRequest(url)) {
