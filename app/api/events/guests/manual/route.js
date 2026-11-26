@@ -14,7 +14,15 @@ import {
   revealProfilePii,
 } from "@/data/lib/profileBroker";
 import { isEventOrganizer } from "@/data/lib/eventAccess";
-import { appParts } from "@/data/lib/appTime";
+import {
+  STUDENT,
+  EMPLOYEE,
+  ageOnAppDay,
+  contactOf,
+  departmentOf,
+  positionOf,
+  programYearSectionOf,
+} from "@/data/lib/attendeeLookup";
 import { guestDedupeKey, pickAdoptableWalkIn } from "@/data/lib/guestIdentity";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
@@ -23,48 +31,12 @@ import { guestDedupeKey, pickAdoptableWalkIn } from "@/data/lib/guestIdentity";
    reads EventGuest. Detail fields are copied from the profile so the person's
    name, sex, age and office match every other attendance view. */
 
-const STUDENT = "Student";
-const EMPLOYEE = "Employee";
-
 /* Note stamped on every row an organizer records by hand. A constant so the
    adopt/encode paths and the payload's pre-filled fields can never drift. */
 const VALIDATION_NOTE = "Recorded manually by organizer";
 
-/* Guest sheets store the contact number under `contact`. */
-function contactOf(profile) {
-  return String(
-    profile?.contact?.mobileNumber || profile?.contact?.phoneNumber || "",
-  ).trim();
-}
-
-/* QR rows keep "Program Year Section" in one string; mirror that shape. */
-function programYearSectionOf(profile) {
-  const academic = profile?.affiliation?.academic_information || {};
-  const program = String(academic.course || "").trim();
-  const year = String(academic.year_level || "").trim();
-  return [program, year].filter(Boolean).join(" ");
-}
-
-function departmentOf(profile, participantType) {
-  if (participantType === STUDENT) {
-    return String(
-      profile?.affiliation?.academic_information?.college || "",
-    ).trim();
-  }
-  return String(
-    profile?.affiliation?.employment_information?.office || "",
-  ).trim();
-}
-
-function positionOf(profile, participantType) {
-  if (participantType === STUDENT) return "";
-  const employment = profile?.affiliation?.employment_information || {};
-  return String(
-    employment.employment_status ||
-      employment.employment_appointment_status ||
-      "",
-  ).trim();
-}
+/* contactOf / programYearSectionOf / departmentOf / positionOf live in
+   data/lib/attendeeLookup, shared with the public QR form's ID lookup. */
 
 /* Promotes an existing guest row to an approved manual record for `user_id`.
    The organizer is recording this person right now, so the row must end up
@@ -283,8 +255,13 @@ export async function POST(req) {
 
     /* Manual encoding covers students and employees; stakeholders have no
        profile record. */
+    /* `affiliation.person_type` first: the profile schema no longer has a
+       `personal` block, so `currentStatus` is empty on stripped profiles and
+       every student was recorded as an employee with no college. */
     const participantType =
-      String(personal.currentStatus || "").trim() === STUDENT
+      String(
+        identity?.affiliation?.person_type || personal.currentStatus || "",
+      ).trim() === STUDENT
         ? STUDENT
         : EMPLOYEE;
 
@@ -295,24 +272,12 @@ export async function POST(req) {
        themselves (or leave it blank) and the age stays empty. */
     const mayCopyPersonalData = canViewPII(user.role);
 
-    const birthday =
+    /* Age on today's Manila date (attendeeLookup.ageOnAppDay); empty for
+       organizers not cleared to read the birthday. */
+    const age =
       mayCopyPersonalData && personal.birthday
-        ? new Date(personal.birthday)
+        ? ageOnAppDay(personal.birthday)
         : null;
-    let age = null;
-    /* Both dates as Manila days: the server's own calendar (UTC) made a
-       birthday on the event day read one year young until 08:00 Manila. */
-    const born = birthday ? appParts(birthday) : null;
-    const today = appParts(Date.now());
-    if (born && today) {
-      age = today.year - born.year;
-      if (
-        today.month < born.month ||
-        (today.month === born.month && today.day < born.day)
-      )
-        age -= 1;
-      if (age < 1 || age > 120) age = null;
-    }
 
     const payload = {
       event_id,
