@@ -65,6 +65,12 @@ const importBatchSchema = new Schema(
       missing: { type: [String], default: undefined },
       problems: { type: [String], default: undefined },
     },
+    /* Rows handled so far by a background migration; the page polls it. */
+    progress: {
+      done: { type: Number },
+      total: { type: Number },
+      updated_at: { type: Date },
+    },
     /* The most common blocking validation errors, so one problem shared by
        every row reads as one line instead of hundreds. */
     error_summary: {
