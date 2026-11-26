@@ -18,7 +18,9 @@ const MISSING = {
  * POST /api/university-officials/assign-legacy { to }
  * One-click rescue for pre-migration installs: tags untagged legacy
  * officials + GFPS docs to the selected year in place. Refuses when the
- * target year already has data (use copy-forward instead).
+ * target year already has data. (Officials need no copying since the term
+ * migration; a GFPS committee is copied with "Copy from previous year" on
+ * the GFPS page.)
  */
 export async function POST(req) {
   const { error, status } = await requireOrgStructureEditor(req);
@@ -52,7 +54,7 @@ export async function POST(req) {
     return Response.json(
       {
         success: false,
-        error: `AY ${to} already has data; use copy-forward instead`,
+        error: `AY ${to} already has data. Officials stay on the chart every year on their own; to copy a GFPS committee, use "Copy from previous year" on the GFPS page.`,
       },
       { status: 409 },
     );

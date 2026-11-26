@@ -204,7 +204,9 @@ export default function GFPSManager() {
     if (
       !(await confirm({
         title: `Copy the GFPS committee from AY ${source} to AY ${academicYear}?`,
-        message: "Copy the officials roster first if you have not.",
+        /* Officials carry over to later years on their own (OfficialTerm);
+           only the committee is copied here. */
+        message: "This copies the committee's seats and members only. University officials already appear on every year until their seat is vacated.",
         confirmLabel: "Copy",
         tone: "primary",
       }))
