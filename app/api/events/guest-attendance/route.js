@@ -14,6 +14,7 @@ import {
   checkInClosedReason,
   guestDetailsFromProfile,
   resolveProfileByIdentifier,
+  signedInUnderName,
 } from "@/data/lib/attendeeLookup";
 
 const SEX = ["Male", "Female"];
@@ -185,7 +186,7 @@ export async function POST(req) {
           { status: 400 },
         );
     }
-    const { error: eventError } = await loadOpenEvent(event_id);
+    const { event, error: eventError } = await loadOpenEvent(event_id);
     if (eventError) return eventError;
     /* Everything the guest typed that ends up on the sheet. */
     const details = {
@@ -229,6 +230,10 @@ export async function POST(req) {
         .lean();
       const [onList] = sameNameRows(linked, details);
       if (onList) return alreadyOnSheet(onList);
+      /* Checked in signed in (Event.attended_users), matched through the
+         profile's name index. A signed-in check-in is attendance already. */
+      if (await signedInUnderName(event.attended_users, details))
+        return alreadyOnSheet({ validation_status: "approved" });
     }
     return await saveCheckIn({ req, event_id, details, existing, submittedBy });
   } catch (err) {
