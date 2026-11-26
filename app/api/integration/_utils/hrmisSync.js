@@ -9,7 +9,6 @@ import {
 } from "@/app/api/integration/_utils/hrmisFetch";
 import { loadFieldMapping } from "@/app/api/integration/_utils/fieldMapping";
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
-import { logActivity } from "@/data/lib/activityLog";
 
 export const HRMIS_CONFIG_KEY = "hrmis_integration";
 
@@ -30,14 +29,14 @@ async function recordSyncStatus(status, message) {
  * @param actor { user_id, username, role, auth_method } — who the batch is
  *   staged for: the signed-in user, or for a scheduled run the admin who
  *   turned the schedule on.
- * @param req the request, for the audit trail's IP; null for a scheduled run.
  * @param scheduled true for the daily run: an unchanged feed stages nothing.
  * @returns { error: { status, message } } or { data } (the fetch route's
- *   response body), with data.skipped when nothing was staged.
+ *   response body), with data.skipped when nothing was staged; always with
+ *   `audit`, the activity-log entry for the caller to write with its
+ *   request (each route handler writes its own audit record).
  */
 export async function runHrmisSync({
   actor,
-  req = null,
   sourceName = "HRMIS API",
   schoolYear = "",
   semester = "",
@@ -70,8 +69,7 @@ export async function runHrmisSync({
        sabotaged — sync is recognised. Recorded on the config too, so the
        page stops showing the previous success as the latest state. */
     await recordSyncStatus("failed", result.error.logMessage || "Sync failed");
-    await logActivity({
-      req,
+    const audit = {
       actor,
       action: "IMPORT_BATCH_FETCH_FAILED",
       description: `${how} from ${sourceName} failed: ${result.error.logMessage}`,
@@ -90,8 +88,9 @@ export async function runHrmisSync({
         error_code: result.error.code,
         message: result.error.logMessage,
       },
-    });
+    };
     return {
+      audit,
       error: { status: result.error.status, message: result.error.message },
     };
   }
@@ -117,8 +116,7 @@ export async function runHrmisSync({
   if (staged.skipped) {
     const message = `${how}: ${rows.length} row(s), unchanged since batch "${sameAs.source_name || sameAs.batch_id}"; nothing staged`;
     await recordSyncStatus("success", message);
-    await logActivity({
-      req,
+    const audit = {
       actor,
       action: "IMPORT_BATCH_FETCH",
       /* Warning level is awaited; a scheduled run has no request to outlive. */
@@ -135,8 +133,9 @@ export async function runHrmisSync({
         scheduled,
       },
       outcome: { result: "success", status_code: 200 },
-    });
+    };
     return {
+      audit,
       data: {
         batch_id: null,
         fetched: rows.length,
@@ -175,8 +174,7 @@ export async function runHrmisSync({
      system's view of staff and students into a batch nobody has approved
      yet. The endpoint host is recorded, never the configured headers: those
      carry credentials. */
-  await logActivity({
-    req,
+  const audit = {
     actor,
     action: "IMPORT_BATCH_FETCH",
     /* Warning level is awaited; a scheduled run has no request to outlive. */
@@ -199,9 +197,10 @@ export async function runHrmisSync({
       scheduled,
     },
     outcome: { result: "success", status_code: 201 },
-  });
+  };
 
   return {
+    audit,
     data: {
       batch_id: batch._id,
       fetched: rows.length,

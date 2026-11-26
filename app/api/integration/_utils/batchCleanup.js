@@ -82,11 +82,11 @@ export async function findStaleBatches({ afterDays, now = new Date() }) {
 }
 
 /**
- * Removes the stale batches with their staging rows and sync logs, and
- * writes one audit entry naming every batch removed (the batches' own logs
- * go with them).
+ * Removes the stale batches with their staging rows and sync logs. Returns
+ * `audit`, one activity-log entry naming every removed batch, for the
+ * caller to write.
  */
-export async function removeStaleBatches({ afterDays, now = new Date(), actor, req = null, trigger }) {
+export async function removeStaleBatches({ afterDays, now = new Date(), actor, trigger }) {
   const stale = await findStaleBatches({ afterDays, now });
   const cutoff = new Date(now.getTime() - afterDays * DAY_MS);
   const removed = [];
@@ -111,35 +111,41 @@ export async function removeStaleBatches({ afterDays, now = new Date(), actor, r
     removed.push(b);
   }
 
-  if (removed.length) {
-    await logActivity({
-      req,
-      actor,
-      action: "IMPORT_BATCH_CLEANUP",
-      description: `Removed ${removed.length} import batch(es) not imported and untouched for ${afterDays} day(s) (${trigger})`,
-      severity: "critical",
-      resource_type: "import_batch",
-      module: "integration",
-      metadata: {
-        trigger,
-        after_days: afterDays,
-        deleted_records: deletedRecords,
-        deleted_logs: deletedLogs,
-        batches: removed.map((b) => ({
-          batch_id: String(b.batch_id),
-          source_name: b.source_name,
-          source_type: b.source_type,
-          status: b.status,
-          created_by_username: b.created_by_username,
-          created_at: b.created_at,
-          updated_at: b.updated_at,
-          rows: b.rows,
-        })),
-      },
-    });
-  }
+  /* One audit entry naming every removed batch (their own logs are gone).
+     Written by the caller, which has the request. */
+  const audit = removed.length
+    ? {
+        actor,
+        action: "IMPORT_BATCH_CLEANUP",
+        description: `Removed ${removed.length} import batch(es) not imported and untouched for ${afterDays} day(s) (${trigger})`,
+        severity: "critical",
+        resource_type: "import_batch",
+        module: "integration",
+        metadata: {
+          trigger,
+          after_days: afterDays,
+          deleted_records: deletedRecords,
+          deleted_logs: deletedLogs,
+          batches: removed.map((b) => ({
+            batch_id: String(b.batch_id),
+            source_name: b.source_name,
+            source_type: b.source_type,
+            status: b.status,
+            created_by_username: b.created_by_username,
+            created_at: b.created_at,
+            updated_at: b.updated_at,
+            rows: b.rows,
+          })),
+        },
+      }
+    : null;
 
-  return { removed, deleted_records: deletedRecords, deleted_logs: deletedLogs };
+  return {
+    removed,
+    deleted_records: deletedRecords,
+    deleted_logs: deletedLogs,
+    audit,
+  };
 }
 
 /**
@@ -172,5 +178,6 @@ export async function runCleanupIfDue(now = new Date()) {
       auth_method: "system",
     },
   });
+  if (result.audit) await logActivity(result.audit);
   return { ran: true, result };
 }
