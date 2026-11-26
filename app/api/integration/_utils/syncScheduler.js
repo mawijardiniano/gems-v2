@@ -1,7 +1,8 @@
-/* Daily automatic HRMIS sync. Started once per server process from
-   instrumentation.js; every minute it checks whether today's sync is due.
-   It only stages a batch: validating, approving and migrating stay with a
-   person. */
+/* Daily integration jobs: the automatic HRMIS sync and the removal of
+   old, never-imported batches (see batchCleanup.js). Started once per
+   server process from instrumentation.js; every minute it checks whether
+   either is due. The sync only stages a batch: validating, approving and
+   migrating stay with a person. */
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { appDateInput, appParts } from "@/data/lib/appTime";
@@ -9,6 +10,7 @@ import {
   HRMIS_CONFIG_KEY,
   runHrmisSync,
 } from "@/app/api/integration/_utils/hrmisSync";
+import { runCleanupIfDue } from "@/app/api/integration/_utils/batchCleanup";
 
 const CHECK_EVERY_MS = 60 * 1000;
 const FIRST_CHECK_MS = 30 * 1000;
@@ -67,10 +69,15 @@ export async function runScheduledSyncIfDue(now = new Date()) {
 /** Starts the minute check once per process. */
 export function startSyncScheduler() {
   if (globalThis.__gemsSyncScheduler) return;
-  const tick = () =>
-    runScheduledSyncIfDue().catch((error) => {
+  const tick = async () => {
+    await runScheduledSyncIfDue().catch((error) => {
       console.error("[integration] scheduled sync check failed:", error.message);
     });
+    /* Removal of old, never-imported batches, once a day when turned on. */
+    await runCleanupIfDue().catch((error) => {
+      console.error("[integration] batch cleanup check failed:", error.message);
+    });
+  };
   const first = setTimeout(tick, FIRST_CHECK_MS);
   const timer = setInterval(tick, CHECK_EVERY_MS);
   /* The timers never keep the process alive on their own. */

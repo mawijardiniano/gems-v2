@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button";
 import useIntegrationData from "../components/integration/useIntegrationData";
 import StagingWorkspace from "../components/integration/StagingWorkspace";
 import FieldMappingPanel from "../components/integration/FieldMappingPanel";
+import CleanupPanel from "../components/integration/CleanupPanel";
 import SyncLogsPanel from "../components/integration/SyncLogsPanel";
 import { MessageBanner } from "../components/integration/statuses";
 import { buildSchoolYearOptions } from "../components/integration/schoolYears";
@@ -13,6 +14,7 @@ const TABS = [
   { id: "staging", label: "Staging Areas" },
   { id: "mapping", label: "Field Mapping" },
   { id: "logs", label: "Synchronization Logs" },
+  { id: "cleanup", label: "Cleanup" },
 ];
 
 export default function IntegrationContent() {
@@ -312,6 +314,7 @@ export default function IntegrationContent() {
         <div className="p-4">
           {tab === "staging" && <StagingWorkspace d={d} />}
           {tab === "mapping" && <FieldMappingPanel />}
+          {tab === "cleanup" && <CleanupPanel onRemoved={d.loadBatches} />}
           {tab === "logs" && (
             <div>
               {d.selectedBatch ? (
