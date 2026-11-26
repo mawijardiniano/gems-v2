@@ -9,6 +9,7 @@ export const RECORD_STATUS_STYLES = {
   duplicate: "bg-yellow-100 text-warning",
   migrated: "bg-emerald-100 text-success",
   failed: "bg-red-100 text-danger",
+  undone: "bg-muted text-fg-4",
 };
 
 export const BATCH_STATUS_STYLES = {

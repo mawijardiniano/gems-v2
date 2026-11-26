@@ -9,6 +9,7 @@ import RecordDetailPanel from "./RecordDetailPanel";
 import SyncLogsPanel from "./SyncLogsPanel";
 import BatchActionBar from "./BatchActionBar";
 import { canEditRecord } from "./recordEdit";
+import UndoImport from "./UndoImport";
 import { fieldLabel } from "@/app/api/integration/_utils/fieldLabels";
 
 /* Problems that concern the whole file rather than one row: columns that
@@ -120,6 +121,14 @@ export default function StagingWorkspace({ d }) {
   ).length;
   /* Rows whose migration failed: Validate re-checks them for a retry. */
   const failedCount = d.records.filter((r) => r.status === "failed").length;
+  /* A finished import with imported rows can be undone (Admins only;
+     the server refuses others). */
+  const canUndo =
+    ["completed", "failed"].includes(batch?.status) &&
+    ((batch?.totals?.migrated_created || 0) +
+      (batch?.totals?.migrated_updated || 0) >
+      0 ||
+      d.records.some((r) => r.status === "migrated"));
 
   return (
     <div className="space-y-4">
@@ -227,6 +236,23 @@ export default function StagingWorkspace({ d }) {
                 }))
               }
             />
+            {canUndo && (
+              <UndoImport
+                batch={batch}
+                busy={d.busyAction !== ""}
+                onUndo={() =>
+                  d.runAction("Undo Import", () => ({
+                    url: `/api/integration/batches/${batch._id}/undo`,
+                    options: {
+                      method: "POST",
+                      credentials: "include",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ confirm: true }),
+                    },
+                  }))
+                }
+              />
+            )}
           </div>
           <BatchFileNotes batch={batch} />
           <div className="flex items-center gap-2">
@@ -251,6 +277,7 @@ export default function StagingWorkspace({ d }) {
               <option value="duplicate">duplicate</option>
               <option value="migrated">migrated</option>
               <option value="failed">failed</option>
+              <option value="undone">undone</option>
             </select>
           </div>
 

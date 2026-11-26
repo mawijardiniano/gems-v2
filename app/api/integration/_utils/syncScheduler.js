@@ -11,6 +11,7 @@ import {
   runHrmisSync,
 } from "@/app/api/integration/_utils/hrmisSync";
 import { runCleanupIfDue } from "@/app/api/integration/_utils/batchCleanup";
+import { logActivity } from "@/data/lib/activityLog";
 
 const CHECK_EVERY_MS = 60 * 1000;
 const FIRST_CHECK_MS = 30 * 1000;
@@ -63,6 +64,7 @@ export async function runScheduledSyncIfDue(now = new Date()) {
     },
     scheduled: true,
   });
+  if (result.audit) await logActivity(result.audit);
   return { ran: true, result };
 }
 

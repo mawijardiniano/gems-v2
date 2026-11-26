@@ -132,9 +132,11 @@ export async function POST(req) {
     const result = await removeStaleBatches({
       afterDays: settings.after_days,
       actor: actorOf(auth),
-      req,
       trigger: "manual",
     });
+    /* Batches deleted without anyone pressing Delete on each: the entry
+       names every one (their own sync logs are gone with them). */
+    if (result.audit) await logActivity({ ...result.audit, req });
     return NextResponse.json({
       status: "success",
       data: {

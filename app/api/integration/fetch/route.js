@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { runHrmisSync } from "@/app/api/integration/_utils/hrmisSync";
+import { logActivity } from "@/data/lib/activityLog";
 
 /* Sync Now: fetch the configured HRMIS endpoint and stage the rows. The
    work (and its audit trail) is in runHrmisSync, shared with the daily
@@ -28,11 +29,16 @@ export async function POST(req) {
         role: auth.user.role,
         auth_method: "session",
       },
-      req,
       sourceName: body.source_name || "HRMIS API",
       schoolYear: body.school_year || "",
       semester: body.semester || "",
     });
+
+    /* A fetch pulls an external system's view of staff and students into a
+       batch nobody has approved yet, at a time of the operator's choosing;
+       a failed one is how a misconfigured or sabotaged sync is noticed.
+       Both are recorded (endpoint host only, never the credentials). */
+    if (result.audit) await logActivity({ ...result.audit, req });
 
     if (result.error) {
       return NextResponse.json(

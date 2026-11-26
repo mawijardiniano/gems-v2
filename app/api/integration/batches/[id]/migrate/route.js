@@ -407,6 +407,8 @@ async function migrateApproved({ batch, approved, auth, req, trackProgress }) {
         profile_id: profile._id,
         profile_term_id: term._id,
         matched_on: matchedOn,
+        term_created: !existingTerm,
+        account_created: account.action === "created",
         changes: profileChanges,
         message:
           profileAction === "created"
@@ -636,6 +638,24 @@ export async function POST(req, { params }) {
       }
     }
     if (scheduled) {
+      /* The result entry (IMPORT_BATCH_MIGRATE) is written when the run
+         ends, after this response; this one records who started it. */
+      await logActivity({
+        req,
+        actor: {
+          user_id: auth.user._id,
+          username: auth.user.username,
+          role: auth.user.role,
+          auth_method: "session",
+        },
+        action: "IMPORT_BATCH_MIGRATE_START",
+        description: `Started migrating ${approved.length} row(s) of import batch ${batch.source_name || batch._id} in the background`,
+        severity: "warning",
+        resource_type: "import_batch",
+        resource_id: batch._id,
+        module: "integration",
+        metadata: { approved: approved.length },
+      });
       return NextResponse.json(
         {
           status: "success",
