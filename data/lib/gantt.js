@@ -175,6 +175,79 @@ export const mergeMilestones = (generated, previous) => {
   return { milestones: [...milestones, ...custom], removed };
 };
 
+const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
+
+const hasProgress = (m) =>
+  (m.status && m.status !== "pending") ||
+  Boolean(m.actual_date) ||
+  (Array.isArray(m.proofs) && m.proofs.length > 0);
+
+const progressOf = (m) => ({
+  actual_date: m ? toInputDate(m.actual_date) : "",
+  status: m && MILESTONE_STATUSES.includes(m.status) ? m.status : "pending",
+  proofs: (m && Array.isArray(m.proofs) ? m.proofs : []).filter(
+    (file) => file && (file.url || file.key),
+  ),
+});
+
+/**
+ * Builds the single activity+milestone table: one row per activity, carrying
+ * the progress (actual date, status, proofs) of its saved milestone. A
+ * milestone belongs to an activity by source activity, by the same title, or
+ * by the old generated "<Activity> Completed" title; when several match, the
+ * one with progress wins. Milestones left over are kept as their own rows when
+ * they are custom (no source activity) or carry progress, so no proof or status
+ * is lost; leftover generated rows without progress ("Project Start-Up") drop.
+ */
+export const buildUnifiedRows = (activities, milestones) => {
+  const pool = (Array.isArray(milestones) ? milestones : []).filter(
+    (m) => m && String(m.title || "").trim(),
+  );
+  const used = new Set();
+
+  const rows = (Array.isArray(activities) ? activities : [])
+    .filter((a) => a && String(a.activity || "").trim())
+    .map((a) => {
+      const name = String(a.activity).trim();
+      const matches = pool.filter(
+        (m) =>
+          !used.has(m) &&
+          (m.source_activity === name ||
+            m.title === name ||
+            m.title === `${name} Completed`),
+      );
+      const match = matches.find(hasProgress) || matches[0];
+      matches.forEach((m) => used.add(m));
+      /* Other matches with progress stay visible as their own rows below. */
+      if (match) {
+        matches
+          .filter((m) => m !== match && hasProgress(m))
+          .forEach((m) => used.delete(m));
+      }
+      return {
+        activity: a.activity,
+        start_date: toInputDate(a.start_date),
+        end_date: toInputDate(a.end_date),
+        person_responsible: a.person_responsible || "",
+        ...progressOf(match),
+      };
+    });
+
+  pool
+    .filter((m) => !used.has(m) && (!m.source_activity || hasProgress(m)))
+    .forEach((m) => {
+      rows.push({
+        activity: String(m.title).trim(),
+        start_date: "",
+        end_date: toInputDate(m.target_date),
+        person_responsible: "",
+        ...progressOf(m),
+      });
+    });
+
+  return rows.slice(0, MAX_GANTT_ACTIVITIES);
+};
+
 /** True when `rows` no longer match what the Gantt would generate. */
 export const isMilestonesOutdated = (activities, rows) => {
   const generated = generateMilestonesFromGantt(activities);
