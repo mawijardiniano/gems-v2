@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { loadFieldMapping } from "@/app/api/integration/_utils/fieldMapping";
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
@@ -115,6 +116,7 @@ export async function POST(req) {
         sourceName,
         createdBy: auth.user._id,
         createdByUsername: auth.user.username,
+        customHeaders: await loadFieldMapping(),
         defaults: {
           school_year: defaultSchoolYear,
           semester: defaultSemester,

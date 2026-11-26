@@ -82,6 +82,7 @@ export const LONG_RETENTION_ACTIONS = [
   /* Authority and configuration — changes to the rules themselves. */
   "SETTINGS_UPDATE",
   "INTEGRATION_CONFIG_UPDATE",
+  "INTEGRATION_FIELD_MAPPING_UPDATE",
 
   /* Destructive acts on records and membership. */
   "PROFILE_BULK_DELETE",

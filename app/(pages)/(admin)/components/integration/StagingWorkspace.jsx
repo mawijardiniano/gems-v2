@@ -47,7 +47,9 @@ function BatchFileNotes({ batch }) {
       )}
       {unused.length > 0 && (
         <p className="text-fg-muted">
-          Columns not used: {unused.join(", ")}.
+          Columns not used: {unused.join(", ")}. If one holds a field, add
+          its name in the Field Mapping tab of the Data Integration page and
+          upload or sync again.
         </p>
       )}
     </div>

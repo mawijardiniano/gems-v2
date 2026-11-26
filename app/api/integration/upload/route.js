@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { loadFieldMapping } from "@/app/api/integration/_utils/fieldMapping";
 import csv from "csvtojson";
 import { connectDB } from "@/data/lib/db";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
@@ -100,6 +101,7 @@ export async function POST(req) {
         sourceFileKey: name,
         createdBy: auth.user._id,
         createdByUsername: auth.user.username,
+        customHeaders: await loadFieldMapping(),
         defaults: {
           school_year: defaultSchoolYear,
           semester: defaultSemester,
