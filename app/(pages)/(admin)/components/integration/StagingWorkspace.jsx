@@ -123,12 +123,16 @@ export default function StagingWorkspace({ d }) {
   const failedCount = d.records.filter((r) => r.status === "failed").length;
   /* A finished import with imported rows can be undone (Admins only;
      the server refuses others). */
+  /* Judged from the rows when all are listed (an undo leaves totals as
+     they were, so they would keep offering it); with a status filter on,
+     from the totals, unless the batch was already undone. */
   const canUndo =
     ["completed", "failed"].includes(batch?.status) &&
-    ((batch?.totals?.migrated_created || 0) +
-      (batch?.totals?.migrated_updated || 0) >
-      0 ||
-      d.records.some((r) => r.status === "migrated"));
+    (d.recordsFilter === ""
+      ? d.records.some((r) => r.status === "migrated")
+      : (batch?.totals?.migrated_created || 0) +
+          (batch?.totals?.migrated_updated || 0) >
+          0 && !batch?.undo?.at);
 
   return (
     <div className="space-y-4">
