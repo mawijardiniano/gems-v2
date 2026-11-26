@@ -155,8 +155,9 @@ export default function GanttUploadTab({ onApply }) {
       )}
 
       <p className="text-xs text-fg-muted">
-        The system reads the activities and timelines from the file. You can
-        review and edit them in the Encode tab, then generate milestones.
+        The system reads the activities and timelines from the file into the
+        table above. Progress already recorded on an activity with the same name
+        is kept.
       </p>
     </div>
   );
