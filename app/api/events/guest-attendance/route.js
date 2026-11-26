@@ -7,7 +7,7 @@ import { logActivity } from "@/data/lib/activityLog";
 import { cacheDelPrefix } from "@/data/lib/cache";
 import { optionalAuth } from "@/data/lib/auth";
 import { rateLimiters } from "@/data/lib/rateLimit";
-import { guestDedupeKey } from "@/data/lib/guestIdentity";
+import { guestDedupeKey, sameNameRows } from "@/data/lib/guestIdentity";
 import {
   STUDENT,
   EMPLOYEE,
@@ -71,6 +71,30 @@ const ALREADY_SUBMITTED = {
   already_submitted: true,
   validation_status: "pending",
 };
+
+/* The answer for a typed check-in whose person is already on the sheet under
+   an account. Nothing is written: an approved row is attendance already, a
+   pending one waits for the organizer, and a rejected one is the organizer's
+   call (resubmitting would overwrite the profile details with typed ones). */
+function alreadyOnSheet(row) {
+  const status = row?.validation_status || "approved";
+  if (status === "approved")
+    return NextResponse.json({
+      message: "You are already marked as attended for this event.",
+      already_attended: true,
+      validation_status: "approved",
+    });
+  if (status === "pending") return NextResponse.json(ALREADY_SUBMITTED);
+  return NextResponse.json(
+    {
+      message:
+        "Your check-in for this event was not approved. Please see the organizer.",
+      code: "CHECK_IN_REJECTED",
+      validation_status: "rejected",
+    },
+    { status: 409 },
+  );
+}
 
 /* The event, or the response to send when it is missing or its attendance
    window is not open. */
@@ -195,6 +219,17 @@ export async function POST(req) {
         { dedupe_key: null, full_name: name },
       ],
     }).collation(NAME_COLLATION);
+    if (!existing) {
+      /* Already on the sheet under an account (manual encode, or a check-in
+         by ID number / email) with this name and sex. The typed form's key
+         ("qr:<name>|<contact>|…") never matches an account row's
+         ("account:<id>"), so the guest used to get a second, pending row. */
+      const linked = await EventGuest.find({ event_id, user_id: { $ne: null } })
+        .select("full_name sex validation_status")
+        .lean();
+      const [onList] = sameNameRows(linked, details);
+      if (onList) return alreadyOnSheet(onList);
+    }
     return await saveCheckIn({ req, event_id, details, existing, submittedBy });
   } catch (err) {
     if (err?.code === 11000) {

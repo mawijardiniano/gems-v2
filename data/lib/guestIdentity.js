@@ -43,6 +43,27 @@ export function guestDedupeKey(row) {
 }
 
 /**
+ * Guest rows that look like the same person by name: the name matches once
+ * case and spacing are ignored, and the sex at birth agrees (a row or person
+ * without one is not ruled out). Used to stop one person landing on the sheet
+ * twice, once through the QR form and once by manual encode.
+ *
+ * @param {object[]} rows guest rows in the event
+ * @param {{ full_name?: string, sex?: string }} person
+ * @returns {object[]} the matching rows
+ */
+export function sameNameRows(rows, person) {
+  const name = normalizeName(person?.full_name);
+  if (!name) return [];
+  return (Array.isArray(rows) ? rows : []).filter(
+    (row) =>
+      row &&
+      normalizeName(row.full_name) === name &&
+      !(person?.sex && row.sex && row.sex !== person.sex),
+  );
+}
+
+/**
  * Whether a QR walk-in row can be taken over by the account an organizer is
  * manually encoding: only when it is plainly the same person. Exactly one
  * unlinked row may carry that name, and its sex at birth must agree; a second
