@@ -39,17 +39,19 @@ export default function GanttEncodeTab({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
-      <table className="w-full min-w-[1100px] text-left">
+      {/* Wide enough for the fixed columns plus a readable activity name;
+          narrower screens scroll sideways inside the card. */}
+      <table className="w-full min-w-[1400px] text-left">
         <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
           <tr>
             <th className="px-2.5 py-1.5 w-8">#</th>
-            <th className="px-2.5 py-1.5">Activity / Deliverable</th>
+            <th className="px-2.5 py-1.5 min-w-60">Activity / Deliverable</th>
             <th className="px-2.5 py-1.5 w-36">Start Date</th>
             <th className="px-2.5 py-1.5 w-36">End / Target Date</th>
             <th className="px-2.5 py-1.5 w-14">Days</th>
-            <th className="px-2.5 py-1.5 w-36">Person Responsible</th>
+            <th className="px-2.5 py-1.5 w-40 min-w-40">Person Responsible</th>
             <th className="px-2.5 py-1.5 w-36">Actual Date</th>
-            <th className="px-2.5 py-1.5 w-32">Status</th>
+            <th className="px-2.5 py-1.5 w-36 min-w-36">Status</th>
             <th className="px-2.5 py-1.5 w-44">Proof</th>
             <th className="px-2.5 py-1.5 w-24 text-right">Actions</th>
           </tr>
