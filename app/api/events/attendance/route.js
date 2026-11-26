@@ -8,6 +8,7 @@ import { cacheDelPrefix } from "@/data/lib/cache";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 import { isEventOrganizer } from "@/data/lib/eventAccess";
 import UserAuth from "@/models/user";
+import EventGuest from "@/models/eventGuest";
 
 /* How old an offline-queued scan may be when it is replayed. The scan time
    comes from the device, so this is also how far back a check-in can be
@@ -142,9 +143,37 @@ export async function POST(req) {
 
     const attendedAt = new Date(referenceTime);
 
+    /* People already on the guest sheet as approved (a manual encode, or an
+       approved check-in by ID / email). Pushing them into attended_users too
+       replied "Attendance recorded successfully" for someone already counted;
+       the table hid the second entry, so it looked like a duplicate save. */
+    const onSheet = await EventGuest.find({
+      event_id,
+      user_id: { $in: targetIds },
+      $or: [
+        { validation_status: "approved" },
+        { validation_status: { $exists: false } },
+        { validation_status: null },
+      ],
+    })
+      .select("user_id attended_at")
+      .lean();
+    const onSheetAt = new Map(
+      onSheet.map((g) => [String(g.user_id), g.attended_at]),
+    );
+
     const results = [];
     let anyAdded = false;
     for (const uid of targetIds) {
+      if (onSheetAt.has(uid)) {
+        results.push({
+          user_id: uid,
+          added: false,
+          already_attended: true,
+          attended_at: onSheetAt.get(uid),
+        });
+        continue;
+      }
       /* updateOne, not findOneAndUpdate with new:true: the whole event (and
          its full attendee list) was being returned and discarded per id. */
       const { modifiedCount } = await Event.updateOne(
@@ -162,7 +191,7 @@ export async function POST(req) {
 
     /* One read for everyone who was already on the list, instead of one
        full event load per already-attended id. */
-    const already = results.filter((r) => !r.added);
+    const already = results.filter((r) => !r.added && !r.already_attended);
     if (already.length) {
       const fresh = await Event.findById(event_id)
         .select("attended_users")

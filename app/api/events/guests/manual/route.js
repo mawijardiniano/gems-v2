@@ -23,7 +23,7 @@ import {
   positionOf,
   programYearSectionOf,
 } from "@/data/lib/attendeeLookup";
-import { guestDedupeKey, pickAdoptableWalkIn } from "@/data/lib/guestIdentity";
+import { sameNameRows } from "@/data/lib/guestIdentity";
 
 /* Organizers record a profile holder's attendance without a QR scan. The row
    is written straight to EventGuest as APPROVED so it lands in the same table,
@@ -38,96 +38,58 @@ const VALIDATION_NOTE = "Recorded manually by organizer";
 /* contactOf / programYearSectionOf / departmentOf / positionOf live in
    data/lib/attendeeLookup, shared with the public QR form's ID lookup. */
 
-/* Promotes an existing guest row to an approved manual record for `user_id`.
-   The organizer is recording this person right now, so the row must end up
-   approved whatever its previous status (a pending / rejected row left as-is
-   kept the person hidden from the attendance table). `extra` overrides
-   fields such as attended_at. */
-function approveGuestRow(rowId, { payload, user_id, organizerId, note, extra }) {
-  return EventGuest.findByIdAndUpdate(
-    rowId,
+/* How the existing row got onto the sheet, for the organizer's message. */
+function viaText(row) {
+  if (row?.source === "account-check-in") return " through the QR code (signed in)";
+  if (row?.source === "manual-encode") return " by manual encode";
+  return " through the QR code";
+}
+
+/* The answer when the person is already on the sheet. Manual encode used to
+   save over the existing row instead: it re-approved a pending or rejected QR
+   check-in (silently undoing the organizer's rejection), relabelled it as a
+   manual record and replied "Attendance recorded successfully", which read as
+   a second entry. Now nothing is written; a pending or rejected row is decided
+   with the Approve button on that row. */
+function alreadyOnList(name, row, code = "ALREADY_ON_LIST") {
+  const status = row?.validation_status || "approved";
+  const via = viaText(row);
+  const statusText =
+    status === "approved"
+      ? "approved"
+      : status === "pending"
+        ? "pending"
+        : "not approved";
+  const message =
+    code === "SAME_NAME_ON_LIST"
+      ? `A QR check-in named ${name} is already on the list (${statusText}). If that is a different person with the same name, choose "Record as a different person".`
+      : status === "approved"
+      ? `${name} is already on the attendance list${via}.`
+      : status === "pending"
+        ? `${name} already checked in${via} and is waiting for approval. Approve their row in the Pending tab instead.`
+        : `${name} already has a check-in${via} that was not approved. If they did attend, approve it in the Not approved tab.`;
+  return NextResponse.json(
     {
-      $set: {
-        ...payload,
-        user_id,
-        /* $set skips the model's save hook, so the identity is set here: the
-           row now belongs to this account. */
-        dedupe_key: guestDedupeKey({ user_id }),
-        source: "manual-encode",
-        validation_status: "approved",
-        validated_by: organizerId,
-        validated_at: new Date(),
-        validation_note: note,
-        ...(extra || {}),
-      },
+      message,
+      code,
+      already_attended: status === "approved",
+      guest_id: row?._id || null,
+      validation_status: status,
     },
-    { new: true },
+    { status: 409 },
   );
 }
 
-/* A QR walk-in the account being encoded may take over: only when exactly
-   one unlinked row in the event carries that name (compared case-
-   insensitively) and its sex at birth agrees. Taking over any same-name row
-   used to overwrite a different person's check-in — two "Maria Santos" at one
-   event became one record linked to the wrong account. */
-async function findAdoptableWalkIn(event_id, fullName, sex) {
-  if (!fullName) return null;
-  const rows = await EventGuest.find({ event_id, full_name: fullName })
-    .collation({ locale: "en", strength: 2 })
-    .limit(5);
-  return pickAdoptableWalkIn(rows, { sex });
-}
-
-/* A person who already scanned the QR lives only in Event.attended_users, which
-   the Attendance table never renders. When an organizer re-records them we copy
-   their profile into an approved EventGuest row so they finally appear in the
-   table, prints and reports. Returns null when the write is impossible, and
-   never throws: the QR check-in already counted them, so a failure here must not
-   turn a valid state into an error. */
-async function adoptCheckedInGuest({
-  event_id,
-  user_id,
-  payload,
-  fullName,
-  organizerId,
-  noteOverride,
-}) {
-  /* Returning an existing pending / rejected row untouched was the bug that
-     left the attendance table looking empty while Insights had already
-     counted the check-in in Event.attended_users. */
-  const note = noteOverride || VALIDATION_NOTE;
-  const approve = (doc) =>
-    approveGuestRow(doc._id, { payload, user_id, organizerId, note });
-
-  try {
-    const byAccount = await EventGuest.findOne({ event_id, user_id });
-    if (byAccount) return await approve(byAccount);
-    const walkIn = await findAdoptableWalkIn(event_id, fullName, payload.sex);
-    if (walkIn) return await approve(walkIn);
-    return await EventGuest.create({
-      ...payload,
-      user_id,
-      attended_at: new Date(),
-      source: "manual-encode",
-      validation_status: "approved",
-      validated_by: organizerId,
-      validated_at: new Date(),
-      validation_note: "Adopted from QR check-in by organizer",
-    });
-  } catch (err) {
-    /* A row already holds this account (the organizer recorded the same
-       person twice, or two requests raced). Promote it, so the caller can
-       report it as already attended *and* the row is visible in the table. */
-    if (err?.code === 11000) {
-      const byAccount = await EventGuest.findOne({ event_id, user_id });
-      if (byAccount) return await approve(byAccount);
-      const walkIn = await findAdoptableWalkIn(event_id, fullName, payload.sex);
-      if (walkIn) return await approve(walkIn);
-      return null;
-    }
-    console.error("adoptCheckedInGuest error:", err);
-    return null;
-  }
+/* QR walk-in rows (no account) that look like this person: same name with
+   case and spacing ignored, and a sex at birth that agrees. The old check
+   compared the exact name, so "Juan  Dela Cruz" or a different capital let a
+   second row through. */
+async function findSameNameWalkIns(event_id, fullName, sex) {
+  if (!fullName) return [];
+  const rows = await EventGuest.find({ event_id, user_id: null })
+    .select("full_name sex validation_status source")
+    .lean();
+  return sameNameRows(rows, { full_name: fullName, sex });
 }
 
 export async function POST(req) {
@@ -222,10 +184,9 @@ export async function POST(req) {
       contact: overlay(profile.contact, revealed?.contact),
     };
 
-    /* Identity fields may arrive in the body: when the picked person shares a
-       name with a QR walk-in, the API adopts that row and these values complete
-       it instead of leaving the row half-blank. The profile record stays the
-       source of truth for whatever it holds, and the body only fills its gaps. */
+    /* Identity fields may arrive in the body, looked up by the organizer's
+       client. The profile record stays the source of truth for whatever it
+       holds, and the body only fills its gaps. */
     const bodyFullName = String(body?.full_name || "").trim();
     const bodySex = String(body?.sex || "").trim();
     const bodyContact = String(body?.contact || "").trim();
@@ -290,125 +251,41 @@ export async function POST(req) {
       position_designation: positionOf(identity, participantType),
       program_year_section:
         participantType === STUDENT ? programYearSectionOf(identity) : "",
-      /* Set for an adopted / created row so the Attendance table can say where
-         the row came from and who signed it off. */
+      /* Set on the created row so the Attendance table can say where the row
+         came from and who signed it off. */
       validation_status: "approved",
       validated_by: user._id,
       validated_at: new Date(),
       validation_note: VALIDATION_NOTE,
     };
 
-    /* The person may already have checked in through the QR flow, which writes
-       Event.attended_users. Attendance counts that list plus approved guests,
-       so we must NOT add a second row here — but returning a bare "already
-       attended" leaves the organizer staring at a table with no such row,
-       because the table only renders EventGuest. Instead, adopt the check-in
-       into the guest sheet so the person becomes visible and printable, then
-       tell the caller it was already attended. */
+    const name = fullName || "This person";
+
+    /* Signed in and scanned the QR: Event.attended_users. The Attendance tab
+       already shows that check-in as a row (useEventAttendance), so a manual
+       record would be the same person twice. */
     const checkedInById = (event.attended_users || []).some(
       (entry) => String(entry?.user_id) === String(user_id),
     );
-    if (checkedInById) {
-      const adopted = await adoptCheckedInGuest({
-        event_id,
-        user_id,
-        payload,
-        fullName,
-        organizerId: user._id,
-        noteOverride: "Adopted from QR check-in by organizer",
+    if (checkedInById)
+      return alreadyOnList(name, {
+        source: "account-check-in",
+        validation_status: "approved",
       });
-      if (adopted) {
-        cacheDelPrefix("events:list:");
-        await logActivity({
-          req,
-          action: "EVENT_ATTENDANCE_MANUAL",
-          description:
-            "Organizer adopted an existing QR check-in into the attendance sheet",
-          resource_type: "event",
-          resource_id: event_id,
-          severity: "info",
-          metadata: {
-            guest_id: adopted._id,
-            user_id,
-            adopted_from: "qr-check-in",
-          },
-        });
-        return NextResponse.json({
-          message: "Already checked in — added to the attendance sheet",
-          already_attended: true,
-          source: "checked-in",
-          guest_id: adopted._id,
-          adopted: true,
-          validation_status: adopted.validation_status,
-        });
-      }
-      /* Adopting is best-effort: if the guest sheet can't take the row the
-         write still happened once (in attended_users), so report it plainly. */
-      return NextResponse.json({
-        message: "Already marked as attended",
-        already_attended: true,
-        source: "checked-in",
-      });
-    }
 
-    /* Profile holders are deduped by account; QR rows by name. An existing row
-       may still be pending / rejected from an earlier QR submission, so it is
-       promoted to approved here — otherwise the organizer records the person
-       and the attendance table (approved queue) keeps hiding them. */
-    const existing = await EventGuest.findOne({ event_id, user_id });
-    if (existing) {
-      const promoted = await approveGuestRow(existing._id, {
-        payload,
-        user_id,
-        organizerId: user._id,
-        note: VALIDATION_NOTE,
-      });
-      return NextResponse.json({
-        message: "Attendance recorded successfully",
-        already_attended: promoted.validation_status === "approved",
-        adopted: true,
-        guest_id: promoted._id,
-        validation_status: promoted.validation_status,
-        attended_at: promoted.attended_at,
-      });
-    }
+    /* A row already linked to this account: an earlier manual encode, or a QR
+       check-in by ID number / email. Any status counts. */
+    const existing = await EventGuest.findOne({ event_id, user_id })
+      .select("validation_status source")
+      .lean();
+    if (existing) return alreadyOnList(name, existing);
 
-    /* This person may already have checked in through the QR form as a
-       walk-in. When that row is unambiguously theirs, attach the account to it
-       and approve it instead of counting them twice; otherwise a new row is
-       recorded below and any same-name walk-in is left untouched. */
-    const nameRow = await findAdoptableWalkIn(event_id, fullName, sexAtBirth);
-    if (nameRow) {
-      /* The adopted row is still a manual record: it keeps the provenance the
-         table reads, not the QR row's original note. */
-      const promoted = await approveGuestRow(nameRow._id, {
-        payload,
-        user_id,
-        organizerId: user._id,
-        note: "Linked to a profile by organizer",
-        extra: { attended_at: nameRow.attended_at || new Date() },
-      });
-      if (promoted) {
-        cacheDelPrefix("events:list:");
-        await logActivity({
-          req,
-          action: "EVENT_ATTENDANCE_MANUAL",
-          description:
-            "Organizer linked a QR guest row to a profile and approved it",
-          resource_type: "event",
-          resource_id: event_id,
-          severity: "info",
-          metadata: { guest_id: promoted._id, user_id, linked_existing: true },
-        });
-        return NextResponse.json({
-          message: "Attendance recorded successfully",
-          already_attended: true,
-          adopted: true,
-          guest_id: promoted._id,
-          validation_status: "approved",
-          attended_at: promoted.attended_at,
-        });
-      }
+    /* A QR walk-in typed with this person's name. The organizer may confirm
+       it is a different person who shares the name (`confirm_different_person`),
+       the one case a same-name row is not this person. */
+    if (body?.confirm_different_person !== true) {
+      const [walkIn] = await findSameNameWalkIns(event_id, fullName, sexAtBirth);
+      if (walkIn) return alreadyOnList(name, walkIn, "SAME_NAME_ON_LIST");
     }
 
     let guest;
@@ -420,51 +297,12 @@ export async function POST(req) {
         source: "manual-encode",
       });
     } catch (err) {
-      /* The account already has a row (a concurrent request), or — before
-         scripts/migrate-guest-dedupe-key.mjs drops the old name index — a
-         same-name row blocks the insert. */
+      /* Two requests for the same account raced (unique event_id + user_id). */
       if (err?.code === 11000) {
-        const clash =
-          (await EventGuest.findOne({ event_id, user_id })) ||
-          (await findAdoptableWalkIn(event_id, fullName, sexAtBirth));
-        if (clash?.validation_status === "approved") {
-          return NextResponse.json({
-            message: "Already marked as attended",
-            already_attended: true,
-            adopted: true,
-            guest_id: clash._id,
-            validation_status: clash.validation_status,
-            attended_at: clash.attended_at,
-          });
-        }
-        const promoted = clash
-          ? await approveGuestRow(clash._id, {
-              payload,
-              user_id,
-              organizerId: user._id,
-              note: VALIDATION_NOTE,
-              extra: { attended_at: new Date() },
-            })
-          : null;
-        if (promoted) {
-          cacheDelPrefix("events:list:");
-          await logActivity({
-            req,
-            action: "EVENT_ATTENDANCE_MANUAL",
-            description: "Organizer manually approved an existing guest row",
-            resource_type: "event",
-            resource_id: event_id,
-            severity: "info",
-            metadata: { guest_id: promoted._id, user_id },
-          });
-          return NextResponse.json({
-            message: "Attendance recorded successfully",
-            adopted: true,
-            guest_id: promoted._id,
-            validation_status: "approved",
-            attended_at: promoted.attended_at,
-          });
-        }
+        const clash = await EventGuest.findOne({ event_id, user_id })
+          .select("validation_status source")
+          .lean();
+        if (clash) return alreadyOnList(name, clash);
       }
       throw err;
     }

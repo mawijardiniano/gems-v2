@@ -166,29 +166,47 @@ export default function ManualEncodeModal({
   const pickedSexMissing =
     Boolean(picked) && pickedSexAtBirth !== "Male" && pickedSexAtBirth !== "Female";
 
-  /* Belt and braces: if the person already sits in the table (any validation
-     status) the row is not sent again — the API would only re-approve it and
-     report "already recorded", which reads like a failure to the organizer even
-     though the person is already counted. The check is advisory: the request
-     still goes out when the loaded list is stale. */
-  /* Matched on the account only. A name match used to say "already counted"
-     for a *different* person who shares the name, so they were never sent;
-     same-name QR walk-ins are reconciled by the API, which links one only when
-     it is unambiguously this person. */
-  /* Approved rows only. A pending or rejected row is not counted, and the
-     API approves it when the organizer records the person, so those must be
-     sent; they used to be skipped with "already counted". */
-  const alreadyInSheet = (person, sheet = []) => {
+  /* A same-name warning belongs to the person it was raised for: picking
+     someone else clears it, so its button cannot record the wrong person. */
+  useEffect(() => {
+    setFeedback((f) => (f?.sameName ? null : f));
+  }, [picked]);
+
+  /* The row already holding this account in the loaded table, any status: a
+     guest row linked to the account, or a signed-in QR check-in (`checkin:`
+     rows carry the account id in their key). Matched on the account only;
+     same-name QR walk-ins are checked by the API, which can tell the
+     organizer and let them record a different person who shares the name.
+     Advisory: the API refuses the same cases when the loaded list is stale. */
+  const rowInSheet = (person, sheet = []) => {
     const id = String(person?._id || "");
-    if (!id) return false;
-    return (Array.isArray(sheet) ? sheet : []).some(
-      (g) =>
-        String(g?.user_id || "") === id &&
-        (!g?.validation_status || g.validation_status === "approved"),
+    if (!id) return null;
+    return (
+      (Array.isArray(sheet) ? sheet : []).find(
+        (g) =>
+          String(g?.user_id || "") === id || String(g?._id || "") === `checkin:${id}`,
+      ) || null
     );
   };
 
-  const handleEncode = async () => {
+  /* Why the person can't be recorded again, worded like the API's reply. */
+  const onListMessage = (name, row) => {
+    const status = row?.validation_status || "approved";
+    const via =
+      row?.source === "manual-encode"
+        ? " by manual encode"
+        : row?.source === "account-check-in"
+          ? " through the QR code (signed in)"
+          : " through the QR code";
+    if (status === "approved") return `${name} is already on the attendance list${via}.`;
+    if (status === "pending")
+      return `${name} already checked in${via} and is waiting for approval. Approve their row in the Pending tab instead.`;
+    return `${name} already has a check-in${via} that was not approved. If they did attend, approve it in the Not approved tab.`;
+  };
+
+  /* `differentPerson`: the organizer confirmed a same-name QR check-in is
+     somebody else, so the API records this person anyway. */
+  const handleEncode = async ({ differentPerson = false } = {}) => {
     if (!picked || !eventId) return;
     const person = picked;
     const name = fullNameOf(person) || "This person";
@@ -202,64 +220,52 @@ export default function ManualEncodeModal({
           "",
       ).trim(),
     };
+    /* Already on the sheet: nothing is sent. Saving used to go through and
+       the API re-approved the existing row, so a QR check-in the organizer had
+       rejected came back as approved and looked like a second entry. */
+    const listed = rowInSheet(person, existingGuests);
+    if (listed) {
+      setFeedback({ tone: "warn", message: onListMessage(name, listed) });
+      return;
+    }
     setSaving(true);
     setFeedback(null);
     try {
-      /* True when the sheet already holds this person, so we tell the organizer
-         they were already counted instead of leaving them guessing. */
-      const alreadyListed = alreadyInSheet(person, existingGuests);
-      /* The row already exists: no second write, but the table is refreshed and
-         the message states the person is counted either way. */
-      if (alreadyListed) {
-        setFeedback({
-          tone: "ok",
-          message: `Already in the attendance sheet — ${name} is already counted`,
-        });
-        setPicked(null);
-        setQuery("");
-        setResults([]);
-        onEncoded?.();
-        return;
-      }
-
       /* Writes an approved EventGuest row so the person appears in the
          attendance table, overview counters, prints and reports — the same
-         records QR check-ins use. Duplicates come back as already_attended.
-         Identity fields travel with the request: if a QR walk-in already holds
-         the name, the API adopts THAT row and uses them to complete it, so the
-         table never shows a half-blank entry. */
-      const res = await axios.post("/api/events/guests/manual", {
+         records QR check-ins use. Identity fields fill gaps in the profile. */
+      await axios.post("/api/events/guests/manual", {
         event_id: eventId,
         user_id: person._id,
         full_name: identity.full_name,
         sex: identity.sex,
         contact: identity.contact,
+        ...(differentPerson ? { confirm_different_person: true } : {}),
       });
-      const data = res.data || {};
-      /* approved / adopted / linked row that the caller must be told about. */
-      const wasWritten =
-        data.validation_status === "approved" || data.adopted === true;
-      const already = data.already_attended === true;
-      const adopted = data.adopted === true;
-      setFeedback({
-        tone: wasWritten ? "ok" : already ? "warn" : "ok",
-        message: adopted
-          ? `Already checked in — ${name} is now in the attendance sheet`
-          : already
-            ? `Already recorded — ${name}`
-            : `Recorded — ${name}`,
-      });
+      setFeedback({ tone: "ok", message: `Recorded — ${name}` });
       setPicked(null);
       setQuery("");
       setResults([]);
-      /* Any 2xx produced a visible row, so always refetch. The former guard
-         skipped this on a bare already_attended, which left the table stale. */
       onEncoded?.();
     } catch (err) {
-      setFeedback({
-        tone: "error",
-        message: err?.response?.data?.message || "Unable to record attendance.",
-      });
+      const data = err?.response?.data || {};
+      /* 409: already on the list (the loaded table was stale, or a same-name
+         QR walk-in). Nothing was written; the table is refreshed so the
+         existing row shows. The person stays picked for a same-name match so
+         the organizer can record them as a different person. */
+      if (err?.response?.status === 409) {
+        setFeedback({
+          tone: "warn",
+          message: data.message || `${name} is already on the attendance list.`,
+          sameName: data.code === "SAME_NAME_ON_LIST",
+        });
+        onEncoded?.();
+      } else {
+        setFeedback({
+          tone: "error",
+          message: data.message || "Unable to record attendance.",
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -494,7 +500,19 @@ export default function ManualEncodeModal({
               ) : (
                 <FiAlertCircle className="mt-0.5 shrink-0" size={13} />
               )}
-              <span>{feedback.message}</span>
+              <div className="flex flex-col items-start gap-2">
+                <span>{feedback.message}</span>
+                {feedback.sameName && picked && (
+                  <button
+                    type="button"
+                    onClick={() => handleEncode({ differentPerson: true })}
+                    disabled={saving}
+                    className="rounded-lg border border-secondary-300 bg-white px-2.5 py-1 font-semibold text-secondary-800 hover:bg-secondary-100 disabled:opacity-60"
+                  >
+                    Record as a different person
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -517,7 +535,7 @@ export default function ManualEncodeModal({
                 ? "This profile has no sex at birth on record."
                 : undefined
             }
-            onClick={handleEncode}
+            onClick={() => handleEncode()}
             variant="primary"
             className="!py-2 !px-4 !text-xs !rounded-lg"
           >
