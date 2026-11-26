@@ -22,4 +22,14 @@ export async function register() {
   /* Imported lazily so the Edge runtime never evaluates the module at all. */
   const { assertJwtSecret } = await import("@/data/lib/configGuards");
   assertJwtSecret();
+
+  /* Daily HRMIS sync, when an admin has turned it on in the integration
+     config. INTEGRATION_SCHEDULER=off keeps a process from running it (a
+     second instance, or a machine pointed at a copy of the database). */
+  if (process.env.INTEGRATION_SCHEDULER !== "off") {
+    const { startSyncScheduler } = await import(
+      "@/app/api/integration/_utils/syncScheduler"
+    );
+    startSyncScheduler();
+  }
 }

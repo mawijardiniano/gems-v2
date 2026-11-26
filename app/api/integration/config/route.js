@@ -5,6 +5,16 @@ import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import { logActivity } from "@/data/lib/activityLog";
 
 const CONFIG_KEY = "hrmis_integration";
+const DEFAULT_SCHEDULE_TIME = "06:00";
+
+function scheduleView(value) {
+  return {
+    schedule_enabled: Boolean(value.schedule_enabled),
+    schedule_time: value.schedule_time || DEFAULT_SCHEDULE_TIME,
+    schedule_set_by_username: value.schedule_set_by_username || "",
+    last_scheduled_run_on: value.last_scheduled_run_on || "",
+  };
+}
 const SENSITIVE_HEADER_KEYS = [
   "authorization",
   "x-api-key",
@@ -75,6 +85,7 @@ export async function GET(req) {
         last_sync_at: value.last_sync_at || null,
         last_sync_status: value.last_sync_status || null,
         last_sync_message: value.last_sync_message || "",
+        ...scheduleView(value),
       },
     });
   } catch (error) {
@@ -170,6 +181,25 @@ export async function PUT(req) {
       );
     }
 
+    /* Daily automatic sync. A key left out keeps the saved setting. */
+    const scheduleEnabled =
+      typeof body.schedule_enabled === "boolean"
+        ? body.schedule_enabled
+        : Boolean(previous.schedule_enabled);
+    const scheduleTime =
+      typeof body.schedule_time === "string"
+        ? body.schedule_time.trim()
+        : previous.schedule_time || DEFAULT_SCHEDULE_TIME;
+    if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(scheduleTime)) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Sync time must be a time of day like 06:00.",
+        },
+        { status: 400 },
+      );
+    }
+
     const mergedHeaders = { ...previous.headers, ...headers };
     for (const [key, value] of Object.entries(headers)) {
       if (
@@ -189,6 +219,17 @@ export async function PUT(req) {
       last_sync_at: previous.last_sync_at || null,
       last_sync_status: previous.last_sync_status || null,
       last_sync_message: previous.last_sync_message || "",
+      schedule_enabled: scheduleEnabled,
+      schedule_time: scheduleTime,
+      /* Scheduled batches are staged in the name of whoever last saved the
+         config with the schedule on. */
+      schedule_set_by: scheduleEnabled
+        ? auth.user._id
+        : previous.schedule_set_by || null,
+      schedule_set_by_username: scheduleEnabled
+        ? auth.user.username
+        : previous.schedule_set_by_username || "",
+      last_scheduled_run_on: previous.last_scheduled_run_on || "",
       updated_by: auth.user._id,
       updated_by_username: auth.user.username,
       updated_at: new Date(),
@@ -225,6 +266,8 @@ export async function PUT(req) {
         header_keys: Object.keys(value.headers || {}),
         school_year: value.school_year || null,
         semester: value.semester || null,
+        schedule_enabled: value.schedule_enabled,
+        schedule_time: value.schedule_time,
       },
     });
 
@@ -237,6 +280,7 @@ export async function PUT(req) {
         semester: value.semester,
         last_sync_at: value.last_sync_at,
         last_sync_status: value.last_sync_status,
+        ...scheduleView(value),
       },
     });
   } catch (error) {
