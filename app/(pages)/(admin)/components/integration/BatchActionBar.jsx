@@ -4,6 +4,8 @@ import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 
+const STALE_MIGRATION_MS = 10 * 60 * 1000;
+
 export default function BatchActionBar({
   batch,
   busyAction,
@@ -21,10 +23,20 @@ export default function BatchActionBar({
   const busy = busyAction !== "";
 
   const finished = ["migrating", "completed"].includes(batch?.status);
-  const canValidate = !busy && !finished;
+  /* A background migration with no progress for 10 minutes has stopped
+     (server restart); Validate puts the batch back to ready. Same limit as
+     the validate route. */
+  const progress = batch?.progress;
+  const stalled =
+    batch?.status === "migrating" &&
+    Date.now() -
+      new Date(progress?.updated_at || batch?.updatedAt || 0).getTime() >
+      STALE_MIGRATION_MS;
+  const canValidate = !busy && (!finished || stalled);
   const hasSelection = selectedIds.size > 0;
   const canReview = !busy && !finished && (hasSelection || validCount > 0);
-  const canMigrate = !busy && approvedCount > 0;
+  const canMigrate =
+    !busy && approvedCount > 0 && batch?.status !== "migrating";
 
   const existingCount = batch?.totals?.existing ?? 0;
   const predictedUpdateCount = Math.min(existingCount, approvedCount);
@@ -75,6 +87,19 @@ export default function BatchActionBar({
             : `Migrate Approved (${approvedCount})`}
         </Button>
       </div>
+      {batch?.status === "migrating" && progress?.total > 0 && !stalled && (
+        <p className="text-xs text-secondary-700" role="status">
+          Migrating on the server: {progress.done ?? 0} of {progress.total}{" "}
+          rows done. This updates every few seconds.
+        </p>
+      )}
+      {stalled && (
+        <p className="text-xs text-danger">
+          This migration stopped making progress (the server may have
+          restarted). Press Validate to put the batch back to ready, then
+          migrate again; rows already imported are not imported twice.
+        </p>
+      )}
       {needsReviewCount > 0 && !finished && (
         <p className="text-xs text-warning">
           {needsReviewCount} row(s) matched an existing person on name +

@@ -23,6 +23,11 @@ import {
 import { writeSyncLog } from "@/app/api/integration/_utils/logger";
 import { logActivity } from "@/data/lib/activityLog";
 
+/* Rows saved per bulk write. */
+const SAVE_CHUNK = 500;
+/* A migrating batch with no progress for this long has stopped. */
+const STALE_MIGRATION_MS = 10 * 60 * 1000;
+
 export async function POST(req, { params }) {
   try {
     await connectDB();
@@ -47,7 +52,19 @@ export async function POST(req, { params }) {
     /* A batch being migrated, or already migrated, must not be re-checked:
        validation rewrites record statuses and would put migrated rows back
        in the approve queue. */
-    if (["migrating", "completed"].includes(batch.status)) {
+    /* Except a migration that stopped (server restart during a background
+       run): no progress for STALE_MIGRATION_MS. Validating it puts the
+       batch back to ready; rows already migrated keep that status. */
+    const lastProgress = new Date(
+      batch.progress?.updated_at || batch.updatedAt || 0,
+    ).getTime();
+    const staleMigration =
+      batch.status === "migrating" &&
+      Date.now() - lastProgress > STALE_MIGRATION_MS;
+    if (
+      (batch.status === "migrating" && !staleMigration) ||
+      batch.status === "completed"
+    ) {
       return NextResponse.json(
         {
           status: "error",
@@ -302,7 +319,6 @@ export async function POST(req, { params }) {
       record.validation_errors = errors;
       const blocking = errors.some((e) => e.level !== "warning");
       record.status = blocking ? "invalid" : "valid";
-      await record.save();
 
       if (blocking) invalid += 1;
       else valid += 1;
@@ -320,16 +336,13 @@ export async function POST(req, { params }) {
           });
       }
 
-      await writeSyncLog({
-        batchId: batch._id,
-        stagingRecordId: record._id,
-        level: blocking ? "warn" : "info",
-        action: "validate",
-        message: blocking ? "Row checked — has problems" : "Row checked — OK",
-        details: { errors },
-        executedBy: auth.user._id,
-        executedByUsername: auth.user.username,
-      });
+    }
+
+    /* One bulk write per SAVE_CHUNK rows instead of a save per row. Each
+       row's errors are on the row itself, so the sync log gets one summary
+       line for the run, not one line per row. */
+    for (let i = 0; i < records.length; i += SAVE_CHUNK) {
+      await StagingRecord.bulkSave(records.slice(i, i + SAVE_CHUNK));
     }
 
     const totalsBefore = {
@@ -356,6 +369,26 @@ export async function POST(req, { params }) {
           : e,
       );
     await batch.save();
+
+    await writeSyncLog({
+      batchId: batch._id,
+      level: invalid > 0 ? "warn" : "info",
+      action: "validate",
+      message: `Checked ${valid + invalid} row(s): ${valid} OK, ${invalid} with problems`,
+      details: {
+        valid,
+        invalid,
+        retried,
+        existing: existingCount,
+        common_errors: batch.error_summary.map((e) => ({
+          field: e.field,
+          message: e.message,
+          count: e.count,
+        })),
+      },
+      executedBy: auth.user._id,
+      executedByUsername: auth.user.username,
+    });
 
     /* Validation is the gate, not a read-only check: the result decides whether
        the batch becomes eligible for migration. The change is recorded because

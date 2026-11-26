@@ -10,6 +10,8 @@ async function readJson(res) {
   return data;
 }
 
+const POLL_MS = 3000;
+
 export default function useIntegrationData() {
   const [batches, setBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState("");
@@ -83,8 +85,23 @@ export default function useIntegrationData() {
     }
   }, [selectedBatchId]);
 
+  /* A large migration runs on the server after the request returns; poll
+     until no batch is migrating, so status and progress stay current. */
+  const anyMigrating = batches.some((b) => b.status === "migrating");
+  useEffect(() => {
+    if (!anyMigrating) return undefined;
+    const timer = setInterval(() => {
+      loadBatches();
+      if (selectedBatchId) loadBatchDetails(selectedBatchId, recordsFilter);
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  }, [anyMigrating, selectedBatchId, recordsFilter, loadBatches, loadBatchDetails]);
+
   function buildResultMessage(actionName, data) {
     if (!data) return null;
+    if (actionName === "Migrate Approved" && data.background) {
+      return `Migrating ${data.total ?? 0} row(s) on the server. You can leave this page; progress shows on the batch.`;
+    }
     if (["Fetch to Staging", "Sync Now", "Upload to Staging"].includes(actionName)) {
       const counts = `Imported ${data.fetched ?? 0} raw rows. ${data.staged ?? 0} staged. ${data.duplicates_flagged ?? 0} duplicates flagged.`;
       /* Column problems fail every row; say so now, not after Validate. */
