@@ -108,17 +108,18 @@ export async function POST(req) {
     }
     const { rows } = result;
 
-    const { batch, insertedCount, duplicateCount, sameAs } = await stageRows({
-      rows,
-      sourceType: "hrmis_api",
-      sourceName,
-      createdBy: auth.user._id,
-      createdByUsername: auth.user.username,
-      defaults: {
-        school_year: defaultSchoolYear,
-        semester: defaultSemester,
-      },
-    });
+    const { batch, insertedCount, duplicateCount, sameAs, headerReport } =
+      await stageRows({
+        rows,
+        sourceType: "hrmis_api",
+        sourceName,
+        createdBy: auth.user._id,
+        createdByUsername: auth.user.username,
+        defaults: {
+          school_year: defaultSchoolYear,
+          semester: defaultSemester,
+        },
+      });
 
     if (storedConfig) {
       await SystemSetting.findOneAndUpdate(
@@ -187,6 +188,8 @@ export async function POST(req) {
           staged: insertedCount,
           duplicates_flagged: duplicateCount,
           same_as: sameAs,
+          header_problems: headerReport.problems,
+          unused_columns: headerReport.unrecognized,
         },
       },
       { status: 201 },

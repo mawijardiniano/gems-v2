@@ -7,21 +7,13 @@ import {
   safeHost,
 } from "@/app/api/integration/_utils/hrmisFetch";
 import { logActivity } from "@/data/lib/activityLog";
+import {
+  buildHeaderMap,
+  headerReport,
+} from "@/app/api/integration/_utils/headerMap";
 
 const CONFIG_KEY = "hrmis_integration";
 const TEST_TIMEOUT_MS = 15000;
-
-/* Column names the mapping reads for each field; used to tell the admin
-   which expected columns the feed is missing. Any one name per field is
-   enough. */
-const EXPECTED_COLUMNS = [
-  ["First name", ["first_name", "FirstName", "firstname", "firstName"]],
-  ["Last name", ["last_name", "LastName", "lastname", "lastName"]],
-  [
-    "Student No., Employee No. or Email",
-    ["student_id", "StudentID", "studentId", "StudentNo", "studentNo", "employee_id", "EmployeeID", "employeeId", "email", "Email"],
-  ],
-];
 
 /**
  * Calls the saved HRMIS endpoint and reports whether it answers with rows,
@@ -67,10 +59,10 @@ export async function POST(req) {
       first && typeof first === "object" && !Array.isArray(first)
         ? Object.keys(first)
         : [];
+    /* Same column matching as a real sync, so "missing" here means a sync
+       would fail those rows too. */
     const missing = result.rows?.length
-      ? EXPECTED_COLUMNS.filter(
-          ([, names]) => !names.some((n) => columns.includes(n)),
-        ).map(([label]) => label)
+      ? headerReport(columns, buildHeaderMap(columns)).missing
       : [];
 
     await logActivity({

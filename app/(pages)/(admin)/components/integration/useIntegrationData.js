@@ -86,7 +86,12 @@ export default function useIntegrationData() {
   function buildResultMessage(actionName, data) {
     if (!data) return null;
     if (["Fetch to Staging", "Sync Now", "Upload to Staging"].includes(actionName)) {
-      const base = `Imported ${data.fetched ?? 0} raw rows. ${data.staged ?? 0} staged. ${data.duplicates_flagged ?? 0} duplicates flagged.`;
+      const counts = `Imported ${data.fetched ?? 0} raw rows. ${data.staged ?? 0} staged. ${data.duplicates_flagged ?? 0} duplicates flagged.`;
+      /* Column problems fail every row; say so now, not after Validate. */
+      const problems = data.header_problems || [];
+      const base = problems.length
+        ? `${counts} Check the file: ${problems.join(" ")}`
+        : counts;
       const same = data.same_as;
       if (!same) return base;
       const when = same.created_at

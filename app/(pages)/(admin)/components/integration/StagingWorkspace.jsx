@@ -9,6 +9,50 @@ import RecordDetailPanel from "./RecordDetailPanel";
 import SyncLogsPanel from "./SyncLogsPanel";
 import BatchActionBar from "./BatchActionBar";
 import { canEditRecord } from "./recordEdit";
+import { fieldLabel } from "@/app/api/integration/_utils/fieldLabels";
+
+/* Problems that concern the whole file rather than one row: columns that
+   are missing or unused, and validation errors shared by many rows. */
+function BatchFileNotes({ batch }) {
+  const report = batch.header_report || {};
+  const problems = report.problems || [];
+  const unused = report.unrecognized || [];
+  const summary = (batch.error_summary || []).filter((e) => e.count > 1);
+  if (!problems.length && !unused.length && !summary.length) return null;
+
+  return (
+    <div className="space-y-2 text-xs">
+      {problems.length > 0 && (
+        <div className="bg-danger-subtle border border-danger-border rounded p-2 text-danger">
+          <div className="font-semibold mb-1">Problems with the file:</div>
+          {problems.map((p) => (
+            <div key={p}>• {p}</div>
+          ))}
+          {report.columns?.length > 0 && (
+            <div className="mt-1 text-fg-3">
+              Columns in the file: {report.columns.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
+      {summary.length > 0 && (
+        <div className="bg-warning-subtle border border-warning-border rounded p-2 text-warning">
+          <div className="font-semibold mb-1">Most common problems:</div>
+          {summary.map((e) => (
+            <div key={`${e.field}|${e.code}`}>
+              • {e.count} row(s) — {fieldLabel(e.field)}: {e.message}
+            </div>
+          ))}
+        </div>
+      )}
+      {unused.length > 0 && (
+        <p className="text-fg-muted">
+          Columns not used: {unused.join(", ")}.
+        </p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Shared staging/review workspace: batch table, delete confirmation, and the
@@ -182,6 +226,7 @@ export default function StagingWorkspace({ d }) {
               }
             />
           </div>
+          <BatchFileNotes batch={batch} />
           <div className="flex items-center gap-2">
             <label htmlFor="recordFilter" className="text-sm text-fg-3">
               Filter records:

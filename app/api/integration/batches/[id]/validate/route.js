@@ -211,6 +211,8 @@ export async function POST(req, { params }) {
     let valid = 0;
     let invalid = 0;
     let existingCount = 0;
+    /* field|code -> { field, code, message, count } over blocking errors. */
+    const errorCounts = new Map();
 
     for (const record of records) {
       if (record.status === "duplicate") continue;
@@ -304,6 +306,19 @@ export async function POST(req, { params }) {
 
       if (blocking) invalid += 1;
       else valid += 1;
+      for (const e of errors) {
+        if (e.level === "warning") continue;
+        const key = `${e.field}|${e.code}`;
+        const entry = errorCounts.get(key);
+        if (entry) entry.count += 1;
+        else
+          errorCounts.set(key, {
+            field: e.field,
+            code: e.code,
+            message: e.message,
+            count: 1,
+          });
+      }
 
       await writeSyncLog({
         batchId: batch._id,
@@ -329,6 +344,17 @@ export async function POST(req, { params }) {
     batch.totals.valid = valid;
     batch.totals.invalid = invalid;
     batch.totals.existing = existingCount;
+    /* One problem shared by many rows (a missing column, a wrong default)
+       is shown once on the batch instead of hundreds of times. The message
+       of duplicate_in_batch names one row's ID, so it is made generic. */
+    batch.error_summary = [...errorCounts.values()]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map((e) =>
+        e.code === "duplicate_in_batch"
+          ? { ...e, message: "The same ID appears more than once in this file." }
+          : e,
+      );
     await batch.save();
 
     /* Validation is the gate, not a read-only check: the result decides whether
