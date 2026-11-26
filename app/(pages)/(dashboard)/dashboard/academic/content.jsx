@@ -1,5 +1,7 @@
 "use client";
 
+import { saveErrorMessage, toastDuration } from "../../components/saveError";
+
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import {
@@ -145,7 +147,7 @@ export default function AcademicContent() {
 
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), toastDuration(type));
   };
 
   useEffect(() => {
@@ -207,7 +209,7 @@ export default function AcademicContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to save academic info");
+      if (!res.ok) throw new Error(await saveErrorMessage(res, "Failed to save academic info."));
       const data = await res.json();
       const updatedProfile = data.data || profile;
       const updatedAcademic = updatedProfile?.affiliation?.academic_information || formData;
@@ -230,7 +232,8 @@ export default function AcademicContent() {
       } catch (e) {}
     } catch (e) {
       console.error(e);
-      showToast("Failed to save academic info.", "failure");
+      /* The server's reason (e.g. which field it refused), not a generic line. */
+      showToast(e?.message || "Failed to save academic info.", "failure");
     } finally {
       setIsUpdating(false);
     }

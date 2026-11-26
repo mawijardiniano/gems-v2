@@ -14,6 +14,7 @@ import {
   PROFILE_WATCHER_ROLES,
 } from "@/data/lib/realtime";
 import { cacheDelPrefix } from "@/data/lib/cache";
+import { friendlyValidationError } from "@/app/api/integration/_utils/fieldLabels";
 import { deleteProfilesCascade } from "@/data/lib/profileDelete";
 import {
   isSelf,
@@ -141,8 +142,30 @@ export async function GET(req, { params }) {
   });
 }
 
+/* The parts of a profile a person edits from their portal. Anything else
+   in the body (gemsPublicId, vaultRef, profileSearchIndex, created_by, …)
+   is dropped: profile.set(body) used to write whatever was sent. */
+const EDITABLE_SECTIONS = ["personal", "personal_information", "contact", "gadData"];
+const EDITABLE_AFFILIATION = ["academic_information", "employment_information"];
+
+function editableBody(body) {
+  const out = {};
+  for (const key of EDITABLE_SECTIONS) {
+    if (Object.prototype.hasOwnProperty.call(body || {}, key)) out[key] = body[key];
+  }
+  const aff = body?.affiliation;
+  if (aff && typeof aff === "object") {
+    const kept = {};
+    for (const key of EDITABLE_AFFILIATION) {
+      if (Object.prototype.hasOwnProperty.call(aff, key)) kept[key] = aff[key];
+    }
+    if (Object.keys(kept).length) out.affiliation = kept;
+  }
+  return out;
+}
+
 export async function PUT(req, { params }) {
-  const { error, status } = await requireAuth(req);
+  const { error, status, user } = await requireAuth(req);
   if (error) return NextResponse.json({ error }, { status });
 
   const { id } = await params;
@@ -153,9 +176,27 @@ export async function PUT(req, { params }) {
     );
   }
 
+  /* A person may edit only the profile linked to their own account (an
+     Admin may edit any). This used to accept any signed-in caller, so one
+     user could change another person's name, contact details or IDs. */
+  const ownsProfile =
+    user?.personal_info_id && String(user.personal_info_id) === String(id);
+  if (!ownsProfile && user?.role !== "Admin") {
+    return NextResponse.json(
+      { status: "error", message: "You can only edit your own profile." },
+      { status: 403 },
+    );
+  }
+
   await connectDB();
-  const body = await req.json();
-  console.log("body", body);
+  /* Never logged: the body is the person's personal data. */
+  const body = editableBody(await req.json().catch(() => ({})));
+  if (!Object.keys(body).length) {
+    return NextResponse.json(
+      { status: "error", message: "Nothing to save." },
+      { status: 400 },
+    );
+  }
 
   const profile = await Profile.findById(id);
   if (!profile) {
@@ -180,6 +221,24 @@ export async function PUT(req, { params }) {
         profile.personal_information = mergedPI;
       }
       delete body.personal_information;
+    }
+
+    /* The portal sends one affiliation section at a time ({ affiliation:
+       { employment_information } }). set() replaces a nested object
+       whole, which wiped person_type and the other section, and the
+       schema then refused the save ("Status is required"). Each section
+       is merged into what is stored instead. */
+    if (body.affiliation) {
+      const stored =
+        profile.affiliation?.toObject?.() ?? { ...(profile.affiliation || {}) };
+      const merged = { ...stored };
+      for (const [key, value] of Object.entries(body.affiliation)) {
+        merged[key] =
+          value && typeof value === "object" && !Array.isArray(value)
+            ? { ...(stored[key] || {}), ...value }
+            : value;
+      }
+      body.affiliation = merged;
     }
 
     profile.set(body);
@@ -260,10 +319,27 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json({ status: "success", data: updated });
   } catch (error) {
-    console.error("Validation failed:", error);
+    /* A value the schema refuses (an office not on the list, a bad date)
+       is the person's to fix, so it goes back as a readable message naming
+       the field. Anything else is ours: logged by name only, and the
+       person gets a generic message. */
+    const isInputError =
+      error?.name === "ValidationError" ||
+      error?.name === "CastError" ||
+      error?.code === 11000;
+    if (isInputError) {
+      return NextResponse.json(
+        { status: "error", message: friendlyValidationError(error) },
+        { status: 400 },
+      );
+    }
+    console.error("[profile] Save failed:", error?.name, error?.message);
     return NextResponse.json(
-      { status: "error", message: error.message },
-      { status: 400 },
+      {
+        status: "error",
+        message: "Your changes could not be saved. Please try again.",
+      },
+      { status: 500 },
     );
   }
 }

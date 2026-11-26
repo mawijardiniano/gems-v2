@@ -1,5 +1,7 @@
 "use client";
 
+import { saveErrorMessage, toastDuration } from "../../components/saveError";
+
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import {
@@ -85,7 +87,7 @@ export default function ContactInformationContent({ profile }) {
 
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), toastDuration(type));
   };
 
   useEffect(() => {
@@ -184,7 +186,7 @@ export default function ContactInformationContent({ profile }) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save contact info");
+      if (!res.ok) throw new Error(await saveErrorMessage(res, "Failed to save contact info."));
       const data = await res.json();
 
       const updated = data.data || currentProfile;
@@ -209,7 +211,8 @@ export default function ContactInformationContent({ profile }) {
       } catch (e) {}
     } catch (err) {
       console.error(err);
-      showToast("Failed to save contact info.", "failure");
+      /* The server's reason (e.g. which field it refused), not a generic line. */
+      showToast(err?.message || "Failed to save contact info.", "failure");
     } finally {
       setIsUpdating(false);
     }

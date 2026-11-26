@@ -1,5 +1,7 @@
 "use client";
 
+import { toastDuration } from "../../components/saveError";
+
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import {
@@ -125,7 +127,7 @@ export default function EmploymentContent() {
 
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), toastDuration(type));
   };
 
   useEffect(() => {
@@ -198,8 +200,9 @@ export default function EmploymentContent() {
         data = text;
       }
       if (!res.ok) {
-        console.error("Failed to save employment info:", res.status, data);
-        throw new Error("Failed to save employment info");
+        /* The server's reason (e.g. which field it refused), not a generic line. */
+        const reason = data && typeof data === "object" ? data.message || data.error : null;
+        throw new Error(reason || "Failed to save employment info.");
       }
 
       const updatedEmployment =
@@ -221,7 +224,7 @@ export default function EmploymentContent() {
       } catch (e) {}
     } catch (e) {
       console.error(e);
-      showToast("Failed to save employment info.", "failure");
+      showToast(e?.message || "Failed to save employment info.", "failure");
     } finally {
       setIsUpdating(false);
     }

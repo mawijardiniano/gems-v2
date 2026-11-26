@@ -1,5 +1,7 @@
 "use client";
 
+import { saveErrorMessage, toastDuration } from "../../components/saveError";
+
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
@@ -314,7 +316,7 @@ export default function PersonalInformationContent({ profile }) {
 
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
-    setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    setTimeout(() => setToast((t) => ({ ...t, visible: false })), toastDuration(type));
   };
 
   useEffect(() => {
@@ -477,7 +479,7 @@ export default function PersonalInformationContent({ profile }) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to update profile");
+      if (!res.ok) throw new Error(await saveErrorMessage(res, "Failed to update personal info."));
       const data = await res.json();
       const updated = data.data || currentProfile;
       const updatedPersonal = updated.personal || formData;
@@ -513,7 +515,8 @@ export default function PersonalInformationContent({ profile }) {
       } catch (e) {}
     } catch (err) {
       console.error(err);
-      showToast("Failed to update personal info.", "failure");
+      /* The server's reason (e.g. which field it refused), not a generic line. */
+      showToast(err?.message || "Failed to update personal info.", "failure");
     } finally {
       setIsUpdating(false);
     }
