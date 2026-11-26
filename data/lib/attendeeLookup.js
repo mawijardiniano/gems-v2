@@ -1,7 +1,10 @@
 import GemsProfile from "@/models/profile";
 import UserAuth from "@/models/user";
 import { blindIndex } from "@/data/lib/identityVault";
-import { loadDecryptedPii } from "@/data/lib/profileBroker";
+import {
+  loadDecryptedPii,
+  loadDecryptedPiiBatch,
+} from "@/data/lib/profileBroker";
 import { appParts } from "@/data/lib/appTime";
 import { attendanceWindow } from "@/data/lib/eventStatus";
 
@@ -186,4 +189,64 @@ export function confirmPreview(details) {
         ? details.program_year_section
         : details.position_designation,
   };
+}
+
+/**
+ * Whether a name typed on the public QR form belongs to somebody who already
+ * checked in signed in (Event.attended_users). Those check-ins hold only an
+ * account id, so the typed form never saw them and the same person could add
+ * a second, pending row as a walk-in.
+ *
+ * Names are encrypted, so the match goes through the profile's blind index
+ * (identityVault.buildSearchIndex): every word of the typed name must be in
+ * the profile's index. "Juan Dela Cruz" therefore matches a profile whose
+ * last name is "Dela Cruz", and "Juan Delacruz" matches a profile with a
+ * middle name. Only the few profiles that pass are decrypted, to compare the
+ * sex at birth as the guest sheet does (guestIdentity.sameNameRows).
+ *
+ * @param {Array<{ user_id: unknown }>} attendedUsers Event.attended_users
+ * @param {{ full_name?: string, sex?: string }} person what the guest typed
+ * @returns {Promise<boolean>}
+ */
+export async function signedInUnderName(attendedUsers, person) {
+  const ids = (Array.isArray(attendedUsers) ? attendedUsers : [])
+    .map((entry) => entry?.user_id?._id ?? entry?.user_id)
+    .filter(Boolean);
+  if (!ids.length) return false;
+
+  const words = String(person?.full_name ?? "")
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  /* One word ("Juan") is too weak to call two people the same. */
+  if (words.length < 2) return false;
+  const digests = words.map((word) => blindIndex(word));
+  /* No vault key: the index cannot be computed, so nothing is blocked. */
+  if (digests.some((d) => !d)) return false;
+
+  const accounts = await UserAuth.find({ _id: { $in: ids } })
+    .select("personal_info_id")
+    .lean();
+  const profileIds = accounts.map((a) => a.personal_info_id).filter(Boolean);
+  if (!profileIds.length) return false;
+
+  const profiles = await GemsProfile.find({
+    _id: { $in: profileIds },
+    profileSearchIndex: { $all: digests },
+  })
+    .select("vaultRef")
+    .limit(10)
+    .lean();
+  if (!profiles.length) return false;
+  if (!person?.sex) return true;
+
+  const pii = await loadDecryptedPiiBatch(
+    profiles.map((p) => p.vaultRef),
+    { fields: ["sexAtBirth"] },
+  );
+  return profiles.some((p) => {
+    const sex = String(pii.get(String(p.vaultRef))?.sexAtBirth || "").trim();
+    return !sex || sex === person.sex;
+  });
 }
