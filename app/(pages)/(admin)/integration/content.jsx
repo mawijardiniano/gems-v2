@@ -24,6 +24,8 @@ export default function IntegrationContent() {
   const [authHeader, setAuthHeader] = useState("");
   const [cfgSchoolYear, setCfgSchoolYear] = useState("");
   const [cfgSemester, setCfgSemester] = useState("");
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState("06:00");
   const [savingConfig, setSavingConfig] = useState(false);
 
   async function loadConfig() {
@@ -37,6 +39,8 @@ export default function IntegrationContent() {
         setEndpoint(data.data.endpoint || "");
         setCfgSchoolYear(data.data.school_year || "");
         setCfgSemester(data.data.semester || "");
+        setScheduleEnabled(Boolean(data.data.schedule_enabled));
+        setScheduleTime(data.data.schedule_time || "06:00");
         const authz = Object.entries(data.data.headers || {}).find(
           ([key]) => key.toLowerCase() === "authorization",
         );
@@ -65,6 +69,8 @@ export default function IntegrationContent() {
           headers: authHeader ? { Authorization: authHeader } : {},
           school_year: cfgSchoolYear,
           semester: cfgSemester,
+          schedule_enabled: scheduleEnabled,
+          schedule_time: scheduleTime,
         }),
       });
       const data = await res.json();
@@ -226,6 +232,39 @@ export default function IntegrationContent() {
               <option value="Summer">Summer</option>
             </select>
           </div>
+          <fieldset className="sm:col-span-2 flex flex-wrap items-center gap-3 text-sm">
+            <legend className="sr-only">Automatic sync</legend>
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={scheduleEnabled}
+                onChange={(e) => setScheduleEnabled(e.target.checked)}
+              />
+              Sync automatically every day at
+            </label>
+            <label className="sr-only" htmlFor="scheduleTime">
+              Daily sync time
+            </label>
+            <input
+              id="scheduleTime"
+              type="time"
+              value={scheduleTime}
+              onChange={(e) => setScheduleTime(e.target.value)}
+              disabled={!scheduleEnabled}
+              required={scheduleEnabled}
+              className="border border-line-strong rounded px-2 py-1 text-sm disabled:opacity-50"
+            />
+            <span className="text-xs text-fg-muted">
+              Philippine time. The sync only stages a batch; it still needs
+              Validate, Approve and Migrate. An unchanged feed stages nothing.
+              {config?.schedule_enabled && config?.schedule_set_by_username
+                ? ` Batches are staged in the name of ${config.schedule_set_by_username}.`
+                : ""}
+              {config?.last_scheduled_run_on
+                ? ` Last automatic run: ${config.last_scheduled_run_on}.`
+                : ""}
+            </span>
+          </fieldset>
           <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
             <button
               type="submit"

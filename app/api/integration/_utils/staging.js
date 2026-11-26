@@ -29,6 +29,8 @@ export async function stageRows({
   defaults = {},
   /* { "Source column": "field_key" } saved in the field mapping. */
   customHeaders = {},
+  /* Stage nothing when an earlier batch has exactly these rows. */
+  skipUnchanged = false,
 }) {
   const docs = [];
   const firstDocIndexByKey = new Map();
@@ -89,6 +91,19 @@ export async function stageRows({
         created_at: previous.createdAt,
       }
     : null;
+
+  /* A scheduled sync of a feed that has not changed stages nothing, so an
+     unchanged HRMIS feed does not pile up a new batch every day. */
+  if (skipUnchanged && sameAs) {
+    return {
+      batch: null,
+      insertedCount: 0,
+      duplicateCount: 0,
+      sameAs,
+      headerReport: report,
+      skipped: true,
+    };
+  }
 
   const batch = await ImportBatch.create({
     source_type: sourceType,
