@@ -25,7 +25,6 @@ export default async function DashboardPage() {
   }
 
   const data = await res.json();
-  console.log("userIdsss", data);
 
   return (
     <UserDashboardPageContent profile={data.data} userId={data.user._id} />

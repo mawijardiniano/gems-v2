@@ -59,12 +59,9 @@ function EventCard({ event, onClick }) {
     event?.poster?.url ||
     "";
 
-  const isPast = (() => {
-    const end = eventSpan(event).end;
-    return end !== null && end < Date.now();
-  })();
-
-  const isCancelled = effectiveStatus(event) === "cancelled";
+  const phase = effectiveStatus(event);
+  const isPast = phase === "completed";
+  const isCancelled = phase === "cancelled";
 
   return (
     <div
@@ -200,8 +197,7 @@ export default function DiscoverContent() {
     /* "Upcoming events": finished ones used to be listed too, oldest first,
        pushing what is actually coming up to the bottom. */
     let filtered = (allEvents || []).filter(
-      (evt) =>
-        evt.status !== "cancelled" && effectiveStatus(evt) !== "completed",
+      (evt) => !["cancelled", "completed"].includes(effectiveStatus(evt)),
     );
 
     // Type filter

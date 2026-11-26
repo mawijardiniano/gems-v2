@@ -59,6 +59,17 @@ function Toast({ message, type, visible }) {
   );
 }
 
+/* PH mobile numbers: 09XXXXXXXXX or +639XXXXXXXXX, after removing spaces
+   and dashes. */
+const PH_MOBILE = /^(09\d{9}|\+639\d{9})$/;
+const normalizeMobile = (value) => String(value || "").replace(/[\s-]/g, "");
+
+const ADDRESS_PARTS = ["region", "province", "city", "barangay"];
+/* Both addresses filled in and pointing at the same places. */
+const sameAddress = (a, b) =>
+  Boolean(a?.region?.code) &&
+  ADDRESS_PARTS.every((part) => (a?.[part]?.code || "") === (b?.[part]?.code || ""));
+
 export default function ContactInformationContent({ profile }) {
   const [currentProfile, setCurrentProfile] = useState(profile || null);
   const [formData, setFormData] = useState({
@@ -147,6 +158,11 @@ export default function ContactInformationContent({ profile }) {
       showToast("Email and mobile number are required.", "failure");
       return;
     }
+    const mobile = normalizeMobile(formData.mobileNumber);
+    if (!PH_MOBILE.test(mobile)) {
+      showToast("Enter the mobile number as 09XXXXXXXXX or +639XXXXXXXXX.", "failure");
+      return;
+    }
 
     try {
       const profileId = currentProfile?._id;
@@ -156,6 +172,7 @@ export default function ContactInformationContent({ profile }) {
       const payload = {
         contact: {
           ...formData,
+          mobileNumber: mobile,
           currentAddress: buildAddress(formData.currentAddress),
           permanentAddress: buildAddress(formData.permanentAddress),
         },
@@ -361,8 +378,14 @@ export default function ContactInformationContent({ profile }) {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-fg-4 uppercase tracking-wider mb-2">Mobile Number <span className="text-red-400">*</span></label>
+                  {/* type="tel", not "number": a number input dropped the
+                      leading 0 of 09XXXXXXXXX. */}
                   <input
-                    type="number"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    maxLength={16}
+                    placeholder="09XXXXXXXXX"
                     className="w-full rounded-lg border border-line bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:border-secondary-300 transition"
                     value={formData.mobileNumber}
                     onChange={(e) => handleChange("mobileNumber", e.target.value)}
@@ -406,9 +429,12 @@ export default function ContactInformationContent({ profile }) {
                   </div>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
+                  {/* Checked whenever the two addresses match, so it shows
+                      the saved state and unticks itself if either changes. */}
                   <input
                     type="checkbox"
                     className="w-4 h-4 rounded border-line-strong text-secondary-600 focus:ring-secondary-500"
+                    checked={sameAddress(formData.permanentAddress, formData.currentAddress)}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setFormData((prev) => ({
