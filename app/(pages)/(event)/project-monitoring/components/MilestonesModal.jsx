@@ -1,28 +1,18 @@
 "use client";
 
-import { appDateInput } from "@/data/lib/appTime";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   FaExclamationTriangle,
-  FaPaperclip,
   FaPlus,
   FaSpinner,
   FaTimes,
-  FaTrash,
 } from "react-icons/fa";
 import { useFileUploads } from "@/hooks/useFileUploads";
 import { readJson } from "@/data/lib/uploadClient";
 import { useDialog } from "@/hooks/useDialog";
 import Button from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/useConfirm";
-import {
-  MAX_GANTT_ACTIVITIES,
-  emptyActivity,
-  generateMilestonesFromGantt,
-  isMilestonesOutdated,
-  mergeMilestones,
-  toInputDate,
-} from "@/data/lib/gantt";
+import { MAX_GANTT_ACTIVITIES, buildUnifiedRows } from "@/data/lib/gantt";
 import GanttEncodeTab from "./GanttEncodeTab";
 import GanttUploadTab from "./GanttUploadTab";
 import GanttTimeline from "./GanttTimeline";
@@ -35,23 +25,6 @@ const CARD_TITLE_INLINE = "text-sm font-semibold text-fg-2";
 
 const MILESTONE_STATUSES = ["pending", "ongoing", "completed"];
 
-const MILESTONE_STATUS_META = {
-  pending: {
-    label: "Pending",
-    classes: "bg-subtle text-fg-3 border-line",
-  },
-  ongoing: {
-    label: "Ongoing",
-    classes: "bg-secondary-50 text-secondary-700 border-secondary-200",
-  },
-  completed: {
-    label: "Completed",
-    classes: "bg-success-subtle text-success border-success-border",
-  },
-};
-
-const MAX_MILESTONES = 50;
-
 /* Rows carry a client-only id: an upload resolves seconds later, by which time
    rows may have been added or removed, so it must find its row by id rather
    than by index. Stripped before saving. */
@@ -60,19 +33,28 @@ const nextRowId = () => `row-${(rowSeq += 1)}`;
 const withRowIds = (list) =>
   list.map((row) => (row._rid ? row : { ...row, _rid: nextRowId() }));
 
+/* One row is both a Gantt activity and its milestone. */
 const emptyRow = () => ({
   _rid: nextRowId(),
-  title: "",
-  target_date: "",
+  activity: "",
+  start_date: "",
+  end_date: "",
+  person_responsible: "",
   actual_date: "",
   status: "pending",
   proofs: [],
-  source_activity: "",
 });
 
-/* The Manila day of a stored date — the browser's local day showed the
-   previous day west of UTC+8, and saving unchanged moved it back a day. */
-const toDateInputValue = (value) => appDateInput(value);
+/* Rows as saved milestones — the shape buildUnifiedRows reads back. */
+const rowsAsMilestones = (list) =>
+  list.map((row) => ({
+    title: row.activity,
+    target_date: row.end_date,
+    actual_date: row.actual_date,
+    status: row.status,
+    proofs: row.proofs,
+    source_activity: row.activity,
+  }));
 
 export default function MilestonesModal({
   project,
@@ -90,34 +72,27 @@ export default function MilestonesModal({
   /* A row whose proofs are uploading, or null; isUploadingTarget(i) per row. */
   const uploadingRow = fileLifecycle.uploading;
 
-  const [rows, setRows] = useState(() => {
-    const existing = Array.isArray(project?.milestones)
-      ? project.milestones.filter((m) => m && String(m.title || "").trim())
-      : [];
+  /* One row per activity, carrying its milestone progress. Older projects
+     saved generated milestones ("Project Start-Up", "<Activity> Completed");
+     their progress is matched onto the activity rows. */
+  const [rows, setRows] = useState(() =>
+    withRowIds(
+      buildUnifiedRows(project?.gantt_activities, project?.milestones),
+    ),
+  );
 
-    if (existing.length === 0) return [emptyRow()];
-
-    return existing.map((m) => ({
-      _rid: nextRowId(),
-      title: m.title || "",
-      target_date: toDateInputValue(m.target_date),
-      actual_date: toDateInputValue(m.actual_date),
-      status: MILESTONE_STATUSES.includes(m.status) ? m.status : "pending",
-      proofs: (Array.isArray(m.proofs) ? m.proofs : []).filter(
-        (file) => file && (file.url || file.key),
-      ),
-      source_activity: m.source_activity || "",
-    }));
-  });
-  const [activities, setActivities] = useState(() =>
-    (Array.isArray(project?.gantt_activities) ? project.gantt_activities : [])
-      .filter((a) => a && a.activity)
-      .map((a) => ({
-        activity: a.activity,
-        start_date: toInputDate(a.start_date),
-        end_date: toInputDate(a.end_date),
-        person_responsible: a.person_responsible || "",
-      })),
+  /* The Gantt chart view and print read plain activities. */
+  const activities = useMemo(
+    () =>
+      rows
+        .filter((row) => row.activity.trim())
+        .map((row) => ({
+          activity: row.activity,
+          start_date: row.start_date,
+          end_date: row.end_date,
+          person_responsible: row.person_responsible,
+        })),
+    [rows],
   );
 
   const timelineYear = useMemo(() => {
@@ -128,56 +103,7 @@ export default function MilestonesModal({
     return Number(project?.year) || new Date().getFullYear();
   }, [project, activities]);
 
-  const milestonesOutdated = useMemo(
-    () => isMilestonesOutdated(activities, rows),
-    [activities, rows],
-  );
-
-  /* Replaces the milestone list with ones generated from the Gantt chart.
-     Proofs/status of milestones with the same title are kept. */
-  const regenerateMilestones = async () => {
-    const generated = generateMilestonesFromGantt(activities);
-    if (generated.length === 0) {
-      setError(
-        "Add at least one activity with a name, start date, and end date first.",
-      );
-      return;
-    }
-    setError("");
-    const { milestones: next, removed } = mergeMilestones(
-      generated,
-      rows.filter((r) => r.title || r.target_date),
-    );
-    const lostProgress = removed.filter(
-      (r) => r.status === "completed" || (r.proofs || []).length > 0,
-    );
-    if (
-      lostProgress.length > 0 &&
-      !(await confirm({
-        title: "Continue?",
-        message: (
-          <span className="whitespace-pre-line">
-            {`${lostProgress.length} milestone(s) with completed status or proofs no longer exist in the Gantt chart and will be removed:\n- ${lostProgress
-              .map((r) => r.title)
-              .join("\n- ")}`}
-          </span>
-        ),
-        confirmLabel: "Continue",
-        tone: "danger",
-      }))
-    ) {
-      return;
-    }
-    commitRows(() => withRowIds(next));
-  };
   const [editingActivity, setEditingActivity] = useState(null);
-
-  /* Appends a blank activity and opens it for editing. */
-  const addActivity = () => {
-    if (activities.length >= MAX_GANTT_ACTIVITIES) return;
-    setActivities([...activities, emptyActivity()]);
-    setEditingActivity(activities.length);
-  };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -220,9 +146,7 @@ export default function MilestonesModal({
   }, [project]);
 
   const stats = useMemo(() => {
-    const cleaned = rows.filter(
-      (row) => row.title || row.target_date || row.actual_date,
-    );
+    const cleaned = rows.filter((row) => row.activity.trim());
     const total = cleaned.length;
     const done = cleaned.filter((row) => row.status === "completed").length;
     return {
@@ -232,12 +156,28 @@ export default function MilestonesModal({
     };
   }, [rows]);
 
+  /* Appends a blank activity and opens it for editing. */
   const addRow = () => {
-    if (rows.length >= MAX_MILESTONES) {
-      setError(`You can add up to ${MAX_MILESTONES} milestones.`);
+    if (rows.length >= MAX_GANTT_ACTIVITIES) {
+      setError(`You can add up to ${MAX_GANTT_ACTIVITIES} activities.`);
       return;
     }
+    setEditingActivity(rows.length);
     setRows((prev) => [...prev, emptyRow()]);
+  };
+
+  /* An uploaded Gantt replaces the plan; progress follows each activity by
+     name, and rows with progress that are no longer in the file are kept. */
+  const applyUploadedGantt = (parsed) => {
+    setEditingActivity(null);
+    commitRows((prev) =>
+      withRowIds(
+        buildUnifiedRows(
+          parsed,
+          rowsAsMilestones(prev.filter((row) => row.activity.trim())),
+        ),
+      ),
+    );
   };
 
   const updateRow = (index, patch) =>
@@ -254,8 +194,25 @@ export default function MilestonesModal({
         .filter(Boolean),
     );
 
-  const removeRow = (index) => {
-    commitRows((prev) => prev.filter((_, i) => i !== index));
+  const removeRow = async (index) => {
+    const row = rowsRef.current[index];
+    if (!row) return;
+    const hasProgress =
+      row.status === "completed" || (row.proofs || []).length > 0;
+    if (
+      hasProgress &&
+      !(await confirm({
+        title: "Remove activity?",
+        message: `"${row.activity || "This activity"}" has a completed status or proof files. Removing it also removes its milestone progress.`,
+        confirmLabel: "Remove",
+        tone: "danger",
+      }))
+    ) {
+      return;
+    }
+    const rid = row._rid;
+    setEditingActivity(null);
+    commitRows((prev) => prev.filter((r) => r._rid !== rid));
   };
 
   const handleProofUpload = async (index, e) => {
@@ -325,28 +282,43 @@ export default function MilestonesModal({
       return;
     }
 
-    const cleaned = rows
-      .map((row) => ({
-        title: String(row.title || "").trim(),
-        target_date: row.target_date || null,
-        actual_date: row.actual_date || null,
-        status: MILESTONE_STATUSES.includes(row.status)
-          ? row.status
-          : "pending",
-        proofs: Array.isArray(row.proofs) ? row.proofs : [],
-        source_activity: row.source_activity || "",
-      }))
-      .filter((row) => row.title || row.target_date || row.actual_date);
+    /* Untouched blank rows are skipped; a row with dates or progress but no
+       name is an error. */
+    const filled = rows.filter(
+      (row) =>
+        row.activity.trim() ||
+        row.start_date ||
+        row.end_date ||
+        row.actual_date ||
+        (row.proofs || []).length > 0,
+    );
 
-    if (cleaned.some((row) => !row.title)) {
-      setError("Each milestone needs a title/activity.");
+    if (filled.some((row) => !row.activity.trim())) {
+      setError("Each activity needs a name.");
       return;
     }
 
-    if (cleaned.length > MAX_MILESTONES) {
-      setError(`You can add up to ${MAX_MILESTONES} milestones.`);
+    if (filled.length > MAX_GANTT_ACTIVITIES) {
+      setError(`You can add up to ${MAX_GANTT_ACTIVITIES} activities.`);
       return;
     }
+
+    const ganttActivities = filled.map((row) => ({
+      activity: row.activity.trim(),
+      start_date: row.start_date,
+      end_date: row.end_date,
+      person_responsible: row.person_responsible.trim(),
+    }));
+
+    /* Each activity is its own milestone; the end date is the target. */
+    const cleaned = filled.map((row) => ({
+      title: row.activity.trim(),
+      target_date: row.end_date || null,
+      actual_date: row.actual_date || null,
+      status: MILESTONE_STATUSES.includes(row.status) ? row.status : "pending",
+      proofs: Array.isArray(row.proofs) ? row.proofs : [],
+      source_activity: row.activity.trim(),
+    }));
 
     /* Completed milestones can never be saved without proof of completion. */
     const missingProof = cleaned.find(
@@ -368,7 +340,7 @@ export default function MilestonesModal({
         body: JSON.stringify({
           userId,
           milestones: cleaned,
-          gantt_activities: activities.filter((a) => a.activity.trim()),
+          gantt_activities: ganttActivities,
         }),
       });
 
@@ -382,7 +354,7 @@ export default function MilestonesModal({
         Array.isArray(data.data?.milestones) ? data.data.milestones : cleaned,
         Array.isArray(data.data?.gantt_activities)
           ? data.data.gantt_activities
-          : activities.filter((a) => a.activity.trim()),
+          : ganttActivities,
       );
       if (!inline) onClose?.();
     } catch (err) {
@@ -424,9 +396,9 @@ export default function MilestonesModal({
                 Project Gantt Chart &amp; Milestones
               </h3>
               <p className="text-xs text-fg-muted mt-0.5">
-                Encode or upload the Gantt chart; activities and timelines
-                generate the milestones. Completed milestones require at least
-                one proof file.
+                Encode or upload the Gantt chart. Each activity is a milestone;
+                its end date is the target date. Completed activities require at
+                least one proof file.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -478,51 +450,37 @@ export default function MilestonesModal({
             </div>
           )}
 
-          {milestonesOutdated && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-secondary-200 bg-secondary-50 px-3 py-2 text-xs text-secondary-800">
-              <span>The Gantt chart changed. Milestones are out of date.</span>
-              <button
-                type="button"
-                onClick={regenerateMilestones}
-                className="rounded-md border border-secondary-300 bg-white px-2.5 py-1 font-medium text-secondary-800 hover:bg-secondary-100"
-              >
-                Apply to Milestones
-              </button>
-            </div>
-          )}
-
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-            <section className={CARD}>
+            <section className={`${CARD} xl:col-span-2`}>
               <div className={CARD_HEADER}>
-                <h4 className={CARD_TITLE_INLINE}>Encode Gantt Chart</h4>
-                <div className="flex flex-wrap items-center gap-2">
-                  <PrintGantt
-                    project={{ ...project, gantt_activities: activities }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <button
-                    type="button"
-                    onClick={addActivity}
-                    disabled={activities.length >= MAX_GANTT_ACTIVITIES}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <FaPlus size={10} />
-                    Add Activity
-                  </button>
-                  <Button
-                    variant="secondary"
-                    onClick={regenerateMilestones}
-                    className="rounded-lg px-3 py-1.5 text-xs"
-                  >
-                    Generate Milestones
-                  </Button>
-                </div>
+                <h4 className={CARD_TITLE_INLINE}>
+                  Gantt Chart &amp; Milestones ({stats.total})
+                </h4>
+                <button
+                  type="button"
+                  onClick={addRow}
+                  disabled={rows.length >= MAX_GANTT_ACTIVITIES}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaPlus size={10} />
+                  Add Activity
+                </button>
               </div>
+              <p className="mb-2 text-xs text-fg-muted">
+                Each activity is a milestone; its end date is the target date.
+                Use Edit to change the plan. Status, actual date and proof can
+                be updated anytime.
+              </p>
               <GanttEncodeTab
-                activities={activities}
-                onChange={setActivities}
+                rows={rows}
                 editingIndex={editingActivity}
                 onEditingChange={setEditingActivity}
+                onUpdate={updateRow}
+                onRemove={removeRow}
+                onUploadProof={handleProofUpload}
+                onRemoveProof={removeProof}
+                isUploading={(i) => fileLifecycle.isUploadingTarget(i)}
+                uploadBusy={uploadingRow !== null}
               />
             </section>
 
@@ -539,244 +497,7 @@ export default function MilestonesModal({
 
             <section className={CARD}>
               <h4 className={CARD_TITLE}>Upload Gantt Chart</h4>
-              <GanttUploadTab
-                onApply={(parsed) => {
-                  setActivities(parsed);
-                }}
-              />
-            </section>
-
-            <section className={CARD}>
-              <div className={CARD_HEADER}>
-                <h4 className={CARD_TITLE_INLINE}>
-                  Generated Milestones ({rows.filter((r) => r.title).length})
-                </h4>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={regenerateMilestones}
-                    className="rounded-lg px-3 py-1.5 text-xs"
-                  >
-                    Regenerate
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={addRow}
-                    disabled={rows.length >= MAX_MILESTONES}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-3 py-1.5 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <FaPlus size={10} />
-                    Add Milestone
-                  </button>
-                </div>
-              </div>
-              <div>
-                <p className="mb-2 text-xs text-fg-muted">
-                  Milestones are generated from the Gantt activities. You may
-                  edit them as needed.
-                </p>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <label className="text-xs font-medium text-fg-muted">
-                    Milestones &amp; Activities
-                  </label>
-                  <span className="text-xs text-fg-muted">
-                    {rows.length}/{MAX_MILESTONES}
-                  </span>
-                </div>
-
-                <div className="overflow-x-auto rounded-lg border border-line">
-                  <table className="w-full text-left">
-                    <thead className="bg-subtle text-2xs uppercase tracking-wider text-fg-muted">
-                      <tr>
-                        <th className="px-2.5 py-1.5 font-semibold">
-                          Milestone / Activity
-                        </th>
-                        <th className="px-2.5 py-1.5 font-semibold w-40">
-                          Source Activity
-                        </th>
-                        <th className="px-2.5 py-1.5 font-semibold w-36">
-                          Target Date
-                        </th>
-                        <th className="px-2.5 py-1.5 font-semibold w-36">
-                          Actual Date
-                        </th>
-                        <th className="px-2.5 py-1.5 font-semibold w-32">
-                          Status
-                        </th>
-                        <th className="px-2.5 py-1.5 font-semibold w-48">
-                          Proof
-                        </th>
-                        <th className="px-2.5 py-1.5 w-10" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={7}
-                            className="px-2.5 py-5 text-center text-xs text-fg-muted italic"
-                          >
-                            No milestones yet — click “Add Milestone” to start.
-                          </td>
-                        </tr>
-                      ) : (
-                        rows.map((row, i) => (
-                          <tr
-                            key={i}
-                            className="border-t border-line-subtle align-top"
-                          >
-                            <td className="px-2.5 py-1.5">
-                              <input
-                                type="text"
-                                value={row.title}
-                                placeholder="e.g. Conduct GAD orientation"
-                                onChange={(e) =>
-                                  updateRow(i, { title: e.target.value })
-                                }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
-                              />
-                            </td>
-                            <td className="px-2.5 py-2">
-                              {row.source_activity ? (
-                                <span
-                                  className="block max-w-40 truncate text-xs text-fg-4"
-                                  title={row.source_activity}
-                                >
-                                  {row.source_activity}
-                                </span>
-                              ) : (
-                                <span className="rounded-full border border-line bg-subtle px-2 py-0.5 text-xs font-medium text-fg-muted">
-                                  Manual
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-2.5 py-1.5">
-                              <input
-                                type="date"
-                                value={row.target_date}
-                                onChange={(e) =>
-                                  updateRow(i, { target_date: e.target.value })
-                                }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
-                              />
-                            </td>
-                            <td className="px-2.5 py-1.5">
-                              <input
-                                type="date"
-                                value={row.actual_date}
-                                onChange={(e) =>
-                                  updateRow(i, { actual_date: e.target.value })
-                                }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
-                              />
-                            </td>
-                            <td className="px-2.5 py-1.5">
-                              <select
-                                value={row.status}
-                                onChange={(e) =>
-                                  updateRow(i, { status: e.target.value })
-                                }
-                                className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm text-fg-2 focus:outline-none focus:ring-2 focus:ring-secondary-500/20 focus:border-secondary-400"
-                              >
-                                {MILESTONE_STATUSES.map((s) => (
-                                  <option key={s} value={s}>
-                                    {MILESTONE_STATUS_META[s].label}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="px-2.5 py-1.5">
-                              <div className="space-y-1.5">
-                                {(row.proofs || []).length > 0 && (
-                                  <ul className="space-y-1">
-                                    {(row.proofs || []).map(
-                                      (file, fileIndex) => (
-                                        <li
-                                          key={
-                                            file.key || file.url || fileIndex
-                                          }
-                                          className="flex items-center gap-1.5 text-xs text-fg-4"
-                                        >
-                                          <FaPaperclip
-                                            size={9}
-                                            className="shrink-0 text-fg-muted"
-                                          />
-                                          <span
-                                            className="max-w-[120px] truncate"
-                                            title={file.name || file.key || ""}
-                                          >
-                                            {file.name || "Proof file"}
-                                          </span>
-                                          <button
-                                            type="button"
-                                            onClick={() => removeProof(i, file)}
-                                            className="touch-target text-fg-muted hover:text-danger transition-colors"
-                                            title="Remove proof"
-                                          >
-                                            <FaTimes size={9} />
-                                          </button>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
-                                )}
-                                {row.status === "completed" ? (
-                                  <>
-                                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-2.5 py-1 text-xs font-medium text-fg-4 hover:bg-subtle hover:border-gray-400 cursor-pointer transition-colors">
-                                      {fileLifecycle.isUploadingTarget(i) ? (
-                                        <FaSpinner
-                                          size={10}
-                                          className="animate-spin"
-                                        />
-                                      ) : (
-                                        <FaPaperclip size={10} />
-                                      )}
-                                      {fileLifecycle.isUploadingTarget(i)
-                                        ? "Uploading…"
-                                        : "Upload proof"}
-                                      <input
-                                        type="file"
-                                        multiple
-                                        accept=".pdf,.jpg,.jpeg,.png"
-                                        className="hidden"
-                                        disabled={uploadingRow !== null}
-                                        onChange={(e) =>
-                                          handleProofUpload(i, e)
-                                        }
-                                      />
-                                    </label>
-                                    {(row.proofs || []).length === 0 && (
-                                      <p className="text-xs font-medium text-secondary-600">
-                                        Proof required
-                                      </p>
-                                    )}
-                                  </>
-                                ) : (
-                                  (row.proofs || []).length === 0 && (
-                                    <span className="text-xs text-fg-muted">
-                                      —
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-2.5 py-1.5 text-right">
-                              <button
-                                type="button"
-                                onClick={() => removeRow(i)}
-                                className="touch-target text-fg-muted hover:text-danger transition-colors"
-                                title="Remove milestone"
-                              >
-                                <FaTrash size={12} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <GanttUploadTab onApply={applyUploadedGantt} />
             </section>
           </div>
         </div>
