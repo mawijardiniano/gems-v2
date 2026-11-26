@@ -84,9 +84,9 @@ export default function BatchActionBar({
       )}
       {failedCount > 0 && !finished && (
         <p className="text-xs text-danger">
-          {failedCount} row(s) failed to import. Open a row to see why, fix
-          it in the row or the source file, then press Validate to check it
-          again, approve it and migrate.
+          {failedCount} row(s) failed to import. Open a row to see why and
+          press Edit to fix it, then press Validate to check it again,
+          approve it and migrate.
         </p>
       )}
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/data/lib/db";
 import StagingRecord from "@/models/stagingRecord";
+import ImportBatch from "@/models/importBatch";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
 import {
   buildIdentity,
@@ -66,7 +67,49 @@ export async function PATCH(req, { params }) {
     }
 
     if (body.mapped_payload) {
+      if (
+        typeof body.mapped_payload !== "object" ||
+        Array.isArray(body.mapped_payload)
+      ) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: "The row data is not in the expected format.",
+          },
+          { status: 400 },
+        );
+      }
+      /* After import the row's personal data is cleared; an edit would
+         stage a person with no source row behind it. */
+      if (record.payload_cleared_at) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message:
+              "This row's data was cleared after import, so it cannot be edited.",
+          },
+          { status: 409 },
+        );
+      }
+      /* The batch validate route refuses a migrating or completed batch, so
+         an edit there could never be checked or imported. */
+      const batch = await ImportBatch.findById(record.batch_id)
+        .select("status")
+        .lean();
+      if (batch && ["migrating", "completed"].includes(batch.status)) {
+        return NextResponse.json(
+          {
+            status: "error",
+            message: `This batch is ${batch.status}, so its rows can no longer be edited. Fix the row in the source file and upload it as a new batch.`,
+          },
+          { status: 409 },
+        );
+      }
       record.mapped_payload = body.mapped_payload;
+      /* mapped_payload is Mixed; Mongoose does not see the change otherwise. */
+      record.markModified("mapped_payload");
+      /* A failed row's old error no longer describes the edited data. */
+      record.migration_result = undefined;
       record.identity = buildIdentity(body.mapped_payload);
       record.school_year = body.mapped_payload.school_year || "";
       record.semester = body.mapped_payload.semester || "";
