@@ -6,6 +6,12 @@ import {
   buildIdentityDedupeKey,
   mapToStagingPayload,
 } from "@/app/api/integration/_utils/mapping";
+import {
+  buildHeaderMap,
+  canonicalizeRow,
+  collectColumns,
+  headerReport,
+} from "@/app/api/integration/_utils/headerMap";
 
 /* Upper bounds on what one batch may hold. Validation and migration run
    row by row inside a request, so an unbounded file or feed would time out
@@ -21,14 +27,26 @@ export async function stageRows({
   createdBy,
   createdByUsername,
   defaults = {},
+  /* { "Source column": "field_key" } saved in the field mapping. */
+  customHeaders = {},
 }) {
   const docs = [];
   const firstDocIndexByKey = new Map();
   let duplicateCount = 0;
 
+  /* Column names are matched ignoring case, spaces and punctuation, so
+     "Employee No." reads as employee_id. The report flags columns that
+     would fail every row, once, instead of one error per row. */
+  const columns = collectColumns(rows);
+  const headerMap = buildHeaderMap(columns, customHeaders);
+  const report = headerReport(columns, headerMap, defaults);
+
   for (let idx = 0; idx < rows.length; idx += 1) {
     const raw = rows[idx];
-    const mapped = mapToStagingPayload(raw, defaults);
+    const mapped = mapToStagingPayload(
+      canonicalizeRow(raw, headerMap),
+      defaults,
+    );
     const identity = buildIdentity(mapped);
     const dedupeKey = buildIdentityDedupeKey(identity);
 
@@ -77,6 +95,7 @@ export async function stageRows({
     source_name: sourceName,
     source_file_key: sourceFileKey,
     content_hash: contentHash,
+    header_report: report,
     created_by: createdBy,
     created_by_username: createdByUsername,
     totals: { fetched: rows.length, duplicates: duplicateCount },
@@ -117,5 +136,6 @@ export async function stageRows({
     insertedCount: docs.length,
     duplicateCount,
     sameAs,
+    headerReport: report,
   };
 }

@@ -92,18 +92,19 @@ export async function POST(req) {
       );
     }
 
-    const { batch, insertedCount, duplicateCount, sameAs } = await stageRows({
-      rows,
-      sourceType: "manual_upload",
-      sourceName: name,
-      sourceFileKey: name,
-      createdBy: auth.user._id,
-      createdByUsername: auth.user.username,
-      defaults: {
-        school_year: defaultSchoolYear,
-        semester: defaultSemester,
-      },
-    });
+    const { batch, insertedCount, duplicateCount, sameAs, headerReport } =
+      await stageRows({
+        rows,
+        sourceType: "manual_upload",
+        sourceName: name,
+        sourceFileKey: name,
+        createdBy: auth.user._id,
+        createdByUsername: auth.user.username,
+        defaults: {
+          school_year: defaultSchoolYear,
+          semester: defaultSemester,
+        },
+      });
 
     await writeSyncLog({
       batchId: batch._id,
@@ -154,6 +155,8 @@ export async function POST(req) {
           staged: insertedCount,
           duplicates_flagged: duplicateCount,
           same_as: sameAs,
+          header_problems: headerReport.problems,
+          unused_columns: headerReport.unrecognized,
         },
       },
       { status: 201 },

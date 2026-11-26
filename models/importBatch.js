@@ -52,6 +52,33 @@ const importBatchSchema = new Schema(
       default: "",
       index: true,
     },
+    /* Column names found in the source and what they were read as, plus
+       problems that fail every row (see headerMap.headerReport). Column
+       names only, no row values. */
+    header_report: {
+      columns: { type: [String], default: undefined },
+      recognized: {
+        type: [{ column: String, field: String, _id: false }],
+        default: undefined,
+      },
+      unrecognized: { type: [String], default: undefined },
+      missing: { type: [String], default: undefined },
+      problems: { type: [String], default: undefined },
+    },
+    /* The most common blocking validation errors, so one problem shared by
+       every row reads as one line instead of hundreds. */
+    error_summary: {
+      type: [
+        {
+          field: String,
+          code: String,
+          message: String,
+          count: Number,
+          _id: false,
+        },
+      ],
+      default: undefined,
+    },
     totals: {
       fetched: { type: Number, default: 0 },
       valid: { type: Number, default: 0 },
