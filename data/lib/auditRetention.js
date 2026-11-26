@@ -102,6 +102,8 @@ export const LONG_RETENTION_ACTIONS = [
   "IMPORT_BATCH_DELETE",
   "IMPORT_BATCH_CLEANUP",
   "IMPORT_BATCH_MIGRATE",
+  "IMPORT_BATCH_MIGRATE_START",
+  "IMPORT_BATCH_UNDO",
 
   /* Access to unmasked personal data. Kept longest of all, because the question
      it answers — who looked at whom — is the one a data-protection review

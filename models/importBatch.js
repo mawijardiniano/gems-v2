@@ -65,6 +65,18 @@ const importBatchSchema = new Schema(
       missing: { type: [String], default: undefined },
       problems: { type: [String], default: undefined },
     },
+    /* Set when the batch's import was undone: who did it and the counts. */
+    undo: {
+      at: { type: Date },
+      by: { type: Schema.Types.ObjectId, ref: "UserAuth" },
+      by_username: { type: String },
+      removed: { type: Number },
+      kept: { type: Number },
+      terms_removed: { type: Number },
+      /* Lock while an undo runs, so two cannot run at once. */
+      running: { type: Boolean },
+      started_at: { type: Date },
+    },
     /* Rows handled so far by a background migration; the page polls it. */
     progress: {
       done: { type: Number },

@@ -65,6 +65,8 @@ const stagingRecordSchema = new Schema(
         "duplicate",
         "migrated",
         "failed",
+        /* Imported, then the import was undone (see importUndo.js). */
+        "undone",
       ],
       default: "pending",
       index: true,
@@ -122,6 +124,13 @@ const stagingRecordSchema = new Schema(
         ],
         default: [],
       },
+      /* Whether this row's import added the term, and created the login
+         account, rather than finding them already there. Undo removes only
+         what the import added. Unset on rows imported before these fields. */
+      term_created: { type: Boolean },
+      account_created: { type: Boolean },
+      /* When the import of this row was undone. */
+      undone_at: { type: Date },
     },
   },
   { timestamps: true },

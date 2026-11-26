@@ -142,6 +142,15 @@ export default function useIntegrationData() {
     if (actionName === "Migrate Approved") {
       return `Migration complete: ${data.created ?? 0} created, ${data.updated ?? 0} updated, ${data.skipped ?? 0} skipped, ${data.failed ?? 0} failed.`;
     }
+    if (actionName === "Undo Import") {
+      const parts = [`Import undone: ${data.removed ?? 0} person(s) removed`];
+      if (data.terms_removed) parts.push(`${data.terms_removed} term(s) removed`);
+      if (data.kept) parts.push(`${data.kept} kept because they changed or are in use`);
+      const tail = data.updated_not_reverted
+        ? ` ${data.updated_not_reverted} updated person(s) were not changed back.`
+        : "";
+      return `${parts.join(", ")}.${tail}`;
+    }
     if (actionName === "Save Row") {
       return `Row ${data.row_number ?? ""} saved and set back to pending. Press Validate to check it again, then approve it.`;
     }
