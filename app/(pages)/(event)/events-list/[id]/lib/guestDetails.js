@@ -7,6 +7,9 @@
 export const toAcronym = (value) => {
   if (!value || typeof value !== "string") return "";
   const cleaned = value
+    /* "Registrar's" is one word: without this the "s" after the apostrophe
+       became its own letter ("Registrar's Office" → "RSO"). */
+    .replace(/['’]/g, "")
     .replace(/\b(of|and|the|&)\b/gi, " ")
     .replace(/[()]/g, " ");
   const matches = cleaned.match(/\b[A-Za-z0-9]/g);
@@ -72,7 +75,9 @@ export const extractGuestDetails = (guest) => {
     department: toAcronym(departmentRaw),
     genderPreference:
       gadData.gender_preference || gadData.genderPreference || "",
-    status: personal.currentStatus || "",
+    /* `affiliation.person_type` replaced `personal.currentStatus`; the old
+       path is the fallback for shapes that still carry it. */
+    status: affiliation.person_type || personal.currentStatus || "",
     positionDesignation,
     programYearSection,
     contact: contactInfo.mobileNumber || contactInfo.phoneNumber || "",
