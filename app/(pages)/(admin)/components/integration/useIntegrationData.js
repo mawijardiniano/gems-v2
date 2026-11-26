@@ -120,9 +120,14 @@ export default function useIntegrationData() {
     if (actionName === "Migrate Approved") {
       return `Migration complete: ${data.created ?? 0} created, ${data.updated ?? 0} updated, ${data.skipped ?? 0} skipped, ${data.failed ?? 0} failed.`;
     }
+    if (actionName === "Save Row") {
+      return `Row ${data.row_number ?? ""} saved and set back to pending. Press Validate to check it again, then approve it.`;
+    }
     return null;
   }
 
+  /* Resolves true when the action succeeded, so a caller (the row edit form)
+     can close itself; failures are shown in the message banner. */
   const runAction = useCallback(
     async (actionName, requestFactory) => {
       setBusyAction(actionName);
@@ -140,11 +145,13 @@ export default function useIntegrationData() {
         if (selectedBatchId) {
           await loadBatchDetails(selectedBatchId, recordsFilter);
         }
+        return true;
       } catch (err) {
         setMessage({
           type: "error",
           text: err.message || `${actionName} failed`,
         });
+        return false;
       } finally {
         setBusyAction("");
       }

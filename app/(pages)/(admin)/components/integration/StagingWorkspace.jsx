@@ -8,6 +8,7 @@ import StagingRecordsTable from "./StagingRecordsTable";
 import RecordDetailPanel from "./RecordDetailPanel";
 import SyncLogsPanel from "./SyncLogsPanel";
 import BatchActionBar from "./BatchActionBar";
+import { canEditRecord } from "./recordEdit";
 
 /**
  * Shared staging/review workspace: batch table, delete confirmation, and the
@@ -231,9 +232,24 @@ export default function StagingWorkspace({ d }) {
               {d.selectedRecord ? (
                 <div className="max-h-80 overflow-auto border border-line rounded p-2">
                   <RecordDetailPanel
+                    /* A new row opens with the form closed. */
+                    key={d.selectedRecord._id}
                     record={d.selectedRecord}
                     allRecords={d.records}
                     onClose={() => d.setSelectedRecordId(null)}
+                    canEdit={canEditRecord(d.selectedRecord, batch)}
+                    saving={d.busyAction === "Save Row"}
+                    onSave={(payload) =>
+                      d.runAction("Save Row", () => ({
+                        url: `/api/integration/records/${d.selectedRecord._id}`,
+                        options: {
+                          method: "PATCH",
+                          credentials: "include",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ mapped_payload: payload }),
+                        },
+                      }))
+                    }
                   />
                 </div>
               ) : (
