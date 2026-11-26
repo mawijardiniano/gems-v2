@@ -5,6 +5,9 @@ import { activityPillClasses } from "@/data/lib/activityTypeColors";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
+  FaArrowLeft,
+  FaChevronRight,
+  FaSearch,
   FaBuilding,
   FaCalendarAlt,
   FaCheckCircle,
@@ -38,10 +41,29 @@ const EMPTY = {
 
 
 const PARTICIPANT_TYPES = [
-  { value: "Student", label: "Student", icon: FaGraduationCap },
-  { value: "Employee", label: "Employee", icon: FaBriefcase },
-  { value: "Stakeholder", label: "Stakeholder", icon: FaUsers },
+  {
+    value: "Student",
+    label: "Student",
+    icon: FaGraduationCap,
+    hint: "Enrolled in the university",
+  },
+  {
+    value: "Employee",
+    label: "Employee",
+    icon: FaBriefcase,
+    hint: "Faculty or staff",
+  },
+  {
+    value: "Stakeholder",
+    label: "Stakeholder / Guest",
+    icon: FaUsers,
+    hint: "Parent, alumni, partner, visitor",
+  },
 ];
+
+/* Students and employees have a GEMS profile, so they check in with one
+   field (ID number or registered email) instead of the whole form. */
+const usesLookup = (type) => type === "Student" || type === "Employee";
 
 const helperCls = "mt-1 text-xs text-fg-muted";
 
@@ -69,6 +91,30 @@ function SectionTitle({ step, title }) {
         {title}
       </h2>
       <span className="h-px flex-1 bg-muted" />
+    </div>
+  );
+}
+
+/* Top bar on every step after the first: back link plus the chosen type. */
+function StepNav({ type, onBack }) {
+  const current = PARTICIPANT_TYPES.find((t) => t.value === type);
+  const Icon = current?.icon;
+  return (
+    <div className="mb-5 flex items-center justify-between gap-3">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-fg-muted hover:text-fg focus-visible:ring-4 focus-visible:ring-secondary-500/20 focus-visible:outline-none"
+      >
+        <FaArrowLeft size={11} />
+        Back
+      </button>
+      {current && (
+        <span className="badge border border-secondary-200 bg-secondary-50 text-secondary-700">
+          <Icon size={11} />
+          {current.label}
+        </span>
+      )}
     </div>
   );
 }
@@ -105,6 +151,12 @@ export default function AttendContent() {
   const [done, setDone] = useState(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  /* "type" → (Student/Employee) "lookup" → "confirm", or → "form" for
+     stakeholders and anyone who can't use the lookup. */
+  const [step, setStep] = useState("type");
+  const [identifier, setIdentifier] = useState("");
+  const [match, setMatch] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   /* Programs offered for the college typed above, used as datalist hints. */
   const programOptions = useMemo(() => {
@@ -149,6 +201,105 @@ export default function AttendContent() {
     }));
   };
 
+  /* Back to the first screen with nothing carried over. */
+  const restart = () => {
+    setForm(EMPTY);
+    setIdentifier("");
+    setMatch(null);
+    setNotFound(false);
+    setError("");
+    setDone(null);
+    setStep("type");
+  };
+
+  const chooseType = (value) => {
+    pickParticipantType(value);
+    setError("");
+    setNotFound(false);
+    setMatch(null);
+    setStep(usesLookup(value) ? "lookup" : "form");
+  };
+
+  /* Can't use the lookup: the full form, with the type already picked. */
+  const fillFormInstead = () => {
+    setError("");
+    setNotFound(false);
+    setMatch(null);
+    setStep("form");
+  };
+
+  /* Shared reply handling for both submit paths. */
+  const handleCheckInError = (err) => {
+    const data = err.response?.data;
+    if (data?.already_attended) {
+      setDone({ already: true, at: data?.attended_at });
+    } else if (data?.already_submitted) {
+      setDone({ already: true, pending: true, at: data?.submitted_at });
+    } else {
+      setError(data?.message || "Unable to record attendance.");
+    }
+  };
+  const doneFrom = (data, name) => ({
+    already: !!data?.already_attended || !!data?.already_submitted,
+    pending: data?.validation_status === "pending",
+    at: data?.submitted_at || data?.attended_at,
+    name,
+  });
+
+  const lookUp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setNotFound(false);
+    if (!identifier.trim())
+      return setError("Enter your ID number or email.");
+    setSubmitting(true);
+    try {
+      const res = await axios.post("/api/events/guest-attendance/lookup", {
+        event_id: eventId,
+        participant_type: form.participant_type,
+        identifier: identifier.trim(),
+      });
+      if (res.data?.found) {
+        setMatch(res.data);
+        setStep("confirm");
+      } else {
+        setNotFound(true);
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to look up your record.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const confirmMatch = async () => {
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await axios.post("/api/events/guest-attendance", {
+        event_id: eventId,
+        participant_type: form.participant_type,
+        identifier: identifier.trim(),
+      });
+      setDone(doneFrom(res.data, match?.displayName));
+    } catch (err) {
+      const data = err.response?.data;
+      /* The record changed or is incomplete since the lookup: fall back to
+         the form rather than leaving the person stuck. */
+      if (data?.code === "NOT_FOUND" || data?.code === "INCOMPLETE_PROFILE") {
+        setMatch(null);
+        setStep("form");
+        setError(data.message);
+      } else {
+        handleCheckInError(err);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -179,20 +330,9 @@ export default function AttendContent() {
         section: isStudent ? form.section.trim() : "",
         position_designation: isStudent ? "" : form.position_designation.trim(),
       });
-      setDone({
-        already: !!res.data?.already_attended,
-        pending: res.data?.validation_status === "pending",
-        at: res.data?.submitted_at || res.data?.attended_at,
-      });
+      setDone(doneFrom(res.data));
     } catch (err) {
-      const data = err.response?.data;
-      if (data?.already_attended) {
-        setDone({ already: true, at: data?.attended_at });
-      } else if (data?.already_submitted) {
-        setDone({ already: true, pending: true, at: data?.submitted_at });
-      } else {
-        setError(data?.message || "Unable to record attendance.");
-      }
+      handleCheckInError(err);
     } finally {
       setSubmitting(false);
     }
@@ -310,6 +450,11 @@ export default function AttendContent() {
                   ? "Already Checked In"
                   : "Attendance Confirmed!"}
             </h1>
+            {done.name && (
+              <p className="mt-2 text-sm font-semibold text-fg-3">
+                {done.name}
+              </p>
+            )}
             <p className="mt-1.5 text-sm text-fg-muted">
               {done.pending
                 ? "Your check-in was submitted and is awaiting organizer validation. It will count toward attendance once approved."
@@ -327,11 +472,7 @@ export default function AttendContent() {
             )}
             <Button
               type="button"
-              onClick={() => {
-                setForm(EMPTY);
-                setDone(null);
-                setError("");
-              }}
+              onClick={restart}
               variant="secondary"
               className="mt-6 w-full"
             >
@@ -413,8 +554,216 @@ export default function AttendContent() {
             </div>
           </div>
 
-          {/* ── Form ─────────────────────────────────────────────── */}
+          {/* ── Step 1: who is attending ─────────────────────────── */}
+          {step === "type" && (
+            <div className="p-5 sm:p-6">
+              <h2 className="text-base font-bold text-fg">
+                Who are you attending as?
+              </h2>
+              <p className="mt-1 text-sm text-fg-muted">
+                Pick one to continue.
+              </p>
+              <div className="mt-4 space-y-2.5">
+                {PARTICIPANT_TYPES.map(({ value, label, hint, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => chooseType(value)}
+                    className="flex w-full items-center gap-3.5 rounded-xl border border-line bg-white px-4 py-3.5 text-left transition duration-200 hover:border-secondary-500 hover:bg-secondary-50 focus-visible:ring-4 focus-visible:ring-secondary-500/20 focus-visible:outline-none"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary-50 text-secondary-600">
+                      <Icon size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-fg">
+                        {label}
+                      </span>
+                      <span className="block text-xs text-fg-muted">
+                        {hint}
+                      </span>
+                    </span>
+                    <FaChevronRight className="shrink-0 text-fg-muted" size={12} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: ID number or email ───────────────────────── */}
+          {step === "lookup" && (
+            <form onSubmit={lookUp} noValidate className="p-5 sm:p-6">
+              <StepNav type={form.participant_type} onBack={restart} />
+              {error && (
+                <div className="alert-error mb-5">
+                  <FaExclamationCircle className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              <label className="label" htmlFor="identifier">
+                {form.participant_type} ID or email{" "}
+                <span className="text-danger">*</span>
+              </label>
+              <input
+                id="identifier"
+                name="identifier"
+                className="input"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                value={identifier}
+                onChange={(e) => {
+                  setIdentifier(e.target.value);
+                  setNotFound(false);
+                }}
+                placeholder={
+                  form.participant_type === "Student"
+                    ? "e.g. 2021-00123 or you@email.com"
+                    : "e.g. EMP-0456 or you@email.com"
+                }
+                aria-describedby="identifier_help"
+                aria-invalid={notFound || undefined}
+              />
+              <p id="identifier_help" className={helperCls}>
+                Don&apos;t remember your ID? Use the email you registered in
+                GEMS.
+              </p>
+
+              {notFound && (
+                <div className="alert-error mt-4" role="alert">
+                  <FaExclamationCircle className="shrink-0" />
+                  <span>
+                    We couldn&apos;t find a{" "}
+                    {form.participant_type.toLowerCase()} record with that ID
+                    or email.
+                  </span>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={submitting}
+                variant="primary"
+                className="mt-6 w-full py-3 text-sm font-semibold"
+              >
+                {submitting ? (
+                  <>
+                    <FaSpinner className="animate-spin" size={13} />
+                    Looking up...
+                  </>
+                ) : notFound ? (
+                  "Try again"
+                ) : (
+                  <>
+                    <FaSearch size={13} />
+                    Find my record
+                  </>
+                )}
+              </Button>
+              {notFound ? (
+                <Button
+                  type="button"
+                  onClick={fillFormInstead}
+                  variant="secondary"
+                  className="mt-2.5 w-full py-3 text-sm font-semibold"
+                >
+                  Fill in my details instead
+                </Button>
+              ) : (
+                <p className="mt-4 text-center text-sm text-fg-muted">
+                  Don&apos;t know your ID or email?{" "}
+                  <button
+                    type="button"
+                    onClick={fillFormInstead}
+                    className="font-semibold text-secondary-600 underline-offset-2 hover:underline"
+                  >
+                    Fill in your details instead
+                  </button>
+                </p>
+              )}
+            </form>
+          )}
+
+          {/* ── Step 3: is this you? ─────────────────────────────── */}
+          {step === "confirm" && match && (
+            <div className="p-5 sm:p-6">
+              <StepNav
+                type={form.participant_type}
+                onBack={() => {
+                  setMatch(null);
+                  setStep("lookup");
+                }}
+              />
+              {error && (
+                <div className="alert-error mb-5">
+                  <FaExclamationCircle className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              <h2 className="text-base font-bold text-fg">Is this you?</h2>
+              <div className="mt-3 flex items-start gap-3.5 rounded-xl border border-line bg-subtle px-4 py-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary-50 text-secondary-600">
+                  <FaUserCheck size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-fg">
+                    {match.displayName}
+                  </p>
+                  {match.sex && (
+                    <p className="text-sm text-fg-muted">{match.sex}</p>
+                  )}
+                  {match.department && (
+                    <p className="mt-0.5 text-sm text-fg-3">
+                      {match.department}
+                    </p>
+                  )}
+                  {match.program && (
+                    <p className="text-sm text-fg-muted">{match.program}</p>
+                  )}
+                </div>
+              </div>
+              <p className={`${helperCls} mt-2`}>
+                Not you? Tap &quot;Not me&quot; and check the ID or email you
+                typed.
+              </p>
+              <Button
+                type="button"
+                onClick={confirmMatch}
+                disabled={submitting}
+                variant="primary"
+                className="mt-6 w-full py-3 text-sm font-semibold"
+              >
+                {submitting ? (
+                  <>
+                    <FaSpinner className="animate-spin" size={13} />
+                    Recording...
+                  </>
+                ) : (
+                  <>
+                    <FaUserCheck size={14} />
+                    Yes, record my attendance
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setMatch(null);
+                  setError("");
+                  setStep("lookup");
+                }}
+                disabled={submitting}
+                variant="secondary"
+                className="mt-2.5 w-full py-3 text-sm font-semibold"
+              >
+                Not me
+              </Button>
+            </div>
+          )}
+
+          {/* ── Full form: stakeholders, or no ID / email ─────────── */}
+          {step === "form" && (
           <form onSubmit={submit} noValidate className="p-5 sm:p-6">
+            <StepNav type={form.participant_type} onBack={restart} />
             {error && (
               <div className="alert-error mb-5">
                 <FaExclamationCircle className="shrink-0" />
@@ -530,43 +879,8 @@ export default function AttendContent() {
               <SectionTitle step="2" title="Participant Details" />
             </div>
             <div className="mt-4 space-y-4">
-              <fieldset>
-                <legend className="label">
-                  I am attending as <span className="text-danger">*</span>
-                </legend>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  {PARTICIPANT_TYPES.map(({ value, label, icon: Icon }) => {
-                    const active = form.participant_type === value;
-                    return (
-                      <label
-                        key={value}
-                        className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm font-medium transition duration-200 ${
-                          active
-                            ? "border-secondary-500 bg-secondary-50 text-secondary-700 ring-4 ring-secondary-500/10"
-                            : "border-line bg-white text-fg-4 hover:border-line-strong hover:bg-subtle"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="participant_type"
-                          value={value}
-                          checked={active}
-                          onChange={() => pickParticipantType(value)}
-                          className="sr-only"
-                        />
-                        <Icon
-                          className={
-                            active ? "text-secondary-600" : "text-fg-muted"
-                          }
-                          size={16}
-                        />
-                        {label}
-                      </label>
-                    );
-                  })}
-                </div>
-              </fieldset>
-
+              {/* The participant type was picked on the first screen and is
+                  shown in the bar above; "Change" goes back to it. */}
               <div>
                 <label className="label" htmlFor="department_office_org">
                   College / Office / Organization
@@ -694,6 +1008,7 @@ export default function AttendContent() {
               report.
             </p>
           </form>
+          )}
         </div>
       </div>
     </div>

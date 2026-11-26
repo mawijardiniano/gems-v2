@@ -145,4 +145,11 @@ export const rateLimiters = {
      which a client cannot rotate, so spoofed IP headers cannot flood one event. */
   guestCheckinIp: (req) => rateLimit(req, { limit: 60, windowMs: 60 * 1000, keyPrefix: "guest-ip", bypassAuth: true }),
   guestCheckinEvent: (req, eventId) => rateLimit(req, { limit: 300, windowMs: 60 * 1000, keyPrefix: "guest-event", key: String(eventId) }),
+
+  /* The QR form's "ID or email" lookup answers whether a record exists, so it
+     can be used to probe IDs. Tighter than the check-in itself, but not so
+     tight that one campus Wi-Fi address (a whole venue) is locked out; it only
+     answers while an event's attendance window is open. */
+  guestLookupIp: (req) => rateLimit(req, { limit: 40, windowMs: 60 * 1000, keyPrefix: "guest-lookup-ip", bypassAuth: true }),
+  guestLookupEvent: (req, eventId) => rateLimit(req, { limit: 200, windowMs: 60 * 1000, keyPrefix: "guest-lookup-event", key: String(eventId) }),
 };
