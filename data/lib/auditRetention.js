@@ -83,6 +83,7 @@ export const LONG_RETENTION_ACTIONS = [
   "SETTINGS_UPDATE",
   "INTEGRATION_CONFIG_UPDATE",
   "INTEGRATION_FIELD_MAPPING_UPDATE",
+  "INTEGRATION_CLEANUP_UPDATE",
 
   /* Destructive acts on records and membership. */
   "PROFILE_BULK_DELETE",
@@ -99,6 +100,7 @@ export const LONG_RETENTION_ACTIONS = [
   "IMPORT_BATCH_APPROVE",
   "IMPORT_BATCH_REJECT",
   "IMPORT_BATCH_DELETE",
+  "IMPORT_BATCH_CLEANUP",
   "IMPORT_BATCH_MIGRATE",
 
   /* Access to unmasked personal data. Kept longest of all, because the question
