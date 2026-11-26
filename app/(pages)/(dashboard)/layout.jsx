@@ -31,22 +31,16 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const qs =
-        typeof window !== "undefined"
-          ? new URLSearchParams(window.location.search)
-          : null;
-      if (qs?.get("qr") === "1") {
-        setIsAuthorized(true);
-        return;
-      }
+      /* No URL parameter skips this check: a "?qr=1" bypass used to mark any
+         visitor as signed in. QR attendance lives at /attend, outside this
+         group. The response holds decrypted personal data, so it is never
+         logged. */
       try {
         const res = await fetch("/api/profile/my-profile", {
           method: "GET",
           credentials: "include",
         });
         const data = await res.json();
-
-        console.log("Dashboard auth check data:", data);
 
         if (!res.ok || !data.user) {
           const currentPath =
@@ -56,7 +50,6 @@ export default function DashboardLayout({ children }) {
         }
 
         if (!data.user.role || data.user.role.toLowerCase() !== "user") {
-          console.log("User not authorized, role:", data.user.role);
           router.replace("/not-authorized");
           return;
         }

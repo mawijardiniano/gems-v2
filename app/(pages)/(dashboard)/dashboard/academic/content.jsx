@@ -156,7 +156,9 @@ export default function AcademicContent() {
         if (!mounted) return;
         if (!res.ok) return setProfile(null);
         const body = await res.json();
-        const profileObj = body?.data || body?.profile || body || null;
+        /* my-profile answers { data: null } for an account with no profile;
+           falling back to the whole body hid the "No profile found" screen. */
+        const profileObj = body?.data ?? null;
         setProfile(profileObj);
         const academic = profileObj?.affiliation?.academic_information || null;
         setFormData({

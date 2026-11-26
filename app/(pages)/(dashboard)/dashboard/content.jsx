@@ -94,8 +94,9 @@ function StatCard({ icon, label, value, color }) {
 function EventCard({ event, onClick, compact = false }) {
   const span = eventSpan(event);
   const eventDate = span.end ?? span.start;
-  const isPast = span.end !== null ? span.end < Date.now() : false;
-  const isCancelled = effectiveStatus(event) === "cancelled";
+  const phase = effectiveStatus(event);
+  const isPast = phase === "completed";
+  const isCancelled = phase === "cancelled";
 
   return (
     <div
@@ -191,14 +192,10 @@ export default function DashboardContent({ profile, userId }) {
         setRegisteredIds(new Set(participated.map((evt) => evt._id)));
         setCreatedIds(new Set(created.map((evt) => evt._id)));
 
-        // Past events: anything whose end has passed, newest first.
-        const now = Date.now();
+        // Past events: finished ones (same rule as the Events page), newest first.
         const endOf = (evt) => eventSpan(evt).end;
         const past = participated
-          .filter((evt) => {
-            const end = endOf(evt);
-            return end !== null && end < now;
-          })
+          .filter((evt) => effectiveStatus(evt) === "completed")
           .sort((a, b) => (endOf(b) ?? 0) - (endOf(a) ?? 0))
           .slice(0, 4);
         setPastEvents(past);
@@ -207,10 +204,7 @@ export default function DashboardContent({ profile, userId }) {
       .catch(() => setEventsLoading(false));
   }, [userId]);
 
-  const isPast = (evt) => {
-    const end = eventSpan(evt).end;
-    return end !== null && end < Date.now();
-  };
+  const isPast = (evt) => effectiveStatus(evt) === "completed";
 
   const discoverEvents = useMemo(() => {
     return (allEvents || [])

@@ -136,7 +136,9 @@ export default function EmploymentContent() {
         if (!mounted) return;
         if (!res.ok) return setProfile(null);
         const body = await res.json();
-        const profileObj = body?.data || body?.profile || body || null;
+        /* my-profile answers { data: null } for an account with no profile;
+           falling back to the whole body hid the "No profile found" screen. */
+        const profileObj = body?.data ?? null;
         setProfile(profileObj);
         const employment = profileObj?.affiliation?.employment_information || null;
         setFormData({
@@ -200,7 +202,8 @@ export default function EmploymentContent() {
         throw new Error("Failed to save employment info");
       }
 
-      const updatedEmployment = data.data.affiliation?.employment_information || formData;
+      const updatedEmployment =
+        data?.data?.affiliation?.employment_information || formData;
       setFormData({
         employee_id: updatedEmployment.employee_id || "",
         office: updatedEmployment.office || "",

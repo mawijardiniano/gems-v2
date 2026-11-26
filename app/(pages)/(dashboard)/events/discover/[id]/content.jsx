@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { eventSpan, attendanceWindow } from "@/data/lib/eventStatus";
+import { attendanceWindow, effectiveStatus } from "@/data/lib/eventStatus";
 import { formatEventWhen } from "@/data/lib/eventDates";
 import { useParams, useRouter } from "next/navigation";
 import { FaCalendar, FaLocationArrow } from "react-icons/fa";
@@ -43,15 +43,11 @@ export default function DiscoverEventContent() {
     load();
   }, [eventId]);
 
-  const isPast = (evt) => {
-    if (!evt) return false;
-    /* end is the latest instant the event occupies; null means no dates at all,
-       which is not "past". */
-    const end = eventSpan(evt).end;
-    return end !== null && end < Date.now();
-  };
+  /* Same rules as the Overview and Events pages: a stored cancelled or
+     completed wins over the dates, and an event with no dates is not past. */
+  const isPast = (evt) => Boolean(evt) && effectiveStatus(evt) === "completed";
 
-  const isCancelled = (evt) => evt?.status === "cancelled";
+  const isCancelled = (evt) => Boolean(evt) && effectiveStatus(evt) === "cancelled";
 
   const isAttendanceAllowed = (evt) => {
     if (!evt || isCancelled(evt)) return false;
