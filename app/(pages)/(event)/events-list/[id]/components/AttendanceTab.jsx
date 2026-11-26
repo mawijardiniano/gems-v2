@@ -408,17 +408,23 @@ export default function AttendanceTab(props) {
                       <td className="text-fg-muted">{(currentPage - 1) * pageSize + idx + 1}</td>
                       <td className="font-medium text-fg">
                         {g.full_name}
-                        {g.source === "manual-encode" && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-xs font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
+                        {/* Every row says how it was recorded: by an
+                            organizer ("Manual") or through the event QR —
+                            the public form or a signed-in check-in. */}
+                        {g.source === "manual-encode" ? (
+                          <span className="ml-2 inline-flex items-center whitespace-nowrap rounded-full bg-secondary-50 px-2 py-0.5 align-middle text-xs font-medium text-secondary-700 ring-1 ring-inset ring-secondary-600/20">
                             Manual
                           </span>
-                        )}
-                        {!editable && (
+                        ) : (
                           <span
-                            className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 align-middle text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20"
-                            title="Signed-in QR check-in — counted, with no guest record to validate"
+                            className="ml-2 inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 align-middle text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/20"
+                            title={
+                              editable
+                                ? undefined
+                                : "Signed-in QR check-in — counted, with no guest record to validate"
+                            }
                           >
-                            QR / Account
+                            QR Code
                           </span>
                         )}
                       </td>
