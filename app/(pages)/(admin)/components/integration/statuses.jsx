@@ -40,7 +40,9 @@ export function MessageBanner({ message }) {
       ? "bg-danger-subtle border-red-300 text-danger"
       : message.type === "success"
         ? "bg-success-subtle border-green-300 text-success"
-        : "bg-slate-100 border-slate-300 text-slate-700";
+        : message.type === "warning"
+          ? "bg-warning-subtle border-warning-border text-warning"
+          : "bg-slate-100 border-slate-300 text-slate-700";
   return (
     <div className={`border rounded px-4 py-3 text-sm ${style}`}>
       {message.text}

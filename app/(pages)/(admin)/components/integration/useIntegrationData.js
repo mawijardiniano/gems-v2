@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 async function readJson(res) {
   const data = await res.json().catch(() => ({}));
@@ -97,6 +97,26 @@ export default function useIntegrationData() {
     return () => clearInterval(timer);
   }, [anyMigrating, selectedBatchId, recordsFilter, loadBatches, loadBatchDetails]);
 
+  /* When a batch seen migrating has finished, replace the "Migrating on
+     the server" banner with the result. */
+  const migratingIds = useRef(new Set());
+  useEffect(() => {
+    const now = new Set(
+      batches.filter((b) => b.status === "migrating").map((b) => b._id),
+    );
+    for (const id of migratingIds.current) {
+      if (now.has(id)) continue;
+      const b = batches.find((x) => x._id === id);
+      if (!b) continue;
+      const t = b.totals || {};
+      setMessage({
+        type: b.status === "failed" ? "error" : "success",
+        text: `Migration of "${b.source_name || b._id}" finished: ${t.migrated_created ?? 0} created, ${t.migrated_updated ?? 0} updated, ${t.failed ?? 0} failed.`,
+      });
+    }
+    migratingIds.current = now;
+  }, [batches]);
+
   function buildResultMessage(actionName, data) {
     if (!data) return null;
     if (actionName === "Migrate Approved" && data.background) {
@@ -168,8 +188,9 @@ export default function useIntegrationData() {
         const res = await fetch(req.url, req.options);
         const data = await readJson(res);
         const resultMessage = buildResultMessage(actionName, data?.data);
+        /* A staged file whose columns fail every row is not plain success. */
         setMessage({
-          type: "success",
+          type: data?.data?.header_problems?.length ? "warning" : "success",
           text: resultMessage || `${actionName} completed successfully`,
         });
         await loadBatches();

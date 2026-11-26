@@ -511,6 +511,12 @@ async function migrateApproved({ batch, approved, auth, req, trackProgress }) {
   batch.totals.identical = (batch.totals.identical || 0) + identical;
   batch.totals.skipped = (batch.totals.skipped || 0) + skipped;
   batch.totals.failed = failed;
+  /* Rows migrated in this run are no longer approved; without this the
+     page kept offering "Migrate Approved (N)" for a finished batch. */
+  batch.totals.approved = await StagingRecord.countDocuments({
+    batch_id: batch._id,
+    status: "approved",
+  });
   await batch.save();
 
   /* Migration is where staged rows become live profiles *and live login
