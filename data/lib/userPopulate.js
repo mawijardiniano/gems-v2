@@ -52,6 +52,20 @@ export async function hydrateUserPopulate(rows, role) {
     row?.created_by?.personal_info_id ||
     null;
 
+  /* `person_type` moved from `personal.currentStatus` to
+     `affiliation.person_type`, but the event page, its insights and other
+     readers still use the old path: without this, every signed-in attendee
+     showed "-" as their type and counted as "Unknown". Mirrored for every
+     role because it is a GEMS-owned identifier, not vault PII — the same
+     transition rule as `applyRowPii` in lib/profileBroker. */
+  for (const row of list) {
+    const info = infoOf(row);
+    const personType = info?.affiliation?.person_type;
+    if (info && personType) {
+      info.personal = { ...(info.personal || {}), currentStatus: personType };
+    }
+  }
+
   /* `vaultRef` is the key into the vault, so it is removed from every row on
      every path out of this function - including the no-role and vault-failure
      paths - before anything is returned to a caller. */

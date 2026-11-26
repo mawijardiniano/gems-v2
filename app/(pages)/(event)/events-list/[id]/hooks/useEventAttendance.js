@@ -78,8 +78,12 @@ export function useEventAttendance(event, guests) {
             sex: details.sex,
             age: details.age,
             participant_type: details.status,
+            /* Full college / office name, like every other row on the sheet.
+               The acronym (`details.department`) made these rows the odd
+               ones out and mangled names with an apostrophe
+               ("Registrar's Office" → "RSO"). */
             department_office_org:
-              details.department || details.college || details.office,
+              details.office || details.college || details.department,
             program_year_section: details.programYearSection,
             position_designation: details.positionDesignation,
             contact: details.contact,
@@ -113,7 +117,8 @@ export function useEventAttendance(event, guests) {
   const statusCounts = useMemo(() => {
     const counts = {};
     attendedProfiles.forEach((p) => {
-      const status = p?.personal?.currentStatus || "Unknown";
+      const status =
+        p?.affiliation?.person_type || p?.personal?.currentStatus || "Unknown";
       counts[status] = (counts[status] || 0) + 1;
     });
     approvedGuests.forEach((g) => {
