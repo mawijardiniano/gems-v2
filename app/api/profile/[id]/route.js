@@ -233,10 +233,18 @@ export async function PUT(req, { params }) {
         profile.affiliation?.toObject?.() ?? { ...(profile.affiliation || {}) };
       const merged = { ...stored };
       for (const [key, value] of Object.entries(body.affiliation)) {
-        merged[key] =
-          value && typeof value === "object" && !Array.isArray(value)
-            ? { ...(stored[key] || {}), ...value }
-            : value;
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          const section = { ...(stored[key] || {}), ...value };
+          /* An empty field means "not set". Faculty have no appointment
+             status, so the form sends "" for it; kept as "", the schema's
+             list of accepted values refused the whole save. */
+          for (const [field, fieldValue] of Object.entries(value)) {
+            if (fieldValue === "" || fieldValue === null) delete section[field];
+          }
+          merged[key] = section;
+        } else {
+          merged[key] = value;
+        }
       }
       body.affiliation = merged;
     }
