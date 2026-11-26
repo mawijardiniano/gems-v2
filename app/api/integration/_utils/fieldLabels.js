@@ -57,6 +57,18 @@ export function fieldLabel(path) {
  * else keeps its own message.
  */
 export function friendlyMigrationError(error) {
+  return friendlyValidationError(
+    error,
+    "Correct it in the source file and import again.",
+  );
+}
+
+/**
+ * Same sentences as friendlyMigrationError, with `hint` (if any) appended
+ * to validation errors instead of the import advice. Used by the profile
+ * edit route, where the person fixes the field on the page.
+ */
+export function friendlyValidationError(error, hint = "") {
   if (!error) return "Unknown error";
   if (error.name === "ValidationError" && error.errors) {
     const lines = Object.entries(error.errors).map(([path, err]) => {
@@ -70,7 +82,7 @@ export function friendlyMigrationError(error) {
       }
       return `${label}: ${err.message}`;
     });
-    return `${lines.join(" ")} Correct it in the source file and import again.`;
+    return hint ? `${lines.join(" ")} ${hint}` : lines.join(" ");
   }
   if (error.code === 11000) {
     const field = Object.keys(error.keyValue || error.keyPattern || {})[0];
