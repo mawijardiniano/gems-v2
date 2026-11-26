@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { loadFieldMapping } from "@/app/api/integration/_utils/fieldMapping";
 import { connectDB } from "@/data/lib/db";
 import SystemSetting from "@/models/systemSetting";
 import { requireIntegrationAccess } from "@/app/api/integration/_utils/auth";
@@ -62,7 +63,8 @@ export async function POST(req) {
     /* Same column matching as a real sync, so "missing" here means a sync
        would fail those rows too. */
     const missing = result.rows?.length
-      ? headerReport(columns, buildHeaderMap(columns)).missing
+      ? headerReport(columns, buildHeaderMap(columns, await loadFieldMapping()))
+          .missing
       : [];
 
     await logActivity({
